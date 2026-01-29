@@ -323,78 +323,111 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
     {
       scenario: "An ambulance with a 700 Hz siren approaches you at 30 m/s. Sound travels at 340 m/s in air.",
       question: "What frequency do you hear as it approaches?",
-      options: ["~632 Hz (lower pitch)", "700 Hz (unchanged)", "~768 Hz (higher pitch)", "~900 Hz (much higher)"],
-      correct: 2,
+      options: [
+        { text: "~632 Hz (lower pitch)", correct: false },
+        { text: "700 Hz (unchanged)", correct: false },
+        { text: "~768 Hz (higher pitch)", correct: true },
+        { text: "~900 Hz (much higher)", correct: false }
+      ],
       explanation: "Using f' = f × v/(v - v_src) = 700 × 340/(340-30) = 700 × 340/310 ≈ 768 Hz. The approaching source compresses wavelengths, increasing frequency!"
     },
     {
       scenario: "You're standing on a train platform as an express train sounds its horn while passing through.",
       question: "At what moment do you hear the TRUE (unshifted) frequency?",
-      options: ["When approaching but far away", "When directly beside you (perpendicular)", "When receding but nearby", "You never hear the true frequency"],
-      correct: 1,
+      options: [
+        { text: "When approaching but far away", correct: false },
+        { text: "When directly beside you (perpendicular)", correct: true },
+        { text: "When receding but nearby", correct: false },
+        { text: "You never hear the true frequency", correct: false }
+      ],
       explanation: "At the perpendicular moment, the train's velocity component toward/away from you is ZERO. No Doppler shift occurs—you hear the actual emitted frequency!"
     },
     {
       scenario: "Police radar guns bounce radio waves off moving vehicles and measure the reflected wave's frequency.",
       question: "If a car is driving TOWARD the radar gun, the reflected waves experience:",
-      options: ["A single Doppler shift (higher)", "A DOUBLE Doppler shift (even higher)", "Two shifts that cancel out", "No shift (radio waves unaffected)"],
-      correct: 1,
+      options: [
+        { text: "A single Doppler shift (higher)", correct: false },
+        { text: "A DOUBLE Doppler shift (even higher)", correct: true },
+        { text: "Two shifts that cancel out", correct: false },
+        { text: "No shift (radio waves unaffected)", correct: false }
+      ],
       explanation: "The wave is shifted once when hitting the moving car, then shifted AGAIN when reflecting back. This double-Doppler makes radar very sensitive to speed!"
     },
     {
       scenario: "Astronomers observe a distant galaxy. The hydrogen emission lines, normally at 656 nm, appear at 670 nm.",
       question: "What can we conclude about this galaxy?",
-      options: ["It's approaching Earth", "It's moving away from Earth", "It's very hot", "It's a young galaxy"],
-      correct: 1,
+      options: [
+        { text: "It's approaching Earth", correct: false },
+        { text: "It's moving away from Earth", correct: true },
+        { text: "It's very hot", correct: false },
+        { text: "It's a young galaxy", correct: false }
+      ],
       explanation: "Longer wavelength (redshift) means the galaxy is receding. This cosmic Doppler effect proved the universe is expanding—the foundation of Big Bang cosmology!"
     },
     {
       scenario: "A bat emits 40 kHz ultrasound while flying at 10 m/s toward a stationary insect. Sound speed is 340 m/s.",
       question: "The echo frequency the bat hears is approximately:",
-      options: ["40 kHz (unchanged)", "~41.2 kHz (slightly higher)", "~42.5 kHz (noticeably higher)", "~44 kHz (much higher)"],
-      correct: 2,
+      options: [
+        { text: "40 kHz (unchanged)", correct: false },
+        { text: "~41.2 kHz (slightly higher)", correct: false },
+        { text: "~42.5 kHz (noticeably higher)", correct: true },
+        { text: "~44 kHz (much higher)", correct: false }
+      ],
       explanation: "Double Doppler! Outgoing: f' = 40 × 340/(340-10) ≈ 41.2 kHz. Returning: f'' = 41.2 × (340+10)/340 ≈ 42.5 kHz. Bats use this to detect prey motion!"
     },
     {
       scenario: "Both you AND the ambulance are moving. You walk toward the ambulance at 2 m/s while it approaches at 30 m/s.",
       question: "Compared to standing still, the Doppler shift you experience is:",
-      options: ["Less—your motion cancels the ambulance's", "The same—observer motion doesn't matter", "Greater—both motions ADD to the shift", "Reversed—you hear a lower pitch"],
-      correct: 2,
+      options: [
+        { text: "Less—your motion cancels the ambulance's", correct: false },
+        { text: "The same—observer motion doesn't matter", correct: false },
+        { text: "Greater—both motions ADD to the shift", correct: true },
+        { text: "Reversed—you hear a lower pitch", correct: false }
+      ],
       explanation: "Both motions contribute! The full formula: f' = f × (v + v_obs)/(v - v_src). Walking toward + ambulance approaching = maximum frequency increase!"
     },
     {
       scenario: "A supersonic jet flies at Mach 2 (twice the speed of sound). The jet emits a continuous engine sound.",
       question: "What special phenomenon occurs for observers on the ground?",
-      options: ["They hear an extremely high-pitched whine", "They hear a very low rumble", "They hear a sonic boom (shock wave)", "They hear nothing until the jet passes"],
-      correct: 2,
+      options: [
+        { text: "They hear an extremely high-pitched whine", correct: false },
+        { text: "They hear a very low rumble", correct: false },
+        { text: "They hear a sonic boom (shock wave)", correct: true },
+        { text: "They hear nothing until the jet passes", correct: false }
+      ],
       explanation: "At supersonic speeds, the jet outruns its own sound waves! They pile up into a cone-shaped shock wave—the sonic boom. This is BEYOND normal Doppler physics!"
     },
     {
       scenario: "Doppler ultrasound is used to measure blood flow velocity in arteries.",
       question: "This technology relies on the Doppler effect from:",
-      options: ["Sound bouncing off artery walls", "Sound reflecting off moving red blood cells", "Sound passing through blood plasma", "Heartbeat vibrations in the chest"],
-      correct: 1,
+      options: [
+        { text: "Sound bouncing off artery walls", correct: false },
+        { text: "Sound reflecting off moving red blood cells", correct: true },
+        { text: "Sound passing through blood plasma", correct: false },
+        { text: "Heartbeat vibrations in the chest", correct: false }
+      ],
       explanation: "Red blood cells act as millions of tiny moving reflectors! The frequency shift reveals blood velocity—faster flow = larger shift. This detects blockages non-invasively!"
     },
     {
       scenario: "Weather radar shows a tornado with one side red (moving away) and the other green (approaching).",
       question: "This 'velocity couplet' signature indicates:",
-      options: ["A very large, slow-moving storm", "Strong rotation—air spinning in a vortex", "A very tall storm cloud", "Heavy precipitation"],
-      correct: 1,
+      options: [
+        { text: "A very large, slow-moving storm", correct: false },
+        { text: "Strong rotation—air spinning in a vortex", correct: true },
+        { text: "A very tall storm cloud", correct: false },
+        { text: "Heavy precipitation", correct: false }
+      ],
       explanation: "Doppler radar measures wind velocity! Opposite-direction motions side-by-side = rotation. This 'couplet' is how meteorologists detect tornadoes before they touch down!"
-    },
-    {
-      scenario: "You're designing a speed camera. You need to detect vehicles 20-200 km/h with 1 km/h accuracy.",
-      question: "Which factor is MOST critical for accurate Doppler speed measurement?",
-      options: ["Higher transmitter power", "Higher carrier frequency for better resolution", "Larger antenna size", "Closer measurement distance"],
-      correct: 1,
-      explanation: "Higher frequency = more Doppler shift per unit velocity! A 10 GHz radar gives 10× more shift than 1 GHz for the same speed. This enables precision measurement."
     },
     {
       scenario: "A fire truck is driving away from you at 25 m/s while sounding a 800 Hz siren. Speed of sound is 343 m/s.",
       question: "What frequency do you hear?",
-      options: ["~746 Hz", "~800 Hz", "~857 Hz", "~691 Hz"],
-      correct: 0,
+      options: [
+        { text: "~746 Hz", correct: true },
+        { text: "~800 Hz", correct: false },
+        { text: "~857 Hz", correct: false },
+        { text: "~691 Hz", correct: false }
+      ],
       explanation: "Using f' = f × v/(v + v_src) = 800 × 343/(343+25) = 800 × 343/368 ≈ 746 Hz. Receding source stretches wavelengths, decreasing frequency!"
     },
   ], []);
@@ -1612,7 +1645,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   // TEST PHASE
   if (phase === 8) {
     if (testSubmitted) {
-      const score = testAnswers.reduce((acc, ans, i) => acc + (ans === testQuestions[i].correct ? 1 : 0), 0);
+      const score = testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0);
       const percentage = Math.round((score / testQuestions.length) * 100);
       const passed = percentage >= 70;
 
@@ -1743,7 +1776,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
                     fontWeight: 600,
                     color: selected === i ? design.colors.textPrimary : design.colors.textSecondary,
                   }}>
-                    {opt}
+                    {opt.text}
                   </p>
                 </button>
               ))}
@@ -1768,7 +1801,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               if (testAnswers.every(a => a !== null)) {
                 setTestSubmitted(true);
                 emitEvent('test_answered', {
-                  score: testAnswers.reduce((acc, ans, i) => acc + (ans === testQuestions[i].correct ? 1 : 0), 0),
+                  score: testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0),
                   total: testQuestions.length
                 });
               }

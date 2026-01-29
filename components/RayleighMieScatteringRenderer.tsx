@@ -166,62 +166,102 @@ const applications = [
 const testQuestions = [
   {
     question: 'Why does the sky appear blue during the day?',
-    options: ['Blue light reflects off the ocean', 'Air molecules scatter blue light more than red', 'The ozone layer is blue', 'Blue light is absorbed by the atmosphere'],
-    correct: 1,
+    options: [
+      { text: 'Blue light reflects off the ocean', correct: false },
+      { text: 'Air molecules scatter blue light more than red', correct: true },
+      { text: 'The ozone layer is blue', correct: false },
+      { text: 'Blue light is absorbed by the atmosphere', correct: false }
+    ],
     explanation: 'Air molecules are much smaller than light wavelengths. Rayleigh scattering causes short wavelengths (blue) to scatter more than long wavelengths (red).',
   },
   {
     question: 'In Rayleigh scattering, how does scattering intensity relate to wavelength?',
-    options: ['Proportional to wavelength', 'Inversely proportional to wavelength', 'Proportional to wavelength⁴', 'Inversely proportional to wavelength⁴'],
-    correct: 3,
+    options: [
+      { text: 'Proportional to wavelength', correct: false },
+      { text: 'Inversely proportional to wavelength', correct: false },
+      { text: 'Proportional to wavelength⁴', correct: false },
+      { text: 'Inversely proportional to wavelength⁴', correct: true }
+    ],
     explanation: 'Rayleigh scattering intensity ∝ 1/λ⁴. This means blue light (450nm) scatters about 5.5× more than red light (650nm).',
   },
   {
     question: 'Why do clouds appear white instead of blue?',
-    options: ['Water is white', 'Cloud droplets are too large for Rayleigh scattering', 'Clouds are above the atmosphere', 'Ice crystals are white'],
-    correct: 1,
+    options: [
+      { text: 'Water is white', correct: false },
+      { text: 'Cloud droplets are too large for Rayleigh scattering', correct: true },
+      { text: 'Clouds are above the atmosphere', correct: false },
+      { text: 'Ice crystals are white', correct: false }
+    ],
     explanation: 'Cloud droplets (10-20μm) are much larger than light wavelengths. Mie scattering occurs, scattering all wavelengths equally → white appearance.',
   },
   {
     question: 'Why is the sunset red/orange?',
-    options: ['The sun changes color', 'Pollution makes it red', 'Light travels through more atmosphere, scattering away blue', 'Red light is emitted more at sunset'],
-    correct: 2,
+    options: [
+      { text: 'The sun changes color', correct: false },
+      { text: 'Pollution makes it red', correct: false },
+      { text: 'Light travels through more atmosphere, scattering away blue', correct: true },
+      { text: 'Red light is emitted more at sunset', correct: false }
+    ],
     explanation: 'At sunset, sunlight travels through ~40× more atmosphere. Blue light scatters away completely via Rayleigh scattering, leaving only red/orange.',
   },
   {
     question: 'Mie scattering primarily occurs when:',
-    options: ['Particles are much smaller than wavelength', 'Particles are comparable to or larger than wavelength', 'Temperature is very high', 'Humidity is above 90%'],
-    correct: 1,
+    options: [
+      { text: 'Particles are much smaller than wavelength', correct: false },
+      { text: 'Particles are comparable to or larger than wavelength', correct: true },
+      { text: 'Temperature is very high', correct: false },
+      { text: 'Humidity is above 90%', correct: false }
+    ],
     explanation: 'Mie scattering dominates when particle size is comparable to or larger than the light wavelength (roughly 0.1-10× the wavelength).',
   },
   {
     question: 'If you shine white light through dilute milk from the side, what color do you see?',
-    options: ['White', 'Yellow', 'Bluish', 'Red'],
-    correct: 2,
+    options: [
+      { text: 'White', correct: false },
+      { text: 'Yellow', correct: false },
+      { text: 'Bluish', correct: true },
+      { text: 'Red', correct: false }
+    ],
     explanation: 'Dilute milk has fewer fat droplets, so Rayleigh scattering from water molecules dominates. Blue light scatters more to the sides → bluish appearance.',
   },
   {
     question: 'The ocean appears blue primarily because:',
-    options: ['It reflects the sky', 'Water molecules scatter blue light and absorb red', 'Salt is blue', 'Algae are blue'],
-    correct: 1,
+    options: [
+      { text: 'It reflects the sky', correct: false },
+      { text: 'Water molecules scatter blue light and absorb red', correct: true },
+      { text: 'Salt is blue', correct: false },
+      { text: 'Algae are blue', correct: false }
+    ],
     explanation: 'Water molecules scatter blue light (Rayleigh) AND absorb red light preferentially. Both effects combine to make deep water appear blue.',
   },
   {
     question: 'Which would make a sunset more vivid?',
-    options: ['Cleaner air', 'Volcanic ash particles', 'Lower humidity', 'Colder temperature'],
-    correct: 1,
+    options: [
+      { text: 'Cleaner air', correct: false },
+      { text: 'Volcanic ash particles', correct: true },
+      { text: 'Lower humidity', correct: false },
+      { text: 'Colder temperature', correct: false }
+    ],
     explanation: 'Volcanic ash and pollution add particles that enhance Mie scattering, spreading reds and oranges more widely across the sky.',
   },
   {
     question: 'On Mars, the sky appears pink/butterscotch because:',
-    options: ['Mars has a blue sun', 'Iron-rich dust in the atmosphere', 'CO₂ is pink', 'No atmosphere exists'],
-    correct: 1,
+    options: [
+      { text: 'Mars has a blue sun', correct: false },
+      { text: 'Iron-rich dust in the atmosphere', correct: true },
+      { text: 'CO₂ is pink', correct: false },
+      { text: 'No atmosphere exists', correct: false }
+    ],
     explanation: 'Mars atmosphere contains iron-rich dust particles (~1μm). These are the right size for Mie scattering and absorb blue while scattering red.',
   },
   {
     question: 'Blue eyes have blue pigment. True or false, and why?',
-    options: ['True - melanin is blue', 'False - Rayleigh scattering of light in the iris', 'True - blood vessels appear blue', 'False - they reflect the sky'],
-    correct: 1,
+    options: [
+      { text: 'True - melanin is blue', correct: false },
+      { text: 'False - Rayleigh scattering of light in the iris', correct: true },
+      { text: 'True - blood vessels appear blue', correct: false },
+      { text: 'False - they reflect the sky', correct: false }
+    ],
     explanation: 'Blue eyes have NO blue pigment. The stroma contains colorless collagen fibers that Rayleigh scatter blue light, just like the sky!',
   },
 ];
@@ -1892,7 +1932,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
   // ============================================================================
   if (phase === 8) {
     const q = testQuestions[testIndex];
-    const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (ans === testQuestions[i].correct ? 1 : 0), 0);
+    const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0);
 
     if (testSubmitted) {
       const passed = totalCorrect >= 7;
@@ -1933,7 +1973,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
                   <div key={i} style={{
                     width: 8, height: 8, borderRadius: radius.full,
                     background: testAnswers[i] !== null
-                      ? (testAnswers[i] === testQuestions[i].correct ? colors.success : colors.error)
+                      ? (testQuestions[i].options[testAnswers[i] as number]?.correct ? colors.success : colors.error)
                       : i === testIndex ? colors.brand : colors.border,
                   }} />
                 ))}
@@ -1949,7 +1989,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
             <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md, marginBottom: spacing.xl }}>
               {q.options.map((opt, i) => {
                 const isSelected = testAnswers[testIndex] === i;
-                const isCorrect = i === q.correct;
+                const isCorrect = opt.correct;
                 const showResult = testAnswers[testIndex] !== null;
 
                 return (
@@ -1960,7 +2000,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
                         const newAnswers = [...testAnswers];
                         newAnswers[testIndex] = i;
                         setTestAnswers(newAnswers);
-                        emitEvent('test_answered', { questionIndex: testIndex, correct: i === q.correct });
+                        emitEvent('test_answered', { questionIndex: testIndex, correct: opt.correct });
                       }
                     }}
                     style={{
@@ -1986,7 +2026,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
                     }}>
                       {String.fromCharCode(65 + i)}
                     </span>
-                    {opt}
+                    {opt.text}
                   </button>
                 );
               })}

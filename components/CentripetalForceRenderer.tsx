@@ -163,19 +163,103 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
   }, [playSound]);
 
   const testQuestions = [
-    { question: "Centripetal force always points:", options: ["Tangent to the circle", "Outward from center", "Toward the center", "In direction of motion"], correct: 2 },
-    { question: "The formula for centripetal force is:", options: ["F = ma", "F = mv²/r", "F = mg", "F = kx"], correct: 1 },
-    { question: "If you double the speed on a curve, the required centripetal force:", options: ["Doubles", "Quadruples", "Halves", "Stays the same"], correct: 1 },
-    { question: "'Centrifugal force' is:", options: ["A real force pushing outward", "An apparent force in rotating frames", "Same as centripetal force", "A gravitational effect"], correct: 1 },
-    { question: "What provides centripetal force for a car on a flat road?", options: ["Engine power", "Air resistance", "Friction between tires and road", "Steering wheel"], correct: 2 },
-    { question: "A banked curve works by using:", options: ["Air lift", "A component of normal force", "Engine braking", "Magnetic rails"], correct: 1 },
-    { question: "If curve radius decreases at constant speed:", options: ["F_c decreases", "F_c increases", "F_c stays same", "Car stops"], correct: 1 },
-    { question: "In a centrifuge, objects move outward because:", options: ["Real outward force", "They continue straight while container curves", "Gravity pulls them", "Electric fields"], correct: 1 },
-    { question: "At top of roller coaster loop, centripetal force is from:", options: ["Friction only", "Normal force and gravity together", "Air resistance", "Motor"], correct: 1 },
-    { question: "Ideal banking angle depends on:", options: ["Only speed", "Only radius", "Both speed and radius", "Always 45°"], correct: 2 }
+    {
+      question: "Centripetal force always points:",
+      options: [
+        { text: "Tangent to the circle", correct: false },
+        { text: "Outward from center", correct: false },
+        { text: "Toward the center", correct: true },
+        { text: "In direction of motion", correct: false }
+      ]
+    },
+    {
+      question: "The formula for centripetal force is:",
+      options: [
+        { text: "F = ma", correct: false },
+        { text: "F = mv²/r", correct: true },
+        { text: "F = mg", correct: false },
+        { text: "F = kx", correct: false }
+      ]
+    },
+    {
+      question: "If you double the speed on a curve, the required centripetal force:",
+      options: [
+        { text: "Doubles", correct: false },
+        { text: "Quadruples", correct: true },
+        { text: "Halves", correct: false },
+        { text: "Stays the same", correct: false }
+      ]
+    },
+    {
+      question: "'Centrifugal force' is:",
+      options: [
+        { text: "A real force pushing outward", correct: false },
+        { text: "An apparent force in rotating frames", correct: true },
+        { text: "Same as centripetal force", correct: false },
+        { text: "A gravitational effect", correct: false }
+      ]
+    },
+    {
+      question: "What provides centripetal force for a car on a flat road?",
+      options: [
+        { text: "Engine power", correct: false },
+        { text: "Air resistance", correct: false },
+        { text: "Friction between tires and road", correct: true },
+        { text: "Steering wheel", correct: false }
+      ]
+    },
+    {
+      question: "A banked curve works by using:",
+      options: [
+        { text: "Air lift", correct: false },
+        { text: "A component of normal force", correct: true },
+        { text: "Engine braking", correct: false },
+        { text: "Magnetic rails", correct: false }
+      ]
+    },
+    {
+      question: "If curve radius decreases at constant speed:",
+      options: [
+        { text: "F_c decreases", correct: false },
+        { text: "F_c increases", correct: true },
+        { text: "F_c stays same", correct: false },
+        { text: "Car stops", correct: false }
+      ]
+    },
+    {
+      question: "In a centrifuge, objects move outward because:",
+      options: [
+        { text: "Real outward force", correct: false },
+        { text: "They continue straight while container curves", correct: true },
+        { text: "Gravity pulls them", correct: false },
+        { text: "Electric fields", correct: false }
+      ]
+    },
+    {
+      question: "At top of roller coaster loop, centripetal force is from:",
+      options: [
+        { text: "Friction only", correct: false },
+        { text: "Normal force and gravity together", correct: true },
+        { text: "Air resistance", correct: false },
+        { text: "Motor", correct: false }
+      ]
+    },
+    {
+      question: "Ideal banking angle depends on:",
+      options: [
+        { text: "Only speed", correct: false },
+        { text: "Only radius", correct: false },
+        { text: "Both speed and radius", correct: true },
+        { text: "Always 45°", correct: false }
+      ]
+    }
   ];
 
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer === testQuestions[index].correct ? 1 : 0), 0);
+  const calculateScore = (): number => {
+    return testAnswers.reduce((score, answer, index) => {
+      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
+    }, 0);
+  };
 
   const renderCircularMotion = (showVec: boolean, size: number = 280) => {
     const centerX = size / 2;
@@ -705,7 +789,7 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
                     onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>

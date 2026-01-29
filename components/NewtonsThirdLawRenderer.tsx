@@ -105,62 +105,102 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
   const [testQuestions] = useState([
     {
       question: "According to Newton's Third Law, when you push against a wall, what happens?",
-      options: ["Nothing, the wall doesn't move", "The wall pushes back on you with equal force", "The wall absorbs your force", "Your force disappears"],
-      correct: 1,
+      options: [
+        { text: "Nothing, the wall doesn't move", correct: false },
+        { text: "The wall pushes back on you with equal force", correct: true },
+        { text: "The wall absorbs your force", correct: false },
+        { text: "Your force disappears", correct: false }
+      ],
       explanation: "Newton's Third Law states that for every action, there's an equal and opposite reaction. When you push on the wall, it pushes back on you with equal force!"
     },
     {
       question: "Why does a balloon rocket move forward when air escapes backward?",
-      options: ["The air pushes on the ground", "The air resistance pulls it forward", "The escaping air pushes the balloon forward (reaction)", "Magic"],
-      correct: 2,
+      options: [
+        { text: "The air pushes on the ground", correct: false },
+        { text: "The air resistance pulls it forward", correct: false },
+        { text: "The escaping air pushes the balloon forward (reaction)", correct: true },
+        { text: "Magic", correct: false }
+      ],
       explanation: "The balloon pushes air out (action), and the air pushes the balloon forward (reaction). This is Newton's Third Law in action!"
     },
     {
       question: "If a larger balloon has more air, what happens compared to a smaller balloon?",
-      options: ["It goes slower", "It goes the same distance", "It can travel farther due to longer thrust", "Size doesn't matter"],
-      correct: 2,
+      options: [
+        { text: "It goes slower", correct: false },
+        { text: "It goes the same distance", correct: false },
+        { text: "It can travel farther due to longer thrust", correct: true },
+        { text: "Size doesn't matter", correct: false }
+      ],
       explanation: "More air means the balloon can push air out for a longer time, providing thrust for longer and thus traveling farther."
     },
     {
       question: "When you swim, you push water backward. What is the reaction force?",
-      options: ["The water disappears", "The water pushes you forward", "Gravity pulls you down", "Nothing happens"],
-      correct: 1,
+      options: [
+        { text: "The water disappears", correct: false },
+        { text: "The water pushes you forward", correct: true },
+        { text: "Gravity pulls you down", correct: false },
+        { text: "Nothing happens", correct: false }
+      ],
       explanation: "When you push water backward (action), the water pushes you forward (reaction). This is how you propel yourself through water!"
     },
     {
       question: "A gun recoils (kicks back) when fired because:",
-      options: ["The gun is afraid of the noise", "The bullet pushes the gun backward (reaction)", "Air pressure pushes the gun", "The explosion happens twice"],
-      correct: 1,
+      options: [
+        { text: "The gun is afraid of the noise", correct: false },
+        { text: "The bullet pushes the gun backward (reaction)", correct: true },
+        { text: "Air pressure pushes the gun", correct: false },
+        { text: "The explosion happens twice", correct: false }
+      ],
       explanation: "The gun pushes the bullet forward (action), and the bullet pushes the gun backward (reaction). The gun recoils due to Newton's Third Law."
     },
     {
       question: "Why do rockets work in the vacuum of space where there's nothing to push against?",
-      options: ["They can't work in space", "They push against their own exhaust gases", "Space isn't really a vacuum", "They use solar wind"],
-      correct: 1,
+      options: [
+        { text: "They can't work in space", correct: false },
+        { text: "They push against their own exhaust gases", correct: true },
+        { text: "Space isn't really a vacuum", correct: false },
+        { text: "They use solar wind", correct: false }
+      ],
       explanation: "Rockets push exhaust gases out (action), and those gases push the rocket forward (reaction). They don't need anything external to push against!"
     },
     {
       question: "If action and reaction forces are equal, why do objects move?",
-      options: ["They're not really equal", "The forces act on different objects", "One force is always stronger", "Movement is an illusion"],
-      correct: 1,
+      options: [
+        { text: "They're not really equal", correct: false },
+        { text: "The forces act on different objects", correct: true },
+        { text: "One force is always stronger", correct: false },
+        { text: "Movement is an illusion", correct: false }
+      ],
       explanation: "Action and reaction forces act on DIFFERENT objects. When you push a cart, you push on the cart (it accelerates) while the cart pushes on you (but you're more massive)."
     },
     {
       question: "When a bird flaps its wings downward, what is the reaction?",
-      options: ["The air pushes the bird up", "The bird gets tired", "Nothing, birds are too light", "Gravity increases"],
-      correct: 0,
+      options: [
+        { text: "The air pushes the bird up", correct: true },
+        { text: "The bird gets tired", correct: false },
+        { text: "Nothing, birds are too light", correct: false },
+        { text: "Gravity increases", correct: false }
+      ],
       explanation: "The bird pushes air downward (action), and the air pushes the bird upward (reaction). This is how birds generate lift with each wing stroke!"
     },
     {
       question: "A person standing on a skateboard throws a heavy ball forward. What happens?",
-      options: ["Nothing", "The person rolls backward", "The ball stops mid-air", "The skateboard breaks"],
-      correct: 1,
+      options: [
+        { text: "Nothing", correct: false },
+        { text: "The person rolls backward", correct: true },
+        { text: "The ball stops mid-air", correct: false },
+        { text: "The skateboard breaks", correct: false }
+      ],
       explanation: "When the person pushes the ball forward (action), the ball pushes the person backward (reaction), causing them to roll backward on the skateboard."
     },
     {
       question: "If you're floating in space and throw your tool kit away from you, what happens?",
-      options: ["You stay still", "You move in the opposite direction", "You start spinning randomly", "The tool kit comes back"],
-      correct: 1,
+      options: [
+        { text: "You stay still", correct: false },
+        { text: "You move in the opposite direction", correct: true },
+        { text: "You start spinning randomly", correct: false },
+        { text: "The tool kit comes back", correct: false }
+      ],
       explanation: "When you push the tool kit away (action), it pushes you in the opposite direction (reaction). This is how astronauts can move in the weightlessness of space!"
     }
   ]);
@@ -973,7 +1013,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
           <div className="grid gap-3">
             {question.options.map((option, index) => {
               const isSelected = selectedAnswer === index;
-              const isCorrect = index === question.correct;
+              const isCorrect = option.correct;
               const showResult = showExplanation;
 
               let className = 'p-4 rounded-xl text-left transition-all border-2 ';
@@ -997,7 +1037,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
                   onMouseDown={(e) => { e.preventDefault(); if (!showExplanation) setSelectedAnswer(index); }}
                   className={className}
                 >
-                  <span className="text-slate-200">{option}</span>
+                  <span className="text-slate-200">{option.text}</span>
                   {showResult && isCorrect && <span className="ml-2">✓</span>}
                   {showResult && isSelected && !isCorrect && <span className="ml-2">✗</span>}
                 </button>
@@ -1006,9 +1046,9 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
           </div>
 
           {showExplanation && (
-            <div className={`mt-6 p-4 rounded-xl ${selectedAnswer === question.correct ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
-              <p className={`font-semibold mb-2 ${selectedAnswer === question.correct ? 'text-emerald-400' : 'text-red-400'}`}>
-                {selectedAnswer === question.correct ? '✓ Correct!' : '✗ Not quite'}
+            <div className={`mt-6 p-4 rounded-xl ${testQuestions[currentQuestion].options[selectedAnswer!]?.correct ? 'bg-emerald-500/10 border border-emerald-500/30' : 'bg-red-500/10 border border-red-500/30'}`}>
+              <p className={`font-semibold mb-2 ${testQuestions[currentQuestion].options[selectedAnswer!]?.correct ? 'text-emerald-400' : 'text-red-400'}`}>
+                {testQuestions[currentQuestion].options[selectedAnswer!]?.correct ? '✓ Correct!' : '✗ Not quite'}
               </p>
               <p className="text-slate-300">{question.explanation}</p>
             </div>
@@ -1027,7 +1067,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
                 setTestComplete(true);
               }
             } else {
-              if (selectedAnswer === question.correct) {
+              if (testQuestions[currentQuestion].options[selectedAnswer!]?.correct) {
                 setTestScore(s => s + 1);
               }
               setShowExplanation(true);

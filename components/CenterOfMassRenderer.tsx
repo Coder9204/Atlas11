@@ -191,16 +191,66 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
 
   // Test questions
   const questions = [
-    { q: "Why does the fork-toothpick system balance on the glass rim?", opts: ["The fork is very light", "Center of mass is below the pivot point", "Friction holds it in place", "The glass surface is sticky"], correct: 1, exp: "The system balances because its center of mass lies below the pivot point, creating stable equilibrium." },
-    { q: "What happens if you move the center of mass above the pivot?", opts: ["More stable", "Unstable - falls", "No change", "Floats"], correct: 1, exp: "When COM is above the pivot, any disturbance causes gravity to tip it further. It falls." },
-    { q: "Adding clay to the fork end (lower side) would:", opts: ["Make it more stable", "Make it less stable", "Have no effect", "Make it lighter"], correct: 0, exp: "Adding weight to the fork end shifts the COM lower, making the system more stable." },
-    { q: "A tightrope walker holds a long pole because:", opts: ["For exercise", "To lower their overall center of mass", "To wave at the crowd", "No purpose"], correct: 1, exp: "The heavy pole bends downward, lowering the walker's COM below the rope." },
-    { q: "Where is the center of mass of a donut shape?", opts: ["In the dough", "In the empty hole at center", "Nowhere specific", "At the outer edge"], correct: 1, exp: "A donut's center of mass is in the hole—the geometric center—even with no material there!" },
-    { q: "To balance a ruler on your finger, place it:", opts: ["At one end", "At its center of mass", "Anywhere", "At both ends"], correct: 1, exp: "You must place your finger under the center of mass." },
-    { q: "Why do racing cars have low centers of mass?", opts: ["To go faster straight", "To be more stable in turns", "For aerodynamics only", "To use less fuel"], correct: 1, exp: "A low COM means the car is less likely to tip during sharp turns." },
-    { q: "A bird perches on a branch by:", opts: ["Gripping with claws only", "Keeping its COM over the branch", "Birds can't balance well", "The branch helps"], correct: 1, exp: "Birds constantly adjust to keep their COM directly over the branch." },
-    { q: "Leaning too far forward makes you fall because:", opts: ["Weak legs", "COM moves outside base of support", "Gravity increases", "Wind pushes you"], correct: 1, exp: "When COM moves outside your feet, gravity creates unbalanced torque." },
-    { q: "A Weeble toy always rights itself because:", opts: ["Magnets", "Its center of mass is very low", "Filled with water", "Perfectly round"], correct: 1, exp: "Weebles have a heavy bottom keeping the COM very low." }
+    { q: "Why does the fork-toothpick system balance on the glass rim?", opts: [
+      { text: "The fork is very light", correct: false },
+      { text: "Center of mass is below the pivot point", correct: true },
+      { text: "Friction holds it in place", correct: false },
+      { text: "The glass surface is sticky", correct: false }
+    ], exp: "The system balances because its center of mass lies below the pivot point, creating stable equilibrium." },
+    { q: "What happens if you move the center of mass above the pivot?", opts: [
+      { text: "More stable", correct: false },
+      { text: "Unstable - falls", correct: true },
+      { text: "No change", correct: false },
+      { text: "Floats", correct: false }
+    ], exp: "When COM is above the pivot, any disturbance causes gravity to tip it further. It falls." },
+    { q: "Adding clay to the fork end (lower side) would:", opts: [
+      { text: "Make it more stable", correct: true },
+      { text: "Make it less stable", correct: false },
+      { text: "Have no effect", correct: false },
+      { text: "Make it lighter", correct: false }
+    ], exp: "Adding weight to the fork end shifts the COM lower, making the system more stable." },
+    { q: "A tightrope walker holds a long pole because:", opts: [
+      { text: "For exercise", correct: false },
+      { text: "To lower their overall center of mass", correct: true },
+      { text: "To wave at the crowd", correct: false },
+      { text: "No purpose", correct: false }
+    ], exp: "The heavy pole bends downward, lowering the walker's COM below the rope." },
+    { q: "Where is the center of mass of a donut shape?", opts: [
+      { text: "In the dough", correct: false },
+      { text: "In the empty hole at center", correct: true },
+      { text: "Nowhere specific", correct: false },
+      { text: "At the outer edge", correct: false }
+    ], exp: "A donut's center of mass is in the hole—the geometric center—even with no material there!" },
+    { q: "To balance a ruler on your finger, place it:", opts: [
+      { text: "At one end", correct: false },
+      { text: "At its center of mass", correct: true },
+      { text: "Anywhere", correct: false },
+      { text: "At both ends", correct: false }
+    ], exp: "You must place your finger under the center of mass." },
+    { q: "Why do racing cars have low centers of mass?", opts: [
+      { text: "To go faster straight", correct: false },
+      { text: "To be more stable in turns", correct: true },
+      { text: "For aerodynamics only", correct: false },
+      { text: "To use less fuel", correct: false }
+    ], exp: "A low COM means the car is less likely to tip during sharp turns." },
+    { q: "A bird perches on a branch by:", opts: [
+      { text: "Gripping with claws only", correct: false },
+      { text: "Keeping its COM over the branch", correct: true },
+      { text: "Birds can't balance well", correct: false },
+      { text: "The branch helps", correct: false }
+    ], exp: "Birds constantly adjust to keep their COM directly over the branch." },
+    { q: "Leaning too far forward makes you fall because:", opts: [
+      { text: "Weak legs", correct: false },
+      { text: "COM moves outside base of support", correct: true },
+      { text: "Gravity increases", correct: false },
+      { text: "Wind pushes you", correct: false }
+    ], exp: "When COM moves outside your feet, gravity creates unbalanced torque." },
+    { q: "A Weeble toy always rights itself because:", opts: [
+      { text: "Magnets", correct: false },
+      { text: "Its center of mass is very low", correct: true },
+      { text: "Filled with water", correct: false },
+      { text: "Perfectly round", correct: false }
+    ], exp: "Weebles have a heavy bottom keeping the COM very low." }
   ];
 
   // Applications
@@ -249,7 +299,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
     newAnswers[currentQuestion] = idx;
     setTestAnswers(newAnswers);
     setShowExplanation(true);
-    if (idx === questions[currentQuestion].correct) {
+    if (questions[currentQuestion].opts[idx]?.correct) {
       setTestScore(s => s + 1);
       playSound('success');
     } else {
@@ -1012,7 +1062,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
               let bg = colors.bgElevated;
               let border = 'transparent';
               if (answered) {
-                if (i === q.correct) { bg = colors.successBg; border = colors.success; }
+                if (opt.correct) { bg = colors.successBg; border = colors.success; }
                 else if (i === testAnswers[currentQuestion]) { bg = colors.errorBg; border = colors.error; }
               }
               return (
@@ -1029,7 +1079,7 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
                   }}
                 >
                   <span style={{ fontWeight: 600, marginRight: '10px', color: colors.textMuted }}>{String.fromCharCode(65 + i)}.</span>
-                  {opt}
+                  {opt.text}
                 </button>
               );
             })}

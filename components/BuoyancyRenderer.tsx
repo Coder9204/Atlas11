@@ -107,62 +107,102 @@ const applications = [
 const testQuestions = [
   {
     question: 'A 5 kg object displaces 3 liters of water when fully submerged. What is the buoyant force? (g = 10 m/s²)',
-    options: ['50 N', '30 N', '20 N', '15 N'],
-    correct: 1,
+    options: [
+      { text: '50 N', correct: false },
+      { text: '30 N', correct: true },
+      { text: '20 N', correct: false },
+      { text: '15 N', correct: false },
+    ],
     explanation: 'F_b = ρ_water × V × g = 1000 × 0.003 × 10 = 30 N',
   },
   {
     question: 'An object floats with 40% of its volume above water. What is its density relative to water?',
-    options: ['0.4', '0.6', '1.0', '1.4'],
-    correct: 1,
+    options: [
+      { text: '0.4', correct: false },
+      { text: '0.6', correct: true },
+      { text: '1.0', correct: false },
+      { text: '1.4', correct: false },
+    ],
     explanation: 'If 40% above, 60% below. At equilibrium, ρ_object/ρ_water = fraction submerged = 0.6',
   },
   {
     question: 'A steel ship floats but a steel ball sinks. Why?',
-    options: ['Ship steel is lighter', 'Ship shape displaces more water', 'Water pressure is different', 'Ships have special coatings'],
-    correct: 1,
+    options: [
+      { text: 'Ship steel is lighter', correct: false },
+      { text: 'Ship shape displaces more water', correct: true },
+      { text: 'Water pressure is different', correct: false },
+      { text: 'Ships have special coatings', correct: false },
+    ],
     explanation: 'The hollow ship shape displaces much more water than a ball of the same mass, creating greater buoyant force.',
   },
   {
     question: 'What happens to a floating object if you move it from fresh water (ρ=1.0) to salt water (ρ=1.025)?',
-    options: ['Sinks lower', 'Floats higher', 'No change', 'Depends on object density'],
-    correct: 1,
+    options: [
+      { text: 'Sinks lower', correct: false },
+      { text: 'Floats higher', correct: true },
+      { text: 'No change', correct: false },
+      { text: 'Depends on object density', correct: false },
+    ],
     explanation: 'Denser water provides more buoyant force per volume displaced, so less volume needs to be submerged.',
   },
   {
     question: 'A submarine wants to dive deeper. It should:',
-    options: ['Pump air into ballast tanks', 'Pump water into ballast tanks', 'Heat the hull', 'Spin its propeller faster'],
-    correct: 1,
+    options: [
+      { text: 'Pump air into ballast tanks', correct: false },
+      { text: 'Pump water into ballast tanks', correct: true },
+      { text: 'Heat the hull', correct: false },
+      { text: 'Spin its propeller faster', correct: false },
+    ],
     explanation: 'Adding water increases weight without changing volume, making weight > buoyant force, so it sinks.',
   },
   {
     question: 'A 60 kg person feels they weigh only 6 kg in a swimming pool. The buoyant force is:',
-    options: ['60 N', '540 N', '600 N', '6 N'],
-    correct: 1,
+    options: [
+      { text: '60 N', correct: false },
+      { text: '540 N', correct: true },
+      { text: '600 N', correct: false },
+      { text: '6 N', correct: false },
+    ],
     explanation: 'Apparent weight = True weight - Buoyant force. 60 - 540 = 6 N apparent, so F_b = 540 N.',
   },
   {
     question: 'Two objects have the same mass. Object A floats, Object B sinks. Which has greater volume?',
-    options: ['Object A', 'Object B', 'They have equal volume', 'Cannot determine'],
-    correct: 0,
+    options: [
+      { text: 'Object A', correct: true },
+      { text: 'Object B', correct: false },
+      { text: 'They have equal volume', correct: false },
+      { text: 'Cannot determine', correct: false },
+    ],
     explanation: 'Same mass but A floats means A has lower density, therefore greater volume (ρ = m/V).',
   },
   {
     question: 'A hot air balloon rises because:',
-    options: ['Hot air is lighter than cold air', 'Heat creates upward convection', 'Fire produces lift gas', 'Thermal radiation pushes up'],
-    correct: 0,
+    options: [
+      { text: 'Hot air is lighter than cold air', correct: true },
+      { text: 'Heat creates upward convection', correct: false },
+      { text: 'Fire produces lift gas', correct: false },
+      { text: 'Thermal radiation pushes up', correct: false },
+    ],
     explanation: 'Hot air has lower density than surrounding cold air, creating buoyancy in the atmosphere.',
   },
   {
     question: 'An ice cube floats with 90% of its volume underwater. When it melts, the water level:',
-    options: ['Rises', 'Falls', 'Stays exactly the same', 'Depends on temperature'],
-    correct: 2,
+    options: [
+      { text: 'Rises', correct: false },
+      { text: 'Falls', correct: false },
+      { text: 'Stays exactly the same', correct: true },
+      { text: 'Depends on temperature', correct: false },
+    ],
     explanation: 'The melted ice takes exactly the same volume as the water it was displacing while floating.',
   },
   {
     question: 'Archimedes\' principle states that buoyant force equals:',
-    options: ['Weight of submerged object', 'Weight of displaced fluid', 'Volume of object × density of object', 'Pressure × surface area'],
-    correct: 1,
+    options: [
+      { text: 'Weight of submerged object', correct: false },
+      { text: 'Weight of displaced fluid', correct: true },
+      { text: 'Volume of object × density of object', correct: false },
+      { text: 'Pressure × surface area', correct: false },
+    ],
     explanation: 'Buoyant force = weight of the fluid displaced by the submerged part of the object.',
   },
 ];
@@ -1182,7 +1222,7 @@ export default function BuoyancyRenderer({ onComplete, onGameEvent, currentPhase
 
   const renderTest = () => {
     const q = testQuestions[testIndex];
-    const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (ans === testQuestions[i].correct ? 1 : 0), 0);
+    const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (ans !== null && testQuestions[i].options[ans]?.correct ? 1 : 0), 0);
 
     if (testSubmitted) {
       const passed = totalCorrect >= 7;
@@ -1228,7 +1268,7 @@ export default function BuoyancyRenderer({ onComplete, onGameEvent, currentPhase
                   key={i}
                   className={`w-2 h-2 rounded-full ${
                     testAnswers[i] !== null
-                      ? testAnswers[i] === testQuestions[i].correct ? 'bg-emerald-500' : 'bg-red-500'
+                      ? testQuestions[i].options[testAnswers[i] as number]?.correct ? 'bg-emerald-500' : 'bg-red-500'
                       : i === testIndex ? 'bg-cyan-500' : 'bg-slate-700'
                   }`}
                 />
@@ -1245,7 +1285,7 @@ export default function BuoyancyRenderer({ onComplete, onGameEvent, currentPhase
           <div className="flex flex-col gap-3 mb-6">
             {q.options.map((opt, i) => {
               const isSelected = testAnswers[testIndex] === i;
-              const isCorrect = i === q.correct;
+              const isCorrect = opt.correct;
               const showResult = testAnswers[testIndex] !== null;
 
               return (
@@ -1256,7 +1296,7 @@ export default function BuoyancyRenderer({ onComplete, onGameEvent, currentPhase
                       const newAnswers = [...testAnswers];
                       newAnswers[testIndex] = i;
                       setTestAnswers(newAnswers);
-                      emitEvent('test_answered', { questionIndex: testIndex, correct: i === q.correct });
+                      emitEvent('test_answered', { questionIndex: testIndex, correct: opt.correct });
                     }
                   }}
                   className={`p-4 rounded-xl text-left transition-all border-2 ${
@@ -1278,7 +1318,7 @@ export default function BuoyancyRenderer({ onComplete, onGameEvent, currentPhase
                   }`}>
                     {String.fromCharCode(65 + i)}
                   </span>
-                  <span className="text-white">{opt}</span>
+                  <span className="text-white">{opt.text}</span>
                 </button>
               );
             })}

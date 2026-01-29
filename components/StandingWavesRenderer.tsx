@@ -148,16 +148,16 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
   // Test questions
   const questions = [
-    { question: "A rope fixed at both ends is shaken. When do stable standing wave patterns form?", options: ["Any frequency", "Only resonant frequencies fitting whole half-wavelengths", "Only low frequencies", "Only high frequencies"], correct: 1, explanation: "Standing waves form only at resonant frequencies where whole numbers of half-wavelengths fit between the fixed ends." },
-    { question: "If the fundamental frequency is 100 Hz, what is the 3rd harmonic?", options: ["150 Hz", "200 Hz", "300 Hz", "400 Hz"], correct: 2, explanation: "Harmonics are integer multiples of the fundamental: 3rd harmonic = 3 x 100 Hz = 300 Hz." },
-    { question: "How does increasing rope tension affect wave speed?", options: ["No effect", "Increases speed", "Decreases speed", "Depends on frequency"], correct: 1, explanation: "Wave speed v = sqrt(T/u). Higher tension = faster waves = higher resonant frequencies." },
-    { question: "At a node in a standing wave, what do you observe?", options: ["Maximum motion", "Zero motion", "Half maximum", "Random motion"], correct: 1, explanation: "Nodes are points of destructive interference where the string stays stationary." },
-    { question: "A string's 2nd harmonic is 330 Hz. What's the fundamental frequency?", options: ["110 Hz", "165 Hz", "220 Hz", "660 Hz"], correct: 1, explanation: "Fundamental = 2nd harmonic / 2 = 330 / 2 = 165 Hz." },
-    { question: "What creates a standing wave on a fixed rope?", options: ["Two separate wave sources", "A wave interfering with its reflection", "Air resonance", "Natural vibration"], correct: 1, explanation: "Standing waves form when a traveling wave reflects off a fixed end and interferes with itself." },
-    { question: "To raise a string's pitch without changing its length, you should:", options: ["Loosen the string", "Tighten the string", "Use a thicker string", "It's impossible"], correct: 1, explanation: "Increasing tension increases wave speed and therefore frequency (pitch)." },
-    { question: "A standing wave has 4 nodes (including both ends). Which harmonic is this?", options: ["2nd harmonic", "3rd harmonic", "4th harmonic", "5th harmonic"], correct: 1, explanation: "The nth harmonic has (n+1) nodes including the endpoints. 4 nodes means n = 3 (3rd harmonic)." },
-    { question: "Why do different instruments playing the same note sound different?", options: ["Different volumes", "Different harmonic mixtures (timbre)", "Different wave speeds", "Room acoustics only"], correct: 1, explanation: "Timbre comes from unique combinations of harmonics each instrument produces." },
-    { question: "If you double the frequency while keeping wave speed constant, wavelength:", options: ["Doubles", "Halves", "Stays the same", "Quadruples"], correct: 1, explanation: "From v = f*lambda, if v is constant and f doubles, lambda must halve." }
+    { question: "A rope fixed at both ends is shaken. When do stable standing wave patterns form?", options: [{ text: "Any frequency", correct: false }, { text: "Only resonant frequencies fitting whole half-wavelengths", correct: true }, { text: "Only low frequencies", correct: false }, { text: "Only high frequencies", correct: false }], explanation: "Standing waves form only at resonant frequencies where whole numbers of half-wavelengths fit between the fixed ends." },
+    { question: "If the fundamental frequency is 100 Hz, what is the 3rd harmonic?", options: [{ text: "150 Hz", correct: false }, { text: "200 Hz", correct: false }, { text: "300 Hz", correct: true }, { text: "400 Hz", correct: false }], explanation: "Harmonics are integer multiples of the fundamental: 3rd harmonic = 3 x 100 Hz = 300 Hz." },
+    { question: "How does increasing rope tension affect wave speed?", options: [{ text: "No effect", correct: false }, { text: "Increases speed", correct: true }, { text: "Decreases speed", correct: false }, { text: "Depends on frequency", correct: false }], explanation: "Wave speed v = sqrt(T/u). Higher tension = faster waves = higher resonant frequencies." },
+    { question: "At a node in a standing wave, what do you observe?", options: [{ text: "Maximum motion", correct: false }, { text: "Zero motion", correct: true }, { text: "Half maximum", correct: false }, { text: "Random motion", correct: false }], explanation: "Nodes are points of destructive interference where the string stays stationary." },
+    { question: "A string's 2nd harmonic is 330 Hz. What's the fundamental frequency?", options: [{ text: "110 Hz", correct: false }, { text: "165 Hz", correct: true }, { text: "220 Hz", correct: false }, { text: "660 Hz", correct: false }], explanation: "Fundamental = 2nd harmonic / 2 = 330 / 2 = 165 Hz." },
+    { question: "What creates a standing wave on a fixed rope?", options: [{ text: "Two separate wave sources", correct: false }, { text: "A wave interfering with its reflection", correct: true }, { text: "Air resonance", correct: false }, { text: "Natural vibration", correct: false }], explanation: "Standing waves form when a traveling wave reflects off a fixed end and interferes with itself." },
+    { question: "To raise a string's pitch without changing its length, you should:", options: [{ text: "Loosen the string", correct: false }, { text: "Tighten the string", correct: true }, { text: "Use a thicker string", correct: false }, { text: "It's impossible", correct: false }], explanation: "Increasing tension increases wave speed and therefore frequency (pitch)." },
+    { question: "A standing wave has 4 nodes (including both ends). Which harmonic is this?", options: [{ text: "2nd harmonic", correct: false }, { text: "3rd harmonic", correct: true }, { text: "4th harmonic", correct: false }, { text: "5th harmonic", correct: false }], explanation: "The nth harmonic has (n+1) nodes including the endpoints. 4 nodes means n = 3 (3rd harmonic)." },
+    { question: "Why do different instruments playing the same note sound different?", options: [{ text: "Different volumes", correct: false }, { text: "Different harmonic mixtures (timbre)", correct: true }, { text: "Different wave speeds", correct: false }, { text: "Room acoustics only", correct: false }], explanation: "Timbre comes from unique combinations of harmonics each instrument produces." },
+    { question: "If you double the frequency while keeping wave speed constant, wavelength:", options: [{ text: "Doubles", correct: false }, { text: "Halves", correct: true }, { text: "Stays the same", correct: false }, { text: "Quadruples", correct: false }], explanation: "From v = f*lambda, if v is constant and f doubles, lambda must halve." }
   ];
 
   // Real-world applications
@@ -514,7 +514,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
   };
 
   // Calculate score
-  const score = answers.filter((a, i) => a === questions[i].correct).length;
+  const score = answers.filter((a, i) => a !== null && questions[i].options[a]?.correct).length;
 
   // ==================== PHASE RENDERS ====================
 
@@ -1074,7 +1074,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
               <div className="flex gap-1.5">
                 {answers.slice(0, 10).map((a, i) => (
                   <div key={i} className={`w-2.5 h-2.5 rounded-full ${
-                    a !== null ? (a === questions[i].correct ? 'bg-emerald-500' : 'bg-red-500') :
+                    a !== null ? (questions[i].options[a]?.correct ? 'bg-emerald-500' : 'bg-red-500') :
                     i === testIndex ? 'bg-amber-400' : 'bg-slate-700'
                   }`} />
                 ))}
@@ -1090,7 +1090,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
             <div className="flex flex-col gap-3 mb-6">
               {q.options.map((opt, i) => {
                 const isSelected = answers[testIndex] === i;
-                const isCorrect = i === q.correct;
+                const isCorrect = opt.correct;
                 const showFeedback = answered;
 
                 return (
@@ -1102,7 +1102,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                         const newAnswers = [...answers];
                         newAnswers[testIndex] = i;
                         setAnswers(newAnswers);
-                        emitEvent('test_answered', { questionIndex: testIndex, correct: i === q.correct });
+                        emitEvent('test_answered', { questionIndex: testIndex, correct: opt.correct });
                       }
                     }}
                     disabled={answered}
@@ -1118,7 +1118,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                           : 'border-slate-700 bg-slate-800/50'
                     } ${answered ? 'cursor-default' : 'cursor-pointer hover:border-slate-600'}`}
                   >
-                    <span className="text-white">{opt}</span>
+                    <span className="text-white">{opt.text}</span>
                   </button>
                 );
               })}
@@ -1127,13 +1127,13 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
             {/* Explanation */}
             {answered && (
               <div className={`p-5 rounded-xl border ${
-                answers[testIndex] === q.correct
+                q.options[answers[testIndex] as number]?.correct
                   ? 'bg-emerald-500/10 border-emerald-500/30'
                   : 'bg-red-500/10 border-red-500/30'
               }`}>
                 <p className="text-white">
-                  <strong className={answers[testIndex] === q.correct ? 'text-emerald-400' : 'text-red-400'}>
-                    {answers[testIndex] === q.correct ? '✓ Correct!' : '✗ Not quite.'}
+                  <strong className={q.options[answers[testIndex] as number]?.correct ? 'text-emerald-400' : 'text-red-400'}>
+                    {q.options[answers[testIndex] as number]?.correct ? '✓ Correct!' : '✗ Not quite.'}
                   </strong>{' '}
                   {q.explanation}
                 </p>

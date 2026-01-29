@@ -223,16 +223,106 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
 
    // Test questions - 10 comprehensive questions
    const testQuestions = [
-      { q: 'Which seismic wave arrives first at a monitoring station?', opts: ['S-wave (Secondary)', 'P-wave (Primary)', 'Surface wave', 'Both arrive together'], correct: 1, explain: 'P-waves (Primary waves) travel about 1.7x faster than S-waves through rock, so they always arrive first—hence the name "Primary."' },
-      { q: 'How did scientists discover Earth\'s outer core is liquid?', opts: ['Temperature measurements', 'S-wave shadow zone', 'Drilling experiments', 'Satellite imagery'], correct: 1, explain: 'S-waves cannot travel through liquids. Scientists found that S-waves disappear on the opposite side of Earth after an earthquake, creating a "shadow zone" that proves the outer core is liquid.' },
-      { q: 'How do particles move in a P-wave?', opts: ['Perpendicular to wave direction', 'Parallel to wave direction (compression)', 'In circular orbits', 'They don\'t move'], correct: 1, explain: 'P-waves are compression waves—particles push and pull back and forth parallel to the direction the wave travels, like a slinky being pushed from one end.' },
-      { q: 'Why can\'t S-waves travel through liquids?', opts: ['Liquids are too dense', 'Liquids move too fast', 'Liquids cannot support shear stress', 'S-waves are always slower'], correct: 2, explain: 'S-waves require the material to "spring back" when displaced sideways (shear). Liquids flow instead of springing back—there\'s no restoring force to propagate the wave.' },
-      { q: 'In an earthquake, what causes the first sharp jolt you feel?', opts: ['S-wave arrival', 'P-wave arrival', 'Surface wave', 'Aftershock'], correct: 1, explain: 'The faster P-wave arrives first as a sharp, quick jolt. The more damaging S-wave arrives seconds later with stronger shaking.' },
-      { q: 'Medical ultrasound uses which type of wave principle?', opts: ['S-waves (shear)', 'P-waves (compression)', 'Surface waves', 'Electromagnetic waves'], correct: 1, explain: 'Ultrasound uses compression waves (same principle as P-waves) because they can travel through fluids like blood and amniotic fluid.' },
-      { q: 'How do oil companies use P and S waves together?', opts: ['Only P-waves are used', 'S-waves reflect differently off fluid reservoirs', 'For legal compliance', 'They cannot be used together'], correct: 1, explain: 'S-waves are blocked by fluid-filled reservoirs while P-waves pass through. This difference helps locate underground oil and gas deposits.' },
-      { q: 'If you wanted to detect a liquid layer inside another planet, what would you look for?', opts: ['Higher temperatures', 'S-wave shadow zone', 'Magnetic field changes', 'Visual light reflection'], correct: 1, explain: 'Just like on Earth, an S-wave shadow zone would indicate liquid layers—this is how planetary scientists study the interiors of planets and moons.' },
-      { q: 'What happens when P-waves enter the liquid outer core?', opts: ['They stop completely', 'They speed up dramatically', 'They slow down and bend', 'They convert to S-waves'], correct: 2, explain: 'P-waves slow down in liquid (from ~14 km/s to ~8 km/s) and bend (refract) at the boundary. This creates a P-wave shadow zone between 104° and 140° from the epicenter.' },
-      { q: 'Why do buildings often shake more during S-wave passage than P-wave?', opts: ['S-waves are always larger', 'S-wave shear motion causes more horizontal movement', 'P-waves are absorbed by ground', 'S-waves last longer'], correct: 1, explain: 'S-waves cause side-to-side (shear) motion which is more damaging to buildings than the back-and-forth compression of P-waves. Buildings are better at resisting vertical loads than horizontal shaking.' }
+      {
+         question: 'Which seismic wave arrives first at a monitoring station?',
+         options: [
+            { text: 'S-wave (Secondary)', correct: false },
+            { text: 'P-wave (Primary)', correct: true },
+            { text: 'Surface wave', correct: false },
+            { text: 'Both arrive together', correct: false }
+         ],
+         explanation: 'P-waves (Primary waves) travel about 1.7x faster than S-waves through rock, so they always arrive first—hence the name "Primary."'
+      },
+      {
+         question: 'How did scientists discover Earth\'s outer core is liquid?',
+         options: [
+            { text: 'Temperature measurements', correct: false },
+            { text: 'S-wave shadow zone', correct: true },
+            { text: 'Drilling experiments', correct: false },
+            { text: 'Satellite imagery', correct: false }
+         ],
+         explanation: 'S-waves cannot travel through liquids. Scientists found that S-waves disappear on the opposite side of Earth after an earthquake, creating a "shadow zone" that proves the outer core is liquid.'
+      },
+      {
+         question: 'How do particles move in a P-wave?',
+         options: [
+            { text: 'Perpendicular to wave direction', correct: false },
+            { text: 'Parallel to wave direction (compression)', correct: true },
+            { text: 'In circular orbits', correct: false },
+            { text: 'They don\'t move', correct: false }
+         ],
+         explanation: 'P-waves are compression waves—particles push and pull back and forth parallel to the direction the wave travels, like a slinky being pushed from one end.'
+      },
+      {
+         question: 'Why can\'t S-waves travel through liquids?',
+         options: [
+            { text: 'Liquids are too dense', correct: false },
+            { text: 'Liquids move too fast', correct: false },
+            { text: 'Liquids cannot support shear stress', correct: true },
+            { text: 'S-waves are always slower', correct: false }
+         ],
+         explanation: 'S-waves require the material to "spring back" when displaced sideways (shear). Liquids flow instead of springing back—there\'s no restoring force to propagate the wave.'
+      },
+      {
+         question: 'In an earthquake, what causes the first sharp jolt you feel?',
+         options: [
+            { text: 'S-wave arrival', correct: false },
+            { text: 'P-wave arrival', correct: true },
+            { text: 'Surface wave', correct: false },
+            { text: 'Aftershock', correct: false }
+         ],
+         explanation: 'The faster P-wave arrives first as a sharp, quick jolt. The more damaging S-wave arrives seconds later with stronger shaking.'
+      },
+      {
+         question: 'Medical ultrasound uses which type of wave principle?',
+         options: [
+            { text: 'S-waves (shear)', correct: false },
+            { text: 'P-waves (compression)', correct: true },
+            { text: 'Surface waves', correct: false },
+            { text: 'Electromagnetic waves', correct: false }
+         ],
+         explanation: 'Ultrasound uses compression waves (same principle as P-waves) because they can travel through fluids like blood and amniotic fluid.'
+      },
+      {
+         question: 'How do oil companies use P and S waves together?',
+         options: [
+            { text: 'Only P-waves are used', correct: false },
+            { text: 'S-waves reflect differently off fluid reservoirs', correct: true },
+            { text: 'For legal compliance', correct: false },
+            { text: 'They cannot be used together', correct: false }
+         ],
+         explanation: 'S-waves are blocked by fluid-filled reservoirs while P-waves pass through. This difference helps locate underground oil and gas deposits.'
+      },
+      {
+         question: 'If you wanted to detect a liquid layer inside another planet, what would you look for?',
+         options: [
+            { text: 'Higher temperatures', correct: false },
+            { text: 'S-wave shadow zone', correct: true },
+            { text: 'Magnetic field changes', correct: false },
+            { text: 'Visual light reflection', correct: false }
+         ],
+         explanation: 'Just like on Earth, an S-wave shadow zone would indicate liquid layers—this is how planetary scientists study the interiors of planets and moons.'
+      },
+      {
+         question: 'What happens when P-waves enter the liquid outer core?',
+         options: [
+            { text: 'They stop completely', correct: false },
+            { text: 'They speed up dramatically', correct: false },
+            { text: 'They slow down and bend', correct: true },
+            { text: 'They convert to S-waves', correct: false }
+         ],
+         explanation: 'P-waves slow down in liquid (from ~14 km/s to ~8 km/s) and bend (refract) at the boundary. This creates a P-wave shadow zone between 104° and 140° from the epicenter.'
+      },
+      {
+         question: 'Why do buildings often shake more during S-wave passage than P-wave?',
+         options: [
+            { text: 'S-waves are always larger', correct: false },
+            { text: 'S-wave shear motion causes more horizontal movement', correct: true },
+            { text: 'P-waves are absorbed by ground', correct: false },
+            { text: 'S-waves last longer', correct: false }
+         ],
+         explanation: 'S-waves cause side-to-side (shear) motion which is more damaging to buildings than the back-and-forth compression of P-waves. Buildings are better at resisting vertical loads than horizontal shaking.'
+      }
    ];
 
    // Real-world applications - 4 detailed applications
@@ -1773,13 +1863,13 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   marginBottom: '24px',
                   lineHeight: 1.4,
                }}>
-                  {q.q}
+                  {q.question}
                </h3>
 
                {/* Answer options */}
                <div style={{ display: 'grid', gap: '12px' }}>
-                  {q.opts.map((opt, i) => {
-                     const isCorrect = i === q.correct;
+                  {q.options.map((opt, i) => {
+                     const isCorrect = opt.correct;
                      const isSelected = i === selectedAnswer;
                      let bg = design.colors.bgSecondary;
                      let border = design.colors.border;
@@ -1805,7 +1895,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                               setSelectedAnswer(i);
                               setShowExplanation(true);
                               if (isCorrect) setTestScore(s => s + 1);
-                              emitEvent('test_answered', { questionIndex: testIndex, answer: opt, isCorrect });
+                              emitEvent('test_answered', { questionIndex: testIndex, answer: opt.text, isCorrect });
                            }}
                            style={{
                               display: 'flex',
@@ -1835,7 +1925,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            }}>
                               {selectedAnswer !== null && isCorrect ? '✓' : String.fromCharCode(65 + i)}
                            </div>
-                           <p style={{ fontSize: '14px', color: textColor, lineHeight: 1.4 }}>{opt}</p>
+                           <p style={{ fontSize: '14px', color: textColor, lineHeight: 1.4 }}>{opt.text}</p>
                         </button>
                      );
                   })}
@@ -1864,7 +1954,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                         color: design.colors.textSecondary,
                         lineHeight: 1.6,
                      }}>
-                        {q.explain}
+                        {q.explanation}
                      </p>
                   </div>
                )}

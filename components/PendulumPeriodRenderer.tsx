@@ -158,120 +158,110 @@ const testQuestions = [
     scenario: "You're timing a grandfather clock pendulum. The brass bob feels heavy in your hand.",
     question: "If you replaced the brass bob with an aluminum one of the same size (but lighter), what would happen to the period?",
     options: [
-      "Period would increase because lighter things swing slower",
-      "Period would decrease because lighter things swing faster",
-      "Period would stay the same because mass cancels out in the equation",
-      "Period would become erratic due to the material change"
+      { text: "Period would increase because lighter things swing slower", correct: false },
+      { text: "Period would decrease because lighter things swing faster", correct: false },
+      { text: "Period would stay the same because mass cancels out in the equation", correct: true },
+      { text: "Period would become erratic due to the material change", correct: false }
     ],
-    correct: 2,
     explanation: "In the pendulum equation T = 2π√(L/g), mass doesn't appear! When deriving the equation, the bob's mass appears in both gravitational force (mg) and inertia (ma), canceling completely. Only length and gravity determine period."
   },
   {
     scenario: "A student sets up two identical pendulums but uses a 1kg bob on one and a 5kg bob on the other.",
     question: "They start both at the same angle and release simultaneously. Which reaches the bottom first?",
     options: [
-      "The 5kg bob - heavier objects fall faster",
-      "The 1kg bob - lighter objects accelerate more easily",
-      "They arrive at the same time",
-      "It depends on the release technique"
+      { text: "The 5kg bob - heavier objects fall faster", correct: false },
+      { text: "The 1kg bob - lighter objects accelerate more easily", correct: false },
+      { text: "They arrive at the same time", correct: true },
+      { text: "It depends on the release technique", correct: false }
     ],
-    correct: 2,
     explanation: "Both arrive simultaneously! This is the same principle as Galileo's famous thought experiment. In a pendulum, the restoring force is proportional to mass (F = mg×sin(θ)), but so is inertia (ma). They cancel, so all masses swing identically."
   },
   {
     scenario: "You need to design a pendulum clock with a 2-second period (1 second each way).",
     question: "What length should the pendulum be? (Use g = 10 m/s² and π² ≈ 10)",
     options: [
-      "About 25 cm",
-      "About 50 cm",
-      "About 100 cm (1 meter)",
-      "About 200 cm (2 meters)"
+      { text: "About 25 cm", correct: false },
+      { text: "About 50 cm", correct: false },
+      { text: "About 100 cm (1 meter)", correct: true },
+      { text: "About 200 cm (2 meters)", correct: false }
     ],
-    correct: 2,
     explanation: "Using T = 2π√(L/g): 2 = 2π√(L/10). Solving: √(L/10) = 1/π, so L/10 = 1/π² ≈ 0.1, giving L ≈ 1 meter. A 'seconds pendulum' that takes 1 second per half-swing is indeed about 1 meter long."
   },
   {
     scenario: "A Foucault pendulum at a science museum swings with a period of 16 seconds.",
     question: "Scientists want to double the period to 32 seconds. How should they change the length?",
     options: [
-      "Double the length (2× longer)",
-      "Quadruple the length (4× longer)",
-      "Increase length by √2 (about 1.41× longer)",
-      "The period cannot be changed by adjusting length"
+      { text: "Double the length (2× longer)", correct: false },
+      { text: "Quadruple the length (4× longer)", correct: true },
+      { text: "Increase length by √2 (about 1.41× longer)", correct: false },
+      { text: "The period cannot be changed by adjusting length", correct: false }
     ],
-    correct: 1,
     explanation: "Since T ∝ √L, doubling the period requires quadrupling the length. If T₁ = 2π√(L₁/g) and T₂ = 2T₁, then √(L₂/g) = 2√(L₁/g), so L₂ = 4L₁. Period scales with square root of length!"
   },
   {
     scenario: "On the Moon, gravity is about 1/6 of Earth's gravity.",
     question: "A 1-meter pendulum has a 2-second period on Earth. What's its period on the Moon?",
     options: [
-      "About 2 seconds (same as Earth)",
-      "About 5 seconds (√6 ≈ 2.45 times longer)",
-      "About 12 seconds (6 times longer)",
-      "About 0.8 seconds (shorter due to less resistance)"
+      { text: "About 2 seconds (same as Earth)", correct: false },
+      { text: "About 5 seconds (√6 ≈ 2.45 times longer)", correct: true },
+      { text: "About 12 seconds (6 times longer)", correct: false },
+      { text: "About 0.8 seconds (shorter due to less resistance)", correct: false }
     ],
-    correct: 1,
     explanation: "Since T = 2π√(L/g) and Moon's g is 1/6 of Earth's, T_moon = 2π√(L/(g/6)) = √6 × T_earth ≈ 2.45 × 2s ≈ 5 seconds. Lower gravity means slower restoration and longer period."
   },
   {
     scenario: "A child on a playground swing is pushed to a small angle.",
     question: "If the child's parent (who weighs 3× more) sits on the same swing at the same angle, how does their period compare?",
     options: [
-      "Parent swings 3× slower due to greater weight",
-      "Parent swings √3 times slower",
-      "Both have the same period",
-      "Parent swings faster because adults push off harder"
+      { text: "Parent swings 3× slower due to greater weight", correct: false },
+      { text: "Parent swings √3 times slower", correct: false },
+      { text: "Both have the same period", correct: true },
+      { text: "Parent swings faster because adults push off harder", correct: false }
     ],
-    correct: 2,
     explanation: "The period is identical! A playground swing acts as a pendulum, and since mass cancels out (T = 2π√(L/g)), the parent and child swing at the same rate if released from the same angle. Only the swing's length matters."
   },
   {
     scenario: "You're exploring a cave and find an ancient pendulum. You measure its length as 2.5 meters.",
     question: "You time 10 complete swings and count about 32 seconds. What can you conclude about the cave's gravity?",
     options: [
-      "Gravity is normal (about 10 m/s²)",
-      "Gravity is weaker than normal",
-      "Gravity is stronger than normal",
-      "You can't determine gravity from this information"
+      { text: "Gravity is normal (about 10 m/s²)", correct: true },
+      { text: "Gravity is weaker than normal", correct: false },
+      { text: "Gravity is stronger than normal", correct: false },
+      { text: "You can't determine gravity from this information", correct: false }
     ],
-    correct: 0,
     explanation: "Period ≈ 3.2 seconds. Using T = 2π√(L/g): 3.2 = 2π√(2.5/g). Solving: g = 4π²×2.5/3.2² ≈ 4×10×2.5/10 ≈ 10 m/s². This matches Earth's normal gravity, suggesting the cave is near sea level."
   },
   {
     scenario: "An engineer is designing a tuned mass damper for a skyscraper. The building sways with a 10-second period.",
     question: "What pendulum length is needed for the damper to match this frequency?",
     options: [
-      "About 2.5 meters",
-      "About 10 meters",
-      "About 25 meters",
-      "About 100 meters"
+      { text: "About 2.5 meters", correct: false },
+      { text: "About 10 meters", correct: false },
+      { text: "About 25 meters", correct: true },
+      { text: "About 100 meters", correct: false }
     ],
-    correct: 2,
     explanation: "Using T = 2π√(L/g) with T = 10s and g = 10 m/s²: 10 = 2π√(L/10). Squaring: 100 = 4π²L/10, so L = 1000/4π² ≈ 1000/40 ≈ 25 meters. This is why building dampers need significant height!"
   },
   {
     scenario: "A physics student claims that swinging higher (larger amplitude) will make the period longer.",
     question: "Is the student correct for a simple pendulum with small to moderate angles?",
     options: [
-      "Yes, amplitude strongly affects period",
-      "No, period is completely independent of amplitude",
-      "Partially - period is nearly constant for small angles but increases slightly at large angles",
-      "The opposite is true - larger amplitude means shorter period"
+      { text: "Yes, amplitude strongly affects period", correct: false },
+      { text: "No, period is completely independent of amplitude", correct: false },
+      { text: "Partially - period is nearly constant for small angles but increases slightly at large angles", correct: true },
+      { text: "The opposite is true - larger amplitude means shorter period", correct: false }
     ],
-    correct: 2,
     explanation: "For small angles (< 15°), the period is essentially constant - this is the 'isochronism' Galileo observed. However, the sin(θ) ≈ θ approximation breaks down at large angles, causing slightly longer periods. At 90°, the period is about 18% longer than the small-angle value."
   },
   {
     scenario: "Two pendulums have the same length, but one swings in oil and one in air.",
     question: "Ignoring damping (energy loss), how do their natural periods compare?",
     options: [
-      "Oil pendulum is much slower due to viscosity",
-      "Oil pendulum is faster because oil is denser",
-      "Periods are nearly identical - the formula T = 2π√(L/g) doesn't include medium density",
-      "Cannot be determined without knowing oil density"
+      { text: "Oil pendulum is much slower due to viscosity", correct: false },
+      { text: "Oil pendulum is faster because oil is denser", correct: false },
+      { text: "Periods are nearly identical - the formula T = 2π√(L/g) doesn't include medium density", correct: true },
+      { text: "Cannot be determined without knowing oil density", correct: false }
     ],
-    correct: 2,
     explanation: "The natural period depends only on length and gravity, not on the surrounding medium. The oil causes faster damping (energy loss), but each swing still takes the same time. The pendulum simply loses amplitude faster, not frequency."
   }
 ];
@@ -2029,7 +2019,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
                       }}>
                         {String.fromCharCode(65 + idx)}
                       </span>
-                      <span style={{ lineHeight: 1.4 }}>{option}</span>
+                      <span style={{ lineHeight: 1.4 }}>{option.text}</span>
                     </button>
                   );
                 })}
@@ -2106,7 +2096,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
 
               {(() => {
                 const score = testAnswers.reduce((acc, answer, idx) =>
-                  acc + (answer === testQuestions[idx].correct ? 1 : 0), 0);
+                  acc + (testQuestions[idx].options[answer as number]?.correct ? 1 : 0), 0);
                 const percentage = Math.round((score / testQuestions.length) * 100);
 
                 return (
@@ -2131,7 +2121,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
                       {testQuestions.map((q, idx) => {
-                        const isCorrect = testAnswers[idx] === q.correct;
+                        const isCorrect = q.options[testAnswers[idx] as number]?.correct ?? false;
                         return (
                           <div key={idx} style={{
                             padding: space.lg,
@@ -2158,11 +2148,11 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
                                 </p>
                                 {!isCorrect && (
                                   <p style={{ fontSize: '13px', color: colors.danger, margin: `${space.sm} 0 0` }}>
-                                    Your answer: {q.options[testAnswers[idx] as number]}
+                                    Your answer: {q.options[testAnswers[idx] as number]?.text}
                                   </p>
                                 )}
                                 <p style={{ fontSize: '13px', color: colors.success, margin: `${space.xs} 0 0`, fontWeight: 500 }}>
-                                  Correct: {q.options[q.correct]}
+                                  Correct: {q.options.find(o => o.correct)?.text}
                                 </p>
                               </div>
                             </div>
@@ -2194,7 +2184,7 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
   // Mastery phase
   const renderMastery = () => {
     const score = testAnswers.reduce((acc, answer, idx) =>
-      acc + (answer === testQuestions[idx].correct ? 1 : 0), 0);
+      acc + (testQuestions[idx].options[answer as number]?.correct ? 1 : 0), 0);
 
     return (
       <div style={{

@@ -43,102 +43,92 @@ const TEST_QUESTIONS = [
   {
     question: 'What is angular momentum?',
     options: [
-      'The speed at which an object moves in a straight line',
-      'The rotational equivalent of linear momentum (L = Iω)',
-      'The force needed to start an object spinning',
-      'The energy stored in a spinning object'
-    ],
-    correct: 1
+      { text: 'The speed at which an object moves in a straight line', correct: false },
+      { text: 'The rotational equivalent of linear momentum (L = Iω)', correct: true },
+      { text: 'The force needed to start an object spinning', correct: false },
+      { text: 'The energy stored in a spinning object', correct: false }
+    ]
   },
   {
     question: 'Why does a spinning bicycle wheel resist being tilted?',
     options: [
-      'The wheel becomes heavier when spinning',
-      'Air resistance pushes against tilting',
-      'Angular momentum is conserved - changing direction requires torque',
-      'Friction increases when spinning'
-    ],
-    correct: 2
+      { text: 'The wheel becomes heavier when spinning', correct: false },
+      { text: 'Air resistance pushes against tilting', correct: false },
+      { text: 'Angular momentum is conserved - changing direction requires torque', correct: true },
+      { text: 'Friction increases when spinning', correct: false }
+    ]
   },
   {
     question: 'What happens to a spinning top\'s stability as it slows down?',
     options: [
-      'It becomes more stable',
-      'Stability stays the same',
-      'It becomes less stable and eventually falls',
-      'It speeds up to compensate'
-    ],
-    correct: 2
+      { text: 'It becomes more stable', correct: false },
+      { text: 'Stability stays the same', correct: false },
+      { text: 'It becomes less stable and eventually falls', correct: true },
+      { text: 'It speeds up to compensate', correct: false }
+    ]
   },
   {
     question: 'How do bicycles stay upright when moving?',
     options: [
-      'The rider\'s balance alone keeps them up',
-      'Gyroscopic effects from spinning wheels help resist tipping',
-      'The handlebars automatically correct balance',
-      'Bikes have hidden stabilizers'
-    ],
-    correct: 1
+      { text: 'The rider\'s balance alone keeps them up', correct: false },
+      { text: 'Gyroscopic effects from spinning wheels help resist tipping', correct: true },
+      { text: 'The handlebars automatically correct balance', correct: false },
+      { text: 'Bikes have hidden stabilizers', correct: false }
+    ]
   },
   {
     question: 'What is the relationship between spin rate and stability?',
     options: [
-      'Faster spin = less stability',
-      'Spin rate doesn\'t affect stability',
-      'Faster spin = more angular momentum = more stability',
-      'Only the mass matters, not spin rate'
-    ],
-    correct: 2
+      { text: 'Faster spin = less stability', correct: false },
+      { text: 'Spin rate doesn\'t affect stability', correct: false },
+      { text: 'Faster spin = more angular momentum = more stability', correct: true },
+      { text: 'Only the mass matters, not spin rate', correct: false }
+    ]
   },
   {
     question: 'How do spacecraft control their orientation without rockets?',
     options: [
-      'They can\'t - rockets are always needed',
-      'They use reaction wheels and control moment gyroscopes',
-      'They rely on solar wind pressure',
-      'They bounce off Earth\'s magnetic field'
-    ],
-    correct: 1
+      { text: 'They can\'t - rockets are always needed', correct: false },
+      { text: 'They use reaction wheels and control moment gyroscopes', correct: true },
+      { text: 'They rely on solar wind pressure', correct: false },
+      { text: 'They bounce off Earth\'s magnetic field', correct: false }
+    ]
   },
   {
     question: 'Why does a gyroscope appear to "defy gravity"?',
     options: [
-      'It actually cancels out gravity',
-      'Angular momentum prevents the axis from falling until friction slows it',
-      'It creates an anti-gravity field',
-      'Air pressure holds it up'
-    ],
-    correct: 1
+      { text: 'It actually cancels out gravity', correct: false },
+      { text: 'Angular momentum prevents the axis from falling until friction slows it', correct: true },
+      { text: 'It creates an anti-gravity field', correct: false },
+      { text: 'Air pressure holds it up', correct: false }
+    ]
   },
   {
     question: 'What is the moment of inertia?',
     options: [
-      'The moment when an object stops spinning',
-      'A measure of how mass is distributed relative to the rotation axis',
-      'The time it takes to start spinning',
-      'The force needed to maintain rotation'
-    ],
-    correct: 1
+      { text: 'The moment when an object stops spinning', correct: false },
+      { text: 'A measure of how mass is distributed relative to the rotation axis', correct: true },
+      { text: 'The time it takes to start spinning', correct: false },
+      { text: 'The force needed to maintain rotation', correct: false }
+    ]
   },
   {
     question: 'Why are flywheels used in engines?',
     options: [
-      'To make the engine lighter',
-      'To store rotational energy and smooth out power delivery',
-      'To create more friction',
-      'To reduce fuel consumption by stopping rotation'
-    ],
-    correct: 1
+      { text: 'To make the engine lighter', correct: false },
+      { text: 'To store rotational energy and smooth out power delivery', correct: true },
+      { text: 'To create more friction', correct: false },
+      { text: 'To reduce fuel consumption by stopping rotation', correct: false }
+    ]
   },
   {
     question: 'What happens if you try to rotate a spinning gyroscope in a new direction?',
     options: [
-      'It rotates easily in any direction',
-      'It experiences precession - rotating perpendicular to the applied force',
-      'It immediately stops spinning',
-      'It doubles its spin speed'
-    ],
-    correct: 1
+      { text: 'It rotates easily in any direction', correct: false },
+      { text: 'It experiences precession - rotating perpendicular to the applied force', correct: true },
+      { text: 'It immediately stops spinning', correct: false },
+      { text: 'It doubles its spin speed', correct: false }
+    ]
   }
 ];
 
@@ -1415,9 +1405,9 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
   };
 
   const renderTest = () => {
-    const score = testAnswers.reduce((acc, answer, index) =>
-      answer === TEST_QUESTIONS[index].correct ? acc + 1 : acc, 0
-    );
+    const score = testAnswers.reduce((acc, answer, index) => {
+      return acc + (TEST_QUESTIONS[index].options[answer]?.correct ? 1 : 0);
+    }, 0);
     const allAnswered = testAnswers.every(a => a !== -1);
     const passed = score >= 7;
 
@@ -1440,21 +1430,24 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
 
           {/* Review answers */}
           <div className="space-y-3 mb-6 max-h-64 overflow-y-auto">
-            {TEST_QUESTIONS.map((q, index) => (
-              <div
-                key={index}
-                className={`p-3 rounded-lg ${
-                  testAnswers[index] === q.correct ? 'bg-green-500/10' : 'bg-red-500/10'
-                }`}
-              >
-                <p className="text-sm text-slate-300">Q{index + 1}: {q.question}</p>
-                <p className={`text-xs mt-1 ${
-                  testAnswers[index] === q.correct ? 'text-green-400' : 'text-red-400'
-                }`}>
-                  {testAnswers[index] === q.correct ? '✓ Correct' : `✗ Correct: ${q.options[q.correct]}`}
-                </p>
-              </div>
-            ))}
+            {TEST_QUESTIONS.map((q, index) => {
+              const isCorrect = q.options[testAnswers[index]]?.correct;
+              return (
+                <div
+                  key={index}
+                  className={`p-3 rounded-lg ${
+                    isCorrect ? 'bg-green-500/10' : 'bg-red-500/10'
+                  }`}
+                >
+                  <p className="text-sm text-slate-300">Q{index + 1}: {q.question}</p>
+                  <p className={`text-xs mt-1 ${
+                    isCorrect ? 'text-green-400' : 'text-red-400'
+                  }`}>
+                    {isCorrect ? '✓ Correct' : `✗ Correct: ${q.options.find(o => o.correct)?.text}`}
+                  </p>
+                </div>
+              );
+            })}
           </div>
 
           <div className="flex justify-center">
@@ -1500,13 +1493,13 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
                     }}
                     className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
-                        ? testAnswers[qIndex] === q.correct
+                        ? option.correct
                           ? 'bg-green-500/20 border border-green-500 text-green-300'
                           : 'bg-red-500/20 border border-red-500 text-red-300'
                         : 'bg-slate-600/50 text-slate-300 hover:bg-slate-600'
                     }`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>

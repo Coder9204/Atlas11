@@ -206,7 +206,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     if (answeredQuestions.has(currentQuestion)) return;
     setSelectedAnswer(answerIndex);
     setShowExplanation(true);
-    const isCorrect = answerIndex === testQuestions[currentQuestion].correct;
+    const isCorrect = testQuestions[currentQuestion].options[answerIndex]?.correct;
     if (isCorrect) {
       setCorrectAnswers(prev => prev + 1);
       playSound('success');
@@ -219,16 +219,66 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
   // Test questions
   const testQuestions = [
-    { question: "Why is it easier to open a door by pushing at the handle (far from hinge)?", options: ["The handle is smoother", "Larger lever arm = less force needed", "The door is lighter there", "It's not actually easier"], correct: 1, explanation: "Torque = Force x Lever arm. With a larger lever arm (distance from hinge), you need less force to create the same torque." },
-    { question: "What is the correct formula for torque?", options: ["t = F + r", "t = F x r", "t = F / r", "t = F - r"], correct: 1, explanation: "Torque (t) equals force (F) times the perpendicular distance (r) from the pivot point: t = F x r" },
-    { question: "If you push a door at half the distance from the hinge, you need:", options: ["Half the force", "The same force", "Twice the force", "Four times the force"], correct: 2, explanation: "Since t = F x r, halving r means you need to double F to maintain the same torque." },
-    { question: "Door handles are placed far from hinges because:", options: ["It looks better aesthetically", "Maximizes lever arm, minimizing force needed", "It's where the door is strongest", "There's no particular reason"], correct: 1, explanation: "Engineers place handles far from hinges to maximize the lever arm, making doors easy to open with minimal force." },
-    { question: "A sticky hinge increases the force needed because:", options: ["It adds friction resistance to overcome", "It makes the door heavier", "It changes the lever arm length", "It doesn't affect the force needed"], correct: 0, explanation: "Friction at the hinge creates a resisting torque that must be overcome in addition to the torque needed to accelerate the door." },
-    { question: "A wrench with a longer handle:", options: ["Is always heavier to use", "Provides more torque for the same force", "Provides less torque overall", "Doesn't affect the torque"], correct: 1, explanation: "A longer wrench handle increases the lever arm, so the same force produces more torque." },
-    { question: "To balance a seesaw with unequal weights:", options: ["Put the heavier weight in the middle", "Put the heavier weight closer to pivot", "Put the lighter weight closer to pivot", "It cannot be balanced"], correct: 1, explanation: "For balance, torques must be equal: W1 x r1 = W2 x r2. The heavier weight needs a shorter lever arm." },
-    { question: "Why do doorstops work best when placed far from the hinge?", options: ["They're easier to see there", "Maximum leverage prevents door motion", "The door is thinner there", "Position doesn't matter"], correct: 1, explanation: "Placing a doorstop far from the hinge maximizes the resisting moment arm, making it harder to push the door open." },
-    { question: "A torque wrench is designed to measure:", options: ["The weight of the wrench", "Rotational force being applied", "The length of the wrench", "The turning speed"], correct: 1, explanation: "A torque wrench measures the rotational force (torque) being applied to a fastener, ensuring proper tightening." },
-    { question: "If torque = 20 N-m and lever arm = 0.5 m, what force is applied?", options: ["10 N", "40 N", "20 N", "0.025 N"], correct: 1, explanation: "Using t = F x r: 20 = F x 0.5, solving for F gives F = 40 N." }
+    { question: "Why is it easier to open a door by pushing at the handle (far from hinge)?", options: [
+      { text: "The handle is smoother", correct: false },
+      { text: "Larger lever arm = less force needed", correct: true },
+      { text: "The door is lighter there", correct: false },
+      { text: "It's not actually easier", correct: false }
+    ], explanation: "Torque = Force x Lever arm. With a larger lever arm (distance from hinge), you need less force to create the same torque." },
+    { question: "What is the correct formula for torque?", options: [
+      { text: "t = F + r", correct: false },
+      { text: "t = F x r", correct: true },
+      { text: "t = F / r", correct: false },
+      { text: "t = F - r", correct: false }
+    ], explanation: "Torque (t) equals force (F) times the perpendicular distance (r) from the pivot point: t = F x r" },
+    { question: "If you push a door at half the distance from the hinge, you need:", options: [
+      { text: "Half the force", correct: false },
+      { text: "The same force", correct: false },
+      { text: "Twice the force", correct: true },
+      { text: "Four times the force", correct: false }
+    ], explanation: "Since t = F x r, halving r means you need to double F to maintain the same torque." },
+    { question: "Door handles are placed far from hinges because:", options: [
+      { text: "It looks better aesthetically", correct: false },
+      { text: "Maximizes lever arm, minimizing force needed", correct: true },
+      { text: "It's where the door is strongest", correct: false },
+      { text: "There's no particular reason", correct: false }
+    ], explanation: "Engineers place handles far from hinges to maximize the lever arm, making doors easy to open with minimal force." },
+    { question: "A sticky hinge increases the force needed because:", options: [
+      { text: "It adds friction resistance to overcome", correct: true },
+      { text: "It makes the door heavier", correct: false },
+      { text: "It changes the lever arm length", correct: false },
+      { text: "It doesn't affect the force needed", correct: false }
+    ], explanation: "Friction at the hinge creates a resisting torque that must be overcome in addition to the torque needed to accelerate the door." },
+    { question: "A wrench with a longer handle:", options: [
+      { text: "Is always heavier to use", correct: false },
+      { text: "Provides more torque for the same force", correct: true },
+      { text: "Provides less torque overall", correct: false },
+      { text: "Doesn't affect the torque", correct: false }
+    ], explanation: "A longer wrench handle increases the lever arm, so the same force produces more torque." },
+    { question: "To balance a seesaw with unequal weights:", options: [
+      { text: "Put the heavier weight in the middle", correct: false },
+      { text: "Put the heavier weight closer to pivot", correct: true },
+      { text: "Put the lighter weight closer to pivot", correct: false },
+      { text: "It cannot be balanced", correct: false }
+    ], explanation: "For balance, torques must be equal: W1 x r1 = W2 x r2. The heavier weight needs a shorter lever arm." },
+    { question: "Why do doorstops work best when placed far from the hinge?", options: [
+      { text: "They're easier to see there", correct: false },
+      { text: "Maximum leverage prevents door motion", correct: true },
+      { text: "The door is thinner there", correct: false },
+      { text: "Position doesn't matter", correct: false }
+    ], explanation: "Placing a doorstop far from the hinge maximizes the resisting moment arm, making it harder to push the door open." },
+    { question: "A torque wrench is designed to measure:", options: [
+      { text: "The weight of the wrench", correct: false },
+      { text: "Rotational force being applied", correct: true },
+      { text: "The length of the wrench", correct: false },
+      { text: "The turning speed", correct: false }
+    ], explanation: "A torque wrench measures the rotational force (torque) being applied to a fastener, ensuring proper tightening." },
+    { question: "If torque = 20 N-m and lever arm = 0.5 m, what force is applied?", options: [
+      { text: "10 N", correct: false },
+      { text: "40 N", correct: true },
+      { text: "20 N", correct: false },
+      { text: "0.025 N", correct: false }
+    ], explanation: "Using t = F x r: 20 = F x 0.5, solving for F gives F = 40 N." }
   ];
 
   // Real-world applications
@@ -1026,10 +1076,10 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
               let textClass = 'text-white';
 
               if (isAnswered) {
-                if (idx === q.correct) {
+                if (option.correct) {
                   bgClass = 'bg-emerald-500/20 border-emerald-500';
                   textClass = 'text-emerald-400';
-                } else if (idx === selectedAnswer && idx !== q.correct) {
+                } else if (idx === selectedAnswer && !option.correct) {
                   bgClass = 'bg-red-500/20 border-red-500';
                   textClass = 'text-red-400';
                 }
@@ -1042,7 +1092,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                   disabled={isAnswered}
                   className={`p-4 rounded-xl border-2 text-left transition-all ${bgClass}`}
                 >
-                  <span className={`text-sm ${textClass}`}>{option}</span>
+                  <span className={`text-sm ${textClass}`}>{option.text}</span>
                 </button>
               );
             })}

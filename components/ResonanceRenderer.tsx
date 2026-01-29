@@ -277,17 +277,16 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
 
   // Test questions
   const questions = [
-    { question: "What is resonance?", options: ["Random vibration", "Maximum energy transfer at matching frequencies", "Minimum amplitude", "Constant frequency"], correct: 1, explanation: "Resonance occurs when the driving frequency matches the system's natural frequency, causing maximum energy transfer and amplitude." },
-    { question: "A child on a swing has a natural frequency of 0.5 Hz. To push most effectively, at what frequency should you push?", options: ["0.25 Hz", "0.5 Hz", "1.0 Hz", "2.0 Hz"], correct: 1, explanation: "For maximum energy transfer (resonance), the driving frequency must match the natural frequency of 0.5 Hz." },
-    { question: "What happens to resonant frequency when you add mass to an oscillator?", options: ["Increases", "Decreases", "Stays the same", "Becomes zero"], correct: 1, explanation: "From f = (1/2π)√(k/m), increasing mass decreases the natural/resonant frequency." },
-    { question: "Why did the Tacoma Narrows Bridge collapse?", options: ["Earthquake", "Wind-induced resonance", "Heavy traffic", "Material fatigue"], correct: 1, explanation: "Wind created oscillations matching the bridge's natural frequency, causing resonance that amplified until structural failure." },
-    { question: "How does MRI imaging work?", options: ["X-rays", "Sound waves", "Nuclear magnetic resonance", "Electrical current"], correct: 2, explanation: "MRI uses nuclear magnetic resonance - hydrogen nuclei in the body resonate at specific frequencies in a magnetic field." },
-    { question: "A singer shatters a wine glass by singing. What must the singer's frequency match?", options: ["The room's frequency", "The glass's natural frequency", "440 Hz exactly", "Any high frequency"], correct: 1, explanation: "The singer must match the glass's natural frequency to create resonance and accumulate enough energy to shatter it." },
-    { question: "Why do bass speakers need to be larger than treble speakers?", options: ["They need more power", "Lower frequency = longer wavelength needs larger resonator", "They're louder", "Marketing"], correct: 1, explanation: "Lower frequencies require larger resonating chambers. From f = (1/2π)√(k/m), more mass lowers frequency." },
-    { question: "Taipei 101 has a 730-ton ball inside. What is its purpose?", options: ["Decoration", "Tuned mass damper to prevent resonance", "Electricity generation", "Water storage"], correct: 1, explanation: "The tuned mass damper oscillates opposite to building sway, canceling resonant vibrations from wind or earthquakes." },
-    { question: "At resonance, what happens to the phase between driving force and oscillation?", options: ["In phase", "90° out of phase", "180° out of phase", "Random"], correct: 1, explanation: "At resonance, the velocity (not position) is in phase with the driving force, meaning position is 90° behind." },
-    { question: "Why do soldiers break step when crossing bridges?", options: ["Tradition", "To avoid resonance", "To rest", "Balance"], correct: 1, explanation: "Marching in step could match the bridge's natural frequency, causing dangerous resonance amplification." },
-    { question: "What determines a guitar body's resonant frequencies?", options: ["String length only", "Wood type and cavity shape", "Paint color", "Tuning pegs"], correct: 1, explanation: "The cavity shape, wood properties, and body construction determine which frequencies the body amplifies through resonance." }
+    { question: "What is resonance?", options: [{ text: "Random vibration", correct: false }, { text: "Maximum energy transfer at matching frequencies", correct: true }, { text: "Minimum amplitude", correct: false }, { text: "Constant frequency", correct: false }], explanation: "Resonance occurs when the driving frequency matches the system's natural frequency, causing maximum energy transfer and amplitude." },
+    { question: "A child on a swing has a natural frequency of 0.5 Hz. To push most effectively, at what frequency should you push?", options: [{ text: "0.25 Hz", correct: false }, { text: "0.5 Hz", correct: true }, { text: "1.0 Hz", correct: false }, { text: "2.0 Hz", correct: false }], explanation: "For maximum energy transfer (resonance), the driving frequency must match the natural frequency of 0.5 Hz." },
+    { question: "What happens to resonant frequency when you add mass to an oscillator?", options: [{ text: "Increases", correct: false }, { text: "Decreases", correct: true }, { text: "Stays the same", correct: false }, { text: "Becomes zero", correct: false }], explanation: "From f = (1/2π)√(k/m), increasing mass decreases the natural/resonant frequency." },
+    { question: "Why did the Tacoma Narrows Bridge collapse?", options: [{ text: "Earthquake", correct: false }, { text: "Wind-induced resonance", correct: true }, { text: "Heavy traffic", correct: false }, { text: "Material fatigue", correct: false }], explanation: "Wind created oscillations matching the bridge's natural frequency, causing resonance that amplified until structural failure." },
+    { question: "How does MRI imaging work?", options: [{ text: "X-rays", correct: false }, { text: "Sound waves", correct: false }, { text: "Nuclear magnetic resonance", correct: true }, { text: "Electrical current", correct: false }], explanation: "MRI uses nuclear magnetic resonance - hydrogen nuclei in the body resonate at specific frequencies in a magnetic field." },
+    { question: "A singer shatters a wine glass by singing. What must the singer's frequency match?", options: [{ text: "The room's frequency", correct: false }, { text: "The glass's natural frequency", correct: true }, { text: "440 Hz exactly", correct: false }, { text: "Any high frequency", correct: false }], explanation: "The singer must match the glass's natural frequency to create resonance and accumulate enough energy to shatter it." },
+    { question: "Why do bass speakers need to be larger than treble speakers?", options: [{ text: "They need more power", correct: false }, { text: "Lower frequency = longer wavelength needs larger resonator", correct: true }, { text: "They're louder", correct: false }, { text: "Marketing", correct: false }], explanation: "Lower frequencies require larger resonating chambers. From f = (1/2π)√(k/m), more mass lowers frequency." },
+    { question: "Taipei 101 has a 730-ton ball inside. What is its purpose?", options: [{ text: "Decoration", correct: false }, { text: "Tuned mass damper to prevent resonance", correct: true }, { text: "Electricity generation", correct: false }, { text: "Water storage", correct: false }], explanation: "The tuned mass damper oscillates opposite to building sway, canceling resonant vibrations from wind or earthquakes." },
+    { question: "At resonance, what happens to the phase between driving force and oscillation?", options: [{ text: "In phase", correct: false }, { text: "90° out of phase", correct: true }, { text: "180° out of phase", correct: false }, { text: "Random", correct: false }], explanation: "At resonance, the velocity (not position) is in phase with the driving force, meaning position is 90° behind." },
+    { question: "Why do soldiers break step when crossing bridges?", options: [{ text: "Tradition", correct: false }, { text: "To avoid resonance", correct: true }, { text: "To rest", correct: false }, { text: "Balance", correct: false }], explanation: "Marching in step could match the bridge's natural frequency, causing dangerous resonance amplification." }
   ];
 
   // Real-world applications with SVG graphics
@@ -726,7 +725,12 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
   };
 
   // Calculate score
-  const score = answers.filter((a, i) => a === questions[i].correct).length;
+  const calculateScore = (): number => {
+    return answers.reduce((score, answer, index) => {
+      return score + (questions[index].options[answer as number]?.correct ? 1 : 0);
+    }, 0);
+  };
+  const score = calculateScore();
 
   // ==================== PHASE RENDERS ====================
 
@@ -1385,7 +1389,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                 {answers.slice(0, 10).map((a, i) => (
                   <div key={i} style={{
                     width: '10px', height: '10px', borderRadius: '50%',
-                    background: a !== null ? (a === questions[i].correct ? design.colors.success : design.colors.error) :
+                    background: a !== null ? (questions[i].options[a as number]?.correct ? design.colors.success : design.colors.error) :
                                i === testIndex ? design.colors.accentPrimary : design.colors.bgElevated
                   }} />
                 ))}
@@ -1399,9 +1403,9 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
 
             {/* Options */}
             <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md }}>
-              {q.options.map((opt, i) => {
+              {q.options.map((option, i) => {
                 const isSelected = answers[testIndex] === i;
-                const isCorrect = i === q.correct;
+                const isCorrect = option.correct;
                 const showFeedback = answered;
 
                 return (
@@ -1413,7 +1417,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                       const newAnswers = [...answers];
                       newAnswers[testIndex] = i;
                       setAnswers(newAnswers);
-                      emitEvent('test_answered', { questionIndex: testIndex, correct: i === q.correct });
+                      emitEvent('test_answered', { questionIndex: testIndex, correct: option.correct });
                       setTimeout(() => { navigationLockRef.current = false; }, 400);
                     }}
                     disabled={answered}
@@ -1430,7 +1434,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                       transition: 'all 0.2s ease'
                     }}
                   >
-                    {opt}
+                    {option.text}
                   </button>
                 );
               })}
@@ -1442,12 +1446,12 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                 marginTop: design.spacing.lg,
                 padding: design.spacing.lg,
                 borderRadius: design.radius.lg,
-                background: answers[testIndex] === q.correct ? design.colors.successMuted : design.colors.errorMuted,
-                border: `1px solid ${answers[testIndex] === q.correct ? design.colors.success : design.colors.error}30`
+                background: q.options[answers[testIndex] as number]?.correct ? design.colors.successMuted : design.colors.errorMuted,
+                border: `1px solid ${q.options[answers[testIndex] as number]?.correct ? design.colors.success : design.colors.error}30`
               }}>
                 <p style={{ fontSize: '14px', color: design.colors.textPrimary, lineHeight: 1.6 }}>
-                  <strong style={{ color: answers[testIndex] === q.correct ? design.colors.success : design.colors.error }}>
-                    {answers[testIndex] === q.correct ? '✓ Correct!' : '✗ Not quite.'}
+                  <strong style={{ color: q.options[answers[testIndex] as number]?.correct ? design.colors.success : design.colors.error }}>
+                    {q.options[answers[testIndex] as number]?.correct ? '✓ Correct!' : '✗ Not quite.'}
                   </strong>{' '}
                   {q.explanation}
                 </p>

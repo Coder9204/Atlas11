@@ -124,91 +124,101 @@ const quizQuestions = [
   {
     question: "What is the Law of Reflection?",
     options: [
-      "Light always reflects straight back",
-      "Angle of incidence equals angle of reflection",
-      "Light bends when it reflects",
-      "Reflection only works with flat surfaces"
+      { text: "Light always reflects straight back", correct: false },
+      { text: "Angle of incidence equals angle of reflection", correct: true },
+      { text: "Light bends when it reflects", correct: false },
+      { text: "Reflection only works with flat surfaces", correct: false }
     ],
-    correct: 1,
     explanation: "The Law of Reflection states that the angle of incidence (incoming) equals the angle of reflection (outgoing), both measured from the normal (perpendicular line)."
   },
   {
     question: "Angles in reflection are measured from what reference line?",
     options: [
-      "The mirror surface",
-      "The horizontal",
-      "The normal (perpendicular to surface)",
-      "The vertical"
+      { text: "The mirror surface", correct: false },
+      { text: "The horizontal", correct: false },
+      { text: "The normal (perpendicular to surface)", correct: true },
+      { text: "The vertical", correct: false }
     ],
-    correct: 2,
     explanation: "Both angles are measured from the normal - an imaginary line perpendicular to the mirror surface at the point where light hits."
   },
   {
     question: "If light hits a mirror at 0° to the normal, at what angle does it reflect?",
-    options: ["90°", "45°", "180°", "0°"],
-    correct: 3,
+    options: [
+      { text: "90°", correct: false },
+      { text: "45°", correct: false },
+      { text: "180°", correct: false },
+      { text: "0°", correct: true }
+    ],
     explanation: "If light comes straight in (0° to normal), it bounces straight back (0° on the other side). This is called normal incidence."
   },
   {
     question: "Why does a flat mirror create a 'virtual' image?",
     options: [
-      "The image is blurry",
-      "The image doesn't really exist where it appears to be",
-      "The image is upside down",
-      "The image is smaller than the object"
+      { text: "The image is blurry", correct: false },
+      { text: "The image doesn't really exist where it appears to be", correct: true },
+      { text: "The image is upside down", correct: false },
+      { text: "The image is smaller than the object", correct: false }
     ],
-    correct: 1,
     explanation: "A virtual image is where light rays APPEAR to come from when traced backward. No actual light exists behind the mirror - it's an optical illusion created by your brain."
   },
   {
     question: "In a flat mirror, how does the image distance compare to the object distance?",
     options: [
-      "Image is closer",
-      "Image is farther",
-      "They are equal",
-      "Depends on mirror size"
+      { text: "Image is closer", correct: false },
+      { text: "Image is farther", correct: false },
+      { text: "They are equal", correct: true },
+      { text: "Depends on mirror size", correct: false }
     ],
-    correct: 2,
     explanation: "For a flat mirror, the virtual image appears exactly as far behind the mirror as the object is in front. This is why your reflection seems to be inside the mirror."
   },
   {
     question: "Two mirrors are placed at 90° to form a corner. Light enters at 30° to one mirror. What angle does it exit?",
     options: [
-      "30° in the same direction",
-      "30° but going back the way it came",
-      "60°",
-      "90°"
+      { text: "30° in the same direction", correct: false },
+      { text: "30° but going back the way it came", correct: true },
+      { text: "60°", correct: false },
+      { text: "90°", correct: false }
     ],
-    correct: 1,
     explanation: "A corner reflector (90° angle) always sends light back parallel to its incoming direction. After two reflections, the exit angle equals the entry angle but in the opposite direction."
   },
   {
     question: "Why are corner cube reflectors used on road signs?",
     options: [
-      "They're cheaper to make",
-      "They look prettier",
-      "They reflect light back to the source regardless of entry angle",
-      "They absorb less light"
+      { text: "They're cheaper to make", correct: false },
+      { text: "They look prettier", correct: false },
+      { text: "They reflect light back to the source regardless of entry angle", correct: true },
+      { text: "They absorb less light", correct: false }
     ],
-    correct: 2,
     explanation: "Corner cubes (three 90° mirrors) are retroreflectors - they send light back exactly where it came from. Car headlights reflect straight back to the driver's eyes."
   },
   {
     question: "If you place two parallel mirrors facing each other, how many images do you see?",
-    options: ["2", "4", "Infinite (theoretically)", "1"],
-    correct: 2,
+    options: [
+      { text: "2", correct: false },
+      { text: "4", correct: false },
+      { text: "Infinite (theoretically)", correct: true },
+      { text: "1", correct: false }
+    ],
     explanation: "Parallel mirrors create infinite reflections! Each image reflects in the other mirror, creating images of images. In practice, light loss limits how many you can see."
   },
   {
     question: "A periscope uses two mirrors at what angle?",
-    options: ["30°", "45°", "60°", "90°"],
-    correct: 1,
+    options: [
+      { text: "30°", correct: false },
+      { text: "45°", correct: true },
+      { text: "60°", correct: false },
+      { text: "90°", correct: false }
+    ],
     explanation: "Periscope mirrors are at 45° to the vertical. Light hits at 45° and reflects at 45°, turning 90°. Two such mirrors redirect light by 180°, allowing you to see around corners."
   },
   {
     question: "If mirrors are at 60° angle, how many images will you see between them?",
-    options: ["3", "4", "5", "6"],
-    correct: 2,
+    options: [
+      { text: "3", correct: false },
+      { text: "4", correct: false },
+      { text: "5", correct: true },
+      { text: "6", correct: false }
+    ],
     explanation: "The formula is: Number of images = (360°/angle) - 1. For 60°: (360/60) - 1 = 6 - 1 = 5 images. This is the principle behind kaleidoscopes."
   }
 ];
@@ -349,7 +359,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   const handleAnswerSubmit = useCallback(() => {
     if (selectedAnswer === null || showQuizFeedback || isTransitioningRef.current) return;
     setShowQuizFeedback(true);
-    if (selectedAnswer === quizQuestions[currentQuestion].correct) {
+    if (quizQuestions[currentQuestion].options[selectedAnswer]?.correct) {
       setScore(s => s + 1);
     }
   }, [selectedAnswer, showQuizFeedback, currentQuestion]);
@@ -1537,7 +1547,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
             {question.options.map((option, index) => {
               const isSelected = selectedAnswer === index;
-              const isCorrect = index === question.correct;
+              const isCorrect = option.correct;
               const showResult = showQuizFeedback;
 
               let bgColor = colors.background;
@@ -1569,7 +1579,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  <span style={{ color: colors.text }}>{option}</span>
+                  <span style={{ color: colors.text }}>{option.text}</span>
                   {showResult && isCorrect && <span style={{ marginLeft: 8 }}>✓</span>}
                   {showResult && isSelected && !isCorrect && <span style={{ marginLeft: 8 }}>✗</span>}
                 </div>

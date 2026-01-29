@@ -161,19 +161,103 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
   }, [playSound]);
 
   const testQuestions = [
-    { question: "When a figure skater pulls their arms in during a spin:", options: ["They slow down", "They stay the same speed", "They speed up", "They stop spinning"], correct: 2 },
-    { question: "What quantity is conserved when a skater pulls arms in?", options: ["Angular velocity", "Moment of inertia", "Angular momentum", "Kinetic energy"], correct: 2 },
-    { question: "If moment of inertia decreases by half, angular velocity:", options: ["Halves", "Stays same", "Doubles", "Quadruples"], correct: 2 },
-    { question: "Moment of inertia depends on:", options: ["Mass only", "Radius only", "Both mass and radius squared", "Neither"], correct: 2 },
-    { question: "Why do divers tuck into a ball during somersaults?", options: ["Reduce air resistance", "Decrease moment of inertia to spin faster", "Look more aerodynamic", "Feel safer"], correct: 1 },
-    { question: "A neutron star spins incredibly fast because:", options: ["Nuclear reactions", "Angular momentum conserved as it collapsed", "Magnetic fields", "Dark matter"], correct: 1 },
-    { question: "Why do helicopters need tail rotors?", options: ["For steering", "To counter main rotor's angular momentum", "Extra lift", "Cooling"], correct: 1 },
-    { question: "When you extend arms on a spinning chair:", options: ["You speed up", "Nothing happens", "You slow down", "You fly off"], correct: 2 },
-    { question: "L = Iω represents:", options: ["Linear momentum", "Angular momentum", "Torque", "Energy"], correct: 1 },
-    { question: "Gyroscopes resist tilting because:", options: ["They're heavy", "Angular momentum is conserved", "Friction", "Magnetic forces"], correct: 1 }
+    {
+      question: "When a figure skater pulls their arms in during a spin:",
+      options: [
+        { text: "They slow down", correct: false },
+        { text: "They stay the same speed", correct: false },
+        { text: "They speed up", correct: true },
+        { text: "They stop spinning", correct: false }
+      ]
+    },
+    {
+      question: "What quantity is conserved when a skater pulls arms in?",
+      options: [
+        { text: "Angular velocity", correct: false },
+        { text: "Moment of inertia", correct: false },
+        { text: "Angular momentum", correct: true },
+        { text: "Kinetic energy", correct: false }
+      ]
+    },
+    {
+      question: "If moment of inertia decreases by half, angular velocity:",
+      options: [
+        { text: "Halves", correct: false },
+        { text: "Stays same", correct: false },
+        { text: "Doubles", correct: true },
+        { text: "Quadruples", correct: false }
+      ]
+    },
+    {
+      question: "Moment of inertia depends on:",
+      options: [
+        { text: "Mass only", correct: false },
+        { text: "Radius only", correct: false },
+        { text: "Both mass and radius squared", correct: true },
+        { text: "Neither", correct: false }
+      ]
+    },
+    {
+      question: "Why do divers tuck into a ball during somersaults?",
+      options: [
+        { text: "Reduce air resistance", correct: false },
+        { text: "Decrease moment of inertia to spin faster", correct: true },
+        { text: "Look more aerodynamic", correct: false },
+        { text: "Feel safer", correct: false }
+      ]
+    },
+    {
+      question: "A neutron star spins incredibly fast because:",
+      options: [
+        { text: "Nuclear reactions", correct: false },
+        { text: "Angular momentum conserved as it collapsed", correct: true },
+        { text: "Magnetic fields", correct: false },
+        { text: "Dark matter", correct: false }
+      ]
+    },
+    {
+      question: "Why do helicopters need tail rotors?",
+      options: [
+        { text: "For steering", correct: false },
+        { text: "To counter main rotor's angular momentum", correct: true },
+        { text: "Extra lift", correct: false },
+        { text: "Cooling", correct: false }
+      ]
+    },
+    {
+      question: "When you extend arms on a spinning chair:",
+      options: [
+        { text: "You speed up", correct: false },
+        { text: "Nothing happens", correct: false },
+        { text: "You slow down", correct: true },
+        { text: "You fly off", correct: false }
+      ]
+    },
+    {
+      question: "L = Iω represents:",
+      options: [
+        { text: "Linear momentum", correct: false },
+        { text: "Angular momentum", correct: true },
+        { text: "Torque", correct: false },
+        { text: "Energy", correct: false }
+      ]
+    },
+    {
+      question: "Gyroscopes resist tilting because:",
+      options: [
+        { text: "They're heavy", correct: false },
+        { text: "Angular momentum is conserved", correct: true },
+        { text: "Friction", correct: false },
+        { text: "Magnetic forces", correct: false }
+      ]
+    }
   ];
 
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer === testQuestions[index].correct ? 1 : 0), 0);
+  const calculateScore = (): number => {
+    return testAnswers.reduce((score, answer, index) => {
+      return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
+    }, 0);
+  };
 
   const applications = [
     { title: "Figure Skating", icon: "⛸️", description: "Skaters pull arms in to spin faster. Starting with arms out, they can increase speed 3-4x.", details: "Olympic skaters reach 300+ RPM. World record is 342 RPM by Natalia Kanounnikova." },
@@ -567,7 +651,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
                     onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-purple-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>

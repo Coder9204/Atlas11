@@ -104,16 +104,96 @@ const realWorldApplications = [
 ];
 
 const quizQuestions = [
-  { question: "What happens to the air bubble in a Cartesian diver when you squeeze the bottle?", options: ["It expands", "It compresses (gets smaller)", "It stays the same size", "It turns into water"], correct: 1 },
-  { question: "What gas law explains why the air bubble changes size under pressure?", options: ["Newton's Law", "Ohm's Law", "Boyle's Law (PV = constant)", "Murphy's Law"], correct: 2 },
-  { question: "Why does compressing the air bubble make the diver sink?", options: ["The diver gets heavier", "Less displaced water means less buoyant force", "The water pushes it down", "Air becomes heavier under pressure"], correct: 1 },
-  { question: "What is the condition for neutral buoyancy (floating at a fixed depth)?", options: ["Object must be hollow", "Object density equals water density", "Object must be made of plastic", "Water must be cold"], correct: 1 },
-  { question: "How do submarines control their depth?", options: ["By spinning propellers faster", "By adjusting ballast tanks (water vs air)", "By changing shape", "By heating the water around them"], correct: 1 },
-  { question: "At 10 meters underwater, how does pressure compare to the surface?", options: ["Same pressure", "About double (2 atm total)", "Ten times higher", "Half the pressure"], correct: 1 },
-  { question: "Why do scuba divers need to add air to their BCD as they descend?", options: ["To breathe easier", "To compensate for air compression from increased pressure", "To stay warm", "To see better"], correct: 1 },
-  { question: "What does a fish's swim bladder do?", options: ["Helps the fish breathe", "Stores food", "Controls buoyancy by adjusting gas volume", "Makes the fish swim faster"], correct: 2 },
-  { question: "If you heat a Cartesian diver setup, what happens?", options: ["The diver sinks (air expands)", "The diver rises (air expands, more buoyancy)", "Nothing changes", "The diver spins"], correct: 1 },
-  { question: "Why can't deep-sea fish survive if brought to the surface quickly?", options: ["They get cold", "It's too bright", "Their swim bladder expands rapidly and can rupture", "They can't breathe surface air"], correct: 2 }
+  {
+    question: "What happens to the air bubble in a Cartesian diver when you squeeze the bottle?",
+    options: [
+      { text: "It expands", correct: false },
+      { text: "It compresses (gets smaller)", correct: true },
+      { text: "It stays the same size", correct: false },
+      { text: "It turns into water", correct: false },
+    ],
+  },
+  {
+    question: "What gas law explains why the air bubble changes size under pressure?",
+    options: [
+      { text: "Newton's Law", correct: false },
+      { text: "Ohm's Law", correct: false },
+      { text: "Boyle's Law (PV = constant)", correct: true },
+      { text: "Murphy's Law", correct: false },
+    ],
+  },
+  {
+    question: "Why does compressing the air bubble make the diver sink?",
+    options: [
+      { text: "The diver gets heavier", correct: false },
+      { text: "Less displaced water means less buoyant force", correct: true },
+      { text: "The water pushes it down", correct: false },
+      { text: "Air becomes heavier under pressure", correct: false },
+    ],
+  },
+  {
+    question: "What is the condition for neutral buoyancy (floating at a fixed depth)?",
+    options: [
+      { text: "Object must be hollow", correct: false },
+      { text: "Object density equals water density", correct: true },
+      { text: "Object must be made of plastic", correct: false },
+      { text: "Water must be cold", correct: false },
+    ],
+  },
+  {
+    question: "How do submarines control their depth?",
+    options: [
+      { text: "By spinning propellers faster", correct: false },
+      { text: "By adjusting ballast tanks (water vs air)", correct: true },
+      { text: "By changing shape", correct: false },
+      { text: "By heating the water around them", correct: false },
+    ],
+  },
+  {
+    question: "At 10 meters underwater, how does pressure compare to the surface?",
+    options: [
+      { text: "Same pressure", correct: false },
+      { text: "About double (2 atm total)", correct: true },
+      { text: "Ten times higher", correct: false },
+      { text: "Half the pressure", correct: false },
+    ],
+  },
+  {
+    question: "Why do scuba divers need to add air to their BCD as they descend?",
+    options: [
+      { text: "To breathe easier", correct: false },
+      { text: "To compensate for air compression from increased pressure", correct: true },
+      { text: "To stay warm", correct: false },
+      { text: "To see better", correct: false },
+    ],
+  },
+  {
+    question: "What does a fish's swim bladder do?",
+    options: [
+      { text: "Helps the fish breathe", correct: false },
+      { text: "Stores food", correct: false },
+      { text: "Controls buoyancy by adjusting gas volume", correct: true },
+      { text: "Makes the fish swim faster", correct: false },
+    ],
+  },
+  {
+    question: "If you heat a Cartesian diver setup, what happens?",
+    options: [
+      { text: "The diver sinks (air expands)", correct: false },
+      { text: "The diver rises (air expands, more buoyancy)", correct: true },
+      { text: "Nothing changes", correct: false },
+      { text: "The diver spins", correct: false },
+    ],
+  },
+  {
+    question: "Why can't deep-sea fish survive if brought to the surface quickly?",
+    options: [
+      { text: "They get cold", correct: false },
+      { text: "It's too bright", correct: false },
+      { text: "Their swim bladder expands rapidly and can rupture", correct: true },
+      { text: "They can't breathe surface air", correct: false },
+    ],
+  },
 ];
 
 // ============================================================================
@@ -325,7 +405,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
     setPressure(1.0);
   }, []);
 
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer === quizQuestions[index].correct ? 1 : 0), 0);
+  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer >= 0 && quizQuestions[index].options[answer]?.correct ? 1 : 0), 0);
   const netForce = calculateNetForce(bubbleSize);
 
   // ============================================================================
@@ -787,7 +867,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
                     onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-cyan-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>

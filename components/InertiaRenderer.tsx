@@ -96,62 +96,102 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
   const [testQuestions] = useState([
     {
       question: "According to Newton's First Law, what happens to an object at rest with no forces acting on it?",
-      options: ["It starts moving slowly", "It stays at rest", "It floats upward", "It shrinks"],
-      correct: 1,
+      options: [
+        { text: "It starts moving slowly", correct: false },
+        { text: "It stays at rest", correct: true },
+        { text: "It floats upward", correct: false },
+        { text: "It shrinks", correct: false }
+      ],
       explanation: "Newton's First Law (Law of Inertia) states that an object at rest stays at rest unless acted upon by an external force. No force = no change in motion."
     },
     {
       question: "In the coin-card-cup trick, why does the coin fall straight down into the cup?",
-      options: ["The coin is magnetic", "The coin has inertia and resists horizontal motion", "Gravity is stronger on coins", "The cup pulls the coin"],
-      correct: 1,
+      options: [
+        { text: "The coin is magnetic", correct: false },
+        { text: "The coin has inertia and resists horizontal motion", correct: true },
+        { text: "Gravity is stronger on coins", correct: false },
+        { text: "The cup pulls the coin", correct: false }
+      ],
       explanation: "The coin has inertia - it resists changes to its state of motion. When the card is flicked away quickly, the coin 'wants' to stay still, so it drops straight down."
     },
     {
       question: "Why does a fast flick work better than a slow push for the coin trick?",
-      options: ["Fast is more fun", "Less time for friction to act on the coin", "The coin likes speed", "Gravity works faster"],
-      correct: 1,
+      options: [
+        { text: "Fast is more fun", correct: false },
+        { text: "Less time for friction to act on the coin", correct: true },
+        { text: "The coin likes speed", correct: false },
+        { text: "Gravity works faster", correct: false }
+      ],
       explanation: "A fast flick minimizes the time friction has to transfer horizontal motion to the coin. The quicker the card leaves, the less force is transferred to the coin."
     },
     {
       question: "When a bus suddenly stops, passengers lurch forward. This is because:",
-      options: ["The bus pushes them forward", "Their bodies have inertia and continue moving", "Gravity changed direction", "The seats push them"],
-      correct: 1,
+      options: [
+        { text: "The bus pushes them forward", correct: false },
+        { text: "Their bodies have inertia and continue moving", correct: true },
+        { text: "Gravity changed direction", correct: false },
+        { text: "The seats push them", correct: false }
+      ],
       explanation: "Passengers' bodies were moving with the bus. When the bus stops, their bodies continue moving forward due to inertia until a force (seatbelt, seat, friction) stops them."
     },
     {
       question: "A tablecloth can be pulled from under dishes if pulled:",
-      options: ["Slowly and carefully", "Quickly and sharply", "Upward at an angle", "While dishes are wet"],
-      correct: 1,
+      options: [
+        { text: "Slowly and carefully", correct: false },
+        { text: "Quickly and sharply", correct: true },
+        { text: "Upward at an angle", correct: false },
+        { text: "While dishes are wet", correct: false }
+      ],
       explanation: "Quick motion minimizes the time friction acts on the dishes. The dishes' inertia keeps them in place if the tablecloth is pulled fast enough."
     },
     {
       question: "Why do cars have seatbelts?",
-      options: ["To look cool", "To stop inertia from throwing passengers forward in a crash", "To keep seats clean", "Legal requirement only"],
-      correct: 1,
+      options: [
+        { text: "To look cool", correct: false },
+        { text: "To stop inertia from throwing passengers forward in a crash", correct: true },
+        { text: "To keep seats clean", correct: false },
+        { text: "Legal requirement only", correct: false }
+      ],
       explanation: "In a crash, the car stops but passengers continue moving forward due to inertia. Seatbelts provide the external force needed to stop the passenger safely."
     },
     {
       question: "A hockey puck on ice keeps sliding because:",
-      options: ["Ice is magical", "Very little friction = little force to change its motion", "The puck is afraid to stop", "Cold temperatures speed things up"],
-      correct: 1,
+      options: [
+        { text: "Ice is magical", correct: false },
+        { text: "Very little friction = little force to change its motion", correct: true },
+        { text: "The puck is afraid to stop", correct: false },
+        { text: "Cold temperatures speed things up", correct: false }
+      ],
       explanation: "Ice has very low friction. With almost no external force acting on the puck, it continues moving in a straight line - demonstrating Newton's First Law perfectly."
     },
     {
       question: "If you're in a car making a sharp right turn, you feel pushed to the left. This is because:",
-      options: ["The door pushes you", "Your body's inertia resists the change in direction", "Gravity shifts", "Wind from outside"],
-      correct: 1,
+      options: [
+        { text: "The door pushes you", correct: false },
+        { text: "Your body's inertia resists the change in direction", correct: true },
+        { text: "Gravity shifts", correct: false },
+        { text: "Wind from outside", correct: false }
+      ],
       explanation: "Your body has inertia and 'wants' to continue in a straight line. The car turns right, but your body initially continues straight, making you feel 'pushed' left."
     },
     {
       question: "The coin-card trick works best when the card is:",
-      options: ["Heavy and rough", "Light and smooth", "Wet", "Made of metal"],
-      correct: 1,
+      options: [
+        { text: "Heavy and rough", correct: false },
+        { text: "Light and smooth", correct: true },
+        { text: "Wet", correct: false },
+        { text: "Made of metal", correct: false }
+      ],
       explanation: "A smooth card has less friction with the coin. A light card requires less force to accelerate quickly. Both factors help the coin stay in place."
     },
     {
       question: "An astronaut in space throws a ball. What happens to it?",
-      options: ["It stops immediately", "It returns to the astronaut", "It keeps moving forever (in the same direction)", "It falls to Earth"],
-      correct: 2,
+      options: [
+        { text: "It stops immediately", correct: false },
+        { text: "It returns to the astronaut", correct: false },
+        { text: "It keeps moving forever (in the same direction)", correct: true },
+        { text: "It falls to Earth", correct: false }
+      ],
       explanation: "In space, there's no air resistance or friction. With no external force to slow it down, the ball continues moving in a straight line forever - pure inertia!"
     }
   ]);
@@ -324,6 +364,11 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
     };
   }, []);
 
+  // Calculate score helper
+  const calculateScore = (): number => {
+    return testScore;
+  };
+
   // Handle test answer
   const handleTestAnswer = useCallback((answerIndex: number) => {
     const now = Date.now();
@@ -334,7 +379,7 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
     setSelectedAnswer(answerIndex);
     setShowExplanation(true);
 
-    if (answerIndex === testQuestions[currentQuestion].correct) {
+    if (testQuestions[currentQuestion].options[answerIndex]?.correct) {
       setTestScore(s => s + 1);
       playSound('success');
     } else {
@@ -1149,7 +1194,7 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
               let textClass = 'text-white';
 
               if (showExplanation) {
-                if (index === question.correct) {
+                if (option.correct) {
                   bgClass = 'bg-emerald-500/20 border-emerald-500';
                   textClass = 'text-emerald-400';
                 } else if (index === selectedAnswer) {
@@ -1165,7 +1210,7 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
                   disabled={showExplanation}
                   className={`p-4 rounded-xl border-2 text-left transition-all ${bgClass}`}
                 >
-                  <span className={`text-sm ${textClass}`}>{option}</span>
+                  <span className={`text-sm ${textClass}`}>{option.text}</span>
                 </button>
               );
             })}
@@ -1174,14 +1219,14 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
 
         {showExplanation && (
           <div className={`p-4 rounded-xl max-w-lg w-full mb-6 ${
-            selectedAnswer === question.correct
+            testQuestions[currentQuestion].options[selectedAnswer!]?.correct
               ? 'bg-emerald-500/10 border border-emerald-500/30'
               : 'bg-red-500/10 border border-red-500/30'
           }`}>
             <p className={`font-semibold mb-2 ${
-              selectedAnswer === question.correct ? 'text-emerald-400' : 'text-red-400'
+              testQuestions[currentQuestion].options[selectedAnswer!]?.correct ? 'text-emerald-400' : 'text-red-400'
             }`}>
-              {selectedAnswer === question.correct ? '\u2713 Correct!' : '\u2717 Not quite'}
+              {testQuestions[currentQuestion].options[selectedAnswer!]?.correct ? '\u2713 Correct!' : '\u2717 Not quite'}
             </p>
             <p className="text-slate-300 text-sm">{question.explanation}</p>
           </div>

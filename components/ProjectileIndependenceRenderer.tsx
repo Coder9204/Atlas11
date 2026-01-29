@@ -159,120 +159,110 @@ const testQuestions = [
     scenario: "You're standing on a cliff edge with two identical balls. You drop one straight down and throw the other horizontally at the same instant.",
     question: "Which ball hits the water below first?",
     options: [
-      "The dropped ball - it takes the direct path",
-      "The thrown ball - horizontal speed adds to total speed",
-      "They hit at exactly the same time",
-      "The thrown ball - it has more energy"
+      { text: "The dropped ball - it takes the direct path", correct: false },
+      { text: "The thrown ball - horizontal speed adds to total speed", correct: false },
+      { text: "They hit at exactly the same time", correct: true },
+      { text: "The thrown ball - it has more energy", correct: false }
     ],
-    correct: 2,
     explanation: "Both balls hit at exactly the same time! The horizontal and vertical motions are completely independent. Both experience the same gravitational acceleration and fall the same vertical distance, so they take the same time regardless of horizontal velocity."
   },
   {
     scenario: "An airplane flying at 200 m/s releases a supply crate from 500m altitude.",
     question: "How does the crate move immediately after release (ignoring air resistance)?",
     options: [
-      "Falls straight down since it's no longer pushed by the plane",
-      "Continues at 200 m/s horizontally while also accelerating downward at g",
-      "Slows down horizontally as it falls",
-      "Arcs backward relative to the plane"
+      { text: "Falls straight down since it's no longer pushed by the plane", correct: false },
+      { text: "Continues at 200 m/s horizontally while also accelerating downward at g", correct: true },
+      { text: "Slows down horizontally as it falls", correct: false },
+      { text: "Arcs backward relative to the plane", correct: false }
     ],
-    correct: 1,
     explanation: "The crate maintains its 200 m/s horizontal velocity (Newton's first law - no horizontal forces to change it) while simultaneously accelerating downward at g. These motions are independent. The crate stays directly below the plane!"
   },
   {
     scenario: "A cannonball is fired horizontally from a tower. At the same instant, another cannonball is dropped from the same height.",
     question: "If the fired cannonball has twice the initial horizontal speed, how does this affect when it lands?",
     options: [
-      "It lands twice as fast",
-      "It lands at the same time but twice as far",
-      "It lands later because it travels farther",
-      "It lands sooner because it has more kinetic energy"
+      { text: "It lands twice as fast", correct: false },
+      { text: "It lands at the same time but twice as far", correct: true },
+      { text: "It lands later because it travels farther", correct: false },
+      { text: "It lands sooner because it has more kinetic energy", correct: false }
     ],
-    correct: 1,
     explanation: "Doubling horizontal speed has zero effect on landing time (vertical motion is independent) but exactly doubles the horizontal distance traveled. Time is determined only by height and gravity: t = √(2h/g)."
   },
   {
     scenario: "A baseball is thrown at 30 m/s at a 30° angle above horizontal.",
     question: "What are the independent velocity components at launch?",
     options: [
-      "Horizontal: 30 m/s, Vertical: 0 m/s",
-      "Horizontal: 15 m/s, Vertical: 15 m/s",
-      "Horizontal: 26 m/s, Vertical: 15 m/s",
-      "Horizontal: 15 m/s, Vertical: 26 m/s"
+      { text: "Horizontal: 30 m/s, Vertical: 0 m/s", correct: false },
+      { text: "Horizontal: 15 m/s, Vertical: 15 m/s", correct: false },
+      { text: "Horizontal: 26 m/s, Vertical: 15 m/s", correct: true },
+      { text: "Horizontal: 15 m/s, Vertical: 26 m/s", correct: false }
     ],
-    correct: 2,
     explanation: "Using trigonometry: Horizontal = 30×cos(30°) = 30×0.866 ≈ 26 m/s. Vertical = 30×sin(30°) = 30×0.5 = 15 m/s. These components evolve independently - horizontal stays constant while vertical changes due to gravity."
   },
   {
     scenario: "A monkey hangs from a branch. A hunter aims directly at the monkey and fires. The monkey, seeing the gun fire, drops from the branch at the exact instant the bullet leaves the gun.",
     question: "What happens? (Ignore air resistance)",
     options: [
-      "The bullet passes over the monkey - it aimed where the monkey was",
-      "The bullet passes under the monkey - gravity affects only the bullet",
-      "The bullet hits the monkey - both fall the same amount during flight",
-      "It depends on the bullet's speed"
+      { text: "The bullet passes over the monkey - it aimed where the monkey was", correct: false },
+      { text: "The bullet passes under the monkey - gravity affects only the bullet", correct: false },
+      { text: "The bullet hits the monkey - both fall the same amount during flight", correct: true },
+      { text: "It depends on the bullet's speed", correct: false }
     ],
-    correct: 2,
     explanation: "The bullet hits the monkey! Both the bullet and monkey are accelerated downward by gravity equally. Whatever distance the monkey falls during the bullet's flight time, the bullet falls by exactly the same amount (starting from the aimed path). This is the famous 'monkey and hunter' problem!"
   },
   {
     scenario: "On the Moon (gravity = 1.6 m/s²), you throw a ball horizontally at 10 m/s from a 20m cliff.",
     question: "Compared to Earth (g = 10 m/s²), how does the Moon affect the trajectory?",
     options: [
-      "Ball goes same distance but takes longer to land",
-      "Ball goes farther and takes longer to land",
-      "Ball goes farther but takes the same time",
-      "Ball goes same distance but lands sooner"
+      { text: "Ball goes same distance but takes longer to land", correct: false },
+      { text: "Ball goes farther and takes longer to land", correct: true },
+      { text: "Ball goes farther but takes the same time", correct: false },
+      { text: "Ball goes same distance but lands sooner", correct: false }
     ],
-    correct: 1,
     explanation: "On Moon: t = √(2×20/1.6) = 5s. Distance = 10×5 = 50m. On Earth: t = √(2×20/10) = 2s. Distance = 10×2 = 20m. Lower gravity means more time in the air (vertical), and same horizontal speed means more distance. Moon ball travels 2.5× farther and takes 2.5× longer."
   },
   {
     scenario: "A car drives off a cliff at 20 m/s. The cliff is 45m high.",
     question: "How far from the base of the cliff does the car land?",
     options: [
-      "20 meters",
-      "45 meters",
-      "60 meters",
-      "90 meters"
+      { text: "20 meters", correct: false },
+      { text: "45 meters", correct: false },
+      { text: "60 meters", correct: true },
+      { text: "90 meters", correct: false }
     ],
-    correct: 2,
     explanation: "First find time: t = √(2h/g) = √(90/10) = 3 seconds. Then horizontal distance = v×t = 20×3 = 60 meters. The car's horizontal speed stays constant at 20 m/s while it falls for 3 seconds."
   },
   {
     scenario: "A projectile is at the peak of its trajectory (highest point).",
     question: "At this exact moment, what are the velocity components?",
     options: [
-      "Both horizontal and vertical velocity are zero",
-      "Horizontal velocity is zero, vertical velocity is maximum",
-      "Horizontal velocity is unchanged, vertical velocity is zero",
-      "Both are at their minimum non-zero values"
+      { text: "Both horizontal and vertical velocity are zero", correct: false },
+      { text: "Horizontal velocity is zero, vertical velocity is maximum", correct: false },
+      { text: "Horizontal velocity is unchanged, vertical velocity is zero", correct: true },
+      { text: "Both are at their minimum non-zero values", correct: false }
     ],
-    correct: 2,
     explanation: "At the peak, only the vertical velocity has become zero (it changed from positive to negative). The horizontal velocity never changes (no horizontal forces) and maintains its original value. The projectile is still moving horizontally at full speed!"
   },
   {
     scenario: "Two projectiles are launched at the same speed but different angles: 30° and 60°.",
     question: "Ignoring air resistance, which lands farther from the launch point?",
     options: [
-      "The 30° projectile - lower angle means more horizontal speed",
-      "The 60° projectile - higher arc means more time in air",
-      "They land at the same distance",
-      "Cannot determine without knowing the speed"
+      { text: "The 30° projectile - lower angle means more horizontal speed", correct: false },
+      { text: "The 60° projectile - higher arc means more time in air", correct: false },
+      { text: "They land at the same distance", correct: true },
+      { text: "Cannot determine without knowing the speed", correct: false }
     ],
-    correct: 2,
     explanation: "They land at the same distance! This is the 'complementary angle' property of projectile motion. Range = v²sin(2θ)/g. Since sin(60°) = sin(120°) = sin(180°-60°), angles that sum to 90° give equal range. 30° and 60° are complementary."
   },
   {
     scenario: "A ball is thrown horizontally from a moving train at 10 m/s relative to the train. The train moves at 30 m/s relative to the ground.",
     question: "What is the ball's horizontal velocity relative to the ground (in the direction of train motion)?",
     options: [
-      "10 m/s",
-      "20 m/s",
-      "30 m/s",
-      "40 m/s"
+      { text: "10 m/s", correct: false },
+      { text: "20 m/s", correct: false },
+      { text: "30 m/s", correct: false },
+      { text: "40 m/s", correct: true }
     ],
-    correct: 3,
     explanation: "Velocities add! If the ball is thrown forward relative to the train: 30 m/s (train) + 10 m/s (throw) = 40 m/s relative to ground. If thrown backward, it would be 20 m/s. This still demonstrates independence - the vertical motion (falling) is unaffected by this 40 m/s horizontal velocity."
   }
 ];
@@ -1833,7 +1823,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
                       }}>
                         {String.fromCharCode(65 + idx)}
                       </span>
-                      {option}
+                      {option.text}
                     </button>
                   );
                 })}
@@ -1905,7 +1895,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
 
               {(() => {
                 const score = testAnswers.reduce((acc, answer, idx) =>
-                  acc + (answer === testQuestions[idx].correct ? 1 : 0), 0);
+                  acc + (testQuestions[idx].options[answer as number]?.correct ? 1 : 0), 0);
                 const percentage = Math.round((score / testQuestions.length) * 100);
 
                 return (
@@ -1928,7 +1918,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: `${design.space.lg}px` }}>
                       {testQuestions.map((q, idx) => {
-                        const isCorrect = testAnswers[idx] === q.correct;
+                        const isCorrect = q.options[testAnswers[idx] as number]?.correct ?? false;
                         return (
                           <div key={idx} style={{
                             padding: `${design.space.lg}px`,
@@ -1955,11 +1945,11 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
                                 </p>
                                 {!isCorrect && (
                                   <p style={{ fontSize: '13px', color: design.colors.error, margin: `${design.space.sm}px 0 0` }}>
-                                    Your answer: {q.options[testAnswers[idx] as number]}
+                                    Your answer: {q.options[testAnswers[idx] as number]?.text}
                                   </p>
                                 )}
                                 <p style={{ fontSize: '13px', color: design.colors.success, margin: `${design.space.xs}px 0 0` }}>
-                                  Correct: {q.options[q.correct]}
+                                  Correct: {q.options.find(o => o.correct)?.text}
                                 </p>
                               </div>
                             </div>
@@ -1991,7 +1981,7 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
   // Phase: Mastery - Premium completion screen
   const renderMastery = () => {
     const score = testAnswers.reduce((acc, answer, idx) =>
-      acc + (answer === testQuestions[idx].correct ? 1 : 0), 0);
+      acc + (testQuestions[idx].options[answer as number]?.correct ? 1 : 0), 0);
 
     return (
       <div style={{

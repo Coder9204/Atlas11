@@ -74,53 +74,93 @@ const applications = [
 const testQuestions = [
   {
     question: 'A marble is released from rest at height h. At what height will it have half kinetic and half potential energy?',
-    options: ['h/4', 'h/2', 'h/3', '3h/4'],
-    correct: 1,
+    options: [
+      { text: 'h/4', correct: false },
+      { text: 'h/2', correct: true },
+      { text: 'h/3', correct: false },
+      { text: '3h/4', correct: false }
+    ]
   },
   {
     question: 'Why can\'t a roller coaster\'s second hill be higher than the first (without motors)?',
-    options: ['Too scary', 'Not enough potential energy', 'Cars would derail', 'Air resistance'],
-    correct: 1,
+    options: [
+      { text: 'Too scary', correct: false },
+      { text: 'Not enough potential energy', correct: true },
+      { text: 'Cars would derail', correct: false },
+      { text: 'Air resistance', correct: false }
+    ]
   },
   {
     question: 'A ball rolls down. At the bottom, speed is v. From twice the height, speed would be:',
-    options: ['v', '2v', 'v*sqrt(2)', '4v'],
-    correct: 2,
+    options: [
+      { text: 'v', correct: false },
+      { text: '2v', correct: false },
+      { text: 'v*sqrt(2)', correct: true },
+      { text: '4v', correct: false }
+    ]
   },
   {
     question: 'What happens to mechanical energy when friction is present?',
-    options: ['Disappears', 'Converts to thermal energy', 'Increases', 'Stays the same'],
-    correct: 1,
+    options: [
+      { text: 'Disappears', correct: false },
+      { text: 'Converts to thermal energy', correct: true },
+      { text: 'Increases', correct: false },
+      { text: 'Stays the same', correct: false }
+    ]
   },
   {
     question: 'A pendulum swings from A to B. At which point is kinetic energy maximum?',
-    options: ['At A (highest)', 'At B (other highest)', 'At the lowest point', 'Halfway'],
-    correct: 2,
+    options: [
+      { text: 'At A (highest)', correct: false },
+      { text: 'At B (other highest)', correct: false },
+      { text: 'At the lowest point', correct: true },
+      { text: 'Halfway', correct: false }
+    ]
   },
   {
     question: 'Two marbles (m and 2m) released from same height. Their speeds at bottom are:',
-    options: ['Heavier is faster', 'Lighter is faster', 'Same speed', 'Cannot determine'],
-    correct: 2,
+    options: [
+      { text: 'Heavier is faster', correct: false },
+      { text: 'Lighter is faster', correct: false },
+      { text: 'Same speed', correct: true },
+      { text: 'Cannot determine', correct: false }
+    ]
   },
   {
     question: 'Skater at top with 100J of PE. At bottom (ignoring friction), KE is:',
-    options: ['50J', '100J', '200J', '0J'],
-    correct: 1,
+    options: [
+      { text: '50J', correct: false },
+      { text: '100J', correct: true },
+      { text: '200J', correct: false },
+      { text: '0J', correct: false }
+    ]
   },
   {
     question: 'Which has MOST mechanical energy? Ball at 10m at rest, at 5m moving 10m/s, or at 0m moving 14m/s?',
-    options: ['10m at rest', '5m moving', '0m moving fast', 'All similar'],
-    correct: 3,
+    options: [
+      { text: '10m at rest', correct: false },
+      { text: '5m moving', correct: false },
+      { text: '0m moving fast', correct: false },
+      { text: 'All similar', correct: true }
+    ]
   },
   {
     question: 'Hydroelectric dam: what is the intermediate form of energy?',
-    options: ['Chemical', 'Nuclear', 'Kinetic energy of water', 'Thermal'],
-    correct: 2,
+    options: [
+      { text: 'Chemical', correct: false },
+      { text: 'Nuclear', correct: false },
+      { text: 'Kinetic energy of water', correct: true },
+      { text: 'Thermal', correct: false }
+    ]
   },
   {
     question: 'If ALL friction eliminated, a marble would:',
-    options: ['Eventually stop', 'Return to exactly starting height', 'Go higher', 'Accelerate forever'],
-    correct: 1,
+    options: [
+      { text: 'Eventually stop', correct: false },
+      { text: 'Return to exactly starting height', correct: true },
+      { text: 'Go higher', correct: false },
+      { text: 'Accelerate forever', correct: false }
+    ]
   },
 ];
 
@@ -319,7 +359,7 @@ const EnergyConservationRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
     const newAnswers = [...testAnswers];
     newAnswers[testIndex] = answerIndex;
     setTestAnswers(newAnswers);
-    const correct = answerIndex === testQuestions[testIndex].correct;
+    const correct = testQuestions[testIndex].options[answerIndex]?.correct ?? false;
     playSound(correct ? 'success' : 'failure');
     onGameEvent?.({ type: 'test_answered', data: { answer: answerIndex, correct } });
   }, [testAnswers, testIndex, playSound, onGameEvent]);
@@ -815,7 +855,7 @@ const EnergyConservationRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
 
   const renderTest = () => {
     if (testSubmitted) {
-      const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (ans === testQuestions[i].correct ? 1 : 0), 0);
+      const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0);
       const passed = totalCorrect >= 7;
       return (
         <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
@@ -849,7 +889,7 @@ const EnergyConservationRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
           {testQuestions.map((_, i) => (
             <div key={i} className={`w-2 h-2 rounded-full ${
               testAnswers[i] !== null
-                ? testAnswers[i] === testQuestions[i].correct ? 'bg-emerald-500' : 'bg-red-500'
+                ? testQuestions[i].options[testAnswers[i] as number]?.correct ? 'bg-emerald-500' : 'bg-red-500'
                 : i === testIndex ? 'bg-purple-400' : 'bg-slate-600'
             }`} />
           ))}
@@ -860,7 +900,7 @@ const EnergyConservationRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
         <div className="grid gap-3 w-full max-w-xl">
           {q.options.map((option, i) => {
             const isSelected = testAnswers[testIndex] === i;
-            const isCorrect = i === q.correct;
+            const isCorrect = option.correct;
             const showResult = testAnswers[testIndex] !== null;
             return (
               <button
@@ -876,7 +916,7 @@ const EnergyConservationRenderer: React.FC<Props> = ({ onGameEvent, currentPhase
                 }`}
               >
                 <span className="font-bold text-white mr-2">{String.fromCharCode(65 + i)}.</span>
-                <span className="text-slate-200">{option}</span>
+                <span className="text-slate-200">{option.text}</span>
               </button>
             );
           })}

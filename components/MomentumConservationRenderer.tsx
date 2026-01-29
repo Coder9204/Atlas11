@@ -97,16 +97,66 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
 
   // Test questions
   const testQuestions = [
-    { question: "Two carts push off each other. If cart A is heavier, which cart moves faster?", options: ["Cart A (heavier)", "Cart B (lighter)", "Both same speed", "Neither moves"], correct: 1, explanation: "The lighter cart moves faster. Since momentum is conserved and starts at zero, m₁v₁ = m₂v₂. The lighter cart needs higher velocity to match the heavier cart's momentum." },
-    { question: "What is the total momentum before and after two stationary carts push off?", options: ["Increases after", "Decreases after", "Zero both times", "Depends on masses"], correct: 2, explanation: "Total momentum is conserved. Starting at rest = zero momentum. After pushing, momenta are equal and opposite, still summing to zero." },
-    { question: "If a 1kg cart and 3kg cart push off, and the 1kg cart moves at 6 m/s, how fast is the 3kg cart?", options: ["6 m/s", "2 m/s", "18 m/s", "3 m/s"], correct: 1, explanation: "Using p₁ = p₂: 1kg × 6m/s = 3kg × v₂, so v₂ = 2 m/s. The heavier cart moves slower." },
-    { question: "Why doesn't total momentum equal zero on carpet (with friction)?", options: ["Friction creates momentum", "Momentum transfers to Earth", "Carts are heavier", "Momentum is destroyed"], correct: 1, explanation: "Friction transfers momentum to Earth. The Earth-cart system still conserves momentum, but Earth's huge mass means negligible motion." },
-    { question: "Two ice skaters push off each other. What happens?", options: ["Only lighter one moves", "Only heavier one moves", "Both move opposite ways", "Neither moves on ice"], correct: 2, explanation: "Both skaters move in opposite directions. The lighter skater moves faster, but both acquire equal and opposite momenta." },
-    { question: "Momentum is calculated as:", options: ["mass × acceleration", "mass × velocity", "force × time", "mass × distance"], correct: 1, explanation: "Momentum (p) equals mass times velocity: p = mv. It's a vector quantity with both magnitude and direction." },
-    { question: "A gun recoils when fired. This demonstrates:", options: ["Energy conservation", "Momentum conservation", "Mass conservation", "Friction effects"], correct: 1, explanation: "Gun recoil demonstrates momentum conservation. The bullet gains forward momentum, so the gun gains equal backward momentum." },
-    { question: "If you double both masses but keep the spring the same, what happens to velocities?", options: ["Both double", "Both halve", "Stay the same", "One doubles, one halves"], correct: 1, explanation: "Same spring impulse but doubled masses means both velocities halve. Total momentum of each cart stays similar, but v = p/m means lower velocity." },
-    { question: "Why is momentum a vector quantity?", options: ["Only has magnitude", "Has magnitude and direction", "Always positive", "Doesn't change"], correct: 1, explanation: "Momentum is a vector because it has both magnitude (how much) and direction (which way). Opposite momenta cancel in the sum." },
-    { question: "In space, an astronaut throws a tool. What happens?", options: ["Only tool moves", "Both move opposite ways", "Neither moves in space", "Astronaut moves faster"], correct: 1, explanation: "Both move in opposite directions due to momentum conservation. The lighter tool moves faster than the heavier astronaut." }
+    { question: "Two carts push off each other. If cart A is heavier, which cart moves faster?", options: [
+      { text: "Cart A (heavier)", correct: false },
+      { text: "Cart B (lighter)", correct: true },
+      { text: "Both same speed", correct: false },
+      { text: "Neither moves", correct: false }
+    ], explanation: "The lighter cart moves faster. Since momentum is conserved and starts at zero, m₁v₁ = m₂v₂. The lighter cart needs higher velocity to match the heavier cart's momentum." },
+    { question: "What is the total momentum before and after two stationary carts push off?", options: [
+      { text: "Increases after", correct: false },
+      { text: "Decreases after", correct: false },
+      { text: "Zero both times", correct: true },
+      { text: "Depends on masses", correct: false }
+    ], explanation: "Total momentum is conserved. Starting at rest = zero momentum. After pushing, momenta are equal and opposite, still summing to zero." },
+    { question: "If a 1kg cart and 3kg cart push off, and the 1kg cart moves at 6 m/s, how fast is the 3kg cart?", options: [
+      { text: "6 m/s", correct: false },
+      { text: "2 m/s", correct: true },
+      { text: "18 m/s", correct: false },
+      { text: "3 m/s", correct: false }
+    ], explanation: "Using p₁ = p₂: 1kg × 6m/s = 3kg × v₂, so v₂ = 2 m/s. The heavier cart moves slower." },
+    { question: "Why doesn't total momentum equal zero on carpet (with friction)?", options: [
+      { text: "Friction creates momentum", correct: false },
+      { text: "Momentum transfers to Earth", correct: true },
+      { text: "Carts are heavier", correct: false },
+      { text: "Momentum is destroyed", correct: false }
+    ], explanation: "Friction transfers momentum to Earth. The Earth-cart system still conserves momentum, but Earth's huge mass means negligible motion." },
+    { question: "Two ice skaters push off each other. What happens?", options: [
+      { text: "Only lighter one moves", correct: false },
+      { text: "Only heavier one moves", correct: false },
+      { text: "Both move opposite ways", correct: true },
+      { text: "Neither moves on ice", correct: false }
+    ], explanation: "Both skaters move in opposite directions. The lighter skater moves faster, but both acquire equal and opposite momenta." },
+    { question: "Momentum is calculated as:", options: [
+      { text: "mass × acceleration", correct: false },
+      { text: "mass × velocity", correct: true },
+      { text: "force × time", correct: false },
+      { text: "mass × distance", correct: false }
+    ], explanation: "Momentum (p) equals mass times velocity: p = mv. It's a vector quantity with both magnitude and direction." },
+    { question: "A gun recoils when fired. This demonstrates:", options: [
+      { text: "Energy conservation", correct: false },
+      { text: "Momentum conservation", correct: true },
+      { text: "Mass conservation", correct: false },
+      { text: "Friction effects", correct: false }
+    ], explanation: "Gun recoil demonstrates momentum conservation. The bullet gains forward momentum, so the gun gains equal backward momentum." },
+    { question: "If you double both masses but keep the spring the same, what happens to velocities?", options: [
+      { text: "Both double", correct: false },
+      { text: "Both halve", correct: true },
+      { text: "Stay the same", correct: false },
+      { text: "One doubles, one halves", correct: false }
+    ], explanation: "Same spring impulse but doubled masses means both velocities halve. Total momentum of each cart stays similar, but v = p/m means lower velocity." },
+    { question: "Why is momentum a vector quantity?", options: [
+      { text: "Only has magnitude", correct: false },
+      { text: "Has magnitude and direction", correct: true },
+      { text: "Always positive", correct: false },
+      { text: "Doesn't change", correct: false }
+    ], explanation: "Momentum is a vector because it has both magnitude (how much) and direction (which way). Opposite momenta cancel in the sum." },
+    { question: "In space, an astronaut throws a tool. What happens?", options: [
+      { text: "Only tool moves", correct: false },
+      { text: "Both move opposite ways", correct: true },
+      { text: "Neither moves in space", correct: false },
+      { text: "Astronaut moves faster", correct: false }
+    ], explanation: "Both move in opposite directions due to momentum conservation. The lighter tool moves faster than the heavier astronaut." }
   ];
 
   // Real-world applications
@@ -261,7 +311,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
     if (answeredQuestions.has(currentQuestion)) return;
     setSelectedAnswer(answerIndex);
     setShowExplanation(true);
-    const isCorrect = answerIndex === testQuestions[currentQuestion].correct;
+    const isCorrect = testQuestions[currentQuestion].options[answerIndex]?.correct;
     if (isCorrect) {
       setCorrectAnswers(prev => prev + 1);
       playSound('success');
@@ -794,7 +844,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
             {q.options.map((option, idx) => {
               let bgClass = 'bg-slate-700/50 hover:bg-slate-600/50';
               if (isAnswered) {
-                if (idx === q.correct) bgClass = 'bg-emerald-600/30 border-emerald-500';
+                if (option.correct) bgClass = 'bg-emerald-600/30 border-emerald-500';
                 else if (idx === selectedAnswer) bgClass = 'bg-red-600/30 border-red-500';
               }
               return (
@@ -804,7 +854,7 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
                   disabled={isAnswered}
                   className={`p-4 rounded-xl text-left border-2 transition-all ${bgClass} ${isAnswered ? 'cursor-default' : ''}`}
                 >
-                  <span className="text-slate-200">{option}</span>
+                  <span className="text-slate-200">{option.text}</span>
                 </button>
               );
             })}

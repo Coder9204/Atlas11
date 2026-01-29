@@ -155,62 +155,102 @@ export default function DiffusionConvectionRenderer({ onGameEvent, currentPhase,
   const [testQuestions] = useState([
     {
       question: "What is the primary driving force behind diffusion?",
-      options: ["Temperature differences", "Random molecular motion", "Gravity", "Pressure differences"],
-      correct: 1,
+      options: [
+        { text: "Temperature differences", correct: false },
+        { text: "Random molecular motion", correct: true },
+        { text: "Gravity", correct: false },
+        { text: "Pressure differences", correct: false }
+      ],
       explanation: "Diffusion occurs due to random molecular motion (Brownian motion). Molecules naturally spread from high to low concentration areas through this random movement."
     },
     {
       question: "Why does dye spread faster in hot water than cold water?",
-      options: ["Hot water is thinner", "Convection currents carry the dye", "Hot water has more oxygen", "Dye dissolves better when hot"],
-      correct: 1,
+      options: [
+        { text: "Hot water is thinner", correct: false },
+        { text: "Convection currents carry the dye", correct: true },
+        { text: "Hot water has more oxygen", correct: false },
+        { text: "Dye dissolves better when hot", correct: false }
+      ],
       explanation: "In hot water, temperature gradients create convection currents that actively transport the dye throughout the liquid, much faster than diffusion alone."
     },
     {
       question: "What creates convection currents in a fluid?",
-      options: ["Magnetic fields", "Temperature differences causing density changes", "Wind from outside", "Chemical reactions"],
-      correct: 1,
+      options: [
+        { text: "Magnetic fields", correct: false },
+        { text: "Temperature differences causing density changes", correct: true },
+        { text: "Wind from outside", correct: false },
+        { text: "Chemical reactions", correct: false }
+      ],
       explanation: "Convection occurs because warm fluid is less dense and rises, while cooler fluid sinks. This creates circular current patterns that transport heat and matter."
     },
     {
       question: "In which scenario would you expect pure diffusion (no convection)?",
-      options: ["Boiling water", "A uniformly heated room-temperature liquid", "A pot on a stove", "Ocean near the equator"],
-      correct: 1,
+      options: [
+        { text: "Boiling water", correct: false },
+        { text: "A uniformly heated room-temperature liquid", correct: true },
+        { text: "A pot on a stove", correct: false },
+        { text: "Ocean near the equator", correct: false }
+      ],
       explanation: "Pure diffusion dominates when there are no temperature gradients. In a uniformly heated liquid, there's no density difference to drive convection."
     },
     {
       question: "Which process is faster for spreading substances through a liquid?",
-      options: ["Diffusion", "Convection", "They're equally fast", "It depends on the substance"],
-      correct: 1,
+      options: [
+        { text: "Diffusion", correct: false },
+        { text: "Convection", correct: true },
+        { text: "They're equally fast", correct: false },
+        { text: "It depends on the substance", correct: false }
+      ],
       explanation: "Convection is much faster because it involves bulk fluid movement, transporting large amounts of material simultaneously. Diffusion relies on slow random molecular motion."
     },
     {
       question: "In a lava lamp, what causes the colored blobs to rise and fall?",
-      options: ["Magnets in the base", "Convection from the heated bottom", "Air bubbles", "Chemical reactions"],
-      correct: 1,
+      options: [
+        { text: "Magnets in the base", correct: false },
+        { text: "Convection from the heated bottom", correct: true },
+        { text: "Air bubbles", correct: false },
+        { text: "Chemical reactions", correct: false }
+      ],
       explanation: "The lava lamp works by convection. The light bulb heats the wax at the bottom, making it less dense so it rises. At the top, it cools, becomes denser, and sinks."
     },
     {
       question: "Ocean currents that distribute heat around the planet are an example of:",
-      options: ["Diffusion", "Convection", "Conduction", "Radiation"],
-      correct: 1,
+      options: [
+        { text: "Diffusion", correct: false },
+        { text: "Convection", correct: true },
+        { text: "Conduction", correct: false },
+        { text: "Radiation", correct: false }
+      ],
       explanation: "Ocean currents are massive convection systems driven by temperature and salinity differences. They transport enormous amounts of heat from the equator to the poles."
     },
     {
       question: "Why are radiators typically placed near the floor in buildings?",
-      options: ["They're easier to install there", "Warm air rises, creating room-wide convection", "Heat travels downward", "It's a safety requirement"],
-      correct: 1,
+      options: [
+        { text: "They're easier to install there", correct: false },
+        { text: "Warm air rises, creating room-wide convection", correct: true },
+        { text: "Heat travels downward", correct: false },
+        { text: "It's a safety requirement", correct: false }
+      ],
       explanation: "Low-placed radiators heat the air near the floor. This warm air rises, creating convection currents that circulate heat throughout the entire room."
     },
     {
       question: "What happens to the rate of diffusion as temperature increases?",
-      options: ["It decreases", "It stays the same", "It increases", "It stops completely"],
-      correct: 2,
+      options: [
+        { text: "It decreases", correct: false },
+        { text: "It stays the same", correct: false },
+        { text: "It increases", correct: true },
+        { text: "It stops completely", correct: false }
+      ],
       explanation: "Higher temperature means faster molecular motion, which speeds up diffusion. However, in liquids, convection often dominates when temperature gradients exist."
     },
     {
       question: "The smell of perfume spreading across a still room is primarily due to:",
-      options: ["Convection in air", "Diffusion of molecules", "Air conditioning", "Gravity pulling scent down"],
-      correct: 1,
+      options: [
+        { text: "Convection in air", correct: false },
+        { text: "Diffusion of molecules", correct: true },
+        { text: "Air conditioning", correct: false },
+        { text: "Gravity pulling scent down", correct: false }
+      ],
       explanation: "In still air without temperature gradients, perfume spreads primarily through diffusion - random molecular motion gradually carrying scent molecules throughout the room."
     }
   ]);
@@ -1715,7 +1755,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, currentPhase,
           <div style={{ display: 'grid', gap: premiumDesign.spacing.md }}>
             {question.options.map((option, index) => {
               const isSelected = selectedAnswer === index;
-              const isCorrect = index === question.correct;
+              const isCorrect = option.correct;
               const showResult = showExplanation;
 
               let bgColor = premiumDesign.colors.background.secondary;
@@ -1757,7 +1797,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, currentPhase,
                     color: premiumDesign.colors.text.primary,
                     fontSize: '15px',
                   }}>
-                    {option}
+                    {option.text}
                   </span>
                 </button>
               );
@@ -1767,24 +1807,24 @@ export default function DiffusionConvectionRenderer({ onGameEvent, currentPhase,
 
         {showExplanation && (
           <div style={{
-            background: selectedAnswer === question.correct
+            background: question.options[selectedAnswer as number]?.correct
               ? 'rgba(16, 185, 129, 0.1)'
               : 'rgba(239, 68, 68, 0.1)',
             borderRadius: premiumDesign.radius.lg,
             padding: premiumDesign.spacing.lg,
-            border: `1px solid ${selectedAnswer === question.correct
+            border: `1px solid ${question.options[selectedAnswer as number]?.correct
               ? 'rgba(16, 185, 129, 0.3)'
               : 'rgba(239, 68, 68, 0.3)'}`,
             marginBottom: premiumDesign.spacing.lg,
           }}>
             <p style={{
-              color: selectedAnswer === question.correct
+              color: question.options[selectedAnswer as number]?.correct
                 ? premiumDesign.colors.success
                 : premiumDesign.colors.error,
               fontWeight: 600,
               marginBottom: premiumDesign.spacing.sm,
             }}>
-              {selectedAnswer === question.correct ? '✓ Correct!' : '✗ Not quite'}
+              {question.options[selectedAnswer as number]?.correct ? '✓ Correct!' : '✗ Not quite'}
             </p>
             <p style={{ color: premiumDesign.colors.text.secondary, margin: 0 }}>
               {question.explanation}
@@ -1808,7 +1848,7 @@ export default function DiffusionConvectionRenderer({ onGameEvent, currentPhase,
                   setTestComplete(true);
                 }
               } else {
-                if (selectedAnswer === question.correct) {
+                if (question.options[selectedAnswer as number]?.correct) {
                   setTestScore(s => s + 1);
                 }
                 setShowExplanation(true);

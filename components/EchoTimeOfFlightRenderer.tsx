@@ -146,62 +146,102 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
   const [testQuestions] = useState([
     {
       question: "If you shout at a cliff 170m away, how long until you hear the echo? (Speed of sound ≈ 340 m/s)",
-      options: ["0.5 seconds", "1 second", "2 seconds", "340 seconds"],
-      correct: 1,
+      options: [
+        { text: "0.5 seconds", correct: false },
+        { text: "1 second", correct: true },
+        { text: "2 seconds", correct: false },
+        { text: "340 seconds", correct: false }
+      ],
       explanation: "The sound travels to the cliff (170m) and back (170m) = 340m total. At 340 m/s, time = 340/340 = 1 second."
     },
     {
       question: "Why do we divide the total echo time by 2 to find the distance to an object?",
-      options: ["Sound slows down on the way back", "Sound travels there AND back", "The echo is quieter", "We don't - that's wrong"],
-      correct: 1,
+      options: [
+        { text: "Sound slows down on the way back", correct: false },
+        { text: "Sound travels there AND back", correct: true },
+        { text: "The echo is quieter", correct: false },
+        { text: "We don't - that's wrong", correct: false }
+      ],
       explanation: "The sound wave travels TO the object and then BACK to you. The total time covers twice the distance, so we divide by 2."
     },
     {
       question: "Sound travels faster in water than in air. Why?",
-      options: ["Water is lighter", "Water molecules are closer together", "Water has more oxygen", "It actually travels slower in water"],
-      correct: 1,
+      options: [
+        { text: "Water is lighter", correct: false },
+        { text: "Water molecules are closer together", correct: true },
+        { text: "Water has more oxygen", correct: false },
+        { text: "It actually travels slower in water", correct: false }
+      ],
       explanation: "In water, molecules are much closer together than in air. Sound is transmitted through molecular collisions, so denser media transmit sound faster."
     },
     {
       question: "A bat sends an ultrasonic pulse and hears it return in 0.02 seconds. How far is the insect? (Sound = 340 m/s)",
-      options: ["6.8 meters", "3.4 meters", "0.68 meters", "0.34 meters"],
-      correct: 1,
+      options: [
+        { text: "6.8 meters", correct: false },
+        { text: "3.4 meters", correct: true },
+        { text: "0.68 meters", correct: false },
+        { text: "0.34 meters", correct: false }
+      ],
       explanation: "Total distance = 340 × 0.02 = 6.8m. But this is round-trip, so the insect is 6.8/2 = 3.4 meters away."
     },
     {
       question: "Why can't we use echo-location to measure the distance to the Moon?",
-      options: ["The Moon is too far", "There's no air in space for sound to travel", "Sound would take too long", "We actually can use echoes"],
-      correct: 1,
+      options: [
+        { text: "The Moon is too far", correct: false },
+        { text: "There's no air in space for sound to travel", correct: true },
+        { text: "Sound would take too long", correct: false },
+        { text: "We actually can use echoes", correct: false }
+      ],
       explanation: "Sound needs a medium (like air or water) to travel. Space is a vacuum with no molecules, so sound cannot travel there. We use radio waves instead!"
     },
     {
       question: "Dolphins use echolocation underwater. Why is this effective?",
-      options: ["Dolphins have better ears", "Sound travels 4x faster in water, giving quick responses", "Water amplifies sound", "Dolphins can see sound"],
-      correct: 1,
+      options: [
+        { text: "Dolphins have better ears", correct: false },
+        { text: "Sound travels 4x faster in water, giving quick responses", correct: true },
+        { text: "Water amplifies sound", correct: false },
+        { text: "Dolphins can see sound", correct: false }
+      ],
       explanation: "Sound travels about 4 times faster in water (~1500 m/s) than air (~340 m/s). This means dolphins get rapid echo responses for precise navigation."
     },
     {
       question: "An ultrasound machine measures a fetus at 0.1 seconds echo time. If sound in body tissue is ~1540 m/s, how deep is the image?",
-      options: ["154 meters", "77 meters", "7.7 cm", "15.4 cm"],
-      correct: 2,
+      options: [
+        { text: "154 meters", correct: false },
+        { text: "77 meters", correct: false },
+        { text: "7.7 cm", correct: true },
+        { text: "15.4 cm", correct: false }
+      ],
       explanation: "Distance = (1540 × 0.1) / 2 = 77m... wait, that's too far! Actually 0.1 seconds = 100ms. For medical ultrasound, typical times are microseconds. 0.0001s × 1540 / 2 = 7.7cm."
     },
     {
       question: "Why do bats use ultrasonic (high frequency) sounds for echolocation?",
-      options: ["They can't hear low sounds", "Higher frequencies give more detail/resolution", "Low sounds are too loud", "Insects can't hear ultrasound"],
-      correct: 1,
+      options: [
+        { text: "They can't hear low sounds", correct: false },
+        { text: "Higher frequencies give more detail/resolution", correct: true },
+        { text: "Low sounds are too loud", correct: false },
+        { text: "Insects can't hear ultrasound", correct: false }
+      ],
       explanation: "Higher frequency sounds have shorter wavelengths, which can detect smaller objects and provide more detailed 'images' of the environment."
     },
     {
       question: "A ship's sonar detects a submarine with a 4-second echo time. How deep is the sub? (Sound in water ≈ 1500 m/s)",
-      options: ["6000 meters", "3000 meters", "1500 meters", "750 meters"],
-      correct: 1,
+      options: [
+        { text: "6000 meters", correct: false },
+        { text: "3000 meters", correct: true },
+        { text: "1500 meters", correct: false },
+        { text: "750 meters", correct: false }
+      ],
       explanation: "Total distance = 1500 × 4 = 6000m. Divide by 2 for one-way distance: 6000/2 = 3000 meters deep."
     },
     {
       question: "Why does thunder seem to 'roll' and last several seconds?",
-      options: ["Lightning is very long", "Sound echoes off clouds and terrain", "Thunder is actually multiple sounds", "All of the above"],
-      correct: 3,
+      options: [
+        { text: "Lightning is very long", correct: false },
+        { text: "Sound echoes off clouds and terrain", correct: false },
+        { text: "Thunder is actually multiple sounds", correct: false },
+        { text: "All of the above", correct: true }
+      ],
       explanation: "Thunder rolls because: the lightning bolt is long (sound from different parts arrives at different times), sound echoes off terrain and clouds, and multiple return strokes can occur!"
     }
   ]);
@@ -1651,7 +1691,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
           <div style={{ display: 'grid', gap: premiumDesign.spacing.md }}>
             {question.options.map((option, index) => {
               const isSelected = selectedAnswer === index;
-              const isCorrect = index === question.correct;
+              const isCorrect = option.correct;
               const showResult = showExplanation;
 
               let bgColor = premiumDesign.colors.background.secondary;
@@ -1693,7 +1733,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                     color: premiumDesign.colors.text.primary,
                     fontSize: '15px',
                   }}>
-                    {option}
+                    {option.text}
                   </span>
                 </button>
               );
@@ -1703,24 +1743,24 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
 
         {showExplanation && (
           <div style={{
-            background: selectedAnswer === question.correct
+            background: question.options[selectedAnswer as number]?.correct
               ? 'rgba(16, 185, 129, 0.1)'
               : 'rgba(239, 68, 68, 0.1)',
             borderRadius: premiumDesign.radius.lg,
             padding: premiumDesign.spacing.lg,
-            border: `1px solid ${selectedAnswer === question.correct
+            border: `1px solid ${question.options[selectedAnswer as number]?.correct
               ? 'rgba(16, 185, 129, 0.3)'
               : 'rgba(239, 68, 68, 0.3)'}`,
             marginBottom: premiumDesign.spacing.lg,
           }}>
             <p style={{
-              color: selectedAnswer === question.correct
+              color: question.options[selectedAnswer as number]?.correct
                 ? premiumDesign.colors.success
                 : premiumDesign.colors.error,
               fontWeight: 600,
               marginBottom: premiumDesign.spacing.sm,
             }}>
-              {selectedAnswer === question.correct ? '✓ Correct!' : '✗ Not quite'}
+              {question.options[selectedAnswer as number]?.correct ? '✓ Correct!' : '✗ Not quite'}
             </p>
             <p style={{ color: premiumDesign.colors.text.secondary, margin: 0 }}>
               {question.explanation}
@@ -1744,7 +1784,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                   setTestComplete(true);
                 }
               } else {
-                if (selectedAnswer === question.correct) {
+                if (question.options[selectedAnswer as number]?.correct) {
                   setTestScore(s => s + 1);
                 }
                 setShowExplanation(true);

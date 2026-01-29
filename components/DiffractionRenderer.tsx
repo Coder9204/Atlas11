@@ -104,11 +104,15 @@ type Phase =
   | 'test'
   | 'mastery';
 
+interface QuestionOption {
+  text: string;
+  correct: boolean;
+}
+
 interface Question {
   id: number;
   question: string;
-  options: string[];
-  correctIndex: number;
+  options: QuestionOption[];
   explanation: string;
 }
 
@@ -128,12 +132,11 @@ const questions: Question[] = [
     id: 1,
     question: 'What does diffraction prove about light?',
     options: [
-      'Light is made of particles',
-      'Light behaves as a wave',
-      'Light travels in straight lines only',
-      'Light has mass',
+      { text: 'Light is made of particles', correct: false },
+      { text: 'Light behaves as a wave', correct: true },
+      { text: 'Light travels in straight lines only', correct: false },
+      { text: 'Light has mass', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'Diffraction patterns can only be explained by wave behavior. Particles would create sharp shadows, but waves bend around edges and interfere with each other.',
   },
@@ -141,12 +144,11 @@ const questions: Question[] = [
     id: 2,
     question: 'In a single-slit pattern, what creates the dark bands (minima)?',
     options: [
-      'Light is absorbed at those points',
-      'Destructive interference between waves from different parts of the slit',
-      'The screen blocks light at those spots',
-      'The slit filters out some light',
+      { text: 'Light is absorbed at those points', correct: false },
+      { text: 'Destructive interference between waves from different parts of the slit', correct: true },
+      { text: 'The screen blocks light at those spots', correct: false },
+      { text: 'The slit filters out some light', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'Different parts of the wavefront passing through the slit travel different distances. Where they arrive out of phase, they cancel (destructive interference), creating dark bands.',
   },
@@ -154,12 +156,11 @@ const questions: Question[] = [
     id: 3,
     question: "What happens to the diffraction pattern if you make the slit NARROWER?",
     options: [
-      'Pattern gets narrower',
-      'Pattern gets wider (more spreading)',
-      'Pattern disappears',
-      'No change',
+      { text: 'Pattern gets narrower', correct: false },
+      { text: 'Pattern gets wider (more spreading)', correct: true },
+      { text: 'Pattern disappears', correct: false },
+      { text: 'No change', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       "Narrower slits cause more spreading! This seems counterintuitive, but smaller apertures diffract light more. Think of squeezing water through a narrow gap - it fans out more.",
   },
@@ -167,12 +168,11 @@ const questions: Question[] = [
     id: 4,
     question: 'In Young\'s double-slit experiment, what creates the pattern of bright fringes?',
     options: [
-      'Light reflecting between the slits',
-      'Constructive interference where waves arrive in phase',
-      'The slits acting as lenses',
-      'Different colors separating',
+      { text: 'Light reflecting between the slits', correct: false },
+      { text: 'Constructive interference where waves arrive in phase', correct: true },
+      { text: 'The slits acting as lenses', correct: false },
+      { text: 'Different colors separating', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'Light from both slits travels to the screen. Where path lengths differ by whole wavelengths (0, λ, 2λ...), waves arrive in phase and add up constructively - bright fringe!',
   },
@@ -180,12 +180,11 @@ const questions: Question[] = [
     id: 5,
     question: 'For double-slit interference, where is the central bright fringe?',
     options: [
-      'Directly behind one slit',
-      'At the point equidistant from both slits',
-      'At the edge of the screen',
-      'It moves randomly',
+      { text: 'Directly behind one slit', correct: false },
+      { text: 'At the point equidistant from both slits', correct: true },
+      { text: 'At the edge of the screen', correct: false },
+      { text: 'It moves randomly', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'The central maximum is where both waves travel equal distances - zero path difference. Waves arrive perfectly in phase, creating the brightest fringe.',
   },
@@ -193,12 +192,11 @@ const questions: Question[] = [
     id: 6,
     question: 'If you use red light instead of blue, how does the fringe spacing change?',
     options: [
-      'Spacing decreases (fringes closer together)',
-      'Spacing increases (fringes farther apart)',
-      'No change - color doesn\'t matter',
-      'Fringes disappear',
+      { text: 'Spacing decreases (fringes closer together)', correct: false },
+      { text: 'Spacing increases (fringes farther apart)', correct: true },
+      { text: 'No change - color doesn\'t matter', correct: false },
+      { text: 'Fringes disappear', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'Fringe spacing is proportional to wavelength. Red light (λ ≈ 650nm) has longer wavelength than blue (λ ≈ 450nm), so red produces wider-spaced fringes.',
   },
@@ -206,12 +204,11 @@ const questions: Question[] = [
     id: 7,
     question: 'What is the condition for a bright fringe in double-slit interference?',
     options: [
-      'd·sin(θ) = (m + ½)λ',
-      'd·sin(θ) = mλ (where m = 0, 1, 2...)',
-      'd·cos(θ) = mλ',
-      'λ/d = sin(θ)',
+      { text: 'd·sin(θ) = (m + ½)λ', correct: false },
+      { text: 'd·sin(θ) = mλ (where m = 0, 1, 2...)', correct: true },
+      { text: 'd·cos(θ) = mλ', correct: false },
+      { text: 'λ/d = sin(θ)', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'Bright fringes occur when path difference equals a whole number of wavelengths: d·sin(θ) = mλ. The integer m indicates the fringe order (0 = central, 1 = first, etc.).',
   },
@@ -219,12 +216,11 @@ const questions: Question[] = [
     id: 8,
     question: 'Why is diffraction more noticeable with laser light than sunlight?',
     options: [
-      'Lasers are brighter',
-      'Laser light is coherent (same phase and wavelength)',
-      'Sunlight is too heavy',
-      'Lasers travel faster',
+      { text: 'Lasers are brighter', correct: false },
+      { text: 'Laser light is coherent (same phase and wavelength)', correct: true },
+      { text: 'Sunlight is too heavy', correct: false },
+      { text: 'Lasers travel faster', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'Coherence is key! Laser light has a single wavelength and consistent phase. Sunlight contains many wavelengths and random phases, blurring interference patterns.',
   },
@@ -232,12 +228,11 @@ const questions: Question[] = [
     id: 9,
     question: "What happens in single-slit diffraction as slit width approaches zero?",
     options: [
-      'Light stops passing through',
-      'The pattern approaches a single very wide central maximum',
-      'Multiple sharp fringes appear',
-      'Light travels backward',
+      { text: 'Light stops passing through', correct: false },
+      { text: 'The pattern approaches a single very wide central maximum', correct: true },
+      { text: 'Multiple sharp fringes appear', correct: false },
+      { text: 'Light travels backward', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       "As the slit narrows, diffraction increases until the central maximum spreads across nearly the entire screen. In the limit, the slit acts as a point source radiating in all directions.",
   },
@@ -245,12 +240,11 @@ const questions: Question[] = [
     id: 10,
     question: 'Electron diffraction experiments show electrons have wave properties. What does this demonstrate?',
     options: [
-      'Electrons are actually made of light',
-      'Wave-particle duality applies to matter too',
-      'Diffraction only works with charged particles',
-      'Electrons are heavier than expected',
+      { text: 'Electrons are actually made of light', correct: false },
+      { text: 'Wave-particle duality applies to matter too', correct: true },
+      { text: 'Diffraction only works with charged particles', correct: false },
+      { text: 'Electrons are heavier than expected', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'De Broglie proposed all matter has wave-like properties. Electron diffraction through crystals produces patterns just like light diffraction - confirming quantum wave-particle duality!',
   },
@@ -478,7 +472,7 @@ export default function DiffractionRenderer() {
       setSelectedAnswer(index);
       setShowResult(true);
 
-      if (index === questions[currentQuestion].correctIndex) {
+      if (questions[currentQuestion].options[index]?.correct) {
         setScore((prev) => prev + 1);
       }
     },
@@ -2199,10 +2193,10 @@ export default function DiffractionRenderer() {
             let borderColor = 'rgba(255,255,255,0.1)';
 
             if (showResult) {
-              if (i === question.correctIndex) {
+              if (option.correct) {
                 background = 'rgba(16, 185, 129, 0.2)';
                 borderColor = defined.colors.success;
-              } else if (i === selectedAnswer && i !== question.correctIndex) {
+              } else if (i === selectedAnswer && !option.correct) {
                 background = 'rgba(239, 68, 68, 0.2)';
                 borderColor = defined.colors.error;
               }
@@ -2229,7 +2223,7 @@ export default function DiffractionRenderer() {
                   transition: 'all 0.2s ease',
                 }}
               >
-                {option}
+                {option.text}
               </button>
             );
           })}

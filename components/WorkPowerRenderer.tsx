@@ -160,62 +160,102 @@ const applications = [
 const testQuestions = [
   {
     question: 'A 60kg person climbs 5 meters of stairs in 10 seconds. What is their power output? (g = 10 m/s²)',
-    options: ['30 W', '300 W', '3000 W', '60 W'],
-    correct: 1,
+    options: [
+      { text: '30 W', correct: false },
+      { text: '300 W', correct: true },
+      { text: '3000 W', correct: false },
+      { text: '60 W', correct: false },
+    ],
     explanation: 'P = W/t = mgh/t = 60 × 10 × 5 / 10 = 300 W',
   },
   {
     question: 'Two people do the same amount of work. Person A takes 5 seconds, Person B takes 10 seconds. Which is true?',
-    options: ['A has twice the power', 'B has twice the power', 'Both have equal power', 'Cannot determine'],
-    correct: 0,
+    options: [
+      { text: 'A has twice the power', correct: true },
+      { text: 'B has twice the power', correct: false },
+      { text: 'Both have equal power', correct: false },
+      { text: 'Cannot determine', correct: false },
+    ],
     explanation: 'Power = Work/Time. Same work in half the time = twice the power.',
   },
   {
     question: 'A crane lifts a 500kg load 20m in 10 seconds. What power does the motor provide? (g = 10 m/s²)',
-    options: ['1000 W', '10,000 W', '100,000 W', '250 W'],
-    correct: 1,
+    options: [
+      { text: '1000 W', correct: false },
+      { text: '10,000 W', correct: true },
+      { text: '100,000 W', correct: false },
+      { text: '250 W', correct: false },
+    ],
     explanation: 'P = mgh/t = 500 × 10 × 20 / 10 = 10,000 W = 10 kW',
   },
   {
     question: 'If you push a box with 100N force at 2 m/s constant speed, what is your power output?',
-    options: ['50 W', '200 W', '400 W', '100 W'],
-    correct: 1,
+    options: [
+      { text: '50 W', correct: false },
+      { text: '200 W', correct: true },
+      { text: '400 W', correct: false },
+      { text: '100 W', correct: false },
+    ],
     explanation: 'P = Fv = 100 × 2 = 200 W',
   },
   {
     question: 'A 1000W motor runs for 1 hour. How much work does it do?',
-    options: ['1000 J', '60,000 J', '3,600,000 J', '1 J'],
-    correct: 2,
+    options: [
+      { text: '1000 J', correct: false },
+      { text: '60,000 J', correct: false },
+      { text: '3,600,000 J', correct: true },
+      { text: '1 J', correct: false },
+    ],
     explanation: 'W = Pt = 1000 × 3600 = 3,600,000 J = 3.6 MJ',
   },
   {
     question: 'Why do electric cars have faster acceleration than similarly powered gas cars?',
-    options: ['They weigh less', 'Instant max torque from 0 RPM', 'They use better tires', 'Electric motors are more efficient'],
-    correct: 1,
+    options: [
+      { text: 'They weigh less', correct: false },
+      { text: 'Instant max torque from 0 RPM', correct: true },
+      { text: 'They use better tires', correct: false },
+      { text: 'Electric motors are more efficient', correct: false },
+    ],
     explanation: 'Electric motors deliver maximum torque instantly at 0 RPM, while gas engines need to rev up.',
   },
   {
     question: 'A cyclist produces 400W and weighs 80kg with bike. Climbing a 10% grade at constant speed, what is their velocity?',
-    options: ['0.5 m/s', '5 m/s', '50 m/s', '1 m/s'],
-    correct: 1,
+    options: [
+      { text: '0.5 m/s', correct: false },
+      { text: '5 m/s', correct: true },
+      { text: '50 m/s', correct: false },
+      { text: '1 m/s', correct: false },
+    ],
     explanation: 'P = mgv sin(θ) ≈ 80 × 10 × v × 0.1 = 80v. So v = 400/80 = 5 m/s',
   },
   {
     question: 'Which requires more power: lifting 100kg by 1m in 1 second, or lifting 10kg by 10m in 10 seconds?',
-    options: ['The 100kg lift', 'The 10kg lift', 'They require equal power', 'Cannot compare'],
-    correct: 0,
+    options: [
+      { text: 'The 100kg lift', correct: true },
+      { text: 'The 10kg lift', correct: false },
+      { text: 'They require equal power', correct: false },
+      { text: 'Cannot compare', correct: false },
+    ],
     explanation: '100kg: P = 100×10×1/1 = 1000W. 10kg: P = 10×10×10/10 = 100W. 100kg needs 10× more power.',
   },
   {
     question: 'If the human body is 25% efficient, how much food energy (calories) powers a 400W workout for 1 hour?',
-    options: ['400 kcal', '1600 kcal', '100 kcal', '344 kcal'],
-    correct: 3,
+    options: [
+      { text: '400 kcal', correct: false },
+      { text: '1600 kcal', correct: false },
+      { text: '100 kcal', correct: false },
+      { text: '344 kcal', correct: true },
+    ],
     explanation: 'Mechanical work = 400 × 3600 = 1.44 MJ. At 25% efficiency, need 5.76 MJ = ~1370 kcal ≈ 344 kcal (accounting for 4.18 kJ/kcal).',
   },
   {
     question: 'A 100W light bulb and a 100W electric motor both run for an hour. Which does more work?',
-    options: ['The light bulb', 'The motor', 'Equal work - same power rating', 'Depends on efficiency'],
-    correct: 2,
+    options: [
+      { text: 'The light bulb', correct: false },
+      { text: 'The motor', correct: false },
+      { text: 'Equal work - same power rating', correct: true },
+      { text: 'Depends on efficiency', correct: false },
+    ],
     explanation: 'Both consume 100W × 3600s = 360,000 J of electrical energy. The motor converts more to mechanical work; the bulb to light and heat.',
   },
 ];
@@ -1852,7 +1892,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
   // ============================================================================
   if (phase === 8) {
     const q = testQuestions[testIndex];
-    const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (ans === testQuestions[i].correct ? 1 : 0), 0);
+    const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (ans !== null && testQuestions[i].options[ans]?.correct ? 1 : 0), 0);
 
     if (testSubmitted) {
       const passed = totalCorrect >= 7;
@@ -1892,7 +1932,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
                   <div key={i} style={{
                     width: 8, height: 8, borderRadius: radius.full,
                     background: testAnswers[i] !== null
-                      ? (testAnswers[i] === testQuestions[i].correct ? colors.success : colors.error)
+                      ? (testQuestions[i].options[testAnswers[i] as number]?.correct ? colors.success : colors.error)
                       : i === testIndex ? colors.brand : colors.border,
                   }} />
                 ))}
@@ -1908,7 +1948,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
             <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.md, marginBottom: spacing.xl }}>
               {q.options.map((opt, i) => {
                 const isSelected = testAnswers[testIndex] === i;
-                const isCorrect = i === q.correct;
+                const isCorrect = opt.correct;
                 const showResult = testAnswers[testIndex] !== null;
 
                 return (
@@ -1919,7 +1959,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
                         const newAnswers = [...testAnswers];
                         newAnswers[testIndex] = i;
                         setTestAnswers(newAnswers);
-                        emitEvent('test_answered', { questionIndex: testIndex, correct: i === q.correct });
+                        emitEvent('test_answered', { questionIndex: testIndex, correct: q.options[i].correct });
                       }
                     }}
                     style={{
@@ -1945,7 +1985,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
                     }}>
                       {String.fromCharCode(65 + i)}
                     </span>
-                    {opt}
+                    {opt.text}
                   </button>
                 );
               })}

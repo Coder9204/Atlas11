@@ -424,16 +424,66 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   }, []);
 
   const testQuestions = [
-    { question: "Why does the force needed to START moving a block exceed the force to KEEP it moving?", options: ["The block gets lighter once moving", "Static friction > kinetic friction due to surface interlocking", "Air resistance helps once moving", "Gravity changes direction"], correct: 1, explanation: "At rest, surfaces interlock more completely. Once sliding, the microscopic bonds keep breaking before they fully form, resulting in lower kinetic friction." },
-    { question: "Static friction is:", options: ["Always equal to applied force up to a maximum", "Always at its maximum value", "Zero until the object moves", "Greater than kinetic friction always"], correct: 0, explanation: "Static friction matches the applied force exactly (preventing motion) until the maximum static friction is reached - then the object slips." },
-    { question: "When a heavy box finally starts sliding, you notice:", options: ["You need to push harder to keep it moving", "You can push lighter to keep it moving", "The force stays exactly the same", "The box accelerates infinitely"], correct: 1, explanation: "Once the box breaks free (overcomes static friction), kinetic friction takes over, which is lower. You need less force to maintain motion." },
-    { question: "Why does rubber have higher friction coefficients than ice?", options: ["Rubber is heavier", "Rubber deforms and interlocks with surfaces more", "Ice is colder", "Rubber is stickier due to glue"], correct: 1, explanation: "Rubber is soft and deforms around surface irregularities, creating more contact area and mechanical interlocking. Ice is hard and smooth with minimal interlocking." },
-    { question: "If you double the weight on a block, friction force:", options: ["Stays the same", "Doubles (proportional to normal force)", "Halves", "Becomes zero"], correct: 1, explanation: "Friction force = \u03bc \u00d7 Normal force. Doubling the weight doubles the normal force, which doubles the friction force (both static and kinetic)." },
-    { question: "Anti-lock brakes (ABS) work by:", options: ["Increasing kinetic friction", "Keeping tires at static friction (not sliding)", "Heating up the brakes", "Making tires lighter"], correct: 1, explanation: "ABS prevents wheels from locking (sliding). Static friction between tire and road is higher than kinetic, giving better stopping power." },
-    { question: "The coefficient of friction is:", options: ["Always greater than 1", "A ratio of friction force to normal force", "Measured in Newtons", "The same for all materials"], correct: 1, explanation: "The friction coefficient (\u03bc) is the ratio of friction force to normal force: \u03bc = f/N. It's dimensionless and depends on the materials in contact." },
-    { question: "Oil reduces friction by:", options: ["Making surfaces heavier", "Preventing direct surface contact", "Cooling the surfaces", "Increasing the normal force"], correct: 1, explanation: "Oil creates a thin layer between surfaces, preventing the microscopic interlocking that causes friction. This is called lubrication." },
-    { question: "On a force-time graph during a pull test, the peak represents:", options: ["Kinetic friction", "Maximum static friction (just before slip)", "The weight of the object", "Air resistance"], correct: 1, explanation: "The peak in the force-time graph is the moment static friction reaches its maximum, just before the object starts to slide." },
-    { question: "Walking relies on friction. Without it, you would:", options: ["Walk faster", "Slip backward when pushing off", "Float upward", "Walk normally"], correct: 1, explanation: "When you push backward with your foot, friction pushes you forward. Without friction (like on ice), your foot slides back and you can't walk." }
+    { question: "Why does the force needed to START moving a block exceed the force to KEEP it moving?", options: [
+      { text: "The block gets lighter once moving", correct: false },
+      { text: "Static friction > kinetic friction due to surface interlocking", correct: true },
+      { text: "Air resistance helps once moving", correct: false },
+      { text: "Gravity changes direction", correct: false }
+    ], explanation: "At rest, surfaces interlock more completely. Once sliding, the microscopic bonds keep breaking before they fully form, resulting in lower kinetic friction." },
+    { question: "Static friction is:", options: [
+      { text: "Always equal to applied force up to a maximum", correct: true },
+      { text: "Always at its maximum value", correct: false },
+      { text: "Zero until the object moves", correct: false },
+      { text: "Greater than kinetic friction always", correct: false }
+    ], explanation: "Static friction matches the applied force exactly (preventing motion) until the maximum static friction is reached - then the object slips." },
+    { question: "When a heavy box finally starts sliding, you notice:", options: [
+      { text: "You need to push harder to keep it moving", correct: false },
+      { text: "You can push lighter to keep it moving", correct: true },
+      { text: "The force stays exactly the same", correct: false },
+      { text: "The box accelerates infinitely", correct: false }
+    ], explanation: "Once the box breaks free (overcomes static friction), kinetic friction takes over, which is lower. You need less force to maintain motion." },
+    { question: "Why does rubber have higher friction coefficients than ice?", options: [
+      { text: "Rubber is heavier", correct: false },
+      { text: "Rubber deforms and interlocks with surfaces more", correct: true },
+      { text: "Ice is colder", correct: false },
+      { text: "Rubber is stickier due to glue", correct: false }
+    ], explanation: "Rubber is soft and deforms around surface irregularities, creating more contact area and mechanical interlocking. Ice is hard and smooth with minimal interlocking." },
+    { question: "If you double the weight on a block, friction force:", options: [
+      { text: "Stays the same", correct: false },
+      { text: "Doubles (proportional to normal force)", correct: true },
+      { text: "Halves", correct: false },
+      { text: "Becomes zero", correct: false }
+    ], explanation: "Friction force = \u03bc \u00d7 Normal force. Doubling the weight doubles the normal force, which doubles the friction force (both static and kinetic)." },
+    { question: "Anti-lock brakes (ABS) work by:", options: [
+      { text: "Increasing kinetic friction", correct: false },
+      { text: "Keeping tires at static friction (not sliding)", correct: true },
+      { text: "Heating up the brakes", correct: false },
+      { text: "Making tires lighter", correct: false }
+    ], explanation: "ABS prevents wheels from locking (sliding). Static friction between tire and road is higher than kinetic, giving better stopping power." },
+    { question: "The coefficient of friction is:", options: [
+      { text: "Always greater than 1", correct: false },
+      { text: "A ratio of friction force to normal force", correct: true },
+      { text: "Measured in Newtons", correct: false },
+      { text: "The same for all materials", correct: false }
+    ], explanation: "The friction coefficient (\u03bc) is the ratio of friction force to normal force: \u03bc = f/N. It's dimensionless and depends on the materials in contact." },
+    { question: "Oil reduces friction by:", options: [
+      { text: "Making surfaces heavier", correct: false },
+      { text: "Preventing direct surface contact", correct: true },
+      { text: "Cooling the surfaces", correct: false },
+      { text: "Increasing the normal force", correct: false }
+    ], explanation: "Oil creates a thin layer between surfaces, preventing the microscopic interlocking that causes friction. This is called lubrication." },
+    { question: "On a force-time graph during a pull test, the peak represents:", options: [
+      { text: "Kinetic friction", correct: false },
+      { text: "Maximum static friction (just before slip)", correct: true },
+      { text: "The weight of the object", correct: false },
+      { text: "Air resistance", correct: false }
+    ], explanation: "The peak in the force-time graph is the moment static friction reaches its maximum, just before the object starts to slide." },
+    { question: "Walking relies on friction. Without it, you would:", options: [
+      { text: "Walk faster", correct: false },
+      { text: "Slip backward when pushing off", correct: true },
+      { text: "Float upward", correct: false },
+      { text: "Walk normally", correct: false }
+    ], explanation: "When you push backward with your foot, friction pushes you forward. Without friction (like on ice), your foot slides back and you can't walk." }
   ];
 
   const applications = [
@@ -626,7 +676,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
     if (answeredQuestions.has(currentQuestion)) return;
     setSelectedAnswer(answerIndex);
     setShowExplanation(true);
-    const isCorrect = answerIndex === testQuestions[currentQuestion].correct;
+    const isCorrect = testQuestions[currentQuestion].options[answerIndex]?.correct;
     if (isCorrect) setCorrectAnswers(prev => prev + 1);
     setAnsweredQuestions(prev => new Set([...prev, currentQuestion]));
     emit('interaction', { question: currentQuestion, answer: answerIndex, correct: isCorrect }, 'answer_submit');
@@ -1559,8 +1609,8 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
               let bg = design.colors.bgSecondary;
               let border = design.colors.border;
               if (isAnswered) {
-                if (idx === q.correct) { bg = design.colors.successMuted; border = design.colors.success; }
-                else if (idx === selectedAnswer && idx !== q.correct) { bg = design.colors.dangerMuted; border = design.colors.danger; }
+                if (option.correct) { bg = design.colors.successMuted; border = design.colors.success; }
+                else if (idx === selectedAnswer && !option.correct) { bg = design.colors.dangerMuted; border = design.colors.danger; }
               }
               return (
                 <button
@@ -1582,7 +1632,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
                   }}
                 >
                   <span style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans }}>
-                    {option}
+                    {option.text}
                   </span>
                 </button>
               );

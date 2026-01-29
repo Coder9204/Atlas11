@@ -119,16 +119,96 @@ const realWorldApplications = [
 ];
 
 const quizQuestions = [
-  { question: "Why does metal feel colder than wood at the same temperature?", options: ["Metal is actually colder", "Metal conducts heat away from your hand faster", "Wood absorbs more heat", "Metal reflects body heat"], correct: 1 },
-  { question: "What does thermal conductivity (k) measure?", options: ["How hot something can get", "How fast heat flows through a material", "How much heat something stores", "How well something insulates"], correct: 1 },
-  { question: "Which has the highest specific heat capacity?", options: ["Iron (0.45 J/gC)", "Aluminum (0.90 J/gC)", "Water (4.18 J/gC)", "Copper (0.39 J/gC)"], correct: 2 },
-  { question: "Why do coastal cities have milder climates?", options: ["Ocean breezes", "Less pollution", "Water's high heat capacity buffers temperature changes", "Lower elevation"], correct: 2 },
-  { question: "What is Fourier's Law of heat conduction?", options: ["E = mc^2", "Q/t = -kA(dT/dx)", "PV = nRT", "F = ma"], correct: 1 },
-  { question: "Why does doubling wall thickness halve heat loss?", options: ["More material blocks heat", "Temperature gradient (dT/dx) is halved", "Air gets trapped", "Insulation absorbs heat"], correct: 1 },
-  { question: "What makes copper better than aluminum for cookware bottoms?", options: ["Copper is cheaper", "Copper has higher thermal conductivity (401 vs 237 W/mK)", "Copper is lighter", "Copper stores more heat"], correct: 1 },
-  { question: "Why does water take so long to boil compared to metals?", options: ["Water is a liquid", "Water has high specific heat - needs more energy per degree", "Water evaporates", "Water conducts heat poorly"], correct: 1 },
-  { question: "What fills the gap between CPU and heat sink?", options: ["Air", "Thermal paste - fills air gaps that would insulate", "Water", "Vacuum"], correct: 1 },
-  { question: "Q = mcDeltaT: if c doubles, what happens to DeltaT for same Q?", options: ["Doubles", "Halves", "Stays same", "Quadruples"], correct: 1 }
+  {
+    question: "Why does metal feel colder than wood at the same temperature?",
+    options: [
+      { text: "Metal is actually colder", correct: false },
+      { text: "Metal conducts heat away from your hand faster", correct: true },
+      { text: "Wood absorbs more heat", correct: false },
+      { text: "Metal reflects body heat", correct: false },
+    ],
+  },
+  {
+    question: "What does thermal conductivity (k) measure?",
+    options: [
+      { text: "How hot something can get", correct: false },
+      { text: "How fast heat flows through a material", correct: true },
+      { text: "How much heat something stores", correct: false },
+      { text: "How well something insulates", correct: false },
+    ],
+  },
+  {
+    question: "Which has the highest specific heat capacity?",
+    options: [
+      { text: "Iron (0.45 J/gC)", correct: false },
+      { text: "Aluminum (0.90 J/gC)", correct: false },
+      { text: "Water (4.18 J/gC)", correct: true },
+      { text: "Copper (0.39 J/gC)", correct: false },
+    ],
+  },
+  {
+    question: "Why do coastal cities have milder climates?",
+    options: [
+      { text: "Ocean breezes", correct: false },
+      { text: "Less pollution", correct: false },
+      { text: "Water's high heat capacity buffers temperature changes", correct: true },
+      { text: "Lower elevation", correct: false },
+    ],
+  },
+  {
+    question: "What is Fourier's Law of heat conduction?",
+    options: [
+      { text: "E = mc^2", correct: false },
+      { text: "Q/t = -kA(dT/dx)", correct: true },
+      { text: "PV = nRT", correct: false },
+      { text: "F = ma", correct: false },
+    ],
+  },
+  {
+    question: "Why does doubling wall thickness halve heat loss?",
+    options: [
+      { text: "More material blocks heat", correct: false },
+      { text: "Temperature gradient (dT/dx) is halved", correct: true },
+      { text: "Air gets trapped", correct: false },
+      { text: "Insulation absorbs heat", correct: false },
+    ],
+  },
+  {
+    question: "What makes copper better than aluminum for cookware bottoms?",
+    options: [
+      { text: "Copper is cheaper", correct: false },
+      { text: "Copper has higher thermal conductivity (401 vs 237 W/mK)", correct: true },
+      { text: "Copper is lighter", correct: false },
+      { text: "Copper stores more heat", correct: false },
+    ],
+  },
+  {
+    question: "Why does water take so long to boil compared to metals?",
+    options: [
+      { text: "Water is a liquid", correct: false },
+      { text: "Water has high specific heat - needs more energy per degree", correct: true },
+      { text: "Water evaporates", correct: false },
+      { text: "Water conducts heat poorly", correct: false },
+    ],
+  },
+  {
+    question: "What fills the gap between CPU and heat sink?",
+    options: [
+      { text: "Air", correct: false },
+      { text: "Thermal paste - fills air gaps that would insulate", correct: true },
+      { text: "Water", correct: false },
+      { text: "Vacuum", correct: false },
+    ],
+  },
+  {
+    question: "Q = mcDeltaT: if c doubles, what happens to DeltaT for same Q?",
+    options: [
+      { text: "Doubles", correct: false },
+      { text: "Halves", correct: true },
+      { text: "Stays same", correct: false },
+      { text: "Quadruples", correct: false },
+    ],
+  },
 ];
 
 // ============================================================================
@@ -301,7 +381,7 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
     playSound('complete');
   }, [playSound]);
 
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer === quizQuestions[index].correct ? 1 : 0), 0);
+  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer >= 0 && quizQuestions[index].options[answer]?.correct ? 1 : 0), 0);
 
   // ============================================================================
   // HEAT CONDUCTION VISUALIZATION
@@ -829,7 +909,7 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
                     onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-orange-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>

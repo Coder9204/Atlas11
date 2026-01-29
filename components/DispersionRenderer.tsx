@@ -120,11 +120,15 @@ type Phase =
   | 'test'
   | 'mastery';
 
+interface QuestionOption {
+  text: string;
+  correct: boolean;
+}
+
 interface Question {
   id: number;
   question: string;
-  options: string[];
-  correctIndex: number;
+  options: QuestionOption[];
   explanation: string;
 }
 
@@ -144,20 +148,23 @@ const questions: Question[] = [
     id: 1,
     question: 'Why does a prism separate white light into colors?',
     options: [
-      'The prism adds color to the light',
-      'Different wavelengths refract by different amounts',
-      'The prism filters out some colors',
-      'Light bounces inside the prism',
+      { text: 'The prism adds color to the light', correct: false },
+      { text: 'Different wavelengths refract by different amounts', correct: true },
+      { text: 'The prism filters out some colors', correct: false },
+      { text: 'Light bounces inside the prism', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'Each wavelength (color) has a slightly different refractive index in glass. Blue light bends more than red, so colors fan out into a spectrum.',
   },
   {
     id: 2,
     question: 'In a prism, which color bends the MOST?',
-    options: ['Red', 'Yellow', 'Green', 'Violet'],
-    correctIndex: 3,
+    options: [
+      { text: 'Red', correct: false },
+      { text: 'Yellow', correct: false },
+      { text: 'Green', correct: false },
+      { text: 'Violet', correct: true },
+    ],
     explanation:
       'Violet light has the shortest wavelength and highest refractive index in glass (n ≈ 1.532), so it bends the most. Red bends the least (n ≈ 1.513).',
   },
@@ -165,12 +172,11 @@ const questions: Question[] = [
     id: 3,
     question: 'What is the order of colors in a rainbow (top to bottom)?',
     options: [
-      'VIBGYOR (violet to red)',
-      'ROYGBIV (red to violet)',
-      'Random - depends on conditions',
-      'All colors appear equal',
+      { text: 'VIBGYOR (violet to red)', correct: false },
+      { text: 'ROYGBIV (red to violet)', correct: true },
+      { text: 'Random - depends on conditions', correct: false },
+      { text: 'All colors appear equal', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'In a primary rainbow, red is on top and violet on bottom (ROYGBIV). This is because red refracts the least and appears at a higher angle to the observer.',
   },
@@ -178,12 +184,11 @@ const questions: Question[] = [
     id: 4,
     question: 'Why does a CD show rainbow colors?',
     options: [
-      'The CD contains colored dyes',
-      'Light diffracts off the tiny grooves on the surface',
-      'The plastic absorbs certain colors',
-      'Static electricity separates the light',
+      { text: 'The CD contains colored dyes', correct: false },
+      { text: 'Light diffracts off the tiny grooves on the surface', correct: true },
+      { text: 'The plastic absorbs certain colors', correct: false },
+      { text: 'Static electricity separates the light', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'CD tracks are microscopic grooves that act as a diffraction grating. Different wavelengths diffract at different angles, creating rainbow patterns.',
   },
@@ -191,12 +196,11 @@ const questions: Question[] = [
     id: 5,
     question: 'What phenomenon causes diamond "fire" (rainbow flashes)?',
     options: [
-      'Diamond is radioactive',
-      'High dispersion spreads colors more than other gems',
-      'Diamond reflects all light',
-      'Internal heating',
+      { text: 'Diamond is radioactive', correct: false },
+      { text: 'High dispersion spreads colors more than other gems', correct: true },
+      { text: 'Diamond reflects all light', correct: false },
+      { text: 'Internal heating', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       "Diamond has very high dispersion (0.044 vs 0.017 for crown glass). Colors spread more dramatically, creating the brilliant rainbow flashes called 'fire'.",
   },
@@ -204,12 +208,11 @@ const questions: Question[] = [
     id: 6,
     question: 'Why is the sky blue but sunsets red?',
     options: [
-      'The sun changes color during the day',
-      'Blue light scatters more, but at sunset light travels through more atmosphere',
-      'The atmosphere is blue-colored',
-      'Our eyes perceive differently at different times',
+      { text: 'The sun changes color during the day', correct: false },
+      { text: 'Blue light scatters more, but at sunset light travels through more atmosphere', correct: true },
+      { text: 'The atmosphere is blue-colored', correct: false },
+      { text: 'Our eyes perceive differently at different times', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'Blue light scatters more (Rayleigh scattering). At sunset, light travels through more atmosphere, scattering away blue and leaving red/orange.',
   },
@@ -217,12 +220,11 @@ const questions: Question[] = [
     id: 7,
     question: 'A second rainbow (double rainbow) appears above the primary one. What is different?',
     options: [
-      'Colors are in the same order',
-      'Colors are reversed (violet on top, red on bottom)',
-      "It's always brighter",
-      'Only red and blue appear',
+      { text: 'Colors are in the same order', correct: false },
+      { text: 'Colors are reversed (violet on top, red on bottom)', correct: true },
+      { text: "It's always brighter", correct: false },
+      { text: 'Only red and blue appear', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'Secondary rainbows form from two internal reflections in water droplets, reversing the color order. They appear above the primary rainbow and are dimmer.',
   },
@@ -230,12 +232,11 @@ const questions: Question[] = [
     id: 8,
     question: 'What is "dispersion" in optics?',
     options: [
-      'Light spreading out in all directions',
-      'The variation of refractive index with wavelength',
-      'Light being absorbed by a material',
-      'Light intensity decreasing with distance',
+      { text: 'Light spreading out in all directions', correct: false },
+      { text: 'The variation of refractive index with wavelength', correct: true },
+      { text: 'Light being absorbed by a material', correct: false },
+      { text: 'Light intensity decreasing with distance', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       "Dispersion is specifically the wavelength-dependence of refractive index. Higher dispersion means colors separate more when light refracts.",
   },
@@ -243,12 +244,11 @@ const questions: Question[] = [
     id: 9,
     question: 'Why do achromatic lenses use two types of glass?',
     options: [
-      'To make the lens stronger',
-      'To cancel out dispersion and focus all colors at the same point',
-      'To increase magnification',
-      'To reduce weight',
+      { text: 'To make the lens stronger', correct: false },
+      { text: 'To cancel out dispersion and focus all colors at the same point', correct: true },
+      { text: 'To increase magnification', correct: false },
+      { text: 'To reduce weight', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'Achromatic lenses combine crown glass (low dispersion) and flint glass (high dispersion) to cancel chromatic aberration, focusing all colors together.',
   },
@@ -256,12 +256,11 @@ const questions: Question[] = [
     id: 10,
     question: 'What creates the "green flash" sometimes seen at sunset?',
     options: [
-      'A special type of cloud',
-      'Atmospheric dispersion separating colors at the horizon',
-      'Reflection from the ocean',
-      'An optical illusion',
+      { text: 'A special type of cloud', correct: false },
+      { text: 'Atmospheric dispersion separating colors at the horizon', correct: true },
+      { text: 'Reflection from the ocean', correct: false },
+      { text: 'An optical illusion', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       "The atmosphere acts like a giant prism. At sunset, refraction separates colors vertically. When red sets first, a brief green band can appear - the 'green flash'.",
   },
@@ -470,7 +469,7 @@ export default function DispersionRenderer() {
       setSelectedAnswer(index);
       setShowResult(true);
 
-      if (index === questions[currentQuestion].correctIndex) {
+      if (questions[currentQuestion].options[index]?.correct) {
         setScore((prev) => prev + 1);
       }
     },
@@ -2209,10 +2208,10 @@ export default function DispersionRenderer() {
             let borderColor = 'rgba(255,255,255,0.1)';
 
             if (showResult) {
-              if (i === question.correctIndex) {
+              if (option.correct) {
                 background = 'rgba(16, 185, 129, 0.2)';
                 borderColor = defined.colors.success;
-              } else if (i === selectedAnswer && i !== question.correctIndex) {
+              } else if (i === selectedAnswer && !option.correct) {
                 background = 'rgba(239, 68, 68, 0.2)';
                 borderColor = defined.colors.error;
               }
@@ -2239,7 +2238,7 @@ export default function DispersionRenderer() {
                   transition: 'all 0.2s ease',
                 }}
               >
-                {option}
+                {option.text}
               </button>
             );
           })}

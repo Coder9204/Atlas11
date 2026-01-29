@@ -373,16 +373,66 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
   const netAcceleration = Math.max(0, (gravityParallel - frictionForce) / mass);
 
   const testQuestions = [
-    { question: "Why does a ball roll faster on a steeper ramp?", options: ["Less air resistance", "More gravity pulls on it", "Larger component of gravity acts along the ramp", "The ball weighs more on a steeper ramp"], correct: 2, explanation: "Gravity's magnitude stays constant, but the component along the ramp (mg\u00b7sin\u03b8) increases with steeper angles, causing greater acceleration." },
-    { question: "What happens to the normal force as the ramp gets steeper?", options: ["Increases", "Decreases (N = mg\u00b7cos\u03b8)", "Stays the same", "Becomes zero"], correct: 1, explanation: "Normal force N = mg\u00b7cos(\u03b8). As \u03b8 increases, cos(\u03b8) decreases, so the normal force decreases. At 90\u00b0, it would be zero!" },
-    { question: "If there's no friction, a ball on a 30\u00b0 ramp has acceleration:", options: ["g (9.8 m/s\u00b2)", "g\u00b7sin(30\u00b0) = 4.9 m/s\u00b2", "g\u00b7cos(30\u00b0) = 8.5 m/s\u00b2", "Zero"], correct: 1, explanation: "Without friction, the acceleration is a = g\u00b7sin(\u03b8). For 30\u00b0, sin(30\u00b0) = 0.5, so a = 9.8 \u00d7 0.5 = 4.9 m/s\u00b2." },
-    { question: "Friction on a ramp acts:", options: ["Downward, speeding up the ball", "Upward along the ramp, opposing motion", "Perpendicular to the ramp", "In the direction of gravity"], correct: 1, explanation: "Kinetic friction always opposes motion. For a ball rolling down, friction acts up the ramp, reducing the net acceleration." },
-    { question: "At what angle would a frictionless ball have maximum acceleration?", options: ["0\u00b0 (flat)", "45\u00b0", "90\u00b0 (vertical drop)", "30\u00b0"], correct: 2, explanation: "At 90\u00b0, the entire weight acts downward and sin(90\u00b0) = 1, giving maximum acceleration of g. It's essentially free fall!" },
-    { question: "Why do mountain roads zigzag instead of going straight up?", options: ["For better views", "To reduce the effective slope and required force", "Roads can't be built straight", "For drainage"], correct: 1, explanation: "Zigzag roads reduce the slope angle, decreasing the component of gravity cars must overcome. This allows vehicles to climb with less power." },
-    { question: "A ball on a ramp with friction might not move if:", options: ["The ball is too heavy", "Static friction exceeds gravity's parallel component", "The ramp is too long", "There's no normal force"], correct: 1, explanation: "If static friction (\u03bcs \u00d7 N) is greater than mg\u00b7sin(\u03b8), the ball won't start moving. There's a critical angle below which objects stay put." },
-    { question: "The parallel component of gravity equals:", options: ["mg", "mg \u00d7 cos(\u03b8)", "mg \u00d7 sin(\u03b8)", "mg \u00d7 tan(\u03b8)"], correct: 2, explanation: "Using vector decomposition, the component of gravity along (parallel to) the ramp is F_parallel = mg \u00d7 sin(\u03b8)." },
-    { question: "If you double the mass of a ball on a frictionless ramp:", options: ["It accelerates twice as fast", "It accelerates the same (a = g\u00b7sin\u03b8)", "It accelerates half as fast", "It doesn't move"], correct: 1, explanation: "The acceleration a = g\u00b7sin(\u03b8) doesn't depend on mass! Both gravity force and inertia scale with mass, so they cancel out." },
-    { question: "Skiers crouch down on steep slopes to:", options: ["Look cool", "Reduce air resistance and go faster", "Increase normal force", "Change the slope angle"], correct: 1, explanation: "Crouching reduces air resistance (drag), allowing skiers to reach higher speeds. The slope angle and gravity components stay the same." }
+    { question: "Why does a ball roll faster on a steeper ramp?", options: [
+      { text: "Less air resistance", correct: false },
+      { text: "More gravity pulls on it", correct: false },
+      { text: "Larger component of gravity acts along the ramp", correct: true },
+      { text: "The ball weighs more on a steeper ramp", correct: false }
+    ], explanation: "Gravity's magnitude stays constant, but the component along the ramp (mg\u00b7sin\u03b8) increases with steeper angles, causing greater acceleration." },
+    { question: "What happens to the normal force as the ramp gets steeper?", options: [
+      { text: "Increases", correct: false },
+      { text: "Decreases (N = mg\u00b7cos\u03b8)", correct: true },
+      { text: "Stays the same", correct: false },
+      { text: "Becomes zero", correct: false }
+    ], explanation: "Normal force N = mg\u00b7cos(\u03b8). As \u03b8 increases, cos(\u03b8) decreases, so the normal force decreases. At 90\u00b0, it would be zero!" },
+    { question: "If there's no friction, a ball on a 30\u00b0 ramp has acceleration:", options: [
+      { text: "g (9.8 m/s\u00b2)", correct: false },
+      { text: "g\u00b7sin(30\u00b0) = 4.9 m/s\u00b2", correct: true },
+      { text: "g\u00b7cos(30\u00b0) = 8.5 m/s\u00b2", correct: false },
+      { text: "Zero", correct: false }
+    ], explanation: "Without friction, the acceleration is a = g\u00b7sin(\u03b8). For 30\u00b0, sin(30\u00b0) = 0.5, so a = 9.8 \u00d7 0.5 = 4.9 m/s\u00b2." },
+    { question: "Friction on a ramp acts:", options: [
+      { text: "Downward, speeding up the ball", correct: false },
+      { text: "Upward along the ramp, opposing motion", correct: true },
+      { text: "Perpendicular to the ramp", correct: false },
+      { text: "In the direction of gravity", correct: false }
+    ], explanation: "Kinetic friction always opposes motion. For a ball rolling down, friction acts up the ramp, reducing the net acceleration." },
+    { question: "At what angle would a frictionless ball have maximum acceleration?", options: [
+      { text: "0\u00b0 (flat)", correct: false },
+      { text: "45\u00b0", correct: false },
+      { text: "90\u00b0 (vertical drop)", correct: true },
+      { text: "30\u00b0", correct: false }
+    ], explanation: "At 90\u00b0, the entire weight acts downward and sin(90\u00b0) = 1, giving maximum acceleration of g. It's essentially free fall!" },
+    { question: "Why do mountain roads zigzag instead of going straight up?", options: [
+      { text: "For better views", correct: false },
+      { text: "To reduce the effective slope and required force", correct: true },
+      { text: "Roads can't be built straight", correct: false },
+      { text: "For drainage", correct: false }
+    ], explanation: "Zigzag roads reduce the slope angle, decreasing the component of gravity cars must overcome. This allows vehicles to climb with less power." },
+    { question: "A ball on a ramp with friction might not move if:", options: [
+      { text: "The ball is too heavy", correct: false },
+      { text: "Static friction exceeds gravity's parallel component", correct: true },
+      { text: "The ramp is too long", correct: false },
+      { text: "There's no normal force", correct: false }
+    ], explanation: "If static friction (\u03bcs \u00d7 N) is greater than mg\u00b7sin(\u03b8), the ball won't start moving. There's a critical angle below which objects stay put." },
+    { question: "The parallel component of gravity equals:", options: [
+      { text: "mg", correct: false },
+      { text: "mg \u00d7 cos(\u03b8)", correct: false },
+      { text: "mg \u00d7 sin(\u03b8)", correct: true },
+      { text: "mg \u00d7 tan(\u03b8)", correct: false }
+    ], explanation: "Using vector decomposition, the component of gravity along (parallel to) the ramp is F_parallel = mg \u00d7 sin(\u03b8)." },
+    { question: "If you double the mass of a ball on a frictionless ramp:", options: [
+      { text: "It accelerates twice as fast", correct: false },
+      { text: "It accelerates the same (a = g\u00b7sin\u03b8)", correct: true },
+      { text: "It accelerates half as fast", correct: false },
+      { text: "It doesn't move", correct: false }
+    ], explanation: "The acceleration a = g\u00b7sin(\u03b8) doesn't depend on mass! Both gravity force and inertia scale with mass, so they cancel out." },
+    { question: "Skiers crouch down on steep slopes to:", options: [
+      { text: "Look cool", correct: false },
+      { text: "Reduce air resistance and go faster", correct: true },
+      { text: "Increase normal force", correct: false },
+      { text: "Change the slope angle", correct: false }
+    ], explanation: "Crouching reduces air resistance (drag), allowing skiers to reach higher speeds. The slope angle and gravity components stay the same." }
   ];
 
   const applications = [
@@ -584,7 +634,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
     if (answeredQuestions.has(currentQuestion)) return;
     setSelectedAnswer(answerIndex);
     setShowExplanation(true);
-    const isCorrect = answerIndex === testQuestions[currentQuestion].correct;
+    const isCorrect = testQuestions[currentQuestion].options[answerIndex]?.correct;
     if (isCorrect) setCorrectAnswers(prev => prev + 1);
     setAnsweredQuestions(prev => new Set([...prev, currentQuestion]));
     emit('interaction', { question: currentQuestion, answer: answerIndex, correct: isCorrect }, 'answer_submit');
@@ -1543,8 +1593,8 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
               let bg = design.colors.bgSecondary;
               let border = design.colors.border;
               if (isAnswered) {
-                if (idx === q.correct) { bg = design.colors.successMuted; border = design.colors.success; }
-                else if (idx === selectedAnswer && idx !== q.correct) { bg = design.colors.dangerMuted; border = design.colors.danger; }
+                if (option.correct) { bg = design.colors.successMuted; border = design.colors.success; }
+                else if (idx === selectedAnswer && !option.correct) { bg = design.colors.dangerMuted; border = design.colors.danger; }
               }
               return (
                 <button
@@ -1566,7 +1616,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
                   }}
                 >
                   <span style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans }}>
-                    {option}
+                    {option.text}
                   </span>
                 </button>
               );

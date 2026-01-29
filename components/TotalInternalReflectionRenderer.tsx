@@ -108,11 +108,15 @@ const MATERIALS: Record<string, { name: string; n: number; criticalAngle: number
 // =============================================================================
 // TYPE DEFINITIONS
 // =============================================================================
+interface QuestionOption {
+  text: string;
+  correct: boolean;
+}
+
 interface Question {
   id: number;
   question: string;
-  options: string[];
-  correctIndex: number;
+  options: QuestionOption[];
   explanation: string;
 }
 
@@ -132,20 +136,23 @@ const questions: Question[] = [
     id: 1,
     question: 'What causes total internal reflection?',
     options: [
-      'Light bouncing off a mirror',
-      'Light hitting a surface above the critical angle from inside a dense medium',
-      'Light slowing down in water',
-      'Light being absorbed by the material',
+      { text: 'Light bouncing off a mirror', correct: false },
+      { text: 'Light hitting a surface above the critical angle from inside a dense medium', correct: true },
+      { text: 'Light slowing down in water', correct: false },
+      { text: 'Light being absorbed by the material', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'TIR occurs when light traveling in a denser medium hits the boundary at an angle greater than the critical angle. The light cannot escape and reflects back completely.',
   },
   {
     id: 2,
     question: "What is the critical angle for water (n=1.33) to air?",
-    options: ['24.4°', '41.8°', '48.6°', '90°'],
-    correctIndex: 2,
+    options: [
+      { text: '24.4°', correct: false },
+      { text: '41.8°', correct: false },
+      { text: '48.6°', correct: true },
+      { text: '90°', correct: false },
+    ],
     explanation:
       'The critical angle is calculated as arcsin(n_air/n_water) = arcsin(1/1.33) ≈ 48.6°. Above this angle, light cannot escape water into air.',
   },
@@ -153,12 +160,11 @@ const questions: Question[] = [
     id: 3,
     question: 'Why does diamond have such a small critical angle (24.4°)?',
     options: [
-      'Diamond is very hard',
-      'Diamond has a very high refractive index (2.42)',
-      'Diamond is transparent',
-      'Diamond reflects all colors',
+      { text: 'Diamond is very hard', correct: false },
+      { text: 'Diamond has a very high refractive index (2.42)', correct: true },
+      { text: 'Diamond is transparent', correct: false },
+      { text: 'Diamond reflects all colors', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       "Diamond's high refractive index means light slows dramatically inside it. The critical angle is arcsin(1/2.42) ≈ 24.4°, so light easily gets trapped and bounces inside.",
   },
@@ -166,12 +172,11 @@ const questions: Question[] = [
     id: 4,
     question: 'How do fiber optic cables carry light thousands of kilometers?',
     options: [
-      'The light is amplified at each end',
-      'Light bounces via total internal reflection along the fiber',
-      'The fiber glows on its own',
-      'Electric current carries the signal',
+      { text: 'The light is amplified at each end', correct: false },
+      { text: 'Light bounces via total internal reflection along the fiber', correct: true },
+      { text: 'The fiber glows on its own', correct: false },
+      { text: 'Electric current carries the signal', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'Fiber optic cables use TIR to trap light inside the glass core. Light bounces at shallow angles along the fiber with minimal loss, traveling huge distances.',
   },
@@ -179,20 +184,23 @@ const questions: Question[] = [
     id: 5,
     question: 'In the "light fountain" demonstration, what happens to the light?',
     options: [
-      'Light is absorbed by water',
-      'Light follows the curved water stream via repeated TIR',
-      'Light travels straight and exits',
-      'Light disperses into a rainbow',
+      { text: 'Light is absorbed by water', correct: false },
+      { text: 'Light follows the curved water stream via repeated TIR', correct: true },
+      { text: 'Light travels straight and exits', correct: false },
+      { text: 'Light disperses into a rainbow', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'As the water stream curves, light inside keeps hitting the water-air boundary above the critical angle. It reflects repeatedly, following the stream\'s curved path.',
   },
   {
     id: 6,
     question: 'What percentage of light is reflected during total internal reflection?',
-    options: ['50%', '75%', '90%', '100%'],
-    correctIndex: 3,
+    options: [
+      { text: '50%', correct: false },
+      { text: '75%', correct: false },
+      { text: '90%', correct: false },
+      { text: '100%', correct: true },
+    ],
     explanation:
       'During TIR, 100% of the light is reflected - no light escapes. This makes TIR much more efficient than regular mirrors, which absorb some light.',
   },
@@ -200,12 +208,11 @@ const questions: Question[] = [
     id: 7,
     question: 'Binocular prisms use TIR instead of mirrors. Why?',
     options: [
-      'Prisms are cheaper',
-      'TIR provides 100% reflection without the absorption losses of mirrors',
-      'Prisms are easier to clean',
-      'Mirrors are too heavy',
+      { text: 'Prisms are cheaper', correct: false },
+      { text: 'TIR provides 100% reflection without the absorption losses of mirrors', correct: true },
+      { text: 'Prisms are easier to clean', correct: false },
+      { text: 'Mirrors are too heavy', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'Regular mirrors absorb some light at each reflection. TIR reflects 100%, so prism binoculars deliver brighter images, especially important in low light.',
   },
@@ -213,12 +220,11 @@ const questions: Question[] = [
     id: 8,
     question: 'For TIR to occur, light must travel from:',
     options: [
-      'Air to water',
-      'Less dense to more dense medium',
-      'More dense to less dense medium',
-      'Any direction works',
+      { text: 'Air to water', correct: false },
+      { text: 'Less dense to more dense medium', correct: false },
+      { text: 'More dense to less dense medium', correct: true },
+      { text: 'Any direction works', correct: false },
     ],
-    correctIndex: 2,
     explanation:
       'TIR only occurs when light goes from a denser medium (higher n) to a less dense medium (lower n). Going the other way, light simply refracts.',
   },
@@ -226,12 +232,11 @@ const questions: Question[] = [
     id: 9,
     question: 'What happens at exactly the critical angle?',
     options: [
-      'Light reflects back completely',
-      'Light refracts at exactly 90° (parallel to surface)',
-      'Light splits into two beams',
-      'Light is absorbed',
+      { text: 'Light reflects back completely', correct: false },
+      { text: 'Light refracts at exactly 90° (parallel to surface)', correct: true },
+      { text: 'Light splits into two beams', correct: false },
+      { text: 'Light is absorbed', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'At exactly the critical angle, the refracted ray travels along the surface (90° from normal). Any steeper angle results in total internal reflection.',
   },
@@ -239,12 +244,11 @@ const questions: Question[] = [
     id: 10,
     question: 'Medical endoscopes use fiber optics for internal body imaging. What advantage does TIR provide?',
     options: [
-      'It sterilizes the equipment',
-      'Light travels through thin, flexible fibers that can navigate body passages',
-      'It magnifies the image',
-      'It changes the light color for better visibility',
+      { text: 'It sterilizes the equipment', correct: false },
+      { text: 'Light travels through thin, flexible fibers that can navigate body passages', correct: true },
+      { text: 'It magnifies the image', correct: false },
+      { text: 'It changes the light color for better visibility', correct: false },
     ],
-    correctIndex: 1,
     explanation:
       'TIR allows light to travel through thin, bendable glass fibers that can navigate curves in the body. Doctors can see inside without large incisions.',
   },
@@ -440,7 +444,7 @@ export default function TotalInternalReflectionRenderer() {
       setSelectedAnswer(index);
       setShowResult(true);
 
-      if (index === questions[currentQuestion].correctIndex) {
+      if (questions[currentQuestion].options[index]?.correct) {
         setScore((prev) => prev + 1);
       }
     },
@@ -2321,10 +2325,10 @@ export default function TotalInternalReflectionRenderer() {
             let borderColor = 'rgba(255,255,255,0.1)';
 
             if (showResult) {
-              if (i === question.correctIndex) {
+              if (option.correct) {
                 background = 'rgba(16, 185, 129, 0.2)';
                 borderColor = defined.colors.success;
-              } else if (i === selectedAnswer && i !== question.correctIndex) {
+              } else if (i === selectedAnswer && !option.correct) {
                 background = 'rgba(239, 68, 68, 0.2)';
                 borderColor = defined.colors.error;
               }
@@ -2351,7 +2355,7 @@ export default function TotalInternalReflectionRenderer() {
                   transition: 'all 0.2s ease',
                 }}
               >
-                {option}
+                {option.text}
               </button>
             );
           })}

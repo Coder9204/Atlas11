@@ -105,16 +105,96 @@ const realWorldApplications = [
 ];
 
 const quizQuestions = [
-  { question: "According to Bernoulli's principle, when fluid speed increases, what happens to pressure?", options: ["Pressure increases", "Pressure decreases", "Pressure stays the same", "Pressure becomes zero"], correct: 1 },
-  { question: "How do airplane wings generate lift?", options: ["By pushing air downward with propellers", "By creating higher pressure above the wing", "By creating lower pressure above the wing (faster airflow)", "By being lighter than air"], correct: 2 },
-  { question: "What is the Bernoulli equation?", options: ["F = ma", "E = mc^2", "P + (1/2)rho*v^2 + rho*g*h = constant", "PV = nRT"], correct: 2 },
-  { question: "What causes a curveball to curve?", options: ["Air resistance alone", "Gravity pulling it down", "The Magnus effect - spin creates pressure differences", "Optical illusion"], correct: 2 },
-  { question: "What is the Venturi effect?", options: ["Sound travels faster in tunnels", "Fluid speeds up and pressure drops in a constriction", "Water always flows downhill", "Hot air rises"], correct: 1 },
-  { question: "Why does a shower curtain get sucked inward?", options: ["Static electricity", "Water splashing on it", "Moving air from hot water has lower pressure than still air outside", "Magnetic forces"], correct: 2 },
-  { question: "If you blow between two hanging pieces of paper, what happens?", options: ["They blow apart", "They come together", "They don't move", "One rises, one falls"], correct: 1 },
-  { question: "Why do race cars have spoilers that push down instead of up?", options: ["To look cool", "Inverted wing shape creates downforce for better grip", "To reduce drag", "To cool the engine"], correct: 1 },
-  { question: "What does the continuity equation state about fluid in a pipe?", options: ["Pressure is constant", "Temperature is constant", "A1*v1 = A2*v2 (flow rate is constant)", "Density changes with speed"], correct: 2 },
-  { question: "How do atomizers and spray bottles work?", options: ["Pumping creates high pressure that pushes liquid out", "Fast air over a tube creates low pressure that sucks liquid up (Venturi)", "Chemical reaction produces gas", "Liquid is heated until it evaporates"], correct: 1 }
+  {
+    question: "According to Bernoulli's principle, when fluid speed increases, what happens to pressure?",
+    options: [
+      { text: "Pressure increases", correct: false },
+      { text: "Pressure decreases", correct: true },
+      { text: "Pressure stays the same", correct: false },
+      { text: "Pressure becomes zero", correct: false },
+    ],
+  },
+  {
+    question: "How do airplane wings generate lift?",
+    options: [
+      { text: "By pushing air downward with propellers", correct: false },
+      { text: "By creating higher pressure above the wing", correct: false },
+      { text: "By creating lower pressure above the wing (faster airflow)", correct: true },
+      { text: "By being lighter than air", correct: false },
+    ],
+  },
+  {
+    question: "What is the Bernoulli equation?",
+    options: [
+      { text: "F = ma", correct: false },
+      { text: "E = mc^2", correct: false },
+      { text: "P + (1/2)rho*v^2 + rho*g*h = constant", correct: true },
+      { text: "PV = nRT", correct: false },
+    ],
+  },
+  {
+    question: "What causes a curveball to curve?",
+    options: [
+      { text: "Air resistance alone", correct: false },
+      { text: "Gravity pulling it down", correct: false },
+      { text: "The Magnus effect - spin creates pressure differences", correct: true },
+      { text: "Optical illusion", correct: false },
+    ],
+  },
+  {
+    question: "What is the Venturi effect?",
+    options: [
+      { text: "Sound travels faster in tunnels", correct: false },
+      { text: "Fluid speeds up and pressure drops in a constriction", correct: true },
+      { text: "Water always flows downhill", correct: false },
+      { text: "Hot air rises", correct: false },
+    ],
+  },
+  {
+    question: "Why does a shower curtain get sucked inward?",
+    options: [
+      { text: "Static electricity", correct: false },
+      { text: "Water splashing on it", correct: false },
+      { text: "Moving air from hot water has lower pressure than still air outside", correct: true },
+      { text: "Magnetic forces", correct: false },
+    ],
+  },
+  {
+    question: "If you blow between two hanging pieces of paper, what happens?",
+    options: [
+      { text: "They blow apart", correct: false },
+      { text: "They come together", correct: true },
+      { text: "They don't move", correct: false },
+      { text: "One rises, one falls", correct: false },
+    ],
+  },
+  {
+    question: "Why do race cars have spoilers that push down instead of up?",
+    options: [
+      { text: "To look cool", correct: false },
+      { text: "Inverted wing shape creates downforce for better grip", correct: true },
+      { text: "To reduce drag", correct: false },
+      { text: "To cool the engine", correct: false },
+    ],
+  },
+  {
+    question: "What does the continuity equation state about fluid in a pipe?",
+    options: [
+      { text: "Pressure is constant", correct: false },
+      { text: "Temperature is constant", correct: false },
+      { text: "A1*v1 = A2*v2 (flow rate is constant)", correct: true },
+      { text: "Density changes with speed", correct: false },
+    ],
+  },
+  {
+    question: "How do atomizers and spray bottles work?",
+    options: [
+      { text: "Pumping creates high pressure that pushes liquid out", correct: false },
+      { text: "Fast air over a tube creates low pressure that sucks liquid up (Venturi)", correct: true },
+      { text: "Chemical reaction produces gas", correct: false },
+      { text: "Liquid is heated until it evaporates", correct: false },
+    ],
+  },
 ];
 
 // ============================================================================
@@ -272,7 +352,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
     playSound('complete');
   }, [playSound]);
 
-  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer === quizQuestions[index].correct ? 1 : 0), 0);
+  const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer >= 0 && quizQuestions[index].options[answer]?.correct ? 1 : 0), 0);
 
   // ============================================================================
   // BERNOULLI SIMULATION VISUALIZATION
@@ -808,7 +888,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
                     onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                   >
-                    {option}
+                    {option.text}
                   </button>
                 ))}
               </div>

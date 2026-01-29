@@ -187,71 +187,111 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     {
       scenario: "A rope has tension T = 100 N and linear density u = 0.01 kg/m.",
       question: "What is the wave speed?",
-      options: ["10 m/s", "50 m/s", "100 m/s", "1000 m/s"],
-      correct: 2,
+      options: [
+        { text: "10 m/s", correct: false },
+        { text: "50 m/s", correct: false },
+        { text: "100 m/s", correct: true },
+        { text: "1000 m/s", correct: false }
+      ],
       explanation: "v = sqrt(T/u) = sqrt(100/0.01) = sqrt(10000) = 100 m/s."
     },
     {
       scenario: "The formula for wave speed on a string is v = sqrt(T/u).",
       question: "What happens to wave speed if tension doubles?",
-      options: ["Speed doubles", "Speed increases by sqrt(2)", "Speed halves", "Speed stays the same"],
-      correct: 1,
+      options: [
+        { text: "Speed doubles", correct: false },
+        { text: "Speed increases by sqrt(2)", correct: true },
+        { text: "Speed halves", correct: false },
+        { text: "Speed stays the same", correct: false }
+      ],
       explanation: "Because of the square root, v is proportional to sqrt(T). Doubling T multiplies v by sqrt(2) = 1.414."
     },
     {
       scenario: "A guitar string is replaced with a thicker string (more mass per length).",
       question: "How does the wave speed change?",
-      options: ["Increases", "Decreases", "Stays the same", "Depends on tension only"],
-      correct: 1,
+      options: [
+        { text: "Increases", correct: false },
+        { text: "Decreases", correct: true },
+        { text: "Stays the same", correct: false },
+        { text: "Depends on tension only", correct: false }
+      ],
       explanation: "v = sqrt(T/u). Higher u (mass density) in the denominator means lower wave speed."
     },
     {
       scenario: "A wave travels 10 meters in 0.2 seconds on a rope.",
       question: "What is the wave speed?",
-      options: ["2 m/s", "20 m/s", "50 m/s", "200 m/s"],
-      correct: 2,
+      options: [
+        { text: "2 m/s", correct: false },
+        { text: "20 m/s", correct: false },
+        { text: "50 m/s", correct: true },
+        { text: "200 m/s", correct: false }
+      ],
       explanation: "v = distance/time = 10m / 0.2s = 50 m/s."
     },
     {
       scenario: "Two strings have the same tension. String A has u = 0.01 kg/m, String B has u = 0.04 kg/m.",
       question: "How do their wave speeds compare?",
-      options: ["Same speed", "A is twice as fast", "A is four times as fast", "B is twice as fast"],
-      correct: 1,
+      options: [
+        { text: "Same speed", correct: false },
+        { text: "A is twice as fast", correct: true },
+        { text: "A is four times as fast", correct: false },
+        { text: "B is twice as fast", correct: false }
+      ],
       explanation: "vA/vB = sqrt(uB/uA) = sqrt(0.04/0.01) = sqrt(4) = 2. String A (lighter) is 2x faster."
     },
     {
       scenario: "A piano's bass strings are wrapped with wire (higher mass density).",
       question: "Why is this done?",
-      options: ["To increase wave speed", "To produce lower pitch notes", "To make them louder", "Only for durability"],
-      correct: 1,
+      options: [
+        { text: "To increase wave speed", correct: false },
+        { text: "To produce lower pitch notes", correct: true },
+        { text: "To make them louder", correct: false },
+        { text: "Only for durability", correct: false }
+      ],
       explanation: "Higher mass = lower wave speed = lower frequency = lower pitch."
     },
     {
       scenario: "A tightrope walker increases the rope tension.",
       question: "What happens to wave speed if you pluck the rope?",
-      options: ["Decreases", "Increases", "Stays the same", "Becomes zero"],
-      correct: 1,
+      options: [
+        { text: "Decreases", correct: false },
+        { text: "Increases", correct: true },
+        { text: "Stays the same", correct: false },
+        { text: "Becomes zero", correct: false }
+      ],
       explanation: "v = sqrt(T/u). Higher tension = higher wave speed."
     },
     {
       scenario: "Sound travels through air at ~343 m/s and through steel at ~5000 m/s.",
       question: "Why is steel so much faster?",
-      options: ["Steel is hotter", "Steel is much stiffer (higher tension equivalent)", "Steel is less dense", "Steel has fewer molecules"],
-      correct: 1,
+      options: [
+        { text: "Steel is hotter", correct: false },
+        { text: "Steel is much stiffer (higher tension equivalent)", correct: true },
+        { text: "Steel is less dense", correct: false },
+        { text: "Steel has fewer molecules", correct: false }
+      ],
       explanation: "Steel's extreme stiffness dominates its higher density, resulting in much faster wave propagation."
     },
     {
       scenario: "A pulse takes 0.5 s to travel a 10m rope with T = 80 N.",
       question: "What is the rope's linear density?",
-      options: ["0.01 kg/m", "0.02 kg/m", "0.05 kg/m", "0.2 kg/m"],
-      correct: 3,
+      options: [
+        { text: "0.01 kg/m", correct: false },
+        { text: "0.02 kg/m", correct: false },
+        { text: "0.05 kg/m", correct: false },
+        { text: "0.2 kg/m", correct: true }
+      ],
       explanation: "v = 10m/0.5s = 20 m/s. From v^2 = T/u, u = T/v^2 = 80/(20)^2 = 80/400 = 0.2 kg/m."
     },
     {
       scenario: "Seismic waves travel faster in denser rock layers deep in Earth.",
       question: "How is this possible given v = sqrt(T/u)?",
-      options: ["The formula doesn't apply", "Extreme pressure increases stiffness more than density", "Deeper rock is less dense", "Temperature makes them faster"],
-      correct: 1,
+      options: [
+        { text: "The formula doesn't apply", correct: false },
+        { text: "Extreme pressure increases stiffness more than density", correct: true },
+        { text: "Deeper rock is less dense", correct: false },
+        { text: "Temperature makes them faster", correct: false }
+      ],
       explanation: "At great depths, extreme pressure increases the rock's elastic modulus faster than density."
     }
   ], []);
@@ -1095,7 +1135,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     // TEST
     if (phase === 8) {
       if (testSubmitted) {
-        const score = testAnswers.reduce((acc, ans, i) => acc + (ans === testQuestions[i].correct ? 1 : 0), 0);
+        const score = testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0);
         const percentage = Math.round((score / testQuestions.length) * 100);
         const passed = percentage >= 70;
 
@@ -1185,7 +1225,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
                   }`}
                 >
-                  {opt}
+                  {opt.text}
                 </button>
               ))}
             </div>
@@ -1221,7 +1261,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                   if (testAnswers.every(a => a !== null)) {
                     setTestSubmitted(true);
                     emitEvent('test_completed', {
-                      score: testAnswers.reduce((acc, ans, i) => acc + (ans === testQuestions[i].correct ? 1 : 0), 0),
+                      score: testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0),
                       total: testQuestions.length
                     });
                   }

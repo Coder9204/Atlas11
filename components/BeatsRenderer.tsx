@@ -271,17 +271,16 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, currentPhase
 
   // Test questions
   const questions = [
-    { question: "Two tuning forks produce frequencies of 256 Hz and 260 Hz. What is the beat frequency?", options: ["2 Hz", "4 Hz", "258 Hz", "516 Hz"], correct: 1, explanation: "Beat frequency = |f₂ - f₁| = |260 - 256| = 4 Hz. You'll hear 4 pulsations per second." },
-    { question: "What causes the 'wah-wah' sound in beats?", options: ["Echo effect", "Constructive and destructive interference cycling", "Speaker distortion", "Room acoustics"], correct: 1, explanation: "Beats occur when two slightly different frequencies alternately reinforce (constructive) and cancel (destructive) each other." },
-    { question: "If you hear 3 beats per second, what's the frequency difference between the two sources?", options: ["1.5 Hz", "3 Hz", "6 Hz", "9 Hz"], correct: 1, explanation: "Beat frequency equals the frequency difference. 3 beats/second means exactly 3 Hz difference." },
-    { question: "A piano tuner hears 5 beats/second. After tightening a string, beats slow to 2/second. What happened?", options: ["String got farther from target", "String got closer to target", "String stayed the same", "Impossible to tell"], correct: 1, explanation: "Slower beats mean smaller frequency difference - the tuner is getting closer to the reference frequency." },
-    { question: "What is the perceived pitch when two tones produce beats?", options: ["The higher frequency", "The lower frequency", "The average of both frequencies", "The beat frequency itself"], correct: 2, explanation: "The perceived pitch is the average: f_perceived = (f₁ + f₂)/2. The beat is just the amplitude modulation." },
-    { question: "Two violin strings are 440 Hz and 443 Hz. The beat frequency will be:", options: ["3 Hz", "441.5 Hz", "883 Hz", "0 Hz"], correct: 0, explanation: "Beat frequency = |443 - 440| = 3 Hz. The strings will create 3 pulsations every second." },
-    { question: "Why are beats useful for tuning instruments?", options: ["They make the sound louder", "Zero beats means frequencies match exactly", "They create harmony", "They add resonance"], correct: 1, explanation: "When beats disappear (beat frequency = 0), the two frequencies are identical - perfect tuning!" },
-    { question: "As two frequencies get closer together, what happens to beats?", options: ["Get faster", "Get slower", "Stay the same", "Disappear randomly"], correct: 1, explanation: "Beat frequency = |f₂ - f₁|. Smaller difference = slower beats. When equal, beats stop." },
-    { question: "Can you hear beats with frequencies 200 Hz and 400 Hz?", options: ["Yes, 200 Hz beats", "Yes, 600 Hz beats", "No, difference is too large", "Yes, 300 Hz beats"], correct: 2, explanation: "Beats are only audible when the frequency difference is small (typically < 20 Hz). 200 Hz difference is perceived as two separate tones." },
-    { question: "What is the mathematical formula for beat frequency?", options: ["f₁ + f₂", "f₁ × f₂", "|f₁ - f₂|", "(f₁ + f₂)/2"], correct: 2, explanation: "Beat frequency = |f₁ - f₂|, the absolute difference between the two frequencies." },
-    { question: "A 440 Hz and 444 Hz tone played together will produce how many volume pulsations per second?", options: ["2", "4", "440", "884"], correct: 1, explanation: "Beat frequency = |444 - 440| = 4 Hz, meaning 4 complete volume oscillations per second." }
+    { question: "Two tuning forks produce frequencies of 256 Hz and 260 Hz. What is the beat frequency?", options: [{ text: "2 Hz", correct: false }, { text: "4 Hz", correct: true }, { text: "258 Hz", correct: false }, { text: "516 Hz", correct: false }], explanation: "Beat frequency = |f₂ - f₁| = |260 - 256| = 4 Hz. You'll hear 4 pulsations per second." },
+    { question: "What causes the 'wah-wah' sound in beats?", options: [{ text: "Echo effect", correct: false }, { text: "Constructive and destructive interference cycling", correct: true }, { text: "Speaker distortion", correct: false }, { text: "Room acoustics", correct: false }], explanation: "Beats occur when two slightly different frequencies alternately reinforce (constructive) and cancel (destructive) each other." },
+    { question: "If you hear 3 beats per second, what's the frequency difference between the two sources?", options: [{ text: "1.5 Hz", correct: false }, { text: "3 Hz", correct: true }, { text: "6 Hz", correct: false }, { text: "9 Hz", correct: false }], explanation: "Beat frequency equals the frequency difference. 3 beats/second means exactly 3 Hz difference." },
+    { question: "A piano tuner hears 5 beats/second. After tightening a string, beats slow to 2/second. What happened?", options: [{ text: "String got farther from target", correct: false }, { text: "String got closer to target", correct: true }, { text: "String stayed the same", correct: false }, { text: "Impossible to tell", correct: false }], explanation: "Slower beats mean smaller frequency difference - the tuner is getting closer to the reference frequency." },
+    { question: "What is the perceived pitch when two tones produce beats?", options: [{ text: "The higher frequency", correct: false }, { text: "The lower frequency", correct: false }, { text: "The average of both frequencies", correct: true }, { text: "The beat frequency itself", correct: false }], explanation: "The perceived pitch is the average: f_perceived = (f₁ + f₂)/2. The beat is just the amplitude modulation." },
+    { question: "Two violin strings are 440 Hz and 443 Hz. The beat frequency will be:", options: [{ text: "3 Hz", correct: true }, { text: "441.5 Hz", correct: false }, { text: "883 Hz", correct: false }, { text: "0 Hz", correct: false }], explanation: "Beat frequency = |443 - 440| = 3 Hz. The strings will create 3 pulsations every second." },
+    { question: "Why are beats useful for tuning instruments?", options: [{ text: "They make the sound louder", correct: false }, { text: "Zero beats means frequencies match exactly", correct: true }, { text: "They create harmony", correct: false }, { text: "They add resonance", correct: false }], explanation: "When beats disappear (beat frequency = 0), the two frequencies are identical - perfect tuning!" },
+    { question: "As two frequencies get closer together, what happens to beats?", options: [{ text: "Get faster", correct: false }, { text: "Get slower", correct: true }, { text: "Stay the same", correct: false }, { text: "Disappear randomly", correct: false }], explanation: "Beat frequency = |f₂ - f₁|. Smaller difference = slower beats. When equal, beats stop." },
+    { question: "Can you hear beats with frequencies 200 Hz and 400 Hz?", options: [{ text: "Yes, 200 Hz beats", correct: false }, { text: "Yes, 600 Hz beats", correct: false }, { text: "No, difference is too large", correct: true }, { text: "Yes, 300 Hz beats", correct: false }], explanation: "Beats are only audible when the frequency difference is small (typically < 20 Hz). 200 Hz difference is perceived as two separate tones." },
+    { question: "What is the mathematical formula for beat frequency?", options: [{ text: "f₁ + f₂", correct: false }, { text: "f₁ × f₂", correct: false }, { text: "|f₁ - f₂|", correct: true }, { text: "(f₁ + f₂)/2", correct: false }], explanation: "Beat frequency = |f₁ - f₂|, the absolute difference between the two frequencies." }
   ];
 
   // Real-world applications
@@ -704,7 +703,12 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, currentPhase
   };
 
   // Calculate score
-  const score = answers.filter((a, i) => a === questions[i].correct).length;
+  const calculateScore = (): number => {
+    return answers.reduce((score, answer, index) => {
+      return score + (questions[index].options[answer as number]?.correct ? 1 : 0);
+    }, 0);
+  };
+  const score = calculateScore();
 
   // ==================== PHASE RENDERS ====================
 
@@ -1424,7 +1428,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, currentPhase
                 {answers.slice(0, 10).map((a, i) => (
                   <div key={i} style={{
                     width: '10px', height: '10px', borderRadius: '50%',
-                    background: a !== null ? (a === questions[i].correct ? design.colors.success : design.colors.error) :
+                    background: a !== null ? (questions[i].options[a as number]?.correct ? design.colors.success : design.colors.error) :
                                i === testIndex ? design.colors.accentPrimary : design.colors.bgElevated
                   }} />
                 ))}
@@ -1440,7 +1444,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, currentPhase
             <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md }}>
               {q.options.map((opt, i) => {
                 const isSelected = answers[testIndex] === i;
-                const isCorrect = i === q.correct;
+                const isCorrect = opt.correct;
                 const showFeedback = answered;
 
                 return (
@@ -1452,7 +1456,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, currentPhase
                       const newAnswers = [...answers];
                       newAnswers[testIndex] = i;
                       setAnswers(newAnswers);
-                      emitEvent('test_answered', { questionIndex: testIndex, correct: i === q.correct });
+                      emitEvent('test_answered', { questionIndex: testIndex, correct: opt.correct });
                       setTimeout(() => { navigationLockRef.current = false; }, 400);
                     }}
                     disabled={answered}
@@ -1469,7 +1473,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, currentPhase
                       transition: 'all 0.2s ease'
                     }}
                   >
-                    {opt}
+                    {opt.text}
                   </button>
                 );
               })}
@@ -1481,12 +1485,12 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, currentPhase
                 marginTop: design.spacing.lg,
                 padding: design.spacing.lg,
                 borderRadius: design.radius.lg,
-                background: answers[testIndex] === q.correct ? design.colors.successMuted : design.colors.errorMuted,
-                border: `1px solid ${answers[testIndex] === q.correct ? design.colors.success : design.colors.error}30`
+                background: q.options[answers[testIndex] as number]?.correct ? design.colors.successMuted : design.colors.errorMuted,
+                border: `1px solid ${q.options[answers[testIndex] as number]?.correct ? design.colors.success : design.colors.error}30`
               }}>
                 <p style={{ fontSize: '14px', color: design.colors.textPrimary, lineHeight: 1.6 }}>
-                  <strong style={{ color: answers[testIndex] === q.correct ? design.colors.success : design.colors.error }}>
-                    {answers[testIndex] === q.correct ? '✓ Correct!' : '✗ Not quite.'}
+                  <strong style={{ color: q.options[answers[testIndex] as number]?.correct ? design.colors.success : design.colors.error }}>
+                    {q.options[answers[testIndex] as number]?.correct ? '✓ Correct!' : '✗ Not quite.'}
                   </strong>{' '}
                   {q.explanation}
                 </p>

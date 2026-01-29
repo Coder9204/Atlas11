@@ -124,111 +124,101 @@ const quizQuestions = [
   {
     question: "What is the thin lens equation?",
     options: [
-      "f = d_object × d_image",
-      "1/f = 1/d_object + 1/d_image",
-      "f = d_object + d_image",
-      "1/f = 1/d_object - 1/d_image"
+      { text: "f = d_object × d_image", correct: false },
+      { text: "1/f = 1/d_object + 1/d_image", correct: true },
+      { text: "f = d_object + d_image", correct: false },
+      { text: "1/f = 1/d_object - 1/d_image", correct: false }
     ],
-    correct: 1,
     explanation: "The thin lens equation 1/f = 1/d_o + 1/d_i relates focal length to object and image distances. It works for both converging and diverging lenses when using proper sign conventions."
   },
   {
     question: "A convex (converging) lens has what kind of focal length?",
     options: [
-      "Negative",
-      "Zero",
-      "Positive",
-      "Undefined"
+      { text: "Negative", correct: false },
+      { text: "Zero", correct: false },
+      { text: "Positive", correct: true },
+      { text: "Undefined", correct: false }
     ],
-    correct: 2,
     explanation: "Converging (convex) lenses have positive focal lengths. They focus parallel rays to a real focal point. Diverging (concave) lenses have negative focal lengths."
   },
   {
     question: "When does a convex lens create a magnified, upright, virtual image?",
     options: [
-      "When the object is beyond 2f",
-      "When the object is between f and 2f",
-      "When the object is at exactly f",
-      "When the object is inside the focal length (d < f)"
+      { text: "When the object is beyond 2f", correct: false },
+      { text: "When the object is between f and 2f", correct: false },
+      { text: "When the object is at exactly f", correct: false },
+      { text: "When the object is inside the focal length (d < f)", correct: true }
     ],
-    correct: 3,
     explanation: "When an object is inside the focal length of a convex lens, the lens can't form a real image. Instead, it creates a virtual, magnified, upright image - this is the magnifying glass effect!"
   },
   {
     question: "What happens when an object is placed at exactly the focal point of a convex lens?",
     options: [
-      "A tiny image forms at f",
-      "Light rays emerge parallel (image at infinity)",
-      "The image and object are the same size",
-      "No light passes through"
+      { text: "A tiny image forms at f", correct: false },
+      { text: "Light rays emerge parallel (image at infinity)", correct: true },
+      { text: "The image and object are the same size", correct: false },
+      { text: "No light passes through", correct: false }
     ],
-    correct: 1,
     explanation: "When an object is at the focal point, rays emerge parallel (d_image → ∞). The lens equation gives 1/∞ = 1/f - 1/f = 0. This is how flashlights work - putting a bulb at f creates a parallel beam!"
   },
   {
     question: "A lens with f = 50mm compared to f = 200mm will:",
     options: [
-      "Have a wider field of view and less magnification",
-      "Have a narrower field of view and more magnification",
-      "Be the same - focal length doesn't affect view",
-      "Always create smaller images"
+      { text: "Have a wider field of view and less magnification", correct: true },
+      { text: "Have a narrower field of view and more magnification", correct: false },
+      { text: "Be the same - focal length doesn't affect view", correct: false },
+      { text: "Always create smaller images", correct: false }
     ],
-    correct: 0,
     explanation: "Shorter focal length = wider field of view, less magnification. Longer focal length = narrower field (telephoto), more magnification. That's why phone cameras (short f) capture wide scenes while zoom lenses (long f) magnify distant subjects."
   },
   {
     question: "What unit measures optical power of lenses?",
     options: [
-      "Lumens",
-      "Watts",
-      "Diopters (1/meters)",
-      "Hertz"
+      { text: "Lumens", correct: false },
+      { text: "Watts", correct: false },
+      { text: "Diopters (1/meters)", correct: true },
+      { text: "Hertz", correct: false }
     ],
-    correct: 2,
     explanation: "Diopters = 1/focal length in meters. A +2D lens has f = 0.5m and converges light. A -3D lens has f = -0.33m and diverges light. This is how eyeglass prescriptions work!"
   },
   {
     question: "If magnification is negative, what does this indicate about the image?",
     options: [
-      "The image doesn't exist",
-      "The image is inverted (upside down)",
-      "The image is smaller",
-      "The lens is broken"
+      { text: "The image doesn't exist", correct: false },
+      { text: "The image is inverted (upside down)", correct: true },
+      { text: "The image is smaller", correct: false },
+      { text: "The lens is broken", correct: false }
     ],
-    correct: 1,
     explanation: "Negative magnification means the image is inverted relative to the object. Real images formed by converging lenses have negative magnification (inverted). Virtual images have positive magnification (upright)."
   },
   {
     question: "Why do microscope objectives have very short focal lengths?",
     options: [
-      "To save money on glass",
-      "Shorter f = higher magnification (M ∝ 1/f)",
-      "Longer f would be too heavy",
-      "It's just tradition"
+      { text: "To save money on glass", correct: false },
+      { text: "Shorter f = higher magnification (M ∝ 1/f)", correct: true },
+      { text: "Longer f would be too heavy", correct: false },
+      { text: "It's just tradition", correct: false }
     ],
-    correct: 1,
     explanation: "Magnification is inversely proportional to focal length. A 1mm focal length objective can achieve 250x magnification, while a 10mm objective gives only 25x. That's why high-power objectives are tiny and must be very close to samples."
   },
   {
     question: "How do reading glasses (for farsightedness) work?",
     options: [
-      "They block UV light",
-      "They use converging lenses to add focusing power",
-      "They use diverging lenses to spread light",
-      "They make everything darker to reduce strain"
+      { text: "They block UV light", correct: false },
+      { text: "They use converging lenses to add focusing power", correct: true },
+      { text: "They use diverging lenses to spread light", correct: false },
+      { text: "They make everything darker to reduce strain", correct: false }
     ],
-    correct: 1,
     explanation: "Farsighted eyes can't focus on close objects (lens too weak). Reading glasses use converging lenses (positive diopters) to add extra focusing power, helping form the image on the retina."
   },
   {
     question: "In the lens equation, what does a negative image distance (d_i) indicate?",
     options: [
-      "Calculation error",
-      "The image is on the same side as the object (virtual image)",
-      "The image is very far away",
-      "The lens is concave"
+      { text: "Calculation error", correct: false },
+      { text: "The image is on the same side as the object (virtual image)", correct: true },
+      { text: "The image is very far away", correct: false },
+      { text: "The lens is concave", correct: false }
     ],
-    correct: 1,
     explanation: "A negative image distance means the image forms on the same side of the lens as the object - this is a virtual image. You can't project it on a screen; you see it by looking through the lens (like a magnifying glass)."
   }
 ];
@@ -394,7 +384,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
   const handleAnswerSubmit = useCallback(() => {
     if (selectedAnswer === null || showQuizFeedback || isTransitioningRef.current) return;
     setShowQuizFeedback(true);
-    if (selectedAnswer === quizQuestions[currentQuestion].correct) {
+    if (quizQuestions[currentQuestion].options[selectedAnswer]?.correct) {
       setScore(s => s + 1);
     }
   }, [selectedAnswer, showQuizFeedback, currentQuestion]);
@@ -1490,7 +1480,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
           <div style={{ display: 'flex', flexDirection: 'column', gap: spacing.sm }}>
             {question.options.map((option, index) => {
               const isSelected = selectedAnswer === index;
-              const isCorrect = index === question.correct;
+              const isCorrect = option.correct;
               const showResult = showQuizFeedback;
 
               let bgColor = colors.background;
@@ -1522,7 +1512,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
                     transition: 'all 0.2s ease',
                   }}
                 >
-                  <span style={{ color: colors.text }}>{option}</span>
+                  <span style={{ color: colors.text }}>{option.text}</span>
                   {showResult && isCorrect && <span style={{ marginLeft: 8 }}>✓</span>}
                   {showResult && isSelected && !isCorrect && <span style={{ marginLeft: 8 }}>✗</span>}
                 </div>
