@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================================================
 // GAME 181: TRANSMISSION LINE REFLECTIONS
@@ -10,9 +10,10 @@ import React, { useState, useEffect, useCallback } from 'react';
 // Standing waves and ringing cause signal integrity issues
 // ============================================================================
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
 interface TransmissionLineRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: Phase; // Optional for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
@@ -23,6 +24,7 @@ const colors = {
   textMuted: '#94a3b8',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
+  bgCardLight: '#1e293b',
   bgDark: 'rgba(15, 23, 42, 0.95)',
   accent: '#f59e0b',
   accentGlow: 'rgba(245, 158, 11, 0.4)',
@@ -32,14 +34,47 @@ const colors = {
   signal: '#3b82f6',
   reflection: '#ef4444',
   terminated: '#10b981',
+  border: '#334155',
+  primary: '#06b6d4',
+};
+
+// Phase order and labels for navigation
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Open vs Short',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
 };
 
 const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase, phase]);
+
   // Simulation state
   const [characteristicImpedance, setCharacteristicImpedance] = useState(50); // Z0 in ohms
   const [loadImpedance, setLoadImpedance] = useState(50); // ZL in ohms
@@ -57,6 +92,19 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Responsive design
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Animation loop
   useEffect(() => {
     if (!isAnimating) return;
@@ -65,6 +113,33 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     }, 50);
     return () => clearInterval(interval);
   }, [isAnimating]);
+
+  // Navigation functions
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
 
   // Physics calculations
   const calculateReflection = useCallback(() => {
@@ -250,6 +325,137 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     setTestSubmitted(true);
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
+  };
+
+  // Progress bar component
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: isMobile ? '10px 12px' : '12px 16px',
+        borderBottom: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: isMobile ? '12px' : '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
+          <div style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }}>
+            {phaseOrder.map((p, i) => (
+              <div
+                key={p}
+                onClick={() => i < currentIdx && goToPhase(p)}
+                style={{
+                  height: isMobile ? '10px' : '8px',
+                  width: i === currentIdx ? (isMobile ? '20px' : '24px') : (isMobile ? '10px' : '8px'),
+                  borderRadius: '5px',
+                  backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : colors.border,
+                  cursor: i < currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s',
+                  minWidth: isMobile ? '10px' : '8px',
+                  minHeight: isMobile ? '10px' : '8px'
+                }}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+            {currentIdx + 1} / {phaseOrder.length}
+          </span>
+        </div>
+
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: `${colors.accent}20`,
+          color: colors.accent,
+          fontSize: '11px',
+          fontWeight: 700
+        }}>
+          {phaseLabels[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom navigation bar
+  const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: string, onNext?: () => void) => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canBack = canGoBack && currentIdx > 0;
+
+    const handleBack = () => {
+      if (canBack) {
+        goToPhase(phaseOrder[currentIdx - 1]);
+      }
+    };
+
+    const handleNext = () => {
+      if (!canGoNext) return;
+      if (onNext) {
+        onNext();
+      } else if (currentIdx < phaseOrder.length - 1) {
+        goToPhase(phaseOrder[currentIdx + 1]);
+      }
+    };
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isMobile ? '12px' : '12px 16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '12px',
+        flexShrink: 0
+      }}>
+        <button
+          onClick={handleBack}
+          style={{
+            padding: isMobile ? '10px 16px' : '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: isMobile ? '13px' : '14px',
+            backgroundColor: colors.bgCardLight,
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.3,
+            minHeight: '44px'
+          }}
+        >
+          Back
+        </button>
+
+        <span style={{
+          fontSize: '12px',
+          color: colors.textMuted,
+          fontWeight: 600
+        }}>
+          {phaseLabels[phase]}
+        </span>
+
+        <button
+          onClick={handleNext}
+          style={{
+            padding: isMobile ? '10px 20px' : '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: isMobile ? '13px' : '14px',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.accent} 0%, ${colors.warning} 100%)` : colors.bgCardLight,
+            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.4,
+            boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
+            minHeight: '44px'
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
   };
 
   const renderVisualization = (interactive: boolean) => {
@@ -471,170 +677,142 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
     );
   };
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
+  // Render wrapper with progress bar
+  const renderPhaseContent = (content: React.ReactNode, bottomBar: React.ReactNode) => (
+    <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      {renderProgressBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '80px' }}>
+        {content}
+      </div>
+      {bottomBar}
     </div>
   );
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              Transmission Line Reflections
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Why do high-speed signals need matched impedances?
+    return renderPhaseContent(
+      <>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            Transmission Line Reflections
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            Why do high-speed signals need matched impedances?
+          </p>
+        </div>
+
+        {renderVisualization(true)}
+
+        <div style={{ padding: '24px' }}>
+          <div style={{
+            background: colors.bgCard,
+            padding: '20px',
+            borderRadius: '12px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              At high frequencies, electrical signals behave like waves traveling down a wire.
+              When they encounter a change in impedance, part of the signal bounces back -
+              just like sound echoing off a wall!
             </p>
           </div>
 
-          {renderVisualization(true)}
-
-          <div style={{ padding: '24px' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                At high frequencies, electrical signals behave like waves traveling down a wire.
-                When they encounter a change in impedance, part of the signal bounces back -
-                just like sound echoing off a wall!
-              </p>
-            </div>
-
-            <div style={{
-              background: 'rgba(245, 158, 11, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Try changing the load impedance and watch what happens to the signal!
-              </p>
-            </div>
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.2)',
+            padding: '16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              Try changing the load impedance and watch what happens to the signal!
+            </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
-      </div>
+      </>,
+      renderBottomBar(false, true, 'Make a Prediction')
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
+    return renderPhaseContent(
+      <>
+        {renderVisualization(false)}
 
-          <div style={{ padding: '16px' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '16px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Scenario:</h3>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-                A 50-ohm transmission line is connected to a 150-ohm load.
-                What happens to the signal when it reaches the load?
-              </p>
-            </div>
+        <div style={{ padding: '16px' }}>
+          <div style={{
+            background: colors.bgCard,
+            padding: '16px',
+            borderRadius: '12px',
+            marginBottom: '16px',
+          }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Scenario:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+              A 50-ohm transmission line is connected to a 150-ohm load.
+              What happens to the signal when it reaches the load?
+            </p>
+          </div>
 
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              Your Prediction:
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            Your Prediction:
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {predictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                  background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
-      </div>
+      </>,
+      renderBottomBar(true, !!prediction, 'Test My Prediction')
     );
   }
 
   // PLAY PHASE
   if (phase === 'play') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Transmission Line Behavior</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Adjust impedances and observe reflections
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Match the load to Z0 - watch reflections disappear</li>
-              <li>Try open circuit (infinite Z) - see total reflection</li>
-              <li>Try short circuit (Z=0) - see inverted reflection</li>
-              <li>Notice how VSWR changes with mismatch severity</li>
-            </ul>
-          </div>
+    return renderPhaseContent(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Transmission Line Behavior</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Adjust impedances and observe reflections
+          </p>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
-      </div>
+
+        {renderVisualization(true)}
+        {renderControls()}
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
+          <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>Match the load to Z0 - watch reflections disappear</li>
+            <li>Try open circuit (infinite Z) - see total reflection</li>
+            <li>Try short circuit (Z=0) - see inverted reflection</li>
+            <li>Notice how VSWR changes with mismatch severity</li>
+          </ul>
+        </div>
+      </>,
+      renderBottomBar(true, true, 'Continue to Review')
     );
   }
 
@@ -642,148 +820,142 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
   if (phase === 'review') {
     const wasCorrect = prediction === 'reflected';
 
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              When impedance changes, part of the signal reflects back. This is described by the
-              reflection coefficient Gamma = (Z_L - Z_0) / (Z_L + Z_0).
+    return renderPhaseContent(
+      <>
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            {wasCorrect ? 'Correct!' : 'Not Quite!'}
+          </h3>
+          <p style={{ color: colors.textPrimary }}>
+            When impedance changes, part of the signal reflects back. This is described by the
+            reflection coefficient Gamma = (Z_L - Z_0) / (Z_L + Z_0).
+          </p>
+        </div>
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Reflections</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Reflection Coefficient (Gamma):</strong> Ranges from
+              -1 (short circuit) to +1 (open circuit). Gamma = 0 means perfect match.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>VSWR:</strong> Voltage Standing Wave Ratio measures
+              the severity of mismatch. VSWR = 1:1 is perfect; higher ratios mean more reflection.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Return Loss:</strong> Expressed in dB, measures how
+              much power is reflected. 20 dB means only 1% power reflected.
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>Signal Integrity:</strong> Reflections cause ringing,
+              overshoot, and timing problems in high-speed digital circuits.
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Reflections</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Reflection Coefficient (Gamma):</strong> Ranges from
-                -1 (short circuit) to +1 (open circuit). Gamma = 0 means perfect match.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>VSWR:</strong> Voltage Standing Wave Ratio measures
-                the severity of mismatch. VSWR = 1:1 is perfect; higher ratios mean more reflection.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Return Loss:</strong> Expressed in dB, measures how
-                much power is reflected. 20 dB means only 1% power reflected.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Signal Integrity:</strong> Reflections cause ringing,
-                overshoot, and timing problems in high-speed digital circuits.
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
-      </div>
+      </>,
+      renderBottomBar(true, true, 'Next: A Twist!')
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist: Unterminated Lines</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What happens with open or short circuits?
-            </p>
-          </div>
+    return renderPhaseContent(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist: Unterminated Lines</h2>
+          <p style={{ color: colors.textSecondary }}>
+            What happens with open or short circuits?
+          </p>
+        </div>
 
-          {renderVisualization(false)}
+        {renderVisualization(false)}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Challenge:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              In real circuits, lines are sometimes left unterminated (open) or accidentally shorted.
-              Both cases cause 100% reflection, but there is an important difference...
-            </p>
-          </div>
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Challenge:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            In real circuits, lines are sometimes left unterminated (open) or accidentally shorted.
+            Both cases cause 100% reflection, but there is an important difference...
+          </p>
+        </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What is the difference between open and short circuit reflections?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+        <div style={{ padding: '0 16px 16px 16px' }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            What is the difference between open and short circuit reflections?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {twistPredictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setTwistPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                  background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
-      </div>
+      </>,
+      renderBottomBar(true, !!twistPrediction, 'Test My Prediction')
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Open vs Short Circuit</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Compare the reflection behavior
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Open circuit: Gamma = +1 (voltage doubles at the end)<br/>
-              Short circuit: Gamma = -1 (voltage inverts, current doubles)<br/>
-              Both cause total reflection but with opposite phase!
-            </p>
-          </div>
+    return renderPhaseContent(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Open vs Short Circuit</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Compare the reflection behavior
+          </p>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
-      </div>
+
+        {renderVisualization(true)}
+        {renderControls()}
+
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.2)',
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+          borderLeft: `3px solid ${colors.warning}`,
+        }}>
+          <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Open circuit: Gamma = +1 (voltage doubles at the end)<br/>
+            Short circuit: Gamma = -1 (voltage inverts, current doubles)<br/>
+            Both cause total reflection but with opposite phase!
+          </p>
+        </div>
+      </>,
+      renderBottomBar(true, true, 'See the Explanation')
     );
   }
 
@@ -791,218 +963,213 @@ const TransmissionLineRenderer: React.FC<TransmissionLineRendererProps> = ({
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'same';
 
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${colors.warning}`,
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '8px' }}>
-              The Surprising Truth!
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Open and short circuits both reflect 100% of the signal power, but with opposite phase.
-              Open: Gamma = +1 (voltage doubles). Short: Gamma = -1 (voltage cancels, current doubles).
-              {wasCorrect ? ' You correctly identified they are similar in magnitude!' : ''}
+    return renderPhaseContent(
+      <>
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.2)',
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${colors.warning}`,
+        }}>
+          <h3 style={{ color: colors.warning, marginBottom: '8px' }}>
+            The Surprising Truth!
+          </h3>
+          <p style={{ color: colors.textPrimary }}>
+            Open and short circuits both reflect 100% of the signal power, but with opposite phase.
+            Open: Gamma = +1 (voltage doubles). Short: Gamma = -1 (voltage cancels, current doubles).
+            {wasCorrect ? ' You correctly identified they are similar in magnitude!' : ''}
+          </p>
+        </div>
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why Ringing Occurs</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Multiple Reflections:</strong> The reflected wave
+              travels back to the source, where it may reflect again if the source is not matched.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Ringing:</strong> These back-and-forth reflections
+              create oscillations (ringing) that can take several round-trips to settle.
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>Signal Integrity:</strong> In high-speed digital
+              circuits, ringing can cause false triggers, violate timing margins, and corrupt data.
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why Ringing Occurs</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Multiple Reflections:</strong> The reflected wave
-                travels back to the source, where it may reflect again if the source is not matched.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Ringing:</strong> These back-and-forth reflections
-                create oscillations (ringing) that can take several round-trips to settle.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Signal Integrity:</strong> In high-speed digital
-                circuits, ringing can cause false triggers, violate timing margins, and corrupt data.
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
-      </div>
+      </>,
+      renderBottomBar(true, true, 'Apply This Knowledge')
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Real-World Applications
-            </h2>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
-            </p>
-          </div>
+    return renderPhaseContent(
+      <div style={{ padding: '16px' }}>
+        <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+          Real-World Applications
+        </h2>
+        <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+          Complete all 4 applications to unlock the test
+        </p>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', WebkitTapHighlightColor: 'transparent' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
+        {transferApplications.map((app, index) => (
+          <div
+            key={index}
+            style={{
+              background: colors.bgCard,
+              marginBottom: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+              border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
+              {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
             </div>
-          ))}
-        </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
-      </div>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+            <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
+              <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+            </div>
+            {!transferCompleted.has(index) ? (
+              <button
+                onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', WebkitTapHighlightColor: 'transparent' }}
+              >
+                Reveal Answer
+              </button>
+            ) : (
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </div>,
+      renderBottomBar(true, transferCompleted.size >= 4, 'Take the Test')
     );
   }
 
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
-      return (
-        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 7 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 7 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 7 ? 'You understand transmission line reflections!' : 'Review the material and try again.'}
-              </p>
-            </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+      return renderPhaseContent(
+        <>
+          <div style={{
+            background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            margin: '16px',
+            padding: '24px',
+            borderRadius: '12px',
+            textAlign: 'center',
+          }}>
+            <h2 style={{ color: testScore >= 7 ? colors.success : colors.error, marginBottom: '8px' }}>
+              {testScore >= 7 ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+            <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+              {testScore >= 7 ? 'You understand transmission line reflections!' : 'Review the material and try again.'}
+            </p>
           </div>
-          {renderBottomBar(false, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry')}
-        </div>
+          {testQuestions.map((q, qIndex) => {
+            const userAnswer = testAnswers[qIndex];
+            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+            return (
+              <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                {q.options.map((opt, oIndex) => (
+                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                    {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </>,
+        renderBottomBar(true, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry', () => {
+          if (testScore >= 7) {
+            goNext();
+          } else {
+            setTestSubmitted(false);
+            setTestAnswers(new Array(10).fill(null));
+            setCurrentTestQuestion(0);
+          }
+        })
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
-            </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-              ))}
-            </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', WebkitTapHighlightColor: 'transparent' }}>
-                  {opt.text}
-                </button>
-              ))}
-            </div>
-          </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
-            ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Submit Test</button>
-            )}
-          </div>
+    return renderPhaseContent(
+      <div style={{ padding: '16px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
+          <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
         </div>
-      </div>
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+          {testQuestions.map((_, i) => (
+            <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+          ))}
+        </div>
+        <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+          <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+        </div>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {currentQ.options.map((opt, oIndex) => (
+            <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px', WebkitTapHighlightColor: 'transparent' }}>
+              {opt.text}
+            </button>
+          ))}
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0' }}>
+          <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
+          {currentTestQuestion < testQuestions.length - 1 ? (
+            <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
+          ) : (
+            <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Submit Test</button>
+          )}
+        </div>
+      </div>,
+      renderBottomBar(true, false, 'Submit Test')
     );
   }
 
   // MASTERY PHASE
   if (phase === 'mastery') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered transmission line reflections!</p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Reflection coefficient Gamma = (Z_L - Z_0) / (Z_L + Z_0)</li>
-              <li>VSWR and return loss as mismatch metrics</li>
-              <li>Open circuit (Gamma=+1) vs short circuit (Gamma=-1)</li>
-              <li>Signal ringing from multiple reflections</li>
-              <li>Termination strategies for high-speed signals</li>
-            </ul>
-          </div>
-          <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Real-World Impact:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              Understanding transmission line reflections is essential for designing high-speed digital
-              circuits, RF systems, and any application where signal integrity matters. From USB cables
-              to 5G antennas, proper impedance matching ensures reliable communication!
-            </p>
-          </div>
-          {renderVisualization(true)}
+    return renderPhaseContent(
+      <>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+          <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+          <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered transmission line reflections!</p>
         </div>
-        {renderBottomBar(false, true, 'Complete')}
-      </div>
+        <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+          <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>Reflection coefficient Gamma = (Z_L - Z_0) / (Z_L + Z_0)</li>
+            <li>VSWR and return loss as mismatch metrics</li>
+            <li>Open circuit (Gamma=+1) vs short circuit (Gamma=-1)</li>
+            <li>Signal ringing from multiple reflections</li>
+            <li>Termination strategies for high-speed signals</li>
+          </ul>
+        </div>
+        <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Real-World Impact:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+            Understanding transmission line reflections is essential for designing high-speed digital
+            circuits, RF systems, and any application where signal integrity matters. From USB cables
+            to 5G antennas, proper impedance matching ensures reliable communication!
+          </p>
+        </div>
+        {renderVisualization(true)}
+      </>,
+      renderBottomBar(true, true, 'Complete')
     );
   }
 

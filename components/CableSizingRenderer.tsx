@@ -32,11 +32,25 @@ const PHASES: Phase[] = [
 ];
 
 interface CableSizingRendererProps {
-  phase: Phase;
+  phase?: Phase; // Optional - used for resume functionality
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
+
+// Phase labels for progress bar
+const PHASE_LABELS: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Observer Effect',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery',
+};
 
 // ────────────────────────────────────────────────────────────────────────────
 // 10-QUESTION TEST DATA
@@ -167,11 +181,45 @@ const TRANSFER_APPS = [
 // ────────────────────────────────────────────────────────────────────────────
 
 export default function CableSizingRenderer({
-  phase,
+  phase: initialPhase,
   onPhaseComplete,
   onCorrectAnswer,
   onIncorrectAnswer,
 }: CableSizingRendererProps) {
+  // Internal phase state management
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (initialPhase && PHASES.includes(initialPhase)) {
+      return initialPhase;
+    }
+    return 'hook';
+  });
+
+  // Sync phase with prop changes (for resume functionality)
+  useEffect(() => {
+    if (initialPhase && PHASES.includes(initialPhase) && initialPhase !== phase) {
+      setPhase(initialPhase);
+    }
+  }, [initialPhase]);
+
+  // Navigation functions
+  const goToPhase = useCallback((p: Phase) => {
+    setPhase(p);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = PHASES.indexOf(phase);
+    if (idx < PHASES.length - 1) {
+      goToPhase(PHASES[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = PHASES.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(PHASES[idx - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // State
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -301,6 +349,90 @@ export default function CableSizingRenderer({
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
+
+  // Progress bar renderer
+  const renderProgressBar = () => {
+    const currentIdx = PHASES.indexOf(phase);
+    return (
+      <div className="flex items-center justify-between px-4 py-3 bg-slate-900/80 border-b border-slate-700">
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          className={`p-2 rounded-lg transition-all ${
+            currentIdx === 0
+              ? 'opacity-30 cursor-not-allowed'
+              : 'hover:bg-slate-700 text-slate-300'
+          }`}
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            {PHASES.map((p, i) => (
+              <button
+                key={p}
+                onClick={() => i <= currentIdx && goToPhase(p)}
+                className={`h-2 rounded-full transition-all ${
+                  i === currentIdx
+                    ? 'w-6 bg-amber-500'
+                    : i < currentIdx
+                    ? 'w-2 bg-emerald-500 cursor-pointer hover:bg-emerald-400'
+                    : 'w-2 bg-slate-600'
+                }`}
+                title={PHASE_LABELS[p]}
+              />
+            ))}
+          </div>
+          <span className="text-xs font-medium text-slate-400 ml-2">
+            {currentIdx + 1}/{PHASES.length}
+          </span>
+        </div>
+
+        <div className="px-3 py-1 rounded-full bg-amber-500/20 text-amber-400 text-xs font-semibold">
+          {PHASE_LABELS[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom navigation bar renderer
+  const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Continue') => {
+    const currentIdx = PHASES.indexOf(phase);
+    return (
+      <div className="flex justify-between items-center px-6 py-4 bg-slate-900/80 border-t border-slate-700">
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          className={`px-5 py-2.5 rounded-xl font-medium transition-all ${
+            currentIdx === 0
+              ? 'opacity-30 cursor-not-allowed bg-slate-700 text-slate-500'
+              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+          }`}
+        >
+          Back
+        </button>
+
+        <span className="text-sm text-slate-500 font-medium">
+          {PHASE_LABELS[phase]}
+        </span>
+
+        <button
+          onClick={goNext}
+          disabled={!canGoNext}
+          className={`px-6 py-2.5 rounded-xl font-semibold transition-all ${
+            canGoNext
+              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg shadow-amber-500/25 hover:shadow-amber-500/40'
+              : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+          }`}
+        >
+          {nextLabel} {canGoNext && <span className="ml-1">→</span>}
+        </button>
+      </div>
+    );
+  };
 
   // ──────────────────────────────────────────────────────────────────────────
   // RENDER FUNCTIONS
@@ -545,18 +677,7 @@ export default function CableSizingRenderer({
         </div>
       </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Explore Cable Physics
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
+      {renderBottomBar(true, 'Explore Cable Physics')}
     </div>
   );
 
@@ -602,27 +723,19 @@ export default function CableSizingRenderer({
       </div>
 
       {showPredictionFeedback && (
-        <>
-          <div className={`p-5 rounded-2xl mb-6 ${
-            prediction === 'quadruple' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
-          }`}>
-            <p className={`leading-relaxed ${prediction === 'quadruple' ? 'text-emerald-800' : 'text-amber-800'}`}>
-              {prediction === 'quadruple' ? (
-                <><strong>Exactly right!</strong> P = I²R means power loss scales with the <em>square</em> of current. Double the current = 4x the loss. Triple current = 9x loss! This is why cable sizing matters so much.</>
-              ) : (
-                <><strong>The math is surprising:</strong> P = I²R! Power loss scales with current <em>squared</em>. Doubling current causes 4x the loss, not 2x. This quadratic relationship is why proper cable sizing is critical.</>
-              )}
-            </p>
-          </div>
-          <button
-            onClick={() => onPhaseComplete?.()}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
-          >
-            Explore I²R Losses →
-          </button>
-        </>
+        <div className={`p-5 rounded-2xl mb-6 ${
+          prediction === 'quadruple' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
+        }`}>
+          <p className={`leading-relaxed ${prediction === 'quadruple' ? 'text-emerald-800' : 'text-amber-800'}`}>
+            {prediction === 'quadruple' ? (
+              <><strong>Exactly right!</strong> P = I²R means power loss scales with the <em>square</em> of current. Double the current = 4x the loss. Triple current = 9x loss! This is why cable sizing matters so much.</>
+            ) : (
+              <><strong>The math is surprising:</strong> P = I²R! Power loss scales with current <em>squared</em>. Doubling current causes 4x the loss, not 2x. This quadratic relationship is why proper cable sizing is critical.</>
+            )}
+          </p>
+        </div>
       )}
+      {renderBottomBar(showPredictionFeedback, 'Explore I²R Losses')}
     </div>
   );
 
@@ -705,18 +818,7 @@ export default function CableSizingRenderer({
         </p>
       </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        disabled={!hasExperimented}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className={`w-full py-4 px-8 rounded-2xl font-semibold text-lg transition-all ${
-          hasExperimented
-            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
-            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-        }`}
-      >
-        {hasExperimented ? 'Continue to Review →' : `Adjust sliders ${Math.max(0, 5 - experimentCount)} more times...`}
-      </button>
+      {renderBottomBar(hasExperimented, hasExperimented ? 'Continue to Review' : `Adjust sliders ${Math.max(0, 5 - experimentCount)} more times...`)}
     </div>
   );
 
@@ -767,13 +869,7 @@ export default function CableSizingRenderer({
         ))}
       </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
-      >
-        Now for a Twist... →
-      </button>
+      {renderBottomBar(true, 'Now for a Twist...')}
     </div>
   );
 
@@ -822,27 +918,19 @@ export default function CableSizingRenderer({
       </div>
 
       {showTwistFeedback && (
-        <>
-          <div className={`p-5 rounded-2xl mb-6 ${
-            twistPrediction === '480better' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
-          }`}>
-            <p className={`leading-relaxed ${twistPrediction === '480better' ? 'text-emerald-800' : 'text-amber-800'}`}>
-              {twistPrediction === '480better' ? (
-                <><strong>Excellent!</strong> P=IV means higher V = lower I for same power. Since losses are I²R, halving current cuts losses to 1/4! 480V vs 208V: (208/480)² = 0.19 or about 1/5 the losses!</>
-              ) : (
-                <><strong>The math is powerful:</strong> Higher voltage means lower current for the same power (P=IV). Since losses are I²R, halving current reduces losses to 1/4. This is why data centers prefer higher distribution voltages!</>
-              )}
-            </p>
-          </div>
-          <button
-            onClick={() => onPhaseComplete?.()}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
-          >
-            Compare Voltages →
-          </button>
-        </>
+        <div className={`p-5 rounded-2xl mb-6 ${
+          twistPrediction === '480better' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
+        }`}>
+          <p className={`leading-relaxed ${twistPrediction === '480better' ? 'text-emerald-800' : 'text-amber-800'}`}>
+            {twistPrediction === '480better' ? (
+              <><strong>Excellent!</strong> P=IV means higher V = lower I for same power. Since losses are I²R, halving current cuts losses to 1/4! 480V vs 208V: (208/480)² = 0.19 or about 1/5 the losses!</>
+            ) : (
+              <><strong>The math is powerful:</strong> Higher voltage means lower current for the same power (P=IV). Since losses are I²R, halving current reduces losses to 1/4. This is why data centers prefer higher distribution voltages!</>
+            )}
+          </p>
+        </div>
       )}
+      {renderBottomBar(showTwistFeedback, 'Compare Voltages')}
     </div>
   );
 
@@ -901,18 +989,7 @@ export default function CableSizingRenderer({
         </p>
       </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        disabled={!hasExploredTwist}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className={`w-full py-4 px-8 rounded-2xl font-semibold text-lg transition-all ${
-          hasExploredTwist
-            ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
-            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-        }`}
-      >
-        {hasExploredTwist ? 'Continue →' : 'Adjust the power slider...'}
-      </button>
+      {renderBottomBar(hasExploredTwist, hasExploredTwist ? 'Continue' : 'Adjust the power slider...')}
     </div>
   );
 
@@ -961,13 +1038,7 @@ export default function CableSizingRenderer({
         </ul>
       </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
-      >
-        See Real Applications →
-      </button>
+      {renderBottomBar(true, 'See Real Applications')}
     </div>
   );
 
@@ -1044,18 +1115,7 @@ export default function CableSizingRenderer({
           </div>
         </div>
 
-        <button
-          onClick={() => onPhaseComplete?.()}
-          disabled={!allAppsCompleted}
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-          className={`w-full py-4 px-8 rounded-2xl font-semibold text-lg transition-all ${
-            allAppsCompleted
-              ? 'bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg'
-              : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-          }`}
-        >
-          {allAppsCompleted ? 'Take the Assessment →' : `Complete ${4 - completedApps.size} more`}
-        </button>
+        {renderBottomBar(allAppsCompleted, allAppsCompleted ? 'Take the Assessment' : `Complete ${4 - completedApps.size} more`)}
       </div>
     );
   };
@@ -1149,23 +1209,15 @@ export default function CableSizingRenderer({
             </p>
 
             {testScore >= 7 ? (
-              <button
-                onClick={() => onPhaseComplete?.()}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-                className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
-              >
-                Complete Lesson →
-              </button>
+              renderBottomBar(true, 'Complete Lesson')
             ) : (
-              <div className="space-y-3">
-                <button
-                  onClick={() => { setTestSubmitted(false); setTestAnswers(new Array(TEST_QUESTIONS.length).fill(null)); }}
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
-                  className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-slate-200 text-slate-700"
-                >
-                  Try Again
-                </button>
-              </div>
+              <button
+                onClick={() => { setTestSubmitted(false); setTestAnswers(new Array(TEST_QUESTIONS.length).fill(null)); }}
+                style={{ WebkitTapHighlightColor: 'transparent' }}
+                className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-slate-200 text-slate-700"
+              >
+                Try Again
+              </button>
             )}
           </div>
         )}
@@ -1205,13 +1257,15 @@ export default function CableSizingRenderer({
         </ul>
       </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="px-8 py-4 bg-slate-200 text-slate-700 rounded-2xl font-semibold"
-      >
-        Complete
-      </button>
+      <div className="flex justify-center">
+        <button
+          onClick={() => onPhaseComplete?.()}
+          style={{ WebkitTapHighlightColor: 'transparent' }}
+          className="px-8 py-4 bg-slate-200 text-slate-700 rounded-2xl font-semibold"
+        >
+          Complete
+        </button>
+      </div>
     </div>
   );
 
@@ -1233,8 +1287,11 @@ export default function CableSizingRenderer({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {renderPhase()}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col">
+      {renderProgressBar()}
+      <div className="flex-1 overflow-auto">
+        {renderPhase()}
+      </div>
     </div>
   );
 }

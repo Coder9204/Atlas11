@@ -1,10 +1,12 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// Phase type for internal state management
+type EMIPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface EMIShieldingRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: string; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
@@ -25,6 +27,7 @@ const colors = {
   noise: '#ef4444',
   shield: '#64748b',
   twistedPair: '#22c55e',
+  border: '#334155',
 };
 
 // Cable types with EMI characteristics
@@ -36,11 +39,43 @@ const cableTypes = [
 ];
 
 const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Phase order and labels for navigation
+  const phaseOrder: EMIPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<EMIPhase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Twisted Pairs',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  // Validate and get initial phase
+  const getInitialPhase = (): EMIPhase => {
+    if (gamePhase && phaseOrder.includes(gamePhase as EMIPhase)) {
+      return gamePhase as EMIPhase;
+    }
+    return 'hook';
+  };
+
+  // Internal phase state management
+  const [phase, setPhase] = useState<EMIPhase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as EMIPhase) && gamePhase !== phase) {
+      setPhase(gamePhase as EMIPhase);
+    }
+  }, [gamePhase]);
+
   // Simulation state
   const [cableTypeIndex, setCableTypeIndex] = useState(0);
   const [signalFrequency, setSignalFrequency] = useState(100); // MHz
@@ -57,6 +92,19 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
+  // Navigation state
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Responsive design
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   // Calculate EMI effects
   const cable = cableTypes[cableTypeIndex];
   const frequencyFactor = Math.log10(signalFrequency / 10 + 1) * 2; // Higher freq = more radiation
@@ -64,6 +112,33 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
   const radiatedEMI = signalFrequency * (1 - cable.shielding / 100) * 0.5;
   const signalIntegrity = Math.max(0, 100 - effectiveNoise * frequencyFactor);
   const twistCancellation = cable.twisting ? 60 : 0;
+
+  // Navigation functions
+  const goToPhase = useCallback((p: EMIPhase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
 
   // Animation loop
   useEffect(() => {
@@ -220,7 +295,157 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     setTestSubmitted(true);
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
-  }, [testAnswers, testQuestions, onCorrectAnswer, onIncorrectAnswer]);
+  }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
+
+  // Progress bar component
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: isMobile ? '10px 12px' : '12px 16px',
+        borderBottom: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: isMobile ? '8px' : '12px',
+        flexWrap: 'wrap'
+      }}>
+        {/* Back button */}
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '6px',
+            border: `1px solid ${colors.border}`,
+            background: currentIdx > 0 ? colors.bgDark : 'transparent',
+            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
+            cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
+            opacity: currentIdx > 0 ? 1 : 0.4,
+            fontSize: '12px',
+            fontWeight: 600,
+          }}
+        >
+          Back
+        </button>
+
+        {/* Progress dots */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '4px' : '6px' }}>
+          {phaseOrder.map((p, i) => (
+            <div
+              key={p}
+              onClick={() => i <= currentIdx && goToPhase(p)}
+              style={{
+                height: isMobile ? '8px' : '10px',
+                width: i === currentIdx ? (isMobile ? '16px' : '20px') : (isMobile ? '8px' : '10px'),
+                borderRadius: '5px',
+                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : colors.border,
+                cursor: i <= currentIdx ? 'pointer' : 'default',
+                transition: 'all 0.3s',
+              }}
+              title={phaseLabels[p]}
+            />
+          ))}
+        </div>
+
+        {/* Progress count */}
+        <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+          {currentIdx + 1}/{phaseOrder.length}
+        </span>
+
+        {/* Phase Label */}
+        <div style={{
+          padding: '4px 10px',
+          borderRadius: '12px',
+          background: `${colors.accent}20`,
+          color: colors.accent,
+          fontSize: '11px',
+          fontWeight: 700
+        }}>
+          {phaseLabels[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom navigation bar
+  const renderBottomBar = (canGoNext: boolean, nextLabel: string, onNext?: () => void) => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canBack = currentIdx > 0;
+
+    const handleNext = () => {
+      if (!canGoNext) return;
+      if (onNext) {
+        onNext();
+      } else if (currentIdx < phaseOrder.length - 1) {
+        goToPhase(phaseOrder[currentIdx + 1]);
+      }
+    };
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isMobile ? '12px' : '12px 16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '12px',
+        flexShrink: 0
+      }}>
+        {/* Back button */}
+        <button
+          onClick={goBack}
+          disabled={!canBack}
+          style={{
+            padding: isMobile ? '10px 16px' : '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: isMobile ? '13px' : '14px',
+            backgroundColor: colors.bgDark,
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.3,
+            minHeight: '44px'
+          }}
+        >
+          Back
+        </button>
+
+        {/* Phase indicator */}
+        <span style={{
+          fontSize: '12px',
+          color: colors.textMuted,
+          fontWeight: 600
+        }}>
+          {phaseLabels[phase]}
+        </span>
+
+        {/* Next button */}
+        <button
+          onClick={handleNext}
+          disabled={!canGoNext}
+          style={{
+            padding: isMobile ? '10px 20px' : '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: isMobile ? '13px' : '14px',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.accent} 0%, #a855f7 100%)` : colors.bgDark,
+            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.4,
+            boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
+            minHeight: '44px'
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
+  };
 
   const renderVisualization = (interactive: boolean) => {
     const width = 400;
@@ -526,632 +751,618 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
-
-  // HOOK PHASE
-  if (phase === 'hook') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '48px', marginBottom: '16px' }}>*</div>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              Electromagnetic Interference (EMI)
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Why do data centers have shielded cables?
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                Every wire carrying current creates electromagnetic fields. And every wire
-                can pick up fields from nearby sources. This crosstalk and interference
-                can corrupt data - unless cables are designed to fight back.
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                Understanding EMI is crucial for reliable high-speed networking.
-              </p>
-            </div>
-
-            <div style={{
-              background: 'rgba(236, 72, 153, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Try different cable types to see how shielding and twisting protect signals!
-              </p>
-            </div>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
-      </div>
-    );
-  }
-
-  // PREDICT PHASE
-  if (phase === 'predict') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Scenario:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              A data center runs network cables alongside power cables carrying high currents.
-              The network administrator insists on using shielded cables even though they cost
-              more. The facilities team asks why regular cables would not work.
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What is the primary purpose of cable shielding?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(236, 72, 153, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
-      </div>
-    );
-  }
-
-  // PLAY PHASE
-  if (phase === 'play') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore EMI Protection</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Adjust cable type and noise levels to see protection in action
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Compare unshielded single wire vs twisted pair at high noise</li>
-              <li>Increase frequency to 1000 MHz - watch radiated EMI rise</li>
-              <li>Test STP (shielded twisted pair) - best of both protections</li>
-              <li>Extend cable to 100m - longer = more noise pickup</li>
-            </ul>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
-      </div>
-    );
-  }
-
-  // REVIEW PHASE
-  if (phase === 'review') {
-    const wasCorrect = prediction === 'emi';
-
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Shielding prevents external EM fields from inducing noise on signal conductors!
-            </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of EMI</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>How EMI Happens:</strong>
-              </p>
-              <ul style={{ paddingLeft: '20px', marginBottom: '12px' }}>
-                <li><strong>Induction:</strong> Changing magnetic fields from nearby currents induce voltages</li>
-                <li><strong>Capacitive Coupling:</strong> Electric fields from nearby voltages transfer charge</li>
-                <li><strong>Radiation:</strong> EM waves from RF sources couple into wires acting as antennas</li>
-              </ul>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Shielding Works By:</strong> The metal shield intercepts
-                external fields. Induced currents flow in the shield instead of the signal conductors,
-                then drain to ground.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Grounding is Critical:</strong> A shield that is not
-                properly grounded can actually make EMI worse by acting as an antenna!
-              </p>
-            </div>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
-      </div>
-    );
-  }
-
-  // TWIST PREDICT PHASE
-  if (phase === 'twist_predict') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              Why are the wire pairs in Ethernet cables twisted?
-            </p>
-          </div>
-
-          {renderVisualization(false)}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Scenario:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              Ethernet cables use twisted pairs - two wires wound around each other. This
-              was invented by Alexander Graham Bell in 1881! But why does twisting wires
-              together help with noise rejection?
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              How does twisting protect against noise?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
-      </div>
-    );
-  }
-
-  // TWIST PLAY PHASE
-  if (phase === 'twist_play') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Twisted Pair Cancellation</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Compare twisted vs untwisted wires under high noise
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: 'rgba(34, 197, 94, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.twistedPair}`,
-          }}>
-            <h4 style={{ color: colors.twistedPair, marginBottom: '8px' }}>Differential Signaling Magic:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Data is sent as the DIFFERENCE between the two wires. When noise hits both wires
-              equally (common mode), the difference is unchanged! The twist ensures both wires
-              are equally exposed to any noise source. The receiver subtracts one wire from
-              the other, canceling the common noise and revealing the signal.
-            </p>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
-      </div>
-    );
-  }
-
-  // TWIST REVIEW PHASE
-  if (phase === 'twist_review') {
-    const wasCorrect = twistPrediction === 'cancellation';
-
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Twisting ensures both wires pick up equal noise, which cancels in differential signaling!
-            </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why Twisting Works</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>The Key Insight:</strong> If one wire was always
-                closer to a noise source, it would pick up more noise. Twisting averages out
-                the exposure - each wire spends equal time near and far from any external source.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Different Twist Rates:</strong> In Cat6 cables,
-                each pair has a different twist rate! This prevents crosstalk between pairs
-                in the same cable - they do not line up and couple to each other.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>High-Speed Bonus:</strong> As frequencies increase,
-                tighter twists are needed. Cat6a has much tighter twists than Cat5e, enabling
-                10Gbps vs 1Gbps over the same 100m distance.
-              </p>
-            </div>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
-      </div>
-    );
-  }
-
-  // TRANSFER PHASE
-  if (phase === 'transfer') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Real-World Applications
-            </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              How EMI protection shapes infrastructure design
-            </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
-            </p>
-          </div>
-
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Completed</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
-      </div>
-    );
-  }
-
-  // TEST PHASE
-  if (phase === 'test') {
-    if (testSubmitted) {
+  // Main render with wrapper
+  const renderContent = () => {
+    // HOOK PHASE
+    if (phase === 'hook') {
       return (
-        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 7 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 7 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 7 ? 'You understand EMI shielding physics!' : 'Review the material and try again.'}
+        <>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+                Electromagnetic Interference (EMI)
+              </h1>
+              <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+                Why do data centers have shielded cables?
               </p>
             </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct' : userAnswer === oIndex ? 'Your answer' : ''} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+
+            {renderVisualization(true)}
+
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <div style={{
+                background: colors.bgCard,
+                padding: '20px',
+                borderRadius: '12px',
+                marginBottom: '16px',
+              }}>
+                <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+                  Every wire carrying current creates electromagnetic fields. And every wire
+                  can pick up fields from nearby sources. This crosstalk and interference
+                  can corrupt data - unless cables are designed to fight back.
+                </p>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+                  Understanding EMI is crucial for reliable high-speed networking.
+                </p>
+              </div>
+
+              <div style={{
+                background: 'rgba(236, 72, 153, 0.2)',
+                padding: '16px',
+                borderRadius: '8px',
+                borderLeft: `3px solid ${colors.accent}`,
+              }}>
+                <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+                  Try different cable types to see how shielding and twisting protect signals!
+                </p>
+              </div>
+            </div>
           </div>
-          {renderBottomBar(false, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review and Retry')}
-        </div>
+          {renderBottomBar(true, 'Make a Prediction')}
+        </>
       );
     }
 
-    const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+    // PREDICT PHASE
+    if (phase === 'predict') {
+      return (
+        <>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+            {renderVisualization(false)}
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Scenario:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+                A data center runs network cables alongside power cables carrying high currents.
+                The network administrator insists on using shielded cables even though they cost
+                more. The facilities team asks why regular cables would not work.
+              </p>
             </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-              {testQuestions.map((_, i) => (
-                <div
-                  key={i}
-                  onClick={() => setCurrentTestQuestion(i)}
-                  style={{
-                    flex: 1,
-                    height: '4px',
-                    borderRadius: '2px',
-                    background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)',
-                    cursor: 'pointer',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                />
-              ))}
+
+            <div style={{ padding: '0 16px 16px 16px' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+                What is the primary purpose of cable shielding?
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {predictions.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setPrediction(p.id)}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                      background: prediction === p.id ? 'rgba(236, 72, 153, 0.2)' : 'transparent',
+                      color: colors.textPrimary,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
             </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+          </div>
+          {renderBottomBar(!!prediction, 'Test My Prediction')}
+        </>
+      );
+    }
+
+    // PLAY PHASE
+    if (phase === 'play') {
+      return (
+        <>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore EMI Protection</h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                Adjust cable type and noise levels to see protection in action
+              </p>
             </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
+
+            {renderVisualization(true)}
+            {renderControls()}
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+                <li>Compare unshielded single wire vs twisted pair at high noise</li>
+                <li>Increase frequency to 1000 MHz - watch radiated EMI rise</li>
+                <li>Test STP (shielded twisted pair) - best of both protections</li>
+                <li>Extend cable to 100m - longer = more noise pickup</li>
+              </ul>
+            </div>
+          </div>
+          {renderBottomBar(true, 'Continue to Review')}
+        </>
+      );
+    }
+
+    // REVIEW PHASE
+    if (phase === 'review') {
+      const wasCorrect = prediction === 'emi';
+
+      return (
+        <>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+            <div style={{
+              background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+              borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            }}>
+              <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+                {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              </h3>
+              <p style={{ color: colors.textPrimary }}>
+                Shielding prevents external EM fields from inducing noise on signal conductors!
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of EMI</h3>
+              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>How EMI Happens:</strong>
+                </p>
+                <ul style={{ paddingLeft: '20px', marginBottom: '12px' }}>
+                  <li><strong>Induction:</strong> Changing magnetic fields from nearby currents induce voltages</li>
+                  <li><strong>Capacitive Coupling:</strong> Electric fields from nearby voltages transfer charge</li>
+                  <li><strong>Radiation:</strong> EM waves from RF sources couple into wires acting as antennas</li>
+                </ul>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Shielding Works By:</strong> The metal shield intercepts
+                  external fields. Induced currents flow in the shield instead of the signal conductors,
+                  then drain to ground.
+                </p>
+                <p>
+                  <strong style={{ color: colors.textPrimary }}>Grounding is Critical:</strong> A shield that is not
+                  properly grounded can actually make EMI worse by acting as an antenna!
+                </p>
+              </div>
+            </div>
+          </div>
+          {renderBottomBar(true, 'Next: A Twist!')}
+        </>
+      );
+    }
+
+    // TWIST PREDICT PHASE
+    if (phase === 'twist_predict') {
+      return (
+        <>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
+              <p style={{ color: colors.textSecondary }}>
+                Why are the wire pairs in Ethernet cables twisted?
+              </p>
+            </div>
+
+            {renderVisualization(false)}
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Scenario:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+                Ethernet cables use twisted pairs - two wires wound around each other. This
+                was invented by Alexander Graham Bell in 1881! But why does twisting wires
+                together help with noise rejection?
+              </p>
+            </div>
+
+            <div style={{ padding: '0 16px 16px 16px' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+                How does twisting protect against noise?
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {twistPredictions.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setTwistPrediction(p.id)}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                      background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                      color: colors.textPrimary,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </div>
+          {renderBottomBar(!!twistPrediction, 'Test My Prediction')}
+        </>
+      );
+    }
+
+    // TWIST PLAY PHASE
+    if (phase === 'twist_play') {
+      return (
+        <>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Twisted Pair Cancellation</h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                Compare twisted vs untwisted wires under high noise
+              </p>
+            </div>
+
+            {renderVisualization(true)}
+            {renderControls()}
+
+            <div style={{
+              background: 'rgba(34, 197, 94, 0.2)',
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+              borderLeft: `3px solid ${colors.twistedPair}`,
+            }}>
+              <h4 style={{ color: colors.twistedPair, marginBottom: '8px' }}>Differential Signaling Magic:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                Data is sent as the DIFFERENCE between the two wires. When noise hits both wires
+                equally (common mode), the difference is unchanged! The twist ensures both wires
+                are equally exposed to any noise source. The receiver subtracts one wire from
+                the other, canceling the common noise and revealing the signal.
+              </p>
+            </div>
+          </div>
+          {renderBottomBar(true, 'See the Explanation')}
+        </>
+      );
+    }
+
+    // TWIST REVIEW PHASE
+    if (phase === 'twist_review') {
+      const wasCorrect = twistPrediction === 'cancellation';
+
+      return (
+        <>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+            <div style={{
+              background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+              borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            }}>
+              <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+                {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              </h3>
+              <p style={{ color: colors.textPrimary }}>
+                Twisting ensures both wires pick up equal noise, which cancels in differential signaling!
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why Twisting Works</h3>
+              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>The Key Insight:</strong> If one wire was always
+                  closer to a noise source, it would pick up more noise. Twisting averages out
+                  the exposure - each wire spends equal time near and far from any external source.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Different Twist Rates:</strong> In Cat6 cables,
+                  each pair has a different twist rate! This prevents crosstalk between pairs
+                  in the same cable - they do not line up and couple to each other.
+                </p>
+                <p>
+                  <strong style={{ color: colors.textPrimary }}>High-Speed Bonus:</strong> As frequencies increase,
+                  tighter twists are needed. Cat6a has much tighter twists than Cat5e, enabling
+                  10Gbps vs 1Gbps over the same 100m distance.
+                </p>
+              </div>
+            </div>
+          </div>
+          {renderBottomBar(true, 'Apply This Knowledge')}
+        </>
+      );
+    }
+
+    // TRANSFER PHASE
+    if (phase === 'transfer') {
+      return (
+        <>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+            <div style={{ padding: '16px' }}>
+              <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+                Real-World Applications
+              </h2>
+              <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+                How EMI protection shapes infrastructure design
+              </p>
+              <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+                Complete all 4 applications to unlock the test
+              </p>
+            </div>
+
+            {transferApplications.map((app, index) => (
+              <div
+                key={index}
+                style={{
+                  background: colors.bgCard,
+                  margin: '16px',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
+                  {transferCompleted.has(index) && <span style={{ color: colors.success }}>Completed</span>}
+                </div>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+                {!transferCompleted.has(index) ? (
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{
+                      padding: '8px 16px',
+                      borderRadius: '6px',
+                      border: `1px solid ${colors.accent}`,
+                      background: 'transparent',
+                      color: colors.accent,
+                      cursor: 'pointer',
+                      fontSize: '13px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Reveal Answer
+                  </button>
+                ) : (
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+          {renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}
+        </>
+      );
+    }
+
+    // TEST PHASE
+    if (phase === 'test') {
+      if (testSubmitted) {
+        return (
+          <>
+            <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+              <div style={{
+                background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                margin: '16px',
+                padding: '24px',
+                borderRadius: '12px',
+                textAlign: 'center',
+              }}>
+                <h2 style={{ color: testScore >= 7 ? colors.success : colors.error, marginBottom: '8px' }}>
+                  {testScore >= 7 ? 'Excellent!' : 'Keep Learning!'}
+                </h2>
+                <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+                <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+                  {testScore >= 7 ? 'You understand EMI shielding physics!' : 'Review the material and try again.'}
+                </p>
+              </div>
+              {testQuestions.map((q, qIndex) => {
+                const userAnswer = testAnswers[qIndex];
+                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                return (
+                  <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                    <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                    {q.options.map((opt, oIndex) => (
+                      <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                        {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </div>
+            {renderBottomBar(testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review and Retry', testScore >= 7 ? goNext : () => {
+              setTestSubmitted(false);
+              setTestAnswers(new Array(10).fill(null));
+              setCurrentTestQuestion(0);
+            })}
+          </>
+        );
+      }
+
+      const currentQ = testQuestions[currentTestQuestion];
+      return (
+        <>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+            <div style={{ padding: '16px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+                <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
+                <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              </div>
+              <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+                {testQuestions.map((_, i) => (
+                  <div
+                    key={i}
+                    onClick={() => setCurrentTestQuestion(i)}
+                    style={{
+                      flex: 1,
+                      height: '4px',
+                      borderRadius: '2px',
+                      background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)',
+                      cursor: 'pointer',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  />
+                ))}
+              </div>
+              <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+                <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+              </div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {currentQ.options.map((opt, oIndex) => (
+                  <button
+                    key={oIndex}
+                    onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                      background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(236, 72, 153, 0.2)' : 'transparent',
+                      color: colors.textPrimary,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    {opt.text}
+                  </button>
+                ))}
+              </div>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
+              <button
+                onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+                disabled={currentTestQuestion === 0}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '8px',
+                  border: `1px solid ${colors.textMuted}`,
+                  background: 'transparent',
+                  color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
+                  cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                Previous
+              </button>
+              {currentTestQuestion < testQuestions.length - 1 ? (
                 <button
-                  key={oIndex}
-                  onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
+                  onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
                   style={{
-                    padding: '16px',
+                    padding: '12px 24px',
                     borderRadius: '8px',
-                    border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(236, 72, 153, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
+                    border: 'none',
+                    background: colors.accent,
+                    color: 'white',
                     cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
-                  {opt.text}
+                  Next
                 </button>
-              ))}
+              ) : (
+                <button
+                  onClick={submitTest}
+                  disabled={testAnswers.includes(null)}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: testAnswers.includes(null) ? colors.textMuted : colors.success,
+                    color: 'white',
+                    cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  Submit Test
+                </button>
+              )}
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button
-              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
-              disabled={currentTestQuestion === 0}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: `1px solid ${colors.textMuted}`,
-                background: 'transparent',
-                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
-                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Previous
-            </button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button
-                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: colors.accent,
-                  color: 'white',
-                  cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={submitTest}
-                disabled={testAnswers.includes(null)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: testAnswers.includes(null) ? colors.textMuted : colors.success,
-                  color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                Submit Test
-              </button>
-            )}
+        </>
+      );
+    }
+
+    // MASTERY PHASE
+    if (phase === 'mastery') {
+      return (
+        <>
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+              <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+              <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
+                You understand EMI shielding physics
+              </p>
+            </div>
+
+            <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+              <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+                <li>EMI from induction, capacitive coupling, and radiation</li>
+                <li>Shielding blocks external fields from reaching conductors</li>
+                <li>Twisted pairs enable common-mode noise cancellation</li>
+                <li>Differential signaling rejects noise present on both wires</li>
+                <li>Higher frequencies radiate more and need better protection</li>
+              </ul>
+            </div>
+
+            <div style={{ background: 'rgba(236, 72, 153, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+                EMI compliance is a legal requirement - the FCC, CE, and other bodies set limits
+                on how much radiation devices can emit. Engineers use spectrum analyzers, EMI
+                chambers, and near-field probes to find and fix noise sources. Design techniques
+                include proper grounding, decoupling capacitors, spread-spectrum clocking, and
+                careful PCB layout. A single trace acting as an antenna can fail a product!
+              </p>
+            </div>
+
+            {renderVisualization(true)}
           </div>
-        </div>
-      </div>
-    );
-  }
+          {renderBottomBar(true, 'Complete')}
+        </>
+      );
+    }
 
-  // MASTERY PHASE
-  if (phase === 'mastery') {
-    return (
-      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>*</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
-              You understand EMI shielding physics
-            </p>
-          </div>
+    return null;
+  };
 
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>EMI from induction, capacitive coupling, and radiation</li>
-              <li>Shielding blocks external fields from reaching conductors</li>
-              <li>Twisted pairs enable common-mode noise cancellation</li>
-              <li>Differential signaling rejects noise present on both wires</li>
-              <li>Higher frequencies radiate more and need better protection</li>
-            </ul>
-          </div>
-
-          <div style={{ background: 'rgba(236, 72, 153, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              EMI compliance is a legal requirement - the FCC, CE, and other bodies set limits
-              on how much radiation devices can emit. Engineers use spectrum analyzers, EMI
-              chambers, and near-field probes to find and fix noise sources. Design techniques
-              include proper grounding, decoupling capacitors, spread-spectrum clocking, and
-              careful PCB layout. A single trace acting as an antenna can fail a product!
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-        </div>
-        {renderBottomBar(false, true, 'Complete')}
-      </div>
-    );
-  }
-
-  return null;
+  return (
+    <div style={{
+      minHeight: '100dvh',
+      display: 'flex',
+      flexDirection: 'column',
+      background: colors.bgPrimary,
+      color: colors.textPrimary
+    }}>
+      {renderProgressBar()}
+      {renderContent()}
+    </div>
+  );
 };
 
 export default EMIShieldingRenderer;

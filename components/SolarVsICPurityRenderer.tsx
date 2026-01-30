@@ -1,11 +1,12 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
 
 interface SolarVsICPurityRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: string; // Optional for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
+
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 const colors = {
   textPrimary: '#f8fafc',
@@ -23,14 +24,75 @@ const colors = {
   solarPanel: '#3b82f6',
   chip: '#8b5cf6',
   impurity: '#ef4444',
+  border: '#334155',
 };
 
 const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Phase navigation
+  const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Cost Scaling',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  // Internal phase state management
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Simulation state
   const [purityLevel, setPurityLevel] = useState(99.9999); // 9s of purity
   const [viewMode, setViewMode] = useState<'solar' | 'ic'>('solar');
@@ -412,44 +474,135 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
+  // Progress bar showing all 10 phases
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '12px 16px',
+        borderBottom: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {phaseOrder.map((p, i) => (
+              <div
+                key={p}
+                onClick={() => i < currentIdx && goToPhase(p)}
+                style={{
+                  height: '8px',
+                  width: i === currentIdx ? '24px' : '8px',
+                  borderRadius: '5px',
+                  backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : colors.border,
+                  cursor: i < currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s',
+                }}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+            {currentIdx + 1} / {phaseOrder.length}
+          </span>
+        </div>
+
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: `${colors.accent}20`,
+          color: colors.accent,
+          fontSize: '11px',
+          fontWeight: 700
+        }}>
+          {phaseLabels[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom navigation bar with Back/Next
+  const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: string, onNext?: () => void) => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canBack = canGoBack && currentIdx > 0;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '12px',
+        flexShrink: 0
+      }}>
+        <button
+          onClick={goBack}
+          disabled={!canBack}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: '14px',
+            backgroundColor: colors.bgDark,
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.3,
+            minHeight: '44px'
+          }}
+        >
+          Back
+        </button>
+
+        <span style={{
+          fontSize: '12px',
+          color: colors.textMuted,
+          fontWeight: 600
+        }}>
+          {phaseLabels[phase]}
+        </span>
+
+        <button
+          onClick={() => {
+            if (!canGoNext) return;
+            if (onNext) {
+              onNext();
+            } else {
+              goNext();
+            }
+          }}
+          disabled={!canGoNext}
+          style={{
+            padding: '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: '14px',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.accent} 0%, #d97706 100%)` : colors.bgDark,
+            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.4,
+            boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
+            minHeight: '44px'
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
+  };
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Solar vs IC Silicon Purity
@@ -496,7 +649,8 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           {renderVisualization(false)}
 
           <div style={{ padding: '16px' }}>
@@ -535,7 +689,8 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Purity Effects</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -561,7 +716,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(true, true, 'Continue to Review')}
       </div>
     );
   }
@@ -572,7 +727,8 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -615,7 +771,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar(true, true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -624,7 +780,8 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -670,7 +827,8 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Explore the Cost Curve</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -695,7 +853,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(true, true, 'See the Explanation')}
       </div>
     );
   }
@@ -706,7 +864,8 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -747,7 +906,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar(true, true, 'Apply This Knowledge')}
       </div>
     );
   }
@@ -756,7 +915,8 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -809,7 +969,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(true, transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -819,7 +979,8 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          {renderProgressBar()}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -847,7 +1008,11 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(true, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry', testScore >= 8 ? goNext : () => {
+            setTestSubmitted(false);
+            setTestAnswers(new Array(10).fill(null));
+            setCurrentTestQuestion(0);
+          })}
         </div>
       );
     }
@@ -855,7 +1020,8 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -949,7 +1115,8 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Achievement</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
@@ -969,7 +1136,7 @@ const SolarVsICPurityRenderer: React.FC<SolarVsICPurityRendererProps> = ({
           </div>
           {renderVisualization(true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderBottomBar(true, true, 'Complete Game')}
       </div>
     );
   }

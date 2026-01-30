@@ -1,11 +1,37 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// Game event interface for AI coach integration
+interface GameEvent {
+  type: 'phase_change' | 'prediction' | 'interaction' | 'completion';
+  phase?: string;
+  data?: Record<string, unknown>;
+  timestamp: number;
+}
 
 interface DCDCConverterRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string; // Optional, only for resume
 }
+
+// Simple audio feedback
+const playSound = (type: 'click' | 'success' | 'error' | 'transition') => {
+  if (typeof window === 'undefined' || !window.AudioContext) return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    const frequencies: Record<string, number> = { click: 600, success: 800, error: 300, transition: 500 };
+    oscillator.frequency.value = frequencies[type] || 440;
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.1);
+  } catch (e) { /* Audio not available */ }
+};
 
 const colors = {
   textPrimary: '#f8fafc',
@@ -26,12 +52,102 @@ const colors = {
   diode: '#06b6d4',
 };
 
+// Phase type definition
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
+  onGameEvent,
+  gamePhase,
 }) => {
+  // Phase order and labels
+  const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Play',
+    review: 'Review',
+    twist_predict: 'Twist',
+    twist_play: 'Explore',
+    twist_review: 'Explain',
+    transfer: 'Transfer',
+    test: 'Test',
+    mastery: 'Mastery',
+  };
+
+  // Get initial phase from gamePhase prop or default to 'hook'
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  // Internal phase state management
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Emit game event helper
+  const emitGameEvent = useCallback((type: GameEvent['type'], data?: Record<string, unknown>) => {
+    if (onGameEvent) {
+      onGameEvent({ type, phase, data, timestamp: Date.now() });
+    }
+  }, [onGameEvent, phase]);
+
+  // Navigation functions with debouncing
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    playSound('transition');
+    setPhase(p);
+    emitGameEvent('phase_change', {
+      from: phase,
+      to: p,
+      label: phaseLabels[p],
+      index: phaseOrder.indexOf(p)
+    });
+
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, [emitGameEvent, phase, phaseLabels, phaseOrder]);
+
+  const goNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, phaseOrder, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, phaseOrder, goToPhase]);
+
   // Simulation state
   const [converterType, setConverterType] = useState<'buck' | 'boost'>('buck');
   const [inputVoltage, setInputVoltage] = useState(24);
@@ -57,7 +173,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
 
     let outputVoltage: number;
     let inputCurrent: number;
-    let efficiency = 0.90; // Typical efficiency
+    const efficiency = 0.90; // Typical efficiency
 
     if (converterType === 'buck') {
       // Buck: Vout = D * Vin
@@ -102,6 +218,13 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
     }, 50);
     return () => clearInterval(interval);
   }, [isAnimating]);
+
+  // Set boost mode for twist_play phase
+  useEffect(() => {
+    if (phase === 'twist_play') {
+      setConverterType('boost');
+    }
+  }, [phase]);
 
   const output = calculateOutput();
 
@@ -254,7 +377,10 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+    if (score >= 8) {
+      playSound('success');
+      emitGameEvent('completion', { score, total: 10, passed: true });
+    }
   };
 
   const renderVisualization = (interactive: boolean, showBoost: boolean = false) => {
@@ -444,7 +570,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
             <rect x="0" y="0" width="340" height="35" fill="rgba(168, 85, 247, 0.15)" rx="6" />
             <text x="170" y="22" fill={colors.inductor} fontSize="12" textAnchor="middle" fontWeight="bold">
               {converterType === 'buck'
-                ? `Buck: Vout = D × Vin = ${D.toFixed(2)} × ${inputVoltage}V = ${output.outputVoltage.toFixed(1)}V`
+                ? `Buck: Vout = D x Vin = ${D.toFixed(2)} x ${inputVoltage}V = ${output.outputVoltage.toFixed(1)}V`
                 : `Boost: Vout = Vin/(1-D) = ${inputVoltage}V/(1-${D.toFixed(2)}) = ${output.outputVoltage.toFixed(1)}V`
               }
             </text>
@@ -616,44 +742,173 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
-
-  // HOOK PHASE
-  if (phase === 'hook') {
+  // Progress bar component
+  const renderProgressBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+        padding: '12px 16px',
+        background: 'rgba(0,0,0,0.3)',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
+      }}>
+        {phaseOrder.map((p, index) => (
+          <React.Fragment key={p}>
+            <button
+              onClick={() => index <= currentIndex && goToPhase(p)}
+              disabled={index > currentIndex}
+              style={{
+                width: isMobile ? '28px' : '32px',
+                height: isMobile ? '28px' : '32px',
+                borderRadius: '50%',
+                border: 'none',
+                background: index === currentIndex
+                  ? colors.accent
+                  : index < currentIndex
+                    ? colors.success
+                    : 'rgba(255,255,255,0.2)',
+                color: index <= currentIndex ? 'white' : colors.textMuted,
+                fontSize: isMobile ? '10px' : '11px',
+                fontWeight: 'bold',
+                cursor: index <= currentIndex ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                transition: 'all 0.2s ease',
+              }}
+              title={phaseLabels[p]}
+            >
+              {index + 1}
+            </button>
+            {index < phaseOrder.length - 1 && (
+              <div style={{
+                width: isMobile ? '12px' : '20px',
+                height: '2px',
+                background: index < currentIndex ? colors.success : 'rgba(255,255,255,0.2)',
+                flexShrink: 0,
+              }} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  };
+
+  // Bottom navigation bar
+  const getBottomBarConfig = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+
+    let canProceed = true;
+    let nextLabel = 'Next';
+
+    switch (phase) {
+      case 'hook':
+        nextLabel = 'Make a Prediction';
+        break;
+      case 'predict':
+        canProceed = !!prediction;
+        nextLabel = 'Test My Prediction';
+        break;
+      case 'play':
+        nextLabel = 'Continue to Review';
+        break;
+      case 'review':
+        nextLabel = 'Next: A Twist!';
+        break;
+      case 'twist_predict':
+        canProceed = !!twistPrediction;
+        nextLabel = 'Test My Prediction';
+        break;
+      case 'twist_play':
+        nextLabel = 'See the Explanation';
+        break;
+      case 'twist_review':
+        nextLabel = 'Apply This Knowledge';
+        break;
+      case 'transfer':
+        canProceed = transferCompleted.size >= 4;
+        nextLabel = 'Take the Test';
+        break;
+      case 'test':
+        canProceed = testSubmitted && testScore >= 8;
+        nextLabel = testSubmitted ? (testScore >= 8 ? 'Complete Mastery' : 'Review & Retry') : 'Submit Test';
+        break;
+      case 'mastery':
+        nextLabel = 'Complete Game';
+        break;
+    }
+
+    return { isFirst, isLast, canProceed, nextLabel };
+  };
+
+  const renderBottomBar = () => {
+    const { isFirst, isLast, canProceed, nextLabel } = getBottomBarConfig();
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '16px 24px',
+        background: colors.bgDark,
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        gap: '12px',
+        zIndex: 1000,
+      }}>
+        <button
+          onClick={goBack}
+          disabled={isFirst}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${isFirst ? 'rgba(255,255,255,0.1)' : colors.textMuted}`,
+            background: 'transparent',
+            color: isFirst ? colors.textMuted : colors.textPrimary,
+            fontWeight: 'bold',
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            opacity: isFirst ? 0.5 : 1,
+          }}
+        >
+          Back
+        </button>
+        <button
+          onClick={goNext}
+          disabled={!canProceed}
+          style={{
+            padding: '12px 32px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+            color: canProceed ? 'white' : colors.textMuted,
+            fontWeight: 'bold',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            flex: 1,
+            maxWidth: '300px',
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
+  };
+
+  // Render phase content
+  const renderPhaseContent = () => {
+    switch (phase) {
+      case 'hook':
+        return (
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               DC-DC Converters: Voltage Transformation
@@ -661,344 +916,300 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
             <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
               How do electronics change voltage levels efficiently?
             </p>
+
+            {renderVisualization(true)}
+
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <div style={{
+                background: colors.bgCard,
+                padding: '20px',
+                borderRadius: '12px',
+                marginBottom: '16px',
+              }}>
+                <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+                  Your phone charger takes 120V AC, converts to DC, then a <strong style={{ color: colors.inductor }}>DC-DC converter</strong> steps
+                  it down to exactly 5V (or up to 20V for fast charging). Solar systems use them to match panel voltage to battery voltage.
+                </p>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+                  Unlike resistive voltage dividers, DC-DC converters are over 90% efficient!
+                </p>
+              </div>
+
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.2)',
+                padding: '16px',
+                borderRadius: '8px',
+                borderLeft: `3px solid ${colors.accent}`,
+              }}>
+                <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+                  Adjust the duty cycle to control output voltage. Watch the formula update in real-time!
+                </p>
+              </div>
+            </div>
           </div>
+        );
 
-          {renderVisualization(true)}
+      case 'predict':
+        return (
+          <>
+            {renderVisualization(false)}
 
-          <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{
               background: colors.bgCard,
-              padding: '20px',
+              margin: '16px',
+              padding: '16px',
               borderRadius: '12px',
-              marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                Your phone charger takes 120V AC, converts to DC, then a <strong style={{ color: colors.inductor }}>DC-DC converter</strong> steps
-                it down to exactly 5V (or up to 20V for fast charging). Solar systems use them to match panel voltage to battery voltage.
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                Unlike resistive voltage dividers, DC-DC converters are over 90% efficient!
+              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You Are Looking At:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+                A DC-DC converter with a switch that rapidly turns ON and OFF (switching at 100kHz+),
+                an inductor that stores energy, and a diode that provides a path for current when the switch is OFF.
               </p>
             </div>
+
+            <div style={{ padding: '0 16px 16px 16px' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+                What determines the output voltage of a DC-DC converter?
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {predictions.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setPrediction(p.id)}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                      background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                      color: colors.textPrimary,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        );
+
+      case 'play':
+        return (
+          <>
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore DC-DC Conversion</h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                Adjust duty cycle and see how output voltage changes
+              </p>
+            </div>
+
+            {renderVisualization(true)}
+            {renderControls()}
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+                <li>Sweep duty cycle from 5% to 95% - watch output voltage track the formula</li>
+                <li>Switch between Buck and Boost modes - note the different formulas</li>
+                <li>With Boost mode, see what happens as duty cycle approaches 100%</li>
+                <li>Notice: Power out is always less than power in (conservation + losses)</li>
+              </ul>
+            </div>
+          </>
+        );
+
+      case 'review':
+        const wasCorrect = prediction === 'switch_time';
+        return (
+          <>
+            <div style={{
+              background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+              borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            }}>
+              <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+                {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              </h3>
+              <p style={{ color: colors.textPrimary }}>
+                The <strong>duty cycle</strong> (percentage of time the switch is ON) directly controls the output voltage.
+                This is called Pulse Width Modulation (PWM). By averaging the switched voltage through the inductor and capacitor,
+                we get a smooth DC output.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>How DC-DC Converters Work</h3>
+              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>The Inductor is Key:</strong> Inductors resist
+                  changes in current. When the switch turns ON, current builds up in the inductor. When OFF,
+                  the inductor maintains current flow through the diode, releasing stored energy.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Buck (Step-Down):</strong> Vout = D x Vin. The
+                  switch chops the input, and the LC filter averages it. 50% duty cycle = half the input voltage.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Boost (Step-Up):</strong> Vout = Vin / (1-D). When
+                  the switch is ON, the inductor charges. When OFF, inductor voltage ADDS to input voltage.
+                </p>
+                <p>
+                  <strong style={{ color: colors.textPrimary }}>Efficiency:</strong> Unlike resistors that waste
+                  excess voltage as heat, inductors store and release energy. Real converters achieve 85-95% efficiency!
+                </p>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'twist_predict':
+        return (
+          <>
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
+              <p style={{ color: colors.textSecondary }}>
+                What are the limits of boost converters?
+              </p>
+            </div>
+
+            {renderVisualization(false, true)}
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+                The boost formula Vout = Vin/(1-D) suggests that as D approaches 100%, output voltage
+                approaches infinity! But real converters cannot boost indefinitely. What limits them?
+              </p>
+            </div>
+
+            <div style={{ padding: '0 16px 16px 16px' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+                What limits how high a boost converter can go?
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {twistPredictions.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setTwistPrediction(p.id)}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                      background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                      color: colors.textPrimary,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        );
+
+      case 'twist_play':
+        return (
+          <>
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Boost Converter Limits</h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                Try high duty cycles and observe efficiency
+              </p>
+            </div>
+
+            {renderVisualization(true, true)}
+            {renderControls(true)}
 
             <div style={{
               background: 'rgba(245, 158, 11, 0.2)',
+              margin: '16px',
               padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
+              borderRadius: '12px',
+              borderLeft: `3px solid ${colors.warning}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Adjust the duty cycle to control output voltage. Watch the formula update in real-time!
+              <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                At very high duty cycles (above 80-90%), the switch has very little OFF time to transfer
+                energy to the output. Parasitic resistances cause more and more loss as current increases.
+                Practical boost ratios are limited to about 4-5x before efficiency drops unacceptably.
               </p>
             </div>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
-      </div>
-    );
-  }
+          </>
+        );
 
-  // PREDICT PHASE
-  if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You Are Looking At:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              A DC-DC converter with a switch that rapidly turns ON and OFF (switching at 100kHz+),
-              an inductor that stores energy, and a diode that provides a path for current when the switch is OFF.
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What determines the output voltage of a DC-DC converter?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
-      </div>
-    );
-  }
-
-  // PLAY PHASE
-  if (phase === 'play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore DC-DC Conversion</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Adjust duty cycle and see how output voltage changes
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Sweep duty cycle from 5% to 95% - watch output voltage track the formula</li>
-              <li>Switch between Buck and Boost modes - note the different formulas</li>
-              <li>With Boost mode, see what happens as duty cycle approaches 100%</li>
-              <li>Notice: Power out is always less than power in (conservation + losses)</li>
-            </ul>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
-      </div>
-    );
-  }
-
-  // REVIEW PHASE
-  if (phase === 'review') {
-    const wasCorrect = prediction === 'switch_time';
-
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              The <strong>duty cycle</strong> (percentage of time the switch is ON) directly controls the output voltage.
-              This is called Pulse Width Modulation (PWM). By averaging the switched voltage through the inductor and capacitor,
-              we get a smooth DC output.
-            </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>How DC-DC Converters Work</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>The Inductor is Key:</strong> Inductors resist
-                changes in current. When the switch turns ON, current builds up in the inductor. When OFF,
-                the inductor maintains current flow through the diode, releasing stored energy.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Buck (Step-Down):</strong> Vout = D x Vin. The
-                switch chops the input, and the LC filter averages it. 50% duty cycle = half the input voltage.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Boost (Step-Up):</strong> Vout = Vin / (1-D). When
-                the switch is ON, the inductor charges. When OFF, inductor voltage ADDS to input voltage.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Efficiency:</strong> Unlike resistors that waste
-                excess voltage as heat, inductors store and release energy. Real converters achieve 85-95% efficiency!
+      case 'twist_review':
+        const twistWasCorrect = twistPrediction === 'boost_limited';
+        return (
+          <>
+            <div style={{
+              background: twistWasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+              borderLeft: `4px solid ${twistWasCorrect ? colors.success : colors.error}`,
+            }}>
+              <h3 style={{ color: twistWasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+                {twistWasCorrect ? 'Correct!' : 'Not Quite!'}
+              </h3>
+              <p style={{ color: colors.textPrimary }}>
+                Real boost converters are practically limited to about <strong>4-5x voltage gain</strong>.
+                At higher ratios, efficiency drops dramatically due to parasitic losses and the duty cycle
+                approaching 100% leaves no time for energy transfer.
               </p>
             </div>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
-      </div>
-    );
-  }
 
-  // TWIST PREDICT PHASE
-  if (phase === 'twist_predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What are the limits of boost converters?
-            </p>
-          </div>
-
-          {renderVisualization(false, true)}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              The boost formula Vout = Vin/(1-D) suggests that as D approaches 100%, output voltage
-              approaches infinity! But real converters cannot boost indefinitely. What limits them?
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What limits how high a boost converter can go?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Practical Limitations</h3>
+              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Parasitic Resistance:</strong> Every component
+                  has resistance. At high currents (needed for high boost ratios), I^2R losses become significant.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Switch and Diode Losses:</strong> MOSFETs have
+                  on-resistance and switching losses. Diodes have forward voltage drop. These add up!
+                </p>
+                <p>
+                  <strong style={{ color: colors.textPrimary }}>The Solution:</strong> For higher voltage ratios,
+                  use cascaded converters, transformer-based topologies (flyback, forward), or charge pumps.
+                  These trade complexity for better high-ratio performance.
+                </p>
+              </div>
             </div>
-          </div>
-        </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
-      </div>
-    );
-  }
+          </>
+        );
 
-  // TWIST PLAY PHASE
-  if (phase === 'twist_play') {
-    // Force boost mode for this phase
-    useEffect(() => {
-      setConverterType('boost');
-    }, []);
-
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Boost Converter Limits</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Try high duty cycles and observe efficiency
-            </p>
-          </div>
-
-          {renderVisualization(true, true)}
-          {renderControls(true)}
-
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              At very high duty cycles (above 80-90%), the switch has very little OFF time to transfer
-              energy to the output. Parasitic resistances cause more and more loss as current increases.
-              Practical boost ratios are limited to about 4-5x before efficiency drops unacceptably.
-            </p>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
-      </div>
-    );
-  }
-
-  // TWIST REVIEW PHASE
-  if (phase === 'twist_review') {
-    const wasCorrect = twistPrediction === 'boost_limited';
-
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Real boost converters are practically limited to about <strong>4-5x voltage gain</strong>.
-              At higher ratios, efficiency drops dramatically due to parasitic losses and the duty cycle
-              approaching 100% leaves no time for energy transfer.
-            </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Practical Limitations</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Parasitic Resistance:</strong> Every component
-                has resistance. At high currents (needed for high boost ratios), I^2R losses become significant.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Switch and Diode Losses:</strong> MOSFETs have
-                on-resistance and switching losses. Diodes have forward voltage drop. These add up!
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>The Solution:</strong> For higher voltage ratios,
-                use cascaded converters, transformer-based topologies (flyback, forward), or charge pumps.
-                These trade complexity for better high-ratio performance.
-              </p>
-            </div>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
-      </div>
-    );
-  }
-
-  // TRANSFER PHASE
-  if (phase === 'transfer') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      case 'transfer':
+        return (
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1009,92 +1220,82 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
             <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
               Complete all 4 applications to unlock the test
             </p>
-          </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
+            {transferApplications.map((app, index) => (
+              <div
+                key={index}
+                style={{
+                  background: colors.bgCard,
+                  margin: '16px 0',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
+                  {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                </div>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+                <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
+                  <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+                </div>
+                {!transferCompleted.has(index) ? (
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', WebkitTapHighlightColor: 'transparent' }}
+                  >
+                    Reveal Answer
+                  </button>
+                ) : (
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'test':
+        if (testSubmitted) {
+          return (
+            <>
+              <div style={{
+                background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
                 margin: '16px',
-                padding: '16px',
+                padding: '24px',
                 borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                textAlign: 'center',
+              }}>
+                <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
+                  {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+                </h2>
+                <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+                <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+                  {testScore >= 8 ? 'You understand DC-DC conversion!' : 'Review the material and try again.'}
+                </p>
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', WebkitTapHighlightColor: 'transparent' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
-      </div>
-    );
-  }
+              {testQuestions.map((q, qIndex) => {
+                const userAnswer = testAnswers[qIndex];
+                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                return (
+                  <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                    <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                    {q.options.map((opt, oIndex) => (
+                      <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                        {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </>
+          );
+        }
 
-  // TEST PHASE
-  if (phase === 'test') {
-    if (testSubmitted) {
-      return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You understand DC-DC conversion!' : 'Review the material and try again.'}
-              </p>
-            </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
-          </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
-        </div>
-      );
-    }
-
-    const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        const currentQ = testQuestions[currentTestQuestion];
+        return (
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1115,58 +1316,63 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
                 </button>
               ))}
             </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0' }}>
+              <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
+              {currentTestQuestion < testQuestions.length - 1 ? (
+                <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
+              ) : (
+                <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Submit Test</button>
+              )}
+            </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
-            ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Submit Test</button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+        );
 
-  // MASTERY PHASE
-  if (phase === 'mastery') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered DC-DC converter principles</p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Buck converter: Vout = D x Vin (step-down)</li>
-              <li>Boost converter: Vout = Vin / (1-D) (step-up)</li>
-              <li>Role of inductor in energy storage and transfer</li>
-              <li>Duty cycle controls output voltage</li>
-              <li>High efficiency through energy storage vs. dissipation</li>
-              <li>Practical limits of boost converters</li>
-            </ul>
-          </div>
-          <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              Advanced topologies include buck-boost (bidirectional), SEPIC, Cuk, flyback (isolated),
-              and full/half-bridge converters for high power. Synchronous rectification replaces diodes
-              with MOSFETs for even higher efficiency. Digital control enables adaptive algorithms
-              for maximum efficiency across varying loads.
-            </p>
-          </div>
-          {renderVisualization(true, true)}
-        </div>
-        {renderBottomBar(false, true, 'Complete Game')}
-      </div>
-    );
-  }
+      case 'mastery':
+        return (
+          <>
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+              <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+              <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered DC-DC converter principles</p>
+            </div>
+            <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+              <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+                <li>Buck converter: Vout = D x Vin (step-down)</li>
+                <li>Boost converter: Vout = Vin / (1-D) (step-up)</li>
+                <li>Role of inductor in energy storage and transfer</li>
+                <li>Duty cycle controls output voltage</li>
+                <li>High efficiency through energy storage vs. dissipation</li>
+                <li>Practical limits of boost converters</li>
+              </ul>
+            </div>
+            <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+                Advanced topologies include buck-boost (bidirectional), SEPIC, Cuk, flyback (isolated),
+                and full/half-bridge converters for high power. Synchronous rectification replaces diodes
+                with MOSFETs for even higher efficiency. Digital control enables adaptive algorithms
+                for maximum efficiency across varying loads.
+              </p>
+            </div>
+            {renderVisualization(true, true)}
+          </>
+        );
 
-  return null;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      {renderProgressBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderPhaseContent()}
+      </div>
+      {renderBottomBar()}
+    </div>
+  );
 };
 
 export default DCDCConverterRenderer;

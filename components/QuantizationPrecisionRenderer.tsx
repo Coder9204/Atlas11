@@ -1,18 +1,30 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // Types
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface QuantizationPrecisionRendererProps {
-  phase?: Phase;
-  onPhaseComplete?: (phase: Phase) => void;
+  gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
-const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+// Phase order and labels for navigation
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Sensitivity Lab',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
+};
 
 const colors = {
   textPrimary: '#f8fafc',
@@ -77,10 +89,17 @@ const TRANSFER_APPS = [
 ];
 
 const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps> = ({
-  phase: initialPhase,
-  onPhaseComplete,
+  gamePhase,
 }) => {
-  const [phase, setPhase] = useState<Phase>(initialPhase || 'hook');
+  // Internal phase state management
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [testAnswers, setTestAnswers] = useState<(boolean | null)[]>(new Array(10).fill(null));
@@ -94,6 +113,44 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   const [showQuantizationError, setShowQuantizationError] = useState(true);
   const [layerSensitivity, setLayerSensitivity] = useState<'input' | 'middle' | 'output'>('middle');
   const [animationFrame, setAnimationFrame] = useState(0);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase, phase]);
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Navigation functions
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
 
   // Example values for visualization
   const [originalValue] = useState(0.3927);
@@ -114,15 +171,6 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
     }, 50);
     return () => clearInterval(interval);
   }, []);
-
-  const goToNextPhase = useCallback(() => {
-    const currentIndex = PHASE_ORDER.indexOf(phase);
-    if (currentIndex < PHASE_ORDER.length - 1) {
-      const nextPhase = PHASE_ORDER[currentIndex + 1];
-      setPhase(nextPhase);
-      onPhaseComplete?.(nextPhase);
-    }
-  }, [phase, onPhaseComplete]);
 
   // Calculations
   const spec = PRECISION_SPECS[precision];
@@ -319,36 +367,110 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
     </div>
   );
 
-  const renderBottomBar = (canProceed: boolean, buttonText: string, action?: () => void) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-    }}>
-      <button
-        onClick={action || goToNextPhase}
-        disabled={!canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
+  // Progress bar showing all 10 phases
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        position: 'fixed',
+        top: 0,
+        left: 0,
+        right: 0,
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 16px',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        backgroundColor: colors.bgDark,
+        zIndex: 1000,
+        gap: '12px'
+      }}>
+        <span style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600 }}>
+          Quantization
+        </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, justifyContent: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <div
+              key={p}
+              onClick={() => i <= currentIdx && goToPhase(p)}
+              style={{
+                width: i === currentIdx ? '20px' : '10px',
+                height: '10px',
+                borderRadius: '5px',
+                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
+                cursor: i <= currentIdx ? 'pointer' : 'default',
+                transition: 'all 0.2s'
+              }}
+              title={phaseLabels[p]}
+            />
+          ))}
+        </div>
+        <span style={{ color: colors.accent, fontSize: '12px', fontWeight: 600 }}>
+          {currentIdx + 1}/{phaseOrder.length}
+        </span>
+      </div>
+    );
+  };
+
+  // Bottom navigation bar with Back/Next
+  const renderBottomBar = (canProceed: boolean, buttonText: string, action?: () => void) => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canGoBack = currentIdx > 0;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '16px 24px',
+        background: colors.bgDark,
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        zIndex: 1000,
+        gap: '12px'
+      }}>
+        <button
+          onClick={goBack}
+          disabled={!canGoBack}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canGoBack ? 'rgba(255,255,255,0.1)' : 'transparent',
+            color: canGoBack ? colors.textSecondary : colors.textMuted,
+            fontWeight: 'bold',
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            opacity: canGoBack ? 1 : 0.3,
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          Back
+        </button>
+        <span style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600 }}>
+          {phaseLabels[phase]}
+        </span>
+        <button
+          onClick={action || goNext}
+          disabled={!canProceed}
+          style={{
+            padding: '12px 32px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+            color: canProceed ? 'white' : colors.textMuted,
+            fontWeight: 'bold',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          {buttonText}
+        </button>
+      </div>
+    );
+  };
 
   // Phase renders
   const renderHook = () => (
@@ -811,7 +933,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
           </div>
           {renderBottomBar(passed, passed ? 'Complete Mastery' : 'Review & Retry', () => {
             if (passed) {
-              goToNextPhase();
+              goNext();
             } else {
               setTestSubmitted(false);
               setTestAnswers(new Array(10).fill(null));
@@ -1026,37 +1148,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
   return (
     <div style={{ minHeight: '100vh', background: colors.bgPrimary }}>
-      {/* Progress bar */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        background: colors.bgDark,
-        borderBottom: '1px solid rgba(255,255,255,0.1)',
-        padding: '12px 24px',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '600px', margin: '0 auto' }}>
-          <span style={{ color: colors.textMuted, fontSize: '14px' }}>Quantization</span>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            {PHASE_ORDER.map((p, i) => (
-              <div
-                key={p}
-                style={{
-                  width: PHASE_ORDER.indexOf(phase) >= i ? '20px' : '8px',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: PHASE_ORDER.indexOf(phase) >= i ? colors.accent : 'rgba(255,255,255,0.2)',
-                  transition: 'all 0.3s ease',
-                }}
-              />
-            ))}
-          </div>
-          <span style={{ color: colors.accent, fontSize: '14px' }}>{phase.replace('_', ' ')}</span>
-        </div>
-      </div>
-
+      {renderProgressBar()}
       {/* Main content with padding for fixed header */}
       <div style={{ paddingTop: '60px' }}>
         {renderPhase()}

@@ -1,11 +1,39 @@
-import React, { useState, useCallback, useEffect } from 'react';
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {};
+
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+
+
+interface GameEvent {
+  type: 'phase_complete' | 'answer_correct' | 'answer_incorrect' | 'interaction';
+  phase?: string;
+  data?: Record<string, unknown>;
+}
 
 interface ProcessVariationRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
+
+type PVPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const validPhases: PVPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseOrder: PVPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<PVPhase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Play',
+  review: 'Review',
+  twist_predict: 'Twist',
+  twist_play: 'Explore',
+  twist_review: 'Explain',
+  transfer: 'Apply',
+  test: 'Test',
+  mastery: 'Mastery',
+};
 
 const colors = {
   textPrimary: '#f8fafc',
@@ -32,11 +60,69 @@ const seededRandom = (seed: number) => {
 };
 
 const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  onGameEvent,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const getInitialPhase = (): PVPhase => {
+    if (gamePhase && validPhases.includes(gamePhase as PVPhase)) {
+      return gamePhase as PVPhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<PVPhase>(getInitialPhase);
+  const [isMobile, setIsMobile] = useState(false);
+  const navigationRef = useRef<boolean>(false);
+
+  // Sync with external gamePhase prop changes
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as PVPhase)) {
+      setPhase(gamePhase as PVPhase);
+    }
+  }, [gamePhase]);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Navigation functions
+  const goToPhase = useCallback((newPhase: PVPhase) => {
+    if (navigationRef.current) return;
+    navigationRef.current = true;
+
+    playSound('transition');
+    setPhase(newPhase);
+
+    if (onGameEvent) {
+      onGameEvent({ type: 'phase_complete', phase: newPhase });
+    }
+
+    setTimeout(() => {
+      navigationRef.current = false;
+    }, 300);
+  }, [onGameEvent]);
+
+  const goNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Simulation state
   const [vthVariation, setVthVariation] = useState(10); // mV sigma
   const [lineWidthVariation, setLineWidthVariation] = useState(5); // % sigma
@@ -296,6 +382,53 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
     }
   }, [isSimulating, simulationSeed]);
 
+  const renderProgressBar = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px',
+      background: colors.bgDark,
+      borderBottom: '1px solid rgba(255,255,255,0.1)',
+    }}>
+      {phaseOrder.map((p, index) => {
+        const isActive = p === phase;
+        const isPast = phaseOrder.indexOf(p) < phaseOrder.indexOf(phase);
+        return (
+          <div
+            key={p}
+            onClick={() => isPast && goToPhase(p)}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              cursor: isPast ? 'pointer' : 'default',
+              opacity: isActive ? 1 : isPast ? 0.7 : 0.4,
+            }}
+          >
+            <div style={{
+              width: isMobile ? '10px' : '12px',
+              height: isMobile ? '10px' : '12px',
+              borderRadius: '50%',
+              background: isActive ? colors.accent : isPast ? colors.success : 'rgba(255,255,255,0.3)',
+              border: isActive ? `2px solid ${colors.accent}` : 'none',
+              boxShadow: isActive ? `0 0 8px ${colors.accentGlow}` : 'none',
+            }} />
+            {!isMobile && (
+              <span style={{
+                fontSize: '9px',
+                color: isActive ? colors.accent : colors.textMuted,
+                marginTop: '4px',
+              }}>
+                {phaseLabels[p]}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+
   const renderVisualization = (interactive: boolean, showAdaptive: boolean = false) => {
     const width = 500;
     const height = 420;
@@ -406,7 +539,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
             Std Dev: {sim.stdDev.toFixed(3)} ns
           </text>
           <text x={20} y={368} fill={colors.textSecondary} fontSize={10}>
-            3σ range: {(sim.mean - 3 * sim.stdDev).toFixed(2)} - {(sim.mean + 3 * sim.stdDev).toFixed(2)}
+            3s range: {(sim.mean - 3 * sim.stdDev).toFixed(2)} - {(sim.mean + 3 * sim.stdDev).toFixed(2)}
           </text>
           <text x={20} y={384} fill={colors.error} fontSize={10}>
             Failing: {sim.failingPaths} paths
@@ -611,13 +744,13 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
           Variation causes {(runMonteCarloSimulation().stdDev / runMonteCarloSimulation().mean * 100).toFixed(1)}% coefficient of variation
         </div>
         <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
-          Delay = Base × (1 + Vth_shift/200) × (1 - Width_shift/50)
+          Delay = Base * (1 + Vth_shift/200) * (1 - Width_shift/50)
         </div>
       </div>
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  const renderBottomBar = (canGoBack: boolean, canProceed: boolean, nextLabel: string) => (
     <div style={{
       position: 'fixed',
       bottom: 0,
@@ -627,12 +760,29 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
       background: colors.bgDark,
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
-      justifyContent: 'flex-end',
+      justifyContent: 'space-between',
       zIndex: 1000,
     }}>
       <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
+        onClick={goBack}
+        disabled={!canGoBack}
+        style={{
+          padding: '12px 24px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.textMuted}`,
+          background: 'transparent',
+          color: canGoBack ? colors.textPrimary : colors.textMuted,
+          fontWeight: 'bold',
+          cursor: canGoBack ? 'pointer' : 'not-allowed',
+          fontSize: '14px',
+          opacity: canGoBack ? 1 : 0.5,
+        }}
+      >
+        Back
+      </button>
+      <button
+        onClick={goNext}
+        disabled={!canProceed}
         style={{
           padding: '12px 32px',
           borderRadius: '8px',
@@ -645,7 +795,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        {buttonText}
+        {nextLabel}
       </button>
     </div>
   );
@@ -654,6 +804,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
@@ -701,6 +852,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
@@ -754,6 +906,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Process Variation</h2>
@@ -780,7 +933,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(true, true, 'Continue to Review')}
       </div>
     );
   }
@@ -791,6 +944,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -835,7 +989,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar(true, true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -844,6 +998,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
@@ -904,6 +1059,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Explore Adaptive Techniques</h2>
@@ -930,7 +1086,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(true, true, 'See the Explanation')}
       </div>
     );
   }
@@ -941,6 +1097,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -981,7 +1138,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar(true, true, 'Apply This Knowledge')}
       </div>
     );
   }
@@ -990,6 +1147,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1046,7 +1204,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(true, transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -1056,6 +1214,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          {renderProgressBar()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1087,7 +1246,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(true, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
@@ -1095,6 +1254,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1199,6 +1359,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
@@ -1225,7 +1386,7 @@ const ProcessVariationRenderer: React.FC<ProcessVariationRendererProps> = ({
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderBottomBar(true, true, 'Complete Game')}
       </div>
     );
   }

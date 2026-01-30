@@ -1,11 +1,39 @@
-import React, { useState, useCallback, useEffect } from 'react';
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {};
+
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+
+
+interface GameEvent {
+  type: 'phase_complete' | 'answer_correct' | 'answer_incorrect' | 'interaction';
+  phase?: string;
+  data?: Record<string, unknown>;
+}
 
 interface FlipChipWirebondRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
+
+type FCWBPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const validPhases: FCWBPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseOrder: FCWBPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<FCWBPhase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Play',
+  review: 'Review',
+  twist_predict: 'Twist',
+  twist_play: 'Explore',
+  twist_review: 'Explain',
+  transfer: 'Apply',
+  test: 'Test',
+  mastery: 'Mastery',
+};
 
 const colors = {
   textPrimary: '#f8fafc',
@@ -30,11 +58,69 @@ const colors = {
 };
 
 const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  onGameEvent,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const getInitialPhase = (): FCWBPhase => {
+    if (gamePhase && validPhases.includes(gamePhase as FCWBPhase)) {
+      return gamePhase as FCWBPhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<FCWBPhase>(getInitialPhase);
+  const [isMobile, setIsMobile] = useState(false);
+  const navigationRef = useRef<boolean>(false);
+
+  // Sync with external gamePhase prop changes
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as FCWBPhase)) {
+      setPhase(gamePhase as FCWBPhase);
+    }
+  }, [gamePhase]);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Navigation functions
+  const goToPhase = useCallback((newPhase: FCWBPhase) => {
+    if (navigationRef.current) return;
+    navigationRef.current = true;
+
+    playSound('transition');
+    setPhase(newPhase);
+
+    if (onGameEvent) {
+      onGameEvent({ type: 'phase_complete', phase: newPhase });
+    }
+
+    setTimeout(() => {
+      navigationRef.current = false;
+    }, 300);
+  }, [onGameEvent]);
+
+  const goNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Simulation state
   const [packageType, setPackageType] = useState<'wirebond' | 'flipchip'>('wirebond');
   const [wireLength, setWireLength] = useState(3); // mm
@@ -56,70 +142,51 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
 
   // Physics calculations
   const calculateElectrical = useCallback(() => {
-    // Wire bond: long loop, high inductance
-    // Inductance of a wire loop: L ≈ μ0/π * l * (ln(2l/r) - 0.75)
-    // Simplified: ~1 nH/mm for typical bond wire
-
     const wirebondInductance = wireLength * 1.0; // nH per mm
     const flipchipInductance = 0.1; // nH (very short bump)
 
     const inductance = packageType === 'wirebond' ? wirebondInductance : flipchipInductance;
 
-    // Resistance: ~2 mΩ/mm for 25μm gold wire
-    const wirebondResistance = wireLength * 2; // mΩ per mm
-    const flipchipResistance = 0.5; // mΩ for bump
+    const wirebondResistance = wireLength * 2; // mOhm per mm
+    const flipchipResistance = 0.5; // mOhm for bump
 
     const resistance = packageType === 'wirebond' ? wirebondResistance : flipchipResistance;
 
-    // Impedance at frequency: Z = sqrt(R^2 + (2πfL)^2)
-    const omega = 2 * Math.PI * signalFrequency * 1e9; // rad/s
-    const inductiveReactance = omega * inductance * 1e-9; // Ω
+    const omega = 2 * Math.PI * signalFrequency * 1e9;
+    const inductiveReactance = omega * inductance * 1e-9;
     const impedance = Math.sqrt(Math.pow(resistance * 1e-3, 2) + Math.pow(inductiveReactance, 2));
 
-    // Ground bounce: ΔV = L * di/dt
-    // Assume di/dt = I * f for switching
-    const diDt = powerCurrent * signalFrequency * 1e9; // A/s
-    const groundBounce = inductance * 1e-9 * diDt * 1000; // mV
+    const diDt = powerCurrent * signalFrequency * 1e9;
+    const groundBounce = inductance * 1e-9 * diDt * 1000;
 
-    // Signal delay due to inductance
-    const signalDelay = inductance * 0.01; // ps per nH (rough approximation)
+    const signalDelay = inductance * 0.01;
 
-    // Power delivery: IR drop
-    const irDrop = powerCurrent * resistance; // mV
+    const irDrop = powerCurrent * resistance;
 
     return {
       inductance,
       resistance,
-      impedance: impedance * 1000, // mΩ
-      groundBounce: Math.min(groundBounce, 500), // cap for display
+      impedance: impedance * 1000,
+      groundBounce: Math.min(groundBounce, 500),
       signalDelay,
       irDrop,
     };
   }, [packageType, wireLength, signalFrequency, powerCurrent]);
 
   const calculateThermal = useCallback(() => {
-    // Thermal path resistance
-    // Die to substrate through bump/wire: Rth_junction
-    // Wirebond: heat must go through die face-up, longer path
-    // Flip-chip: heat directly to substrate/spreader
-
-    const wirebondRthJunction = 2.0; // K/W
-    const flipchipRthJunction = 0.3; // K/W (much better)
+    const wirebondRthJunction = 2.0;
+    const flipchipRthJunction = 0.3;
 
     const rthJunction = packageType === 'wirebond' ? wirebondRthJunction : flipchipRthJunction;
 
-    // Substrate to ambient
-    const rthSubstrate = 0.5; // K/W
-    const rthHeatsink = 0.2; // K/W
+    const rthSubstrate = 0.5;
+    const rthHeatsink = 0.2;
 
-    // Total thermal resistance
     const rthTotal = rthJunction + rthSubstrate + rthHeatsink;
 
-    // Temperature rise
     const deltaT = diePower * rthTotal;
-    const junctionTemp = 25 + deltaT; // Assume 25°C ambient
+    const junctionTemp = 25 + deltaT;
 
-    // Maximum power before throttling (assume 100°C limit)
     const maxPower = (100 - 25) / rthTotal;
 
     return {
@@ -186,7 +253,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
       question: 'Wire bond inductance is problematic at high frequencies because:',
       options: [
         { text: 'Inductance decreases with frequency', correct: false },
-        { text: 'Inductive reactance (2πfL) increases with frequency', correct: true },
+        { text: 'Inductive reactance (2*pi*f*L) increases with frequency', correct: true },
         { text: 'Wires become more flexible at high frequency', correct: false },
         { text: 'Wire resistance increases with frequency', correct: false },
       ],
@@ -240,7 +307,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
       question: 'The formula for voltage droop due to inductance is:',
       options: [
         { text: 'V = IR (Ohm\'s law)', correct: false },
-        { text: 'V = L × di/dt (Faraday\'s law)', correct: true },
+        { text: 'V = L * di/dt (Faraday\'s law)', correct: true },
         { text: 'V = CV (capacitor equation)', correct: false },
         { text: 'V = P/I (power equation)', correct: false },
       ],
@@ -292,13 +359,59 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
+  const renderProgressBar = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px',
+      background: colors.bgDark,
+      borderBottom: '1px solid rgba(255,255,255,0.1)',
+    }}>
+      {phaseOrder.map((p, index) => {
+        const isActive = p === phase;
+        const isPast = phaseOrder.indexOf(p) < phaseOrder.indexOf(phase);
+        return (
+          <div
+            key={p}
+            onClick={() => isPast && goToPhase(p)}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              cursor: isPast ? 'pointer' : 'default',
+              opacity: isActive ? 1 : isPast ? 0.7 : 0.4,
+            }}
+          >
+            <div style={{
+              width: isMobile ? '10px' : '12px',
+              height: isMobile ? '10px' : '12px',
+              borderRadius: '50%',
+              background: isActive ? colors.accent : isPast ? colors.success : 'rgba(255,255,255,0.3)',
+              border: isActive ? `2px solid ${colors.accent}` : 'none',
+              boxShadow: isActive ? `0 0 8px ${colors.accentGlow}` : 'none',
+            }} />
+            {!isMobile && (
+              <span style={{
+                fontSize: '9px',
+                color: isActive ? colors.accent : colors.textMuted,
+                marginTop: '4px',
+              }}>
+                {phaseLabels[p]}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
+
   const renderVisualization = (interactive: boolean, showThermalMode: boolean = false) => {
     const width = 500;
     const height = 420;
     const electrical = calculateElectrical();
     const thermal = calculateThermal();
 
-    // Package cross-section dimensions
     const dieWidth = 100;
     const dieHeight = 20;
     const substrateWidth = 160;
@@ -306,7 +419,6 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
     const heatsinkWidth = 180;
     const heatsinkHeight = 40;
 
-    // Signal animation
     const signalPhase = animationTime;
     const ringing = packageType === 'wirebond' ? Math.sin(signalPhase * 5) * 0.3 : Math.sin(signalPhase * 5) * 0.05;
 
@@ -341,7 +453,6 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
 
           {/* Package cross-section */}
           {packageType === 'wirebond' ? (
-            // Wire bond: die face-up
             <>
               {/* Heatsink at bottom */}
               <rect x={250 - heatsinkWidth/2} y={280} width={heatsinkWidth} height={heatsinkHeight} fill={colors.heatsink} rx={4} />
@@ -358,7 +469,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
               <rect x={250 - dieWidth/2} y={180} width={dieWidth} height={dieHeight} fill="url(#dieGrad)" rx={2} />
               <text x={250} y={194} fill={colors.textPrimary} fontSize={10} textAnchor="middle">Die</text>
 
-              {/* Wire bonds (arcing loops) */}
+              {/* Wire bonds */}
               {[-40, -25, 25, 40].map((offset, i) => (
                 <path
                   key={`wire${i}`}
@@ -391,7 +502,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
               <line x1={340} y1={180} x2={340} y2={240} stroke={colors.textMuted} strokeDasharray="3,3" />
               <text x={350} y={210} fill={colors.textMuted} fontSize={9}>L={wireLength}mm</text>
 
-              {/* Thermal path (if enabled) */}
+              {/* Thermal path */}
               {showThermalMode && showThermal && (
                 <>
                   <line x1={250} y1={200} x2={250} y2={320} stroke={colors.thermal} strokeWidth={4} opacity={0.5} />
@@ -401,7 +512,6 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
               )}
             </>
           ) : (
-            // Flip-chip: die face-down
             <>
               {/* Heatsink on top of die */}
               <rect x={250 - heatsinkWidth/2} y={100} width={heatsinkWidth} height={heatsinkHeight} fill={colors.heatsink} rx={4} />
@@ -462,7 +572,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
               {/* Bump height indicator */}
               <text x={350} y={172} fill={colors.textMuted} fontSize={9}>L~0.1mm</text>
 
-              {/* Thermal path (if enabled) */}
+              {/* Thermal path */}
               {showThermalMode && showThermal && (
                 <>
                   <line x1={250} y1={148} x2={250} y2={100} stroke={colors.thermal} strokeWidth={8} opacity={0.5} />
@@ -487,7 +597,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
             IR Drop: <tspan fill={electrical.irDrop < 10 ? colors.success : colors.warning}>{electrical.irDrop.toFixed(1)} mV</tspan>
           </text>
 
-          {/* Thermal metrics panel (if enabled) */}
+          {/* Thermal metrics panel */}
           {showThermalMode && showThermal && (
             <>
               <rect x={260} y={330} width={230} height={80} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.thermal} strokeWidth={1} />
@@ -497,7 +607,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
                 Rth Junction: <tspan fill={thermal.rthJunction < 1 ? colors.success : colors.warning}>{thermal.rthJunction.toFixed(1)} K/W</tspan>
               </text>
               <text x={270} y={382} fill={colors.textSecondary} fontSize={10}>
-                Tj at {diePower}W: <tspan fill={thermal.junctionTemp < 85 ? colors.success : colors.error}>{thermal.junctionTemp.toFixed(0)}°C</tspan>
+                Tj at {diePower}W: <tspan fill={thermal.junctionTemp < 85 ? colors.success : colors.error}>{thermal.junctionTemp.toFixed(0)}C</tspan>
               </text>
               <text x={270} y={398} fill={colors.textSecondary} fontSize={10}>
                 Max Power: <tspan fill={colors.accent}>{thermal.maxPower.toFixed(0)} W</tspan>
@@ -657,16 +767,16 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
         borderLeft: `3px solid ${colors.accent}`,
       }}>
         <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          V_bounce = L × di/dt = {calculateElectrical().inductance.toFixed(2)} nH × {powerCurrent} A × {signalFrequency} GHz
+          V_bounce = L * di/dt = {calculateElectrical().inductance.toFixed(2)} nH * {powerCurrent} A * {signalFrequency} GHz
         </div>
         <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
-          Impedance at {signalFrequency} GHz: {calculateElectrical().impedance.toFixed(1)} mΩ
+          Impedance at {signalFrequency} GHz: {calculateElectrical().impedance.toFixed(1)} mOhm
         </div>
       </div>
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  const renderBottomBar = (canGoBack: boolean, canProceed: boolean, nextLabel: string) => (
     <div style={{
       position: 'fixed',
       bottom: 0,
@@ -676,12 +786,29 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
       background: colors.bgDark,
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
-      justifyContent: 'flex-end',
+      justifyContent: 'space-between',
       zIndex: 1000,
     }}>
       <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
+        onClick={goBack}
+        disabled={!canGoBack}
+        style={{
+          padding: '12px 24px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.textMuted}`,
+          background: 'transparent',
+          color: canGoBack ? colors.textPrimary : colors.textMuted,
+          fontWeight: 'bold',
+          cursor: canGoBack ? 'pointer' : 'not-allowed',
+          fontSize: '14px',
+          opacity: canGoBack ? 1 : 0.5,
+        }}
+      >
+        Back
+      </button>
+      <button
+        onClick={goNext}
+        disabled={!canProceed}
         style={{
           padding: '12px 32px',
           borderRadius: '8px',
@@ -694,7 +821,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        {buttonText}
+        {nextLabel}
       </button>
     </div>
   );
@@ -703,6 +830,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
@@ -750,6 +878,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
@@ -803,6 +932,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Packaging Physics</h2>
@@ -829,7 +959,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(true, true, 'Continue to Review')}
       </div>
     );
   }
@@ -840,6 +970,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -872,11 +1003,11 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
                 L ~ 1 nH/mm for bond wires.
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Inductive Reactance:</strong> X_L = 2πfL increases
-                with frequency. At 5 GHz, 3nH creates 94Ω of reactance - enormous for power delivery!
+                <strong style={{ color: colors.textPrimary }}>Inductive Reactance:</strong> X_L = 2*pi*f*L increases
+                with frequency. At 5 GHz, 3nH creates 94 Ohm of reactance - enormous for power delivery!
               </p>
               <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Ground Bounce:</strong> V = L × di/dt. Fast current
+                <strong style={{ color: colors.textPrimary }}>Ground Bounce:</strong> V = L * di/dt. Fast current
                 transients through package inductance cause voltage spikes that corrupt signals.
               </p>
               <p>
@@ -886,7 +1017,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar(true, true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -895,6 +1026,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
@@ -955,6 +1087,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Explore Thermal Performance</h2>
@@ -981,7 +1114,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(true, true, 'See the Explanation')}
       </div>
     );
   }
@@ -992,6 +1125,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1019,22 +1153,22 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
             <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Thermal Resistance Path:</strong> Heat flows from
-                junction → die → TIM → lid → heatsink → ambient. Each interface adds resistance.
+                junction to die to TIM to lid to heatsink to ambient. Each interface adds resistance.
                 Minimizing path length minimizes Rth.
               </p>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>TIM Importance:</strong> Thermal Interface Material
-                fills microscopic gaps between surfaces. Even "flat" surfaces have ~10μm roughness.
+                fills microscopic gaps between surfaces. Even "flat" surfaces have ~10um roughness.
                 TIM thermal conductivity of 5-10 W/mK bridges these gaps.
               </p>
               <p>
-                <strong style={{ color: colors.textPrimary }}>Power Density:</strong> Modern CPUs hit 100+ W/cm²
+                <strong style={{ color: colors.textPrimary }}>Power Density:</strong> Modern CPUs hit 100+ W/cm2
                 in hotspots. Without flip-chip and advanced cooling, temperatures would exceed limits.
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar(true, true, 'Apply This Knowledge')}
       </div>
     );
   }
@@ -1043,6 +1177,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1099,7 +1234,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(true, transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -1109,6 +1244,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          {renderProgressBar()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1140,7 +1276,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(true, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
@@ -1148,6 +1284,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1252,6 +1389,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
@@ -1262,7 +1400,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
             <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Inductance scales with conductor length: L ~ 1 nH/mm for wires</li>
-              <li>Ground bounce: V = L × di/dt dominates at high frequencies</li>
+              <li>Ground bounce: V = L * di/dt dominates at high frequencies</li>
               <li>Flip-chip has ~30x lower inductance than wire bond</li>
               <li>Thermal resistance: flip-chip enables direct die-to-lid heat path</li>
               <li>Package selection is a physics trade-off, not just cost</li>
@@ -1278,7 +1416,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderBottomBar(true, true, 'Complete Game')}
       </div>
     );
   }

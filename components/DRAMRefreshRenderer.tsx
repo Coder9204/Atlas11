@@ -1,28 +1,30 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ─────────────────────────────────────────────────────────────────────────────
-// TYPES & INTERFACES
-// ─────────────────────────────────────────────────────────────────────────────
+// ============================================================================
+// GAME 185: DRAM REFRESH
+// ============================================================================
+// Physics: DRAM stores bits as charge in capacitors that leak over time
+// Refresh cycles must periodically restore charge to prevent data loss
+// Temperature and memory speed affect refresh requirements
+// ============================================================================
+
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface DRAMRefreshRendererProps {
-  phase: Phase;
-  onPhaseComplete?: () => void;
+  gamePhase?: Phase; // Optional for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
-// ─────────────────────────────────────────────────────────────────────────────
-// CONSTANTS
-// ─────────────────────────────────────────────────────────────────────────────
 const colors = {
   textPrimary: '#f8fafc',
   textSecondary: '#e2e8f0',
   textMuted: '#94a3b8',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
+  bgCardLight: '#1e293b',
   bgDark: 'rgba(15, 23, 42, 0.95)',
   accent: '#8b5cf6',
   accentGlow: 'rgba(139, 92, 246, 0.4)',
@@ -32,6 +34,22 @@ const colors = {
   capacitor: '#3b82f6',
   charge: '#22d3ee',
   leak: '#f97316',
+  border: '#334155',
+};
+
+// Phase order and labels for navigation
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Speed Tradeoff',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
 };
 
 const TEST_QUESTIONS = [
@@ -74,15 +92,61 @@ const TRANSFER_APPLICATIONS = [
   },
 ];
 
-// ─────────────────────────────────────────────────────────────────────────────
-// MAIN COMPONENT
-// ─────────────────────────────────────────────────────────────────────────────
 const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase, phase]);
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Responsive design
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Navigation functions
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Simulation state
   const [refreshRate, setRefreshRate] = useState(64); // ms between refreshes
   const [temperature, setTemperature] = useState(25); // Celsius
@@ -193,9 +257,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // VISUALIZATION
-  // ─────────────────────────────────────────────────────────────────────────────
+  // Visualization
   const renderDRAMVisualization = () => {
     const width = 400;
     const height = 300;
@@ -323,9 +385,137 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     );
   };
 
-  // ─────────────────────────────────────────────────────────────────────────────
-  // RENDER HELPERS
-  // ─────────────────────────────────────────────────────────────────────────────
+  // Progress bar component
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: isMobile ? '10px 12px' : '12px 16px',
+        borderBottom: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: isMobile ? '12px' : '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '8px' : '12px' }}>
+          <div style={{ display: 'flex', gap: isMobile ? '4px' : '6px' }}>
+            {phaseOrder.map((p, i) => (
+              <div
+                key={p}
+                onClick={() => i < currentIdx && goToPhase(p)}
+                style={{
+                  height: isMobile ? '10px' : '8px',
+                  width: i === currentIdx ? (isMobile ? '20px' : '24px') : (isMobile ? '10px' : '8px'),
+                  borderRadius: '5px',
+                  backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : colors.border,
+                  cursor: i < currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s',
+                  minWidth: isMobile ? '10px' : '8px',
+                  minHeight: isMobile ? '10px' : '8px'
+                }}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+            {currentIdx + 1} / {phaseOrder.length}
+          </span>
+        </div>
+
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: `${colors.accent}20`,
+          color: colors.accent,
+          fontSize: '11px',
+          fontWeight: 700
+        }}>
+          {phaseLabels[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom navigation bar
+  const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: string, onNext?: () => void) => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canBack = canGoBack && currentIdx > 0;
+
+    const handleBack = () => {
+      if (canBack) {
+        goToPhase(phaseOrder[currentIdx - 1]);
+      }
+    };
+
+    const handleNext = () => {
+      if (!canGoNext) return;
+      if (onNext) {
+        onNext();
+      } else if (currentIdx < phaseOrder.length - 1) {
+        goToPhase(phaseOrder[currentIdx + 1]);
+      }
+    };
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isMobile ? '12px' : '12px 16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '12px',
+        flexShrink: 0
+      }}>
+        <button
+          onClick={handleBack}
+          style={{
+            padding: isMobile ? '10px 16px' : '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: isMobile ? '13px' : '14px',
+            backgroundColor: colors.bgCardLight,
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.3,
+            minHeight: '44px'
+          }}
+        >
+          Back
+        </button>
+
+        <span style={{
+          fontSize: '12px',
+          color: colors.textMuted,
+          fontWeight: 600
+        }}>
+          {phaseLabels[phase]}
+        </span>
+
+        <button
+          onClick={handleNext}
+          style={{
+            padding: isMobile ? '10px 20px' : '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: isMobile ? '13px' : '14px',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.accent} 0%, #a78bfa 100%)` : colors.bgCardLight,
+            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.4,
+            boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
+            minHeight: '44px'
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
+  };
+
   const buttonStyle = {
     padding: '12px 24px',
     borderRadius: '8px',
@@ -336,42 +526,11 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     WebkitTapHighlightColor: 'transparent' as const,
   };
 
-  const renderBottomBar = (canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={!canProceed}
-        style={{
-          ...buttonStyle,
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
-
-  // ─────────────────────────────────────────────────────────────────────────────
-  // PHASE RENDERS
-  // ─────────────────────────────────────────────────────────────────────────────
-
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
@@ -410,12 +569,12 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
               borderLeft: `3px solid ${colors.accent}`,
             }}>
               <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                DRAM capacitors hold charge measured in femtofarads - that's 0.000000000000001 farads!
+                DRAM capacitors hold charge measured in femtofarads - that is 0.000000000000001 farads!
               </p>
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Make a Prediction')}
+        {renderBottomBar(false, true, 'Make a Prediction')}
       </div>
     );
   }
@@ -423,7 +582,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>How Does DRAM Store Data?</h2>
@@ -461,7 +621,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(!!prediction, 'Test My Prediction')}
+        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -469,7 +629,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>DRAM Refresh Lab</h2>
@@ -553,7 +714,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Continue to Review')}
+        {renderBottomBar(false, true, 'Continue to Review')}
       </div>
     );
   }
@@ -563,7 +724,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     const wasCorrect = prediction === 'capacitor';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -610,7 +772,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Next: The Twist!')}
+        {renderBottomBar(false, true, 'Next: The Twist!')}
       </div>
     );
   }
@@ -618,7 +780,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Speed Paradox</h2>
@@ -664,7 +827,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(!!twistPrediction, 'Test My Prediction')}
+        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -672,7 +835,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Speed vs Power Trade-off</h2>
@@ -755,7 +919,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'See the Explanation')}
+        {renderBottomBar(false, true, 'See the Explanation')}
       </div>
     );
   }
@@ -765,7 +929,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     const wasCorrect = twistPrediction === 'more';
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -811,7 +976,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, 'Apply This Knowledge')}
+        {renderBottomBar(false, true, 'Apply This Knowledge')}
       </div>
     );
   }
@@ -819,7 +984,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -872,7 +1038,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -881,7 +1047,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+          {renderProgressBar()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -918,7 +1085,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
@@ -927,7 +1094,8 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     const allAnswered = testAnswers.every(a => a !== null);
 
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1045,10 +1213,11 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+      <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>🏆</div>
+            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>
               You understand DRAM refresh and volatile memory physics
@@ -1081,7 +1250,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
             <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
               Modern memory research explores alternatives like FeRAM (ferroelectric), MRAM
-              (magnetic), and ReRAM (resistive) that don't need refresh. These non-volatile
+              (magnetic), and ReRAM (resistive) that do not need refresh. These non-volatile
               technologies could someday replace DRAM for instant-on computers!
             </p>
           </div>
@@ -1090,7 +1259,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
             {renderDRAMVisualization()}
           </div>
         </div>
-        {renderBottomBar(true, 'Complete Game')}
+        {renderBottomBar(false, true, 'Complete')}
       </div>
     );
   }

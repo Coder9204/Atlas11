@@ -1,11 +1,39 @@
-import React, { useState, useCallback, useEffect } from 'react';
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {};
+
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+
+
+interface GameEvent {
+  type: 'phase_complete' | 'answer_correct' | 'answer_incorrect' | 'interaction';
+  phase?: string;
+  data?: Record<string, unknown>;
+}
 
 interface SRAMYieldRedundancyRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
+
+type SRAMPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const validPhases: SRAMPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseOrder: SRAMPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<SRAMPhase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Play',
+  review: 'Review',
+  twist_predict: 'Twist',
+  twist_play: 'Explore',
+  twist_review: 'Explain',
+  transfer: 'Apply',
+  test: 'Test',
+  mastery: 'Mastery',
+};
 
 const colors = {
   textPrimary: '#f8fafc',
@@ -33,11 +61,69 @@ const seededRandom = (seed: number) => {
 };
 
 const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  onGameEvent,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const getInitialPhase = (): SRAMPhase => {
+    if (gamePhase && validPhases.includes(gamePhase as SRAMPhase)) {
+      return gamePhase as SRAMPhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<SRAMPhase>(getInitialPhase);
+  const [isMobile, setIsMobile] = useState(false);
+  const navigationRef = useRef<boolean>(false);
+
+  // Sync with external gamePhase prop changes
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as SRAMPhase)) {
+      setPhase(gamePhase as SRAMPhase);
+    }
+  }, [gamePhase]);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Navigation functions
+  const goToPhase = useCallback((newPhase: SRAMPhase) => {
+    if (navigationRef.current) return;
+    navigationRef.current = true;
+
+    playSound('transition');
+    setPhase(newPhase);
+
+    if (onGameEvent) {
+      onGameEvent({ type: 'phase_complete', phase: newPhase });
+    }
+
+    setTimeout(() => {
+      navigationRef.current = false;
+    }, 300);
+  }, [onGameEvent]);
+
+  const goNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Simulation state
   const [arrayRows, setArrayRows] = useState(32);
   const [arrayCols, setArrayCols] = useState(32);
@@ -63,7 +149,6 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   const generateDefectMap = useCallback(() => {
     const defects: { row: number; col: number }[] = [];
     const totalBits = arrayRows * arrayCols;
-    const expectedDefects = (totalBits / 1000) * defectDensity;
 
     for (let i = 0; i < totalBits; i++) {
       const rand = seededRandom(simulationSeed * 10000 + i);
@@ -94,13 +179,8 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
     const defectiveRows = Object.keys(rowDefects).map(Number);
     const defectiveCols = Object.keys(colDefects).map(Number);
 
-    // Can we repair with available spares?
-    const rowsToRepair = defectiveRows.length;
-    const colsToRepair = defectiveCols.length;
-
     // Simple repair algorithm: replace worst rows/cols first
     let repairedDefects = 0;
-    let remainingDefects = defects.length;
 
     // Repair rows (removes all defects in that row)
     const sortedRows = defectiveRows.sort((a, b) => (rowDefects[b] || 0) - (rowDefects[a] || 0));
@@ -120,13 +200,12 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
       });
     });
 
-    remainingDefects = defects.length - repairedDefects;
+    let remainingDefects = defects.length - repairedDefects;
 
     // ECC can correct remaining single-bit errors per word
     let eccCorrected = 0;
     if (enableECC && remainingDefects > 0) {
       // Assume 64-bit words, ECC can correct 'eccBits' per word
-      const wordsPerRow = arrayCols / 64;
       const wordDefects: { [key: string]: number } = {};
 
       defects.forEach(d => {
@@ -147,8 +226,6 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
 
     // Calculate yields
     const totalBits = arrayRows * arrayCols;
-    const rawYield = Math.exp(-defects.length / 100); // Poisson approximation
-    const repairedYield = remainingDefects === 0 ? 1 : Math.exp(-remainingDefects / 10);
 
     return {
       totalBits,
@@ -328,6 +405,53 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
     setTestSubmitted(true);
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
+
+  const renderProgressBar = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: '8px',
+      padding: '16px',
+      background: colors.bgDark,
+      borderBottom: '1px solid rgba(255,255,255,0.1)',
+    }}>
+      {phaseOrder.map((p, index) => {
+        const isActive = p === phase;
+        const isPast = phaseOrder.indexOf(p) < phaseOrder.indexOf(phase);
+        return (
+          <div
+            key={p}
+            onClick={() => isPast && goToPhase(p)}
+            style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              cursor: isPast ? 'pointer' : 'default',
+              opacity: isActive ? 1 : isPast ? 0.7 : 0.4,
+            }}
+          >
+            <div style={{
+              width: isMobile ? '10px' : '12px',
+              height: isMobile ? '10px' : '12px',
+              borderRadius: '50%',
+              background: isActive ? colors.accent : isPast ? colors.success : 'rgba(255,255,255,0.3)',
+              border: isActive ? `2px solid ${colors.accent}` : 'none',
+              boxShadow: isActive ? `0 0 8px ${colors.accentGlow}` : 'none',
+            }} />
+            {!isMobile && (
+              <span style={{
+                fontSize: '9px',
+                color: isActive ? colors.accent : colors.textMuted,
+                marginTop: '4px',
+              }}>
+                {phaseLabels[p]}
+              </span>
+            )}
+          </div>
+        );
+      })}
+    </div>
+  );
 
   const renderVisualization = (interactive: boolean, showECC: boolean = false) => {
     const width = 500;
@@ -668,7 +792,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  const renderBottomBar = (canGoBack: boolean, canProceed: boolean, nextLabel: string) => (
     <div style={{
       position: 'fixed',
       bottom: 0,
@@ -678,12 +802,29 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
       background: colors.bgDark,
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
-      justifyContent: 'flex-end',
+      justifyContent: 'space-between',
       zIndex: 1000,
     }}>
       <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
+        onClick={goBack}
+        disabled={!canGoBack}
+        style={{
+          padding: '12px 24px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.textMuted}`,
+          background: 'transparent',
+          color: canGoBack ? colors.textPrimary : colors.textMuted,
+          fontWeight: 'bold',
+          cursor: canGoBack ? 'pointer' : 'not-allowed',
+          fontSize: '14px',
+          opacity: canGoBack ? 1 : 0.5,
+        }}
+      >
+        Back
+      </button>
+      <button
+        onClick={goNext}
+        disabled={!canProceed}
         style={{
           padding: '12px 32px',
           borderRadius: '8px',
@@ -696,7 +837,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           WebkitTapHighlightColor: 'transparent',
         }}
       >
-        {buttonText}
+        {nextLabel}
       </button>
     </div>
   );
@@ -705,6 +846,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
@@ -752,6 +894,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
@@ -805,6 +948,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Redundancy Repair</h2>
@@ -831,7 +975,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(true, true, 'Continue to Review')}
       </div>
     );
   }
@@ -842,6 +986,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -888,7 +1033,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar(true, true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -897,6 +1042,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
@@ -957,6 +1103,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Explore ECC + Redundancy</h2>
@@ -983,7 +1130,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(true, true, 'See the Explanation')}
       </div>
     );
   }
@@ -994,6 +1141,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1037,7 +1185,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar(true, true, 'Apply This Knowledge')}
       </div>
     );
   }
@@ -1046,6 +1194,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -1102,7 +1251,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(true, transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -1112,6 +1261,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          {renderProgressBar()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1143,7 +1293,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(true, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
@@ -1151,6 +1301,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1255,6 +1406,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
@@ -1282,7 +1434,7 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderBottomBar(true, true, 'Complete Game')}
       </div>
     );
   }

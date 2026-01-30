@@ -1,18 +1,67 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface ChipletArchitectureRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: Phase;  // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Mixed Nodes',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
+};
+
+const colors = {
+  textPrimary: '#f8fafc',
+  textSecondary: '#e2e8f0',
+  textMuted: '#94a3b8',
+  bgPrimary: '#0f172a',
+  bgCard: 'rgba(30, 41, 59, 0.9)',
+  bgDark: 'rgba(15, 23, 42, 0.95)',
+  accent: '#22c55e',
+  success: '#22c55e',
+  warning: '#f59e0b',
+  error: '#ef4444',
+};
+
 const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase, phase]);
+
   // Simulation state
   const [dieSize, setDieSize] = useState(300); // mm^2
   const [chipletCount, setChipletCount] = useState(4);
@@ -28,6 +77,156 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+
+  // Internal navigation functions
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
+
+  // Progress bar showing all 10 phases
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '12px 16px',
+        borderBottom: `1px solid rgba(255,255,255,0.1)`,
+        backgroundColor: colors.bgDark,
+        gap: '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {phaseOrder.map((p, i) => (
+              <div
+                key={p}
+                onClick={() => i < currentIdx && goToPhase(p)}
+                style={{
+                  height: '8px',
+                  width: i === currentIdx ? '24px' : '8px',
+                  borderRadius: '5px',
+                  backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
+                  cursor: i < currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s',
+                }}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+            {currentIdx + 1} / {phaseOrder.length}
+          </span>
+        </div>
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: `${colors.accent}20`,
+          color: colors.accent,
+          fontSize: '11px',
+          fontWeight: 700
+        }}>
+          {phaseLabels[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom bar with Back/Next navigation
+  const renderBottomBar = (canProceed: boolean, buttonText: string, onNext?: () => void) => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canBack = currentIdx > 0;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 16px',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        backgroundColor: colors.bgDark,
+        gap: '12px',
+      }}>
+        <button
+          onClick={goBack}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: '14px',
+            backgroundColor: 'rgba(30, 41, 59, 0.9)',
+            color: colors.textSecondary,
+            border: '1px solid rgba(255,255,255,0.1)',
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.3,
+            minHeight: '44px',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+          disabled={!canBack}
+        >
+          Back
+        </button>
+
+        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+          {phaseLabels[phase]}
+        </span>
+
+        <button
+          onClick={onNext || goNext}
+          disabled={!canProceed}
+          style={{
+            padding: '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: '14px',
+            background: canProceed ? `linear-gradient(135deg, ${colors.accent} 0%, #16a34a 100%)` : 'rgba(30, 41, 59, 0.9)',
+            color: canProceed ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+            opacity: canProceed ? 1 : 0.4,
+            boxShadow: canProceed ? `0 2px 12px ${colors.accent}30` : 'none',
+            minHeight: '44px',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          {buttonText}
+        </button>
+      </div>
+    );
+  };
+
+  // Wrapper function for phase content
+  const wrapPhaseContent = (content: React.ReactNode, bottomBarContent?: React.ReactNode) => (
+    <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
+      <div style={{ flexShrink: 0 }}>{renderProgressBar()}</div>
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
+        {content}
+      </div>
+      {bottomBarContent && <div style={{ flexShrink: 0 }}>{bottomBarContent}</div>}
+    </div>
+  );
 
   // Calculate yield and cost metrics
   const calculateMetrics = useCallback(() => {
@@ -456,8 +655,8 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '24px' }}>
             <span style={{ color: '#22c55e', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>Chip Manufacturing</span>
@@ -480,33 +679,16 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
               Why build chips in pieces instead of as one unit? The answer involves physics, economics, and clever engineering.
             </p>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              padding: '16px 32px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              background: 'linear-gradient(90deg, #22c55e, #16a34a)',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Discover the Reason
-          </button>
         </div>
-      </div>
+      </div>,
+      renderBottomBar(true, 'Discover the Reason')
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
 
@@ -538,36 +720,16 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
               </button>
             ))}
           </div>
-
-          {prediction && (
-            <button
-              onClick={onPhaseComplete}
-              style={{
-                marginTop: '24px',
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: '#22c55e',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
-      </div>
+      </div>,
+      renderBottomBar(!!prediction, 'Test My Prediction')
     );
   }
 
   // PLAY PHASE
   if (phase === 'play') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore Yield Economics</h2>
           <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
@@ -586,27 +748,9 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
               <li>Notice: there's a sweet spot where chiplets win on cost</li>
             </ul>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#22c55e',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Review the Concepts
-          </button>
         </div>
-      </div>
+      </div>,
+      renderBottomBar(true, 'Review the Concepts')
     );
   }
 
@@ -614,8 +758,8 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   if (phase === 'review') {
     const wasCorrect = prediction === 'defects';
 
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -653,34 +797,16 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
               To build bigger chips, you MUST use chiplets. NVIDIA's latest GPUs exceed this limit!
             </p>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#a855f7',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Discover the Twist
-          </button>
         </div>
-      </div>
+      </div>,
+      renderBottomBar(true, 'Discover the Twist')
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>The Twist</h2>
 
@@ -714,36 +840,16 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
               </button>
             ))}
           </div>
-
-          {twistPrediction && (
-            <button
-              onClick={onPhaseComplete}
-              style={{
-                marginTop: '24px',
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: '#a855f7',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              See the Answer
-            </button>
-          )}
         </div>
-      </div>
+      </div>,
+      renderBottomBar(!!twistPrediction, 'See the Answer')
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>Mixed Process Nodes</h2>
 
@@ -777,27 +883,9 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
               This can save 30-40% on total chip cost while maintaining full performance!
             </p>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#a855f7',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Review the Discovery
-          </button>
         </div>
-      </div>
+      </div>,
+      renderBottomBar(true, 'Review the Discovery')
     );
   }
 
@@ -805,8 +893,8 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'mixed';
 
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -830,34 +918,16 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
               <p><strong style={{ color: '#ef4444' }}>Power delivery:</strong> Can use even older nodes for voltage regulators</p>
             </div>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#22c55e',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            See Real-World Applications
-          </button>
         </div>
-      </div>
+      </div>,
+      renderBottomBar(true, 'See Real-World Applications')
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
           <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
@@ -902,37 +972,17 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
               )}
             </div>
           ))}
-
-          {transferCompleted.size >= 4 && (
-            <button
-              onClick={onPhaseComplete}
-              style={{
-                marginTop: '24px',
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: '#22c55e',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Take the Test
-            </button>
-          )}
         </div>
-      </div>
+      </div>,
+      renderBottomBar(transferCompleted.size >= 4, 'Take the Test')
     );
   }
 
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
-      return (
-        <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+      return wrapPhaseContent(
+        <div style={{ padding: '24px', paddingBottom: '100px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -949,32 +999,15 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
                 {testScore >= 8 ? 'You\'ve mastered chiplet architecture!' : 'Review the concepts and try again.'}
               </p>
             </div>
-
-            <button
-              onClick={testScore >= 8 ? onPhaseComplete : () => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); }}
-              style={{
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: testScore >= 8 ? '#22c55e' : '#f59e0b',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              {testScore >= 8 ? 'Claim Mastery' : 'Try Again'}
-            </button>
           </div>
-        </div>
+        </div>,
+        renderBottomBar(true, testScore >= 8 ? 'Claim Mastery' : 'Try Again', testScore >= 8 ? goNext : () => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); })
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2>Knowledge Test</h2>
@@ -1074,14 +1107,15 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
             )}
           </div>
         </div>
-      </div>
+      </div>,
+      null
     );
   }
 
   // MASTERY PHASE
   if (phase === 'mastery') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return wrapPhaseContent(
+      <div style={{ padding: '24px', paddingBottom: '100px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '80px', marginBottom: '16px' }}>MASTERY</div>
           <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Chiplet Architecture Expert!</h1>
@@ -1107,25 +1141,9 @@ const ChipletArchitectureRenderer: React.FC<ChipletArchitectureRendererProps> = 
               This enables larger, more capable chips while improving yields and reducing costs.
             </p>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              padding: '16px 32px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              background: 'linear-gradient(90deg, #22c55e, #16a34a)',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Complete
-          </button>
         </div>
-      </div>
+      </div>,
+      renderBottomBar(true, 'Complete')
     );
   }
 

@@ -1,8 +1,35 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+
+// --- GAME EVENT INTERFACE FOR AI COACH INTEGRATION ---
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+             'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+             'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+             'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected' |
+             'coach_prompt' | 'guide_paused' | 'guide_resumed';
+  gameType: string;
+  gameTitle: string;
+  details: {
+    currentScreen?: number;
+    totalScreens?: number;
+    phase?: string;
+    phaseLabel?: string;
+    prediction?: string;
+    answer?: string;
+    isCorrect?: boolean;
+    score?: number;
+    maxScore?: number;
+    message?: string;
+    coachMessage?: string;
+    needsHelp?: boolean;
+    [key: string]: unknown;
+  };
+  timestamp: number;
+}
 
 interface IonImplantationRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
@@ -23,14 +50,135 @@ const colors = {
   dopant: '#3b82f6',
   ion: '#8b5cf6',
   crystal: '#10b981',
+  border: '#334155',
+  primary: '#06b6d4',
+};
+
+// --- GLOBAL SOUND UTILITY ---
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' }
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
 };
 
 const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  onGameEvent,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // --- INTERNAL PHASE STATE MANAGEMENT ---
+  type IonPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  const validPhases: IonPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+  // Use gamePhase from props if valid, otherwise default to 'hook'
+  const getInitialPhase = (): IonPhase => {
+    if (gamePhase && validPhases.includes(gamePhase as IonPhase)) {
+      return gamePhase as IonPhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<IonPhase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as IonPhase) && gamePhase !== phase) {
+      setPhase(gamePhase as IonPhase);
+    }
+  }, [gamePhase]);
+
+  // Phase order for navigation
+  const phaseOrder: IonPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<IonPhase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Channeling',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Emit events to AI coach
+  const emitGameEvent = useCallback((
+    eventType: GameEvent['eventType'],
+    details: GameEvent['details']
+  ) => {
+    if (onGameEvent) {
+      onGameEvent({
+        eventType,
+        gameType: 'ion_implantation',
+        gameTitle: 'Ion Implantation',
+        details,
+        timestamp: Date.now()
+      });
+    }
+  }, [onGameEvent]);
+
+  const goToPhase = useCallback((p: IonPhase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    playSound('transition');
+
+    const idx = phaseOrder.indexOf(p);
+    emitGameEvent('phase_changed', {
+      phase: p,
+      phaseLabel: phaseLabels[p],
+      currentScreen: idx + 1,
+      totalScreens: phaseOrder.length,
+      message: `Navigated to ${phaseLabels[p]}`
+    });
+
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, [emitGameEvent, phaseLabels, phaseOrder]);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
   // Simulation state
   const [ionEnergy, setIonEnergy] = useState(50); // keV
   const [doseExponent, setDoseExponent] = useState(14); // 10^14 to 10^16 ions/cm^2
@@ -49,6 +197,15 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
+
+  // Responsive design
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   // Physics calculations
   const calculateImplantProfile = useCallback(() => {
@@ -78,7 +235,6 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     const postAnnealStraggle = Math.sqrt(straggle * straggle + 2 * diffusionLength * diffusionLength);
 
     // Junction depth (where concentration falls to ~1e17)
-    const peakConcentration = Math.pow(10, doseExponent) / (Math.sqrt(2 * Math.PI) * straggle);
     const junctionDepth = effectiveRange + 3 * postAnnealStraggle;
 
     // Damage level (arbitrary units)
@@ -92,7 +248,6 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
       straggle,
       postAnnealStraggle,
       junctionDepth,
-      peakConcentration,
       damageLevel: Math.min(100, damageLevel),
       activation: Math.min(100, activation),
       diffusionLength,
@@ -153,7 +308,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     {
       question: 'The Gaussian distribution of implanted ions is characterized by:',
       options: [
-        { text: 'Projected range (Rp) and straggle (ΔRp)', correct: true },
+        { text: 'Projected range (Rp) and straggle (delta Rp)', correct: true },
         { text: 'Dose and beam current', correct: false },
         { text: 'Wafer rotation speed', correct: false },
         { text: 'Vacuum pressure', correct: false },
@@ -249,6 +404,137 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     setTestScore(score);
     setTestSubmitted(true);
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+    if (score < 8 && onIncorrectAnswer) onIncorrectAnswer();
+  };
+
+  // --- PROGRESS BAR COMPONENT ---
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: isMobile ? '10px 12px' : '12px 16px',
+        borderBottom: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: isMobile ? '8px' : '12px',
+        flexWrap: 'wrap'
+      }}>
+        {/* Back button */}
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          style={{
+            padding: '6px 12px',
+            borderRadius: '6px',
+            border: `1px solid ${colors.border}`,
+            background: currentIdx > 0 ? colors.bgDark : 'transparent',
+            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
+            cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
+            opacity: currentIdx > 0 ? 1 : 0.4,
+            fontSize: '12px',
+            fontWeight: 600
+          }}
+        >
+          Back
+        </button>
+
+        {/* Progress dots */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '6px' : '8px' }}>
+          <div style={{ display: 'flex', gap: isMobile ? '3px' : '4px' }}>
+            {phaseOrder.map((p, i) => (
+              <div
+                key={p}
+                onClick={() => i <= currentIdx && goToPhase(p)}
+                style={{
+                  height: isMobile ? '8px' : '8px',
+                  width: i === currentIdx ? (isMobile ? '16px' : '20px') : (isMobile ? '8px' : '8px'),
+                  borderRadius: '4px',
+                  backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : colors.border,
+                  cursor: i <= currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s',
+                }}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '11px', fontWeight: 'bold', color: colors.textMuted }}>
+            {currentIdx + 1}/{phaseOrder.length}
+          </span>
+        </div>
+
+        {/* Phase Label */}
+        <div style={{
+          padding: '4px 10px',
+          borderRadius: '10px',
+          background: `${colors.accent}20`,
+          color: colors.accent,
+          fontSize: '10px',
+          fontWeight: 700
+        }}>
+          {phaseLabels[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // --- BOTTOM NAVIGATION BAR ---
+  const renderBottomBar = (canGoNext: boolean, nextLabel: string) => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canBack = currentIdx > 0;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isMobile ? '12px 16px' : '16px 24px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgDark,
+        gap: '12px',
+      }}>
+        <button
+          onClick={goBack}
+          disabled={!canBack}
+          style={{
+            padding: isMobile ? '10px 16px' : '12px 20px',
+            borderRadius: '8px',
+            fontWeight: 600,
+            fontSize: isMobile ? '13px' : '14px',
+            backgroundColor: colors.bgCard,
+            color: canBack ? colors.textSecondary : colors.textMuted,
+            border: `1px solid ${colors.border}`,
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.4,
+          }}
+        >
+          Back
+        </button>
+
+        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+          {phaseLabels[phase]}
+        </span>
+
+        <button
+          onClick={goNext}
+          disabled={!canGoNext}
+          style={{
+            padding: isMobile ? '10px 20px' : '12px 24px',
+            borderRadius: '8px',
+            fontWeight: 700,
+            fontSize: isMobile ? '13px' : '14px',
+            background: canGoNext ? colors.accent : colors.bgCard,
+            color: canGoNext ? 'white' : colors.textMuted,
+            border: 'none',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.5,
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
   };
 
   const renderVisualization = (interactive: boolean, showChannelingEffect: boolean = false) => {
@@ -356,7 +642,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
           {/* Implant profile plot */}
           <text x={250} y={330} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
-            Depth (nm) → {Math.round(profile.junctionDepth)} nm junction
+            Depth (nm) - {Math.round(profile.junctionDepth)} nm junction
           </text>
 
           {/* Profile background */}
@@ -400,7 +686,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
           {/* Info panel */}
           <rect x={10} y={340} width={200} height={55} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.accent} strokeWidth={1} />
           <text x={20} y={355} fill={colors.textSecondary} fontSize={10}>
-            Dose: 10^{doseExponent} ions/cm²
+            Dose: 10^{doseExponent} ions/cm2
           </text>
           <text x={20} y={370} fill={colors.textSecondary} fontSize={10}>
             Damage: {Math.round(profile.damageLevel)}%
@@ -416,7 +702,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             </rect>
           )}
           <text x={300} y={355} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={10}>
-            Anneal: {annealTemp}°C
+            Anneal: {annealTemp}C
           </text>
           <text x={300} y={370} fill={isAnnealing ? colors.success : colors.textMuted} fontSize={10}>
             Time: {annealTime}s
@@ -439,7 +725,6 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
-                WebkitTapHighlightColor: 'transparent',
               }}
             >
               {isImplanting ? 'Stop Implant' : 'Start Implant'}
@@ -455,7 +740,6 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
-                WebkitTapHighlightColor: 'transparent',
               }}
             >
               {isAnnealing ? 'Stop Anneal' : 'Start Anneal'}
@@ -471,7 +755,6 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
-                WebkitTapHighlightColor: 'transparent',
               }}
             >
               Reset
@@ -501,7 +784,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Dose: 10^{doseExponent} ions/cm²
+          Dose: 10^{doseExponent} ions/cm2
         </label>
         <input
           type="range"
@@ -516,7 +799,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
       <div>
         <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Anneal Temperature: {annealTemp}°C
+          Anneal Temperature: {annealTemp}C
         </label>
         <input
           type="range"
@@ -562,7 +845,6 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                     background: crystalOrientation === orient ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
                     color: colors.textPrimary,
                     cursor: 'pointer',
-                    WebkitTapHighlightColor: 'transparent',
                   }}
                 >
                   ({orient})
@@ -598,7 +880,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
       }}>
         <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
           Rp = {calculateImplantProfile().projectedRange.toFixed(1)} nm |
-          ΔRp = {calculateImplantProfile().straggle.toFixed(1)} nm
+          Delta Rp = {calculateImplantProfile().straggle.toFixed(1)} nm
         </div>
         <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
           Junction: {calculateImplantProfile().junctionDepth.toFixed(1)} nm
@@ -607,44 +889,28 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
+  // Emit initial game_started event on mount
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      emitGameEvent('game_started', {
+        phase: 'hook',
+        phaseLabel: 'Introduction',
+        currentScreen: 1,
+        totalScreens: phaseOrder.length,
+        message: 'Ion Implantation game started'
+      });
+    }, 100);
+    return () => clearTimeout(timer);
+  }, []);
+
+  // --- RENDER PHASES ---
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Ion Implantation
@@ -682,7 +948,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(true, 'Make a Prediction')}
       </div>
     );
   }
@@ -691,7 +957,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -726,7 +993,6 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
                   }}
                 >
                   {p.label}
@@ -735,7 +1001,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar(!!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -744,7 +1010,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Ion Implantation</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -764,13 +1031,13 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
             <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Increase energy from 10 to 200 keV - how does the profile shift?</li>
-              <li>Try annealing at 600°C vs 1000°C - watch the profile broaden</li>
+              <li>Try annealing at 600C vs 1000C - watch the profile broaden</li>
               <li>Compare short (10s) vs long (120s) anneal times</li>
               <li>Note: higher dose increases damage that needs repair!</li>
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(true, 'Continue to Review')}
       </div>
     );
   }
@@ -781,7 +1048,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -813,7 +1081,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
               </p>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Gaussian Profile:</strong> The implant distribution
-                is roughly Gaussian with mean Rp (projected range) and standard deviation ΔRp (straggle).
+                is roughly Gaussian with mean Rp (projected range) and standard deviation Delta Rp (straggle).
               </p>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Crystal Damage:</strong> Each ion creates a cascade
@@ -827,7 +1095,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar(true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -836,7 +1104,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -878,7 +1147,6 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
                   }}
                 >
                   {p.label}
@@ -887,7 +1155,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderBottomBar(!!twistPrediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -896,7 +1164,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Explore Channeling</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -921,7 +1190,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(true, 'See the Explanation')}
       </div>
     );
   }
@@ -932,7 +1201,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -964,7 +1234,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
               </p>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Preventing Channeling:</strong> For controlled
-                implants, wafers are tilted 7° off-axis and rotated. This ensures ions hit atoms early,
+                implants, wafers are tilted 7 degrees off-axis and rotated. This ensures ions hit atoms early,
                 preventing deep channeling tails.
               </p>
               <p>
@@ -975,7 +1245,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar(true, 'Apply This Knowledge')}
       </div>
     );
   }
@@ -984,7 +1254,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -1027,7 +1298,6 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                     color: colors.accent,
                     cursor: 'pointer',
                     fontSize: '13px',
-                    WebkitTapHighlightColor: 'transparent',
                   }}
                 >
                   Reveal Answer
@@ -1040,7 +1310,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -1050,7 +1320,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          {renderProgressBar()}
+          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -1081,7 +1352,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
@@ -1089,7 +1360,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1127,7 +1399,6 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                     cursor: 'pointer',
                     textAlign: 'left',
                     fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
                   }}
                 >
                   {opt.text}
@@ -1146,7 +1417,6 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                 background: 'transparent',
                 color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
-                WebkitTapHighlightColor: 'transparent',
               }}
             >
               Previous
@@ -1161,7 +1431,6 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                   background: colors.accent,
                   color: 'white',
                   cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
                 Next
@@ -1177,7 +1446,6 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
                   background: testAnswers.includes(null) ? colors.textMuted : colors.success,
                   color: 'white',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
                 Submit Test
@@ -1193,7 +1461,8 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
@@ -1203,7 +1472,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
             <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
             <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Ion energy controls implant depth (Rp ~ E^0.7)</li>
-              <li>Profile is Gaussian with range Rp and straggle ΔRp</li>
+              <li>Profile is Gaussian with range Rp and straggle Delta Rp</li>
               <li>Channeling allows deeper penetration along crystal axes</li>
               <li>Annealing repairs damage but broadens the profile</li>
               <li>Dopant activation requires substitutional site occupancy</li>
@@ -1219,7 +1488,7 @@ const IonImplantationRenderer: React.FC<IonImplantationRendererProps> = ({
           </div>
           {renderVisualization(true, true)}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderBottomBar(true, 'Complete Game')}
       </div>
     );
   }

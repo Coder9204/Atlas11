@@ -1,11 +1,28 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// Phase type for this game
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface ShuntSeriesDefectsRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
+
+// Phase order and labels for navigation
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Test Twist',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery',
+};
 
 const colors = {
   textPrimary: '#f8fafc',
@@ -25,11 +42,58 @@ const colors = {
 };
 
 const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase, phase]);
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Navigation functions
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Simulation state
   const [defectType, setDefectType] = useState<'none' | 'crack' | 'shunt' | 'contact' | 'hotspot'>('none');
   const [defectSeverity, setDefectSeverity] = useState(50); // 0-100
@@ -603,38 +667,101 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
+  // Progress bar showing all phases
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '6px',
+        padding: '8px 16px',
+      }}>
+        {phaseOrder.map((p, idx) => (
+          <div
+            key={p}
+            onClick={() => idx <= currentIdx && goToPhase(p)}
+            title={phaseLabels[p]}
+            style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: idx === currentIdx ? colors.accent : idx < currentIdx ? colors.success : 'rgba(255,255,255,0.2)',
+              cursor: idx <= currentIdx ? 'pointer' : 'default',
+              transition: 'all 0.2s ease',
+            }}
+          />
+        ))}
+      </div>
+    );
+  };
+
+  // Bottom bar with Back/Next navigation
+  const renderBottomBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const isFirst = currentIdx === 0;
+    const isLast = currentIdx === phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '12px 24px',
+        background: colors.bgDark,
+        borderTop: `1px solid rgba(255,255,255,0.1)`,
+        zIndex: 1000,
+      }}>
+        {renderProgressBar()}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: '8px',
+        }}>
+          <button
+            onClick={goBack}
+            disabled={isFirst}
+            style={{
+              padding: '10px 24px',
+              borderRadius: '8px',
+              border: `1px solid ${isFirst ? 'transparent' : colors.accent}`,
+              background: 'transparent',
+              color: isFirst ? colors.textMuted : colors.accent,
+              fontWeight: 'bold',
+              cursor: isFirst ? 'not-allowed' : 'pointer',
+              fontSize: '14px',
+              opacity: isFirst ? 0.5 : 1,
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            Back
+          </button>
+          <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+            {phaseLabels[phase]}
+          </span>
+          <button
+            onClick={goNext}
+            disabled={isLast}
+            style={{
+              padding: '10px 24px',
+              borderRadius: '8px',
+              border: 'none',
+              background: isLast ? colors.success : colors.accent,
+              color: 'white',
+              fontWeight: 'bold',
+              cursor: isLast ? 'default' : 'pointer',
+              fontSize: '14px',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            {isLast ? 'Complete' : 'Next'}
+          </button>
+        </div>
+      </div>
+    );
+  };
 
   // HOOK PHASE
   if (phase === 'hook') {
@@ -667,7 +794,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -706,7 +833,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -741,7 +868,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -796,7 +923,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -856,7 +983,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -892,7 +1019,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -946,7 +1073,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1008,7 +1135,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar()}
       </div>
     );
   }
@@ -1046,7 +1173,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar()}
         </div>
       );
     }
@@ -1125,7 +1252,7 @@ const ShuntSeriesDefectsRenderer: React.FC<ShuntSeriesDefectsRendererProps> = ({
           </div>
           {renderVisualization()}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderBottomBar()}
       </div>
     );
   }

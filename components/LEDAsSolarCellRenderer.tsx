@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// Phase type for this game
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface LEDAsSolarCellRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
@@ -24,14 +26,77 @@ const colors = {
   blue: '#3b82f6',
   yellow: '#eab308',
   purple: '#a855f7',
+  border: '#334155',
+};
+
+// Phase order and labels for navigation
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Test Twist',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery',
 };
 
 const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase, phase]);
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Navigation functions
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Simulation state
   const [ledColor, setLedColor] = useState<'red' | 'green' | 'blue' | 'yellow'>('red');
   const [lightIntensity, setLightIntensity] = useState(80);
@@ -260,6 +325,116 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
     return '#991b1b'; // IR
   };
 
+  // Progress bar showing all 10 phases
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '12px 16px',
+        borderBottom: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {phaseOrder.map((p, i) => (
+              <div
+                key={p}
+                onClick={() => i < currentIdx && goToPhase(p)}
+                style={{
+                  height: '8px',
+                  width: i === currentIdx ? '24px' : '8px',
+                  borderRadius: '5px',
+                  backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : colors.border,
+                  cursor: i < currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s',
+                }}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+            {currentIdx + 1} / {phaseOrder.length}
+          </span>
+        </div>
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: `${colors.accent}20`,
+          color: colors.accent,
+          fontSize: '11px',
+          fontWeight: 700
+        }}>
+          {phaseLabels[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom navigation bar with Back/Next
+  const renderBottomBar = (canGoNext: boolean, nextLabel: string) => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canBack = currentIdx > 0;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '12px',
+      }}>
+        <button
+          onClick={goBack}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: '14px',
+            backgroundColor: 'rgba(30, 41, 59, 0.9)',
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.3,
+            minHeight: '44px',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+          disabled={!canBack}
+        >
+          Back
+        </button>
+        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+          {phaseLabels[phase]}
+        </span>
+        <button
+          onClick={goNext}
+          style={{
+            padding: '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: '14px',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.accent} 0%, ${colors.warning} 100%)` : 'rgba(30, 41, 59, 0.9)',
+            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.4,
+            boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
+            minHeight: '44px',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+          disabled={!canGoNext}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
+  };
+
   const renderVisualization = () => {
     const width = 500;
     const height = 400;
@@ -477,7 +652,7 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
         borderLeft: `3px solid ${colors.accent}`,
       }}>
         <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
-          <strong>Physics:</strong> Photon energy = hc/λ = {(1240 / lightWavelength).toFixed(2)} eV
+          <strong>Physics:</strong> Photon energy = hc/lambda = {(1240 / lightWavelength).toFixed(2)} eV
         </div>
         <div style={{ color: colors.textMuted, fontSize: '11px', marginTop: '4px' }}>
           Must exceed LED bandgap ({ledBandgaps[ledColor].bandgap} eV) to generate current
@@ -486,160 +661,135 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: `1px solid rgba(255,255,255,0.1)`,
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
+  // Render wrapper with progress bar and bottom bar
+  const renderPhaseContent = (content: React.ReactNode, canGoNext: boolean, nextLabel: string) => (
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      {renderProgressBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
+        {content}
+      </div>
+      {renderBottomBar(canGoNext, nextLabel)}
     </div>
   );
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              LED as a Solar Cell
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Can an LED generate electricity like a solar cell?
+    return renderPhaseContent(
+      <>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            LED as a Solar Cell
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            Can an LED generate electricity like a solar cell?
+          </p>
+        </div>
+
+        {renderVisualization()}
+
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{
+            background: colors.bgCard,
+            padding: '20px',
+            borderRadius: '12px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              We know LEDs emit light when powered. But what happens when we shine light
+              ON an LED? The P-N junction that creates light can also convert it back to
+              electricity - the photovoltaic effect in action!
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              LEDs are tiny solar cells waiting to be discovered.
             </p>
           </div>
 
-          {renderVisualization()}
-
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                We know LEDs emit light when powered. But what happens when we shine light
-                ON an LED? The P-N junction that creates light can also convert it back to
-                electricity - the photovoltaic effect in action!
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                LEDs are tiny solar cells waiting to be discovered.
-              </p>
-            </div>
-
-            <div style={{
-              background: 'rgba(245, 158, 11, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Try changing LED colors and light wavelength to see when power is generated!
-              </p>
-            </div>
+          <div style={{
+            background: 'rgba(245, 158, 11, 0.2)',
+            padding: '16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              Try changing LED colors and light wavelength to see when power is generated!
+            </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
-      </div>
+      </>,
+      true,
+      'Make a Prediction'
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization()}
+    return renderPhaseContent(
+      <>
+        {renderVisualization()}
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              When you shine a flashlight on an LED, what do you predict will happen?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+        <div style={{ padding: '0 16px 16px 16px' }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            When you shine a flashlight on an LED, what do you predict will happen?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {predictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                  background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
-      </div>
+      </>,
+      !!prediction,
+      'Test My Prediction'
     );
   }
 
   // PLAY PHASE
   if (phase === 'play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore LED Photovoltaic Effect</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Change LED color and light wavelength to discover the physics
-            </p>
-          </div>
-
-          {renderVisualization()}
-          {renderControls()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Shine blue light on a red LED - what voltage do you get?</li>
-              <li>Try red light on a blue LED - does it work?</li>
-              <li>Which LED produces the highest voltage?</li>
-              <li>What happens at the wavelength threshold?</li>
-            </ul>
-          </div>
+    return renderPhaseContent(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore LED Photovoltaic Effect</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Change LED color and light wavelength to discover the physics
+          </p>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
-      </div>
+
+        {renderVisualization()}
+        {renderControls()}
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
+          <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>Shine blue light on a red LED - what voltage do you get?</li>
+            <li>Try red light on a blue LED - does it work?</li>
+            <li>Which LED produces the highest voltage?</li>
+            <li>What happens at the wavelength threshold?</li>
+          </ul>
+        </div>
+      </>,
+      true,
+      'Continue to Review'
     );
   }
 
@@ -647,151 +797,148 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
   if (phase === 'review') {
     const wasCorrect = prediction === 'small';
 
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Let\'s explore further!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              LEDs can indeed generate electricity when illuminated! The P-N junction creates
-              electron-hole pairs when photons with sufficient energy are absorbed.
+    return renderPhaseContent(
+      <>
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            {wasCorrect ? 'Correct!' : 'Let\'s explore further!'}
+          </h3>
+          <p style={{ color: colors.textPrimary }}>
+            LEDs can indeed generate electricity when illuminated! The P-N junction creates
+            electron-hole pairs when photons with sufficient energy are absorbed.
+          </p>
+        </div>
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics Explained</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>P-N Junction Magic:</strong> The same
+              semiconductor junction that emits light can also absorb it. Photons with energy
+              greater than the bandgap create electron-hole pairs that generate current.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Bandgap Energy:</strong> Each LED color
+              has a specific bandgap. Blue LEDs have larger bandgaps (2.7 eV) than red LEDs (1.9 eV),
+              so they can generate higher voltages.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Threshold Effect:</strong> Light must have
+              photon energy above the bandgap. Red light on a blue LED won't work because red
+              photons don't have enough energy!
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>Efficiency:</strong> LEDs aren't optimized
+              for solar conversion, so efficiency is low. But the physics is identical to solar cells!
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics Explained</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>P-N Junction Magic:</strong> The same
-                semiconductor junction that emits light can also absorb it. Photons with energy
-                greater than the bandgap create electron-hole pairs that generate current.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Bandgap Energy:</strong> Each LED color
-                has a specific bandgap. Blue LEDs have larger bandgaps (2.7 eV) than red LEDs (1.9 eV),
-                so they can generate higher voltages.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Threshold Effect:</strong> Light must have
-                photon energy above the bandgap. Red light on a blue LED won't work because red
-                photons don't have enough energy!
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Efficiency:</strong> LEDs aren't optimized
-                for solar conversion, so efficiency is low. But the physics is identical to solar cells!
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
-      </div>
+      </>,
+      true,
+      'Next: A Twist!'
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What if we add colored filters between the light and the LED?
-            </p>
-          </div>
+    return renderPhaseContent(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
+          <p style={{ color: colors.textSecondary }}>
+            What if we add colored filters between the light and the LED?
+          </p>
+        </div>
 
-          {renderVisualization()}
+        {renderVisualization()}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              We'll place colored filters that block certain wavelengths. How will this
-              affect the LED's ability to generate electricity? Will matching colors
-              help or hurt?
-            </p>
-          </div>
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            We'll place colored filters that block certain wavelengths. How will this
+            affect the LED's ability to generate electricity? Will matching colors
+            help or hurt?
+          </p>
+        </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What happens when you add a colored filter?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+        <div style={{ padding: '0 16px 16px 16px' }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            What happens when you add a colored filter?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {twistPredictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setTwistPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                  background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
-      </div>
+      </>,
+      !!twistPrediction,
+      'Test My Prediction'
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test with Filters</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Use the wavelength slider to simulate different colored filters
-            </p>
-          </div>
-
-          {renderVisualization()}
-          {renderControls()}
-
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Insight:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Filters that pass only long wavelengths (red, orange) reduce the photon energy.
-              For LEDs with larger bandgaps (green, blue), this can drop below threshold!
-            </p>
-          </div>
+    return renderPhaseContent(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test with Filters</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Use the wavelength slider to simulate different colored filters
+          </p>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
-      </div>
+
+        {renderVisualization()}
+        {renderControls()}
+
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.2)',
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+          borderLeft: `3px solid ${colors.warning}`,
+        }}>
+          <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Insight:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Filters that pass only long wavelengths (red, orange) reduce the photon energy.
+            For LEDs with larger bandgaps (green, blue), this can drop below threshold!
+          </p>
+        </div>
+      </>,
+      true,
+      'See the Explanation'
     );
   }
 
@@ -799,163 +946,161 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'opposite';
 
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Excellent insight!' : 'The answer is counterintuitive!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Colored filters that match the LED color often REDUCE output! The filter
-              removes higher-energy photons that the LED could have converted.
+    return renderPhaseContent(
+      <>
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            {wasCorrect ? 'Excellent insight!' : 'The answer is counterintuitive!'}
+          </h3>
+          <p style={{ color: colors.textPrimary }}>
+            Colored filters that match the LED color often REDUCE output! The filter
+            removes higher-energy photons that the LED could have converted.
+          </p>
+        </div>
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Spectral Response Explained</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Energy Matters:</strong> LEDs respond
+              to photons with energy ABOVE their bandgap. Higher energy (shorter wavelength)
+              photons can always be converted.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Filter Effect:</strong> A red filter
+              removes blue and green light. For a red LED, this is fine. But a green LED
+              loses the high-energy photons it needs!
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>Practical Implication:</strong> This
+              is why solar cells need broad spectrum absorption and why multi-junction cells
+              use different bandgaps to capture more of the spectrum.
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Spectral Response Explained</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Energy Matters:</strong> LEDs respond
-                to photons with energy ABOVE their bandgap. Higher energy (shorter wavelength)
-                photons can always be converted.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Filter Effect:</strong> A red filter
-                removes blue and green light. For a red LED, this is fine. But a green LED
-                loses the high-energy photons it needs!
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Practical Implication:</strong> This
-                is why solar cells need broad spectrum absorption and why multi-junction cells
-                use different bandgaps to capture more of the spectrum.
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
-      </div>
+      </>,
+      true,
+      'Apply This Knowledge'
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Real-World Applications
-            </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              LED photovoltaics enable surprising technologies
-            </p>
-          </div>
-
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
+    return renderPhaseContent(
+      <>
+        <div style={{ padding: '16px' }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            LED photovoltaics enable surprising technologies
+          </p>
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
-      </div>
+
+        {transferApplications.map((app, index) => (
+          <div
+            key={index}
+            style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+              border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
+              {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+            </div>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+            <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
+              <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+            </div>
+            {!transferCompleted.has(index) ? (
+              <button
+                onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: `1px solid ${colors.accent}`,
+                  background: 'transparent',
+                  color: colors.accent,
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                Reveal Answer
+              </button>
+            ) : (
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </>,
+      transferCompleted.size >= 4,
+      'Take the Test'
     );
   }
 
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
-      return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You\'ve mastered LED photovoltaics!' : 'Review the material and try again.'}
-              </p>
-            </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+      return renderPhaseContent(
+        <>
+          <div style={{
+            background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            margin: '16px',
+            padding: '24px',
+            borderRadius: '12px',
+            textAlign: 'center',
+          }}>
+            <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
+              {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+            <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+              {testScore >= 8 ? 'You\'ve mastered LED photovoltaics!' : 'Review the material and try again.'}
+            </p>
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
-        </div>
+          {testQuestions.map((q, qIndex) => {
+            const userAnswer = testAnswers[qIndex];
+            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+            return (
+              <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                {q.options.map((opt, oIndex) => (
+                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                    {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </>,
+        testScore >= 8,
+        testScore >= 8 ? 'Complete Mastery' : 'Review & Retry'
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '20px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1047,36 +1192,35 @@ const LEDAsSolarCellRenderer: React.FC<LEDAsSolarCellRendererProps> = ({
 
   // MASTERY PHASE
   if (phase === 'mastery') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered LED photovoltaics!</p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>P-N junctions can both emit and absorb light</li>
-              <li>Photon energy must exceed bandgap for current generation</li>
-              <li>Different LED colors have different bandgap energies</li>
-              <li>Voltage output relates to bandgap energy</li>
-              <li>Spectral response depends on bandgap threshold</li>
-            </ul>
-          </div>
-          <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              This principle is used in optical transceivers, LED-based sensors, and even
-              research into new solar cell designs. The same physics applies to all
-              semiconductor light-electricity conversion!
-            </p>
-          </div>
-          {renderVisualization()}
+    return renderPhaseContent(
+      <>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+          <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+          <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered LED photovoltaics!</p>
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
-      </div>
+        <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+          <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>P-N junctions can both emit and absorb light</li>
+            <li>Photon energy must exceed bandgap for current generation</li>
+            <li>Different LED colors have different bandgap energies</li>
+            <li>Voltage output relates to bandgap energy</li>
+            <li>Spectral response depends on bandgap threshold</li>
+          </ul>
+        </div>
+        <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+            This principle is used in optical transceivers, LED-based sensors, and even
+            research into new solar cell designs. The same physics applies to all
+            semiconductor light-electricity conversion!
+          </p>
+        </div>
+        {renderVisualization()}
+      </>,
+      true,
+      'Complete Game'
     );
   }
 

@@ -32,11 +32,25 @@ const PHASES: Phase[] = [
 ];
 
 interface HumidityESDRendererProps {
-  phase: Phase;
+  phase?: Phase; // Optional - used for resume functionality
   onPhaseComplete?: () => void;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
+
+// Phase labels for progress bar
+const PHASE_LABELS: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Observer Effect',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery',
+};
 
 // ────────────────────────────────────────────────────────────────────────────
 // 10-QUESTION TEST DATA
@@ -167,11 +181,44 @@ const TRANSFER_APPS = [
 // ────────────────────────────────────────────────────────────────────────────
 
 export default function HumidityESDRenderer({
-  phase,
-  onPhaseComplete,
+  phase: initialPhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }: HumidityESDRendererProps) {
+  // Internal phase state management
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (initialPhase && PHASES.includes(initialPhase)) {
+      return initialPhase;
+    }
+    return 'hook';
+  });
+
+  // Sync phase with prop changes (for resume functionality)
+  useEffect(() => {
+    if (initialPhase && PHASES.includes(initialPhase) && initialPhase !== phase) {
+      setPhase(initialPhase);
+    }
+  }, [initialPhase]);
+
+  // Navigation functions
+  const goToPhase = useCallback((p: Phase) => {
+    setPhase(p);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = PHASES.indexOf(phase);
+    if (idx < PHASES.length - 1) {
+      goToPhase(PHASES[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = PHASES.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(PHASES[idx - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // State
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -299,6 +346,90 @@ export default function HumidityESDRenderer({
     if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   }, [testAnswers, onCorrectAnswer, onIncorrectAnswer]);
+
+  // Progress bar renderer
+  const renderProgressBar = () => {
+    const currentIdx = PHASES.indexOf(phase);
+    return (
+      <div className="flex items-center justify-between px-4 py-3 bg-slate-900/80 border-b border-slate-700">
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          className={`p-2 rounded-lg transition-all ${
+            currentIdx === 0
+              ? 'opacity-30 cursor-not-allowed'
+              : 'hover:bg-slate-700 text-slate-300'
+          }`}
+        >
+          <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <div className="flex items-center gap-2">
+          <div className="flex gap-1">
+            {PHASES.map((p, i) => (
+              <button
+                key={p}
+                onClick={() => i <= currentIdx && goToPhase(p)}
+                className={`h-2 rounded-full transition-all ${
+                  i === currentIdx
+                    ? 'w-6 bg-cyan-500'
+                    : i < currentIdx
+                    ? 'w-2 bg-emerald-500 cursor-pointer hover:bg-emerald-400'
+                    : 'w-2 bg-slate-600'
+                }`}
+                title={PHASE_LABELS[p]}
+              />
+            ))}
+          </div>
+          <span className="text-xs font-medium text-slate-400 ml-2">
+            {currentIdx + 1}/{PHASES.length}
+          </span>
+        </div>
+
+        <div className="px-3 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-semibold">
+          {PHASE_LABELS[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom navigation bar renderer
+  const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Continue') => {
+    const currentIdx = PHASES.indexOf(phase);
+    return (
+      <div className="flex justify-between items-center px-6 py-4 bg-slate-900/80 border-t border-slate-700">
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          className={`px-5 py-2.5 rounded-xl font-medium transition-all ${
+            currentIdx === 0
+              ? 'opacity-30 cursor-not-allowed bg-slate-700 text-slate-500'
+              : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+          }`}
+        >
+          Back
+        </button>
+
+        <span className="text-sm text-slate-500 font-medium">
+          {PHASE_LABELS[phase]}
+        </span>
+
+        <button
+          onClick={goNext}
+          disabled={!canGoNext}
+          className={`px-6 py-2.5 rounded-xl font-semibold transition-all ${
+            canGoNext
+              ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40'
+              : 'bg-slate-700 text-slate-500 cursor-not-allowed'
+          }`}
+        >
+          {nextLabel} {canGoNext && <span className="ml-1">→</span>}
+        </button>
+      </div>
+    );
+  };
 
   // ──────────────────────────────────────────────────────────────────────────
   // RENDER FUNCTIONS
@@ -586,18 +717,7 @@ export default function HumidityESDRenderer({
         </div>
       </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Explore Humidity Control
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
+      {renderBottomBar(true, 'Explore Humidity Control')}
     </div>
   );
 
@@ -646,27 +766,19 @@ export default function HumidityESDRenderer({
       </div>
 
       {showPredictionFeedback && (
-        <>
-          <div className={`p-5 rounded-2xl mb-6 ${
-            prediction === 'high' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
-          }`}>
-            <p className={`leading-relaxed ${prediction === 'high' ? 'text-emerald-800' : 'text-amber-800'}`}>
-              {prediction === 'high' ? (
-                <><strong>Exactly right!</strong> Static discharge can reach 25,000V or more! You feel sparks above ~3,000V, but even unfelt discharges below 100V can damage sensitive electronics. Dry air is an excellent insulator, allowing massive charge buildup.</>
-              ) : (
-                <><strong>Much higher!</strong> Static sparks routinely reach 3,000-25,000V. The spark you see/feel is thousands of volts! Even unfelt ESD under 100V can damage sensitive chips. This is why humidity control is critical.</>
-              )}
-            </p>
-          </div>
-          <button
-            onClick={() => onPhaseComplete?.()}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg"
-          >
-            Explore ESD Physics →
-          </button>
-        </>
+        <div className={`p-5 rounded-2xl mb-6 ${
+          prediction === 'high' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
+        }`}>
+          <p className={`leading-relaxed ${prediction === 'high' ? 'text-emerald-800' : 'text-amber-800'}`}>
+            {prediction === 'high' ? (
+              <><strong>Exactly right!</strong> Static discharge can reach 25,000V or more! You feel sparks above ~3,000V, but even unfelt discharges below 100V can damage sensitive electronics. Dry air is an excellent insulator, allowing massive charge buildup.</>
+            ) : (
+              <><strong>Much higher!</strong> Static sparks routinely reach 3,000-25,000V. The spark you see/feel is thousands of volts! Even unfelt ESD under 100V can damage sensitive chips. This is why humidity control is critical.</>
+            )}
+          </p>
+        </div>
       )}
+      {renderBottomBar(showPredictionFeedback, 'Explore ESD Physics')}
     </div>
   );
 
@@ -741,18 +853,7 @@ export default function HumidityESDRenderer({
         </p>
       </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        disabled={!hasExperimented}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className={`w-full py-4 px-8 rounded-2xl font-semibold text-lg transition-all ${
-          hasExperimented
-            ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
-            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-        }`}
-      >
-        {hasExperimented ? 'Continue to Review →' : `Adjust humidity ${Math.max(0, 5 - experimentCount)} more times...`}
-      </button>
+      {renderBottomBar(hasExperimented, hasExperimented ? 'Continue to Review' : `Adjust humidity ${Math.max(0, 5 - experimentCount)} more times...`)}
     </div>
   );
 
@@ -803,13 +904,7 @@ export default function HumidityESDRenderer({
         ))}
       </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg"
-      >
-        Now for a Twist... →
-      </button>
+      {renderBottomBar(true, 'Now for a Twist...')}
     </div>
   );
 
@@ -858,27 +953,19 @@ export default function HumidityESDRenderer({
       </div>
 
       {showTwistFeedback && (
-        <>
-          <div className={`p-5 rounded-2xl mb-6 ${
-            twistPrediction === 'condensation' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
-          }`}>
-            <p className={`leading-relaxed ${twistPrediction === 'condensation' ? 'text-emerald-800' : 'text-amber-800'}`}>
-              {twistPrediction === 'condensation' ? (
-                <><strong>Exactly!</strong> High humidity causes condensation on any surface below the dew point. Cold water pipes, air conditioning coils, and even server intake fans can collect water droplets - leading to short circuits and corrosion.</>
-              ) : (
-                <><strong>The real danger:</strong> Condensation! When humid air contacts cold surfaces (pipes, AC coils, server intakes), water condenses. Liquid water + electronics = short circuits and corrosion. Too humid is just as bad as too dry!</>
-              )}
-            </p>
-          </div>
-          <button
-            onClick={() => onPhaseComplete?.()}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg"
-          >
-            Explore Dew Point →
-          </button>
-        </>
+        <div className={`p-5 rounded-2xl mb-6 ${
+          twistPrediction === 'condensation' ? 'bg-emerald-100 border border-emerald-300' : 'bg-amber-100 border border-amber-300'
+        }`}>
+          <p className={`leading-relaxed ${twistPrediction === 'condensation' ? 'text-emerald-800' : 'text-amber-800'}`}>
+            {twistPrediction === 'condensation' ? (
+              <><strong>Exactly!</strong> High humidity causes condensation on any surface below the dew point. Cold water pipes, air conditioning coils, and even server intake fans can collect water droplets - leading to short circuits and corrosion.</>
+            ) : (
+              <><strong>The real danger:</strong> Condensation! When humid air contacts cold surfaces (pipes, AC coils, server intakes), water condenses. Liquid water + electronics = short circuits and corrosion. Too humid is just as bad as too dry!</>
+            )}
+          </p>
+        </div>
       )}
+      {renderBottomBar(showTwistFeedback, 'Explore Dew Point')}
     </div>
   );
 
@@ -945,18 +1032,7 @@ export default function HumidityESDRenderer({
         </p>
       </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        disabled={!hasExploredTwist}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className={`w-full py-4 px-8 rounded-2xl font-semibold text-lg transition-all ${
-          hasExploredTwist
-            ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
-            : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-        }`}
-      >
-        {hasExploredTwist ? 'Continue →' : 'Adjust the sliders...'}
-      </button>
+      {renderBottomBar(hasExploredTwist, hasExploredTwist ? 'Continue' : 'Adjust the sliders...')}
     </div>
   );
 
@@ -1002,13 +1078,7 @@ export default function HumidityESDRenderer({
         </ul>
       </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg"
-      >
-        See Real Applications →
-      </button>
+      {renderBottomBar(true, 'See Real Applications')}
     </div>
   );
 
@@ -1085,18 +1155,7 @@ export default function HumidityESDRenderer({
           </div>
         </div>
 
-        <button
-          onClick={() => onPhaseComplete?.()}
-          disabled={!allAppsCompleted}
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-          className={`w-full py-4 px-8 rounded-2xl font-semibold text-lg transition-all ${
-            allAppsCompleted
-              ? 'bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg'
-              : 'bg-slate-200 text-slate-400 cursor-not-allowed'
-          }`}
-        >
-          {allAppsCompleted ? 'Take the Assessment →' : `Complete ${4 - completedApps.size} more`}
-        </button>
+        {renderBottomBar(allAppsCompleted, allAppsCompleted ? 'Take the Assessment' : `Complete ${4 - completedApps.size} more`)}
       </div>
     );
   };
@@ -1189,25 +1248,16 @@ export default function HumidityESDRenderer({
               {testScore >= 7 ? 'Excellent! You understand humidity and ESD!' : 'Review the concepts and try again.'}
             </p>
 
-            {testScore >= 7 ? (
+            {testScore < 7 && (
               <button
-                onClick={() => onPhaseComplete?.()}
+                onClick={() => { setTestSubmitted(false); setTestAnswers(new Array(TEST_QUESTIONS.length).fill(null)); }}
                 style={{ WebkitTapHighlightColor: 'transparent' }}
-                className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-gradient-to-r from-cyan-500 to-blue-500 text-white shadow-lg"
+                className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-slate-200 text-slate-700 mb-4"
               >
-                Complete Lesson →
+                Try Again
               </button>
-            ) : (
-              <div className="space-y-3">
-                <button
-                  onClick={() => { setTestSubmitted(false); setTestAnswers(new Array(TEST_QUESTIONS.length).fill(null)); }}
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
-                  className="w-full py-4 px-8 rounded-2xl font-semibold text-lg bg-slate-200 text-slate-700"
-                >
-                  Try Again
-                </button>
-              </div>
             )}
+            {renderBottomBar(testScore >= 7, testScore >= 7 ? 'Complete Lesson' : 'Review and Retry')}
           </div>
         )}
       </div>
@@ -1246,13 +1296,7 @@ export default function HumidityESDRenderer({
         </ul>
       </div>
 
-      <button
-        onClick={() => onPhaseComplete?.()}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="px-8 py-4 bg-slate-200 text-slate-700 rounded-2xl font-semibold"
-      >
-        Complete
-      </button>
+      {renderBottomBar(true, 'Complete')}
     </div>
   );
 
@@ -1274,8 +1318,11 @@ export default function HumidityESDRenderer({
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100">
-      {renderPhase()}
+    <div className="min-h-screen bg-gradient-to-br from-slate-900 to-slate-800 flex flex-col">
+      {renderProgressBar()}
+      <div className="flex-1 overflow-auto">
+        {renderPhase()}
+      </div>
     </div>
   );
 }

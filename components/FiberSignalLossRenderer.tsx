@@ -2,9 +2,36 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const PHASES: Phase[] = [
+  'hook',
+  'predict',
+  'play',
+  'review',
+  'twist_predict',
+  'twist_play',
+  'twist_review',
+  'transfer',
+  'test',
+  'mastery',
+];
+
+const PHASE_LABELS: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Bend Effects',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery',
+};
+
 interface FiberSignalLossRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  phase?: Phase;
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
@@ -36,11 +63,44 @@ const fiberTypes = [
 ];
 
 const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  phase: initialPhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (initialPhase && PHASES.includes(initialPhase)) {
+      return initialPhase;
+    }
+    return 'hook';
+  });
+
+  // Sync phase with prop changes (for resume functionality)
+  useEffect(() => {
+    if (initialPhase && PHASES.includes(initialPhase) && initialPhase !== phase) {
+      setPhase(initialPhase);
+    }
+  }, [initialPhase]);
+
+  // Navigation functions
+  const goToPhase = useCallback((p: Phase) => {
+    setPhase(p);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = PHASES.indexOf(phase);
+    if (idx < PHASES.length - 1) {
+      goToPhase(PHASES[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = PHASES.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(PHASES[idx - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Simulation state
   const [fiberLength, setFiberLength] = useState(10); // km
   const [fiberTypeIndex, setFiberTypeIndex] = useState(0);
@@ -510,44 +570,135 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
+  // Progress bar renderer
+  const renderProgressBar = () => {
+    const currentIdx = PHASES.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: '12px 16px',
+        background: 'rgba(15, 23, 42, 0.8)',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+      }}>
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          style={{
+            padding: '8px',
+            borderRadius: '8px',
+            border: 'none',
+            background: 'transparent',
+            color: currentIdx === 0 ? 'rgba(255,255,255,0.3)' : colors.textSecondary,
+            cursor: currentIdx === 0 ? 'not-allowed' : 'pointer',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 19l-7-7 7-7" />
+          </svg>
+        </button>
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+          <div style={{ display: 'flex', gap: '4px' }}>
+            {PHASES.map((p, i) => (
+              <button
+                key={p}
+                onClick={() => i <= currentIdx && goToPhase(p)}
+                style={{
+                  width: i === currentIdx ? '24px' : '8px',
+                  height: '8px',
+                  borderRadius: '4px',
+                  border: 'none',
+                  background: i === currentIdx ? colors.accent : i < currentIdx ? colors.success : 'rgba(255,255,255,0.2)',
+                  cursor: i <= currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.2s',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+                title={PHASE_LABELS[p]}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: '500', color: colors.textMuted, marginLeft: '8px' }}>
+            {currentIdx + 1}/{PHASES.length}
+          </span>
+        </div>
+
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: 'rgba(6, 182, 212, 0.2)',
+          color: colors.accent,
+          fontSize: '12px',
+          fontWeight: '600',
+        }}>
+          {PHASE_LABELS[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom navigation bar renderer
+  const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Continue') => {
+    const currentIdx = PHASES.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '16px 24px',
+        background: colors.bgDark,
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+      }}>
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '12px',
+            border: 'none',
+            background: currentIdx === 0 ? 'rgba(255,255,255,0.05)' : 'rgba(255,255,255,0.1)',
+            color: currentIdx === 0 ? colors.textMuted : colors.textSecondary,
+            fontWeight: '500',
+            cursor: currentIdx === 0 ? 'not-allowed' : 'pointer',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          Back
+        </button>
+
+        <span style={{ fontSize: '14px', color: colors.textMuted, fontWeight: '500' }}>
+          {PHASE_LABELS[phase]}
+        </span>
+
+        <button
+          onClick={goNext}
+          disabled={!canGoNext}
+          style={{
+            padding: '10px 24px',
+            borderRadius: '12px',
+            border: 'none',
+            background: canGoNext ? colors.accent : 'rgba(255,255,255,0.1)',
+            color: canGoNext ? 'white' : colors.textMuted,
+            fontWeight: '600',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            fontSize: '16px',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          {nextLabel} {canGoNext && '->'}
+        </button>
+      </div>
+    );
+  };
 
   // HOOK PHASE
   if (phase === 'hook') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '48px', marginBottom: '16px' }}>~</div>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
@@ -589,7 +740,7 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(true, 'Make a Prediction')}
       </div>
     );
   }
@@ -598,7 +749,8 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           {renderVisualization(false)}
 
           <div style={{
@@ -641,7 +793,7 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar(!!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -650,7 +802,8 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Fiber Loss</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -676,7 +829,7 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(true, 'Continue to Review')}
       </div>
     );
   }
@@ -687,7 +840,8 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -731,7 +885,7 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar(true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -740,7 +894,8 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
             <p style={{ color: colors.textSecondary }}>
@@ -791,7 +946,7 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderBottomBar(!!twistPrediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -800,7 +955,8 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test Bend Effects</h2>
             <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
@@ -827,7 +983,7 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(true, 'See the Explanation')}
       </div>
     );
   }
@@ -838,7 +994,8 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
             margin: '16px',
@@ -879,16 +1036,18 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar(true, 'Apply This Knowledge')}
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
+    const allAppsCompleted = transferCompleted.size >= 4;
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -941,7 +1100,7 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(allAppsCompleted, allAppsCompleted ? 'Take the Test' : `Complete ${4 - transferCompleted.size} more`)}
       </div>
     );
   }
@@ -951,7 +1110,8 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+          {renderProgressBar()}
+          <div style={{ flex: 1, overflowY: 'auto' }}>
             <div style={{
               background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
@@ -966,6 +1126,23 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
               <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
                 {testScore >= 7 ? 'You understand fiber optic signal loss!' : 'Review the material and try again.'}
               </p>
+              {testScore < 7 && (
+                <button
+                  onClick={() => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); }}
+                  style={{
+                    marginTop: '16px',
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: 'rgba(255,255,255,0.1)',
+                    color: colors.textPrimary,
+                    cursor: 'pointer',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  Try Again
+                </button>
+              )}
             </div>
             {testQuestions.map((q, qIndex) => {
               const userAnswer = testAnswers[qIndex];
@@ -982,15 +1159,17 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review and Retry')}
+          {renderBottomBar(testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review and Retry')}
         </div>
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
+    const allAnswered = !testAnswers.includes(null);
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, overflowY: 'auto' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1071,14 +1250,14 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
             ) : (
               <button
                 onClick={submitTest}
-                disabled={testAnswers.includes(null)}
+                disabled={!allAnswered}
                 style={{
                   padding: '12px 24px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: testAnswers.includes(null) ? colors.textMuted : colors.success,
+                  background: allAnswered ? colors.success : colors.textMuted,
                   color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  cursor: allAnswered ? 'pointer' : 'not-allowed',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >

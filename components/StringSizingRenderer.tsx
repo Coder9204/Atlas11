@@ -18,7 +18,7 @@ type Phase =
   | 'test'
   | 'mastery';
 
-const PHASES: Phase[] = [
+const phaseOrder: Phase[] = [
   'hook',
   'predict',
   'play',
@@ -31,9 +31,71 @@ const PHASES: Phase[] = [
   'mastery',
 ];
 
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Temperature Effects',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery',
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// SOUND UTILITY
+// ────────────────────────────────────────────────────────────────────────────
+
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' },
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// COLOR PALETTE
+// ────────────────────────────────────────────────────────────────────────────
+
+const colors = {
+  primary: '#eab308',
+  primaryDark: '#ca8a04',
+  accent: '#f59e0b',
+  accentDark: '#d97706',
+  warning: '#f59e0b',
+  success: '#22c55e',
+  danger: '#ef4444',
+  bgDark: '#0f172a',
+  bgCard: '#1e293b',
+  bgCardLight: '#334155',
+  border: '#475569',
+  textPrimary: '#f8fafc',
+  textSecondary: '#94a3b8',
+  textMuted: '#64748b',
+};
+
 interface StringSizingRendererProps {
-  phase: Phase;
-  onPhaseComplete?: () => void;
+  gamePhase?: Phase;  // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
@@ -167,11 +229,30 @@ const TRANSFER_APPS = [
 // ────────────────────────────────────────────────────────────────────────────
 
 export default function StringSizingRenderer({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }: StringSizingRendererProps) {
+  // ──────────────────────────────────────────────────────────────────────────
+  // INTERNAL PHASE STATE MANAGEMENT
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase, phase]);
+
   // State
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -198,8 +279,204 @@ export default function StringSizingRenderer({
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
+  // Responsive design
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // NAVIGATION FUNCTIONS
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (navigationLockRef.current) return;
+
+    lastClickRef.current = now;
+    navigationLockRef.current = true;
+
+    setPhase(p);
+    playSound('transition');
+
+    setTimeout(() => {
+      navigationLockRef.current = false;
+    }, 300);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PROGRESS BAR COMPONENT
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: isMobile ? '10px 12px' : '12px 16px',
+        borderBottom: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+      }}>
+        {/* Back button */}
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: currentIdx > 0 ? colors.bgCardLight : 'transparent',
+            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
+            cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
+            opacity: currentIdx > 0 ? 1 : 0.4,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '16px',
+          }}
+        >
+          ←
+        </button>
+
+        {/* Progress dots */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => i <= currentIdx && goToPhase(p)}
+              style={{
+                width: i === currentIdx ? '20px' : '10px',
+                height: '10px',
+                borderRadius: '5px',
+                border: 'none',
+                backgroundColor: i < currentIdx
+                  ? colors.success
+                  : i === currentIdx
+                    ? colors.primary
+                    : colors.border,
+                cursor: i <= currentIdx ? 'pointer' : 'default',
+                transition: 'all 0.2s',
+                opacity: i > currentIdx ? 0.5 : 1,
+              }}
+              title={phaseLabels[p]}
+            />
+          ))}
+        </div>
+
+        {/* Phase label and count */}
+        <div style={{
+          fontSize: '11px',
+          fontWeight: 700,
+          color: colors.primary,
+          padding: '4px 8px',
+          borderRadius: '6px',
+          backgroundColor: `${colors.primary}15`,
+        }}>
+          {currentIdx + 1}/{phaseOrder.length}
+        </div>
+      </div>
+    );
+  };
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // BOTTOM NAVIGATION BAR
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: string, onNext?: () => void) => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canBack = canGoBack && currentIdx > 0;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isMobile ? '12px' : '12px 16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '12px',
+      }}>
+        <button
+          onClick={goBack}
+          disabled={!canBack}
+          style={{
+            padding: isMobile ? '10px 16px' : '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: isMobile ? '13px' : '14px',
+            backgroundColor: colors.bgCardLight,
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.3,
+            minHeight: '44px',
+          }}
+        >
+          ← Back
+        </button>
+
+        <span style={{
+          fontSize: '12px',
+          color: colors.textMuted,
+          fontWeight: 600,
+        }}>
+          {phaseLabels[phase]}
+        </span>
+
+        <button
+          onClick={() => {
+            if (!canGoNext) return;
+            if (onNext) {
+              onNext();
+            } else {
+              goNext();
+            }
+          }}
+          disabled={!canGoNext}
+          style={{
+            padding: isMobile ? '10px 20px' : '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: isMobile ? '13px' : '14px',
+            background: canGoNext
+              ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`
+              : colors.bgCardLight,
+            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.4,
+            minHeight: '44px',
+          }}
+        >
+          {nextLabel} →
+        </button>
+      </div>
+    );
+  };
 
   // Calculate string voltage with temperature compensation
   const tempCoefficient = -0.003; // -0.3% per degree C (typical for silicon)
@@ -228,22 +505,6 @@ export default function StringSizingRenderer({
     return 'Warning: Above MPPT Range';
   };
 
-  // Navigation helpers
-  const goToNextPhase = useCallback(() => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 300) return;
-    if (navigationLockRef.current) return;
-    lastClickRef.current = now;
-    navigationLockRef.current = true;
-
-    if (onPhaseComplete) {
-      onPhaseComplete();
-    }
-
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 300);
-  }, [onPhaseComplete]);
 
   // Handlers
   const handlePrediction = useCallback((choice: string) => {
@@ -375,7 +636,7 @@ export default function StringSizingRenderer({
       </div>
 
       <button
-        onClick={goToNextPhase}
+        onClick={goNext}
         style={{
           padding: '16px 40px',
           fontSize: '16px',
@@ -470,7 +731,7 @@ export default function StringSizingRenderer({
 
       {showPredictionFeedback && (
         <button
-          onClick={goToNextPhase}
+          onClick={goNext}
           style={{
             width: '100%',
             padding: '16px',
@@ -621,7 +882,7 @@ export default function StringSizingRenderer({
       </div>
 
       <button
-        onClick={goToNextPhase}
+        onClick={goNext}
         disabled={!hasExperimented}
         style={{
           width: '100%',
@@ -697,7 +958,7 @@ export default function StringSizingRenderer({
       ))}
 
       <button
-        onClick={goToNextPhase}
+        onClick={goNext}
         style={{
           width: '100%',
           padding: '16px',
@@ -792,7 +1053,7 @@ export default function StringSizingRenderer({
 
       {showTwistFeedback && (
         <button
-          onClick={goToNextPhase}
+          onClick={goNext}
           style={{
             width: '100%',
             padding: '16px',
@@ -928,7 +1189,7 @@ export default function StringSizingRenderer({
       </div>
 
       <button
-        onClick={goToNextPhase}
+        onClick={goNext}
         disabled={!hasExploredTwist}
         style={{
           width: '100%',
@@ -1004,7 +1265,7 @@ export default function StringSizingRenderer({
       ))}
 
       <button
-        onClick={goToNextPhase}
+        onClick={goNext}
         style={{
           width: '100%',
           padding: '16px',
@@ -1131,7 +1392,7 @@ export default function StringSizingRenderer({
       </div>
 
       <button
-        onClick={goToNextPhase}
+        onClick={goNext}
         disabled={completedApps.size < 4}
         style={{
           width: '100%',
@@ -1212,7 +1473,7 @@ export default function StringSizingRenderer({
           </div>
 
           <button
-            onClick={goToNextPhase}
+            onClick={goNext}
             style={{
               width: '100%',
               padding: '16px',
@@ -1420,61 +1681,108 @@ export default function StringSizingRenderer({
     </div>
   );
 
-  // Main render
-  const renderContent = () => {
+  // Main render - wrap each phase with progress bar and bottom bar
+  const renderPhaseContent = () => {
     switch (phase) {
-      case 'hook': return renderHook();
-      case 'predict': return renderPredict();
-      case 'play': return renderPlay();
-      case 'review': return renderReview();
-      case 'twist_predict': return renderTwistPredict();
-      case 'twist_play': return renderTwistPlay();
-      case 'twist_review': return renderTwistReview();
-      case 'transfer': return renderTransfer();
-      case 'test': return renderTest();
-      case 'mastery': return renderMastery();
-      default: return null;
+      case 'hook':
+        return (
+          <>
+            <div style={{ flex: 1, overflowY: 'auto' }}>{renderHook()}</div>
+            {renderBottomBar(false, true, 'Start Learning')}
+          </>
+        );
+      case 'predict':
+        return (
+          <>
+            <div style={{ flex: 1, overflowY: 'auto' }}>{renderPredict()}</div>
+            {renderBottomBar(true, showPredictionFeedback, 'Continue')}
+          </>
+        );
+      case 'play':
+        return (
+          <>
+            <div style={{ flex: 1, overflowY: 'auto' }}>{renderPlay()}</div>
+            {renderBottomBar(true, hasExperimented, 'Continue')}
+          </>
+        );
+      case 'review':
+        return (
+          <>
+            <div style={{ flex: 1, overflowY: 'auto' }}>{renderReview()}</div>
+            {renderBottomBar(true, true, 'Next: The Twist')}
+          </>
+        );
+      case 'twist_predict':
+        return (
+          <>
+            <div style={{ flex: 1, overflowY: 'auto' }}>{renderTwistPredict()}</div>
+            {renderBottomBar(true, showTwistFeedback, 'Continue')}
+          </>
+        );
+      case 'twist_play':
+        return (
+          <>
+            <div style={{ flex: 1, overflowY: 'auto' }}>{renderTwistPlay()}</div>
+            {renderBottomBar(true, hasExploredTwist, 'Continue')}
+          </>
+        );
+      case 'twist_review':
+        return (
+          <>
+            <div style={{ flex: 1, overflowY: 'auto' }}>{renderTwistReview()}</div>
+            {renderBottomBar(true, true, 'Applications')}
+          </>
+        );
+      case 'transfer':
+        return (
+          <>
+            <div style={{ flex: 1, overflowY: 'auto' }}>{renderTransfer()}</div>
+            {renderBottomBar(true, completedApps.size >= 4, 'Take Test')}
+          </>
+        );
+      case 'test':
+        return (
+          <>
+            <div style={{ flex: 1, overflowY: 'auto' }}>{renderTest()}</div>
+            {!testSubmitted && renderBottomBar(true, false, 'Submit Test')}
+          </>
+        );
+      case 'mastery':
+        return (
+          <>
+            <div style={{ flex: 1, overflowY: 'auto' }}>{renderMastery()}</div>
+          </>
+        );
+      default:
+        return null;
     }
   };
 
   return (
-    <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
-      color: 'white',
-    }}>
-      {/* Header */}
-      <div style={{
-        position: 'sticky',
-        top: 0,
-        background: 'rgba(15, 23, 42, 0.9)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(51, 65, 85, 0.5)',
-        padding: '12px 24px',
-        zIndex: 100,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0' }}>String Sizing</span>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            {PHASES.map((p, i) => (
-              <div
-                key={p}
-                style={{
-                  width: phase === p ? '20px' : '8px',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: phase === p ? '#eab308' : PHASES.indexOf(phase) > i ? '#22c55e' : '#475569',
-                  transition: 'all 0.3s ease',
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
+    <div
+      style={{
+        position: 'absolute',
+        inset: 0,
+        display: 'flex',
+        flexDirection: 'column',
+        background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
+        color: 'white',
+      }}
+    >
+      {/* Progress Bar Header */}
+      {renderProgressBar()}
 
       {/* Content */}
-      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-        {renderContent()}
+      <div style={{
+        flex: 1,
+        display: 'flex',
+        flexDirection: 'column',
+        overflow: 'hidden',
+        maxWidth: '600px',
+        width: '100%',
+        margin: '0 auto',
+      }}>
+        {renderPhaseContent()}
       </div>
     </div>
   );

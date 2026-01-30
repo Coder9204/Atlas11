@@ -1,18 +1,79 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+
+// Phase type for internal state management
+type SolarPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface SolarYieldPredictionRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: SolarPhase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
+// Sound utility for feedback
+const playSound = (type: 'click' | 'success' | 'transition') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
 const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Phase order and labels for navigation
+  const phaseOrder: SolarPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<SolarPhase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Uncertainty',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery',
+  };
+
+  // Internal phase state management
+  const getInitialPhase = (): SolarPhase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<SolarPhase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase]);
+
+  // Navigation refs for debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
   // Simulation state - Solar yield model parameters
   const [irradiance, setIrradiance] = useState(5.5); // kWh/m²/day (peak sun hours)
   const [tiltAngle, setTiltAngle] = useState(30); // degrees
@@ -31,47 +92,85 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
+  // Responsive design
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Colors
+  const colors = {
+    primary: '#f59e0b', // amber-500
+    primaryDark: '#d97706',
+    success: '#22c55e',
+    danger: '#ef4444',
+    bgDark: '#0f172a',
+    bgCard: '#1e293b',
+    border: '#475569',
+    textPrimary: '#f8fafc',
+    textSecondary: '#94a3b8',
+  };
+
+  // Navigation function
+  const goToPhase = useCallback((p: SolarPhase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    playSound('transition');
+
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Physics calculations
   const calculateYield = useCallback(() => {
-    // Cosine correction for tilt angle (optimal at latitude)
-    const optimalTilt = 35; // Assume latitude ~35 degrees
+    const optimalTilt = 35;
     const angleRad = ((tiltAngle - optimalTilt) * Math.PI) / 180;
-    const cosineFactor = Math.cos(angleRad * 0.5); // Softer penalty
+    const cosineFactor = Math.cos(angleRad * 0.5);
 
-    // Temperature derating: -0.4% per degree above 25C (typical for silicon)
     const tempCoeff = -0.004;
     const tempDerate = 1 + tempCoeff * (temperature - 25);
 
-    // Soiling factor
     const soilingFactor = 1 - soilingLoss / 100;
-
-    // Inverter efficiency
     const inverterFactor = inverterEfficiency / 100;
-
-    // DC to AC system losses (wiring, mismatch, etc.) ~14%
     const systemLosses = 0.86;
 
-    // Daily yield calculation
     const dailyYield = irradiance * systemSize * cosineFactor * tempDerate * soilingFactor * inverterFactor * systemLosses;
-
-    // Annual yield (days vary by location, use 365)
     const annualYield = dailyYield * 365;
 
-    // Calculate uncertainty bands
-    const irradianceUncertainty = 0.08; // 8% year-to-year variation
-    const degradationUncertainty = 0.005; // 0.5% per year degradation
-    const modelUncertainty = 0.05; // 5% model error
+    const irradianceUncertainty = 0.08;
+    const degradationUncertainty = 0.005;
+    const modelUncertainty = 0.05;
 
     const totalUncertainty = Math.sqrt(
       irradianceUncertainty ** 2 + degradationUncertainty ** 2 + modelUncertainty ** 2
     );
 
-    // Sensitivity analysis
-    const baseYield = annualYield;
     const irradianceSensitivity = ((irradiance * 1.1 - irradiance) / irradiance) * 100;
     const tempSensitivity = Math.abs(tempCoeff * 10 * 100);
-    const soilingSensitivity = 5; // If soiling goes from 3% to 8%
-    const inverterSensitivity = 2; // If inverter drops 2%
+    const soilingSensitivity = 5;
+    const inverterSensitivity = 2;
 
     return {
       dailyYield: Math.max(0, dailyYield),
@@ -192,7 +291,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
       question: 'Peak sun hours (PSH) represent:',
       options: [
         { text: 'The hours when the sun is above the horizon', correct: false },
-        { text: 'Equivalent hours of 1000 W/m² irradiance', correct: true },
+        { text: 'Equivalent hours of 1000 W/m squared irradiance', correct: true },
         { text: 'The hottest part of the day', correct: false },
         { text: 'When electricity prices are highest', correct: false },
       ],
@@ -245,6 +344,107 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
+  // Progress bar component
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: isMobile ? '10px 12px' : '12px 16px',
+        backgroundColor: colors.bgCard,
+        borderBottom: `1px solid ${colors.border}`,
+        gap: isMobile ? '8px' : '16px',
+        flexWrap: 'wrap',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: isMobile ? '4px' : '6px' }}>
+          {phaseOrder.map((p, i) => (
+            <div
+              key={p}
+              onClick={() => i < currentIdx && goToPhase(p)}
+              style={{
+                height: isMobile ? '8px' : '10px',
+                width: i === currentIdx ? (isMobile ? '16px' : '24px') : (isMobile ? '8px' : '10px'),
+                borderRadius: '5px',
+                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
+                cursor: i < currentIdx ? 'pointer' : 'default',
+                transition: 'all 0.3s',
+              }}
+              title={phaseLabels[p]}
+            />
+          ))}
+        </div>
+        <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textSecondary }}>
+          {currentIdx + 1} / {phaseOrder.length}
+        </span>
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: `${colors.primary}20`,
+          color: colors.primary,
+          fontSize: '11px',
+          fontWeight: 700,
+        }}>
+          {phaseLabels[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom navigation bar
+  const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Next') => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canBack = currentIdx > 0;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isMobile ? '12px' : '16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+      }}>
+        <button
+          onClick={goBack}
+          disabled={!canBack}
+          style={{
+            padding: isMobile ? '10px 16px' : '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            backgroundColor: 'transparent',
+            color: canBack ? colors.textPrimary : colors.textSecondary,
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.5,
+            fontWeight: 600,
+          }}
+        >
+          Back
+        </button>
+        <span style={{ fontSize: '12px', color: colors.textSecondary }}>
+          {phaseLabels[phase]}
+        </span>
+        <button
+          onClick={goNext}
+          disabled={!canGoNext}
+          style={{
+            padding: isMobile ? '10px 20px' : '12px 28px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.primary}, ${colors.success})` : colors.border,
+            color: colors.textPrimary,
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.5,
+            fontWeight: 700,
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
+  };
+
   const renderVisualization = () => {
     const output = calculateYield();
 
@@ -261,30 +461,27 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           </linearGradient>
         </defs>
 
-        {/* Background */}
         <rect width="500" height="450" fill="#0f172a" rx="12" />
 
-        {/* Title */}
         <text x="250" y="30" fill="#f8fafc" fontSize="16" fontWeight="bold" textAnchor="middle">
           Solar Yield Prediction Model
         </text>
 
-        {/* Input Parameters Box */}
         <g transform="translate(20, 50)">
           <rect width="200" height="160" fill="rgba(30, 41, 59, 0.8)" rx="8" />
           <text x="100" y="20" fill="#f59e0b" fontSize="12" fontWeight="bold" textAnchor="middle">INPUT PARAMETERS</text>
 
           <text x="10" y="45" fill="#94a3b8" fontSize="10">Irradiance:</text>
-          <text x="190" y="45" fill="#f8fafc" fontSize="10" textAnchor="end">{irradiance.toFixed(1)} kWh/m²/day</text>
+          <text x="190" y="45" fill="#f8fafc" fontSize="10" textAnchor="end">{irradiance.toFixed(1)} kWh/m2/day</text>
 
           <text x="10" y="65" fill="#94a3b8" fontSize="10">System Size:</text>
           <text x="190" y="65" fill="#f8fafc" fontSize="10" textAnchor="end">{systemSize} kW</text>
 
           <text x="10" y="85" fill="#94a3b8" fontSize="10">Tilt Angle:</text>
-          <text x="190" y="85" fill="#f8fafc" fontSize="10" textAnchor="end">{tiltAngle}°</text>
+          <text x="190" y="85" fill="#f8fafc" fontSize="10" textAnchor="end">{tiltAngle} deg</text>
 
           <text x="10" y="105" fill="#94a3b8" fontSize="10">Temperature:</text>
-          <text x="190" y="105" fill="#f8fafc" fontSize="10" textAnchor="end">{temperature}°C</text>
+          <text x="190" y="105" fill="#f8fafc" fontSize="10" textAnchor="end">{temperature} C</text>
 
           <text x="10" y="125" fill="#94a3b8" fontSize="10">Soiling Loss:</text>
           <text x="190" y="125" fill="#f8fafc" fontSize="10" textAnchor="end">{soilingLoss}%</text>
@@ -293,31 +490,29 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           <text x="190" y="145" fill="#f8fafc" fontSize="10" textAnchor="end">{inverterEfficiency}%</text>
         </g>
 
-        {/* Multiplication Chain */}
         <g transform="translate(240, 50)">
           <rect width="240" height="160" fill="rgba(30, 41, 59, 0.8)" rx="8" />
           <text x="120" y="20" fill="#22c55e" fontSize="12" fontWeight="bold" textAnchor="middle">YIELD CALCULATION</text>
 
-          <text x="10" y="45" fill="#94a3b8" fontSize="9">Irradiance × Size × Days:</text>
+          <text x="10" y="45" fill="#94a3b8" fontSize="9">Irradiance x Size x Days:</text>
           <text x="230" y="45" fill="#f8fafc" fontSize="9" textAnchor="end">{(irradiance * systemSize * 365).toFixed(0)} kWh base</text>
 
-          <text x="10" y="65" fill="#94a3b8" fontSize="9">× Cosine Factor:</text>
-          <text x="230" y="65" fill="#f8fafc" fontSize="9" textAnchor="end">× {output.cosineFactor.toFixed(3)}</text>
+          <text x="10" y="65" fill="#94a3b8" fontSize="9">x Cosine Factor:</text>
+          <text x="230" y="65" fill="#f8fafc" fontSize="9" textAnchor="end">x {output.cosineFactor.toFixed(3)}</text>
 
-          <text x="10" y="85" fill="#94a3b8" fontSize="9">× Temp Derate:</text>
-          <text x="230" y="85" fill={output.tempDerate < 1 ? '#ef4444' : '#22c55e'} fontSize="9" textAnchor="end">× {output.tempDerate.toFixed(3)}</text>
+          <text x="10" y="85" fill="#94a3b8" fontSize="9">x Temp Derate:</text>
+          <text x="230" y="85" fill={output.tempDerate < 1 ? '#ef4444' : '#22c55e'} fontSize="9" textAnchor="end">x {output.tempDerate.toFixed(3)}</text>
 
-          <text x="10" y="105" fill="#94a3b8" fontSize="9">× Soiling Factor:</text>
-          <text x="230" y="105" fill="#f8fafc" fontSize="9" textAnchor="end">× {output.soilingFactor.toFixed(3)}</text>
+          <text x="10" y="105" fill="#94a3b8" fontSize="9">x Soiling Factor:</text>
+          <text x="230" y="105" fill="#f8fafc" fontSize="9" textAnchor="end">x {output.soilingFactor.toFixed(3)}</text>
 
-          <text x="10" y="125" fill="#94a3b8" fontSize="9">× Inverter Eff:</text>
-          <text x="230" y="125" fill="#f8fafc" fontSize="9" textAnchor="end">× {output.inverterFactor.toFixed(3)}</text>
+          <text x="10" y="125" fill="#94a3b8" fontSize="9">x Inverter Eff:</text>
+          <text x="230" y="125" fill="#f8fafc" fontSize="9" textAnchor="end">x {output.inverterFactor.toFixed(3)}</text>
 
-          <text x="10" y="145" fill="#94a3b8" fontSize="9">× System Losses:</text>
-          <text x="230" y="145" fill="#f8fafc" fontSize="9" textAnchor="end">× 0.860</text>
+          <text x="10" y="145" fill="#94a3b8" fontSize="9">x System Losses:</text>
+          <text x="230" y="145" fill="#f8fafc" fontSize="9" textAnchor="end">x 0.860</text>
         </g>
 
-        {/* Output Display */}
         <g transform="translate(20, 220)">
           <rect width="460" height="80" fill="rgba(34, 197, 94, 0.1)" rx="8" stroke="#22c55e" strokeWidth="2" />
           <text x="230" y="25" fill="#22c55e" fontSize="14" fontWeight="bold" textAnchor="middle">PREDICTED ANNUAL YIELD</text>
@@ -326,35 +521,29 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           </text>
           {showUncertainty && (
             <text x="230" y="72" fill="#94a3b8" fontSize="10" textAnchor="middle">
-              Range: {output.lowEstimate.toFixed(0)} - {output.highEstimate.toFixed(0)} kWh (±{(output.uncertainty * 100).toFixed(1)}%)
+              Range: {output.lowEstimate.toFixed(0)} - {output.highEstimate.toFixed(0)} kWh (+/-{(output.uncertainty * 100).toFixed(1)}%)
             </text>
           )}
         </g>
 
-        {/* Sensitivity Analysis Bar Chart */}
         <g transform="translate(20, 320)">
           <text x="230" y="0" fill="#f59e0b" fontSize="12" fontWeight="bold" textAnchor="middle">
             SENSITIVITY ANALYSIS - What Matters Most?
           </text>
 
-          {/* Irradiance bar */}
           <rect x="10" y="20" width={output.sensitivities.irradiance * 15} height="20" fill="#f59e0b" rx="4" />
           <text x="10" y="55" fill="#94a3b8" fontSize="9">Irradiance ({output.sensitivities.irradiance.toFixed(1)}%)</text>
 
-          {/* Temperature bar */}
           <rect x="10" y="65" width={output.sensitivities.temperature * 15} height="20" fill="#ef4444" rx="4" />
           <text x="10" y="100" fill="#94a3b8" fontSize="9">Temperature ({output.sensitivities.temperature.toFixed(1)}%)</text>
 
-          {/* Soiling bar */}
           <rect x="250" y="20" width={output.sensitivities.soiling * 15} height="20" fill="#8b5cf6" rx="4" />
           <text x="250" y="55" fill="#94a3b8" fontSize="9">Soiling ({output.sensitivities.soiling.toFixed(1)}%)</text>
 
-          {/* Inverter bar */}
           <rect x="250" y="65" width={output.sensitivities.inverter * 15} height="20" fill="#3b82f6" rx="4" />
           <text x="250" y="100" fill="#94a3b8" fontSize="9">Inverter ({output.sensitivities.inverter.toFixed(1)}%)</text>
         </g>
 
-        {/* Key Insight */}
         <g transform="translate(20, 430)">
           <text x="230" y="0" fill="#94a3b8" fontSize="10" textAnchor="middle">
             Simple physics: multiply a few factors to predict kWh within 5-10%
@@ -368,7 +557,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px', maxWidth: '500px', margin: '0 auto' }}>
       <div>
         <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
-          Solar Irradiance: {irradiance.toFixed(1)} kWh/m²/day (Peak Sun Hours)
+          Solar Irradiance: {irradiance.toFixed(1)} kWh/m2/day (Peak Sun Hours)
         </label>
         <input
           type="range"
@@ -398,7 +587,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
 
       <div>
         <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
-          Panel Tilt Angle: {tiltAngle}° (optimal ~35° at mid-latitudes)
+          Panel Tilt Angle: {tiltAngle} deg (optimal ~35 deg at mid-latitudes)
         </label>
         <input
           type="range"
@@ -413,7 +602,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
 
       <div>
         <label style={{ color: '#e2e8f0', display: 'block', marginBottom: '8px' }}>
-          Cell Temperature: {temperature}°C (above 25°C reduces output)
+          Cell Temperature: {temperature} C (above 25 C reduces output)
         </label>
         <input
           type="range"
@@ -466,7 +655,6 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           color: 'white',
           fontWeight: 'bold',
           cursor: 'pointer',
-          WebkitTapHighlightColor: 'transparent',
         }}
       >
         {showUncertainty ? 'Hide Uncertainty Bands' : 'Show Uncertainty Bands'}
@@ -474,10 +662,21 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
     </div>
   );
 
+  // Render wrapper with progress bar and bottom navigation
+  const renderPhaseContent = (content: React.ReactNode, canGoNext: boolean, nextLabel: string = 'Next') => (
+    <div style={{ display: 'flex', flexDirection: 'column', minHeight: '100vh', background: colors.bgDark }}>
+      {renderProgressBar()}
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {content}
+      </div>
+      {renderBottomBar(canGoNext, nextLabel)}
+    </div>
+  );
+
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return renderPhaseContent(
+      <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ marginBottom: '24px' }}>
             <span style={{ color: '#f59e0b', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>Solar Physics</span>
@@ -500,33 +699,17 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
               Spoiler: A handful of factors capture most of the physics.
             </p>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              padding: '16px 32px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              background: 'linear-gradient(90deg, #f59e0b, #22c55e)',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Make a Prediction
-          </button>
         </div>
-      </div>
+      </div>,
+      true,
+      'Make a Prediction'
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return renderPhaseContent(
+      <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
 
@@ -550,43 +733,23 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '15px',
-                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
                 {p.label}
               </button>
             ))}
           </div>
-
-          {prediction && (
-            <button
-              onClick={onPhaseComplete}
-              style={{
-                marginTop: '24px',
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: '#f59e0b',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
-      </div>
+      </div>,
+      prediction !== null,
+      'Test My Prediction'
     );
   }
 
   // PLAY PHASE
   if (phase === 'play') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return renderPhaseContent(
+      <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Build Your Yield Model</h2>
           <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
@@ -599,33 +762,16 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
           <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
             <h3 style={{ color: '#f59e0b', marginBottom: '12px' }}>Try These Experiments:</h3>
             <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
-              <li>Increase temperature to 45°C - watch the temperature penalty</li>
+              <li>Increase temperature to 45 C - watch the temperature penalty</li>
               <li>Move irradiance from 4 to 6 - see the dominant effect</li>
               <li>Vary tilt angle - notice the cosine correction</li>
               <li>Look at the sensitivity bars - which parameter matters most?</li>
             </ul>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#f59e0b',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Review the Concepts
-          </button>
         </div>
-      </div>
+      </div>,
+      true,
+      'Review the Concepts'
     );
   }
 
@@ -633,8 +779,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
   if (phase === 'review') {
     const wasCorrect = prediction === 'simple';
 
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return renderPhaseContent(
+      <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -657,59 +803,42 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             <div style={{ marginBottom: '16px' }}>
               <h4 style={{ color: '#22c55e', marginBottom: '8px' }}>1. Irradiance Dominates</h4>
               <p style={{ color: '#94a3b8', fontSize: '14px' }}>
-                Solar irradiance (measured in kWh/m²/day or Peak Sun Hours) is the single biggest factor. A location with 6 PSH produces 50% more than one with 4 PSH - this alone sets the baseline.
+                Solar irradiance (measured in kWh/m2/day or Peak Sun Hours) is the single biggest factor. A location with 6 PSH produces 50% more than one with 4 PSH - this alone sets the baseline.
               </p>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
               <h4 style={{ color: '#ef4444', marginBottom: '8px' }}>2. Temperature Derating</h4>
               <p style={{ color: '#94a3b8', fontSize: '14px' }}>
-                Silicon cells lose ~0.4% output per degree C above 25°C. A panel at 45°C produces 8% less power. Hot desert locations face this penalty despite high irradiance.
+                Silicon cells lose ~0.4% output per degree C above 25 C. A panel at 45 C produces 8% less power. Hot desert locations face this penalty despite high irradiance.
               </p>
             </div>
 
             <div style={{ marginBottom: '16px' }}>
               <h4 style={{ color: '#8b5cf6', marginBottom: '8px' }}>3. Multiplicative Losses</h4>
               <p style={{ color: '#94a3b8', fontSize: '14px' }}>
-                Soiling, inverter efficiency, wiring losses, and mismatch multiply together. Each 3% loss compounds: 0.97 × 0.96 × 0.97 × 0.98 = 0.88 (12% total loss).
+                Soiling, inverter efficiency, wiring losses, and mismatch multiply together. Each 3% loss compounds: 0.97 x 0.96 x 0.97 x 0.98 = 0.88 (12% total loss).
               </p>
             </div>
 
             <div>
               <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>4. Simple Model, Good Results</h4>
               <p style={{ color: '#94a3b8', fontSize: '14px' }}>
-                Annual kWh = Irradiance × Size × 365 × Cosine × TempDerate × Soiling × Inverter × SystemLosses. This captures 90-95% of the physics!
+                Annual kWh = Irradiance x Size x 365 x Cosine x TempDerate x Soiling x Inverter x SystemLosses. This captures 90-95% of the physics!
               </p>
             </div>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#f59e0b',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Next: A Twist!
-          </button>
         </div>
-      </div>
+      </div>,
+      true,
+      'Next: A Twist!'
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return renderPhaseContent(
+      <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', color: '#f59e0b', marginBottom: '24px' }}>The Twist: Uncertainty</h2>
 
@@ -733,43 +862,23 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                   cursor: 'pointer',
                   textAlign: 'left',
                   fontSize: '15px',
-                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
                 {p.label}
               </button>
             ))}
           </div>
-
-          {twistPrediction && (
-            <button
-              onClick={onPhaseComplete}
-              style={{
-                marginTop: '24px',
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: '#f59e0b',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
-      </div>
+      </div>,
+      twistPrediction !== null,
+      'Test My Prediction'
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return renderPhaseContent(
+      <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '700px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore Uncertainty</h2>
           <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
@@ -788,27 +897,10 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
               <li>These combine via square root of sum of squares: ~10% total</li>
             </ul>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#f59e0b',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            See the Explanation
-          </button>
         </div>
-      </div>
+      </div>,
+      true,
+      'See the Explanation'
     );
   }
 
@@ -816,8 +908,8 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'irradiance_dominates';
 
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return renderPhaseContent(
+      <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{
             background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -850,34 +942,17 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
               </ul>
             </div>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#f59e0b',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Apply This Knowledge
-          </button>
         </div>
-      </div>
+      </div>,
+      true,
+      'Apply This Knowledge'
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return renderPhaseContent(
+      <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
           <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
@@ -913,7 +988,6 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                     background: 'transparent',
                     color: '#f59e0b',
                     cursor: 'pointer',
-                    WebkitTapHighlightColor: 'transparent',
                   }}
                 >
                   Reveal Answer
@@ -925,36 +999,18 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
               )}
             </div>
           ))}
-
-          <button
-            onClick={onPhaseComplete}
-            disabled={transferCompleted.size < 4}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: transferCompleted.size >= 4 ? '#f59e0b' : '#475569',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: transferCompleted.size >= 4 ? 'pointer' : 'not-allowed',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            {transferCompleted.size >= 4 ? 'Take the Test' : `Complete ${4 - transferCompleted.size} more applications`}
-          </button>
         </div>
-      </div>
+      </div>,
+      transferCompleted.size >= 4,
+      'Take the Test'
     );
   }
 
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
-      return (
-        <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+      return renderPhaseContent(
+        <div style={{ color: '#f8fafc', padding: '24px' }}>
           <div style={{ maxWidth: '600px', margin: '0 auto' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -998,34 +1054,18 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                 </div>
               );
             })}
-
-            <button
-              onClick={onPhaseComplete}
-              style={{
-                marginTop: '24px',
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: testScore >= 8 ? '#22c55e' : '#f59e0b',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              {testScore >= 8 ? 'Complete Mastery' : 'Review & Retry'}
-            </button>
           </div>
-        </div>
+        </div>,
+        testScore >= 8,
+        testScore >= 8 ? 'Complete Mastery' : 'Review & Retry'
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
+    const allAnswered = !testAnswers.includes(null);
 
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return renderPhaseContent(
+      <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
             <h2>Knowledge Test</h2>
@@ -1065,7 +1105,6 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                   color: '#f8fafc',
                   cursor: 'pointer',
                   textAlign: 'left',
-                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
                 {opt.text}
@@ -1084,7 +1123,6 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                 background: 'transparent',
                 color: currentTestQuestion === 0 ? '#475569' : '#f8fafc',
                 cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
-                WebkitTapHighlightColor: 'transparent',
               }}
             >
               Previous
@@ -1100,7 +1138,6 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
                   background: '#f59e0b',
                   color: 'white',
                   cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
                 }}
               >
                 Next
@@ -1108,15 +1145,14 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             ) : (
               <button
                 onClick={submitTest}
-                disabled={testAnswers.includes(null)}
+                disabled={!allAnswered}
                 style={{
                   padding: '12px 24px',
                   borderRadius: '8px',
                   border: 'none',
-                  background: testAnswers.includes(null) ? '#475569' : '#22c55e',
+                  background: allAnswered ? '#22c55e' : '#475569',
                   color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
+                  cursor: allAnswered ? 'pointer' : 'not-allowed',
                 }}
               >
                 Submit Test
@@ -1124,14 +1160,15 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             )}
           </div>
         </div>
-      </div>
+      </div>,
+      false // Navigation handled by test buttons
     );
   }
 
   // MASTERY PHASE
   if (phase === 'mastery') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+    return renderPhaseContent(
+      <div style={{ color: '#f8fafc', padding: '24px' }}>
         <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
           <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
           <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Mastery Achieved!</h1>
@@ -1144,7 +1181,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
             <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
               <li>Simple physics models capture most solar yield behavior</li>
               <li>Irradiance is the dominant factor</li>
-              <li>Temperature derating (-0.4%/°C for silicon)</li>
+              <li>Temperature derating (-0.4%/C for silicon)</li>
               <li>Multiplicative loss factors (soiling, inverter, system)</li>
               <li>Uncertainty quantification for financial decisions</li>
               <li>P50/P90/P99 probability exceedance concepts</li>
@@ -1157,26 +1194,10 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
               The same principle applies: a few key parameters often dominate complex systems. Just as solar yield is ~90% determined by irradiance, temperature, and basic losses, AI inference latency is dominated by memory bandwidth and model size. Simple models reveal the physics before you need complexity.
             </p>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              padding: '16px 32px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              background: 'linear-gradient(90deg, #f59e0b, #22c55e)',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Complete
-          </button>
         </div>
-      </div>
+      </div>,
+      true,
+      'Complete'
     );
   }
 

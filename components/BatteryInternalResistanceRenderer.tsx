@@ -1,11 +1,37 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// Game event interface for AI coach integration
+interface GameEvent {
+  type: 'phase_change' | 'prediction' | 'interaction' | 'completion';
+  phase?: string;
+  data?: Record<string, unknown>;
+  timestamp: number;
+}
 
 interface BatteryInternalResistanceRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string; // Optional, only for resume
 }
+
+// Simple audio feedback
+const playSound = (type: 'click' | 'success' | 'error' | 'transition') => {
+  if (typeof window === 'undefined' || !window.AudioContext) return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    const frequencies: Record<string, number> = { click: 600, success: 800, error: 300, transition: 500 };
+    oscillator.frequency.value = frequencies[type] || 440;
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.1);
+  } catch (e) { /* Audio not available */ }
+};
 
 const colors = {
   textPrimary: '#f8fafc',
@@ -28,12 +54,102 @@ const colors = {
   power: '#f97316',
 };
 
+// Phase type definition
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
+  onGameEvent,
+  gamePhase,
 }) => {
+  // Phase order and labels
+  const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Play',
+    review: 'Review',
+    twist_predict: 'Twist',
+    twist_play: 'Explore',
+    twist_review: 'Explain',
+    transfer: 'Transfer',
+    test: 'Test',
+    mastery: 'Mastery',
+  };
+
+  // Get initial phase from gamePhase prop or default to 'hook'
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  // Internal phase state management
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Emit game event helper
+  const emitGameEvent = useCallback((type: GameEvent['type'], data?: Record<string, unknown>) => {
+    if (onGameEvent) {
+      onGameEvent({ type, phase, data, timestamp: Date.now() });
+    }
+  }, [onGameEvent, phase]);
+
+  // Navigation functions with debouncing
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    playSound('transition');
+    setPhase(p);
+    emitGameEvent('phase_change', {
+      from: phase,
+      to: p,
+      label: phaseLabels[p],
+      index: phaseOrder.indexOf(p)
+    });
+
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, [emitGameEvent, phase, phaseLabels, phaseOrder]);
+
+  const goNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, phaseOrder, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, phaseOrder, goToPhase]);
+
   // Simulation state
   const [stateOfCharge, setStateOfCharge] = useState(100); // 0-100%
   const [temperature, setTemperature] = useState(25); // Celsius
@@ -153,7 +269,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
       title: 'Jump Starting Cars',
       description: 'A battery that can run headlights for hours cannot crank the starter motor when cold.',
       question: 'Why can a seemingly good battery fail to start a car in cold weather?',
-      answer: 'Starter motors draw 100-400A. At -20C, internal resistance can be 5x normal. A 12V battery with 100mΩ internal resistance drops to only 2V under 100A load! The headlights (2A) barely notice the same resistance (0.2V drop).',
+      answer: 'Starter motors draw 100-400A. At -20C, internal resistance can be 5x normal. A 12V battery with 100mOhm internal resistance drops to only 2V under 100A load! The headlights (2A) barely notice the same resistance (0.2V drop).',
     },
     {
       title: 'Grid-Scale Energy Storage',
@@ -271,7 +387,10 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
     });
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+    if (score >= 8) {
+      playSound('success');
+      emitGameEvent('completion', { score, total: 10, passed: true });
+    }
   };
 
   const renderVisualization = (interactive: boolean, showTempControl: boolean = false) => {
@@ -290,10 +409,6 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
       if (stateOfCharge > 30) return colors.batteryMid;
       return colors.batteryLow;
     };
-
-    // Thermometer position
-    const tempY = 30;
-    const tempX = 160;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
@@ -339,7 +454,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
           </g>
 
           {/* Temperature indicator */}
-          <g transform={`translate(${tempX}, ${tempY})`}>
+          <g transform="translate(160, 30)">
             <rect x="0" y="0" width="30" height="80" fill="#1e293b" rx="15" stroke="#475569" strokeWidth="2" />
             <rect
               x="5"
@@ -351,7 +466,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
             />
             <circle cx="15" cy="70" r="10" fill={temperature < 10 ? colors.voltage : temperature > 35 ? colors.error : colors.warning} />
             <text x="15" y="100" fill={colors.textSecondary} fontSize="12" textAnchor="middle">
-              {temperature}°C
+              {temperature}C
             </text>
           </g>
 
@@ -373,7 +488,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
             {/* Resistor symbol */}
             <path d="M60,35 l5,-8 l10,16 l10,-16 l10,16 l10,-16 l5,8" fill="none" stroke={colors.resistance} strokeWidth="2" />
             <text x="85" y="60" fill={colors.resistance} fontSize="9" textAnchor="middle">
-              R_int: {(values.internalResistance * 1000).toFixed(0)}mΩ
+              R_int: {(values.internalResistance * 1000).toFixed(0)}mOhm
             </text>
 
             {/* Wire to terminal */}
@@ -427,7 +542,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
               rx="4"
             />
             <text x="10" y="67" fill={colors.textPrimary} fontSize="10">
-              Lost in R_int: {values.powerWasted.toFixed(3)}W (I²R heat)
+              Lost in R_int: {values.powerWasted.toFixed(3)}W (I^2R heat)
             </text>
 
             {/* Efficiency */}
@@ -555,7 +670,7 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
       {showTempControl && (
         <div>
           <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: '14px' }}>
-            Battery Temperature: {temperature}°C
+            Battery Temperature: {temperature}C
           </label>
           <input
             type="range"
@@ -568,8 +683,8 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
             style={{ width: '100%', height: '32px', cursor: 'pointer' }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
-            <span>Freezing (-20°C)</span>
-            <span>Hot (50°C)</span>
+            <span>Freezing (-20C)</span>
+            <span>Hot (50C)</span>
           </div>
         </div>
       )}
@@ -590,386 +705,478 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
-
-  // HOOK PHASE
-  if (phase === 'hook') {
+  // Progress bar component
+  const renderProgressBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              Battery Internal Resistance
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Why do batteries feel weak when cold or nearly empty?
-            </p>
-          </div>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+        padding: '12px 16px',
+        background: 'rgba(0,0,0,0.3)',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
+      }}>
+        {phaseOrder.map((p, index) => (
+          <React.Fragment key={p}>
+            <button
+              onClick={() => index <= currentIndex && goToPhase(p)}
+              disabled={index > currentIndex}
+              style={{
+                width: isMobile ? '28px' : '32px',
+                height: isMobile ? '28px' : '32px',
+                borderRadius: '50%',
+                border: 'none',
+                background: index === currentIndex
+                  ? colors.accent
+                  : index < currentIndex
+                    ? colors.success
+                    : 'rgba(255,255,255,0.2)',
+                color: index <= currentIndex ? 'white' : colors.textMuted,
+                fontSize: isMobile ? '10px' : '11px',
+                fontWeight: 'bold',
+                cursor: index <= currentIndex ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                transition: 'all 0.2s ease',
+              }}
+              title={phaseLabels[p]}
+            >
+              {index + 1}
+            </button>
+            {index < phaseOrder.length - 1 && (
+              <div style={{
+                width: isMobile ? '12px' : '20px',
+                height: '2px',
+                background: index < currentIndex ? colors.success : 'rgba(255,255,255,0.2)',
+                flexShrink: 0,
+              }} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  };
 
-          {renderVisualization(true)}
+  // Bottom navigation bar
+  const getBottomBarConfig = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
 
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                Every battery has a hidden enemy inside: <strong style={{ color: colors.resistance }}>internal resistance</strong>.
-                This resistance steals voltage and wastes energy as heat, especially when the battery is cold,
-                nearly empty, or under heavy load.
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                Understanding internal resistance explains why your phone dies at 15%, why cars struggle to start in winter,
-                and why fast charging generates so much heat.
+    let canProceed = true;
+    let nextLabel = 'Next';
+
+    switch (phase) {
+      case 'hook':
+        nextLabel = 'Make a Prediction';
+        break;
+      case 'predict':
+        canProceed = !!prediction;
+        nextLabel = 'Test My Prediction';
+        break;
+      case 'play':
+        nextLabel = 'Continue to Review';
+        break;
+      case 'review':
+        nextLabel = 'Next: A Twist!';
+        break;
+      case 'twist_predict':
+        canProceed = !!twistPrediction;
+        nextLabel = 'Test My Prediction';
+        break;
+      case 'twist_play':
+        nextLabel = 'See the Explanation';
+        break;
+      case 'twist_review':
+        nextLabel = 'Apply This Knowledge';
+        break;
+      case 'transfer':
+        canProceed = transferCompleted.size >= 4;
+        nextLabel = 'Take the Test';
+        break;
+      case 'test':
+        canProceed = testSubmitted && testScore >= 8;
+        nextLabel = testSubmitted ? (testScore >= 8 ? 'Complete Mastery' : 'Review & Retry') : 'Submit Test';
+        break;
+      case 'mastery':
+        nextLabel = 'Complete Game';
+        break;
+    }
+
+    return { isFirst, isLast, canProceed, nextLabel };
+  };
+
+  const renderBottomBar = () => {
+    const { isFirst, isLast, canProceed, nextLabel } = getBottomBarConfig();
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '16px 24px',
+        background: colors.bgDark,
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        gap: '12px',
+        zIndex: 1000,
+      }}>
+        <button
+          onClick={goBack}
+          disabled={isFirst}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${isFirst ? 'rgba(255,255,255,0.1)' : colors.textMuted}`,
+            background: 'transparent',
+            color: isFirst ? colors.textMuted : colors.textPrimary,
+            fontWeight: 'bold',
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            opacity: isFirst ? 0.5 : 1,
+          }}
+        >
+          Back
+        </button>
+        <button
+          onClick={goNext}
+          disabled={!canProceed}
+          style={{
+            padding: '12px 32px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+            color: canProceed ? 'white' : colors.textMuted,
+            fontWeight: 'bold',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            flex: 1,
+            maxWidth: '300px',
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
+  };
+
+  // Render phase content
+  const renderPhaseContent = () => {
+    switch (phase) {
+      case 'hook':
+        return (
+          <>
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+                Battery Internal Resistance
+              </h1>
+              <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+                Why do batteries feel weak when cold or nearly empty?
               </p>
             </div>
+
+            {renderVisualization(true)}
+
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <div style={{
+                background: colors.bgCard,
+                padding: '20px',
+                borderRadius: '12px',
+                marginBottom: '16px',
+              }}>
+                <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+                  Every battery has a hidden enemy inside: <strong style={{ color: colors.resistance }}>internal resistance</strong>.
+                  This resistance steals voltage and wastes energy as heat, especially when the battery is cold,
+                  nearly empty, or under heavy load.
+                </p>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+                  Understanding internal resistance explains why your phone dies at 15%, why cars struggle to start in winter,
+                  and why fast charging generates so much heat.
+                </p>
+              </div>
+
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.2)',
+                padding: '16px',
+                borderRadius: '8px',
+                borderLeft: `3px solid ${colors.accent}`,
+              }}>
+                <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+                  Use the sliders to change load current and state of charge - watch the voltage drop!
+                </p>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'predict':
+        return (
+          <>
+            {renderVisualization(false)}
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You Are Looking At:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+                The battery has an internal resistance (R_int) that causes voltage to drop when current flows.
+                Open Circuit Voltage (OCV) is the voltage with no load. Terminal voltage is what the device actually sees.
+              </p>
+            </div>
+
+            <div style={{ padding: '0 16px 16px 16px' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+                What happens when you increase the current draw from a battery?
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {predictions.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setPrediction(p.id)}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                      background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                      color: colors.textPrimary,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        );
+
+      case 'play':
+        return (
+          <>
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Internal Resistance</h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                See how current and state of charge affect voltage
+              </p>
+            </div>
+
+            {renderVisualization(true)}
+            {renderControls()}
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+                <li>Set current to 10A and watch the voltage drop dramatically</li>
+                <li>Reduce SOC to 10% and notice resistance increases</li>
+                <li>Compare efficiency at 1A vs 10A load</li>
+                <li>Click "Sweep Current" to see the full range of behavior</li>
+              </ul>
+            </div>
+          </>
+        );
+
+      case 'review':
+        const wasCorrect = prediction === 'voltage_drops';
+        return (
+          <>
+            <div style={{
+              background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+              borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+            }}>
+              <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+                {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              </h3>
+              <p style={{ color: colors.textPrimary }}>
+                Battery voltage <strong>drops when current increases</strong> because of internal resistance.
+                The voltage you get at the terminals equals OCV minus the voltage lost across R_internal.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Internal Resistance</h3>
+              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Ohm's Law Inside the Battery:</strong> V_terminal = V_OCV - (I x R_internal).
+                  The higher the current, the more voltage is "lost" inside the battery.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Power Loss:</strong> P = I^2R. Power loss scales with the
+                  square of current! Double the current = 4x the heat generated inside the battery.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>SOC Effect:</strong> As the battery depletes, chemical
+                  reactions slow down, increasing resistance. A nearly empty battery has 2-3x higher resistance.
+                </p>
+                <p>
+                  <strong style={{ color: colors.textPrimary }}>Why It Matters:</strong> This is why fast charging
+                  generates heat (high current), why phones die at 15% under load, and why cold batteries
+                  cannot deliver high power.
+                </p>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'twist_predict':
+        return (
+          <>
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
+              <p style={{ color: colors.textSecondary }}>
+                High-current vs low-current loads
+              </p>
+            </div>
+
+            {renderVisualization(false, true)}
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+                A battery has increased internal resistance due to cold or low charge. You connect
+                two different devices: a flashlight (0.5A) and a power drill (5A). Which device
+                will reveal the battery's weakness more dramatically?
+              </p>
+            </div>
+
+            <div style={{ padding: '0 16px 16px 16px' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+                Which device reveals internal resistance problems more?
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {twistPredictions.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setTwistPrediction(p.id)}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                      background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                      color: colors.textPrimary,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        );
+
+      case 'twist_play':
+        return (
+          <>
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Temperature & Current Effects</h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                Try cold temperatures with high current draw
+              </p>
+            </div>
+
+            {renderVisualization(true, true)}
+            {renderControls(true)}
 
             <div style={{
               background: 'rgba(245, 158, 11, 0.2)',
+              margin: '16px',
               padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
+              borderRadius: '12px',
+              borderLeft: `3px solid ${colors.warning}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Use the sliders to change load current and state of charge - watch the voltage drop!
+              <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                Set temperature to -20C and SOC to 20%. Compare voltage at 0.5A (flashlight) vs 5A (power tool).
+                The high-current device sees a MUCH larger voltage drop - it might not even work!
               </p>
             </div>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
-      </div>
-    );
-  }
+          </>
+        );
 
-  // PREDICT PHASE
-  if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You Are Looking At:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              The battery has an internal resistance (R_int) that causes voltage to drop when current flows.
-              Open Circuit Voltage (OCV) is the voltage with no load. Terminal voltage is what the device actually sees.
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What happens when you increase the current draw from a battery?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
-      </div>
-    );
-  }
-
-  // PLAY PHASE
-  if (phase === 'play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Internal Resistance</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              See how current and state of charge affect voltage
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Set current to 10A and watch the voltage drop dramatically</li>
-              <li>Reduce SOC to 10% and notice resistance increases</li>
-              <li>Compare efficiency at 1A vs 10A load</li>
-              <li>Click "Sweep Current" to see the full range of behavior</li>
-            </ul>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
-      </div>
-    );
-  }
-
-  // REVIEW PHASE
-  if (phase === 'review') {
-    const wasCorrect = prediction === 'voltage_drops';
-
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Battery voltage <strong>drops when current increases</strong> because of internal resistance.
-              The voltage you get at the terminals equals OCV minus the voltage lost across R_internal.
-            </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Internal Resistance</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Ohm's Law Inside the Battery:</strong> V_terminal = V_OCV - (I x R_internal).
-                The higher the current, the more voltage is "lost" inside the battery.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Power Loss:</strong> P = I²R. Power loss scales with the
-                square of current! Double the current = 4x the heat generated inside the battery.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>SOC Effect:</strong> As the battery depletes, chemical
-                reactions slow down, increasing resistance. A nearly empty battery has 2-3x higher resistance.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Why It Matters:</strong> This is why fast charging
-                generates heat (high current), why phones die at 15% under load, and why cold batteries
-                cannot deliver high power.
+      case 'twist_review':
+        const twistWasCorrect = twistPrediction === 'high_current_better';
+        return (
+          <>
+            <div style={{
+              background: twistWasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+              borderLeft: `4px solid ${twistWasCorrect ? colors.success : colors.error}`,
+            }}>
+              <h3 style={{ color: twistWasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+                {twistWasCorrect ? 'Correct!' : 'Not Quite!'}
+              </h3>
+              <p style={{ color: colors.textPrimary }}>
+                <strong>High-current devices reveal internal resistance more dramatically!</strong> The voltage
+                drop is proportional to current (V = IR), so a 10x higher current means 10x more voltage drop.
               </p>
             </div>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
-      </div>
-    );
-  }
 
-  // TWIST PREDICT PHASE
-  if (phase === 'twist_predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              High-current vs low-current loads
-            </p>
-          </div>
-
-          {renderVisualization(false, true)}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              A battery has increased internal resistance due to cold or low charge. You connect
-              two different devices: a flashlight (0.5A) and a power drill (5A). Which device
-              will reveal the battery's weakness more dramatically?
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              Which device reveals internal resistance problems more?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why High Current Exposes Weak Batteries</h3>
+              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>The Math:</strong> With 200mOhm internal resistance:
+                  <br/>- At 0.5A: Voltage drop = 0.1V (barely noticeable)
+                  <br/>- At 5A: Voltage drop = 1V (device may not work!)
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Real Example - Car Battery:</strong> A 12V car battery
+                  with 100mOhm resistance can light headlights (2A, 0.2V drop) all night, but cannot crank a
+                  starter motor (300A, 30V drop!) when cold.
+                </p>
+                <p>
+                  <strong style={{ color: colors.textPrimary }}>Practical Impact:</strong> This is why battery
+                  testing uses high-current "load tests" rather than just measuring voltage. A battery can
+                  show 12V at rest but fail completely under load.
+                </p>
+              </div>
             </div>
-          </div>
-        </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
-      </div>
-    );
-  }
+          </>
+        );
 
-  // TWIST PLAY PHASE
-  if (phase === 'twist_play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Temperature & Current Effects</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Try cold temperatures with high current draw
-            </p>
-          </div>
-
-          {renderVisualization(true, true)}
-          {renderControls(true)}
-
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Set temperature to -20°C and SOC to 20%. Compare voltage at 0.5A (flashlight) vs 5A (power tool).
-              The high-current device sees a MUCH larger voltage drop - it might not even work!
-            </p>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
-      </div>
-    );
-  }
-
-  // TWIST REVIEW PHASE
-  if (phase === 'twist_review') {
-    const wasCorrect = twistPrediction === 'high_current_better';
-
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              <strong>High-current devices reveal internal resistance more dramatically!</strong> The voltage
-              drop is proportional to current (V = IR), so a 10x higher current means 10x more voltage drop.
-            </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why High Current Exposes Weak Batteries</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>The Math:</strong> With 200mΩ internal resistance:
-                <br/>- At 0.5A: Voltage drop = 0.1V (barely noticeable)
-                <br/>- At 5A: Voltage drop = 1V (device may not work!)
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Real Example - Car Battery:</strong> A 12V car battery
-                with 100mΩ resistance can light headlights (2A, 0.2V drop) all night, but cannot crank a
-                starter motor (300A, 30V drop!) when cold.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Practical Impact:</strong> This is why battery
-                testing uses high-current "load tests" rather than just measuring voltage. A battery can
-                show 12V at rest but fail completely under load.
-              </p>
-            </div>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
-      </div>
-    );
-  }
-
-  // TRANSFER PHASE
-  if (phase === 'transfer') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      case 'transfer':
+        return (
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -980,92 +1187,82 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
             <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
               Complete all 4 applications to unlock the test
             </p>
-          </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
+            {transferApplications.map((app, index) => (
+              <div
+                key={index}
+                style={{
+                  background: colors.bgCard,
+                  margin: '16px 0',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
+                  {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                </div>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+                <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
+                  <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+                </div>
+                {!transferCompleted.has(index) ? (
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', WebkitTapHighlightColor: 'transparent' }}
+                  >
+                    Reveal Answer
+                  </button>
+                ) : (
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'test':
+        if (testSubmitted) {
+          return (
+            <>
+              <div style={{
+                background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
                 margin: '16px',
-                padding: '16px',
+                padding: '24px',
                 borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                textAlign: 'center',
+              }}>
+                <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
+                  {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+                </h2>
+                <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+                <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+                  {testScore >= 8 ? 'You understand battery internal resistance!' : 'Review the material and try again.'}
+                </p>
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', WebkitTapHighlightColor: 'transparent' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
-      </div>
-    );
-  }
+              {testQuestions.map((q, qIndex) => {
+                const userAnswer = testAnswers[qIndex];
+                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                return (
+                  <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                    <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                    {q.options.map((opt, oIndex) => (
+                      <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                        {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </>
+          );
+        }
 
-  // TEST PHASE
-  if (phase === 'test') {
-    if (testSubmitted) {
-      return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You understand battery internal resistance!' : 'Review the material and try again.'}
-              </p>
-            </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
-          </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
-        </div>
-      );
-    }
-
-    const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        const currentQ = testQuestions[currentTestQuestion];
+        return (
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1086,57 +1283,62 @@ const BatteryInternalResistanceRenderer: React.FC<BatteryInternalResistanceRende
                 </button>
               ))}
             </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0' }}>
+              <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
+              {currentTestQuestion < testQuestions.length - 1 ? (
+                <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
+              ) : (
+                <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Submit Test</button>
+              )}
+            </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
-            ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Submit Test</button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+        );
 
-  // MASTERY PHASE
-  if (phase === 'mastery') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered battery internal resistance</p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Internal resistance causes voltage drop under load (V = IR)</li>
-              <li>Power loss scales with current squared (P = I²R)</li>
-              <li>Resistance increases at low state of charge</li>
-              <li>Cold temperatures dramatically increase resistance</li>
-              <li>High-current loads reveal weak batteries</li>
-              <li>Battery Management Systems protect against damage</li>
-            </ul>
-          </div>
-          <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              Advanced batteries use multiple cells in parallel to reduce effective internal resistance.
-              Solid-state batteries promise lower resistance and better cold performance. Understanding
-              internal resistance is crucial for designing everything from smartphones to electric aircraft!
-            </p>
-          </div>
-          {renderVisualization(true, true)}
-        </div>
-        {renderBottomBar(false, true, 'Complete Game')}
-      </div>
-    );
-  }
+      case 'mastery':
+        return (
+          <>
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+              <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+              <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered battery internal resistance</p>
+            </div>
+            <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+              <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+                <li>Internal resistance causes voltage drop under load (V = IR)</li>
+                <li>Power loss scales with current squared (P = I^2R)</li>
+                <li>Resistance increases at low state of charge</li>
+                <li>Cold temperatures dramatically increase resistance</li>
+                <li>High-current loads reveal weak batteries</li>
+                <li>Battery Management Systems protect against damage</li>
+              </ul>
+            </div>
+            <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+                Advanced batteries use multiple cells in parallel to reduce effective internal resistance.
+                Solid-state batteries promise lower resistance and better cold performance. Understanding
+                internal resistance is crucial for designing everything from smartphones to electric aircraft!
+              </p>
+            </div>
+            {renderVisualization(true, true)}
+          </>
+        );
 
-  return null;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      {renderProgressBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderPhaseContent()}
+      </div>
+      {renderBottomBar()}
+    </div>
+  );
 };
 
 export default BatteryInternalResistanceRenderer;

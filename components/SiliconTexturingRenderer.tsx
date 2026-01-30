@@ -1,11 +1,28 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// Phase type for internal state management
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface SiliconTexturingRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: Phase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
+
+// Phase order and labels for navigation
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Compare',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
+};
 
 const colors = {
   textPrimary: '#f8fafc',
@@ -25,11 +42,31 @@ const colors = {
 };
 
 const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase]);
+
+  // Navigation refs
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
   // Simulation state
   const [surfaceType, setSurfaceType] = useState<'smooth' | 'random' | 'periodic'>('smooth');
   const [textureDepth, setTextureDepth] = useState(50);
@@ -519,7 +556,97 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  // Navigation function
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const currentIdx = phaseOrder.indexOf(phase);
+
+  // Progress bar component
+  const renderProgressBar = () => (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'space-between',
+      padding: '12px 16px',
+      background: colors.bgDark,
+      borderBottom: `1px solid rgba(255,255,255,0.1)`,
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '6px',
+            border: 'none',
+            background: currentIdx > 0 ? 'rgba(255,255,255,0.1)' : 'transparent',
+            color: currentIdx > 0 ? colors.textPrimary : colors.textMuted,
+            cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+          }}
+        >
+          Back
+        </button>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        {phaseOrder.map((p, i) => (
+          <div
+            key={p}
+            onClick={() => i <= currentIdx && goToPhase(p)}
+            style={{
+              width: i === currentIdx ? '24px' : '8px',
+              height: '8px',
+              borderRadius: '4px',
+              background: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
+              cursor: i <= currentIdx ? 'pointer' : 'default',
+              transition: 'all 0.3s',
+            }}
+          />
+        ))}
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+          {currentIdx + 1}/{phaseOrder.length}
+        </span>
+        <span style={{
+          padding: '4px 8px',
+          borderRadius: '4px',
+          background: 'rgba(245, 158, 11, 0.2)',
+          color: colors.accent,
+          fontSize: '11px',
+          fontWeight: 'bold',
+        }}>
+          {phaseLabels[phase]}
+        </span>
+      </div>
+    </div>
+  );
+
+  const renderBottomBar = (canGoBack: boolean, canProceed: boolean, buttonText: string) => (
     <div style={{
       position: 'fixed',
       bottom: 0,
@@ -529,12 +656,34 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
       background: colors.bgDark,
       borderTop: `1px solid rgba(255,255,255,0.1)`,
       display: 'flex',
-      justifyContent: 'flex-end',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       zIndex: 1000,
     }}>
       <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
+        onClick={goBack}
+        disabled={currentIdx === 0}
+        style={{
+          padding: '12px 24px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.textMuted}`,
+          background: 'transparent',
+          color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
+          fontWeight: 'bold',
+          cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
+          fontSize: '14px',
+          opacity: currentIdx > 0 ? 1 : 0.5,
+          WebkitTapHighlightColor: 'transparent',
+        }}
+      >
+        Back
+      </button>
+      <span style={{ color: colors.textMuted, fontSize: '12px' }}>
+        {phaseLabels[phase]}
+      </span>
+      <button
+        onClick={goNext}
+        disabled={!canProceed}
         style={{
           padding: '12px 32px',
           borderRadius: '8px',
@@ -556,6 +705,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
@@ -605,6 +755,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           {renderVisualization(false)}
 
@@ -657,6 +808,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Light Trapping Lab</h2>
@@ -694,6 +846,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -750,6 +903,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
@@ -809,6 +963,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Compare Texture Types</h2>
@@ -846,6 +1001,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -898,6 +1054,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -964,6 +1121,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          {renderProgressBar()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -1003,6 +1161,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1097,6 +1256,7 @@ const SiliconTexturingRenderer: React.FC<SiliconTexturingRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>

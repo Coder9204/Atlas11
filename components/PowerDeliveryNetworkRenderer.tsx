@@ -1,12 +1,21 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+
+// Phase type for internal state management
+type PDNPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface PowerDeliveryNetworkRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  gamePhase?: string; // Optional for resume functionality
+  onGameEvent?: (event: GameEvent) => void;
+}
+
+interface GameEvent {
+  eventType: string;
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
 const colors = {
@@ -16,6 +25,8 @@ const colors = {
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
+  bgCardLight: '#1e293b',
+  border: '#334155',
   accent: '#f59e0b',
   accentGlow: 'rgba(245, 158, 11, 0.4)',
   success: '#10b981',
@@ -25,14 +36,49 @@ const colors = {
   ground: '#6366f1',
   capacitor: '#22c55e',
   voltage: '#f59e0b',
+  primary: '#06b6d4',
 };
 
 const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
+  gamePhase,
+  onGameEvent,
 }) => {
+  // Phase order and labels for navigation
+  const phaseOrder: PDNPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<PDNPhase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Parallel Paths',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  // Internal phase state management
+  const getInitialPhase = (): PDNPhase => {
+    if (gamePhase && phaseOrder.includes(gamePhase as PDNPhase)) {
+      return gamePhase as PDNPhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<PDNPhase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as PDNPhase) && gamePhase !== phase) {
+      setPhase(gamePhase as PDNPhase);
+    }
+  }, [gamePhase]);
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
   // Simulation state
   const [currentDemand, setCurrentDemand] = useState(50); // Amps
   const [decouplingCapacitance, setDecouplingCapacitance] = useState(100); // uF total
@@ -49,8 +95,67 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
+  // Responsive design
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Emit game events
+  const emitGameEvent = useCallback((eventType: string, details: Record<string, unknown>) => {
+    if (onGameEvent) {
+      onGameEvent({
+        eventType,
+        gameType: 'power_delivery_network',
+        gameTitle: 'Power Delivery Network',
+        details,
+        timestamp: Date.now()
+      });
+    }
+  }, [onGameEvent]);
+
+  // Navigation function
+  const goToPhase = useCallback((p: PDNPhase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+
+    const idx = phaseOrder.indexOf(p);
+    emitGameEvent('phase_changed', {
+      phase: p,
+      phaseLabel: phaseLabels[p],
+      currentScreen: idx + 1,
+      totalScreens: phaseOrder.length,
+      message: `Navigated to ${phaseLabels[p]}`
+    });
+
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, [emitGameEvent, phaseLabels, phaseOrder]);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
   // Animation
-  React.useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setAnimationTime(t => (t + 1) % 360);
     }, 30);
@@ -248,8 +353,145 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
     });
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
-    if (score < 7 && onIncorrectAnswer) onIncorrectAnswer();
+  };
+
+  // Progress bar renderer
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: isMobile ? '10px 12px' : '12px 16px',
+        borderBottom: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: isMobile ? '8px' : '16px'
+      }}>
+        {/* Back button */}
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          style={{
+            padding: '8px 12px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            backgroundColor: currentIdx > 0 ? colors.bgCardLight : 'transparent',
+            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
+            cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
+            opacity: currentIdx > 0 ? 1 : 0.4,
+            fontSize: '14px',
+            fontWeight: 600
+          }}
+        >
+          Back
+        </button>
+
+        {/* Progress dots */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, justifyContent: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <div
+              key={p}
+              onClick={() => i <= currentIdx && goToPhase(p)}
+              style={{
+                width: i === currentIdx ? '20px' : '10px',
+                height: '10px',
+                borderRadius: '5px',
+                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
+                cursor: i <= currentIdx ? 'pointer' : 'default',
+                transition: 'all 0.2s'
+              }}
+              title={phaseLabels[p]}
+            />
+          ))}
+        </div>
+
+        {/* Phase indicator */}
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: `${colors.primary}20`,
+          color: colors.primary,
+          fontSize: '11px',
+          fontWeight: 700
+        }}>
+          {currentIdx + 1}/{phaseOrder.length}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom bar renderer
+  const renderBottomBar = (canGoNext: boolean, nextLabel: string, onNext?: () => void) => {
+    const currentIdx = phaseOrder.indexOf(phase);
+
+    const handleNext = () => {
+      if (!canGoNext) return;
+      if (onNext) {
+        onNext();
+      } else if (currentIdx < phaseOrder.length - 1) {
+        goToPhase(phaseOrder[currentIdx + 1]);
+      }
+    };
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isMobile ? '12px' : '12px 16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '12px'
+      }}>
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          style={{
+            padding: isMobile ? '10px 16px' : '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: isMobile ? '13px' : '14px',
+            backgroundColor: colors.bgCardLight,
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
+            opacity: currentIdx > 0 ? 1 : 0.3,
+            minHeight: '44px'
+          }}
+        >
+          Back
+        </button>
+
+        <span style={{
+          fontSize: '12px',
+          color: colors.textMuted,
+          fontWeight: 600
+        }}>
+          {phaseLabels[phase]}
+        </span>
+
+        <button
+          onClick={handleNext}
+          disabled={!canGoNext}
+          style={{
+            padding: isMobile ? '10px 20px' : '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: isMobile ? '13px' : '14px',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.accent} 0%, #d97706 100%)` : colors.bgCardLight,
+            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.4,
+            boxShadow: canGoNext ? `0 2px 12px ${colors.accent}30` : 'none',
+            minHeight: '44px'
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
   };
 
   const renderVisualization = () => {
@@ -262,7 +504,6 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
     const isSurging = Math.sin(surgePhase * 2) > 0.7;
 
     // Voltage droop animation during surge
-    const voltageDisplay = isSurging ? pdn.effectiveVoltage : pdn.vTarget;
     const droopActive = isSurging && pdn.droopPercentage > 5;
 
     return (
@@ -506,48 +747,11 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
     </div>
   );
 
-  const buttonStyle = {
-    WebkitTapHighlightColor: 'transparent' as const,
-  };
-
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed' as const,
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          ...buttonStyle,
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
-
-  // HOOK PHASE
-  if (phase === 'hook') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+  // Render content based on phase
+  const renderContent = () => {
+    switch (phase) {
+      case 'hook':
+        return (
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
               Power Delivery Network (PDN)
@@ -555,15 +759,12 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
             <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
               Why do chips have hundreds of power pins?
             </p>
-          </div>
-
-          {renderVisualization()}
-
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+            {renderVisualization()}
             <div style={{
               background: colors.bgCard,
               padding: '20px',
               borderRadius: '12px',
+              marginTop: '16px',
               marginBottom: '16px',
             }}>
               <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
@@ -575,62 +776,38 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
                 The power delivery network is one of the hardest challenges in chip design!
               </p>
             </div>
+          </div>
+        );
 
+      case 'predict':
+        return (
+          <div style={{ padding: '20px' }}>
+            {renderVisualization()}
             <div style={{
-              background: 'rgba(245, 158, 11, 0.2)',
+              background: colors.bgCard,
+              margin: '16px 0',
               padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
+              borderRadius: '12px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Explore how capacitors and low-inductance paths keep voltage stable!
+              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Question:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+                A CPU suddenly demands 100 amps more current in 1 nanosecond (a "current transient").
+                What is the main challenge in delivering this power?
               </p>
             </div>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
-      </div>
-    );
-  }
-
-  // PREDICT PHASE
-  if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Question:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              A CPU suddenly demands 100 amps more current in 1 nanosecond (a "current transient").
-              What is the main challenge in delivering this power?
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What limits how fast we can deliver current to a chip?
-            </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {predictions.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => setPrediction(p.id)}
                   style={{
-                    ...buttonStyle,
                     padding: '16px',
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
                     color: colors.textPrimary,
                     cursor: 'pointer',
-                    textAlign: 'left' as const,
+                    textAlign: 'left',
                     fontSize: '14px',
                   }}
                 >
@@ -639,149 +816,119 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
               ))}
             </div>
           </div>
-        </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
-      </div>
-    );
-  }
+        );
 
-  // PLAY PHASE
-  if (phase === 'play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore the PDN</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Adjust parameters to see how voltage droop changes
-            </p>
-          </div>
-
-          {renderVisualization()}
-          {renderControls()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Increase current demand - watch voltage droop grow</li>
-              <li>Add more decoupling capacitance - see droop decrease</li>
-              <li>Move VRM closer - notice reduced inductance helps</li>
-              <li>Try to get droop below 5% at 100A</li>
-            </ul>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
-      </div>
-    );
-  }
-
-  // REVIEW PHASE
-  if (phase === 'review') {
-    const wasCorrect = prediction === 'inductance';
-
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Inductance is the enemy of fast current delivery! V = L x di/dt means that
-              even tiny inductance (nanohenries) creates huge voltage drops when current
-              changes in nanoseconds.
-            </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Power Delivery Fundamentals</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Voltage Droop:</strong> V = L x di/dt.
-                100A in 1ns through 100pH = 10mV drop. At 1V supply, that is 1%!
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Decoupling Capacitors:</strong> Store
-                charge locally to supply current faster than the remote VRM can respond.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Target Impedance:</strong> Z = deltaV / deltaI.
-                For 5% droop at 100A on 1V: Z = 0.05V / 100A = 0.5 milliohms!
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Capacitor Hierarchy:</strong> Bulk caps for
-                low frequency, ceramics for mid, on-die caps for highest frequency transients.
+      case 'play':
+        return (
+          <div style={{ padding: '16px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore the PDN</h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                Adjust parameters to see how voltage droop changes
               </p>
             </div>
+            {renderVisualization()}
+            {renderControls()}
+            <div style={{
+              background: colors.bgCard,
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+                <li>Increase current demand - watch voltage droop grow</li>
+                <li>Add more decoupling capacitance - see droop decrease</li>
+                <li>Move VRM closer - notice reduced inductance helps</li>
+                <li>Try to get droop below 5% at 100A</li>
+              </ul>
+            </div>
           </div>
-        </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
-      </div>
-    );
-  }
+        );
 
-  // TWIST PREDICT PHASE
-  if (phase === 'twist_predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              Why do modern CPUs have hundreds of power and ground pins?
-            </p>
+      case 'review':
+        const wasCorrect = prediction === 'inductance';
+        return (
+          <div style={{ padding: '20px' }}>
+            <div style={{
+              background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              padding: '20px',
+              borderRadius: '12px',
+              borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+              marginBottom: '16px'
+            }}>
+              <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+                {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              </h3>
+              <p style={{ color: colors.textPrimary }}>
+                Inductance is the enemy of fast current delivery! V = L x di/dt means that
+                even tiny inductance (nanohenries) creates huge voltage drops when current
+                changes in nanoseconds.
+              </p>
+            </div>
+            <div style={{
+              background: colors.bgCard,
+              padding: '20px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Power Delivery Fundamentals</h3>
+              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Voltage Droop:</strong> V = L x di/dt.
+                  100A in 1ns through 100pH = 10mV drop. At 1V supply, that is 1%!
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Decoupling Capacitors:</strong> Store
+                  charge locally to supply current faster than the remote VRM can respond.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Target Impedance:</strong> Z = deltaV / deltaI.
+                  For 5% droop at 100A on 1V: Z = 0.05V / 100A = 0.5 milliohms!
+                </p>
+                <p>
+                  <strong style={{ color: colors.textPrimary }}>Capacitor Hierarchy:</strong> Bulk caps for
+                  low frequency, ceramics for mid, on-die caps for highest frequency transients.
+                </p>
+              </div>
+            </div>
           </div>
+        );
 
-          {renderVisualization()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Pin Count Mystery:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              An Intel Core processor has over 1,000 pins in its package.
-              About half are power and ground - not for data!
-              Why so many just for power delivery?
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              Why does a CPU need hundreds of power pins?
-            </h3>
+      case 'twist_predict':
+        return (
+          <div style={{ padding: '20px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
+              <p style={{ color: colors.textSecondary }}>
+                Why do modern CPUs have hundreds of power and ground pins?
+              </p>
+            </div>
+            {renderVisualization()}
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px 0',
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Pin Count Mystery:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+                An Intel Core processor has over 1,000 pins in its package.
+                About half are power and ground - not for data!
+                Why so many just for power delivery?
+              </p>
+            </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {twistPredictions.map((p) => (
                 <button
                   key={p.id}
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
-                    ...buttonStyle,
                     padding: '16px',
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
                     color: colors.textPrimary,
                     cursor: 'pointer',
-                    textAlign: 'left' as const,
+                    textAlign: 'left',
                     fontSize: '14px',
                   }}
                 >
@@ -790,105 +937,82 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
               ))}
             </div>
           </div>
-        </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
-      </div>
-    );
-  }
+        );
 
-  // TWIST PLAY PHASE
-  if (phase === 'twist_play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Parallel Paths = Lower Inductance</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Explore how path inductance affects droop
-            </p>
-          </div>
-
-          {renderVisualization()}
-          {renderControls()}
-
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Insight:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Parallel inductors: L_total = L / N. Ten parallel power pins have 1/10 the inductance
-              of a single pin. This is why CPUs have hundreds of power pins - each one reduces
-              the total path inductance!
-            </p>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
-      </div>
-    );
-  }
-
-  // TWIST REVIEW PHASE
-  if (phase === 'twist_review') {
-    const wasCorrect = twistPrediction === 'distributed';
-
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Many parallel pins drastically reduce inductance. 100 pins in parallel have
-              1/100th the inductance of a single pin. This is essential for delivering
-              fast current transients without excessive voltage droop.
-            </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>The Parallel Path Strategy</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Package Design:</strong> Power and ground
-                pins are spread across the entire package, not clustered in one corner.
+      case 'twist_play':
+        return (
+          <div style={{ padding: '16px' }}>
+            <div style={{ textAlign: 'center', marginBottom: '16px' }}>
+              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Parallel Paths = Lower Inductance</h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                Explore how path inductance affects droop
               </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>PCB Design:</strong> Multiple layers
-                dedicated to power and ground planes, with many vias connecting them.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Integrated VR:</strong> Some designs
-                integrate voltage regulators into the CPU package itself, minimizing the
-                distance (and thus inductance) between VRM and chip.
+            </div>
+            {renderVisualization()}
+            {renderControls()}
+            <div style={{
+              background: 'rgba(245, 158, 11, 0.2)',
+              padding: '16px',
+              borderRadius: '12px',
+              borderLeft: `3px solid ${colors.warning}`,
+            }}>
+              <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Insight:</h4>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                Parallel inductors: L_total = L / N. Ten parallel power pins have 1/10 the inductance
+                of a single pin. This is why CPUs have hundreds of power pins - each one reduces
+                the total path inductance!
               </p>
             </div>
           </div>
-        </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
-      </div>
-    );
-  }
+        );
 
-  // TRANSFER PHASE
-  if (phase === 'transfer') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      case 'twist_review':
+        const twistCorrect = twistPrediction === 'distributed';
+        return (
+          <div style={{ padding: '20px' }}>
+            <div style={{
+              background: twistCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              padding: '20px',
+              borderRadius: '12px',
+              borderLeft: `4px solid ${twistCorrect ? colors.success : colors.error}`,
+              marginBottom: '16px'
+            }}>
+              <h3 style={{ color: twistCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+                {twistCorrect ? 'Correct!' : 'Not Quite!'}
+              </h3>
+              <p style={{ color: colors.textPrimary }}>
+                Many parallel pins drastically reduce inductance. 100 pins in parallel have
+                1/100th the inductance of a single pin. This is essential for delivering
+                fast current transients without excessive voltage droop.
+              </p>
+            </div>
+            <div style={{
+              background: colors.bgCard,
+              padding: '20px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.warning, marginBottom: '12px' }}>The Parallel Path Strategy</h3>
+              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Package Design:</strong> Power and ground
+                  pins are spread across the entire package, not clustered in one corner.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>PCB Design:</strong> Multiple layers
+                  dedicated to power and ground planes, with many vias connecting them.
+                </p>
+                <p>
+                  <strong style={{ color: colors.textPrimary }}>Integrated VR:</strong> Some designs
+                  integrate voltage regulators into the CPU package itself, minimizing the
+                  distance (and thus inductance) between VRM and chip.
+                </p>
+              </div>
+            </div>
+          </div>
+        );
+
+      case 'transfer':
+        return (
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -899,92 +1023,81 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
             <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
               Complete all 4 applications to unlock the test
             </p>
+            {transferApplications.map((app, index) => (
+              <div
+                key={index}
+                style={{
+                  background: colors.bgCard,
+                  margin: '0 0 16px 0',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
+                  {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                </div>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+                <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
+                  <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+                </div>
+                {!transferCompleted.has(index) ? (
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
+                  >
+                    Reveal Answer
+                  </button>
+                ) : (
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                )}
+              </div>
+            ))}
           </div>
+        );
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
+      case 'test':
+        if (testSubmitted) {
+          return (
+            <div style={{ padding: '20px' }}>
+              <div style={{
+                background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                padding: '24px',
                 borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                textAlign: 'center',
+                marginBottom: '16px'
+              }}>
+                <h2 style={{ color: testScore >= 7 ? colors.success : colors.error, marginBottom: '8px' }}>
+                  {testScore >= 7 ? 'Excellent!' : 'Keep Learning!'}
+                </h2>
+                <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+                <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+                  {testScore >= 7 ? 'You understand Power Delivery Networks!' : 'Review the material and try again.'}
+                </p>
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ ...buttonStyle, padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
+              {testQuestions.map((q, qIndex) => {
+                const userAnswer = testAnswers[qIndex];
+                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                return (
+                  <div key={qIndex} style={{ background: colors.bgCard, marginBottom: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                    <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                    {q.options.map((opt, oIndex) => (
+                      <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                        {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
             </div>
-          ))}
-        </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
-      </div>
-    );
-  }
+          );
+        }
 
-  // TEST PHASE
-  if (phase === 'test') {
-    if (testSubmitted) {
-      return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 7 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 7 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 7 ? 'You understand Power Delivery Networks!' : 'Review the material and try again.'}
-              </p>
-            </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct' : userAnswer === oIndex ? 'Your answer' : ''} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
-          </div>
-          {renderBottomBar(false, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry')}
-        </div>
-      );
-    }
-
-    const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        const currentQ = testQuestions[currentTestQuestion];
+        return (
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1000,62 +1113,105 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ ...buttonStyle, padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left' as const, fontSize: '14px' }}>
+                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(245, 158, 11, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
                   {opt.text}
                 </button>
               ))}
             </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '16px' }}>
+              <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
+              {currentTestQuestion < testQuestions.length - 1 ? (
+                <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+              ) : (
+                <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+              )}
+            </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ ...buttonStyle, padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ ...buttonStyle, padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
-            ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ ...buttonStyle, padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+        );
 
-  // MASTERY PHASE
-  if (phase === 'mastery') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+      case 'mastery':
+        return (
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
             <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
             <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You understand Power Delivery Networks!</p>
+            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', textAlign: 'left', marginBottom: '16px' }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+              <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+                <li>Voltage droop = L x di/dt during current transients</li>
+                <li>Decoupling capacitors supply local charge</li>
+                <li>Many parallel power pins reduce inductance</li>
+                <li>Target impedance = deltaV_allowed / I_max</li>
+                <li>Capacitor hierarchy covers different frequencies</li>
+              </ul>
+            </div>
+            <div style={{ background: 'rgba(245, 158, 11, 0.2)', padding: '20px', borderRadius: '12px', textAlign: 'left' }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+                As CPUs push beyond 300W TDP and voltages drop below 1V, power delivery becomes
+                the limiting factor in performance. Advanced packaging with integrated voltage
+                regulators, 3D stacking with through-silicon vias, and even on-chip inductors
+                are being explored to push the boundaries of power delivery!
+              </p>
+            </div>
+            {renderVisualization()}
           </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Voltage droop = L x di/dt during current transients</li>
-              <li>Decoupling capacitors supply local charge</li>
-              <li>Many parallel power pins reduce inductance</li>
-              <li>Target impedance = deltaV_allowed / I_max</li>
-              <li>Capacitor hierarchy covers different frequencies</li>
-            </ul>
-          </div>
-          <div style={{ background: 'rgba(245, 158, 11, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              As CPUs push beyond 300W TDP and voltages drop below 1V, power delivery becomes
-              the limiting factor in performance. Advanced packaging with integrated voltage
-              regulators, 3D stacking with through-silicon vias, and even on-chip inductors
-              are being explored to push the boundaries of power delivery!
-            </p>
-          </div>
-          {renderVisualization()}
-        </div>
-        {renderBottomBar(false, true, 'Complete Game')}
-      </div>
-    );
-  }
+        );
 
-  return null;
+      default:
+        return null;
+    }
+  };
+
+  // Determine navigation state for bottom bar
+  const getNavigationState = () => {
+    switch (phase) {
+      case 'hook':
+        return { canGoNext: true, nextLabel: 'Make a Prediction' };
+      case 'predict':
+        return { canGoNext: !!prediction, nextLabel: 'Test My Prediction' };
+      case 'play':
+        return { canGoNext: true, nextLabel: 'Continue to Review' };
+      case 'review':
+        return { canGoNext: true, nextLabel: 'Next: A Twist!' };
+      case 'twist_predict':
+        return { canGoNext: !!twistPrediction, nextLabel: 'Test My Prediction' };
+      case 'twist_play':
+        return { canGoNext: true, nextLabel: 'See the Explanation' };
+      case 'twist_review':
+        return { canGoNext: true, nextLabel: 'Apply This Knowledge' };
+      case 'transfer':
+        return { canGoNext: transferCompleted.size >= 4, nextLabel: transferCompleted.size >= 4 ? 'Take the Test' : `Explore ${4 - transferCompleted.size} more` };
+      case 'test':
+        if (testSubmitted) {
+          return { canGoNext: testScore >= 7, nextLabel: testScore >= 7 ? 'Complete Mastery' : 'Review & Retry' };
+        }
+        return { canGoNext: false, nextLabel: 'Answer All Questions' };
+      case 'mastery':
+        return { canGoNext: true, nextLabel: 'Complete Game' };
+      default:
+        return { canGoNext: true, nextLabel: 'Continue' };
+    }
+  };
+
+  const navState = getNavigationState();
+
+  return (
+    <div style={{
+      height: '100dvh',
+      display: 'flex',
+      flexDirection: 'column',
+      overflow: 'hidden',
+      background: colors.bgPrimary,
+      color: colors.textPrimary
+    }}>
+      {renderProgressBar()}
+      <div style={{ flex: 1, overflowY: 'auto', overflowX: 'hidden' }}>
+        {renderContent()}
+      </div>
+      {renderBottomBar(navState.canGoNext, navState.nextLabel)}
+    </div>
+  );
 };
 
 export default PowerDeliveryNetworkRenderer;

@@ -10,12 +10,20 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 interface Props {
   onGameEvent?: (event: { type: string; data?: Record<string, unknown> }) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: number;
 }
 
-const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState(0);
+type Phase = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+
+const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
+  const getInitialPhase = (): Phase => {
+    if (gamePhase !== undefined && gamePhase >= 0 && gamePhase <= 9) {
+      return gamePhase as Phase;
+    }
+    return 0;
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -93,11 +101,12 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
     };
   }, [altitude, shielding, chipType, solarActivity]);
 
+  // Sync phase with gamePhase prop changes (for resume functionality)
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase !== undefined && gamePhase >= 0 && gamePhase <= 9 && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -187,15 +196,144 @@ const RadiationEffectsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
     navigationLockRef.current = true;
     playSound('transition');
 
-    if (onPhaseComplete && newPhase > phase) {
-      onPhaseComplete(phase);
-    }
-
-    setPhase(newPhase);
+    setPhase(newPhase as Phase);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseName: phaseNames[newPhase] } });
 
     setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [phase, playSound, onPhaseComplete, onGameEvent, phaseNames]);
+  }, [playSound, onGameEvent, phaseNames]);
+
+  const goNext = useCallback(() => {
+    if (phase < 9) goToPhase(phase + 1);
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    if (phase > 0) goToPhase(phase - 1);
+  }, [phase, goToPhase]);
+
+  // Progress bar showing all 10 phases
+  const renderProgressBar = () => (
+    <div style={{
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      padding: '12px 16px',
+      borderBottom: '1px solid #334155',
+      backgroundColor: '#0f172a',
+      gap: '16px'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+        <div style={{ display: 'flex', gap: '6px' }}>
+          {phaseNames.map((name, i) => (
+            <div
+              key={i}
+              onClick={() => i <= phase && goToPhase(i)}
+              style={{
+                height: '8px',
+                width: i === phase ? '24px' : '8px',
+                borderRadius: '4px',
+                backgroundColor: i < phase ? '#22c55e' : i === phase ? '#ef4444' : '#334155',
+                cursor: i <= phase ? 'pointer' : 'default',
+                transition: 'all 0.3s'
+              }}
+              title={name}
+            />
+          ))}
+        </div>
+        <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b' }}>
+          {phase + 1} / {phaseNames.length}
+        </span>
+      </div>
+      <div style={{
+        padding: '4px 12px',
+        borderRadius: '12px',
+        background: 'rgba(239, 68, 68, 0.2)',
+        color: '#ef4444',
+        fontSize: '11px',
+        fontWeight: 700
+      }}>
+        {phaseNames[phase]}
+      </div>
+    </div>
+  );
+
+  // Bottom navigation bar with Back/Next
+  const renderBottomBar = (canGoNext: boolean = true, nextLabel: string = 'Next') => {
+    const canBack = phase > 0;
+    const isLastPhase = phase === 9;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '16px 24px',
+        borderTop: '1px solid #334155',
+        backgroundColor: '#0f172a',
+        marginTop: 'auto'
+      }}>
+        <button
+          onClick={goBack}
+          disabled={!canBack}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: '14px',
+            backgroundColor: '#1e293b',
+            color: canBack ? '#e2e8f0' : '#475569',
+            border: '1px solid #334155',
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.5
+          }}
+        >
+          Back
+        </button>
+
+        <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
+          {phaseNames[phase]}
+        </span>
+
+        {!isLastPhase && (
+          <button
+            onClick={goNext}
+            disabled={!canGoNext}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '14px',
+              background: canGoNext ? 'linear-gradient(135deg, #ef4444 0%, #a855f7 100%)' : '#1e293b',
+              color: canGoNext ? '#ffffff' : '#475569',
+              border: 'none',
+              cursor: canGoNext ? 'pointer' : 'not-allowed',
+              opacity: canGoNext ? 1 : 0.5,
+              boxShadow: canGoNext ? '0 2px 12px rgba(239, 68, 68, 0.3)' : 'none'
+            }}
+          >
+            {nextLabel}
+          </button>
+        )}
+        {isLastPhase && (
+          <button
+            onClick={() => goToPhase(0)}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '14px',
+              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+              color: '#ffffff',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 2px 12px rgba(34, 197, 94, 0.3)'
+            }}
+          >
+            Start Over
+          </button>
+        )}
+      </div>
+    );
+  };
 
   const handlePrediction = useCallback((prediction: string) => {
     if (navigationLockRef.current) return;

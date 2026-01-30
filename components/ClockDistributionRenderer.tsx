@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+
+type ClockPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface ClockDistributionRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: string; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
@@ -27,12 +28,79 @@ const colors = {
   pll: '#22c55e',
 };
 
+const phaseOrder: ClockPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<ClockPhase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Play',
+  review: 'Review',
+  twist_predict: 'Twist',
+  twist_play: 'Explore',
+  twist_review: 'Explain',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery',
+};
+
 const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const getInitialPhase = (): ClockPhase => {
+    if (gamePhase && phaseOrder.includes(gamePhase as ClockPhase)) {
+      return gamePhase as ClockPhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<ClockPhase>(getInitialPhase);
+  const [isMobile, setIsMobile] = useState(false);
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Sync with external gamePhase if provided (for resume)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as ClockPhase)) {
+      setPhase(gamePhase as ClockPhase);
+    }
+  }, [gamePhase]);
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Navigation functions
+  const goToPhase = useCallback((newPhase: ClockPhase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 300) return;
+    if (isNavigating.current) return;
+    lastClickRef.current = now;
+    isNavigating.current = true;
+    setPhase(newPhase);
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Simulation state
   const [clockFrequency, setClockFrequency] = useState(3); // GHz
   const [chipSize, setChipSize] = useState(10); // mm
@@ -50,7 +118,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   const [testScore, setTestScore] = useState(0);
 
   // Animation
-  React.useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setAnimationTime(t => (t + 1) % 360);
     }, 30);
@@ -252,8 +320,8 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
     const height = 400;
 
     // Clock signal animation
-    const clockPhase = (animationTime / 360) * 2 * Math.PI * 3;
-    const clockValue = Math.sin(clockPhase) > 0 ? 1 : 0;
+    const clockPhaseAngle = (animationTime / 360) * 2 * Math.PI * 3;
+    const clockValue = Math.sin(clockPhaseAngle) > 0 ? 1 : 0;
 
     // Skew animation (delayed arrivals at different points)
     const skewOffsets = [0, 0.1, 0.2, 0.15]; // Different delays for each endpoint
@@ -325,7 +393,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             {/* Endpoint flip-flops/registers */}
             {[[20, 20], [60, 20], [100, 20], [140, 20],
               [20, 140], [60, 140], [100, 140], [140, 140]].map(([x, y], i) => {
-              const delayed = Math.sin(clockPhase - skewOffsets[i % 4] * 2) > 0;
+              const delayed = Math.sin(clockPhaseAngle - skewOffsets[i % 4] * 2) > 0;
               return (
                 <rect
                   key={i}
@@ -476,7 +544,51 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
     WebkitTapHighlightColor: 'transparent' as const,
   };
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  const renderProgressBar = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: isMobile ? '6px' : '8px',
+      padding: '12px 16px',
+      background: colors.bgDark,
+      borderBottom: '1px solid rgba(255,255,255,0.1)',
+      flexWrap: 'wrap' as const,
+    }}>
+      {phaseOrder.map((p, index) => {
+        const currentIndex = phaseOrder.indexOf(phase);
+        const isCompleted = index < currentIndex;
+        const isCurrent = index === currentIndex;
+        return (
+          <button
+            key={p}
+            onClick={() => index <= currentIndex && goToPhase(p)}
+            disabled={index > currentIndex}
+            style={{
+              ...buttonStyle,
+              width: isMobile ? '28px' : '32px',
+              height: isMobile ? '28px' : '32px',
+              borderRadius: '50%',
+              border: 'none',
+              background: isCompleted ? colors.success : isCurrent ? colors.accent : 'rgba(255,255,255,0.1)',
+              color: isCompleted || isCurrent ? 'white' : colors.textMuted,
+              fontSize: isMobile ? '10px' : '11px',
+              fontWeight: 'bold',
+              cursor: index <= currentIndex ? 'pointer' : 'not-allowed',
+              opacity: index > currentIndex ? 0.5 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            title={phaseLabels[p]}
+          >
+            {index + 1}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const renderBottomBar = (canProceed: boolean, buttonText: string) => (
     <div style={{
       position: 'fixed' as const,
       bottom: 0,
@@ -486,12 +598,31 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
       background: colors.bgDark,
       borderTop: '1px solid rgba(255,255,255,0.1)',
       display: 'flex',
-      justifyContent: 'flex-end',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       zIndex: 1000,
     }}>
       <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
+        onClick={goBack}
+        disabled={phase === 'hook'}
+        style={{
+          ...buttonStyle,
+          padding: '12px 24px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.textMuted}`,
+          background: 'transparent',
+          color: phase === 'hook' ? colors.textMuted : colors.textPrimary,
+          fontWeight: 'bold',
+          cursor: phase === 'hook' ? 'not-allowed' : 'pointer',
+          fontSize: '16px',
+          opacity: phase === 'hook' ? 0.5 : 1,
+        }}
+      >
+        Back
+      </button>
+      <button
+        onClick={goNext}
+        disabled={!canProceed}
         style={{
           ...buttonStyle,
           padding: '12px 32px',
@@ -513,6 +644,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
@@ -554,7 +686,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(true, 'Make a Prediction')}
       </div>
     );
   }
@@ -563,6 +695,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           {renderVisualization()}
 
@@ -607,7 +740,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar(!!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -616,6 +749,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Clock Distribution</h2>
@@ -642,7 +776,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(true, 'Continue to Review')}
       </div>
     );
   }
@@ -653,6 +787,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -698,7 +833,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar(true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -707,6 +842,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
@@ -758,7 +894,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderBottomBar(!!twistPrediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -767,6 +903,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Find the Speed-of-Light Limit</h2>
@@ -793,7 +930,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(true, 'See the Explanation')}
       </div>
     );
   }
@@ -804,6 +941,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -846,7 +984,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar(true, 'Apply This Knowledge')}
       </div>
     );
   }
@@ -855,6 +993,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -902,7 +1041,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -912,6 +1051,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          {renderProgressBar()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -943,7 +1083,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
@@ -951,6 +1091,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -990,6 +1131,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
@@ -1016,7 +1158,7 @@ const ClockDistributionRenderer: React.FC<ClockDistributionRendererProps> = ({
           </div>
           {renderVisualization()}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderBottomBar(true, 'Complete Game')}
       </div>
     );
   }

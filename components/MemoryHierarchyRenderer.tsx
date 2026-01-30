@@ -1,18 +1,30 @@
 'use client';
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // Types
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface MemoryHierarchyRendererProps {
-  phase?: Phase;
-  onPhaseComplete?: (phase: Phase) => void;
+  gamePhase?: Phase;  // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
-const PHASE_ORDER: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Deep Dive',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
+};
 
 const colors = {
   textPrimary: '#f8fafc',
@@ -79,10 +91,17 @@ const TRANSFER_APPS = [
 ];
 
 const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
-  phase: initialPhase,
-  onPhaseComplete,
+  gamePhase,
 }) => {
-  const [phase, setPhase] = useState<Phase>(initialPhase || 'hook');
+  // Internal phase state management
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [testAnswers, setTestAnswers] = useState<(boolean | null)[]>(new Array(10).fill(null));
@@ -97,9 +116,16 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
   const [animationFrame, setAnimationFrame] = useState(0);
   const [memoryAccesses, setMemoryAccesses] = useState<{ level: string; hit: boolean }[]>([]);
 
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
   useEffect(() => {
-    if (initialPhase) setPhase(initialPhase);
-  }, [initialPhase]);
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase, phase]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -146,14 +172,32 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
     return () => clearInterval(interval);
   }, [workingSetSize, accessPattern]);
 
-  const goToNextPhase = useCallback(() => {
-    const currentIndex = PHASE_ORDER.indexOf(phase);
-    if (currentIndex < PHASE_ORDER.length - 1) {
-      const nextPhase = PHASE_ORDER[currentIndex + 1];
-      setPhase(nextPhase);
-      onPhaseComplete?.(nextPhase);
+  // Internal navigation functions
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
     }
-  }, [phase, onPhaseComplete]);
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
 
   // Calculate effective latency based on working set size
   const getActiveLevel = () => {
@@ -374,36 +418,117 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (canProceed: boolean, buttonText: string, action?: () => void) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-    }}>
-      <button
-        onClick={action || goToNextPhase}
-        disabled={!canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
+  // Progress bar showing all 10 phases
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '12px 16px',
+        borderBottom: `1px solid rgba(255,255,255,0.1)`,
+        backgroundColor: colors.bgDark,
+        gap: '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {phaseOrder.map((p, i) => (
+              <div
+                key={p}
+                onClick={() => i < currentIdx && goToPhase(p)}
+                style={{
+                  height: '8px',
+                  width: i === currentIdx ? '24px' : '8px',
+                  borderRadius: '5px',
+                  backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.accent : 'rgba(255,255,255,0.2)',
+                  cursor: i < currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s',
+                }}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: colors.textMuted }}>
+            {currentIdx + 1} / {phaseOrder.length}
+          </span>
+        </div>
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: `${colors.accent}20`,
+          color: colors.accent,
+          fontSize: '11px',
+          fontWeight: 700
+        }}>
+          {phaseLabels[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom bar with Back/Next navigation
+  const renderBottomBar = (canProceed: boolean, buttonText: string, onNext?: () => void) => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canBack = currentIdx > 0;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '12px 16px',
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        backgroundColor: colors.bgDark,
+        gap: '12px',
+      }}>
+        <button
+          onClick={goBack}
+          style={{
+            padding: '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: '14px',
+            backgroundColor: 'rgba(30, 41, 59, 0.9)',
+            color: colors.textSecondary,
+            border: '1px solid rgba(255,255,255,0.1)',
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.3,
+            minHeight: '44px',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+          disabled={!canBack}
+        >
+          Back
+        </button>
+
+        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+          {phaseLabels[phase]}
+        </span>
+
+        <button
+          onClick={onNext || goNext}
+          disabled={!canProceed}
+          style={{
+            padding: '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: '14px',
+            background: canProceed ? `linear-gradient(135deg, ${colors.accent} 0%, #ea580c 100%)` : 'rgba(30, 41, 59, 0.9)',
+            color: canProceed ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+            opacity: canProceed ? 1 : 0.4,
+            boxShadow: canProceed ? `0 2px 12px ${colors.accent}30` : 'none',
+            minHeight: '44px',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          {buttonText}
+        </button>
+      </div>
+    );
+  };
 
   // Phase renders
   const renderHook = () => (
@@ -836,7 +961,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
           </div>
           {renderBottomBar(passed, passed ? 'Complete Mastery' : 'Review & Retry', () => {
             if (passed) {
-              goToNextPhase();
+              goNext();
             } else {
               setTestSubmitted(false);
               setTestAnswers(new Array(10).fill(null));
@@ -1050,40 +1175,14 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
   };
 
   return (
-    <div style={{ minHeight: '100vh', background: colors.bgPrimary }}>
-      {/* Progress bar */}
-      <div style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        zIndex: 100,
-        background: colors.bgDark,
-        borderBottom: '1px solid rgba(255,255,255,0.1)',
-        padding: '12px 24px',
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', maxWidth: '600px', margin: '0 auto' }}>
-          <span style={{ color: colors.textMuted, fontSize: '14px' }}>Memory Hierarchy</span>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            {PHASE_ORDER.map((p, i) => (
-              <div
-                key={p}
-                style={{
-                  width: PHASE_ORDER.indexOf(phase) >= i ? '20px' : '8px',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: PHASE_ORDER.indexOf(phase) >= i ? colors.accent : 'rgba(255,255,255,0.2)',
-                  transition: 'all 0.3s ease',
-                }}
-              />
-            ))}
-          </div>
-          <span style={{ color: colors.accent, fontSize: '14px' }}>{phase.replace('_', ' ')}</span>
-        </div>
+    <div className="absolute inset-0 flex flex-col" style={{ background: colors.bgPrimary, color: colors.textPrimary }}>
+      {/* Progress bar at top */}
+      <div style={{ flexShrink: 0 }}>
+        {renderProgressBar()}
       </div>
 
-      {/* Main content with padding for fixed header */}
-      <div style={{ paddingTop: '60px' }}>
+      {/* Main content - scrollable */}
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden' }}>
         {renderPhase()}
       </div>
     </div>

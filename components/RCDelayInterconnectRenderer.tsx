@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useRef, useEffect } from 'react';
+
+type RCPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface RCDelayInterconnectRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: string; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
@@ -27,12 +28,79 @@ const colors = {
   copper: '#b87333',
 };
 
+const phaseOrder: RCPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<RCPhase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Play',
+  review: 'Review',
+  twist_predict: 'Twist',
+  twist_play: 'Explore',
+  twist_review: 'Explain',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery',
+};
+
 const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const getInitialPhase = (): RCPhase => {
+    if (gamePhase && phaseOrder.includes(gamePhase as RCPhase)) {
+      return gamePhase as RCPhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<RCPhase>(getInitialPhase);
+  const [isMobile, setIsMobile] = useState(false);
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Sync with external gamePhase if provided (for resume)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as RCPhase)) {
+      setPhase(gamePhase as RCPhase);
+    }
+  }, [gamePhase]);
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Navigation functions
+  const goToPhase = useCallback((newPhase: RCPhase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 300) return;
+    if (isNavigating.current) return;
+    lastClickRef.current = now;
+    isNavigating.current = true;
+    setPhase(newPhase);
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Simulation state
   const [wireLength, setWireLength] = useState(1000); // micrometers
   const [wireWidth, setWireWidth] = useState(100); // nanometers
@@ -50,7 +118,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
   const [testScore, setTestScore] = useState(0);
 
   // Animation
-  React.useEffect(() => {
+  useEffect(() => {
     const interval = setInterval(() => {
       setAnimationTime(t => (t + 1) % 360);
     }, 50);
@@ -258,7 +326,6 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
 
     // Signal propagation animation
     const signalProgress = (animationTime / 360);
-    const delayedProgress = Math.max(0, signalProgress - (delay.rcDelay / 500)); // Scale for visualization
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -500,7 +567,51 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     WebkitTapHighlightColor: 'transparent' as const,
   };
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
+  const renderProgressBar = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      gap: isMobile ? '6px' : '8px',
+      padding: '12px 16px',
+      background: colors.bgDark,
+      borderBottom: '1px solid rgba(255,255,255,0.1)',
+      flexWrap: 'wrap' as const,
+    }}>
+      {phaseOrder.map((p, index) => {
+        const currentIndex = phaseOrder.indexOf(phase);
+        const isCompleted = index < currentIndex;
+        const isCurrent = index === currentIndex;
+        return (
+          <button
+            key={p}
+            onClick={() => index <= currentIndex && goToPhase(p)}
+            disabled={index > currentIndex}
+            style={{
+              ...buttonStyle,
+              width: isMobile ? '28px' : '32px',
+              height: isMobile ? '28px' : '32px',
+              borderRadius: '50%',
+              border: 'none',
+              background: isCompleted ? colors.success : isCurrent ? colors.accent : 'rgba(255,255,255,0.1)',
+              color: isCompleted || isCurrent ? 'white' : colors.textMuted,
+              fontSize: isMobile ? '10px' : '11px',
+              fontWeight: 'bold',
+              cursor: index <= currentIndex ? 'pointer' : 'not-allowed',
+              opacity: index > currentIndex ? 0.5 : 1,
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+            }}
+            title={phaseLabels[p]}
+          >
+            {index + 1}
+          </button>
+        );
+      })}
+    </div>
+  );
+
+  const renderBottomBar = (canProceed: boolean, buttonText: string) => (
     <div style={{
       position: 'fixed' as const,
       bottom: 0,
@@ -510,12 +621,31 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
       background: colors.bgDark,
       borderTop: '1px solid rgba(255,255,255,0.1)',
       display: 'flex',
-      justifyContent: 'flex-end',
+      justifyContent: 'space-between',
+      alignItems: 'center',
       zIndex: 1000,
     }}>
       <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
+        onClick={goBack}
+        disabled={phase === 'hook'}
+        style={{
+          ...buttonStyle,
+          padding: '12px 24px',
+          borderRadius: '8px',
+          border: `1px solid ${colors.textMuted}`,
+          background: 'transparent',
+          color: phase === 'hook' ? colors.textMuted : colors.textPrimary,
+          fontWeight: 'bold',
+          cursor: phase === 'hook' ? 'not-allowed' : 'pointer',
+          fontSize: '16px',
+          opacity: phase === 'hook' ? 0.5 : 1,
+        }}
+      >
+        Back
+      </button>
+      <button
+        onClick={goNext}
+        disabled={!canProceed}
         style={{
           ...buttonStyle,
           padding: '12px 32px',
@@ -537,6 +667,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
   if (phase === 'hook') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
@@ -578,7 +709,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
+        {renderBottomBar(true, 'Make a Prediction')}
       </div>
     );
   }
@@ -587,6 +718,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
   if (phase === 'predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           {renderVisualization()}
 
@@ -631,7 +763,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
+        {renderBottomBar(!!prediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -640,6 +772,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore RC Delay</h2>
@@ -666,7 +799,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
             </ul>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(true, 'Continue to Review')}
       </div>
     );
   }
@@ -677,6 +810,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -721,7 +855,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
+        {renderBottomBar(true, 'Next: A Twist!')}
       </div>
     );
   }
@@ -730,6 +864,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
   if (phase === 'twist_predict') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
@@ -780,7 +915,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
             </div>
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
+        {renderBottomBar(!!twistPrediction, 'Test My Prediction')}
       </div>
     );
   }
@@ -789,6 +924,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
   if (phase === 'twist_play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px', textAlign: 'center' }}>
             <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Compare Materials & Nodes</h2>
@@ -816,7 +952,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
             </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(true, 'See the Explanation')}
       </div>
     );
   }
@@ -827,6 +963,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
 
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{
             background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -868,7 +1005,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
+        {renderBottomBar(true, 'Apply This Knowledge')}
       </div>
     );
   }
@@ -877,6 +1014,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
   if (phase === 'transfer') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
@@ -924,7 +1062,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
             </div>
           ))}
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
+        {renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -934,6 +1072,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     if (testSubmitted) {
       return (
         <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+          {renderProgressBar()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
             <div style={{
               background: testScore >= 7 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
@@ -965,7 +1104,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
               );
             })}
           </div>
-          {renderBottomBar(false, testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(testScore >= 7, testScore >= 7 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
@@ -973,6 +1112,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
     const currentQ = testQuestions[currentTestQuestion];
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
@@ -1012,6 +1152,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
   if (phase === 'mastery') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+        {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div style={{ padding: '24px', textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
@@ -1039,7 +1180,7 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
           </div>
           {renderVisualization()}
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
+        {renderBottomBar(true, 'Complete Game')}
       </div>
     );
   }

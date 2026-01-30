@@ -1,18 +1,94 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect, useRef } from 'react';
+
+// Phase type for internal state management
+type BandwidthPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface AttentionLovesBandwidthRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: BandwidthPhase; // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
+// Phase order and labels for navigation
+const phaseOrder: BandwidthPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<BandwidthPhase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Play',
+  review: 'Review',
+  twist_predict: 'Twist',
+  twist_play: 'Explore',
+  twist_review: 'Learn',
+  transfer: 'Apply',
+  test: 'Test',
+  mastery: 'Master'
+};
+
 const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const getInitialPhase = (): BandwidthPhase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<BandwidthPhase>(getInitialPhase);
+  const lastPhaseChangeRef = useRef<number>(0);
+
+  // Sync with external gamePhase prop for resume
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase]);
+
+  // Navigation functions
+  const goToPhase = useCallback((newPhase: BandwidthPhase) => {
+    const now = Date.now();
+    if (now - lastPhaseChangeRef.current < 300) return; // Debounce
+    lastPhaseChangeRef.current = now;
+    playSound();
+    setPhase(newPhase);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
+  // Sound feedback
+  const playSound = () => {
+    try {
+      const audioContext = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+      const oscillator = audioContext.createOscillator();
+      const gainNode = audioContext.createGain();
+      oscillator.connect(gainNode);
+      gainNode.connect(audioContext.destination);
+      oscillator.frequency.value = 600;
+      oscillator.type = 'sine';
+      gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+      gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+      oscillator.start(audioContext.currentTime);
+      oscillator.stop(audioContext.currentTime + 0.1);
+    } catch {
+      // Audio not available
+    }
+  };
+
   // Simulation state
   const [contextLength, setContextLength] = useState(4096);
   const [modelDim, setModelDim] = useState(4096); // hidden dimension
@@ -234,13 +310,117 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
+  // Progress bar component
+  const renderProgressBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '8px',
+        padding: '16px',
+        flexWrap: 'wrap'
+      }}>
+        {phaseOrder.map((p, index) => (
+          <button
+            key={p}
+            onClick={() => index <= currentIndex && goToPhase(p)}
+            disabled={index > currentIndex}
+            style={{
+              width: '32px',
+              height: '32px',
+              borderRadius: '50%',
+              border: 'none',
+              background: index === currentIndex
+                ? '#3b82f6'
+                : index < currentIndex
+                  ? '#22c55e'
+                  : '#475569',
+              color: 'white',
+              fontSize: '12px',
+              fontWeight: 'bold',
+              cursor: index <= currentIndex ? 'pointer' : 'not-allowed',
+              opacity: index > currentIndex ? 0.5 : 1,
+              transition: 'all 0.2s ease',
+            }}
+            title={phaseLabels[p]}
+          >
+            {index + 1}
+          </button>
+        ))}
+      </div>
+    );
+  };
+
+  // Bottom navigation bar
+  const renderBottomBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '16px',
+        marginTop: '24px',
+        borderTop: '1px solid #334155'
+      }}>
+        <button
+          onClick={goBack}
+          disabled={isFirst}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: '1px solid #475569',
+            background: 'transparent',
+            color: isFirst ? '#475569' : '#f8fafc',
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontWeight: 'bold',
+          }}
+        >
+          Back
+        </button>
+        <span style={{ color: '#94a3b8', fontSize: '14px' }}>
+          {phaseLabels[phase]} ({currentIndex + 1}/{phaseOrder.length})
+        </span>
+        <button
+          onClick={goNext}
+          disabled={isLast}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: 'none',
+            background: isLast ? '#475569' : '#3b82f6',
+            color: 'white',
+            cursor: isLast ? 'not-allowed' : 'pointer',
+            fontWeight: 'bold',
+          }}
+        >
+          Next
+        </button>
+      </div>
+    );
+  };
+
+  // Wrapper for phase content
+  const renderPhaseContent = (content: React.ReactNode) => (
+    <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc' }}>
+      {renderProgressBar()}
+      <div style={{ padding: '0 24px 24px 24px' }}>
+        {content}
+      </div>
+      {renderBottomBar()}
+    </div>
+  );
+
   const renderVisualization = () => {
     const metrics = calculateMetrics();
 
     // Roofline visualization
     const rooflineWidth = 300;
     const rooflineHeight = 150;
-    const logScale = (x: number) => Math.log10(Math.max(0.01, x)) * 50 + 100;
 
     return (
       <svg width="100%" height="520" viewBox="0 0 500 520" style={{ maxWidth: '600px' }}>
@@ -494,134 +674,84 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ marginBottom: '24px' }}>
-            <span style={{ color: '#3b82f6', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>AI Hardware</span>
-            <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #3b82f6, #22c55e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Attention Loves Bandwidth
-            </h1>
-            <p style={{ color: '#94a3b8', fontSize: '18px', marginTop: '8px' }}>
-              What is the physical limiter of long-context LLMs?
-            </p>
-          </div>
-
-          {renderVisualization()}
-
-          <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', borderLeft: '4px solid #3b82f6' }}>
-            <p style={{ fontSize: '16px', lineHeight: 1.6 }}>
-              GPUs have thousands of compute cores and teraflops of processing power. Yet long-context LLMs feel slow. The bottleneck is not computation - it is memory bandwidth. Every token generated requires reading gigabytes of cached data.
-            </p>
-          </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              padding: '16px 32px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              background: 'linear-gradient(90deg, #3b82f6, #22c55e)',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Make a Prediction
-          </button>
+    return renderPhaseContent(
+      <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ marginBottom: '24px' }}>
+          <span style={{ color: '#3b82f6', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>AI Hardware</span>
+          <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #3b82f6, #22c55e)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+            Attention Loves Bandwidth
+          </h1>
+          <p style={{ color: '#94a3b8', fontSize: '18px', marginTop: '8px' }}>
+            What is the physical limiter of long-context LLMs?
+          </p>
         </div>
+
+        {renderVisualization()}
+
+        <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', borderLeft: '4px solid #3b82f6' }}>
+          <p style={{ fontSize: '16px', lineHeight: 1.6 }}>
+            GPUs have thousands of compute cores and teraflops of processing power. Yet long-context LLMs feel slow. The bottleneck is not computation - it is memory bandwidth. Every token generated requires reading gigabytes of cached data.
+          </p>
+        </div>
+
+        <button
+          onClick={goNext}
+          style={{
+            marginTop: '24px',
+            padding: '16px 32px',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            background: 'linear-gradient(90deg, #3b82f6, #22c55e)',
+            border: 'none',
+            borderRadius: '12px',
+            color: 'white',
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          Make a Prediction
+        </button>
       </div>
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
+    return renderPhaseContent(
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-            <p style={{ fontSize: '16px' }}>
-              An H100 GPU can perform 2000 trillion floating-point operations per second. Yet generating text from a long-context LLM often produces only 10-50 tokens per second. What is the bottleneck?
-            </p>
-          </div>
+        <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
+          <p style={{ fontSize: '16px' }}>
+            An H100 GPU can perform 2000 trillion floating-point operations per second. Yet generating text from a long-context LLM often produces only 10-50 tokens per second. What is the bottleneck?
+          </p>
+        </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {predictions.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setPrediction(p.id)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: prediction === p.id ? '2px solid #3b82f6' : '1px solid #475569',
-                  background: prediction === p.id ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                  color: '#f8fafc',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontSize: '15px',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-
-          {prediction && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {predictions.map((p) => (
             <button
-              onClick={onPhaseComplete}
+              key={p.id}
+              onClick={() => setPrediction(p.id)}
               style={{
-                marginTop: '24px',
-                width: '100%',
                 padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: '#3b82f6',
-                border: 'none',
                 borderRadius: '12px',
-                color: 'white',
+                border: prediction === p.id ? '2px solid #3b82f6' : '1px solid #475569',
+                background: prediction === p.id ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
+                color: '#f8fafc',
                 cursor: 'pointer',
+                textAlign: 'left',
+                fontSize: '15px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              Test My Prediction
+              {p.label}
             </button>
-          )}
+          ))}
         </div>
-      </div>
-    );
-  }
 
-  // PLAY PHASE
-  if (phase === 'play') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore the Roofline</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
-            See how context length and hardware specs affect performance
-          </p>
-
-          {renderVisualization()}
-          {renderControls()}
-
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
-            <h3 style={{ color: '#3b82f6', marginBottom: '12px' }}>Try These Experiments:</h3>
-            <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
-              <li>Increase context from 4K to 128K - watch throughput collapse</li>
-              <li>Switch KV precision from FP16 to INT4 - see bandwidth relief</li>
-              <li>Crank up bandwidth while keeping compute fixed - observe the roofline</li>
-              <li>Notice: most LLM workloads are deep in the memory-bound region</li>
-            </ul>
-          </div>
-
+        {prediction && (
           <button
-            onClick={onPhaseComplete}
+            onClick={goNext}
             style={{
               marginTop: '24px',
               width: '100%',
@@ -636,9 +766,53 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            Review the Concepts
+            Test My Prediction
           </button>
+        )}
+      </div>
+    );
+  }
+
+  // PLAY PHASE
+  if (phase === 'play') {
+    return renderPhaseContent(
+      <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore the Roofline</h2>
+        <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+          See how context length and hardware specs affect performance
+        </p>
+
+        {renderVisualization()}
+        {renderControls()}
+
+        <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
+          <h3 style={{ color: '#3b82f6', marginBottom: '12px' }}>Try These Experiments:</h3>
+          <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
+            <li>Increase context from 4K to 128K - watch throughput collapse</li>
+            <li>Switch KV precision from FP16 to INT4 - see bandwidth relief</li>
+            <li>Crank up bandwidth while keeping compute fixed - observe the roofline</li>
+            <li>Notice: most LLM workloads are deep in the memory-bound region</li>
+          </ul>
         </div>
+
+        <button
+          onClick={goNext}
+          style={{
+            marginTop: '24px',
+            width: '100%',
+            padding: '16px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            background: '#3b82f6',
+            border: 'none',
+            borderRadius: '12px',
+            color: 'white',
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          Review the Concepts
+        </button>
       </div>
     );
   }
@@ -647,159 +821,110 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
   if (phase === 'review') {
     const wasCorrect = prediction === 'memory';
 
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            padding: '20px',
-            borderRadius: '12px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p>
-              Memory bandwidth is the bottleneck. For every token generated, the GPU must read the entire KV cache - gigabytes of data. The compute happens faster than the data can arrive.
+    return renderPhaseContent(
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{
+          background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          padding: '20px',
+          borderRadius: '12px',
+          marginBottom: '24px',
+          borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
+        }}>
+          <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
+            {wasCorrect ? 'Correct!' : 'Not Quite!'}
+          </h3>
+          <p>
+            Memory bandwidth is the bottleneck. For every token generated, the GPU must read the entire KV cache - gigabytes of data. The compute happens faster than the data can arrive.
+          </p>
+        </div>
+
+        <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
+          <h3 style={{ color: '#3b82f6', marginBottom: '16px' }}>The Memory Wall</h3>
+
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ color: '#f59e0b', marginBottom: '8px' }}>Why Bandwidth Matters</h4>
+            <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+              Attention requires reading all previous keys and values to compute the next token. At 100K context with a 70B model, this can be 10+ GB of data per token. Even at 3+ TB/s bandwidth, that limits you to 300 tokens/second max - and that is before compute.
             </p>
           </div>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-            <h3 style={{ color: '#3b82f6', marginBottom: '16px' }}>The Memory Wall</h3>
-
-            <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ color: '#f59e0b', marginBottom: '8px' }}>Why Bandwidth Matters</h4>
-              <p style={{ color: '#94a3b8', fontSize: '14px' }}>
-                Attention requires reading all previous keys and values to compute the next token. At 100K context with a 70B model, this can be 10+ GB of data per token. Even at 3+ TB/s bandwidth, that limits you to 300 tokens/second max - and that is before compute.
-              </p>
-            </div>
-
-            <div style={{ marginBottom: '16px' }}>
-              <h4 style={{ color: '#22c55e', marginBottom: '8px' }}>Arithmetic Intensity</h4>
-              <p style={{ color: '#94a3b8', fontSize: '14px' }}>
-                LLM inference has very low arithmetic intensity - few FLOPs per byte moved. This puts it firmly in the memory-bound region of the roofline model. Adding more compute FLOPS does not help when you cannot feed the compute with data fast enough.
-              </p>
-            </div>
-
-            <div>
-              <h4 style={{ color: '#8b5cf6', marginBottom: '8px' }}>Physical Constraint</h4>
-              <p style={{ color: '#94a3b8', fontSize: '14px' }}>
-                Memory bandwidth is limited by physics - the number of pins, signal integrity, power. This is why HBM exists and why AI chip roadmaps focus on bandwidth. It is a fundamental wall that better algorithms cannot overcome.
-              </p>
-            </div>
+          <div style={{ marginBottom: '16px' }}>
+            <h4 style={{ color: '#22c55e', marginBottom: '8px' }}>Arithmetic Intensity</h4>
+            <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+              LLM inference has very low arithmetic intensity - few FLOPs per byte moved. This puts it firmly in the memory-bound region of the roofline model. Adding more compute FLOPS does not help when you cannot feed the compute with data fast enough.
+            </p>
           </div>
 
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#3b82f6',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Next: A Twist!
-          </button>
+          <div>
+            <h4 style={{ color: '#8b5cf6', marginBottom: '8px' }}>Physical Constraint</h4>
+            <p style={{ color: '#94a3b8', fontSize: '14px' }}>
+              Memory bandwidth is limited by physics - the number of pins, signal integrity, power. This is why HBM exists and why AI chip roadmaps focus on bandwidth. It is a fundamental wall that better algorithms cannot overcome.
+            </p>
+          </div>
         </div>
+
+        <button
+          onClick={goNext}
+          style={{
+            marginTop: '24px',
+            width: '100%',
+            padding: '16px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            background: '#3b82f6',
+            border: 'none',
+            borderRadius: '12px',
+            color: 'white',
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          Next: A Twist!
+        </button>
       </div>
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', color: '#f59e0b', marginBottom: '24px' }}>The Twist: KV Quantization</h2>
+    return renderPhaseContent(
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <h2 style={{ textAlign: 'center', color: '#f59e0b', marginBottom: '24px' }}>The Twist: KV Quantization</h2>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-            <p style={{ fontSize: '16px', marginBottom: '12px' }}>
-              What if we store the KV cache at lower precision? Instead of 16-bit floats, we use 8-bit or even 4-bit integers. The cache becomes 2-4x smaller.
-            </p>
-            <p style={{ fontSize: '16px' }}>
-              What is the effect?
-            </p>
-          </div>
+        <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
+          <p style={{ fontSize: '16px', marginBottom: '12px' }}>
+            What if we store the KV cache at lower precision? Instead of 16-bit floats, we use 8-bit or even 4-bit integers. The cache becomes 2-4x smaller.
+          </p>
+          <p style={{ fontSize: '16px' }}>
+            What is the effect?
+          </p>
+        </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {twistPredictions.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setTwistPrediction(p.id)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: twistPrediction === p.id ? '2px solid #f59e0b' : '1px solid #475569',
-                  background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                  color: '#f8fafc',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontSize: '15px',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-
-          {twistPrediction && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {twistPredictions.map((p) => (
             <button
-              onClick={onPhaseComplete}
+              key={p.id}
+              onClick={() => setTwistPrediction(p.id)}
               style={{
-                marginTop: '24px',
-                width: '100%',
                 padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: '#f59e0b',
-                border: 'none',
                 borderRadius: '12px',
-                color: 'white',
+                border: twistPrediction === p.id ? '2px solid #f59e0b' : '1px solid #475569',
+                background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'rgba(30, 41, 59, 0.5)',
+                color: '#f8fafc',
                 cursor: 'pointer',
+                textAlign: 'left',
+                fontSize: '15px',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              Test My Prediction
+              {p.label}
             </button>
-          )}
+          ))}
         </div>
-      </div>
-    );
-  }
 
-  // TWIST PLAY PHASE
-  if (phase === 'twist_play') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Quantization Trade-offs</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
-            Toggle between FP16, INT8, and INT4 to see the impact
-          </p>
-
-          {renderVisualization()}
-          {renderControls()}
-
-          <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', border: '1px solid #f59e0b' }}>
-            <h3 style={{ color: '#f59e0b', marginBottom: '12px' }}>Quantization Impact:</h3>
-            <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
-              <li><strong>FP16:</strong> Full precision, largest cache, baseline quality</li>
-              <li><strong>INT8:</strong> 2x smaller cache, ~99% quality preservation</li>
-              <li><strong>INT4:</strong> 4x smaller cache, ~95-98% quality, significant speedup</li>
-            </ul>
-          </div>
-
+        {twistPrediction && (
           <button
-            onClick={onPhaseComplete}
+            onClick={goNext}
             style={{
               marginTop: '24px',
               width: '100%',
@@ -814,9 +939,52 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            See the Explanation
+            Test My Prediction
           </button>
+        )}
+      </div>
+    );
+  }
+
+  // TWIST PLAY PHASE
+  if (phase === 'twist_play') {
+    return renderPhaseContent(
+      <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Quantization Trade-offs</h2>
+        <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+          Toggle between FP16, INT8, and INT4 to see the impact
+        </p>
+
+        {renderVisualization()}
+        {renderControls()}
+
+        <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', border: '1px solid #f59e0b' }}>
+          <h3 style={{ color: '#f59e0b', marginBottom: '12px' }}>Quantization Impact:</h3>
+          <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
+            <li><strong>FP16:</strong> Full precision, largest cache, baseline quality</li>
+            <li><strong>INT8:</strong> 2x smaller cache, ~99% quality preservation</li>
+            <li><strong>INT4:</strong> 4x smaller cache, ~95-98% quality, significant speedup</li>
+          </ul>
         </div>
+
+        <button
+          onClick={goNext}
+          style={{
+            marginTop: '24px',
+            width: '100%',
+            padding: '16px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            background: '#f59e0b',
+            border: 'none',
+            borderRadius: '12px',
+            color: 'white',
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          See the Explanation
+        </button>
       </div>
     );
   }
@@ -825,126 +993,122 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'tradeoff';
 
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            padding: '20px',
-            borderRadius: '12px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p>
-              KV quantization trades some precision for significant throughput gains. Because the system is memory-bound, reducing bytes moved directly increases tokens per second. The quality loss is usually small but measurable.
-            </p>
-          </div>
-
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: '#f59e0b', marginBottom: '16px' }}>The Quantization Trade-off</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
-              INT4 KV cache gives ~2x throughput boost at long contexts with ~2-5% quality degradation on benchmarks. This is often acceptable for interactive use cases where speed matters more than perfect accuracy. The trade-off is physics-driven: fewer bytes = faster reads = more tokens per second.
-            </p>
-          </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#f59e0b',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Apply This Knowledge
-          </button>
+    return renderPhaseContent(
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{
+          background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          padding: '20px',
+          borderRadius: '12px',
+          marginBottom: '24px',
+          borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
+        }}>
+          <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
+            {wasCorrect ? 'Correct!' : 'Not Quite!'}
+          </h3>
+          <p>
+            KV quantization trades some precision for significant throughput gains. Because the system is memory-bound, reducing bytes moved directly increases tokens per second. The quality loss is usually small but measurable.
+          </p>
         </div>
+
+        <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px' }}>
+          <h3 style={{ color: '#f59e0b', marginBottom: '16px' }}>The Quantization Trade-off</h3>
+          <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
+            INT4 KV cache gives ~2x throughput boost at long contexts with ~2-5% quality degradation on benchmarks. This is often acceptable for interactive use cases where speed matters more than perfect accuracy. The trade-off is physics-driven: fewer bytes = faster reads = more tokens per second.
+          </p>
+        </div>
+
+        <button
+          onClick={goNext}
+          style={{
+            marginTop: '24px',
+            width: '100%',
+            padding: '16px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            background: '#f59e0b',
+            border: 'none',
+            borderRadius: '12px',
+            color: 'white',
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          Apply This Knowledge
+        </button>
       </div>
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
-            Memory bandwidth shapes AI system design
-          </p>
+    return renderPhaseContent(
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
+        <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+          Memory bandwidth shapes AI system design
+        </p>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: 'rgba(30, 41, 59, 0.8)',
-                padding: '20px',
-                borderRadius: '12px',
-                marginBottom: '16px',
-                border: transferCompleted.has(index) ? '2px solid #22c55e' : '1px solid #475569',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: '#f8fafc' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: '#22c55e' }}>Complete</span>}
-              </div>
-              <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
-                <p style={{ color: '#3b82f6', fontSize: '14px' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    border: '1px solid #3b82f6',
-                    background: 'transparent',
-                    color: '#3b82f6',
-                    cursor: 'pointer',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e' }}>
-                  <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
-
-          <button
-            onClick={onPhaseComplete}
-            disabled={transferCompleted.size < 4}
+        {transferApplications.map((app, index) => (
+          <div
+            key={index}
             style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: transferCompleted.size >= 4 ? '#3b82f6' : '#475569',
-              border: 'none',
+              background: 'rgba(30, 41, 59, 0.8)',
+              padding: '20px',
               borderRadius: '12px',
-              color: 'white',
-              cursor: transferCompleted.size >= 4 ? 'pointer' : 'not-allowed',
-              WebkitTapHighlightColor: 'transparent',
+              marginBottom: '16px',
+              border: transferCompleted.has(index) ? '2px solid #22c55e' : '1px solid #475569',
             }}
           >
-            {transferCompleted.size >= 4 ? 'Take the Test' : `Complete ${4 - transferCompleted.size} more applications`}
-          </button>
-        </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 style={{ color: '#f8fafc' }}>{app.title}</h3>
+              {transferCompleted.has(index) && <span style={{ color: '#22c55e' }}>Complete</span>}
+            </div>
+            <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+              <p style={{ color: '#3b82f6', fontSize: '14px' }}>{app.question}</p>
+            </div>
+            {!transferCompleted.has(index) ? (
+              <button
+                onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                style={{
+                  padding: '10px 20px',
+                  borderRadius: '8px',
+                  border: '1px solid #3b82f6',
+                  background: 'transparent',
+                  color: '#3b82f6',
+                  cursor: 'pointer',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                Reveal Answer
+              </button>
+            ) : (
+              <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e' }}>
+                <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
+              </div>
+            )}
+          </div>
+        ))}
+
+        <button
+          onClick={goNext}
+          disabled={transferCompleted.size < 4}
+          style={{
+            marginTop: '24px',
+            width: '100%',
+            padding: '16px',
+            fontSize: '16px',
+            fontWeight: 'bold',
+            background: transferCompleted.size >= 4 ? '#3b82f6' : '#475569',
+            border: 'none',
+            borderRadius: '12px',
+            color: 'white',
+            cursor: transferCompleted.size >= 4 ? 'pointer' : 'not-allowed',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          {transferCompleted.size >= 4 ? 'Take the Test' : `Complete ${4 - transferCompleted.size} more applications`}
+        </button>
       </div>
     );
   }
@@ -952,215 +1116,57 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
-      return (
-        <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
-          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-              marginBottom: '24px',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-            </div>
-
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{
-                  background: 'rgba(30, 41, 59, 0.8)',
-                  padding: '16px',
-                  borderRadius: '12px',
-                  marginBottom: '12px',
-                  borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}`,
-                }}>
-                  <p style={{ fontWeight: 'bold', marginBottom: '8px' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{
-                      padding: '8px',
-                      borderRadius: '6px',
-                      marginBottom: '4px',
-                      background: opt.correct ? 'rgba(34, 197, 94, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
-                      color: opt.correct ? '#22c55e' : userAnswer === oIndex ? '#ef4444' : '#94a3b8',
-                    }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
-
-            <button
-              onClick={onPhaseComplete}
-              style={{
-                marginTop: '24px',
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: testScore >= 8 ? '#22c55e' : '#3b82f6',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              {testScore >= 8 ? 'Complete Mastery' : 'Review & Retry'}
-            </button>
-          </div>
-        </div>
-      );
-    }
-
-    const currentQ = testQuestions[currentTestQuestion];
-
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
+      return renderPhaseContent(
         <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2>Knowledge Test</h2>
-            <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+          <div style={{
+            background: testScore >= 8 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            padding: '24px',
+            borderRadius: '12px',
+            textAlign: 'center',
+            marginBottom: '24px',
+          }}>
+            <h2 style={{ color: testScore >= 8 ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
+              {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
           </div>
 
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-            {testQuestions.map((_, i) => (
-              <div
-                key={i}
-                onClick={() => setCurrentTestQuestion(i)}
-                style={{
-                  flex: 1,
-                  height: '4px',
-                  borderRadius: '2px',
-                  background: testAnswers[i] !== null ? '#3b82f6' : i === currentTestQuestion ? '#94a3b8' : '#475569',
-                  cursor: 'pointer',
-                }}
-              />
-            ))}
-          </div>
-
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '16px' }}>{currentQ.question}</p>
-          </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-            {currentQ.options.map((opt, oIndex) => (
-              <button
-                key={oIndex}
-                onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: testAnswers[currentTestQuestion] === oIndex ? '2px solid #3b82f6' : '1px solid #475569',
-                  background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
-                  color: '#f8fafc',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                {opt.text}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
-            <button
-              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
-              disabled={currentTestQuestion === 0}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: '1px solid #475569',
-                background: 'transparent',
-                color: currentTestQuestion === 0 ? '#475569' : '#f8fafc',
-                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Previous
-            </button>
-
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button
-                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: '#3b82f6',
-                  color: 'white',
-                  cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={submitTest}
-                disabled={testAnswers.includes(null)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: testAnswers.includes(null) ? '#475569' : '#22c55e',
-                  color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
-
-  // MASTERY PHASE
-  if (phase === 'mastery') {
-    return (
-      <div style={{ minHeight: '100vh', background: '#0f172a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-          <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Mastery Achieved!</h1>
-          <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
-            You understand the memory bandwidth bottleneck in AI
-          </p>
-
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', textAlign: 'left', marginBottom: '24px' }}>
-            <h3 style={{ color: '#3b82f6', marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
-              <li>KV cache size scales with context length</li>
-              <li>Memory bandwidth limits LLM inference throughput</li>
-              <li>Roofline model shows memory vs compute bound regions</li>
-              <li>Arithmetic intensity determines the bottleneck</li>
-              <li>KV quantization trades quality for speed</li>
-            </ul>
-          </div>
-
-          <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', textAlign: 'left' }}>
-            <h3 style={{ color: '#3b82f6', marginBottom: '12px' }}>The Big Picture:</h3>
-            <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
-              Memory bandwidth is a fundamental physical constraint. It determines why long-context models are slow, why chips like H100 prioritize HBM bandwidth, and why techniques like KV compression matter. Understanding this constraint helps you reason about AI system performance.
-            </p>
-          </div>
+          {testQuestions.map((q, qIndex) => {
+            const userAnswer = testAnswers[qIndex];
+            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+            return (
+              <div key={qIndex} style={{
+                background: 'rgba(30, 41, 59, 0.8)',
+                padding: '16px',
+                borderRadius: '12px',
+                marginBottom: '12px',
+                borderLeft: `4px solid ${isCorrect ? '#22c55e' : '#ef4444'}`,
+              }}>
+                <p style={{ fontWeight: 'bold', marginBottom: '8px' }}>{qIndex + 1}. {q.question}</p>
+                {q.options.map((opt, oIndex) => (
+                  <div key={oIndex} style={{
+                    padding: '8px',
+                    borderRadius: '6px',
+                    marginBottom: '4px',
+                    background: opt.correct ? 'rgba(34, 197, 94, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent',
+                    color: opt.correct ? '#22c55e' : userAnswer === oIndex ? '#ef4444' : '#94a3b8',
+                  }}>
+                    {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
 
           <button
-            onClick={onPhaseComplete}
+            onClick={goNext}
             style={{
               marginTop: '24px',
-              padding: '16px 32px',
-              fontSize: '18px',
+              width: '100%',
+              padding: '16px',
+              fontSize: '16px',
               fontWeight: 'bold',
-              background: 'linear-gradient(90deg, #3b82f6, #22c55e)',
+              background: testScore >= 8 ? '#22c55e' : '#3b82f6',
               border: 'none',
               borderRadius: '12px',
               color: 'white',
@@ -1168,9 +1174,161 @@ const AttentionLovesBandwidthRenderer: React.FC<AttentionLovesBandwidthRendererP
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            Complete
+            {testScore >= 8 ? 'Complete Mastery' : 'Review & Retry'}
           </button>
         </div>
+      );
+    }
+
+    const currentQ = testQuestions[currentTestQuestion];
+
+    return renderPhaseContent(
+      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <h2>Knowledge Test</h2>
+          <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+        </div>
+
+        <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+          {testQuestions.map((_, i) => (
+            <div
+              key={i}
+              onClick={() => setCurrentTestQuestion(i)}
+              style={{
+                flex: 1,
+                height: '4px',
+                borderRadius: '2px',
+                background: testAnswers[i] !== null ? '#3b82f6' : i === currentTestQuestion ? '#94a3b8' : '#475569',
+                cursor: 'pointer',
+              }}
+            />
+          ))}
+        </div>
+
+        <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+          <p style={{ fontSize: '16px' }}>{currentQ.question}</p>
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+          {currentQ.options.map((opt, oIndex) => (
+            <button
+              key={oIndex}
+              onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
+              style={{
+                padding: '16px',
+                borderRadius: '12px',
+                border: testAnswers[currentTestQuestion] === oIndex ? '2px solid #3b82f6' : '1px solid #475569',
+                background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(59, 130, 246, 0.2)' : 'transparent',
+                color: '#f8fafc',
+                cursor: 'pointer',
+                textAlign: 'left',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              {opt.text}
+            </button>
+          ))}
+        </div>
+
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
+          <button
+            onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+            disabled={currentTestQuestion === 0}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: '1px solid #475569',
+              background: 'transparent',
+              color: currentTestQuestion === 0 ? '#475569' : '#f8fafc',
+              cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            Previous
+          </button>
+
+          {currentTestQuestion < testQuestions.length - 1 ? (
+            <button
+              onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: '#3b82f6',
+                color: 'white',
+                cursor: 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Next
+            </button>
+          ) : (
+            <button
+              onClick={submitTest}
+              disabled={testAnswers.includes(null)}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: testAnswers.includes(null) ? '#475569' : '#22c55e',
+                color: 'white',
+                cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Submit Test
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // MASTERY PHASE
+  if (phase === 'mastery') {
+    return renderPhaseContent(
+      <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+        <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Mastery Achieved!</h1>
+        <p style={{ color: '#94a3b8', marginBottom: '24px' }}>
+          You understand the memory bandwidth bottleneck in AI
+        </p>
+
+        <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', textAlign: 'left', marginBottom: '24px' }}>
+          <h3 style={{ color: '#3b82f6', marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+          <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
+            <li>KV cache size scales with context length</li>
+            <li>Memory bandwidth limits LLM inference throughput</li>
+            <li>Roofline model shows memory vs compute bound regions</li>
+            <li>Arithmetic intensity determines the bottleneck</li>
+            <li>KV quantization trades quality for speed</li>
+          </ul>
+        </div>
+
+        <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', textAlign: 'left' }}>
+          <h3 style={{ color: '#3b82f6', marginBottom: '12px' }}>The Big Picture:</h3>
+          <p style={{ color: '#94a3b8', fontSize: '14px', lineHeight: 1.6 }}>
+            Memory bandwidth is a fundamental physical constraint. It determines why long-context models are slow, why chips like H100 prioritize HBM bandwidth, and why techniques like KV compression matter. Understanding this constraint helps you reason about AI system performance.
+          </p>
+        </div>
+
+        <button
+          onClick={goNext}
+          style={{
+            marginTop: '24px',
+            padding: '16px 32px',
+            fontSize: '18px',
+            fontWeight: 'bold',
+            background: 'linear-gradient(90deg, #3b82f6, #22c55e)',
+            border: 'none',
+            borderRadius: '12px',
+            color: 'white',
+            cursor: 'pointer',
+            WebkitTapHighlightColor: 'transparent',
+          }}
+        >
+          Complete
+        </button>
       </div>
     );
   }

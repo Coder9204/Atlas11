@@ -1,11 +1,37 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// Game event interface for AI coach integration
+interface GameEvent {
+  type: 'phase_change' | 'prediction' | 'interaction' | 'completion';
+  phase?: string;
+  data?: Record<string, unknown>;
+  timestamp: number;
+}
 
 interface InverterSineWaveRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  onGameEvent?: (event: GameEvent) => void;
+  gamePhase?: string; // Optional, only for resume
 }
+
+// Simple audio feedback
+const playSound = (type: 'click' | 'success' | 'error' | 'transition') => {
+  if (typeof window === 'undefined' || !window.AudioContext) return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+
+    const frequencies: Record<string, number> = { click: 600, success: 800, error: 300, transition: 500 };
+    oscillator.frequency.value = frequencies[type] || 440;
+    oscillator.type = 'sine';
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + 0.1);
+  } catch (e) { /* Audio not available */ }
+};
 
 const colors = {
   textPrimary: '#f8fafc',
@@ -24,18 +50,107 @@ const colors = {
   harmonic: '#ec4899',
 };
 
+// Phase type definition
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const validPhases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
+  onGameEvent,
+  gamePhase,
 }) => {
+  // Phase order and labels
+  const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Play',
+    review: 'Review',
+    twist_predict: 'Twist',
+    twist_play: 'Explore',
+    twist_review: 'Explain',
+    transfer: 'Transfer',
+    test: 'Test',
+    mastery: 'Mastery',
+  };
+
+  // Get initial phase from gamePhase prop or default to 'hook'
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  };
+
+  // Internal phase state management
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Navigation debouncing
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
+
+  // Mobile detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Emit game event helper
+  const emitGameEvent = useCallback((type: GameEvent['type'], data?: Record<string, unknown>) => {
+    if (onGameEvent) {
+      onGameEvent({ type, phase, data, timestamp: Date.now() });
+    }
+  }, [onGameEvent, phase]);
+
+  // Navigation functions with debouncing
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    playSound('transition');
+    setPhase(p);
+    emitGameEvent('phase_change', {
+      from: phase,
+      to: p,
+      label: phaseLabels[p],
+      index: phaseOrder.indexOf(p)
+    });
+
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, [emitGameEvent, phase, phaseLabels, phaseOrder]);
+
+  const goNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, phaseOrder, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, phaseOrder, goToPhase]);
+
   // Simulation state
   const [waveformType, setWaveformType] = useState<'square' | 'modified' | 'pwm'>('square');
   const [dcVoltage, setDcVoltage] = useState(400);
   const [frequency, setFrequency] = useState(60);
   const [pwmFrequency, setPwmFrequency] = useState(20); // kHz
-  const [showHarmonics, setShowHarmonics] = useState(false);
   const [animationTime, setAnimationTime] = useState(0);
   const [isAnimating, setIsAnimating] = useState(true);
 
@@ -254,7 +369,10 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({
     });
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+    if (score >= 8) {
+      playSound('success');
+      emitGameEvent('completion', { score, total: 10, passed: true });
+    }
   };
 
   const renderVisualization = (interactive: boolean) => {
@@ -531,383 +649,475 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
-    </div>
-  );
-
-  // HOOK PHASE
-  if (phase === 'hook') {
+  // Progress bar component
+  const renderProgressBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
     return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              Inverter Sine Wave Synthesis
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              How do inverters create AC from DC?
-            </p>
-          </div>
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+        padding: '12px 16px',
+        background: 'rgba(0,0,0,0.3)',
+        borderBottom: '1px solid rgba(255,255,255,0.1)',
+        overflowX: 'auto',
+        WebkitOverflowScrolling: 'touch',
+      }}>
+        {phaseOrder.map((p, index) => (
+          <React.Fragment key={p}>
+            <button
+              onClick={() => index <= currentIndex && goToPhase(p)}
+              disabled={index > currentIndex}
+              style={{
+                width: isMobile ? '28px' : '32px',
+                height: isMobile ? '28px' : '32px',
+                borderRadius: '50%',
+                border: 'none',
+                background: index === currentIndex
+                  ? colors.accent
+                  : index < currentIndex
+                    ? colors.success
+                    : 'rgba(255,255,255,0.2)',
+                color: index <= currentIndex ? 'white' : colors.textMuted,
+                fontSize: isMobile ? '10px' : '11px',
+                fontWeight: 'bold',
+                cursor: index <= currentIndex ? 'pointer' : 'not-allowed',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexShrink: 0,
+                transition: 'all 0.2s ease',
+              }}
+              title={phaseLabels[p]}
+            >
+              {index + 1}
+            </button>
+            {index < phaseOrder.length - 1 && (
+              <div style={{
+                width: isMobile ? '12px' : '20px',
+                height: '2px',
+                background: index < currentIndex ? colors.success : 'rgba(255,255,255,0.2)',
+                flexShrink: 0,
+              }} />
+            )}
+          </React.Fragment>
+        ))}
+      </div>
+    );
+  };
 
-          {renderVisualization(true)}
+  // Bottom navigation bar
+  const getBottomBarConfig = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
 
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+    let canProceed = true;
+    let nextLabel = 'Next';
+
+    switch (phase) {
+      case 'hook':
+        nextLabel = 'Make a Prediction';
+        break;
+      case 'predict':
+        canProceed = !!prediction;
+        nextLabel = 'Test My Prediction';
+        break;
+      case 'play':
+        nextLabel = 'Continue to Review';
+        break;
+      case 'review':
+        nextLabel = 'Next: A Twist!';
+        break;
+      case 'twist_predict':
+        canProceed = !!twistPrediction;
+        nextLabel = 'Test My Prediction';
+        break;
+      case 'twist_play':
+        nextLabel = 'See the Explanation';
+        break;
+      case 'twist_review':
+        nextLabel = 'Apply This Knowledge';
+        break;
+      case 'transfer':
+        canProceed = transferCompleted.size >= 4;
+        nextLabel = 'Take the Test';
+        break;
+      case 'test':
+        canProceed = testSubmitted && testScore >= 8;
+        nextLabel = testSubmitted ? (testScore >= 8 ? 'Complete Mastery' : 'Review & Retry') : 'Submit Test';
+        break;
+      case 'mastery':
+        nextLabel = 'Complete Game';
+        break;
+    }
+
+    return { isFirst, isLast, canProceed, nextLabel };
+  };
+
+  const renderBottomBar = () => {
+    const { isFirst, isLast, canProceed, nextLabel } = getBottomBarConfig();
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '16px 24px',
+        background: colors.bgDark,
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        gap: '12px',
+        zIndex: 1000,
+      }}>
+        <button
+          onClick={goBack}
+          disabled={isFirst}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${isFirst ? 'rgba(255,255,255,0.1)' : colors.textMuted}`,
+            background: 'transparent',
+            color: isFirst ? colors.textMuted : colors.textPrimary,
+            fontWeight: 'bold',
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            opacity: isFirst ? 0.5 : 1,
+          }}
+        >
+          Back
+        </button>
+        <button
+          onClick={goNext}
+          disabled={!canProceed}
+          style={{
+            padding: '12px 32px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+            color: canProceed ? 'white' : colors.textMuted,
+            fontWeight: 'bold',
+            cursor: canProceed ? 'pointer' : 'not-allowed',
+            fontSize: '14px',
+            flex: 1,
+            maxWidth: '300px',
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
+  };
+
+  // Render phase content
+  const renderPhaseContent = () => {
+    switch (phase) {
+      case 'hook':
+        return (
+          <>
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+                Inverter Sine Wave Synthesis
+              </h1>
+              <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+                How do inverters create AC from DC?
+              </p>
+            </div>
+
+            {renderVisualization(true)}
+
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <div style={{
+                background: colors.bgCard,
+                padding: '20px',
+                borderRadius: '12px',
+                marginBottom: '16px',
+              }}>
+                <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+                  Solar panels produce DC power, but the grid and most appliances need AC. An <strong style={{ color: colors.ac }}>inverter</strong> must
+                  synthesize a smooth sinusoidal waveform from switched DC. Poor waveform quality wastes energy and damages equipment!
+                </p>
+              </div>
+
+              <div style={{
+                background: 'rgba(245, 158, 11, 0.2)',
+                padding: '16px',
+                borderRadius: '8px',
+                borderLeft: `3px solid ${colors.accent}`,
+              }}>
+                <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+                  Switch between Square, Modified Sine, and PWM Sine to see how waveform quality improves!
+                </p>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'predict':
+        return (
+          <>
+            {renderVisualization(false)}
+
             <div style={{
               background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You Are Looking At:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+                DC voltage is fed to an H-bridge (4 switches) that can connect the output to +DC, -DC, or zero.
+                The output then passes through an LC (inductor-capacitor) filter to smooth it out.
+              </p>
+            </div>
+
+            <div style={{ padding: '0 16px 16px 16px' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+                How does an inverter create a smooth sine wave from DC?
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {predictions.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setPrediction(p.id)}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                      background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                      color: colors.textPrimary,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+          </>
+        );
+
+      case 'play':
+        return (
+          <>
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Waveform Synthesis</h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                Compare different inverter technologies
+              </p>
+            </div>
+
+            {renderVisualization(true)}
+            {renderControls()}
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+                <li>Compare THD between Square (48%), Modified (24%), and PWM (&lt;5%)</li>
+                <li>With PWM, increase switching frequency and see THD improve</li>
+                <li>Note: PWM with filtering produces nearly perfect sine waves</li>
+                <li>Grid-tied inverters require THD under 5% by law!</li>
+              </ul>
+            </div>
+          </>
+        );
+
+      case 'review':
+        const wasCorrect = prediction === 'pwm_filter';
+        return (
+          <>
+            <div style={{
+              background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              margin: '16px',
               padding: '20px',
               borderRadius: '12px',
-              marginBottom: '16px',
+              borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                Solar panels produce DC power, but the grid and most appliances need AC. An <strong style={{ color: colors.ac }}>inverter</strong> must
-                synthesize a smooth sinusoidal waveform from switched DC. Poor waveform quality wastes energy and damages equipment!
+              <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+                {wasCorrect ? 'Correct!' : 'Not Quite!'}
+              </h3>
+              <p style={{ color: colors.textPrimary }}>
+                <strong>PWM + low-pass filtering</strong> is the key! By switching at high frequency with a duty cycle
+                that varies sinusoidally, then filtering out the high-frequency components, we get a clean sine wave.
               </p>
             </div>
 
             <div style={{
-              background: 'rgba(245, 158, 11, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Switch between Square, Modified Sine, and PWM Sine to see how waveform quality improves!
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>How Sine Wave Synthesis Works</h3>
+              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>H-Bridge Switching:</strong> Four MOSFETs arranged in
+                  an H can connect the output to +V, -V, or 0V. This creates the basic alternating polarity.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>PWM Modulation:</strong> Instead of switching at
+                  the output frequency (60Hz), we switch at 10-50kHz with duty cycle following a sine pattern.
+                  The average voltage traces out a sine wave.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>LC Filter:</strong> A low-pass filter (inductor +
+                  capacitor) removes the high-frequency PWM components, leaving only the fundamental sine wave.
+                </p>
+                <p>
+                  <strong style={{ color: colors.textPrimary }}>Total Harmonic Distortion (THD):</strong> Measures
+                  how much the output deviates from a pure sine. Grid-tied inverters must achieve &lt;5% THD.
+                </p>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'twist_predict':
+        return (
+          <>
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
+              <p style={{ color: colors.textSecondary }}>
+                What happens when you run motors on non-sine waves?
               </p>
             </div>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
-      </div>
-    );
-  }
 
-  // PREDICT PHASE
-  if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
+            {renderVisualization(false)}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You Are Looking At:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              DC voltage is fed to an H-bridge (4 switches) that can connect the output to +DC, -DC, or zero.
-              The output then passes through an LC (inductor-capacitor) filter to smooth it out.
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              How does an inverter create a smooth sine wave from DC?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
-          </div>
-        </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
-      </div>
-    );
-  }
-
-  // PLAY PHASE
-  if (phase === 'play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Waveform Synthesis</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Compare different inverter technologies
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Compare THD between Square (48%), Modified (24%), and PWM (&lt;5%)</li>
-              <li>With PWM, increase switching frequency and see THD improve</li>
-              <li>Note: PWM with filtering produces nearly perfect sine waves</li>
-              <li>Grid-tied inverters require THD under 5% by law!</li>
-            </ul>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
-      </div>
-    );
-  }
-
-  // REVIEW PHASE
-  if (phase === 'review') {
-    const wasCorrect = prediction === 'pwm_filter';
-
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              <strong>PWM + low-pass filtering</strong> is the key! By switching at high frequency with a duty cycle
-              that varies sinusoidally, then filtering out the high-frequency components, we get a clean sine wave.
-            </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>How Sine Wave Synthesis Works</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>H-Bridge Switching:</strong> Four MOSFETs arranged in
-                an H can connect the output to +V, -V, or 0V. This creates the basic alternating polarity.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>PWM Modulation:</strong> Instead of switching at
-                the output frequency (60Hz), we switch at 10-50kHz with duty cycle following a sine pattern.
-                The average voltage traces out a sine wave.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>LC Filter:</strong> A low-pass filter (inductor +
-                capacitor) removes the high-frequency PWM components, leaving only the fundamental sine wave.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Total Harmonic Distortion (THD):</strong> Measures
-                how much the output deviates from a pure sine. Grid-tied inverters must achieve &lt;5% THD.
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+                A cheap square-wave or modified-sine inverter is connected to a refrigerator, air conditioner,
+                or power tools with motors. The waveform has high harmonic content (THD &gt; 25%).
               </p>
             </div>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
-      </div>
-    );
-  }
 
-  // TWIST PREDICT PHASE
-  if (phase === 'twist_predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What happens when you run motors on non-sine waves?
-            </p>
-          </div>
-
-          {renderVisualization(false)}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              A cheap square-wave or modified-sine inverter is connected to a refrigerator, air conditioner,
-              or power tools with motors. The waveform has high harmonic content (THD &gt; 25%).
-            </p>
-          </div>
-
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What happens to motors running on distorted waveforms?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
+            <div style={{ padding: '0 16px 16px 16px' }}>
+              <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+                What happens to motors running on distorted waveforms?
+              </h3>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+                {twistPredictions.map((p) => (
+                  <button
+                    key={p.id}
+                    onClick={() => setTwistPrediction(p.id)}
+                    style={{
+                      padding: '16px',
+                      borderRadius: '8px',
+                      border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                      background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                      color: colors.textPrimary,
+                      cursor: 'pointer',
+                      textAlign: 'left',
+                      fontSize: '14px',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    {p.label}
+                  </button>
+                ))}
+              </div>
             </div>
-          </div>
-        </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
-      </div>
-    );
-  }
+          </>
+        );
 
-  // TWIST PLAY PHASE
-  if (phase === 'twist_play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Harmonic Effects</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              See how harmonics affect power quality
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.error}`,
-          }}>
-            <h4 style={{ color: colors.error, marginBottom: '8px' }}>Real Problems with Poor Waveforms:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, paddingLeft: '20px', margin: 0 }}>
-              <li><strong>Motors:</strong> Harmonics create torque pulsations, vibration, and 15-25% more heat</li>
-              <li><strong>Transformers:</strong> Eddy current losses increase dramatically with harmonic frequency</li>
-              <li><strong>Electronics:</strong> Switching power supplies may malfunction or make noise</li>
-              <li><strong>Energy waste:</strong> Harmonics contribute to reactive power, increasing losses</li>
-            </ul>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
-      </div>
-    );
-  }
-
-  // TWIST REVIEW PHASE
-  if (phase === 'twist_review') {
-    const wasCorrect = twistPrediction === 'motor_heat';
-
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              Motors and transformers are highly sensitive to harmonics. The extra frequency components create
-              additional losses, vibration, noise, and <strong>significant overheating</strong> that can
-              reduce equipment lifespan by 50% or more.
-            </p>
-          </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why Harmonics Cause Problems</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Motor Heating:</strong> Harmonics (3rd, 5th, 7th...)
-                induce currents in the rotor that the motor is not designed to handle. These create heat without
-                producing useful torque.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Transformer Losses:</strong> Eddy current losses
-                scale with frequency squared. The 7th harmonic (420Hz) causes 49x more eddy current loss than
-                the fundamental!
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>Equipment Ratings:</strong> Motors on distorted
-                power must be derated by 10-30%. Many manufacturers void warranties if THD exceeds limits.
-                This is why pure sine inverters are essential for inductive loads.
+      case 'twist_play':
+        return (
+          <>
+            <div style={{ padding: '16px', textAlign: 'center' }}>
+              <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Harmonic Effects</h2>
+              <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                See how harmonics affect power quality
               </p>
             </div>
-          </div>
-        </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
-      </div>
-    );
-  }
 
-  // TRANSFER PHASE
-  if (phase === 'transfer') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+            {renderVisualization(true)}
+            {renderControls()}
+
+            <div style={{
+              background: 'rgba(239, 68, 68, 0.2)',
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+              borderLeft: `3px solid ${colors.error}`,
+            }}>
+              <h4 style={{ color: colors.error, marginBottom: '8px' }}>Real Problems with Poor Waveforms:</h4>
+              <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6, paddingLeft: '20px', margin: 0 }}>
+                <li><strong>Motors:</strong> Harmonics create torque pulsations, vibration, and 15-25% more heat</li>
+                <li><strong>Transformers:</strong> Eddy current losses increase dramatically with harmonic frequency</li>
+                <li><strong>Electronics:</strong> Switching power supplies may malfunction or make noise</li>
+                <li><strong>Energy waste:</strong> Harmonics contribute to reactive power, increasing losses</li>
+              </ul>
+            </div>
+          </>
+        );
+
+      case 'twist_review':
+        const twistWasCorrect = twistPrediction === 'motor_heat';
+        return (
+          <>
+            <div style={{
+              background: twistWasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+              borderLeft: `4px solid ${twistWasCorrect ? colors.success : colors.error}`,
+            }}>
+              <h3 style={{ color: twistWasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+                {twistWasCorrect ? 'Correct!' : 'Not Quite!'}
+              </h3>
+              <p style={{ color: colors.textPrimary }}>
+                Motors and transformers are highly sensitive to harmonics. The extra frequency components create
+                additional losses, vibration, noise, and <strong>significant overheating</strong> that can
+                reduce equipment lifespan by 50% or more.
+              </p>
+            </div>
+
+            <div style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '20px',
+              borderRadius: '12px',
+            }}>
+              <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why Harmonics Cause Problems</h3>
+              <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Motor Heating:</strong> Harmonics (3rd, 5th, 7th...)
+                  induce currents in the rotor that the motor is not designed to handle. These create heat without
+                  producing useful torque.
+                </p>
+                <p style={{ marginBottom: '12px' }}>
+                  <strong style={{ color: colors.textPrimary }}>Transformer Losses:</strong> Eddy current losses
+                  scale with frequency squared. The 7th harmonic (420Hz) causes 49x more eddy current loss than
+                  the fundamental!
+                </p>
+                <p>
+                  <strong style={{ color: colors.textPrimary }}>Equipment Ratings:</strong> Motors on distorted
+                  power must be derated by 10-30%. Many manufacturers void warranties if THD exceeds limits.
+                  This is why pure sine inverters are essential for inductive loads.
+                </p>
+              </div>
+            </div>
+          </>
+        );
+
+      case 'transfer':
+        return (
           <div style={{ padding: '16px' }}>
             <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
               Real-World Applications
@@ -915,89 +1125,79 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({
             <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
               Inverters are critical in renewable energy and power electronics
             </p>
-          </div>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
+            {transferApplications.map((app, index) => (
+              <div
+                key={index}
+                style={{
+                  background: colors.bgCard,
+                  margin: '16px 0',
+                  padding: '16px',
+                  borderRadius: '12px',
+                  border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+                }}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+                  <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
+                  {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                </div>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+                <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
+                  <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+                </div>
+                {!transferCompleted.has(index) ? (
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', WebkitTapHighlightColor: 'transparent' }}
+                  >
+                    Reveal Answer
+                  </button>
+                ) : (
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                    <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        );
+
+      case 'test':
+        if (testSubmitted) {
+          return (
+            <>
+              <div style={{
+                background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
                 margin: '16px',
-                padding: '16px',
+                padding: '24px',
                 borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+                textAlign: 'center',
+              }}>
+                <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
+                  {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+                </h2>
+                <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(245, 158, 11, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px', WebkitTapHighlightColor: 'transparent' }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
-        </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
-      </div>
-    );
-  }
+              {testQuestions.map((q, qIndex) => {
+                const userAnswer = testAnswers[qIndex];
+                const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+                return (
+                  <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                    <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                    {q.options.map((opt, oIndex) => (
+                      <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                        {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
+                      </div>
+                    ))}
+                  </div>
+                );
+              })}
+            </>
+          );
+        }
 
-  // TEST PHASE
-  if (phase === 'test') {
-    if (testSubmitted) {
-      return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-            </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
-          </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
-        </div>
-      );
-    }
-
-    const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        const currentQ = testQuestions[currentTestQuestion];
+        return (
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
@@ -1018,49 +1218,54 @@ const InverterSineWaveRenderer: React.FC<InverterSineWaveRendererProps> = ({
                 </button>
               ))}
             </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px 0' }}>
+              <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
+              {currentTestQuestion < testQuestions.length - 1 ? (
+                <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
+              ) : (
+                <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Submit Test</button>
+              )}
+            </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Previous</button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer', WebkitTapHighlightColor: 'transparent' }}>Next</button>
-            ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', WebkitTapHighlightColor: 'transparent' }}>Submit Test</button>
-            )}
-          </div>
-        </div>
-      </div>
-    );
-  }
+        );
 
-  // MASTERY PHASE
-  if (phase === 'mastery') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered inverter sine wave synthesis</p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>H-bridge switching to create AC from DC</li>
-              <li>PWM modulation with sinusoidal duty cycle</li>
-              <li>LC filtering to remove switching harmonics</li>
-              <li>Total Harmonic Distortion (THD) and its effects</li>
-              <li>Why pure sine inverters matter for motors</li>
-              <li>Grid synchronization requirements</li>
-            </ul>
-          </div>
-          {renderVisualization(true)}
-        </div>
-        {renderBottomBar(false, true, 'Complete Game')}
-      </div>
-    );
-  }
+      case 'mastery':
+        return (
+          <>
+            <div style={{ padding: '24px', textAlign: 'center' }}>
+              <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
+              <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+              <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You have mastered inverter sine wave synthesis</p>
+            </div>
+            <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+              <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+              <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+                <li>H-bridge switching to create AC from DC</li>
+                <li>PWM modulation with sinusoidal duty cycle</li>
+                <li>LC filtering to remove switching harmonics</li>
+                <li>Total Harmonic Distortion (THD) and its effects</li>
+                <li>Why pure sine inverters matter for motors</li>
+                <li>Grid synchronization requirements</li>
+              </ul>
+            </div>
+            {renderVisualization(true)}
+          </>
+        );
 
-  return null;
+      default:
+        return null;
+    }
+  };
+
+  return (
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      {renderProgressBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {renderPhaseContent()}
+      </div>
+      {renderBottomBar()}
+    </div>
+  );
 };
 
 export default InverterSineWaveRenderer;

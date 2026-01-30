@@ -18,7 +18,7 @@ type Phase =
   | 'test'
   | 'mastery';
 
-const PHASES: Phase[] = [
+const phaseOrder: Phase[] = [
   'hook',
   'predict',
   'play',
@@ -31,9 +31,71 @@ const PHASES: Phase[] = [
   'mastery',
 ];
 
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'High-Impedance Faults',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery',
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// SOUND UTILITY
+// ────────────────────────────────────────────────────────────────────────────
+
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds: Record<string, { freq: number; duration: number; type: OscillatorType }> = {
+      click: { freq: 600, duration: 0.1, type: 'sine' },
+      success: { freq: 800, duration: 0.2, type: 'sine' },
+      failure: { freq: 300, duration: 0.3, type: 'sine' },
+      transition: { freq: 500, duration: 0.15, type: 'sine' },
+      complete: { freq: 900, duration: 0.4, type: 'sine' },
+    };
+    const sound = sounds[type];
+    oscillator.frequency.value = sound.freq;
+    oscillator.type = sound.type;
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start();
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch { /* Audio not available */ }
+};
+
+// ────────────────────────────────────────────────────────────────────────────
+// COLOR PALETTE
+// ────────────────────────────────────────────────────────────────────────────
+
+const colors = {
+  primary: '#ef4444',
+  primaryDark: '#dc2626',
+  accent: '#f59e0b',
+  accentDark: '#d97706',
+  warning: '#f59e0b',
+  success: '#22c55e',
+  danger: '#ef4444',
+  bgDark: '#0f172a',
+  bgCard: '#1e293b',
+  bgCardLight: '#334155',
+  border: '#475569',
+  textPrimary: '#f8fafc',
+  textSecondary: '#94a3b8',
+  textMuted: '#64748b',
+};
+
 interface GroundFaultRendererProps {
-  phase: Phase;
-  onPhaseComplete?: () => void;
+  gamePhase?: Phase;  // Optional - for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
@@ -167,11 +229,30 @@ const TRANSFER_APPS = [
 // ────────────────────────────────────────────────────────────────────────────
 
 export default function GroundFaultRenderer({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }: GroundFaultRendererProps) {
+  // ──────────────────────────────────────────────────────────────────────────
+  // INTERNAL PHASE STATE MANAGEMENT
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase, phase]);
+
   // State
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -197,9 +278,205 @@ export default function GroundFaultRenderer({
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
 
+  // Responsive design
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
   const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
   const animationRef = useRef<number>();
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // NAVIGATION FUNCTIONS
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (navigationLockRef.current) return;
+
+    lastClickRef.current = now;
+    navigationLockRef.current = true;
+
+    setPhase(p);
+    playSound('transition');
+
+    setTimeout(() => {
+      navigationLockRef.current = false;
+    }, 300);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase]);
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // PROGRESS BAR COMPONENT
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: isMobile ? '10px 12px' : '12px 16px',
+        borderBottom: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+      }}>
+        {/* Back button */}
+        <button
+          onClick={goBack}
+          disabled={currentIdx === 0}
+          style={{
+            width: '36px',
+            height: '36px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.border}`,
+            background: currentIdx > 0 ? colors.bgCardLight : 'transparent',
+            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
+            cursor: currentIdx > 0 ? 'pointer' : 'not-allowed',
+            opacity: currentIdx > 0 ? 1 : 0.4,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '16px',
+          }}
+        >
+          ←
+        </button>
+
+        {/* Progress dots */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => i <= currentIdx && goToPhase(p)}
+              style={{
+                width: i === currentIdx ? '20px' : '10px',
+                height: '10px',
+                borderRadius: '5px',
+                border: 'none',
+                backgroundColor: i < currentIdx
+                  ? colors.success
+                  : i === currentIdx
+                    ? colors.primary
+                    : colors.border,
+                cursor: i <= currentIdx ? 'pointer' : 'default',
+                transition: 'all 0.2s',
+                opacity: i > currentIdx ? 0.5 : 1,
+              }}
+              title={phaseLabels[p]}
+            />
+          ))}
+        </div>
+
+        {/* Phase label and count */}
+        <div style={{
+          fontSize: '11px',
+          fontWeight: 700,
+          color: colors.primary,
+          padding: '4px 8px',
+          borderRadius: '6px',
+          backgroundColor: `${colors.primary}15`,
+        }}>
+          {currentIdx + 1}/{phaseOrder.length}
+        </div>
+      </div>
+    );
+  };
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // BOTTOM NAVIGATION BAR
+  // ──────────────────────────────────────────────────────────────────────────
+
+  const renderBottomBar = (canGoBack: boolean, canGoNext: boolean, nextLabel: string, onNext?: () => void) => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canBack = canGoBack && currentIdx > 0;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isMobile ? '12px' : '12px 16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '12px',
+      }}>
+        <button
+          onClick={goBack}
+          disabled={!canBack}
+          style={{
+            padding: isMobile ? '10px 16px' : '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: isMobile ? '13px' : '14px',
+            backgroundColor: colors.bgCardLight,
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.3,
+            minHeight: '44px',
+          }}
+        >
+          ← Back
+        </button>
+
+        <span style={{
+          fontSize: '12px',
+          color: colors.textMuted,
+          fontWeight: 600,
+        }}>
+          {phaseLabels[phase]}
+        </span>
+
+        <button
+          onClick={() => {
+            if (!canGoNext) return;
+            if (onNext) {
+              onNext();
+            } else {
+              goNext();
+            }
+          }}
+          disabled={!canGoNext}
+          style={{
+            padding: isMobile ? '10px 20px' : '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: isMobile ? '13px' : '14px',
+            background: canGoNext
+              ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`
+              : colors.bgCardLight,
+            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.4,
+            minHeight: '44px',
+          }}
+        >
+          {nextLabel} →
+        </button>
+      </div>
+    );
+  };
 
   // Animation
   useEffect(() => {
@@ -231,22 +508,6 @@ export default function GroundFaultRenderer({
   const canTripGFCI = highImpedanceFaultCurrent >= 5;
   const canTripBreaker = highImpedanceFaultCurrent >= 15000; // 15A breaker
 
-  // Navigation helpers
-  const goToNextPhase = useCallback(() => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 300) return;
-    if (navigationLockRef.current) return;
-    lastClickRef.current = now;
-    navigationLockRef.current = true;
-
-    if (onPhaseComplete) {
-      onPhaseComplete();
-    }
-
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 300);
-  }, [onPhaseComplete]);
 
   // Handlers
   const handlePrediction = useCallback((choice: string) => {
@@ -395,22 +656,6 @@ export default function GroundFaultRenderer({
         </p>
       </div>
 
-      <button
-        onClick={goToNextPhase}
-        style={{
-          padding: '16px 40px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          color: 'white',
-          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-          border: 'none',
-          borderRadius: '12px',
-          cursor: 'pointer',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        Learn Ground Fault Detection
-      </button>
     </div>
   );
 
@@ -487,25 +732,6 @@ export default function GroundFaultRenderer({
         </div>
       )}
 
-      {showPredictionFeedback && (
-        <button
-          onClick={goToNextPhase}
-          style={{
-            width: '100%',
-            padding: '16px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            color: 'white',
-            background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-            border: 'none',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          Try the GFCI Simulator
-        </button>
-      )}
     </div>
   );
 
@@ -670,26 +896,18 @@ export default function GroundFaultRenderer({
         </p>
       </div>
 
-      <button
-        onClick={goToNextPhase}
-        disabled={!hasExperimented}
-        style={{
-          width: '100%',
-          padding: '16px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          color: 'white',
-          background: hasExperimented
-            ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
-            : '#475569',
-          border: 'none',
-          borderRadius: '12px',
-          cursor: hasExperimented ? 'pointer' : 'not-allowed',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {hasExperimented ? 'Continue to Review' : `Experiment more (${Math.max(0, 3 - experimentCount)} left)`}
-      </button>
+      {!hasExperimented && (
+        <div style={{
+          textAlign: 'center',
+          padding: '12px',
+          background: 'rgba(245, 158, 11, 0.1)',
+          borderRadius: '8px',
+          color: '#fcd34d',
+          fontSize: '13px',
+        }}>
+          Experiment more ({Math.max(0, 3 - experimentCount)} adjustments left)
+        </div>
+      )}
     </div>
   );
 
@@ -746,24 +964,6 @@ export default function GroundFaultRenderer({
         </div>
       ))}
 
-      <button
-        onClick={goToNextPhase}
-        style={{
-          width: '100%',
-          padding: '16px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          color: 'white',
-          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-          border: 'none',
-          borderRadius: '12px',
-          cursor: 'pointer',
-          marginTop: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        Now for a Twist...
-      </button>
     </div>
   );
 
@@ -839,26 +1039,6 @@ export default function GroundFaultRenderer({
             )}
           </p>
         </div>
-      )}
-
-      {showTwistFeedback && (
-        <button
-          onClick={goToNextPhase}
-          style={{
-            width: '100%',
-            padding: '16px',
-            fontSize: '16px',
-            fontWeight: 'bold',
-            color: 'white',
-            background: 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)',
-            border: 'none',
-            borderRadius: '12px',
-            cursor: 'pointer',
-            WebkitTapHighlightColor: 'transparent',
-          }}
-        >
-          Explore High-Impedance Faults
-        </button>
       )}
     </div>
   );
@@ -962,26 +1142,18 @@ export default function GroundFaultRenderer({
         </p>
       </div>
 
-      <button
-        onClick={goToNextPhase}
-        disabled={!hasExploredTwist}
-        style={{
-          width: '100%',
-          padding: '16px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          color: 'white',
-          background: hasExploredTwist
-            ? 'linear-gradient(135deg, #f59e0b 0%, #ef4444 100%)'
-            : '#475569',
-          border: 'none',
-          borderRadius: '12px',
-          cursor: hasExploredTwist ? 'pointer' : 'not-allowed',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {hasExploredTwist ? 'Continue' : 'Adjust the impedance slider'}
-      </button>
+      {!hasExploredTwist && (
+        <div style={{
+          textAlign: 'center',
+          padding: '12px',
+          background: 'rgba(245, 158, 11, 0.1)',
+          borderRadius: '8px',
+          color: '#fcd34d',
+          fontSize: '13px',
+        }}>
+          Adjust the impedance slider to continue
+        </div>
+      )}
     </div>
   );
 
@@ -1048,24 +1220,6 @@ export default function GroundFaultRenderer({
         </div>
       ))}
 
-      <button
-        onClick={goToNextPhase}
-        style={{
-          width: '100%',
-          padding: '16px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          color: 'white',
-          background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-          border: 'none',
-          borderRadius: '12px',
-          cursor: 'pointer',
-          marginTop: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        See Real Applications
-      </button>
     </div>
   );
 
@@ -1175,26 +1329,18 @@ export default function GroundFaultRenderer({
         </div>
       </div>
 
-      <button
-        onClick={goToNextPhase}
-        disabled={completedApps.size < 4}
-        style={{
-          width: '100%',
-          padding: '16px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          color: 'white',
-          background: completedApps.size >= 4
-            ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
-            : '#475569',
-          border: 'none',
-          borderRadius: '12px',
-          cursor: completedApps.size >= 4 ? 'pointer' : 'not-allowed',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {completedApps.size >= 4 ? 'Take the Assessment' : `Complete ${4 - completedApps.size} more`}
-      </button>
+      {completedApps.size < 4 && (
+        <div style={{
+          textAlign: 'center',
+          padding: '12px',
+          background: 'rgba(245, 158, 11, 0.1)',
+          borderRadius: '8px',
+          color: '#fcd34d',
+          fontSize: '13px',
+        }}>
+          Complete {4 - completedApps.size} more application(s) to continue
+        </div>
+      )}
     </div>
   );
 
@@ -1256,23 +1402,6 @@ export default function GroundFaultRenderer({
             })}
           </div>
 
-          <button
-            onClick={goToNextPhase}
-            style={{
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              color: 'white',
-              background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)',
-              border: 'none',
-              borderRadius: '12px',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            {testScore >= 7 ? 'Complete Lesson' : 'Continue Anyway'}
-          </button>
         </div>
       );
     }
@@ -1445,23 +1574,6 @@ export default function GroundFaultRenderer({
           Assessment Score: <strong>{testScore}/10</strong>
         </p>
       </div>
-
-      <button
-        onClick={() => window.location.reload()}
-        style={{
-          padding: '16px 40px',
-          fontSize: '16px',
-          fontWeight: 'bold',
-          color: '#ef4444',
-          background: 'transparent',
-          border: '2px solid #ef4444',
-          borderRadius: '12px',
-          cursor: 'pointer',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        Review Again
-      </button>
     </div>
   );
 
@@ -1482,45 +1594,87 @@ export default function GroundFaultRenderer({
     }
   };
 
+  // Determine bottom bar state based on phase
+  const getBottomBarState = () => {
+    switch (phase) {
+      case 'hook':
+        return { canBack: false, canNext: true, label: 'Make a Prediction' };
+      case 'predict':
+        return { canBack: true, canNext: showPredictionFeedback, label: 'Try the GFCI Simulator' };
+      case 'play':
+        return { canBack: true, canNext: hasExperimented, label: 'Continue to Review' };
+      case 'review':
+        return { canBack: true, canNext: true, label: 'Now for a Twist...' };
+      case 'twist_predict':
+        return { canBack: true, canNext: showTwistFeedback, label: 'Explore High-Impedance Faults' };
+      case 'twist_play':
+        return { canBack: true, canNext: hasExploredTwist, label: 'Continue' };
+      case 'twist_review':
+        return { canBack: true, canNext: true, label: 'See Real Applications' };
+      case 'transfer':
+        return { canBack: true, canNext: completedApps.size >= 4, label: 'Take the Assessment' };
+      case 'test':
+        return { canBack: true, canNext: testSubmitted, label: testScore >= 7 ? 'Complete Lesson' : 'Continue Anyway' };
+      case 'mastery':
+        return { canBack: true, canNext: false, label: 'Review Again' };
+      default:
+        return { canBack: true, canNext: true, label: 'Continue' };
+    }
+  };
+
+  const bottomState = getBottomBarState();
+
   return (
     <div style={{
-      minHeight: '100vh',
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 50%, #0f172a 100%)',
-      color: 'white',
+      position: 'absolute',
+      inset: 0,
+      display: 'flex',
+      flexDirection: 'column',
+      background: `linear-gradient(135deg, ${colors.bgDark} 0%, #1e1b4b 50%, ${colors.bgDark} 100%)`,
+      color: colors.textPrimary,
+      overflow: 'hidden',
     }}>
-      {/* Header */}
-      <div style={{
-        position: 'sticky',
-        top: 0,
-        background: 'rgba(15, 23, 42, 0.9)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(51, 65, 85, 0.5)',
-        padding: '12px 24px',
-        zIndex: 100,
-      }}>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <span style={{ fontSize: '14px', fontWeight: 600, color: '#e2e8f0' }}>Ground Fault Detection</span>
-          <div style={{ display: 'flex', gap: '4px' }}>
-            {PHASES.map((p, i) => (
-              <div
-                key={p}
-                style={{
-                  width: phase === p ? '20px' : '8px',
-                  height: '8px',
-                  borderRadius: '4px',
-                  background: phase === p ? '#ef4444' : PHASES.indexOf(phase) > i ? '#22c55e' : '#475569',
-                  transition: 'all 0.3s ease',
-                }}
-              />
-            ))}
-          </div>
-        </div>
-      </div>
+      {/* Progress Bar */}
+      {renderProgressBar()}
 
-      {/* Content */}
-      <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+      {/* Main Content */}
+      <div style={{
+        flex: 1,
+        overflowY: 'auto',
+        overflowX: 'hidden',
+      }}>
         {renderContent()}
       </div>
+
+      {/* Bottom Navigation */}
+      {phase !== 'mastery' && renderBottomBar(bottomState.canBack, bottomState.canNext, bottomState.label)}
+
+      {/* Mastery phase has its own button */}
+      {phase === 'mastery' && (
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          padding: isMobile ? '12px' : '12px 16px',
+          borderTop: `1px solid ${colors.border}`,
+          backgroundColor: colors.bgCard,
+        }}>
+          <button
+            onClick={() => window.location.reload()}
+            style={{
+              padding: '16px 40px',
+              fontSize: '16px',
+              fontWeight: 'bold',
+              color: colors.primary,
+              background: 'transparent',
+              border: `2px solid ${colors.primary}`,
+              borderRadius: '12px',
+              cursor: 'pointer',
+            }}
+          >
+            Review Again
+          </button>
+        </div>
+      )}
     </div>
   );
 }

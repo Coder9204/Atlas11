@@ -1,18 +1,70 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 interface OrbitalMechanicsBasicsRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
-  onCorrectAnswer?: () => void;
-  onIncorrectAnswer?: () => void;
+  gamePhase?: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+  onGameEvent?: (event: { type: string; data?: Record<string, unknown> }) => void;
 }
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
 const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererProps> = ({
-  phase,
-  onPhaseComplete,
-  onCorrectAnswer,
-  onIncorrectAnswer,
+  gamePhase,
+  onGameEvent,
 }) => {
+  // Phase navigation
+  const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'New Variable',
+    twist_play: 'Explore Twist',
+    twist_review: 'Deep Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const validPhases: Phase[] = phaseOrder;
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && validPhases.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
+  const navigationLockRef = useRef(false);
+
+  // Sync phase with gamePhase prop changes (for resume functionality)
+  useEffect(() => {
+    if (gamePhase && validPhases.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase]);
+
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (navigationLockRef.current) return;
+    navigationLockRef.current = true;
+    setPhase(newPhase);
+    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
+    setTimeout(() => { navigationLockRef.current = false; }, 300);
+  }, [onGameEvent, phaseLabels]);
+
+  const goNext = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[idx + 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
+
+  const goBack = useCallback(() => {
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) {
+      goToPhase(phaseOrder[idx - 1]);
+    }
+  }, [phase, goToPhase, phaseOrder]);
   // Simulation state
   const [altitude, setAltitude] = useState(400); // km above Earth surface
   const [showVelocityVector, setShowVelocityVector] = useState(true);
@@ -240,8 +292,136 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
     });
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
-    else if (onIncorrectAnswer) onIncorrectAnswer();
+    onGameEvent?.({ type: 'test_completed', data: { score, total: 10 } });
+  };
+
+  // Progress bar showing all 10 phases
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '12px 16px',
+        borderBottom: '1px solid #334155',
+        backgroundColor: '#0f172a',
+        gap: '16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {phaseOrder.map((p, i) => (
+              <div
+                key={p}
+                onClick={() => i <= currentIdx && goToPhase(p)}
+                style={{
+                  height: '8px',
+                  width: i === currentIdx ? '24px' : '8px',
+                  borderRadius: '4px',
+                  backgroundColor: i < currentIdx ? '#22c55e' : i === currentIdx ? '#3b82f6' : '#334155',
+                  cursor: i <= currentIdx ? 'pointer' : 'default',
+                  transition: 'all 0.3s'
+                }}
+                title={phaseLabels[p]}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b' }}>
+            {currentIdx + 1} / {phaseOrder.length}
+          </span>
+        </div>
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: 'rgba(59, 130, 246, 0.2)',
+          color: '#3b82f6',
+          fontSize: '11px',
+          fontWeight: 700
+        }}>
+          {phaseLabels[phase]}
+        </div>
+      </div>
+    );
+  };
+
+  // Bottom navigation bar with Back/Next
+  const renderBottomBar = (canGoNext: boolean = true, nextLabel: string = 'Next') => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canBack = currentIdx > 0;
+    const isLastPhase = currentIdx === phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: '16px 24px',
+        borderTop: '1px solid #334155',
+        backgroundColor: '#0f172a',
+        marginTop: 'auto'
+      }}>
+        <button
+          onClick={goBack}
+          disabled={!canBack}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: '14px',
+            backgroundColor: '#1e293b',
+            color: canBack ? '#e2e8f0' : '#475569',
+            border: '1px solid #334155',
+            cursor: canBack ? 'pointer' : 'not-allowed',
+            opacity: canBack ? 1 : 0.5
+          }}
+        >
+          Back
+        </button>
+
+        <span style={{ fontSize: '12px', color: '#64748b', fontWeight: 600 }}>
+          {phaseLabels[phase]}
+        </span>
+
+        {!isLastPhase && (
+          <button
+            onClick={goNext}
+            disabled={!canGoNext}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '14px',
+              background: canGoNext ? 'linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%)' : '#1e293b',
+              color: canGoNext ? '#ffffff' : '#475569',
+              border: 'none',
+              cursor: canGoNext ? 'pointer' : 'not-allowed',
+              opacity: canGoNext ? 1 : 0.5,
+              boxShadow: canGoNext ? '0 2px 12px rgba(59, 130, 246, 0.3)' : 'none'
+            }}
+          >
+            {nextLabel}
+          </button>
+        )}
+        {isLastPhase && (
+          <button
+            onClick={() => goToPhase('hook')}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '10px',
+              fontWeight: 700,
+              fontSize: '14px',
+              background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
+              color: '#ffffff',
+              border: 'none',
+              cursor: 'pointer',
+              boxShadow: '0 2px 12px rgba(34, 197, 94, 0.3)'
+            }}
+          >
+            Start Over
+          </button>
+        )}
+      </div>
+    );
   };
 
   const renderVisualization = () => {
@@ -527,48 +707,34 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   // HOOK PHASE
   if (phase === 'hook') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ marginBottom: '24px' }}>
-            <span style={{ color: '#3b82f6', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>Space Physics</span>
-            <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
-              Orbital Mechanics Basics
-            </h1>
-            <p style={{ color: '#94a3b8', fontSize: '18px', marginTop: '8px' }}>
-              Why don't satellites just fall down?
-            </p>
+      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ marginBottom: '24px' }}>
+              <span style={{ color: '#3b82f6', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>Space Physics</span>
+              <h1 style={{ fontSize: '32px', marginTop: '8px', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)', WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent' }}>
+                Orbital Mechanics Basics
+              </h1>
+              <p style={{ color: '#94a3b8', fontSize: '18px', marginTop: '8px' }}>
+                Why don't satellites just fall down?
+              </p>
+            </div>
+
+            {renderVisualization()}
+
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', borderLeft: '4px solid #3b82f6' }}>
+              <p style={{ fontSize: '16px', lineHeight: 1.6 }}>
+                The International Space Station zooms around Earth at 7.7 km/s, completing an orbit every 90 minutes.
+                But gravity at ISS altitude is still 90% of surface gravity. So why doesn't it fall?
+              </p>
+              <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '12px' }}>
+                The answer is one of physics' most beautiful insights.
+              </p>
+            </div>
           </div>
-
-          {renderVisualization()}
-
-          <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', marginTop: '24px', borderLeft: '4px solid #3b82f6' }}>
-            <p style={{ fontSize: '16px', lineHeight: 1.6 }}>
-              The International Space Station zooms around Earth at 7.7 km/s, completing an orbit every 90 minutes.
-              But gravity at ISS altitude is still 90% of surface gravity. So why doesn't it fall?
-            </p>
-            <p style={{ color: '#94a3b8', fontSize: '14px', marginTop: '12px' }}>
-              The answer is one of physics' most beautiful insights.
-            </p>
-          </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              padding: '16px 32px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              background: 'linear-gradient(90deg, #3b82f6, #2563eb)',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Discover the Answer
-          </button>
         </div>
+        {renderBottomBar(true, 'Discover the Answer')}
       </div>
     );
   }
@@ -576,60 +742,43 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   // PREDICT PHASE
   if (phase === 'predict') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
+      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            <h2 style={{ textAlign: 'center', marginBottom: '24px' }}>Make Your Prediction</h2>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-            <p style={{ fontSize: '16px', marginBottom: '8px' }}>
-              At the ISS altitude (400 km), gravity is still about 8.7 m/s2 - about 89% of surface gravity.
-              Yet astronauts float weightlessly. Why don't they and the station fall to Earth?
-            </p>
+            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
+              <p style={{ fontSize: '16px', marginBottom: '8px' }}>
+                At the ISS altitude (400 km), gravity is still about 8.7 m/s2 - about 89% of surface gravity.
+                Yet astronauts float weightlessly. Why don't they and the station fall to Earth?
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {predictions.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setPrediction(p.id)}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: prediction === p.id ? '2px solid #3b82f6' : '1px solid #475569',
+                    background: prediction === p.id ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
+                    color: '#f8fafc',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: '15px',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {predictions.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setPrediction(p.id)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: prediction === p.id ? '2px solid #3b82f6' : '1px solid #475569',
-                  background: prediction === p.id ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                  color: '#f8fafc',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontSize: '15px',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-
-          {prediction && (
-            <button
-              onClick={onPhaseComplete}
-              style={{
-                marginTop: '24px',
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: '#3b82f6',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Test My Prediction
-            </button>
-          )}
         </div>
+        {renderBottomBar(prediction !== null, 'Test My Prediction')}
       </div>
     );
   }
@@ -637,45 +786,30 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   // PLAY PHASE
   if (phase === 'play') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore Orbital Mechanics</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
-            See how altitude affects orbital velocity and period
-          </p>
+      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Explore Orbital Mechanics</h2>
+            <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+              See how altitude affects orbital velocity and period
+            </p>
 
-          {renderVisualization()}
-          {renderControls()}
+            {renderVisualization()}
+            {renderControls()}
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
-            <h3 style={{ color: '#3b82f6', marginBottom: '12px' }}>Key Experiments:</h3>
-            <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
-              <li>Compare velocities at ISS vs GPS vs GEO altitudes</li>
-              <li>Notice: velocity and gravity BOTH decrease with altitude</li>
-              <li>Watch how the velocity vector is always perpendicular to gravity</li>
-              <li>See the orbital period increase dramatically with altitude</li>
-            </ul>
+            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
+              <h3 style={{ color: '#3b82f6', marginBottom: '12px' }}>Key Experiments:</h3>
+              <ul style={{ color: '#e2e8f0', lineHeight: 1.8, paddingLeft: '20px' }}>
+                <li>Compare velocities at ISS vs GPS vs GEO altitudes</li>
+                <li>Notice: velocity and gravity BOTH decrease with altitude</li>
+                <li>Watch how the velocity vector is always perpendicular to gravity</li>
+                <li>See the orbital period increase dramatically with altitude</li>
+              </ul>
+            </div>
           </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#3b82f6',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Review the Concepts
-          </button>
         </div>
+        {renderBottomBar(true, 'Review the Concepts')}
       </div>
     );
   }
@@ -685,65 +819,50 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
     const wasCorrect = prediction === 'falling';
 
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            padding: '20px',
-            borderRadius: '12px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444' }}>
-              {wasCorrect ? 'Correct!' : 'The key insight:'}
-            </h3>
-            <p>Orbiting IS falling! The satellite falls toward Earth, but moves sideways so fast that the curve of its fall matches Earth's curve. It keeps missing the ground!</p>
-          </div>
-
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-            <h3 style={{ color: '#3b82f6', marginBottom: '16px' }}>Newton's Cannonball</h3>
-            <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
-              <strong>The thought experiment:</strong> Imagine firing a cannon horizontally from a tall mountain.
-              Fire faster, and the cannonball lands farther away. Fire fast enough, and the ground curves away as fast as the ball falls.
-            </p>
-            <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
-              <strong>The key insight:</strong> At orbital velocity, the object is continuously falling toward Earth,
-              but Earth's surface curves away at exactly the same rate. The object falls "around" Earth!
-            </p>
-            <p style={{ lineHeight: 1.7 }}>
-              <strong>Weightlessness:</strong> Astronauts feel weightless because they and their spacecraft are both
-              falling at exactly the same rate. There's no floor pushing up on them - they're in free fall together.
-            </p>
-          </div>
-
-          <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-            <h3 style={{ color: '#8b5cf6', marginBottom: '16px' }}>The Math</h3>
-            <p style={{ lineHeight: 1.7 }}>
-              <strong>Orbital velocity:</strong> v = sqrt(GM/r)<br />
-              <strong>For Earth at 400km:</strong> v = 7.7 km/s = 27,720 km/h<br />
-              <strong>Key relationship:</strong> Higher orbit = lower velocity (counterintuitively!)
-            </p>
-          </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#a855f7',
-              border: 'none',
+      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            <div style={{
+              background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              padding: '20px',
               borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Discover the Twist
-          </button>
+              marginBottom: '24px',
+              borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
+            }}>
+              <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444' }}>
+                {wasCorrect ? 'Correct!' : 'The key insight:'}
+              </h3>
+              <p>Orbiting IS falling! The satellite falls toward Earth, but moves sideways so fast that the curve of its fall matches Earth's curve. It keeps missing the ground!</p>
+            </div>
+
+            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+              <h3 style={{ color: '#3b82f6', marginBottom: '16px' }}>Newton's Cannonball</h3>
+              <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
+                <strong>The thought experiment:</strong> Imagine firing a cannon horizontally from a tall mountain.
+                Fire faster, and the cannonball lands farther away. Fire fast enough, and the ground curves away as fast as the ball falls.
+              </p>
+              <p style={{ lineHeight: 1.7, marginBottom: '12px' }}>
+                <strong>The key insight:</strong> At orbital velocity, the object is continuously falling toward Earth,
+                but Earth's surface curves away at exactly the same rate. The object falls "around" Earth!
+              </p>
+              <p style={{ lineHeight: 1.7 }}>
+                <strong>Weightlessness:</strong> Astronauts feel weightless because they and their spacecraft are both
+                falling at exactly the same rate. There's no floor pushing up on them - they're in free fall together.
+              </p>
+            </div>
+
+            <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+              <h3 style={{ color: '#8b5cf6', marginBottom: '16px' }}>The Math</h3>
+              <p style={{ lineHeight: 1.7 }}>
+                <strong>Orbital velocity:</strong> v = sqrt(GM/r)<br />
+                <strong>For Earth at 400km:</strong> v = 7.7 km/s = 27,720 km/h<br />
+                <strong>Key relationship:</strong> Higher orbit = lower velocity (counterintuitively!)
+              </p>
+            </div>
+          </div>
         </div>
+        {renderBottomBar(true, 'Discover the Twist')}
       </div>
     );
   }
@@ -751,64 +870,47 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>The Twist</h2>
+      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>The Twist</h2>
 
-          <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '24px', borderLeft: '4px solid #a855f7' }}>
-            <p style={{ fontSize: '16px', marginBottom: '12px' }}>
-              Here's something counterintuitive: A satellite at 400 km orbits at 7.7 km/s.
-              A GPS satellite at 20,200 km orbits at only 3.9 km/s.
-              A geostationary satellite at 35,786 km orbits at just 3.1 km/s.
-            </p>
-            <p style={{ color: '#c4b5fd', fontWeight: 'bold' }}>
-              What happens to orbital velocity as you go higher?
-            </p>
+            <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '24px', borderLeft: '4px solid #a855f7' }}>
+              <p style={{ fontSize: '16px', marginBottom: '12px' }}>
+                Here's something counterintuitive: A satellite at 400 km orbits at 7.7 km/s.
+                A GPS satellite at 20,200 km orbits at only 3.9 km/s.
+                A geostationary satellite at 35,786 km orbits at just 3.1 km/s.
+              </p>
+              <p style={{ color: '#c4b5fd', fontWeight: 'bold' }}>
+                What happens to orbital velocity as you go higher?
+              </p>
+            </div>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {twistPredictions.map((p) => (
+                <button
+                  key={p.id}
+                  onClick={() => setTwistPrediction(p.id)}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: twistPrediction === p.id ? '2px solid #a855f7' : '1px solid #475569',
+                    background: twistPrediction === p.id ? 'rgba(168, 85, 247, 0.2)' : 'rgba(30, 41, 59, 0.5)',
+                    color: '#f8fafc',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: '15px',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  {p.label}
+                </button>
+              ))}
+            </div>
           </div>
-
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-            {twistPredictions.map((p) => (
-              <button
-                key={p.id}
-                onClick={() => setTwistPrediction(p.id)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: twistPrediction === p.id ? '2px solid #a855f7' : '1px solid #475569',
-                  background: twistPrediction === p.id ? 'rgba(168, 85, 247, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                  color: '#f8fafc',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontSize: '15px',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                {p.label}
-              </button>
-            ))}
-          </div>
-
-          {twistPrediction && (
-            <button
-              onClick={onPhaseComplete}
-              style={{
-                marginTop: '24px',
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: '#a855f7',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              See the Answer
-            </button>
-          )}
         </div>
+        {renderBottomBar(twistPrediction !== null, 'See the Answer')}
       </div>
     );
   }
@@ -816,62 +918,47 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '700px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>Higher = Slower</h2>
+      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+          <div style={{ maxWidth: '700px', margin: '0 auto' }}>
+            <h2 style={{ textAlign: 'center', color: '#a855f7', marginBottom: '24px' }}>Higher = Slower</h2>
 
-          {renderVisualization()}
-          {renderControls()}
+            {renderVisualization()}
+            {renderControls()}
 
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '24px' }}>
-            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '12px' }}>
-              <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>Low Orbit (ISS)</h4>
-              <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
-                <li>400 km altitude</li>
-                <li>7.7 km/s velocity</li>
-                <li>90 minute period</li>
-                <li>Strong gravity</li>
-              </ul>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '16px', marginTop: '24px' }}>
+              <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '16px', borderRadius: '12px' }}>
+                <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>Low Orbit (ISS)</h4>
+                <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
+                  <li>400 km altitude</li>
+                  <li>7.7 km/s velocity</li>
+                  <li>90 minute period</li>
+                  <li>Strong gravity</li>
+                </ul>
+              </div>
+              <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '16px', borderRadius: '12px' }}>
+                <h4 style={{ color: '#a855f7', marginBottom: '8px' }}>High Orbit (GEO)</h4>
+                <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
+                  <li>35,786 km altitude</li>
+                  <li>3.1 km/s velocity</li>
+                  <li>24 hour period</li>
+                  <li>Weak gravity</li>
+                </ul>
+              </div>
             </div>
-            <div style={{ background: 'rgba(168, 85, 247, 0.1)', padding: '16px', borderRadius: '12px' }}>
-              <h4 style={{ color: '#a855f7', marginBottom: '8px' }}>High Orbit (GEO)</h4>
-              <ul style={{ color: '#e2e8f0', fontSize: '14px', paddingLeft: '16px', lineHeight: 1.6 }}>
-                <li>35,786 km altitude</li>
-                <li>3.1 km/s velocity</li>
-                <li>24 hour period</li>
-                <li>Weak gravity</li>
-              </ul>
+
+            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
+              <h4 style={{ color: '#f59e0b', marginBottom: '8px' }}>The Paradox Explained</h4>
+              <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
+                To go to a higher orbit, you must speed up. But once you're there, you're moving slower!
+                The extra speed converts to potential energy (height). It's like slowing down as you climb a hill -
+                kinetic energy becomes potential energy.
+              </p>
             </div>
           </div>
-
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginTop: '24px' }}>
-            <h4 style={{ color: '#f59e0b', marginBottom: '8px' }}>The Paradox Explained</h4>
-            <p style={{ color: '#e2e8f0', fontSize: '14px', lineHeight: 1.6 }}>
-              To go to a higher orbit, you must speed up. But once you're there, you're moving slower!
-              The extra speed converts to potential energy (height). It's like slowing down as you climb a hill -
-              kinetic energy becomes potential energy.
-            </p>
-          </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#a855f7',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Review the Discovery
-          </button>
         </div>
+        {renderBottomBar(true, 'Review the Discovery')}
       </div>
     );
   }
@@ -881,57 +968,42 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
     const wasCorrect = twistPrediction === 'slower_higher';
 
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            padding: '20px',
-            borderRadius: '12px',
-            marginBottom: '24px',
-            borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444' }}>
-              {wasCorrect ? 'Exactly right!' : 'The counterintuitive truth:'}
-            </h3>
-            <p>Higher orbits are SLOWER! It seems wrong, but physics demands it: v = sqrt(GM/r). Larger r means smaller v.</p>
-          </div>
+      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            <div style={{
+              background: wasCorrect ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              padding: '20px',
+              borderRadius: '12px',
+              marginBottom: '24px',
+              borderLeft: `4px solid ${wasCorrect ? '#22c55e' : '#ef4444'}`,
+            }}>
+              <h3 style={{ color: wasCorrect ? '#22c55e' : '#ef4444' }}>
+                {wasCorrect ? 'Exactly right!' : 'The counterintuitive truth:'}
+              </h3>
+              <p>Higher orbits are SLOWER! It seems wrong, but physics demands it: v = sqrt(GM/r). Larger r means smaller v.</p>
+            </div>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-            <h3 style={{ color: '#f59e0b', marginBottom: '16px' }}>Orbital Maneuvers</h3>
-            <div style={{ lineHeight: 1.8 }}>
-              <p><strong style={{ color: '#22c55e' }}>To go higher:</strong> Speed up - you'll rise to a higher orbit where you actually move slower</p>
-              <p><strong style={{ color: '#ef4444' }}>To go lower:</strong> Slow down - you'll drop to a lower orbit where you actually move faster</p>
-              <p><strong style={{ color: '#3b82f6' }}>The paradox:</strong> Speeding up slows you down (eventually). Slowing down speeds you up (eventually)!</p>
+            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+              <h3 style={{ color: '#f59e0b', marginBottom: '16px' }}>Orbital Maneuvers</h3>
+              <div style={{ lineHeight: 1.8 }}>
+                <p><strong style={{ color: '#22c55e' }}>To go higher:</strong> Speed up - you'll rise to a higher orbit where you actually move slower</p>
+                <p><strong style={{ color: '#ef4444' }}>To go lower:</strong> Slow down - you'll drop to a lower orbit where you actually move faster</p>
+                <p><strong style={{ color: '#3b82f6' }}>The paradox:</strong> Speeding up slows you down (eventually). Slowing down speeds you up (eventually)!</p>
+              </div>
+            </div>
+
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+              <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>Kepler's Third Law</h4>
+              <p style={{ color: '#e2e8f0', lineHeight: 1.6 }}>
+                T^2 is proportional to r^3. Double the orbital radius, and the period increases by a factor of 2.8.
+                The satellite moves slower AND has a longer path - that's why higher orbits take so much longer.
+              </p>
             </div>
           </div>
-
-          <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-            <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>Kepler's Third Law</h4>
-            <p style={{ color: '#e2e8f0', lineHeight: 1.6 }}>
-              T^2 is proportional to r^3. Double the orbital radius, and the period increases by a factor of 2.8.
-              The satellite moves slower AND has a longer path - that's why higher orbits take so much longer.
-            </p>
-          </div>
-
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              marginTop: '24px',
-              width: '100%',
-              padding: '16px',
-              fontSize: '16px',
-              fontWeight: 'bold',
-              background: '#22c55e',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            See Real-World Applications
-          </button>
         </div>
+        {renderBottomBar(true, 'See Real-World Applications')}
       </div>
     );
   }
@@ -939,73 +1011,56 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   // TRANSFER PHASE
   if (phase === 'transfer') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
-          <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
-            Complete all 4 to unlock the test ({transferCompleted.size}/4)
-          </p>
+      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            <h2 style={{ textAlign: 'center', marginBottom: '8px' }}>Real-World Applications</h2>
+            <p style={{ textAlign: 'center', color: '#94a3b8', marginBottom: '24px' }}>
+              Complete all 4 to unlock the test ({transferCompleted.size}/4)
+            </p>
 
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: 'rgba(30, 41, 59, 0.8)',
-                padding: '20px',
-                borderRadius: '12px',
-                marginBottom: '16px',
-                border: transferCompleted.has(index) ? '2px solid #22c55e' : '1px solid #334155',
-              }}
-            >
-              <h3 style={{ color: '#f8fafc', marginBottom: '8px' }}>{app.title}</h3>
-              <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
-                <p style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '14px' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '10px 20px',
-                    borderRadius: '8px',
-                    border: '1px solid #3b82f6',
-                    background: 'transparent',
-                    color: '#3b82f6',
-                    cursor: 'pointer',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e' }}>
-                  <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
+            {transferApplications.map((app, index) => (
+              <div
+                key={index}
+                style={{
+                  background: 'rgba(30, 41, 59, 0.8)',
+                  padding: '20px',
+                  borderRadius: '12px',
+                  marginBottom: '16px',
+                  border: transferCompleted.has(index) ? '2px solid #22c55e' : '1px solid #334155',
+                }}
+              >
+                <h3 style={{ color: '#f8fafc', marginBottom: '8px' }}>{app.title}</h3>
+                <p style={{ color: '#94a3b8', fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+                <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '12px' }}>
+                  <p style={{ color: '#3b82f6', fontWeight: 'bold', fontSize: '14px' }}>{app.question}</p>
                 </div>
-              )}
-            </div>
-          ))}
-
-          {transferCompleted.size >= 4 && (
-            <button
-              onClick={onPhaseComplete}
-              style={{
-                marginTop: '24px',
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: '#22c55e',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Take the Test
-            </button>
-          )}
+                {!transferCompleted.has(index) ? (
+                  <button
+                    onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '8px',
+                      border: '1px solid #3b82f6',
+                      background: 'transparent',
+                      color: '#3b82f6',
+                      cursor: 'pointer',
+                      WebkitTapHighlightColor: 'transparent',
+                    }}
+                  >
+                    Reveal Answer
+                  </button>
+                ) : (
+                  <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: '3px solid #22c55e' }}>
+                    <p style={{ color: '#e2e8f0', fontSize: '14px' }}>{app.answer}</p>
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
         </div>
+        {renderBottomBar(transferCompleted.size >= 4, 'Take the Test')}
       </div>
     );
   }
@@ -1014,41 +1069,44 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   if (phase === 'test') {
     if (testSubmitted) {
       return (
-        <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', padding: '24px' }}>
-          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              padding: '32px',
-              borderRadius: '16px',
-              textAlign: 'center',
-              marginBottom: '24px',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ fontSize: '48px', fontWeight: 'bold' }}>{testScore}/10</p>
-              <p style={{ color: '#94a3b8' }}>
-                {testScore >= 8 ? 'You\'ve mastered orbital mechanics!' : 'Review the concepts and try again.'}
-              </p>
-            </div>
+        <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+          {renderProgressBar()}
+          <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+            <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+              <div style={{
+                background: testScore >= 8 ? 'rgba(34, 197, 94, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+                padding: '32px',
+                borderRadius: '16px',
+                textAlign: 'center',
+                marginBottom: '24px',
+              }}>
+                <h2 style={{ color: testScore >= 8 ? '#22c55e' : '#ef4444', marginBottom: '8px' }}>
+                  {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+                </h2>
+                <p style={{ fontSize: '48px', fontWeight: 'bold' }}>{testScore}/10</p>
+                <p style={{ color: '#94a3b8' }}>
+                  {testScore >= 8 ? 'You\'ve mastered orbital mechanics!' : 'Review the concepts and try again.'}
+                </p>
+              </div>
 
-            <button
-              onClick={testScore >= 8 ? onPhaseComplete : () => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); }}
-              style={{
-                width: '100%',
-                padding: '16px',
-                fontSize: '16px',
-                fontWeight: 'bold',
-                background: testScore >= 8 ? '#22c55e' : '#f59e0b',
-                border: 'none',
-                borderRadius: '12px',
-                color: 'white',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              {testScore >= 8 ? 'Claim Mastery' : 'Try Again'}
-            </button>
+              <button
+                onClick={testScore >= 8 ? goNext : () => { setTestSubmitted(false); setTestAnswers(new Array(10).fill(null)); setCurrentTestQuestion(0); }}
+                style={{
+                  width: '100%',
+                  padding: '16px',
+                  fontSize: '16px',
+                  fontWeight: 'bold',
+                  background: testScore >= 8 ? '#22c55e' : '#f59e0b',
+                  border: 'none',
+                  borderRadius: '12px',
+                  color: 'white',
+                  cursor: 'pointer',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                {testScore >= 8 ? 'Claim Mastery' : 'Try Again'}
+              </button>
+            </div>
           </div>
         </div>
       );
@@ -1056,104 +1114,107 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
 
     const currentQ = testQuestions[currentTestQuestion];
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-            <h2>Knowledge Test</h2>
-            <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1}/10</span>
-          </div>
+      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+              <h2>Knowledge Test</h2>
+              <span style={{ color: '#94a3b8' }}>{currentTestQuestion + 1}/10</span>
+            </div>
 
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-            {testQuestions.map((_, i) => (
-              <div
-                key={i}
-                onClick={() => setCurrentTestQuestion(i)}
-                style={{
-                  flex: 1,
-                  height: '4px',
-                  borderRadius: '2px',
-                  background: testAnswers[i] !== null ? '#3b82f6' : i === currentTestQuestion ? '#64748b' : '#1e293b',
-                  cursor: 'pointer',
-                }}
-              />
-            ))}
-          </div>
+            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+              {testQuestions.map((_, i) => (
+                <div
+                  key={i}
+                  onClick={() => setCurrentTestQuestion(i)}
+                  style={{
+                    flex: 1,
+                    height: '4px',
+                    borderRadius: '2px',
+                    background: testAnswers[i] !== null ? '#3b82f6' : i === currentTestQuestion ? '#64748b' : '#1e293b',
+                    cursor: 'pointer',
+                  }}
+                />
+              ))}
+            </div>
 
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-            <p style={{ fontSize: '16px', lineHeight: 1.6 }}>{currentQ.question}</p>
-          </div>
+            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+              <p style={{ fontSize: '16px', lineHeight: 1.6 }}>{currentQ.question}</p>
+            </div>
 
-          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
-            {currentQ.options.map((opt, i) => (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+              {currentQ.options.map((opt, i) => (
+                <button
+                  key={i}
+                  onClick={() => handleTestAnswer(currentTestQuestion, i)}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: testAnswers[currentTestQuestion] === i ? '2px solid #3b82f6' : '1px solid #475569',
+                    background: testAnswers[currentTestQuestion] === i ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
+                    color: '#f8fafc',
+                    cursor: 'pointer',
+                    textAlign: 'left',
+                    fontSize: '14px',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  {opt.text}
+                </button>
+              ))}
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between' }}>
               <button
-                key={i}
-                onClick={() => handleTestAnswer(currentTestQuestion, i)}
-                style={{
-                  padding: '16px',
-                  borderRadius: '12px',
-                  border: testAnswers[currentTestQuestion] === i ? '2px solid #3b82f6' : '1px solid #475569',
-                  background: testAnswers[currentTestQuestion] === i ? 'rgba(59, 130, 246, 0.2)' : 'rgba(30, 41, 59, 0.5)',
-                  color: '#f8fafc',
-                  cursor: 'pointer',
-                  textAlign: 'left',
-                  fontSize: '14px',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                {opt.text}
-              </button>
-            ))}
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <button
-              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
-              disabled={currentTestQuestion === 0}
-              style={{
-                padding: '12px 24px',
-                borderRadius: '8px',
-                border: '1px solid #475569',
-                background: 'transparent',
-                color: currentTestQuestion === 0 ? '#475569' : '#f8fafc',
-                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              Previous
-            </button>
-
-            {currentTestQuestion < 9 ? (
-              <button
-                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+                disabled={currentTestQuestion === 0}
                 style={{
                   padding: '12px 24px',
                   borderRadius: '8px',
-                  border: 'none',
-                  background: '#3b82f6',
-                  color: 'white',
-                  cursor: 'pointer',
+                  border: '1px solid #475569',
+                  background: 'transparent',
+                  color: currentTestQuestion === 0 ? '#475569' : '#f8fafc',
+                  cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
-                Next
+                Previous
               </button>
-            ) : (
-              <button
-                onClick={submitTest}
-                disabled={testAnswers.includes(null)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: testAnswers.includes(null) ? '#475569' : '#22c55e',
-                  color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                Submit
-              </button>
-            )}
+
+              {currentTestQuestion < 9 ? (
+                <button
+                  onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: '#3b82f6',
+                    color: 'white',
+                    cursor: 'pointer',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  Next
+                </button>
+              ) : (
+                <button
+                  onClick={submitTest}
+                  disabled={testAnswers.includes(null)}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '8px',
+                    border: 'none',
+                    background: testAnswers.includes(null) ? '#475569' : '#22c55e',
+                    color: 'white',
+                    cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  Submit
+                </button>
+              )}
+            </div>
           </div>
         </div>
       </div>
@@ -1163,50 +1224,37 @@ const OrbitalMechanicsBasicsRenderer: React.FC<OrbitalMechanicsBasicsRendererPro
   // MASTERY PHASE
   if (phase === 'mastery') {
     return (
-      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', padding: '24px' }}>
-        <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
-          <div style={{ fontSize: '80px', marginBottom: '16px' }}>MASTERY</div>
-          <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Orbital Mechanics Expert!</h1>
-          <p style={{ color: '#94a3b8', marginBottom: '32px' }}>
-            You understand the elegant physics that keeps satellites in orbit
-          </p>
-
-          <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '24px', borderRadius: '16px', marginBottom: '24px', textAlign: 'left' }}>
-            <h3 style={{ color: '#3b82f6', marginBottom: '16px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ lineHeight: 2, paddingLeft: '20px' }}>
-              <li>Orbital motion as continuous falling</li>
-              <li>The relationship v = sqrt(GM/r)</li>
-              <li>Higher orbits = slower velocities</li>
-              <li>Kepler's laws and orbital periods</li>
-              <li>Escape velocity and orbital maneuvers</li>
-            </ul>
-          </div>
-
-          <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
-            <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>The Core Insight</h4>
-            <p style={{ color: '#e2e8f0' }}>
-              Orbits are a beautiful balance between gravity's pull and sideways motion.
-              The mathematics that describes this has enabled everything from GPS navigation to interplanetary exploration.
+      <div style={{ minHeight: '100vh', background: '#0a0a1a', color: '#f8fafc', display: 'flex', flexDirection: 'column' }}>
+        {renderProgressBar()}
+        <div style={{ flex: 1, padding: '24px', overflowY: 'auto' }}>
+          <div style={{ maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+            <div style={{ fontSize: '80px', marginBottom: '16px' }}>MASTERY</div>
+            <h1 style={{ color: '#22c55e', marginBottom: '8px' }}>Orbital Mechanics Expert!</h1>
+            <p style={{ color: '#94a3b8', marginBottom: '32px' }}>
+              You understand the elegant physics that keeps satellites in orbit
             </p>
-          </div>
 
-          <button
-            onClick={onPhaseComplete}
-            style={{
-              padding: '16px 32px',
-              fontSize: '18px',
-              fontWeight: 'bold',
-              background: 'linear-gradient(90deg, #22c55e, #16a34a)',
-              border: 'none',
-              borderRadius: '12px',
-              color: 'white',
-              cursor: 'pointer',
-              WebkitTapHighlightColor: 'transparent',
-            }}
-          >
-            Complete
-          </button>
+            <div style={{ background: 'rgba(30, 41, 59, 0.8)', padding: '24px', borderRadius: '16px', marginBottom: '24px', textAlign: 'left' }}>
+              <h3 style={{ color: '#3b82f6', marginBottom: '16px' }}>Key Concepts Mastered:</h3>
+              <ul style={{ lineHeight: 2, paddingLeft: '20px' }}>
+                <li>Orbital motion as continuous falling</li>
+                <li>The relationship v = sqrt(GM/r)</li>
+                <li>Higher orbits = slower velocities</li>
+                <li>Kepler's laws and orbital periods</li>
+                <li>Escape velocity and orbital maneuvers</li>
+              </ul>
+            </div>
+
+            <div style={{ background: 'rgba(59, 130, 246, 0.1)', padding: '20px', borderRadius: '12px', marginBottom: '24px' }}>
+              <h4 style={{ color: '#3b82f6', marginBottom: '8px' }}>The Core Insight</h4>
+              <p style={{ color: '#e2e8f0' }}>
+                Orbits are a beautiful balance between gravity's pull and sideways motion.
+                The mathematics that describes this has enabled everything from GPS navigation to interplanetary exploration.
+              </p>
+            </div>
+          </div>
         </div>
+        {renderBottomBar()}
       </div>
     );
   }

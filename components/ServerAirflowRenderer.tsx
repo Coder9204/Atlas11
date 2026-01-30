@@ -5,19 +5,40 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface ServerAirflowRendererProps {
-  phase?: Phase;
-  onPhaseComplete?: () => void;
+  gamePhase?: Phase; // Optional for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
 
+// Phase order and labels for navigation
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Explore Twist',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
+};
+
 const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
-  phase: externalPhase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer
 }) => {
-  const [phase, setPhase] = useState<Phase>(externalPhase || 'hook');
+  // Internal phase state management
+  const getInitialPhase = (): Phase => {
+    if (gamePhase && phaseOrder.includes(gamePhase)) {
+      return gamePhase;
+    }
+    return 'hook';
+  };
+
+  const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -26,6 +47,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
   const [showTestResults, setShowTestResults] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
+  const [isMobile, setIsMobile] = useState(false);
 
   // Game-specific state
   const [serverLoad, setServerLoad] = useState(70); // percent
@@ -36,12 +58,22 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
   const [animationFrame, setAnimationFrame] = useState(0);
 
   const lastClickRef = useRef(0);
+  const isNavigating = useRef(false);
 
+  // Sync phase with gamePhase prop changes (for resume functionality)
   useEffect(() => {
-    if (externalPhase && externalPhase !== phase) {
-      setPhase(externalPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase) && gamePhase !== phase) {
+      setPhase(gamePhase);
     }
-  }, [externalPhase, phase]);
+  }, [gamePhase, phase]);
+
+  // Check for mobile
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -110,14 +142,179 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
 
   const metrics = calcAirflowMetrics();
 
+  // Navigation functions
+  const goToPhase = useCallback((p: Phase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 200) return;
+    if (isNavigating.current) return;
+
+    lastClickRef.current = now;
+    isNavigating.current = true;
+
+    setPhase(p);
+    playSound('transition');
+
+    setTimeout(() => { isNavigating.current = false; }, 400);
+  }, [playSound]);
+
   const goToNextPhase = useCallback(() => {
-    const phases: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
-    const currentIndex = phases.indexOf(phase);
-    if (currentIndex < phases.length - 1) {
-      setPhase(phases[currentIndex + 1]);
-      playSound('transition');
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
     }
-  }, [phase, playSound]);
+  }, [phase, goToPhase]);
+
+  const goToPrevPhase = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
+  // Premium color palette
+  const colors = {
+    primary: '#3b82f6', // blue-500
+    primaryDark: '#2563eb', // blue-600
+    accent: '#06b6d4', // cyan-500
+    success: '#10b981', // emerald-500
+    bgDark: '#020617', // slate-950
+    bgCard: '#0f172a', // slate-900
+    bgCardLight: '#1e293b', // slate-800
+    border: '#334155', // slate-700
+    textPrimary: '#f8fafc', // slate-50
+    textSecondary: '#94a3b8', // slate-400
+    textMuted: '#64748b', // slate-500
+  };
+
+  // Progress bar renderer
+  const renderProgressBar = () => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'space-between',
+        padding: isMobile ? '8px 12px' : '10px 16px',
+        backgroundColor: colors.bgCard,
+        borderBottom: `1px solid ${colors.border}`,
+        gap: '8px'
+      }}>
+        {/* Back button */}
+        <button
+          onClick={goToPrevPhase}
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: '36px',
+            height: '36px',
+            borderRadius: '8px',
+            backgroundColor: currentIdx > 0 ? colors.bgCardLight : 'transparent',
+            border: currentIdx > 0 ? `1px solid ${colors.border}` : '1px solid transparent',
+            color: currentIdx > 0 ? colors.textSecondary : colors.textMuted,
+            cursor: currentIdx > 0 ? 'pointer' : 'default',
+            opacity: currentIdx > 0 ? 1 : 0.4,
+          }}
+        >
+          <span style={{ fontSize: '14px' }}>&#8592;</span>
+        </button>
+
+        {/* Progress dots */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px', flex: 1, justifyContent: 'center' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => i <= currentIdx && goToPhase(p)}
+              style={{
+                width: i === currentIdx ? '20px' : '10px',
+                height: '10px',
+                borderRadius: '5px',
+                border: 'none',
+                backgroundColor: i < currentIdx ? colors.success : i === currentIdx ? colors.primary : colors.border,
+                cursor: i <= currentIdx ? 'pointer' : 'default',
+                transition: 'all 0.2s',
+                opacity: i > currentIdx ? 0.5 : 1
+              }}
+              title={`${phaseLabels[p]} (${i + 1}/${phaseOrder.length})`}
+            />
+          ))}
+        </div>
+
+        {/* Phase counter */}
+        <span style={{
+          fontSize: '11px',
+          fontWeight: 700,
+          color: colors.primary,
+          padding: '4px 8px',
+          borderRadius: '6px',
+          backgroundColor: `${colors.primary}15`
+        }}>
+          {currentIdx + 1}/{phaseOrder.length}
+        </span>
+      </div>
+    );
+  };
+
+  // Bottom navigation bar renderer
+  const renderBottomBar = (canGoNext: boolean, nextLabel: string = 'Continue') => {
+    const currentIdx = phaseOrder.indexOf(phase);
+    const canGoBack = currentIdx > 0;
+
+    return (
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: isMobile ? '12px' : '12px 16px',
+        borderTop: `1px solid ${colors.border}`,
+        backgroundColor: colors.bgCard,
+        gap: '12px'
+      }}>
+        <button
+          onClick={goToPrevPhase}
+          style={{
+            padding: isMobile ? '10px 16px' : '10px 20px',
+            borderRadius: '10px',
+            fontWeight: 600,
+            fontSize: isMobile ? '13px' : '14px',
+            backgroundColor: colors.bgCardLight,
+            color: colors.textSecondary,
+            border: `1px solid ${colors.border}`,
+            cursor: canGoBack ? 'pointer' : 'not-allowed',
+            opacity: canGoBack ? 1 : 0.3,
+            minHeight: '44px'
+          }}
+          disabled={!canGoBack}
+        >
+          &#8592; Back
+        </button>
+
+        <span style={{ fontSize: '12px', color: colors.textMuted, fontWeight: 600 }}>
+          {phaseLabels[phase]}
+        </span>
+
+        <button
+          onClick={goToNextPhase}
+          style={{
+            padding: isMobile ? '10px 20px' : '10px 24px',
+            borderRadius: '10px',
+            fontWeight: 700,
+            fontSize: isMobile ? '13px' : '14px',
+            background: canGoNext ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)` : colors.bgCardLight,
+            color: canGoNext ? colors.textPrimary : colors.textMuted,
+            border: 'none',
+            cursor: canGoNext ? 'pointer' : 'not-allowed',
+            opacity: canGoNext ? 1 : 0.4,
+            boxShadow: canGoNext ? `0 2px 12px ${colors.primary}30` : 'none',
+            minHeight: '44px'
+          }}
+          disabled={!canGoNext}
+        >
+          {nextLabel} &#8594;
+        </button>
+      </div>
+    );
+  };
 
   const handlePrediction = useCallback((prediction: string) => {
     const now = Date.now();
@@ -352,18 +549,6 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
         </div>
       </div>
 
-      <button
-        onClick={() => { onPhaseComplete?.(); goToNextPhase(); }}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-blue-500 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98]"
-      >
-        <span className="relative z-10 flex items-center gap-3">
-          Explore Data Center Cooling
-          <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-          </svg>
-        </span>
-      </button>
     </div>
   );
 
@@ -400,17 +585,10 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
         ))}
       </div>
       {showPredictionFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+        <div className="mt-4 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
             Correct! Separating hot exhaust from cold supply prevents wasteful mixing. The cold aisle stays cool, and CRAC units work more efficiently!
           </p>
-          <button
-            onClick={() => { onPhaseComplete?.(); goToNextPhase(); }}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
-          >
-            Explore the Physics
-          </button>
         </div>
       )}
     </div>
@@ -480,13 +658,6 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
         </div>
       </div>
 
-      <button
-        onClick={() => { onPhaseComplete?.(); goToNextPhase(); }}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
-      >
-        Learn the Science
-      </button>
     </div>
   );
 
@@ -518,13 +689,6 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
           </div>
         </div>
       </div>
-      <button
-        onClick={() => { onPhaseComplete?.(); goToNextPhase(); }}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
-      >
-        Discover a Surprising Twist
-      </button>
     </div>
   );
 
@@ -564,17 +728,10 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
         ))}
       </div>
       {showTwistFeedback && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
+        <div className="mt-4 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
             Correct! Hot exhaust air takes the path of least resistance - right through those gaps back into the cold aisle. This "recirculation" can raise intake temps by 10C or more!
           </p>
-          <button
-            onClick={() => { onPhaseComplete?.(); goToNextPhase(); }}
-            style={{ WebkitTapHighlightColor: 'transparent' }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
-          >
-            See Recirculation in Action
-          </button>
         </div>
       )}
     </div>
@@ -623,13 +780,6 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
         </div>
       </div>
 
-      <button
-        onClick={() => { onPhaseComplete?.(); goToNextPhase(); }}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
-      >
-        See Explanation
-      </button>
     </div>
   );
 
@@ -658,13 +808,6 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
           <p className="text-slate-300">A blanking panel costs $2-5. But that missing panel can cause $100s in extra cooling costs monthly, plus reduced server lifespan. It's one of the highest-ROI investments in a data center!</p>
         </div>
       </div>
-      <button
-        onClick={() => { onPhaseComplete?.(); goToNextPhase(); }}
-        style={{ WebkitTapHighlightColor: 'transparent' }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
-      >
-        Explore Real-World Applications
-      </button>
     </div>
   );
 
@@ -709,15 +852,6 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
         <div className="flex gap-1">{applications.map((_, i) => (<div key={i} className={`w-3 h-3 rounded-full ${completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'}`} />))}</div>
         <span className="text-slate-400">{completedApps.size}/4</span>
       </div>
-      {completedApps.size >= 4 && (
-        <button
-          onClick={() => { onPhaseComplete?.(); goToNextPhase(); }}
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
-        >
-          Take the Knowledge Test
-        </button>
-      )}
     </div>
   );
 
@@ -757,15 +891,7 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
           <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
           <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
           <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? 'Excellent! You\'ve mastered data center airflow!' : 'Keep studying! Review and try again.'}</p>
-          {calculateScore() >= 7 ? (
-            <button
-              onClick={() => { onCorrectAnswer?.(); onPhaseComplete?.(); goToNextPhase(); }}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
-              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
-            >
-              Claim Your Mastery Badge
-            </button>
-          ) : (
+          {calculateScore() < 7 && (
             <button
               onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); onIncorrectAnswer?.(); }}
               style={{ WebkitTapHighlightColor: 'transparent' }}
@@ -791,18 +917,11 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">📊</div><p className="text-sm text-slate-300">Static Pressure</p></div>
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔒</div><p className="text-sm text-slate-300">Containment</p></div>
         </div>
-        <button
-          onClick={() => onPhaseComplete?.()}
-          style={{ WebkitTapHighlightColor: 'transparent' }}
-          className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
-        >
-          Complete
-        </button>
       </div>
     </div>
   );
 
-  const renderPhase = () => {
+  const renderPhaseContent = () => {
     switch (phase) {
       case 'hook': return renderHook();
       case 'predict': return renderPredict();
@@ -818,12 +937,61 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
     }
   };
 
+  // Determine if next button should be enabled for each phase
+  const canProceed = () => {
+    switch (phase) {
+      case 'hook': return true;
+      case 'predict': return showPredictionFeedback;
+      case 'play': return true;
+      case 'review': return true;
+      case 'twist_predict': return showTwistFeedback;
+      case 'twist_play': return true;
+      case 'twist_review': return true;
+      case 'transfer': return completedApps.size >= 4;
+      case 'test': return showTestResults && calculateScore() >= 7;
+      case 'mastery': return false;
+      default: return true;
+    }
+  };
+
+  // Get next button label for each phase
+  const getNextLabel = () => {
+    switch (phase) {
+      case 'hook': return 'Start';
+      case 'predict': return showPredictionFeedback ? 'Continue' : 'Select an answer';
+      case 'play': return 'Learn More';
+      case 'review': return 'Discover Twist';
+      case 'twist_predict': return showTwistFeedback ? 'Continue' : 'Select an answer';
+      case 'twist_play': return 'See Explanation';
+      case 'twist_review': return 'Applications';
+      case 'transfer': return completedApps.size >= 4 ? 'Take Test' : `Complete ${4 - completedApps.size} more`;
+      case 'test': return calculateScore() >= 7 ? 'Complete' : 'Score 7+ to pass';
+      case 'mastery': return 'Complete';
+      default: return 'Continue';
+    }
+  };
+
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
-      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl" />
-      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl" />
-      <div className="relative pt-8 pb-12">{renderPhase()}</div>
+    <div className="absolute inset-0 flex flex-col bg-[#0a0f1a] text-white overflow-hidden">
+      {/* Background effects */}
+      <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900 pointer-events-none" />
+      <div className="absolute top-0 left-1/4 w-96 h-96 bg-blue-500/5 rounded-full blur-3xl pointer-events-none" />
+      <div className="absolute bottom-0 right-1/4 w-96 h-96 bg-cyan-500/5 rounded-full blur-3xl pointer-events-none" />
+
+      {/* Progress bar header */}
+      <div className="relative z-10 flex-shrink-0">
+        {renderProgressBar()}
+      </div>
+
+      {/* Main content - scrollable */}
+      <div className="relative z-10 flex-1 overflow-y-auto">
+        {renderPhaseContent()}
+      </div>
+
+      {/* Bottom navigation bar */}
+      <div className="relative z-10 flex-shrink-0">
+        {renderBottomBar(canProceed(), getNextLabel())}
+      </div>
     </div>
   );
 };

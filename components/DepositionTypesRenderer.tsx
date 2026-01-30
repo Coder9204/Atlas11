@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
+
+// Phase type for internal state management
+type DTPhase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
 interface DepositionTypesRendererProps {
-  phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
-  onPhaseComplete?: () => void;
+  gamePhase?: DTPhase; // Optional for resume functionality
   onCorrectAnswer?: () => void;
   onIncorrectAnswer?: () => void;
 }
@@ -26,12 +28,62 @@ const colors = {
   deposited: '#64748b',
 };
 
+// Phase order and labels for navigation
+const phaseOrder: DTPhase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<DTPhase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Explore',
+  review: 'Review',
+  twist_predict: 'Twist',
+  twist_play: 'Test Twist',
+  twist_review: 'Twist Review',
+  transfer: 'Apply',
+  test: 'Test',
+  mastery: 'Mastery',
+};
+
 const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
-  phase,
-  onPhaseComplete,
+  gamePhase,
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  // Internal phase state management
+  const [phase, setPhase] = useState<DTPhase>(() => gamePhase || 'hook');
+  const isNavigating = useRef(false);
+  const lastClickRef = useRef(0);
+
+  // Sync phase with gamePhase prop when it changes (for resume)
+  useEffect(() => {
+    if (gamePhase && gamePhase !== phase) {
+      setPhase(gamePhase);
+    }
+  }, [gamePhase]);
+
+  // Navigation functions with debouncing
+  const goToPhase = useCallback((targetPhase: DTPhase) => {
+    const now = Date.now();
+    if (now - lastClickRef.current < 300 || isNavigating.current) return;
+    lastClickRef.current = now;
+    isNavigating.current = true;
+    setPhase(targetPhase);
+    setTimeout(() => { isNavigating.current = false; }, 300);
+  }, []);
+
+  const goNext = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, goToPhase]);
+
+  const goBack = useCallback(() => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, goToPhase]);
+
   // Simulation state
   const [depositionType, setDepositionType] = useState<'pvd' | 'cvd' | 'ald'>('pvd');
   const [aspectRatio, setAspectRatio] = useState(2); // Width to Depth ratio
@@ -670,174 +722,269 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
     </div>
   );
 
-  const renderBottomBar = (disabled: boolean, canProceed: boolean, buttonText: string) => (
-    <div style={{
-      position: 'fixed',
-      bottom: 0,
-      left: 0,
-      right: 0,
-      padding: '16px 24px',
-      background: colors.bgDark,
-      borderTop: '1px solid rgba(255,255,255,0.1)',
-      display: 'flex',
-      justifyContent: 'flex-end',
-      zIndex: 1000,
-    }}>
-      <button
-        onClick={onPhaseComplete}
-        disabled={disabled && !canProceed}
-        style={{
-          padding: '12px 32px',
-          borderRadius: '8px',
-          border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
-          color: canProceed ? 'white' : colors.textMuted,
-          fontWeight: 'bold',
-          cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
-          WebkitTapHighlightColor: 'transparent',
-        }}
-      >
-        {buttonText}
-      </button>
+  // Progress bar showing all 10 phases
+  const renderProgressBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
+      <div style={{
+        display: 'flex',
+        alignItems: 'center',
+        gap: '4px',
+        padding: '12px 16px',
+        background: 'rgba(0,0,0,0.3)',
+        overflowX: 'auto',
+      }}>
+        {phaseOrder.map((p, index) => {
+          const isCompleted = index < currentIndex;
+          const isCurrent = index === currentIndex;
+          return (
+            <div
+              key={p}
+              onClick={() => isCompleted && goToPhase(p)}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '4px',
+                cursor: isCompleted ? 'pointer' : 'default',
+              }}
+            >
+              <div style={{
+                width: '24px',
+                height: '24px',
+                borderRadius: '50%',
+                background: isCompleted ? colors.success : isCurrent ? colors.accent : 'rgba(255,255,255,0.2)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '10px',
+                color: 'white',
+                fontWeight: 'bold',
+                flexShrink: 0,
+              }}>
+                {isCompleted ? '✓' : index + 1}
+              </div>
+              <span style={{
+                fontSize: '10px',
+                color: isCurrent ? colors.accent : colors.textMuted,
+                whiteSpace: 'nowrap',
+                display: index < 4 || isCurrent ? 'block' : 'none',
+              }}>
+                {phaseLabels[p]}
+              </span>
+              {index < phaseOrder.length - 1 && (
+                <div style={{
+                  width: '12px',
+                  height: '2px',
+                  background: isCompleted ? colors.success : 'rgba(255,255,255,0.2)',
+                  flexShrink: 0,
+                }} />
+              )}
+            </div>
+          );
+        })}
+      </div>
+    );
+  };
+
+  // Bottom bar with Back/Next navigation
+  const renderBottomBar = (canProceed: boolean, nextLabel: string = 'Next') => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const isFirst = currentIndex === 0;
+    const isLast = currentIndex === phaseOrder.length - 1;
+
+    return (
+      <div style={{
+        position: 'fixed',
+        bottom: 0,
+        left: 0,
+        right: 0,
+        padding: '16px 24px',
+        background: colors.bgDark,
+        borderTop: '1px solid rgba(255,255,255,0.1)',
+        display: 'flex',
+        justifyContent: 'space-between',
+        zIndex: 1000,
+      }}>
+        <button
+          onClick={goBack}
+          disabled={isFirst}
+          style={{
+            padding: '12px 24px',
+            borderRadius: '8px',
+            border: `1px solid ${colors.textMuted}`,
+            background: 'transparent',
+            color: isFirst ? colors.textMuted : colors.textPrimary,
+            fontWeight: 'bold',
+            cursor: isFirst ? 'not-allowed' : 'pointer',
+            fontSize: '14px',
+            opacity: isFirst ? 0.5 : 1,
+          }}
+        >
+          Back
+        </button>
+        <button
+          onClick={goNext}
+          disabled={!canProceed || isLast}
+          style={{
+            padding: '12px 32px',
+            borderRadius: '8px',
+            border: 'none',
+            background: canProceed && !isLast ? colors.accent : 'rgba(255,255,255,0.1)',
+            color: canProceed && !isLast ? 'white' : colors.textMuted,
+            fontWeight: 'bold',
+            cursor: canProceed && !isLast ? 'pointer' : 'not-allowed',
+            fontSize: '16px',
+          }}
+        >
+          {nextLabel}
+        </button>
+      </div>
+    );
+  };
+
+  // Wrapper for consistent layout
+  const renderWrapper = (content: React.ReactNode, canProceed: boolean, nextLabel: string = 'Next') => (
+    <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
+      {renderProgressBar()}
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
+        {content}
+      </div>
+      {renderBottomBar(canProceed, nextLabel)}
     </div>
   );
 
   // HOOK PHASE
   if (phase === 'hook') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
-              Deposition Types
-            </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
-              Can you coat the inside of a tiny trench evenly?
+    return renderWrapper(
+      <>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+            Deposition Types
+          </h1>
+          <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            Can you coat the inside of a tiny trench evenly?
+          </p>
+        </div>
+
+        {renderVisualization(true)}
+
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{
+            background: colors.bgCard,
+            padding: '20px',
+            borderRadius: '12px',
+            marginBottom: '16px',
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              Imagine trying to paint the inside of a deep, narrow hole. Spray paint from above
+              would only coat the top and maybe some of the sides. A fog-like coating would do better.
+              But what about going layer-by-layer, like carefully painting each surface?
+            </p>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              Chip manufacturing needs to coat trenches with aspect ratios over 50:1!
             </p>
           </div>
 
-          {renderVisualization(true)}
-
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{
-              background: colors.bgCard,
-              padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
-                Imagine trying to paint the inside of a deep, narrow hole. Spray paint from above
-                would only coat the top and maybe some of the sides. A fog-like coating would do better.
-                But what about going layer-by-layer, like carefully painting each surface?
-              </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
-                Chip manufacturing needs to coat trenches with aspect ratios over 50:1!
-              </p>
-            </div>
-
-            <div style={{
-              background: 'rgba(34, 197, 94, 0.2)',
-              padding: '16px',
-              borderRadius: '8px',
-              borderLeft: `3px solid ${colors.accent}`,
-            }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
-                Compare PVD, CVD, and ALD to see how they coat trench sidewalls and bottoms!
-              </p>
-            </div>
+          <div style={{
+            background: 'rgba(34, 197, 94, 0.2)',
+            padding: '16px',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              Compare PVD, CVD, and ALD to see how they coat trench sidewalls and bottoms!
+            </p>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Make a Prediction')}
-      </div>
+      </>,
+      true,
+      'Make a Prediction'
     );
   }
 
   // PREDICT PHASE
   if (phase === 'predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          {renderVisualization(false)}
+    return renderWrapper(
+      <>
+        {renderVisualization(false)}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Thin Film Deposition:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              Chips are built by depositing thin films (nanometers thick) of metals, insulators,
-              and semiconductors. These films must coat complex 3D structures including deep
-              trenches and narrow holes. Different deposition methods have very different coverage.
-            </p>
-          </div>
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Thin Film Deposition:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            Chips are built by depositing thin films (nanometers thick) of metals, insulators,
+            and semiconductors. These films must coat complex 3D structures including deep
+            trenches and narrow holes. Different deposition methods have very different coverage.
+          </p>
+        </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              How do different deposition methods coat trench sidewalls?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {predictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: prediction === p.id ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+        <div style={{ padding: '0 16px 16px 16px' }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            How do different deposition methods coat trench sidewalls?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {predictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                  background: prediction === p.id ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!prediction, 'Test My Prediction')}
-      </div>
+      </>,
+      !!prediction,
+      'Test My Prediction'
     );
   }
 
   // PLAY PHASE
   if (phase === 'play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Deposition Methods</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Compare how PVD, CVD, and ALD coat trench structures
-            </p>
-          </div>
-
-          {renderVisualization(true)}
-          {renderControls()}
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>Run each method to 100% and compare step coverage</li>
-              <li>Note where PVD deposits most of its material</li>
-              <li>Observe the sidewall vs bottom thickness for each method</li>
-              <li>Compare the "conformality" ratings</li>
-            </ul>
-          </div>
+    return renderWrapper(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Deposition Methods</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Compare how PVD, CVD, and ALD coat trench structures
+          </p>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
-      </div>
+
+        {renderVisualization(true)}
+        {renderControls()}
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Experiments to Try:</h4>
+          <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>Run each method to 100% and compare step coverage</li>
+            <li>Note where PVD deposits most of its material</li>
+            <li>Observe the sidewall vs bottom thickness for each method</li>
+            <li>Compare the "conformality" ratings</li>
+          </ul>
+        </div>
+      </>,
+      true,
+      'Continue to Review'
     );
   }
 
@@ -845,148 +992,145 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
   if (phase === 'review') {
     const wasCorrect = prediction === 'directional';
 
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              PVD is highly directional, like spray paint. CVD is semi-conformal as gases can diffuse.
-              ALD achieves near-perfect conformality by depositing one atomic layer at a time.
+    return renderWrapper(
+      <>
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            {wasCorrect ? 'Correct!' : 'Not Quite!'}
+          </h3>
+          <p style={{ color: colors.textPrimary }}>
+            PVD is highly directional, like spray paint. CVD is semi-conformal as gases can diffuse.
+            ALD achieves near-perfect conformality by depositing one atomic layer at a time.
+          </p>
+        </div>
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Deposition Methods</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.pvd }}>PVD (Physical Vapor Deposition):</strong> Atoms
+              are ejected from a target (sputtering) or evaporated. They travel in straight lines
+              and deposit where they land. Great for flat surfaces, poor for 3D structures.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.cvd }}>CVD (Chemical Vapor Deposition):</strong> Gas
+              precursors flow over the surface and react to deposit a film. Gases can diffuse
+              into trenches, but reaction at the top can starve the bottom.
+            </p>
+            <p>
+              <strong style={{ color: colors.ald }}>ALD (Atomic Layer Deposition):</strong> Precursor
+              A saturates all surfaces (self-limiting). Precursor B reacts with A to form one
+              layer. Repeat. Every surface gets exactly the same thickness!
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Deposition Methods</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.pvd }}>PVD (Physical Vapor Deposition):</strong> Atoms
-                are ejected from a target (sputtering) or evaporated. They travel in straight lines
-                and deposit where they land. Great for flat surfaces, poor for 3D structures.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.cvd }}>CVD (Chemical Vapor Deposition):</strong> Gas
-                precursors flow over the surface and react to deposit a film. Gases can diffuse
-                into trenches, but reaction at the top can starve the bottom.
-              </p>
-              <p>
-                <strong style={{ color: colors.ald }}>ALD (Atomic Layer Deposition):</strong> Precursor
-                A saturates all surfaces (self-limiting). Precursor B reacts with A to form one
-                layer. Repeat. Every surface gets exactly the same thickness!
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Next: A Twist!')}
-      </div>
+      </>,
+      true,
+      'Next: A Twist!'
     );
   }
 
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
-              What happens at very high aspect ratios?
-            </p>
-          </div>
+    return renderWrapper(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
+          <p style={{ color: colors.textSecondary }}>
+            What happens at very high aspect ratios?
+          </p>
+        </div>
 
-          {renderVisualization(false, true)}
+        {renderVisualization(false, true)}
 
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>High Aspect Ratio Challenge:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
-              Modern chips have trenches with aspect ratios of 10:1 to 50:1 or more. As the
-              aspect ratio increases, even good deposition methods struggle to coat the bottom.
-              PVD can actually seal off the top before filling the bottom!
-            </p>
-          </div>
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>High Aspect Ratio Challenge:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            Modern chips have trenches with aspect ratios of 10:1 to 50:1 or more. As the
+            aspect ratio increases, even good deposition methods struggle to coat the bottom.
+            PVD can actually seal off the top before filling the bottom!
+          </p>
+        </div>
 
-          <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
-              What happens to PVD at very high aspect ratios?
-            </h3>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {twistPredictions.map((p) => (
-                <button
-                  key={p.id}
-                  onClick={() => setTwistPrediction(p.id)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
-                    background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {p.label}
-                </button>
-              ))}
-            </div>
+        <div style={{ padding: '0 16px 16px 16px' }}>
+          <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            What happens to PVD at very high aspect ratios?
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {twistPredictions.map((p) => (
+              <button
+                key={p.id}
+                onClick={() => setTwistPrediction(p.id)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
+                  background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                {p.label}
+              </button>
+            ))}
           </div>
         </div>
-        {renderBottomBar(true, !!twistPrediction, 'Test My Prediction')}
-      </div>
+      </>,
+      !!twistPrediction,
+      'Test My Prediction'
     );
   }
 
   // TWIST PLAY PHASE
   if (phase === 'twist_play') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test High Aspect Ratios</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              Increase aspect ratio and observe void formation
-            </p>
-          </div>
-
-          {renderVisualization(true, true)}
-          {renderControls(true)}
-
-          <div style={{
-            background: 'rgba(245, 158, 11, 0.2)',
-            margin: '16px',
-            padding: '16px',
-            borderRadius: '12px',
-            borderLeft: `3px solid ${colors.warning}`,
-          }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
-              At high aspect ratios, PVD forms overhangs at the trench opening that can pinch off,
-              trapping a void inside. This is called "breadloafing." Only ALD can reliably coat
-              extreme aspect ratio structures without voids.
-            </p>
-          </div>
+    return renderWrapper(
+      <>
+        <div style={{ padding: '16px', textAlign: 'center' }}>
+          <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test High Aspect Ratios</h2>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            Increase aspect ratio and observe void formation
+          </p>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
-      </div>
+
+        {renderVisualization(true, true)}
+        {renderControls(true)}
+
+        <div style={{
+          background: 'rgba(245, 158, 11, 0.2)',
+          margin: '16px',
+          padding: '16px',
+          borderRadius: '12px',
+          borderLeft: `3px solid ${colors.warning}`,
+        }}>
+          <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
+          <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            At high aspect ratios, PVD forms overhangs at the trench opening that can pinch off,
+            trapping a void inside. This is called "breadloafing." Only ALD can reliably coat
+            extreme aspect ratio structures without voids.
+          </p>
+        </div>
+      </>,
+      true,
+      'See the Explanation'
     );
   }
 
@@ -994,287 +1138,283 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
   if (phase === 'twist_review') {
     const wasCorrect = twistPrediction === 'voids';
 
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{
-            background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-            borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
-          }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
-              {wasCorrect ? 'Correct!' : 'Not Quite!'}
-            </h3>
-            <p style={{ color: colors.textPrimary }}>
-              PVD at high aspect ratios causes the top of the trench to close before the bottom
-              fills, creating trapped voids. These voids cause reliability failures in chips.
+    return renderWrapper(
+      <>
+        <div style={{
+          background: wasCorrect ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+          borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
+        }}>
+          <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            {wasCorrect ? 'Correct!' : 'Not Quite!'}
+          </h3>
+          <p style={{ color: colors.textPrimary }}>
+            PVD at high aspect ratios causes the top of the trench to close before the bottom
+            fills, creating trapped voids. These voids cause reliability failures in chips.
+          </p>
+        </div>
+
+        <div style={{
+          background: colors.bgCard,
+          margin: '16px',
+          padding: '20px',
+          borderRadius: '12px',
+        }}>
+          <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Void Formation and Prevention</h3>
+          <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Void Problems:</strong> Voids are
+              empty spaces inside deposited films. They increase resistance, cause electromigration
+              failures, and can trap contaminants. Void-free filling is critical for reliability.
+            </p>
+            <p style={{ marginBottom: '12px' }}>
+              <strong style={{ color: colors.textPrimary }}>Bottom-Up Fill:</strong> Some processes
+              deposit faster at the bottom than the top (superfilling). This uses additives that
+              suppress top deposition while accelerating bottom growth.
+            </p>
+            <p>
+              <strong style={{ color: colors.textPrimary }}>ALD Advantage:</strong> ALD is the
+              only method that can conformally coat aspect ratios over 100:1. It is essential for
+              3D NAND, FinFETs, and advanced DRAM.
             </p>
           </div>
-
-          <div style={{
-            background: colors.bgCard,
-            margin: '16px',
-            padding: '20px',
-            borderRadius: '12px',
-          }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Void Formation and Prevention</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Void Problems:</strong> Voids are
-                empty spaces inside deposited films. They increase resistance, cause electromigration
-                failures, and can trap contaminants. Void-free filling is critical for reliability.
-              </p>
-              <p style={{ marginBottom: '12px' }}>
-                <strong style={{ color: colors.textPrimary }}>Bottom-Up Fill:</strong> Some processes
-                deposit faster at the bottom than the top (superfilling). This uses additives that
-                suppress top deposition while accelerating bottom growth.
-              </p>
-              <p>
-                <strong style={{ color: colors.textPrimary }}>ALD Advantage:</strong> ALD is the
-                only method that can conformally coat aspect ratios over 100:1. It is essential for
-                3D NAND, FinFETs, and advanced DRAM.
-              </p>
-            </div>
-          </div>
         </div>
-        {renderBottomBar(false, true, 'Apply This Knowledge')}
-      </div>
+      </>,
+      true,
+      'Apply This Knowledge'
     );
   }
 
   // TRANSFER PHASE
   if (phase === 'transfer') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
-              Real-World Applications
-            </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
-              Deposition methods determine what structures are possible
-            </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
-              Complete all 4 applications to unlock the test
-            </p>
-          </div>
-
-          {transferApplications.map((app, index) => (
-            <div
-              key={index}
-              style={{
-                background: colors.bgCard,
-                margin: '16px',
-                padding: '16px',
-                borderRadius: '12px',
-                border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
-              </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
-              <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
-              </div>
-              {!transferCompleted.has(index) ? (
-                <button
-                  onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{
-                    padding: '8px 16px',
-                    borderRadius: '6px',
-                    border: `1px solid ${colors.accent}`,
-                    background: 'transparent',
-                    color: colors.accent,
-                    cursor: 'pointer',
-                    fontSize: '13px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  Reveal Answer
-                </button>
-              ) : (
-                <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
-                </div>
-              )}
-            </div>
-          ))}
+    return renderWrapper(
+      <>
+        <div style={{ padding: '16px' }}>
+          <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+            Real-World Applications
+          </h2>
+          <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            Deposition methods determine what structures are possible
+          </p>
+          <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+            Complete all 4 applications to unlock the test
+          </p>
         </div>
-        {renderBottomBar(transferCompleted.size < 4, transferCompleted.size >= 4, 'Take the Test')}
-      </div>
+
+        {transferApplications.map((app, index) => (
+          <div
+            key={index}
+            style={{
+              background: colors.bgCard,
+              margin: '16px',
+              padding: '16px',
+              borderRadius: '12px',
+              border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
+              <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
+              {transferCompleted.has(index) && <span style={{ color: colors.success }}>Complete</span>}
+            </div>
+            <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+            <div style={{ background: 'rgba(34, 197, 94, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
+              <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+            </div>
+            {!transferCompleted.has(index) ? (
+              <button
+                onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
+                style={{
+                  padding: '8px 16px',
+                  borderRadius: '6px',
+                  border: `1px solid ${colors.accent}`,
+                  background: 'transparent',
+                  color: colors.accent,
+                  cursor: 'pointer',
+                  fontSize: '13px',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                Reveal Answer
+              </button>
+            ) : (
+              <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
+                <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+              </div>
+            )}
+          </div>
+        ))}
+      </>,
+      transferCompleted.size >= 4,
+      'Take the Test'
     );
   }
 
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
-      return (
-        <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You understand deposition methods!' : 'Review the material and try again.'}
-              </p>
-            </div>
-            {testQuestions.map((q, qIndex) => {
-              const userAnswer = testAnswers[qIndex];
-              const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
-              return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
-                  {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
-                      {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
-                    </div>
-                  ))}
-                </div>
-              );
-            })}
+      return renderWrapper(
+        <>
+          <div style={{
+            background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+            margin: '16px',
+            padding: '24px',
+            borderRadius: '12px',
+            textAlign: 'center',
+          }}>
+            <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
+              {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+            </h2>
+            <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+            <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+              {testScore >= 8 ? 'You understand deposition methods!' : 'Review the material and try again.'}
+            </p>
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
-        </div>
+          {testQuestions.map((q, qIndex) => {
+            const userAnswer = testAnswers[qIndex];
+            const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
+            return (
+              <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                {q.options.map((opt, oIndex) => (
+                  <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                    {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''} {opt.text}
+                  </div>
+                ))}
+              </div>
+            );
+          })}
+        </>,
+        testScore >= 8,
+        testScore >= 8 ? 'Complete Mastery' : 'Review & Retry'
       );
     }
 
     const currentQ = testQuestions[currentTestQuestion];
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
-            </div>
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-              {testQuestions.map((_, i) => (
-                <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
-              ))}
-            </div>
-            <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
-            </div>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {currentQ.options.map((opt, oIndex) => (
-                <button
-                  key={oIndex}
-                  onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
-                  style={{
-                    padding: '16px',
-                    borderRadius: '8px',
-                    border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
-                    background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
-                    color: colors.textPrimary,
-                    cursor: 'pointer',
-                    textAlign: 'left',
-                    fontSize: '14px',
-                    WebkitTapHighlightColor: 'transparent',
-                  }}
-                >
-                  {opt.text}
-                </button>
-              ))}
-            </div>
+    return renderWrapper(
+      <>
+        <div style={{ padding: '16px' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
+            <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+            {testQuestions.map((_, i) => (
+              <div key={i} onClick={() => setCurrentTestQuestion(i)} style={{ flex: 1, height: '4px', borderRadius: '2px', background: testAnswers[i] !== null ? colors.accent : i === currentTestQuestion ? colors.textMuted : 'rgba(255,255,255,0.1)', cursor: 'pointer' }} />
+            ))}
+          </div>
+          <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
+            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+            {currentQ.options.map((opt, oIndex) => (
+              <button
+                key={oIndex}
+                onClick={() => handleTestAnswer(currentTestQuestion, oIndex)}
+                style={{
+                  padding: '16px',
+                  borderRadius: '8px',
+                  border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                  background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(34, 197, 94, 0.2)' : 'transparent',
+                  color: colors.textPrimary,
+                  cursor: 'pointer',
+                  textAlign: 'left',
+                  fontSize: '14px',
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                {opt.text}
+              </button>
+            ))}
+          </div>
+        </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
+          <button
+            onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
+            disabled={currentTestQuestion === 0}
+            style={{
+              padding: '12px 24px',
+              borderRadius: '8px',
+              border: `1px solid ${colors.textMuted}`,
+              background: 'transparent',
+              color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
+              cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+              WebkitTapHighlightColor: 'transparent',
+            }}
+          >
+            Previous
+          </button>
+          {currentTestQuestion < testQuestions.length - 1 ? (
             <button
-              onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))}
-              disabled={currentTestQuestion === 0}
+              onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.textMuted}`,
-                background: 'transparent',
-                color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary,
-                cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer',
+                border: 'none',
+                background: colors.accent,
+                color: 'white',
+                cursor: 'pointer',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
-              Previous
+              Next
             </button>
-            {currentTestQuestion < testQuestions.length - 1 ? (
-              <button
-                onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: colors.accent,
-                  color: 'white',
-                  cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                Next
-              </button>
-            ) : (
-              <button
-                onClick={submitTest}
-                disabled={testAnswers.includes(null)}
-                style={{
-                  padding: '12px 24px',
-                  borderRadius: '8px',
-                  border: 'none',
-                  background: testAnswers.includes(null) ? colors.textMuted : colors.success,
-                  color: 'white',
-                  cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                Submit Test
-              </button>
-            )}
-          </div>
+          ) : (
+            <button
+              onClick={submitTest}
+              disabled={testAnswers.includes(null)}
+              style={{
+                padding: '12px 24px',
+                borderRadius: '8px',
+                border: 'none',
+                background: testAnswers.includes(null) ? colors.textMuted : colors.success,
+                color: 'white',
+                cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                WebkitTapHighlightColor: 'transparent',
+              }}
+            >
+              Submit Test
+            </button>
+          )}
         </div>
-      </div>
+      </>,
+      !testAnswers.includes(null),
+      'Submit Test'
     );
   }
 
   // MASTERY PHASE
   if (phase === 'mastery') {
-    return (
-      <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <div style={{ fontSize: '64px', marginBottom: '16px' }}>Deposition Icon</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You understand deposition methods and step coverage</p>
-          </div>
-          <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
-              <li>PVD: Line-of-sight, poor step coverage</li>
-              <li>CVD: Semi-conformal via gas diffusion</li>
-              <li>ALD: Perfect conformality, layer-by-layer</li>
-              <li>Step coverage and aspect ratio relationship</li>
-              <li>Void formation at high aspect ratios</li>
-            </ul>
-          </div>
-          <div style={{ background: 'rgba(34, 197, 94, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
-              Advanced deposition includes selective deposition (only on certain surfaces), area-selective
-              ALD, and hybrid processes that combine multiple methods. These enable self-aligned structures
-              and further miniaturization beyond what lithography alone can achieve!
-            </p>
-          </div>
-          {renderVisualization(true, true)}
+    return renderWrapper(
+      <>
+        <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ fontSize: '64px', marginBottom: '16px' }}>Deposition Icon</div>
+          <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
+          <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You understand deposition methods and step coverage</p>
         </div>
-        {renderBottomBar(false, true, 'Complete Game')}
-      </div>
+        <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
+          <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <li>PVD: Line-of-sight, poor step coverage</li>
+            <li>CVD: Semi-conformal via gas diffusion</li>
+            <li>ALD: Perfect conformality, layer-by-layer</li>
+            <li>Step coverage and aspect ratio relationship</li>
+            <li>Void formation at high aspect ratios</li>
+          </ul>
+        </div>
+        <div style={{ background: 'rgba(34, 197, 94, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
+          <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
+          <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+            Advanced deposition includes selective deposition (only on certain surfaces), area-selective
+            ALD, and hybrid processes that combine multiple methods. These enable self-aligned structures
+            and further miniaturization beyond what lithography alone can achieve!
+          </p>
+        </div>
+        {renderVisualization(true, true)}
+      </>,
+      true,
+      'Complete Game'
     );
   }
 
