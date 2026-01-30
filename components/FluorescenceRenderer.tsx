@@ -2,9 +2,6 @@
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// ═══════════════════════════════════════════════════════════════════════════
-// TYPES & INTERFACES
-// ═══════════════════════════════════════════════════════════════════════════
 // String phases for game progression
 type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
@@ -138,6 +135,16 @@ const TRANSFER_APPS = [
   }
 ];
 
+// Fluorophore data with emission/excitation wavelengths
+const FLUOROPHORES = {
+  gfp: { name: 'GFP (Green Fluorescent Protein)', excitation: 395, emission: 509, color: '#00ff88', description: 'Nobel Prize 2008 - revolutionized cell biology' },
+  rhodamine: { name: 'Rhodamine B', excitation: 543, emission: 565, color: '#ff6b6b', description: 'Common red/pink dye used in microscopy' },
+  quantum_dot_525: { name: 'Quantum Dot (525nm)', excitation: 350, emission: 525, color: '#22ff22', description: 'Semiconductor nanocrystal with tunable emission' },
+  quantum_dot_605: { name: 'Quantum Dot (605nm)', excitation: 350, emission: 605, color: '#ff8800', description: 'Larger quantum dot, longer emission wavelength' },
+  dapi: { name: 'DAPI (DNA stain)', excitation: 358, emission: 461, color: '#4488ff', description: 'Used to stain cell nuclei in microscopy' },
+  fluorescein: { name: 'Fluorescein', excitation: 494, emission: 521, color: '#88ff00', description: 'Classic green fluorescent dye' }
+};
+
 // ─────────────────────────────────────────────────────────────────────────────
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
@@ -150,29 +157,39 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [showTestResults, setShowTestResults] = useState(false);
 
-  // Simulation state
+  // Play phase simulation state
   const [uvOn, setUvOn] = useState(false);
   const [regularLightOn, setRegularLightOn] = useState(true);
   const [selectedMaterial, setSelectedMaterial] = useState<'highlighter' | 'paper' | 'tonic' | 'mineral'>('highlighter');
   const [animPhase, setAnimPhase] = useState(0);
 
-  // Twist state
+  // Interactive control state for play phase
+  const [excitationWavelength, setExcitationWavelength] = useState(365); // UV default
+  const [lightIntensity, setLightIntensity] = useState(70);
+  const [fluorophoreConcentration, setFluorophoreConcentration] = useState(50);
+
+  // Twist play phase state
   const [twistMaterial, setTwistMaterial] = useState<'highlighter_yellow' | 'highlighter_pink' | 'highlighter_green' | 'laundry_detergent'>('highlighter_yellow');
+  const [selectedFluorophore, setSelectedFluorophore] = useState<keyof typeof FLUOROPHORES>('gfp');
+  const [showPhosphorescence, setShowPhosphorescence] = useState(false);
+  const [phosphorescenceDecay, setPhosphorescenceDecay] = useState(100);
+  const [showJablonskiAnimation, setShowJablonskiAnimation] = useState(true);
+  const [jablonskiStep, setJablonskiStep] = useState(0);
 
   const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
 
   // Material fluorescence properties
   const getMaterialProps = (mat: string) => {
-    const props: Record<string, { fluorescent: boolean; emitColor: string; emitGlow: string; name: string }> = {
-      highlighter: { fluorescent: true, emitColor: '#22ff22', emitGlow: '#00ff00', name: 'Yellow Highlighter' },
-      paper: { fluorescent: false, emitColor: '#f5f5dc', emitGlow: '#f5f5dc', name: 'Plain Paper' },
-      tonic: { fluorescent: true, emitColor: '#00ccff', emitGlow: '#00ffff', name: 'Tonic Water (Quinine)' },
-      mineral: { fluorescent: true, emitColor: '#ff4444', emitGlow: '#ff0000', name: 'Fluorite Mineral' },
-      highlighter_yellow: { fluorescent: true, emitColor: '#22ff22', emitGlow: '#00ff00', name: 'Yellow Highlighter' },
-      highlighter_pink: { fluorescent: true, emitColor: '#ff66cc', emitGlow: '#ff00ff', name: 'Pink Highlighter' },
-      highlighter_green: { fluorescent: true, emitColor: '#00ffaa', emitGlow: '#00ff88', name: 'Green Highlighter' },
-      laundry_detergent: { fluorescent: true, emitColor: '#6666ff', emitGlow: '#0000ff', name: 'Laundry Detergent' }
+    const props: Record<string, { fluorescent: boolean; emitColor: string; emitGlow: string; name: string; emissionWavelength: number }> = {
+      highlighter: { fluorescent: true, emitColor: '#22ff22', emitGlow: '#00ff00', name: 'Yellow Highlighter', emissionWavelength: 520 },
+      paper: { fluorescent: false, emitColor: '#f5f5dc', emitGlow: '#f5f5dc', name: 'Plain Paper', emissionWavelength: 0 },
+      tonic: { fluorescent: true, emitColor: '#00ccff', emitGlow: '#00ffff', name: 'Tonic Water (Quinine)', emissionWavelength: 450 },
+      mineral: { fluorescent: true, emitColor: '#ff4444', emitGlow: '#ff0000', name: 'Fluorite Mineral', emissionWavelength: 620 },
+      highlighter_yellow: { fluorescent: true, emitColor: '#22ff22', emitGlow: '#00ff00', name: 'Yellow Highlighter', emissionWavelength: 520 },
+      highlighter_pink: { fluorescent: true, emitColor: '#ff66cc', emitGlow: '#ff00ff', name: 'Pink Highlighter', emissionWavelength: 580 },
+      highlighter_green: { fluorescent: true, emitColor: '#00ffaa', emitGlow: '#00ff88', name: 'Green Highlighter', emissionWavelength: 510 },
+      laundry_detergent: { fluorescent: true, emitColor: '#6666ff', emitGlow: '#0000ff', name: 'Laundry Detergent', emissionWavelength: 440 }
     };
     return props[mat] || props.highlighter;
   };
@@ -236,23 +253,293 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
     return () => clearInterval(interval);
   }, []);
 
+  // Jablonski diagram animation
+  useEffect(() => {
+    if (showJablonskiAnimation && uvOn) {
+      const interval = setInterval(() => {
+        setJablonskiStep(s => (s + 1) % 4);
+      }, 800);
+      return () => clearInterval(interval);
+    }
+  }, [showJablonskiAnimation, uvOn]);
+
+  // Phosphorescence decay
+  useEffect(() => {
+    if (showPhosphorescence && !uvOn && phosphorescenceDecay > 0) {
+      const interval = setInterval(() => {
+        setPhosphorescenceDecay(d => Math.max(0, d - 2));
+      }, 100);
+      return () => clearInterval(interval);
+    } else if (uvOn) {
+      setPhosphorescenceDecay(100);
+    }
+  }, [showPhosphorescence, uvOn, phosphorescenceDecay]);
+
   // Reset when returning to play phase
   useEffect(() => {
     if (phase === 'play') {
       setUvOn(false);
       setRegularLightOn(true);
       setSelectedMaterial('highlighter');
+      setExcitationWavelength(365);
+      setLightIntensity(70);
+      setFluorophoreConcentration(50);
     }
     if (phase === 'twist_play') {
       setTwistMaterial('highlighter_yellow');
+      setSelectedFluorophore('gfp');
+      setShowPhosphorescence(false);
+      setPhosphorescenceDecay(100);
     }
   }, [phase]);
 
+  // Helper to convert wavelength to color
+  const wavelengthToColor = (wavelength: number): string => {
+    if (wavelength < 380) return '#8b5cf6'; // UV - violet
+    if (wavelength < 450) return '#3b82f6'; // Blue
+    if (wavelength < 495) return '#06b6d4'; // Cyan
+    if (wavelength < 570) return '#22c55e'; // Green
+    if (wavelength < 590) return '#eab308'; // Yellow
+    if (wavelength < 620) return '#f97316'; // Orange
+    if (wavelength < 700) return '#ef4444'; // Red
+    return '#7f1d1d'; // IR - dark red
+  };
+
+  // Calculate emission wavelength based on excitation (Stokes shift)
+  const calculateStokesShift = (excitation: number, material: string): number => {
+    const baseShift = getMaterialProps(material).emissionWavelength - 365; // Base shift from 365nm UV
+    return Math.max(excitation + 50 + (baseShift / 3), excitation + 30); // Minimum 30nm Stokes shift
+  };
+
   // ─── Render Helpers ──────────────────────────────────────────────────────────
+
+  // Animated Jablonski Diagram
+  const renderJablonskiDiagram = () => {
+    const fluorophore = FLUOROPHORES[selectedFluorophore];
+    const excitationColor = wavelengthToColor(excitationWavelength);
+    const emissionColor = fluorophore.color;
+
+    return (
+      <svg viewBox="0 0 300 200" className="w-full h-40">
+        <defs>
+          <marker id="arrowUp" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+            <path d="M0,8 L4,0 L8,8" fill="none" stroke={excitationColor} strokeWidth="1.5" />
+          </marker>
+          <marker id="arrowDown" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+            <path d="M0,0 L4,8 L8,0" fill="none" stroke={emissionColor} strokeWidth="1.5" />
+          </marker>
+          <filter id="jabGlow">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Background */}
+        <rect width="300" height="200" fill="#0f172a" rx="8" />
+
+        {/* Title */}
+        <text x="150" y="20" textAnchor="middle" className="fill-violet-300 text-xs font-bold">Jablonski Diagram</text>
+
+        {/* Ground state S0 */}
+        <rect x="40" y="160" width="80" height="8" fill="#374151" rx="2" />
+        <text x="80" y="180" textAnchor="middle" className="fill-gray-400 text-xs">S0 (Ground)</text>
+
+        {/* Excited vibrational levels */}
+        <rect x="40" y="80" width="80" height="4" fill="#4b5563" rx="1" />
+        <rect x="40" y="70" width="80" height="4" fill="#4b5563" rx="1" />
+        <rect x="40" y="60" width="80" height="4" fill="#6b7280" rx="1" />
+        <text x="80" y="50" textAnchor="middle" className="fill-gray-400 text-xs">S1 (Excited)</text>
+
+        {/* Triplet state (for phosphorescence) */}
+        {showPhosphorescence && (
+          <>
+            <rect x="180" y="100" width="80" height="4" fill="#9333ea" rx="1" />
+            <text x="220" y="120" textAnchor="middle" className="fill-purple-400 text-xs">T1 (Triplet)</text>
+          </>
+        )}
+
+        {/* Absorption arrow */}
+        {uvOn && (jablonskiStep === 0 || jablonskiStep === 1) && (
+          <g filter="url(#jabGlow)">
+            <line
+              x1="60"
+              y1="155"
+              x2="60"
+              y2="65"
+              stroke={excitationColor}
+              strokeWidth="3"
+              markerEnd="url(#arrowUp)"
+              opacity={jablonskiStep === 0 ? 1 : 0.5}
+            />
+            <text x="30" y="110" className="fill-violet-400 text-xs font-semibold" transform="rotate(-90, 30, 110)">Absorb</text>
+          </g>
+        )}
+
+        {/* Vibrational relaxation (heat loss) */}
+        {uvOn && jablonskiStep === 1 && (
+          <g>
+            <path
+              d="M 80 65 Q 90 72 80 80"
+              fill="none"
+              stroke="#fbbf24"
+              strokeWidth="2"
+              strokeDasharray="4,2"
+            />
+            <text x="95" y="75" className="fill-yellow-400 text-xs">Heat</text>
+          </g>
+        )}
+
+        {/* Emission arrow (fluorescence) */}
+        {uvOn && (jablonskiStep === 2 || jablonskiStep === 3) && !showPhosphorescence && (
+          <g filter="url(#jabGlow)">
+            <line
+              x1="100"
+              y1="85"
+              x2="100"
+              y2="155"
+              stroke={emissionColor}
+              strokeWidth="3"
+              markerEnd="url(#arrowDown)"
+              opacity={jablonskiStep === 2 ? 1 : 0.5}
+            />
+            <text x="130" y="120" className="text-xs font-semibold" style={{ fill: emissionColor }}>Emit</text>
+          </g>
+        )}
+
+        {/* ISC and Phosphorescence for triplet state */}
+        {uvOn && showPhosphorescence && jablonskiStep >= 1 && (
+          <>
+            {/* Intersystem crossing */}
+            <path
+              d="M 120 80 Q 150 90 180 100"
+              fill="none"
+              stroke="#9333ea"
+              strokeWidth="2"
+              strokeDasharray="4,2"
+            />
+            <text x="145" y="85" className="fill-purple-400 text-xs">ISC</text>
+
+            {/* Phosphorescence emission (slower, from T1) */}
+            {jablonskiStep >= 2 && (
+              <g filter="url(#jabGlow)" opacity={phosphorescenceDecay / 100}>
+                <line
+                  x1="220"
+                  y1="105"
+                  x2="220"
+                  y2="155"
+                  stroke="#c084fc"
+                  strokeWidth="3"
+                  markerEnd="url(#arrowDown)"
+                />
+                <text x="240" y="130" className="fill-purple-400 text-xs">Phos.</text>
+              </g>
+            )}
+          </>
+        )}
+
+        {/* Energy labels */}
+        <text x="10" y="60" className="fill-gray-500 text-xs">High E</text>
+        <text x="10" y="165" className="fill-gray-500 text-xs">Low E</text>
+
+        {/* Stokes shift indicator */}
+        <g transform="translate(200, 160)">
+          <text x="0" y="0" className="fill-gray-400 text-xs">Stokes Shift:</text>
+          <text x="0" y="15" className="fill-emerald-400 text-xs font-bold">
+            {fluorophore.emission - fluorophore.excitation}nm
+          </text>
+        </g>
+      </svg>
+    );
+  };
+
+  // Emission spectrum visualization
+  const renderEmissionSpectrum = () => {
+    const matProps = getMaterialProps(selectedMaterial);
+    const emissionWl = calculateStokesShift(excitationWavelength, selectedMaterial);
+    const intensityFactor = (lightIntensity / 100) * (fluorophoreConcentration / 100);
+
+    return (
+      <svg viewBox="0 0 300 120" className="w-full h-28">
+        <defs>
+          <linearGradient id="spectrumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#8b5cf6" />
+            <stop offset="20%" stopColor="#3b82f6" />
+            <stop offset="35%" stopColor="#06b6d4" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="65%" stopColor="#eab308" />
+            <stop offset="80%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#ef4444" />
+          </linearGradient>
+        </defs>
+
+        <rect width="300" height="120" fill="#0f172a" rx="8" />
+
+        {/* Spectrum bar */}
+        <rect x="20" y="80" width="260" height="15" fill="url(#spectrumGrad)" rx="2" />
+
+        {/* Wavelength labels */}
+        <text x="20" y="108" className="fill-gray-500 text-xs">380nm</text>
+        <text x="145" y="108" textAnchor="middle" className="fill-gray-500 text-xs">550nm</text>
+        <text x="270" y="108" textAnchor="end" className="fill-gray-500 text-xs">700nm</text>
+
+        {/* Excitation marker */}
+        {uvOn && (
+          <g transform={`translate(${20 + ((excitationWavelength - 300) / 500) * 260}, 0)`}>
+            <line x1="0" y1="25" x2="0" y2="78" stroke={wavelengthToColor(excitationWavelength)} strokeWidth="3" />
+            <text x="0" y="20" textAnchor="middle" className="fill-violet-400 text-xs font-bold">Excitation</text>
+            <text x="0" y="35" textAnchor="middle" className="fill-violet-300 text-xs">{excitationWavelength}nm</text>
+          </g>
+        )}
+
+        {/* Emission peak */}
+        {uvOn && matProps.fluorescent && (
+          <g transform={`translate(${20 + ((emissionWl - 300) / 500) * 260}, 0)`}>
+            {/* Emission curve */}
+            <path
+              d={`M -30 75 Q 0 ${75 - 40 * intensityFactor} 30 75`}
+              fill={matProps.emitColor}
+              opacity={0.5}
+            />
+            <line x1="0" y1="25" x2="0" y2="78" stroke={matProps.emitColor} strokeWidth="3" />
+            <text x="0" y="20" textAnchor="middle" style={{ fill: matProps.emitColor }} className="text-xs font-bold">Emission</text>
+            <text x="0" y="35" textAnchor="middle" style={{ fill: matProps.emitColor }} className="text-xs">{Math.round(emissionWl)}nm</text>
+          </g>
+        )}
+
+        {/* Stokes shift arrow */}
+        {uvOn && matProps.fluorescent && (
+          <g>
+            <line
+              x1={20 + ((excitationWavelength - 300) / 500) * 260 + 5}
+              y1="55"
+              x2={20 + ((emissionWl - 300) / 500) * 260 - 5}
+              y2="55"
+              stroke="#22c55e"
+              strokeWidth="2"
+              markerEnd="url(#arrow)"
+            />
+            <text
+              x={(20 + ((excitationWavelength - 300) / 500) * 260 + 20 + ((emissionWl - 300) / 500) * 260) / 2}
+              y="50"
+              textAnchor="middle"
+              className="fill-emerald-400 text-xs"
+            >
+              Stokes Shift
+            </text>
+          </g>
+        )}
+      </svg>
+    );
+  };
+
   const renderFluorescenceScene = (material: string, uvActive: boolean, regularLight: boolean) => {
     const props = getMaterialProps(material);
     const isGlowing = uvActive && props.fluorescent;
     const ambientLight = regularLight ? 0.8 : (uvActive ? 0.2 : 0.05);
+    const glowIntensity = (lightIntensity / 100) * (fluorophoreConcentration / 100);
 
     return (
       <svg viewBox="0 0 400 280" className="w-full h-56">
@@ -269,17 +556,17 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
               <path
                 d="M -20 100 L -60 260 L 60 260 L 20 100 Z"
                 fill="url(#uvGradient)"
-                opacity="0.4"
+                opacity={0.4 * (lightIntensity / 100)}
               />
               {/* UV rays */}
-              {[...Array(5)].map((_, i) => (
+              {[...Array(Math.ceil(lightIntensity / 20))].map((_, i) => (
                 <line
                   key={i}
                   x1={-15 + i * 8}
                   y1="100"
                   x2={-45 + i * 25}
                   y2="250"
-                  stroke="#8b5cf6"
+                  stroke={wavelengthToColor(excitationWavelength)}
                   strokeWidth="2"
                   opacity={0.3 + Math.sin(animPhase + i) * 0.2}
                 />
@@ -291,12 +578,12 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
         {/* Gradient definitions */}
         <defs>
           <radialGradient id="uvGradient" cx="50%" cy="0%" r="100%">
-            <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+            <stop offset="0%" stopColor={wavelengthToColor(excitationWavelength)} stopOpacity="0.6" />
+            <stop offset="100%" stopColor={wavelengthToColor(excitationWavelength)} stopOpacity="0" />
           </radialGradient>
           <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={props.emitGlow} stopOpacity="0.9" />
-            <stop offset="50%" stopColor={props.emitGlow} stopOpacity="0.4" />
+            <stop offset="0%" stopColor={props.emitGlow} stopOpacity={0.9 * glowIntensity} />
+            <stop offset="50%" stopColor={props.emitGlow} stopOpacity={0.4 * glowIntensity} />
             <stop offset="100%" stopColor={props.emitGlow} stopOpacity="0" />
           </radialGradient>
           <filter id="glow">
@@ -315,8 +602,8 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
             <ellipse
               cx="50"
               cy="60"
-              rx={70 + Math.sin(animPhase) * 5}
-              ry={50 + Math.sin(animPhase) * 5}
+              rx={70 + Math.sin(animPhase) * 5 * glowIntensity}
+              ry={50 + Math.sin(animPhase) * 5 * glowIntensity}
               fill="url(#glowGradient)"
               className="animate-pulse"
             />
@@ -377,10 +664,10 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
         {/* Energy diagram (small) */}
         {uvActive && props.fluorescent && (
           <g transform="translate(20, 180)">
-            <text x="0" y="0" className="fill-violet-400 text-xs">UV (short λ)</text>
-            <line x1="0" y1="10" x2="30" y2="10" stroke="#8b5cf6" strokeWidth="2" markerEnd="url(#arrow)" />
-            <text x="0" y="40" className="fill-gray-400 text-xs">→</text>
-            <text x="15" y="55" style={{ fill: props.emitColor }} className="text-xs">Visible (long λ)</text>
+            <text x="0" y="0" className="fill-violet-400 text-xs">UV ({excitationWavelength}nm)</text>
+            <line x1="0" y1="10" x2="30" y2="10" stroke={wavelengthToColor(excitationWavelength)} strokeWidth="2" markerEnd="url(#arrow)" />
+            <text x="0" y="40" className="fill-gray-400 text-xs">-&gt;</text>
+            <text x="15" y="55" style={{ fill: props.emitColor }} className="text-xs">Visible ({props.emissionWavelength}nm)</text>
             <line x1="0" y1="65" x2="30" y2="65" stroke={props.emitColor} strokeWidth="2" />
           </g>
         )}
@@ -394,85 +681,121 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
         <g transform="translate(10, 20)">
           <circle cx="10" cy="10" r="8" fill={regularLight ? '#fbbf24' : '#374151'} />
           <text x="25" y="14" className="fill-gray-400 text-xs">Room Light</text>
-          <circle cx="10" cy="35" r="8" fill={uvActive ? '#8b5cf6' : '#374151'} />
-          <text x="25" y="39" className="fill-gray-400 text-xs">UV Light</text>
+          <circle cx="10" cy="35" r="8" fill={uvActive ? wavelengthToColor(excitationWavelength) : '#374151'} />
+          <text x="25" y="39" className="fill-gray-400 text-xs">UV Light ({excitationWavelength}nm)</text>
         </g>
 
         {/* Arrow marker */}
         <defs>
           <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#8b5cf6" />
+            <path d="M0,0 L0,6 L9,3 z" fill={wavelengthToColor(excitationWavelength)} />
           </marker>
         </defs>
       </svg>
     );
   };
 
-  const renderTwistScene = (material: string, uvActive: boolean) => {
-    const props = getMaterialProps(material);
-    const isGlowing = uvActive && props.fluorescent;
+  // Twist scene with fluorophore comparison and phosphorescence
+  const renderTwistScene = () => {
+    const currentFluorophore = FLUOROPHORES[selectedFluorophore];
+    const decayOpacity = showPhosphorescence && !uvOn ? phosphorescenceDecay / 100 : 1;
 
     return (
-      <svg viewBox="0 0 400 250" className="w-full h-48">
-        <rect width="400" height="250" fill="#0a0a15" />
+      <svg viewBox="0 0 400 300" className="w-full h-64">
+        <rect width="400" height="300" fill="#0a0a15" />
 
-        {/* UV light */}
-        {uvActive && (
-          <rect x="0" y="0" width="400" height="250" fill="#1a0a2e" opacity="0.5" />
+        {/* UV light indicator */}
+        {uvOn && (
+          <rect x="0" y="0" width="400" height="300" fill="#1a0a2e" opacity="0.5" />
         )}
 
-        {/* Four different materials side by side */}
-        {['highlighter_yellow', 'highlighter_pink', 'highlighter_green', 'laundry_detergent'].map((mat, i) => {
-          const matProps = getMaterialProps(mat);
-          const selected = mat === material;
-          const glowing = uvActive && matProps.fluorescent;
+        {/* Fluorophore display */}
+        <g transform="translate(50, 50)">
+          {/* Sample container */}
+          <rect x="0" y="0" width="120" height="150" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
 
-          return (
-            <g key={mat} transform={`translate(${50 + i * 90}, 60)`}>
-              {/* Glow */}
-              {glowing && (
-                <ellipse
-                  cx="30"
-                  cy="60"
-                  rx={35 + Math.sin(animPhase + i) * 3}
-                  ry={35 + Math.sin(animPhase + i) * 3}
-                  fill={matProps.emitGlow}
-                  opacity="0.3"
-                />
-              )}
-
-              {/* Object */}
+          {/* Fluorescent sample */}
+          {(uvOn || (showPhosphorescence && phosphorescenceDecay > 0)) && (
+            <g>
               <rect
-                x="5"
-                y="30"
-                width="50"
-                height="60"
+                x="15"
+                y="20"
+                width="90"
+                height="110"
                 rx="4"
-                fill={glowing ? matProps.emitColor : '#4b5563'}
-                stroke={selected ? '#ffffff' : 'transparent'}
-                strokeWidth="2"
-                filter={glowing ? 'url(#glow)' : ''}
+                fill={currentFluorophore.color}
+                opacity={decayOpacity * (lightIntensity / 100)}
+                filter="url(#glow)"
               />
-
-              {/* Label */}
-              <text x="30" y="120" textAnchor="middle" className="fill-gray-400 text-xs">
-                {mat.includes('highlighter') ? mat.split('_')[1] : 'detergent'}
-              </text>
-
-              {/* Wavelength label when glowing */}
-              {glowing && (
-                <text x="30" y="15" textAnchor="middle" className="text-xs" style={{ fill: matProps.emitColor }}>
-                  {mat === 'highlighter_yellow' ? '520nm' : mat === 'highlighter_pink' ? '580nm' : mat === 'highlighter_green' ? '510nm' : '440nm'}
-                </text>
-              )}
+              {/* Glow effect */}
+              <ellipse
+                cx="60"
+                cy="75"
+                rx={50 + Math.sin(animPhase) * 5}
+                ry={40 + Math.sin(animPhase) * 5}
+                fill={currentFluorophore.color}
+                opacity={0.3 * decayOpacity}
+              />
             </g>
-          );
-        })}
+          )}
 
-        {/* Explanation */}
-        <text x="200" y="220" textAnchor="middle" className="fill-gray-300 text-sm">
-          Same UV input → Different emission colors (Stokes shift varies)
-        </text>
+          {/* Sample when off */}
+          {!uvOn && (!showPhosphorescence || phosphorescenceDecay === 0) && (
+            <rect x="15" y="20" width="90" height="110" rx="4" fill="#374151" />
+          )}
+
+          <text x="60" y="180" textAnchor="middle" className="fill-gray-300 text-xs font-semibold">
+            {currentFluorophore.name.split('(')[0]}
+          </text>
+        </g>
+
+        {/* Info panel */}
+        <g transform="translate(200, 50)">
+          <rect x="0" y="0" width="180" height="150" rx="8" fill="#1f2937" stroke="#374151" />
+
+          <text x="90" y="25" textAnchor="middle" className="fill-white text-sm font-bold">Properties</text>
+
+          <text x="15" y="50" className="fill-gray-400 text-xs">Excitation:</text>
+          <text x="165" y="50" textAnchor="end" className="fill-violet-400 text-xs font-semibold">{currentFluorophore.excitation}nm</text>
+
+          <text x="15" y="70" className="fill-gray-400 text-xs">Emission:</text>
+          <text x="165" y="70" textAnchor="end" style={{ fill: currentFluorophore.color }} className="text-xs font-semibold">{currentFluorophore.emission}nm</text>
+
+          <text x="15" y="90" className="fill-gray-400 text-xs">Stokes Shift:</text>
+          <text x="165" y="90" textAnchor="end" className="fill-emerald-400 text-xs font-semibold">{currentFluorophore.emission - currentFluorophore.excitation}nm</text>
+
+          <text x="15" y="115" className="fill-gray-500 text-xs" style={{ fontSize: '9px' }}>
+            {currentFluorophore.description}
+          </text>
+
+          {/* Decay indicator for phosphorescence */}
+          {showPhosphorescence && (
+            <g transform="translate(15, 130)">
+              <text x="0" y="0" className="fill-purple-400 text-xs">Decay: {phosphorescenceDecay}%</text>
+              <rect x="60" y="-8" width="100" height="8" fill="#374151" rx="2" />
+              <rect x="60" y="-8" width={phosphorescenceDecay} height="8" fill="#9333ea" rx="2" />
+            </g>
+          )}
+        </g>
+
+        {/* Fluorescence vs Phosphorescence comparison */}
+        <g transform="translate(50, 220)">
+          <rect x="0" y="0" width="300" height="60" rx="8" fill={showPhosphorescence ? '#3b0764' : '#1f2937'} stroke={showPhosphorescence ? '#9333ea' : '#374151'} />
+
+          <text x="150" y="20" textAnchor="middle" className="fill-white text-xs font-bold">
+            {showPhosphorescence ? 'Phosphorescence Mode' : 'Fluorescence Mode'}
+          </text>
+          <text x="150" y="38" textAnchor="middle" className="fill-gray-400 text-xs">
+            {showPhosphorescence
+              ? 'Triplet state - slow decay (ms to hours)'
+              : 'Singlet state - instant emission (ns)'}
+          </text>
+          <text x="150" y="52" textAnchor="middle" className={showPhosphorescence ? 'fill-purple-400' : 'fill-cyan-400'} style={{ fontSize: '9px' }}>
+            {showPhosphorescence
+              ? 'Turn off UV to see glow-in-dark effect'
+              : 'Emission stops instantly when UV stops'}
+          </text>
+        </g>
 
         <defs>
           <filter id="glow">
@@ -568,7 +891,8 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onClick={() => { playSound('click'); goToNextPhase(); }}
+        style={{ zIndex: 10 }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-violet-500 to-fuchsia-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -582,15 +906,15 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
       {/* Feature hints */}
       <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
         <div className="flex items-center gap-2">
-          <span className="text-violet-400">✦</span>
+          <span className="text-violet-400">*</span>
           Interactive Lab
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-violet-400">✦</span>
+          <span className="text-violet-400">*</span>
           Real-World Examples
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-violet-400">✦</span>
+          <span className="text-violet-400">*</span>
           Knowledge Test
         </div>
       </div>
@@ -609,13 +933,14 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
       <div className="grid grid-cols-1 gap-3 max-w-lg w-full">
         {[
           { id: 'reflect', text: 'The UV bounces back as UV (still invisible)', icon: '↩️' },
-          { id: 'absorb', text: 'The highlighter absorbs UV and re-emits VISIBLE light', icon: '✨' },
-          { id: 'nothing', text: 'Nothing - UV passes right through transparent ink', icon: '➡️' },
-          { id: 'heat', text: 'The highlighter heats up but doesn\'t glow', icon: '🔥' }
+          { id: 'absorb', text: 'The highlighter absorbs UV and re-emits VISIBLE light', icon: '*' },
+          { id: 'nothing', text: 'Nothing - UV passes right through transparent ink', icon: '->' },
+          { id: 'heat', text: 'The highlighter heats up but doesn\'t glow', icon: '~' }
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => { handlePrediction(option.id); }}
+            style={{ zIndex: 10 }}
             disabled={prediction !== null}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               prediction === option.id
@@ -634,13 +959,14 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
       {prediction && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            {prediction === 'absorb' ? '✓ Correct!' : '✗ Not quite.'} Fluorescent molecules absorb UV and re-emit visible light!
+            {prediction === 'absorb' ? 'Correct!' : 'Not quite.'} Fluorescent molecules absorb UV and re-emit visible light!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+            onClick={() => { playSound('click'); goToNextPhase(); }}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 text-white font-semibold rounded-xl"
           >
-            Test It! →
+            Test It! -&gt;
           </button>
         </div>
       )}
@@ -651,12 +977,89 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Experiment: UV Fluorescence</h2>
 
+      {/* Main visualization */}
       <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
         {renderFluorescenceScene(selectedMaterial, uvOn, regularLightOn)}
       </div>
 
-      <div className="grid grid-cols-2 gap-4 max-w-lg w-full mb-4">
-        <div className="space-y-2">
+      {/* Jablonski Diagram */}
+      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-lg">
+        <div className="flex justify-between items-center mb-2">
+          <h3 className="text-sm font-semibold text-violet-300">Animated Jablonski Diagram</h3>
+          <button
+            onClick={() => setShowJablonskiAnimation(!showJablonskiAnimation)}
+            style={{ zIndex: 10 }}
+            className={`text-xs px-3 py-1 rounded-full ${showJablonskiAnimation ? 'bg-violet-600' : 'bg-gray-700'} text-white`}
+          >
+            {showJablonskiAnimation ? 'ON' : 'OFF'}
+          </button>
+        </div>
+        {renderJablonskiDiagram()}
+      </div>
+
+      {/* Emission Spectrum */}
+      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-lg">
+        <h3 className="text-sm font-semibold text-violet-300 mb-2">Emission Spectrum & Stokes Shift</h3>
+        {renderEmissionSpectrum()}
+      </div>
+
+      {/* Interactive Controls */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-lg w-full mb-4">
+        <div className="space-y-4">
+          {/* Excitation Wavelength Slider */}
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <label className="text-gray-400 text-sm block mb-2">Excitation Wavelength: {excitationWavelength}nm</label>
+            <input
+              type="range"
+              min="300"
+              max="500"
+              value={excitationWavelength}
+              onChange={(e) => setExcitationWavelength(parseInt(e.target.value))}
+              className="w-full h-2 bg-gradient-to-r from-violet-600 via-blue-500 to-cyan-400 rounded-lg appearance-none cursor-pointer"
+              style={{ accentColor: wavelengthToColor(excitationWavelength) }}
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>UV (300nm)</span>
+              <span>Visible (500nm)</span>
+            </div>
+          </div>
+
+          {/* Light Intensity Slider */}
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <label className="text-gray-400 text-sm block mb-2">Light Intensity: {lightIntensity}%</label>
+            <input
+              type="range"
+              min="10"
+              max="100"
+              value={lightIntensity}
+              onChange={(e) => setLightIntensity(parseInt(e.target.value))}
+              className="w-full h-2 bg-gradient-to-r from-gray-700 to-yellow-400 rounded-lg appearance-none cursor-pointer"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Dim</span>
+              <span>Bright</span>
+            </div>
+          </div>
+
+          {/* Fluorophore Concentration Slider */}
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <label className="text-gray-400 text-sm block mb-2">Fluorophore Concentration: {fluorophoreConcentration}%</label>
+            <input
+              type="range"
+              min="10"
+              max="100"
+              value={fluorophoreConcentration}
+              onChange={(e) => setFluorophoreConcentration(parseInt(e.target.value))}
+              className="w-full h-2 bg-gradient-to-r from-gray-700 to-green-400 rounded-lg appearance-none cursor-pointer"
+            />
+            <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <span>Low</span>
+              <span>High</span>
+            </div>
+          </div>
+        </div>
+
+        <div className="space-y-3">
           <label className="text-gray-400 text-sm">Material:</label>
           <select
             value={selectedMaterial}
@@ -668,11 +1071,10 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
             <option value="tonic">Tonic Water</option>
             <option value="mineral">Fluorite Crystal</option>
           </select>
-        </div>
 
-        <div className="space-y-3">
           <button
-            onMouseDown={(e) => { e.preventDefault(); playSound('click'); setRegularLightOn(!regularLightOn); }}
+            onClick={() => { playSound('click'); setRegularLightOn(!regularLightOn); }}
+            style={{ zIndex: 10 }}
             className={`w-full px-4 py-2 rounded-lg font-medium transition-all ${
               regularLightOn
                 ? 'bg-yellow-600 text-white'
@@ -682,7 +1084,8 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
             Room Light: {regularLightOn ? 'ON' : 'OFF'}
           </button>
           <button
-            onMouseDown={(e) => { e.preventDefault(); playSound('click'); setUvOn(!uvOn); }}
+            onClick={() => { playSound('click'); setUvOn(!uvOn); }}
+            style={{ zIndex: 10 }}
             className={`w-full px-4 py-2 rounded-lg font-medium transition-all ${
               uvOn
                 ? 'bg-violet-600 text-white'
@@ -697,8 +1100,11 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
       {uvOn && getMaterialProps(selectedMaterial).fluorescent && (
         <div className="bg-gradient-to-r from-violet-900/30 to-fuchsia-900/30 rounded-xl p-4 max-w-lg w-full mb-4">
           <p className="text-fuchsia-300 text-sm">
-            <strong>Fluorescence!</strong> UV photons (short wavelength, high energy) are absorbed.
-            The molecule re-emits light at a <em>longer wavelength</em> (lower energy) - visible!
+            <strong>Fluorescence!</strong> UV photons ({excitationWavelength}nm, high energy) are absorbed.
+            The molecule re-emits light at a <em>longer wavelength</em> ({getMaterialProps(selectedMaterial).emissionWavelength}nm) - visible!
+          </p>
+          <p className="text-emerald-400 text-xs mt-2">
+            Stokes Shift: {getMaterialProps(selectedMaterial).emissionWavelength - excitationWavelength}nm (energy lost as heat)
           </p>
         </div>
       )}
@@ -713,10 +1119,11 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
       )}
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onClick={() => { playSound('click'); goToNextPhase(); }}
+        style={{ zIndex: 10 }}
         className="px-8 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl text-white font-semibold hover:from-violet-500 hover:to-fuchsia-500 transition-all"
       >
-        Continue →
+        Continue -&gt;
       </button>
     </div>
   );
@@ -760,12 +1167,13 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
       </div>
 
       <div className="text-center">
-        <p className="text-gray-400 mb-2">Your prediction: <span className="text-violet-400 font-semibold">{prediction === 'absorb' ? '✓ Correct!' : '✗ Not quite'}</span></p>
+        <p className="text-gray-400 mb-2">Your prediction: <span className="text-violet-400 font-semibold">{prediction === 'absorb' ? 'Correct!' : 'Not quite'}</span></p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+          onClick={() => { playSound('click'); goToNextPhase(); }}
+          style={{ zIndex: 10 }}
           className="px-8 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl text-white font-semibold hover:from-violet-500 hover:to-fuchsia-500 transition-all"
         >
-          But wait... →
+          But wait... -&gt;
         </button>
       </div>
     </div>
@@ -773,7 +1181,7 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
 
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-fuchsia-400 mb-6">🔄 The Twist!</h2>
+      <h2 className="text-2xl font-bold text-fuchsia-400 mb-6">~ The Twist!</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <p className="text-lg text-slate-300">
           Different highlighter colors (yellow, pink, green) all absorb the <span className="text-violet-400">same UV light</span>.
@@ -783,14 +1191,15 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
 
       <div className="grid grid-cols-1 gap-3 max-w-lg w-full">
         {[
-          { id: 'same', text: 'They all glow the same color (UV is UV)', icon: '⚪' },
-          { id: 'different', text: 'They each glow their own DIFFERENT visible color', icon: '🌈' },
-          { id: 'white', text: 'They all glow white when fluorescent', icon: '⬜' },
-          { id: 'none', text: 'Only yellow highlighters can fluoresce', icon: '🟡' }
+          { id: 'same', text: 'They all glow the same color (UV is UV)', icon: 'O' },
+          { id: 'different', text: 'They each glow their own DIFFERENT visible color', icon: '~' },
+          { id: 'white', text: 'They all glow white when fluorescent', icon: '[]' },
+          { id: 'none', text: 'Only yellow highlighters can fluoresce', icon: '*' }
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => { handleTwistPrediction(option.id); }}
+            style={{ zIndex: 10 }}
             disabled={twistPrediction !== null}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               twistPrediction === option.id
@@ -809,13 +1218,14 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
       {twistPrediction && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            {twistPrediction === 'different' ? '✓ Correct!' : '✗ Not quite.'} Each molecule has its own energy levels!
+            {twistPrediction === 'different' ? 'Correct!' : 'Not quite.'} Each molecule has its own energy levels!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+            onClick={() => { playSound('click'); goToNextPhase(); }}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-fuchsia-600 to-pink-600 text-white font-semibold rounded-xl"
           >
-            Test It! →
+            Test It! -&gt;
           </button>
         </div>
       )}
@@ -824,24 +1234,123 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
 
   const renderTwistPlay = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-fuchsia-400 mb-4">Compare Fluorescent Materials</h2>
+      <h2 className="text-2xl font-bold text-fuchsia-400 mb-4">Advanced Fluorescence Lab</h2>
 
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
-        {renderTwistScene(twistMaterial, true)}
+      {/* Main visualization */}
+      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-lg">
+        {renderTwistScene()}
       </div>
 
+      {/* Controls */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 max-w-lg w-full mb-4">
+        <div className="space-y-3">
+          {/* Fluorophore Selection */}
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <label className="text-gray-400 text-sm block mb-2">Fluorophore Type:</label>
+            <select
+              value={selectedFluorophore}
+              onChange={(e) => setSelectedFluorophore(e.target.value as keyof typeof FLUOROPHORES)}
+              className="w-full bg-gray-800 text-white rounded-lg px-3 py-2 border border-gray-700"
+            >
+              {Object.entries(FLUOROPHORES).map(([key, val]) => (
+                <option key={key} value={key}>{val.name}</option>
+              ))}
+            </select>
+          </div>
+
+          {/* Intensity slider */}
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <label className="text-gray-400 text-sm block mb-2">Excitation Intensity: {lightIntensity}%</label>
+            <input
+              type="range"
+              min="10"
+              max="100"
+              value={lightIntensity}
+              onChange={(e) => setLightIntensity(parseInt(e.target.value))}
+              className="w-full h-2 bg-gradient-to-r from-gray-700 to-violet-400 rounded-lg appearance-none cursor-pointer"
+            />
+          </div>
+        </div>
+
+        <div className="space-y-3">
+          {/* UV Toggle */}
+          <button
+            onClick={() => { playSound('click'); setUvOn(!uvOn); }}
+            style={{ zIndex: 10 }}
+            className={`w-full px-4 py-3 rounded-lg font-medium transition-all ${
+              uvOn
+                ? 'bg-violet-600 text-white'
+                : 'bg-gray-700 text-gray-300'
+            }`}
+          >
+            UV Light: {uvOn ? 'ON' : 'OFF'}
+          </button>
+
+          {/* Phosphorescence Toggle */}
+          <button
+            onClick={() => { playSound('click'); setShowPhosphorescence(!showPhosphorescence); }}
+            style={{ zIndex: 10 }}
+            className={`w-full px-4 py-3 rounded-lg font-medium transition-all ${
+              showPhosphorescence
+                ? 'bg-purple-600 text-white'
+                : 'bg-gray-700 text-gray-300'
+            }`}
+          >
+            Phosphorescence Mode: {showPhosphorescence ? 'ON' : 'OFF'}
+          </button>
+
+          {/* Reset decay button */}
+          {showPhosphorescence && (
+            <button
+              onClick={() => { setPhosphorescenceDecay(100); setUvOn(false); }}
+              style={{ zIndex: 10 }}
+              className="w-full px-4 py-2 rounded-lg font-medium bg-gray-700 text-gray-300 hover:bg-gray-600"
+            >
+              Test Glow-in-Dark Effect
+            </button>
+          )}
+        </div>
+      </div>
+
+      {/* Info cards */}
+      <div className="grid grid-cols-2 gap-3 max-w-lg w-full mb-4">
+        <div className="bg-cyan-900/30 rounded-xl p-3 border border-cyan-500/30">
+          <p className="text-cyan-300 text-xs font-semibold">Fluorescence</p>
+          <p className="text-gray-400 text-xs mt-1">Instant emission (~ns)</p>
+          <p className="text-gray-500 text-xs">Singlet to singlet transition</p>
+        </div>
+        <div className="bg-purple-900/30 rounded-xl p-3 border border-purple-500/30">
+          <p className="text-purple-300 text-xs font-semibold">Phosphorescence</p>
+          <p className="text-gray-400 text-xs mt-1">Delayed emission (ms-hrs)</p>
+          <p className="text-gray-500 text-xs">Triplet to singlet (forbidden)</p>
+        </div>
+      </div>
+
+      {/* Fluorophore comparison info */}
       <div className="bg-gradient-to-r from-fuchsia-900/30 to-pink-900/30 rounded-xl p-4 max-w-lg w-full mb-4">
         <p className="text-fuchsia-300 text-sm text-center">
-          <strong>Same UV in → Different colors out!</strong><br />
-          Each molecule has its own energy levels, determining its emission wavelength.
+          <strong>Different fluorophores = Different emission colors!</strong><br />
+          Each molecule has unique energy levels determining its Stokes shift.
         </p>
+        <div className="flex justify-center gap-4 mt-3">
+          {Object.entries(FLUOROPHORES).slice(0, 4).map(([key, val]) => (
+            <div key={key} className="text-center">
+              <div
+                className="w-4 h-4 rounded-full mx-auto mb-1"
+                style={{ backgroundColor: val.color }}
+              />
+              <p className="text-gray-400 text-xs">{val.emission}nm</p>
+            </div>
+          ))}
+        </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onClick={() => { playSound('click'); goToNextPhase(); }}
+        style={{ zIndex: 10 }}
         className="px-8 py-3 bg-gradient-to-r from-fuchsia-600 to-pink-600 rounded-xl text-white font-semibold hover:from-fuchsia-500 hover:to-pink-500 transition-all"
       >
-        Continue →
+        Continue -&gt;
       </button>
     </div>
   );
@@ -858,31 +1367,58 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
 
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="bg-gray-900/50 rounded-lg p-3">
-            <div className="text-green-400 font-semibold">Yellow Highlighter</div>
-            <div className="text-gray-500">Emits ~520nm (green)</div>
+            <div className="text-green-400 font-semibold">GFP</div>
+            <div className="text-gray-500">Emits 509nm (green)</div>
+            <div className="text-gray-600 text-xs">Stokes: 114nm</div>
           </div>
           <div className="bg-gray-900/50 rounded-lg p-3">
-            <div className="text-pink-400 font-semibold">Pink Highlighter</div>
-            <div className="text-gray-500">Emits ~580nm (pink)</div>
+            <div className="text-red-400 font-semibold">Rhodamine B</div>
+            <div className="text-gray-500">Emits 565nm (red)</div>
+            <div className="text-gray-600 text-xs">Stokes: 22nm</div>
           </div>
           <div className="bg-gray-900/50 rounded-lg p-3">
-            <div className="text-emerald-400 font-semibold">Green Highlighter</div>
-            <div className="text-gray-500">Emits ~510nm (cyan-green)</div>
+            <div className="text-blue-400 font-semibold">DAPI</div>
+            <div className="text-gray-500">Emits 461nm (blue)</div>
+            <div className="text-gray-600 text-xs">Stokes: 103nm</div>
           </div>
           <div className="bg-gray-900/50 rounded-lg p-3">
-            <div className="text-blue-400 font-semibold">Laundry Detergent</div>
-            <div className="text-gray-500">Emits ~440nm (blue)</div>
+            <div className="text-orange-400 font-semibold">Quantum Dots</div>
+            <div className="text-gray-500">Tunable emission</div>
+            <div className="text-gray-600 text-xs">Size-dependent!</div>
+          </div>
+        </div>
+      </div>
+
+      <div className="bg-purple-900/30 rounded-xl p-4 max-w-lg w-full mb-6">
+        <p className="text-purple-300 font-semibold text-center mb-2">Fluorescence vs Phosphorescence</p>
+        <div className="grid grid-cols-2 gap-4 text-sm">
+          <div>
+            <p className="text-cyan-400">Fluorescence</p>
+            <ul className="text-gray-400 text-xs list-disc pl-4">
+              <li>Nanosecond lifetime</li>
+              <li>Spin-allowed transition</li>
+              <li>Stops immediately</li>
+            </ul>
+          </div>
+          <div>
+            <p className="text-purple-400">Phosphorescence</p>
+            <ul className="text-gray-400 text-xs list-disc pl-4">
+              <li>Milliseconds to hours</li>
+              <li>Spin-forbidden (triplet)</li>
+              <li>Glow-in-dark effect</li>
+            </ul>
           </div>
         </div>
       </div>
 
       <div className="text-center">
-        <p className="text-gray-400 mb-2">Your prediction: <span className="text-fuchsia-400 font-semibold">{twistPrediction === 'different' ? '✓ Correct!' : '✗ Not quite'}</span></p>
+        <p className="text-gray-400 mb-2">Your prediction: <span className="text-fuchsia-400 font-semibold">{twistPrediction === 'different' ? 'Correct!' : 'Not quite'}</span></p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+          onClick={() => { playSound('click'); goToNextPhase(); }}
+          style={{ zIndex: 10 }}
           className="px-8 py-3 bg-gradient-to-r from-fuchsia-600 to-pink-600 rounded-xl text-white font-semibold hover:from-fuchsia-500 hover:to-pink-500 transition-all"
         >
-          See Applications →
+          See Applications -&gt;
         </button>
       </div>
     </div>
@@ -897,7 +1433,8 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
         {TRANSFER_APPS.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(index); }}
+            onClick={() => { handleAppComplete(index); }}
+            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               completedApps.has(index)
                 ? 'border-violet-500 bg-violet-900/30'
@@ -919,10 +1456,11 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+          onClick={() => { playSound('click'); goToNextPhase(); }}
+          style={{ zIndex: 10 }}
           className="px-8 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl text-white font-semibold hover:from-violet-500 hover:to-fuchsia-500 transition-all"
         >
-          Take the Quiz →
+          Take the Quiz -&gt;
         </button>
       )}
     </div>
@@ -936,12 +1474,11 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
       const score = calculateScore();
       return (
         <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-          <div className="text-6xl mb-4">{score >= 3 ? '🎉' : '📚'}</div>
+          <div className="text-6xl mb-4">{score >= 3 ? '+' : '#'}</div>
           <h2 className="text-2xl font-bold text-white mb-2">Quiz Complete!</h2>
           <p className="text-gray-300 mb-6">You got {score} out of {TEST_QUESTIONS.length} correct!</p>
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               if (score >= 3) {
                 playSound('complete');
                 goToNextPhase();
@@ -951,9 +1488,10 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
                 goToPhase('review');
               }
             }}
+            style={{ zIndex: 10 }}
             className="px-8 py-3 bg-gradient-to-r from-violet-600 to-fuchsia-600 rounded-xl text-white font-semibold hover:from-violet-500 hover:to-fuchsia-500 transition-all"
           >
-            {score >= 3 ? 'Complete! 🎊' : 'Review & Try Again'}
+            {score >= 3 ? 'Complete! +' : 'Review & Try Again'}
           </button>
         </div>
       );
@@ -968,7 +1506,8 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
           {question.options.map((option, i) => (
             <button
               key={i}
-              onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(i); }}
+              onClick={() => { handleTestAnswer(i); }}
+              style={{ zIndex: 10 }}
               className="p-4 rounded-xl border-2 border-gray-700 bg-gray-800/50 hover:border-violet-500 transition-all text-left text-gray-200"
             >
               {option.text}
@@ -982,26 +1521,28 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
   const renderMastery = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
       <div className="bg-gradient-to-br from-violet-900/50 via-fuchsia-900/50 to-pink-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">🏆</div>
+        <div className="text-8xl mb-6">+</div>
         <h1 className="text-3xl font-bold text-white mb-4">Fluorescence Master!</h1>
         <p className="text-xl text-slate-300 mb-6">You&apos;ve mastered the physics of fluorescence!</p>
         <div className="bg-gradient-to-r from-violet-900/50 to-fuchsia-900/50 rounded-xl p-6 mb-6">
           <p className="text-violet-300 font-medium mb-4">You now understand:</p>
           <ul className="text-gray-300 text-sm space-y-2 text-left">
-            <li>✓ UV absorption by fluorescent molecules</li>
-            <li>✓ Re-emission at longer wavelength (Stokes shift)</li>
-            <li>✓ Different molecules → different emission colors</li>
-            <li>✓ Real-world applications from security to forensics</li>
+            <li>- UV absorption by fluorescent molecules</li>
+            <li>- Re-emission at longer wavelength (Stokes shift)</li>
+            <li>- Different molecules = different emission colors</li>
+            <li>- Fluorescence vs phosphorescence (lifetime difference)</li>
+            <li>- Real-world applications from security to forensics</li>
           </ul>
         </div>
         <p className="text-gray-400 text-sm mb-6">
           Next time you see a blacklight party, you&apos;ll know the physics of that glow!
         </p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase('hook'); }}
+          onClick={() => { playSound('click'); goToPhase('hook'); }}
+          style={{ zIndex: 10 }}
           className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
         >
-          ↺ Explore Again
+          ~ Explore Again
         </button>
       </div>
     </div>
@@ -1040,7 +1581,8 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
             {PHASE_ORDER.map((p, index) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => { playSound('click'); goToPhase(p); }}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-violet-400 w-6 shadow-lg shadow-violet-400/30'

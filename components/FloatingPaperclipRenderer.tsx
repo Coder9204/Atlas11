@@ -8,6 +8,7 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 // Physics: Surface tension creates a "skin" supporting heavy objects
 // Steel paperclip floats despite being 8× denser than water
 // Force balance: Weight = Surface tension × perimeter × sin(θ)
+// Surface tension γ creates upward force F = γ × perimeter × cos(θ)
 
 interface FloatingPaperclipRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -38,6 +39,13 @@ const phaseLabels: Record<Phase, string> = {
   transfer: 'Transfer', test: 'Test', mastery: 'Mastery'
 };
 
+// Liquid properties for comparison
+const liquidProperties: Record<string, { gamma: number; color: string; name: string }> = {
+  water: { gamma: 0.072, color: '#3b82f6', name: 'Water' },
+  oil: { gamma: 0.032, color: '#eab308', name: 'Oil' },
+  alcohol: { gamma: 0.022, color: '#a855f7', name: 'Alcohol' },
+};
+
 // ─────────────────────────────────────────────────────────────
 // Main Component
 // ─────────────────────────────────────────────────────────────
@@ -64,10 +72,22 @@ export default function FloatingPaperclipRenderer({
   const [dimpleDepth, setDimpleDepth] = useState(0);
   const [hasDropped, setHasDropped] = useState(false);
 
+  // Interactive parameters for play phase
+  const [surfaceTension, setSurfaceTension] = useState(0.072); // N/m (water default)
+  const [clipWeight, setClipWeight] = useState(0.5); // grams
+  const [waterTemperature, setWaterTemperature] = useState(20); // Celsius
+  const [showForceVectors, setShowForceVectors] = useState(true);
+  const [animationFrame, setAnimationFrame] = useState(0);
+
   // Twist state - add soap
   const [soapAdded, setSoapAdded] = useState(false);
   const [twistClipY, setTwistClipY] = useState(60);
   const [twistClipState, setTwistClipState] = useState<'floating' | 'sinking' | 'sunk'>('floating');
+
+  // Twist play interactive parameters
+  const [soapAmount, setSoapAmount] = useState(0); // 0-100%
+  const [selectedLiquid, setSelectedLiquid] = useState<'water' | 'oil' | 'alcohol'>('water');
+  const [contactAngle, setContactAngle] = useState(45); // degrees
 
   // Sound system
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -176,7 +196,37 @@ export default function FloatingPaperclipRenderer({
     setSoapAdded(false);
     setTwistClipY(60);
     setTwistClipState('floating');
+    setSoapAmount(0);
   };
+
+  // Calculate effective surface tension based on temperature and soap
+  const getEffectiveSurfaceTension = useCallback(() => {
+    // Temperature effect: surface tension decreases ~0.15% per degree C above 20
+    const tempFactor = 1 - (waterTemperature - 20) * 0.0015;
+    // Soap effect: reduces surface tension dramatically
+    const soapFactor = 1 - (soapAmount / 100) * 0.65;
+    // Liquid base value
+    const baseGamma = liquidProperties[selectedLiquid]?.gamma || 0.072;
+    return baseGamma * tempFactor * soapFactor;
+  }, [waterTemperature, soapAmount, selectedLiquid]);
+
+  // Calculate if paperclip floats based on physics
+  const calculateFloatability = useCallback(() => {
+    const gamma = getEffectiveSurfaceTension();
+    const perimeter = 0.08; // approx 8cm for standard paperclip
+    const theta = contactAngle * (Math.PI / 180);
+    const surfaceForce = gamma * perimeter * Math.cos(theta);
+    const weight = (clipWeight / 1000) * 9.81; // Convert g to N
+    return surfaceForce >= weight;
+  }, [getEffectiveSurfaceTension, contactAngle, clipWeight]);
+
+  // Animation for force vectors
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAnimationFrame(prev => (prev + 1) % 60);
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
 
   const handlePrediction = (choice: string) => {
     setPrediction(choice);
@@ -372,7 +422,8 @@ export default function FloatingPaperclipRenderer({
             </div>
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase('predict'); }}
+              onClick={() => goToPhase('predict')}
+              style={{ zIndex: 10 }}
               className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-blue-500 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98]"
             >
               <span className="relative z-10 flex items-center gap-3">
@@ -402,7 +453,8 @@ export default function FloatingPaperclipRenderer({
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={(e) => { e.preventDefault(); handlePrediction(opt.id); }}
+                  onClick={() => handlePrediction(opt.id)}
+                  style={{ zIndex: 10 }}
                   className={`p-4 rounded-xl border-2 transition-all text-left ${
                     prediction === opt.id
                       ? 'border-blue-500 bg-blue-500/20'
@@ -416,7 +468,8 @@ export default function FloatingPaperclipRenderer({
 
             {prediction && (
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase('play'); }}
+                onClick={() => goToPhase('play')}
+                style={{ zIndex: 10 }}
                 className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
               >
                 Test It!
@@ -426,52 +479,244 @@ export default function FloatingPaperclipRenderer({
         );
 
       case 'play':
+        const effectiveGamma = getEffectiveSurfaceTension();
+        const willFloat = calculateFloatability();
+        const perimeter = 0.08;
+        const theta = contactAngle * (Math.PI / 180);
+        const surfaceForceN = effectiveGamma * perimeter * Math.cos(theta);
+        const weightForceN = (clipWeight / 1000) * 9.81;
+        const forceRatio = surfaceForceN / weightForceN;
+        const criticalPoint = forceRatio < 1;
+
         return (
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-white mb-4">Floating Paperclip Experiment</h2>
-            <p className="text-slate-400 mb-4">Choose how to place the paperclip on water</p>
+            <p className="text-slate-400 mb-4">Adjust parameters to explore surface tension physics</p>
 
-            <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
-              <svg viewBox="0 0 400 230" className="w-full h-52">
-                <rect x="50" y="100" width="300" height="110" fill="#1e40af" rx="8" />
-                <rect x="55" y="105" width="290" height="100" fill="#3b82f6" rx="5" />
+            {/* Interactive Parameter Controls */}
+            <div className="bg-slate-800/60 rounded-2xl p-4 mb-4 w-full max-w-xl border border-slate-700/50">
+              <h3 className="text-sm font-semibold text-blue-400 mb-3">Experiment Controls</h3>
 
+              {/* Surface Tension Slider */}
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs text-slate-400">Surface Tension Coefficient</label>
+                  <span className="text-xs font-mono text-blue-300">{surfaceTension.toFixed(3)} N/m</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.02"
+                  max="0.08"
+                  step="0.001"
+                  value={surfaceTension}
+                  onChange={(e) => setSurfaceTension(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  style={{ zIndex: 10 }}
+                />
+                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                  <span>Alcohol (0.02)</span>
+                  <span>Water (0.072)</span>
+                </div>
+              </div>
+
+              {/* Paperclip Weight Slider */}
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs text-slate-400">Paperclip Weight/Size</label>
+                  <span className="text-xs font-mono text-cyan-300">{clipWeight.toFixed(2)} g</span>
+                </div>
+                <input
+                  type="range"
+                  min="0.2"
+                  max="2.0"
+                  step="0.1"
+                  value={clipWeight}
+                  onChange={(e) => setClipWeight(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                  style={{ zIndex: 10 }}
+                />
+                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                  <span>Small (0.2g)</span>
+                  <span>Large (2.0g)</span>
+                </div>
+              </div>
+
+              {/* Water Temperature Slider */}
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs text-slate-400">Water Temperature</label>
+                  <span className="text-xs font-mono text-amber-300">{waterTemperature}°C</span>
+                </div>
+                <input
+                  type="range"
+                  min="5"
+                  max="80"
+                  step="1"
+                  value={waterTemperature}
+                  onChange={(e) => setWaterTemperature(parseInt(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                  style={{ zIndex: 10 }}
+                />
+                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                  <span>Cold (5°C)</span>
+                  <span>Hot (80°C)</span>
+                </div>
+              </div>
+
+              {/* Toggle Force Vectors */}
+              <button
+                onClick={() => setShowForceVectors(!showForceVectors)}
+                style={{ zIndex: 10 }}
+                className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all ${
+                  showForceVectors ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'
+                }`}
+              >
+                {showForceVectors ? 'Hide Force Vectors' : 'Show Force Vectors'}
+              </button>
+            </div>
+
+            {/* Interactive SVG Visualization */}
+            <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-xl">
+              <svg viewBox="0 0 400 280" className="w-full h-64">
+                {/* Water container */}
+                <rect x="50" y="100" width="300" height="150" fill="#1e40af" rx="8" />
+                <rect x="55" y="105" width="290" height="140" fill="#3b82f6" rx="5" />
+
+                {/* Animated water surface with dimple */}
                 {clipState === 'floating' && (
-                  <path
-                    d={`M 55,105 Q 150,105 ${200 - dimpleDepth * 3},${105 + dimpleDepth} Q ${200 + dimpleDepth * 3},105 345,105`}
-                    fill="#60a5fa"
-                    opacity="0.6"
-                  />
+                  <>
+                    {/* Surface dimple visualization */}
+                    <path
+                      d={`M 55,105
+                          Q 120,105 ${170 - dimpleDepth * 2},${105 + dimpleDepth * 0.5}
+                          Q 200,${105 + dimpleDepth * 1.5} ${230 + dimpleDepth * 2},${105 + dimpleDepth * 0.5}
+                          Q 280,105 345,105`}
+                      fill="#60a5fa"
+                      opacity="0.7"
+                    />
+                    {/* Animated ripples */}
+                    <ellipse
+                      cx="200"
+                      cy="105"
+                      rx={50 + Math.sin(animationFrame * 0.2) * 5}
+                      ry={3 + Math.sin(animationFrame * 0.2) * 1}
+                      fill="none"
+                      stroke="#93c5fd"
+                      strokeWidth="0.5"
+                      opacity={0.5 - (animationFrame % 30) / 60}
+                    />
+                  </>
                 )}
 
+                {/* Paperclip */}
                 <g transform={`translate(170, ${clipY})`}>
                   <path
                     d="M 5,5 L 5,15 Q 5,20 10,20 L 50,20 Q 55,20 55,15 L 55,5 Q 55,0 50,0 L 15,0 Q 10,0 10,5 L 10,12"
                     fill="none"
-                    stroke="#64748b"
-                    strokeWidth="3"
+                    stroke="#94a3b8"
+                    strokeWidth={3 + clipWeight * 0.5}
                     strokeLinecap="round"
                   />
+                  {/* Highlight */}
+                  <path d="M 8,3 L 12,3" fill="none" stroke="#e2e8f0" strokeWidth="1.5" strokeLinecap="round" />
                 </g>
+
+                {/* Force Vectors (when floating) */}
+                {showForceVectors && clipState === 'floating' && (
+                  <g>
+                    {/* Weight force (down) */}
+                    <defs>
+                      <marker id="arrowRed" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                        <path d="M0,0 L6,3 L0,6 Z" fill="#ef4444" />
+                      </marker>
+                      <marker id="arrowGreen" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                        <path d="M0,0 L6,3 L0,6 Z" fill="#22c55e" />
+                      </marker>
+                    </defs>
+
+                    {/* Weight arrow */}
+                    <line
+                      x1="200" y1={clipY + 25}
+                      x2="200" y2={clipY + 25 + weightForceN * 300}
+                      stroke="#ef4444"
+                      strokeWidth="3"
+                      markerEnd="url(#arrowRed)"
+                    />
+                    <text x="215" y={clipY + 40} fill="#ef4444" fontSize="10" fontWeight="bold">W</text>
+
+                    {/* Surface tension forces (up and outward) */}
+                    {/* Left force */}
+                    <line
+                      x1="175" y1={clipY + 20}
+                      x2={175 - surfaceForceN * 200} y2={clipY + 20 - surfaceForceN * 300}
+                      stroke="#22c55e"
+                      strokeWidth="2"
+                      markerEnd="url(#arrowGreen)"
+                    />
+                    {/* Right force */}
+                    <line
+                      x1="225" y1={clipY + 20}
+                      x2={225 + surfaceForceN * 200} y2={clipY + 20 - surfaceForceN * 300}
+                      stroke="#22c55e"
+                      strokeWidth="2"
+                      markerEnd="url(#arrowGreen)"
+                    />
+
+                    {/* Force labels */}
+                    <text x="130" y={clipY - 5} fill="#22c55e" fontSize="9">F = {(surfaceForceN * 1000).toFixed(2)} mN</text>
+                    <text x="240" y={clipY - 5} fill="#22c55e" fontSize="9">F = {(surfaceForceN * 1000).toFixed(2)} mN</text>
+
+                    {/* Contact angle arc */}
+                    <path
+                      d={`M 175,${clipY + 20} A 15 15 0 0 1 ${175 - 10},${clipY + 10}`}
+                      fill="none"
+                      stroke="#fbbf24"
+                      strokeWidth="1"
+                      strokeDasharray="2,2"
+                    />
+                    <text x="150" y={clipY + 15} fill="#fbbf24" fontSize="8">θ={contactAngle}°</text>
+                  </g>
+                )}
+
+                {/* Critical Point Warning */}
+                {criticalPoint && !hasDropped && (
+                  <g>
+                    <rect x="120" y="60" width="160" height="25" fill="#ef4444" opacity="0.2" rx="4" />
+                    <text x="200" y="77" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">
+                      CRITICAL: Will sink with these settings!
+                    </text>
+                  </g>
+                )}
 
                 {clipState === 'floating' && (
                   <text x="200" y="75" textAnchor="middle" fill="#22c55e" fontSize="14" fontWeight="bold">
-                    It floats!
+                    It floats! (Force ratio: {forceRatio.toFixed(2)})
                   </text>
                 )}
 
                 {clipState === 'sinking' && clipY > 100 && (
                   <text x="200" y="75" textAnchor="middle" fill="#ef4444" fontSize="14" fontWeight="bold">
-                    It sinks!
+                    It sinks! Surface tension insufficient
                   </text>
                 )}
+
+                {/* Physics formula display */}
+                <rect x="55" y="220" width="290" height="35" fill="#1e293b" rx="4" />
+                <text x="200" y="238" textAnchor="middle" fill="#94a3b8" fontSize="10">
+                  F = γ × L × cos(θ) = {effectiveGamma.toFixed(3)} × 0.08 × cos({contactAngle}°)
+                </text>
+                <text x="200" y="250" textAnchor="middle" fill={willFloat ? '#22c55e' : '#ef4444'} fontSize="10" fontWeight="bold">
+                  = {(surfaceForceN * 1000).toFixed(2)} mN {willFloat ? '≥' : '<'} {(weightForceN * 1000).toFixed(2)} mN (Weight)
+                </text>
               </svg>
             </div>
 
+            {/* Drop Method Selection */}
             {!hasDropped && (
               <div className="flex gap-3 mb-4">
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); setDropMethod('gentle'); }}
+                  onClick={() => setDropMethod('gentle')}
+                  style={{ zIndex: 10 }}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     dropMethod === 'gentle' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'
                   }`}
@@ -479,7 +724,8 @@ export default function FloatingPaperclipRenderer({
                   Gentle Place
                 </button>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); setDropMethod('dropped'); }}
+                  onClick={() => setDropMethod('dropped')}
+                  style={{ zIndex: 10 }}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     dropMethod === 'dropped' ? 'bg-red-600 text-white' : 'bg-slate-700 text-slate-300'
                   }`}
@@ -492,14 +738,16 @@ export default function FloatingPaperclipRenderer({
             <div className="flex gap-3 mb-4">
               {!hasDropped ? (
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); dropClip(); }}
+                  onClick={() => dropClip()}
+                  style={{ zIndex: 10 }}
                   className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
                 >
                   {dropMethod === 'gentle' ? 'Place Gently' : 'Drop!'}
                 </button>
               ) : (
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); resetSimulation(); }}
+                  onClick={() => resetSimulation()}
+                  style={{ zIndex: 10 }}
                   className="px-6 py-3 bg-slate-700 text-white font-semibold rounded-xl"
                 >
                   Reset
@@ -509,8 +757,7 @@ export default function FloatingPaperclipRenderer({
 
             {hasDropped && (clipState === 'floating' || clipY > 150) && !showResult && (
               <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
+                onClick={() => {
                   setShowResult(true);
                   if (prediction === 'b') {
                     onCorrectAnswer?.();
@@ -518,6 +765,7 @@ export default function FloatingPaperclipRenderer({
                     onIncorrectAnswer?.();
                   }
                 }}
+                style={{ zIndex: 10 }}
                 className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
               >
                 See Results
@@ -535,7 +783,8 @@ export default function FloatingPaperclipRenderer({
                   8× denser than water.
                 </p>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); goToPhase('review'); }}
+                  onClick={() => goToPhase('review')}
+                  style={{ zIndex: 10 }}
                   className="mt-4 px-6 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
                 >
                   Learn the Physics
@@ -595,7 +844,8 @@ export default function FloatingPaperclipRenderer({
             </div>
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase('twist_predict'); }}
+              onClick={() => goToPhase('twist_predict')}
+              style={{ zIndex: 10 }}
               className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
             >
               Try a Twist!
@@ -620,7 +870,8 @@ export default function FloatingPaperclipRenderer({
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(opt.id); }}
+                  onClick={() => handleTwistPrediction(opt.id)}
+                  style={{ zIndex: 10 }}
                   className={`p-4 rounded-xl border-2 transition-all text-left ${
                     twistPrediction === opt.id
                       ? 'border-amber-500 bg-amber-500/20'
@@ -634,7 +885,8 @@ export default function FloatingPaperclipRenderer({
 
             {twistPrediction && (
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase('twist_play'); }}
+                onClick={() => goToPhase('twist_play')}
+                style={{ zIndex: 10 }}
                 className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
               >
                 Add the Soap!
@@ -644,60 +896,272 @@ export default function FloatingPaperclipRenderer({
         );
 
       case 'twist_play':
+        const twistEffectiveGamma = liquidProperties[selectedLiquid].gamma * (1 - soapAmount / 100 * 0.65);
+        const twistWillFloat = twistEffectiveGamma * 0.08 * Math.cos(contactAngle * Math.PI / 180) >= (clipWeight / 1000) * 9.81;
+        const liquidColor = liquidProperties[selectedLiquid].color;
+
         return (
           <div className="flex flex-col items-center p-6">
-            <h2 className="text-2xl font-bold text-amber-400 mb-4">The Soap Experiment</h2>
-            <p className="text-slate-400 mb-4">The paperclip is floating. Add soap to see what happens!</p>
+            <h2 className="text-2xl font-bold text-amber-400 mb-4">Surface Tension Laboratory</h2>
+            <p className="text-slate-400 mb-4">Explore how soap and different liquids affect surface tension</p>
 
-            <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
-              <svg viewBox="0 0 400 220" className="w-full h-52">
-                <rect x="50" y="80" width="300" height="120" fill="#1e40af" rx="8" />
-                <rect x="55" y="85" width="290" height="110" fill={soapAdded ? '#a855f7' : '#3b82f6'} style={{ transition: 'fill 1s' }} rx="5" />
+            {/* Interactive Controls for Twist Phase */}
+            <div className="bg-slate-800/60 rounded-2xl p-4 mb-4 w-full max-w-xl border border-amber-500/30">
+              <h3 className="text-sm font-semibold text-amber-400 mb-3">Experiment Variables</h3>
 
+              {/* Soap/Detergent Slider */}
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs text-slate-400">Soap/Detergent Amount</label>
+                  <span className="text-xs font-mono text-purple-300">{soapAmount}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="100"
+                  step="5"
+                  value={soapAmount}
+                  onChange={(e) => {
+                    const newAmount = parseInt(e.target.value);
+                    setSoapAmount(newAmount);
+                    if (newAmount > 30 && twistClipState === 'floating') {
+                      setSoapAdded(true);
+                      setTwistClipState('sinking');
+                      playSound('click');
+                      let y = twistClipY;
+                      const interval = setInterval(() => {
+                        y += 3;
+                        setTwistClipY(Math.min(y, 180));
+                        if (y >= 180) {
+                          clearInterval(interval);
+                          setTwistClipState('sunk');
+                          playSound('failure');
+                        }
+                      }, 40);
+                    }
+                  }}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                  style={{ zIndex: 10 }}
+                />
+                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                  <span>None</span>
+                  <span>Max detergent</span>
+                </div>
+                <p className="text-xs text-purple-400 mt-1">
+                  Effective γ: {twistEffectiveGamma.toFixed(3)} N/m ({((1 - twistEffectiveGamma / liquidProperties[selectedLiquid].gamma) * 100).toFixed(0)}% reduction)
+                </p>
+              </div>
+
+              {/* Liquid Selection */}
+              <div className="mb-4">
+                <label className="text-xs text-slate-400 block mb-2">Compare Different Liquids</label>
+                <div className="flex gap-2">
+                  {(Object.keys(liquidProperties) as Array<'water' | 'oil' | 'alcohol'>).map((liquid) => (
+                    <button
+                      key={liquid}
+                      onClick={() => {
+                        setSelectedLiquid(liquid);
+                        resetTwist();
+                      }}
+                      style={{ zIndex: 10 }}
+                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex flex-col items-center ${
+                        selectedLiquid === liquid
+                          ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white'
+                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                      }`}
+                    >
+                      <span className="capitalize">{liquidProperties[liquid].name}</span>
+                      <span className="text-xs opacity-70">γ = {liquidProperties[liquid].gamma}</span>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Contact Angle Slider */}
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-1">
+                  <label className="text-xs text-slate-400">Contact Angle (θ)</label>
+                  <span className="text-xs font-mono text-amber-300">{contactAngle}°</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="90"
+                  step="5"
+                  value={contactAngle}
+                  onChange={(e) => setContactAngle(parseInt(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                  style={{ zIndex: 10 }}
+                />
+                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                  <span>0° (Flat)</span>
+                  <span>90° (Steep)</span>
+                </div>
+                <p className="text-xs text-amber-400 mt-1">
+                  cos(θ) = {Math.cos(contactAngle * Math.PI / 180).toFixed(3)} — affects vertical force component
+                </p>
+              </div>
+
+              {/* Float Prediction Display */}
+              <div className={`p-2 rounded-lg text-center ${twistWillFloat ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-red-500/20 border border-red-500/30'}`}>
+                <p className={`text-sm font-semibold ${twistWillFloat ? 'text-emerald-400' : 'text-red-400'}`}>
+                  {twistWillFloat ? 'Paperclip WILL float' : 'Paperclip WILL SINK'}
+                </p>
+              </div>
+            </div>
+
+            {/* Animated SVG Visualization */}
+            <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-xl">
+              <svg viewBox="0 0 400 280" className="w-full h-60">
+                {/* Container */}
+                <rect x="50" y="80" width="300" height="160" fill="#1e40af" rx="8" />
+                <rect
+                  x="55"
+                  y="85"
+                  width="290"
+                  height="150"
+                  fill={soapAmount > 0 ? `${liquidColor}88` : liquidColor}
+                  style={{ transition: 'fill 0.5s' }}
+                  rx="5"
+                />
+
+                {/* Liquid label */}
+                <text x="320" y="130" fill="white" fontSize="10" fontWeight="bold" opacity="0.7">
+                  {liquidProperties[selectedLiquid].name}
+                </text>
+
+                {/* Surface dimple when floating */}
                 {twistClipState === 'floating' && (
-                  <path d="M 55,85 Q 150,85 200,92 Q 250,85 345,85" fill="#60a5fa" opacity="0.5" />
+                  <>
+                    <path
+                      d={`M 55,85 Q 140,85 ${180 - 10},${85 + 8} Q 200,${85 + 12} ${220 + 10},${85 + 8} Q 260,85 345,85`}
+                      fill={`${liquidColor}aa`}
+                      style={{ transition: 'all 0.3s' }}
+                    />
+                    {/* Contact angle visualization */}
+                    <line
+                      x1="175" y1="93"
+                      x2={175 - 20 * Math.cos(contactAngle * Math.PI / 180)}
+                      y2={93 - 20 * Math.sin(contactAngle * Math.PI / 180)}
+                      stroke="#fbbf24"
+                      strokeWidth="1.5"
+                      strokeDasharray="3,3"
+                    />
+                    <path
+                      d={`M 175,93 A 10 10 0 0 1 ${175 - 8},${88}`}
+                      fill="none"
+                      stroke="#fbbf24"
+                      strokeWidth="1"
+                    />
+                    <text x="155" y="80" fill="#fbbf24" fontSize="9">θ={contactAngle}°</text>
+                  </>
                 )}
 
+                {/* Soap bubbles animation */}
+                {soapAmount > 0 && (
+                  <g>
+                    {Array.from({ length: Math.floor(soapAmount / 20) }).map((_, i) => (
+                      <circle
+                        key={i}
+                        cx={100 + i * 60 + Math.sin(animationFrame * 0.1 + i) * 10}
+                        cy={150 + Math.cos(animationFrame * 0.15 + i * 2) * 20}
+                        r={3 + i}
+                        fill="white"
+                        opacity={0.2 + (i * 0.1)}
+                      />
+                    ))}
+                  </g>
+                )}
+
+                {/* Paperclip */}
                 <g transform={`translate(170, ${twistClipY})`}>
                   <path
                     d="M 5,5 L 5,15 Q 5,20 10,20 L 50,20 Q 55,20 55,15 L 55,5 Q 55,0 50,0 L 15,0 Q 10,0 10,5 L 10,12"
                     fill="none"
-                    stroke="#64748b"
+                    stroke="#94a3b8"
                     strokeWidth="3"
                     strokeLinecap="round"
                   />
+                  <path d="M 8,3 L 12,3" fill="none" stroke="#e2e8f0" strokeWidth="1.5" strokeLinecap="round" />
                 </g>
 
-                {!soapAdded && (
-                  <g transform="translate(50, 10)" style={{ cursor: 'pointer' }} onMouseDown={addSoapToWater}>
-                    <rect x="10" y="15" width="35" height="50" fill="#a855f7" rx="5" />
-                    <rect x="15" y="0" width="25" height="20" fill="#7c3aed" rx="3" />
-                    <text x="27" y="45" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">SOAP</text>
-                    <text x="27" y="80" textAnchor="middle" fill="#94a3b8" fontSize="10">Click to add!</text>
+                {/* Force vectors when floating */}
+                {twistClipState === 'floating' && showForceVectors && (
+                  <g>
+                    <defs>
+                      <marker id="arrowRedTwist" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                        <path d="M0,0 L6,3 L0,6 Z" fill="#ef4444" />
+                      </marker>
+                      <marker id="arrowGreenTwist" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+                        <path d="M0,0 L6,3 L0,6 Z" fill="#22c55e" />
+                      </marker>
+                    </defs>
+                    {/* Weight */}
+                    <line x1="200" y1="85" x2="200" y2="115" stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrowRedTwist)" />
+                    <text x="208" y="105" fill="#ef4444" fontSize="9">W</text>
+                    {/* Surface tension */}
+                    <line x1="175" y1="85" x2="155" y2="65" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowGreenTwist)" />
+                    <line x1="225" y1="85" x2="245" y2="65" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowGreenTwist)" />
                   </g>
                 )}
 
+                {/* Status text */}
                 {twistClipState === 'sunk' && (
                   <text x="200" y="60" textAnchor="middle" fill="#ef4444" fontSize="14" fontWeight="bold">
-                    SUNK!
+                    SUNK! Surface tension broken
                   </text>
                 )}
+
+                {twistClipState === 'floating' && (
+                  <text x="200" y="60" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">
+                    Floating on {liquidProperties[selectedLiquid].name}
+                  </text>
+                )}
+
+                {/* Physics display */}
+                <rect x="55" y="220" width="290" height="40" fill="#1e293b" rx="4" />
+                <text x="200" y="237" textAnchor="middle" fill="#94a3b8" fontSize="10">
+                  Effective γ = {twistEffectiveGamma.toFixed(3)} N/m (Soap reduces by {(soapAmount * 0.65).toFixed(0)}%)
+                </text>
+                <text x="200" y="252" textAnchor="middle" fill={twistWillFloat ? '#22c55e' : '#ef4444'} fontSize="10" fontWeight="bold">
+                  F_surface = {(twistEffectiveGamma * 0.08 * Math.cos(contactAngle * Math.PI / 180) * 1000).toFixed(2)} mN
+                  {twistWillFloat ? ' ≥ ' : ' < '}
+                  {((clipWeight / 1000) * 9.81 * 1000).toFixed(2)} mN (Weight)
+                </text>
               </svg>
             </div>
 
-            {soapAdded && (
-              <button
-                onMouseDown={(e) => { e.preventDefault(); resetTwist(); }}
-                className="px-6 py-2 bg-slate-700 text-white font-semibold rounded-xl mb-4"
-              >
-                Reset
-              </button>
+            {/* Soap bottle click area (traditional method) */}
+            {!soapAdded && soapAmount === 0 && (
+              <p className="text-slate-500 text-sm mb-4">
+                Use the slider above OR click the soap bottle in the visualization to add soap
+              </p>
             )}
+
+            {/* Action buttons */}
+            <div className="flex gap-3 mb-4">
+              <button
+                onClick={() => resetTwist()}
+                style={{ zIndex: 10 }}
+                className="px-6 py-2 bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-600 transition-all"
+              >
+                Reset Experiment
+              </button>
+
+              <button
+                onClick={() => setShowForceVectors(!showForceVectors)}
+                style={{ zIndex: 10 }}
+                className={`px-4 py-2 rounded-xl font-medium transition-all ${
+                  showForceVectors ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'
+                }`}
+              >
+                {showForceVectors ? 'Hide Forces' : 'Show Forces'}
+              </button>
+            </div>
 
             {twistClipState === 'sunk' && !showTwistResult && (
               <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
+                onClick={() => {
                   setShowTwistResult(true);
                   if (twistPrediction === 'c') {
                     onCorrectAnswer?.();
@@ -705,6 +1169,7 @@ export default function FloatingPaperclipRenderer({
                     onIncorrectAnswer?.();
                   }
                 }}
+                style={{ zIndex: 10 }}
                 className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
               >
                 See Results
@@ -718,10 +1183,13 @@ export default function FloatingPaperclipRenderer({
                 </p>
                 <p className="text-slate-300 text-sm mt-2">
                   The paperclip <strong>sinks immediately</strong>! Soap is a surfactant that
-                  breaks the hydrogen bonds creating surface tension.
+                  breaks the hydrogen bonds creating surface tension. Different liquids have
+                  different base surface tensions — alcohol has the lowest, which is why it
+                  evaporates quickly and spreads easily.
                 </p>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); goToPhase('twist_review'); }}
+                  onClick={() => goToPhase('twist_review')}
+                  style={{ zIndex: 10 }}
                   className="mt-4 px-6 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
                 >
                   Understand Why
@@ -759,7 +1227,8 @@ export default function FloatingPaperclipRenderer({
             </div>
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase('transfer'); }}
+              onClick={() => goToPhase('transfer')}
+              style={{ zIndex: 10 }}
               className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
             >
               See Real Applications
@@ -777,11 +1246,11 @@ export default function FloatingPaperclipRenderer({
               {applications.map((app, index) => (
                 <button
                   key={index}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     setCompletedApps(prev => new Set([...prev, index]));
                     playSound('complete');
                   }}
+                  style={{ zIndex: 10 }}
                   className={`p-4 rounded-xl text-center transition-all ${
                     completedApps.has(index)
                       ? 'bg-emerald-500/20 border-2 border-emerald-500'
@@ -799,7 +1268,8 @@ export default function FloatingPaperclipRenderer({
 
             {completedApps.size >= applications.length && (
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase('test'); }}
+                onClick={() => goToPhase('test')}
+                style={{ zIndex: 10 }}
                 className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
               >
                 Take the Test
@@ -825,19 +1295,20 @@ export default function FloatingPaperclipRenderer({
 
               {score >= 7 ? (
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); goToPhase('mastery'); }}
+                  onClick={() => goToPhase('mastery')}
+                  style={{ zIndex: 10 }}
                   className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
                 >
                   Complete Journey
                 </button>
               ) : (
                 <button
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     setTestSubmitted(false);
                     setTestAnswers({});
                     goToPhase('review');
                   }}
+                  style={{ zIndex: 10 }}
                   className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
                 >
                   Review & Try Again
@@ -859,7 +1330,8 @@ export default function FloatingPaperclipRenderer({
                     {tq.options.map((opt, oi) => (
                       <button
                         key={oi}
-                        onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qi, oi); }}
+                        onClick={() => handleTestAnswer(qi, oi)}
+                        style={{ zIndex: 10 }}
                         className={`p-2 rounded-lg text-left text-sm transition-all ${
                           testAnswers[qi] === oi ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
                         }`}
@@ -873,8 +1345,9 @@ export default function FloatingPaperclipRenderer({
             </div>
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); submitTest(); }}
+              onClick={() => submitTest()}
               disabled={Object.keys(testAnswers).length < testQuestions.length}
+              style={{ zIndex: 10 }}
               className={`px-6 py-3 rounded-xl font-semibold ${
                 Object.keys(testAnswers).length < testQuestions.length
                   ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
@@ -926,11 +1399,11 @@ export default function FloatingPaperclipRenderer({
               </div>
 
               <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
+                onClick={() => {
                   onPhaseComplete?.();
                   playSound('complete');
                 }}
+                style={{ zIndex: 10 }}
                 className="px-8 py-4 bg-gradient-to-r from-blue-500 to-cyan-600 text-white font-bold text-lg rounded-xl"
               >
                 Complete Lesson
@@ -962,7 +1435,8 @@ export default function FloatingPaperclipRenderer({
             {phaseOrder.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'

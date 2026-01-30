@@ -162,6 +162,18 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
   const [showGrid, setShowGrid] = useState(true);
   const [touchMode, setTouchMode] = useState<'finger' | 'glove' | 'capacitiveGlove'>('finger');
 
+  // Interactive slider states for play phase
+  const [fingerDistance, setFingerDistance] = useState(5); // 0 to 10mm
+  const [dielectricConstant, setDielectricConstant] = useState(3.9); // Glass ~3.9, Air ~1
+  const [electrodeSpacing, setElectrodeSpacing] = useState(2); // 1 to 5mm
+  const [touchThreshold] = useState(0.5); // Detection threshold (normalized)
+
+  // Multi-touch simulation states for twist_play phase
+  const [multiTouchPoints, setMultiTouchPoints] = useState<{x: number; y: number; id: number}[]>([]);
+  const [gestureMode, setGestureMode] = useState<'single' | 'pinch' | 'spread' | 'rotate'>('single');
+  const [pinchScale, setPinchScale] = useState(1);
+  const [rotationAngle, setRotationAngle] = useState(0);
+
   const lastClickRef = useRef(0);
   const svgRef = useRef<SVGSVGElement>(null);
 
@@ -527,34 +539,244 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
     );
   }
 
+  // Calculate capacitance based on C = εA/d formula
+  const calculateCapacitance = (distance: number, dielectric: number, spacing: number) => {
+    // Normalize values for visualization
+    const baseArea = 1 / spacing; // Smaller spacing = larger effective area
+    const capacitance = (dielectric * baseArea) / Math.max(distance, 0.1);
+    return Math.min(capacitance, 10); // Cap at 10 for visualization
+  };
+
+  const currentCapacitance = calculateCapacitance(fingerDistance, dielectricConstant, electrodeSpacing);
+  const isDetected = currentCapacitance > touchThreshold * 10;
+
+  // Render interactive capacitance visualization SVG
+  const renderCapacitanceVisualization = () => {
+    const normalizedCapacitance = Math.min(currentCapacitance / 10, 1);
+    const fingerY = 30 + (fingerDistance / 10) * 80; // Finger position based on distance
+    const fieldIntensity = isDetected ? normalizedCapacitance : 0.1;
+
+    return (
+      <svg viewBox="0 0 400 200" className="w-full h-48">
+        <defs>
+          <linearGradient id="electrodeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#1d4ed8" />
+          </linearGradient>
+          <linearGradient id="fieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity={fieldIntensity} />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity={fieldIntensity * 0.3} />
+          </linearGradient>
+        </defs>
+
+        {/* Background */}
+        <rect width="400" height="200" fill="#111827" rx="8" />
+
+        {/* Glass layer */}
+        <rect x="50" y="130" width="300" height="20" fill="rgba(147, 197, 253, 0.3)" stroke="#93c5fd" strokeWidth="1" />
+        <text x="200" y="145" textAnchor="middle" className="fill-blue-300 text-xs">Glass (ε = {dielectricConstant.toFixed(1)})</text>
+
+        {/* Electrode grid */}
+        <rect x="50" y="150" width="300" height="10" fill="url(#electrodeGrad)" />
+        <text x="200" y="175" textAnchor="middle" className="fill-blue-400 text-xs">Electrode Grid (spacing: {electrodeSpacing}mm)</text>
+
+        {/* Electric field lines - dynamic based on distance */}
+        {isDetected && [...Array(7)].map((_, i) => {
+          const startX = 120 + i * 25;
+          const endX = startX + (Math.random() - 0.5) * 10;
+          return (
+            <g key={i}>
+              <path
+                d={`M ${startX} 130 Q ${(startX + endX) / 2} ${(fingerY + 130) / 2} ${endX} ${fingerY + 20}`}
+                fill="none"
+                stroke="#22c55e"
+                strokeWidth={2 * fieldIntensity}
+                strokeDasharray="4,2"
+                opacity={fieldIntensity}
+                className="animate-pulse"
+              />
+              {/* Field arrows */}
+              <circle cx={endX} cy={fingerY + 20} r={3 * fieldIntensity} fill="#22c55e" opacity={fieldIntensity} />
+            </g>
+          );
+        })}
+
+        {/* Finger representation */}
+        <ellipse
+          cx="200"
+          cy={fingerY}
+          rx="30"
+          ry="20"
+          fill="#fca5a5"
+          stroke={isDetected ? "#22c55e" : "#ef4444"}
+          strokeWidth="3"
+        />
+        <text x="200" y={fingerY + 5} textAnchor="middle" className="fill-gray-800 text-xs font-bold">Finger</text>
+
+        {/* Distance indicator */}
+        <line x1="240" y1={fingerY + 20} x2="240" y2="130" stroke="#fbbf24" strokeWidth="2" strokeDasharray="4,4" />
+        <text x="260" y={(fingerY + 130) / 2 + 10} className="fill-yellow-400 text-xs">{fingerDistance}mm</text>
+
+        {/* Capacitance meter */}
+        <rect x="320" y="20" width="60" height="100" rx="4" fill="#1f2937" stroke="#4b5563" />
+        <text x="350" y="35" textAnchor="middle" className="fill-gray-400 text-xs">C</text>
+        <rect
+          x="330"
+          y={110 - normalizedCapacitance * 70}
+          width="40"
+          height={normalizedCapacitance * 70}
+          fill={isDetected ? "#22c55e" : "#4b5563"}
+          rx="2"
+        />
+        {/* Threshold line */}
+        <line x1="325" y1={110 - touchThreshold * 70} x2="375" y2={110 - touchThreshold * 70} stroke="#f59e0b" strokeWidth="2" strokeDasharray="3,3" />
+        <text x="350" y={105 - touchThreshold * 70} textAnchor="middle" className="fill-amber-400 text-xs">Threshold</text>
+
+        {/* Detection status */}
+        <rect
+          x="320"
+          y="125"
+          width="60"
+          height="20"
+          rx="4"
+          fill={isDetected ? "#22c55e" : "#ef4444"}
+        />
+        <text x="350" y="139" textAnchor="middle" className="fill-white text-xs font-bold">
+          {isDetected ? "DETECTED" : "NO SIGNAL"}
+        </text>
+
+        {/* Formula display */}
+        <text x="50" y="20" className="fill-cyan-400 text-xs font-mono">C = εA/d</text>
+        <text x="50" y="35" className="fill-gray-400 text-xs">Capacitance: {currentCapacitance.toFixed(2)} (norm)</text>
+      </svg>
+    );
+  };
+
   // PLAY PHASE
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center p-6">
-            <h2 className="text-2xl font-bold text-white mb-4">Capacitive Touch Grid</h2>
-            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
+            <h2 className="text-2xl font-bold text-white mb-4">Capacitive Touch Simulator</h2>
+
+            {/* Interactive Visualization */}
+            <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
+              {renderCapacitanceVisualization()}
+            </div>
+
+            {/* Range Sliders */}
+            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl space-y-6">
+              <h3 className="text-lg font-semibold text-cyan-400 mb-4">Adjust Parameters</h3>
+
+              {/* Finger Distance Slider */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-slate-300 font-medium">Finger Distance from Screen</label>
+                  <span className="text-cyan-400 font-mono">{fingerDistance.toFixed(1)} mm</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="10"
+                  step="0.1"
+                  value={fingerDistance}
+                  onChange={(e) => setFingerDistance(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
+                  style={{ zIndex: 10 }}
+                />
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>0mm (touching)</span>
+                  <span>10mm (far)</span>
+                </div>
+              </div>
+
+              {/* Dielectric Constant Slider */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-slate-300 font-medium">Dielectric Constant (ε)</label>
+                  <span className="text-cyan-400 font-mono">ε = {dielectricConstant.toFixed(1)}</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="10"
+                  step="0.1"
+                  value={dielectricConstant}
+                  onChange={(e) => setDielectricConstant(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                  style={{ zIndex: 10 }}
+                />
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>1.0 (Air)</span>
+                  <span>3.9 (Glass)</span>
+                  <span>10.0 (High-k)</span>
+                </div>
+              </div>
+
+              {/* Electrode Spacing Slider */}
+              <div className="space-y-2">
+                <div className="flex justify-between items-center">
+                  <label className="text-slate-300 font-medium">Electrode Spacing</label>
+                  <span className="text-cyan-400 font-mono">{electrodeSpacing.toFixed(1)} mm</span>
+                </div>
+                <input
+                  type="range"
+                  min="1"
+                  max="5"
+                  step="0.1"
+                  value={electrodeSpacing}
+                  onChange={(e) => setElectrodeSpacing(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                  style={{ zIndex: 10 }}
+                />
+                <div className="flex justify-between text-xs text-slate-500">
+                  <span>1mm (dense)</span>
+                  <span>5mm (sparse)</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Touch Grid Demo */}
+            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
+              <h3 className="text-lg font-semibold text-cyan-400 mb-4">Touch Grid Demo</h3>
               {renderTouchScreen(isFingerMode ? 'finger' : 'glove', touchPoints)}
             </div>
+
+            {/* Control Buttons */}
             <div className="flex justify-center gap-4 mb-6">
               <button
-                onMouseDown={(e) => { e.preventDefault(); setIsFingerMode(true); setTouchPoints([]); }}
+                onClick={() => { setIsFingerMode(true); setTouchPoints([]); }}
+                style={{ zIndex: 10 }}
                 className={`px-4 py-2 rounded-lg font-bold ${isFingerMode ? 'bg-cyan-600 text-white' : 'bg-slate-600 text-slate-300'}`}
               >
                 Bare Finger
               </button>
               <button
-                onMouseDown={(e) => { e.preventDefault(); setShowGrid(!showGrid); }}
+                onClick={() => setShowGrid(!showGrid)}
+                style={{ zIndex: 10 }}
                 className={`px-4 py-2 rounded-lg font-bold ${showGrid ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300'}`}
               >
                 {showGrid ? 'Hide' : 'Show'} Grid
               </button>
+              <button
+                onClick={() => { setFingerDistance(5); setDielectricConstant(3.9); setElectrodeSpacing(2); }}
+                style={{ zIndex: 10 }}
+                className="px-4 py-2 rounded-lg font-bold bg-amber-600 text-white"
+              >
+                Reset Values
+              </button>
             </div>
+
+            {/* Physics Explanation */}
             <div className="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
               <p className="text-slate-300 text-center">
-                Your conductive finger acts as a capacitor plate!
-                The screen measures capacitance changes at each grid intersection.
+                <span className="text-cyan-400 font-bold">C = εA/d</span> - Capacitance increases when:
+                dielectric constant (ε) increases, electrode area (A) increases, or distance (d) decreases.
+                {isDetected ?
+                  <span className="text-green-400 block mt-2">Touch detected! Capacitance exceeds threshold.</span> :
+                  <span className="text-red-400 block mt-2">Move finger closer to trigger detection.</span>
+                }
               </p>
             </div>
           </div>
@@ -612,6 +834,212 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
     );
   }
 
+  // Handle adding/removing multi-touch points in grid
+  const handleGridClick = (e: React.MouseEvent<SVGSVGElement>) => {
+    if (gestureMode !== 'single') return;
+    const svg = e.currentTarget;
+    const rect = svg.getBoundingClientRect();
+    const x = ((e.clientX - rect.left) / rect.width) * 400;
+    const y = ((e.clientY - rect.top) / rect.height) * 280;
+
+    setMultiTouchPoints(prev => {
+      if (prev.length >= 5) {
+        return [...prev.slice(1), { x, y, id: Date.now() }];
+      }
+      return [...prev, { x, y, id: Date.now() }];
+    });
+  };
+
+  // Render multi-touch capacitance grid visualization
+  const renderMultiTouchGrid = () => {
+    const gridSize = 8;
+    const cellWidth = 400 / gridSize;
+    const cellHeight = 280 / gridSize;
+
+    // Generate multi-touch points based on gesture mode
+    const getGesturePoints = () => {
+      const centerX = 200;
+      const centerY = 140;
+      const baseDistance = 60 * pinchScale;
+
+      switch (gestureMode) {
+        case 'pinch':
+          return [
+            { x: centerX - baseDistance, y: centerY, id: 1 },
+            { x: centerX + baseDistance, y: centerY, id: 2 }
+          ];
+        case 'spread':
+          return [
+            { x: centerX - baseDistance * 1.5, y: centerY - baseDistance * 0.5, id: 1 },
+            { x: centerX + baseDistance * 1.5, y: centerY + baseDistance * 0.5, id: 2 }
+          ];
+        case 'rotate':
+          const angle1 = rotationAngle * Math.PI / 180;
+          const angle2 = angle1 + Math.PI;
+          return [
+            { x: centerX + Math.cos(angle1) * 70, y: centerY + Math.sin(angle1) * 70, id: 1 },
+            { x: centerX + Math.cos(angle2) * 70, y: centerY + Math.sin(angle2) * 70, id: 2 }
+          ];
+        default:
+          return multiTouchPoints.length > 0 ? multiTouchPoints : [{ x: centerX, y: centerY, id: 1 }];
+      }
+    };
+
+    const activePoints = gestureMode === 'single' ? (multiTouchPoints.length > 0 ? multiTouchPoints : []) : getGesturePoints();
+
+    // Calculate capacitance grid values based on touch points
+    const getGridCapacitance = (gridX: number, gridY: number) => {
+      let totalCapacitance = 0;
+      activePoints.forEach(point => {
+        const dist = Math.sqrt(
+          Math.pow((gridX * cellWidth) - point.x, 2) +
+          Math.pow((gridY * cellHeight) - point.y, 2)
+        );
+        // Capacitance falls off with distance
+        const contribution = Math.max(0, 1 - dist / 80);
+        totalCapacitance += contribution;
+      });
+      return Math.min(totalCapacitance, 1);
+    };
+
+    return (
+      <svg
+        viewBox="0 0 400 280"
+        className="w-full h-64 cursor-pointer touch-none"
+        onClick={handleGridClick}
+        style={{ zIndex: 10 }}
+      >
+        <rect width="400" height="280" fill="#1a1a2e" rx="8" />
+
+        {/* Capacitance Grid Visualization */}
+        {[...Array(gridSize)].map((_, i) =>
+          [...Array(gridSize)].map((_, j) => {
+            const capacitance = getGridCapacitance(i + 0.5, j + 0.5);
+            return (
+              <rect
+                key={`cell-${i}-${j}`}
+                x={i * cellWidth + 2}
+                y={j * cellHeight + 2}
+                width={cellWidth - 4}
+                height={cellHeight - 4}
+                fill={`rgba(59, 130, 246, ${capacitance * 0.8})`}
+                stroke={capacitance > 0.3 ? "#22c55e" : "#4b5563"}
+                strokeWidth={capacitance > 0.3 ? 2 : 1}
+                rx="2"
+              />
+            );
+          })
+        )}
+
+        {/* Grid lines */}
+        {[...Array(gridSize + 1)].map((_, i) => (
+          <g key={`lines-${i}`}>
+            <line x1="0" y1={i * cellHeight} x2="400" y2={i * cellHeight} stroke="#3b82f6" strokeWidth="1" opacity="0.3" />
+            <line x1={i * cellWidth} y1="0" x2={i * cellWidth} y2="280" stroke="#22c55e" strokeWidth="1" opacity="0.3" />
+          </g>
+        ))}
+
+        {/* Touch points */}
+        {activePoints.map((point, idx) => (
+          <g key={`touch-${point.id}`}>
+            {/* Finger ripple effect */}
+            <circle
+              cx={point.x}
+              cy={point.y}
+              r="35"
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth="2"
+              opacity="0.3"
+              className="animate-ping"
+            />
+            {/* Electric field lines */}
+            {[...Array(8)].map((_, i) => {
+              const angle = (i / 8) * Math.PI * 2;
+              return (
+                <line
+                  key={`field-${idx}-${i}`}
+                  x1={point.x}
+                  y1={point.y}
+                  x2={point.x + Math.cos(angle) * 40}
+                  y2={point.y + Math.sin(angle) * 40}
+                  stroke="#22c55e"
+                  strokeWidth="1"
+                  strokeDasharray="4,4"
+                  opacity="0.5"
+                />
+              );
+            })}
+            {/* Finger circle */}
+            <circle
+              cx={point.x}
+              cy={point.y}
+              r="25"
+              fill="rgba(252, 165, 165, 0.8)"
+              stroke="#22c55e"
+              strokeWidth="3"
+            />
+            <text x={point.x} y={point.y + 5} textAnchor="middle" className="fill-gray-800 text-xs font-bold">
+              {idx + 1}
+            </text>
+          </g>
+        ))}
+
+        {/* Gesture indicator */}
+        {gestureMode === 'pinch' && activePoints.length >= 2 && (
+          <g>
+            <line
+              x1={activePoints[0].x}
+              y1={activePoints[0].y}
+              x2={activePoints[1].x}
+              y2={activePoints[1].y}
+              stroke="#fbbf24"
+              strokeWidth="2"
+              strokeDasharray="6,3"
+            />
+            <text x="200" y="30" textAnchor="middle" className="fill-amber-400 text-sm font-bold">
+              Pinch Gesture - Distance: {Math.round(pinchScale * 100)}%
+            </text>
+          </g>
+        )}
+
+        {gestureMode === 'spread' && activePoints.length >= 2 && (
+          <text x="200" y="30" textAnchor="middle" className="fill-green-400 text-sm font-bold">
+            Spread Gesture - Zoom In
+          </text>
+        )}
+
+        {gestureMode === 'rotate' && activePoints.length >= 2 && (
+          <g>
+            <text x="200" y="30" textAnchor="middle" className="fill-purple-400 text-sm font-bold">
+              Rotate Gesture - Angle: {rotationAngle}deg
+            </text>
+            {/* Rotation arc indicator */}
+            <path
+              d={`M 200 140 m -50 0 a 50 50 0 0 1 ${50 + 50 * Math.cos(rotationAngle * Math.PI / 180)} ${-50 * Math.sin(rotationAngle * Math.PI / 180)}`}
+              fill="none"
+              stroke="#a855f7"
+              strokeWidth="2"
+              strokeDasharray="4,2"
+            />
+          </g>
+        )}
+
+        {/* Status display */}
+        <rect x="10" y="250" width="120" height="25" rx="4" fill="#1f2937" opacity="0.9" />
+        <text x="70" y="267" textAnchor="middle" className="fill-cyan-400 text-xs font-bold">
+          Touch Points: {activePoints.length}
+        </text>
+
+        {activePoints.length === 0 && (
+          <text x="200" y="140" textAnchor="middle" className="fill-gray-500 text-sm">
+            Select a gesture or tap to add points
+          </text>
+        )}
+      </svg>
+    );
+  };
+
   // TWIST PREDICT PHASE
   if (phase === 'twist_predict') {
     return (
@@ -667,24 +1095,129 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center p-6">
-            <h2 className="text-2xl font-bold text-amber-400 mb-4">Finger vs Glove vs Touch Glove</h2>
-            <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
+            <h2 className="text-2xl font-bold text-amber-400 mb-4">Multi-Touch & Gesture Recognition</h2>
+
+            {/* Multi-Touch Grid Visualization */}
+            <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
+              <h3 className="text-lg font-semibold text-cyan-400 mb-3">Capacitance Grid Heatmap</h3>
+              {renderMultiTouchGrid()}
+            </div>
+
+            {/* Gesture Mode Selection */}
+            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
+              <h3 className="text-lg font-semibold text-cyan-400 mb-4">Gesture Simulation</h3>
+              <div className="flex flex-wrap justify-center gap-2 mb-4">
+                <button
+                  onClick={() => { setGestureMode('single'); setMultiTouchPoints([]); }}
+                  style={{ zIndex: 10 }}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm ${gestureMode === 'single' ? 'bg-cyan-600 text-white' : 'bg-slate-600 text-slate-300'}`}
+                >
+                  Single Touch
+                </button>
+                <button
+                  onClick={() => { setGestureMode('pinch'); setPinchScale(1); }}
+                  style={{ zIndex: 10 }}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm ${gestureMode === 'pinch' ? 'bg-amber-600 text-white' : 'bg-slate-600 text-slate-300'}`}
+                >
+                  Pinch (Zoom Out)
+                </button>
+                <button
+                  onClick={() => { setGestureMode('spread'); setPinchScale(1.5); }}
+                  style={{ zIndex: 10 }}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm ${gestureMode === 'spread' ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300'}`}
+                >
+                  Spread (Zoom In)
+                </button>
+                <button
+                  onClick={() => { setGestureMode('rotate'); setRotationAngle(0); }}
+                  style={{ zIndex: 10 }}
+                  className={`px-4 py-2 rounded-lg font-bold text-sm ${gestureMode === 'rotate' ? 'bg-purple-600 text-white' : 'bg-slate-600 text-slate-300'}`}
+                >
+                  Rotate
+                </button>
+              </div>
+
+              {/* Gesture-specific sliders */}
+              {gestureMode === 'pinch' && (
+                <div className="space-y-2 mt-4">
+                  <div className="flex justify-between items-center">
+                    <label className="text-slate-300 font-medium">Pinch Distance</label>
+                    <span className="text-amber-400 font-mono">{Math.round(pinchScale * 100)}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0.3"
+                    max="2"
+                    step="0.05"
+                    value={pinchScale}
+                    onChange={(e) => setPinchScale(parseFloat(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                    style={{ zIndex: 10 }}
+                  />
+                  <p className="text-xs text-slate-500 text-center">Move slider to simulate pinch-to-zoom gesture</p>
+                </div>
+              )}
+
+              {gestureMode === 'rotate' && (
+                <div className="space-y-2 mt-4">
+                  <div className="flex justify-between items-center">
+                    <label className="text-slate-300 font-medium">Rotation Angle</label>
+                    <span className="text-purple-400 font-mono">{rotationAngle}°</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="360"
+                    step="5"
+                    value={rotationAngle}
+                    onChange={(e) => setRotationAngle(parseInt(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                    style={{ zIndex: 10 }}
+                  />
+                  <p className="text-xs text-slate-500 text-center">Rotate two fingers to change image orientation</p>
+                </div>
+              )}
+
+              {gestureMode === 'single' && (
+                <div className="mt-4 p-3 bg-slate-700/50 rounded-lg">
+                  <p className="text-slate-300 text-sm text-center">
+                    Click on the grid above to add touch points (up to 5). Each point affects nearby capacitance cells.
+                  </p>
+                  {multiTouchPoints.length > 0 && (
+                    <button
+                      onClick={() => setMultiTouchPoints([])}
+                      style={{ zIndex: 10 }}
+                      className="mt-2 w-full py-2 bg-red-600 text-white rounded-lg font-medium"
+                    >
+                      Clear All Points
+                    </button>
+                  )}
+                </div>
+              )}
+            </div>
+
+            {/* Original Touch Mode Demo */}
+            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
+              <h3 className="text-lg font-semibold text-amber-400 mb-4">Finger vs Glove Comparison</h3>
               {renderTouchScreen(touchMode, touchPoints)}
               <div className="flex justify-center gap-2 mt-6">
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); setTouchMode('finger'); setTouchPoints([]); }}
+                  onClick={() => { setTouchMode('finger'); setTouchPoints([]); }}
+                  style={{ zIndex: 10 }}
                   className={`px-4 py-2 rounded-lg font-bold text-sm ${touchMode === 'finger' ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300'}`}
                 >
                   Bare Finger
                 </button>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); setTouchMode('glove'); setTouchPoints([]); }}
+                  onClick={() => { setTouchMode('glove'); setTouchPoints([]); }}
+                  style={{ zIndex: 10 }}
                   className={`px-4 py-2 rounded-lg font-bold text-sm ${touchMode === 'glove' ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300'}`}
                 >
                   Regular Glove
                 </button>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); setTouchMode('capacitiveGlove'); setTouchPoints([]); }}
+                  onClick={() => { setTouchMode('capacitiveGlove'); setTouchPoints([]); }}
+                  style={{ zIndex: 10 }}
                   className={`px-4 py-2 rounded-lg font-bold text-sm ${touchMode === 'capacitiveGlove' ? 'bg-cyan-600 text-white' : 'bg-slate-600 text-slate-300'}`}
                 >
                   Touch Glove
@@ -697,6 +1230,16 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
                   {touchMode === 'capacitiveGlove' && <><span className="font-bold">Touch Glove:</span> Conductive threads connect your finger to the tip!</>}
                 </p>
               </div>
+            </div>
+
+            {/* How Multi-Touch Works Explanation */}
+            <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
+              <h4 className="text-amber-400 font-bold mb-2">How Multi-Touch Works</h4>
+              <p className="text-slate-300 text-sm">
+                Projected Capacitive Touch (PCT) screens use a grid of X-Y electrodes. When multiple fingers touch,
+                each creates a capacitance change at different grid intersections. The controller scans all intersections
+                rapidly to track each touch point independently, enabling gestures like pinch-to-zoom and rotate.
+              </p>
             </div>
           </div>
         </div>

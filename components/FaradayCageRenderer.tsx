@@ -150,14 +150,24 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
 
-  // Simulation state
+  // Simulation state - Play phase
   const [cageEnabled, setCageEnabled] = useState(false);
+  const [fieldStrength, setFieldStrength] = useState(70);
+  const [meshDensity, setMeshDensity] = useState(50);
+  const [waveFrequency, setWaveFrequency] = useState(50);
   const [signalStrength, setSignalStrength] = useState(100);
-  const [wavePhase, setWavePhase] = useState(0);
-  const [meshSize, setMeshSize] = useState<'small' | 'medium' | 'large'>('small');
-  const [wavelength, setWavelength] = useState<'long' | 'short'>('long');
+  const [hasExperimented, setHasExperimented] = useState(false);
+
+  // Twist play state
+  const [cageShape, setCageShape] = useState<'box' | 'sphere' | 'cylinder'>('box');
+  const [gapSize, setGapSize] = useState<'none' | 'small' | 'large'>('none');
+  const [twistWavelength, setTwistWavelength] = useState(60);
+  const [twistMeshSize, setTwistMeshSize] = useState(10);
+  const [hasTestedTwist, setHasTestedTwist] = useState(false);
 
   const lastClickRef = useRef(0);
+  const animationRef = useRef<number>();
+  const timeRef = useRef(0);
 
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
@@ -186,34 +196,51 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
 
   // Animation effect
   useEffect(() => {
-    const interval = setInterval(() => {
-      setWavePhase(p => (p + 0.1) % (Math.PI * 2));
-    }, 50);
-    return () => clearInterval(interval);
+    const animate = () => {
+      timeRef.current += 0.05;
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animationRef.current = requestAnimationFrame(animate);
+    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, []);
 
-  // Update signal based on cage
+  // Update signal based on cage and parameters
   useEffect(() => {
-    setSignalStrength(cageEnabled ? 5 : 100);
-  }, [cageEnabled]);
+    if (cageEnabled) {
+      const meshEffectiveness = meshDensity / 100;
+      const blockingFactor = meshEffectiveness * 0.95;
+      setSignalStrength(Math.round((1 - blockingFactor) * fieldStrength));
+    } else {
+      setSignalStrength(fieldStrength);
+    }
+  }, [cageEnabled, fieldStrength, meshDensity]);
 
   // Reset when returning to play phase
   useEffect(() => {
     if (phase === 'play') {
       setCageEnabled(false);
-      setSignalStrength(100);
+      setFieldStrength(70);
+      setMeshDensity(50);
+      setWaveFrequency(50);
+      setHasExperimented(false);
     }
     if (phase === 'twist_play') {
-      setMeshSize('small');
-      setWavelength('long');
+      setCageShape('box');
+      setGapSize('none');
+      setTwistWavelength(60);
+      setTwistMeshSize(10);
+      setHasTestedTwist(false);
     }
   }, [phase]);
 
-  const getShieldingEffectiveness = (mesh: 'small' | 'medium' | 'large', wave: 'long' | 'short'): number => {
-    if (mesh === 'small') return 99;
-    if (mesh === 'medium') return wave === 'long' ? 95 : 50;
-    return wave === 'long' ? 80 : 10;
-  };
+  const getShieldingEffectiveness = useCallback((meshSizeMm: number, wavelengthMm: number, gap: 'none' | 'small' | 'large'): number => {
+    if (gap === 'large') return Math.max(10, 100 - (meshSizeMm / wavelengthMm) * 100);
+    if (gap === 'small') return Math.max(40, 100 - (meshSizeMm / wavelengthMm) * 60);
+    if (meshSizeMm < wavelengthMm * 0.1) return 99;
+    if (meshSizeMm < wavelengthMm * 0.5) return 85;
+    if (meshSizeMm < wavelengthMm) return 60;
+    return Math.max(10, 100 - (meshSizeMm / wavelengthMm) * 80);
+  }, []);
 
   const handlePrediction = useCallback((prediction: string) => {
     const now = Date.now();
@@ -265,121 +292,464 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
-  const renderFaradayCage = (cage: boolean, strength: number, animPhase: number) => {
-    const waveAmplitude = 30;
+  // Interactive Faraday Cage visualization with field lines
+  const renderInteractiveFaradayCage = () => {
+    const numFieldLines = Math.floor(fieldStrength / 10);
+    const meshSpacing = Math.max(8, 40 - meshDensity * 0.32);
+    const waveSpeed = waveFrequency / 25;
+    const chargeOscillation = Math.sin(timeRef.current * 3);
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill="#111827" />
-        {/* Radio tower */}
-        <g>
-          <rect x="30" y="100" width="10" height="130" fill="#6b7280" />
-          <path d="M 15 100 L 35 60 L 55 100" fill="none" stroke="#6b7280" strokeWidth="4" />
-          <circle cx="35" cy="55" r="8" fill="#ef4444" className="animate-pulse" />
-          <text x="35" y="250" textAnchor="middle" className="fill-gray-400 text-xs">Signal</text>
+      <svg viewBox="0 0 500 320" className="w-full h-64">
+        <defs>
+          <linearGradient id="cageGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#d97706" stopOpacity="0.9" />
+          </linearGradient>
+          <filter id="glow">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+            <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" />
+          </marker>
+        </defs>
+
+        <rect width="500" height="320" fill="#0f172a" />
+
+        {/* Title */}
+        <text x="250" y="25" textAnchor="middle" className="fill-white text-sm font-bold">
+          Faraday Cage Shielding Simulation
+        </text>
+
+        {/* External field source indicator */}
+        <g transform="translate(30, 160)">
+          <rect x="-15" y="-50" width="30" height="100" rx="4" fill="#374151" stroke="#6b7280" strokeWidth="2" />
+          <circle cx="0" cy="0" r="15" fill="#ef4444" opacity={0.5 + fieldStrength / 200}>
+            <animate attributeName="r" values="12;18;12" dur={`${2 / waveSpeed}s`} repeatCount="indefinite" />
+          </circle>
+          <text x="0" y="70" textAnchor="middle" className="fill-gray-400 text-xs">EM Source</text>
+          <text x="0" y="85" textAnchor="middle" className="fill-amber-400 text-xs font-bold">{fieldStrength}%</text>
         </g>
 
-        {/* EM waves propagating */}
-        <g>
-          {[...Array(5)].map((_, i) => {
-            const x = 80 + i * 40;
-            const opacity = cage && x > 200 ? 0.1 : 1 - i * 0.15;
-            const blocked = cage && x > 180;
-            return (
-              <g key={i}>
-                <path d={`M ${x} 80 Q ${x + 10} ${80 + Math.sin(animPhase + i) * waveAmplitude} ${x + 20} 80 Q ${x + 30} ${80 - Math.sin(animPhase + i) * waveAmplitude} ${x + 40} 80`} fill="none" stroke={blocked ? '#ef4444' : '#fbbf24'} strokeWidth="3" opacity={blocked ? 0.3 : opacity} />
-                <path d={`M ${x} 200 Q ${x + 10} ${200 + Math.sin(animPhase + i) * waveAmplitude} ${x + 20} 200 Q ${x + 30} ${200 - Math.sin(animPhase + i) * waveAmplitude} ${x + 40} 200`} fill="none" stroke={blocked ? '#ef4444' : '#fbbf24'} strokeWidth="3" opacity={blocked ? 0.3 : opacity} />
-              </g>
-            );
-          })}
-        </g>
+        {/* Electric field lines (external) */}
+        {[...Array(numFieldLines)].map((_, i) => {
+          const yOffset = (i - numFieldLines / 2) * 15;
+          const baseY = 160 + yOffset;
+          const blocked = cageEnabled;
+          const waveOffset = Math.sin(timeRef.current * waveSpeed * 2 + i * 0.5) * 8;
 
-        {/* Faraday cage (when enabled) */}
-        {cage && (
+          return (
+            <g key={`field-${i}`}>
+              {/* Incoming field line with wave */}
+              <path
+                d={`M 60 ${baseY} Q 100 ${baseY + waveOffset} 140 ${baseY} Q 180 ${baseY - waveOffset} ${blocked ? 220 : 400} ${baseY}`}
+                fill="none"
+                stroke={blocked ? '#ef4444' : '#fbbf24'}
+                strokeWidth="2"
+                strokeDasharray={blocked ? '5,5' : 'none'}
+                opacity={blocked ? 0.3 : 0.8}
+                markerEnd={blocked ? '' : 'url(#arrowhead)'}
+              />
+              {/* Blocked indicator */}
+              {blocked && (
+                <circle cx="220" cy={baseY} r="4" fill="#ef4444" opacity="0.6">
+                  <animate attributeName="opacity" values="0.3;0.8;0.3" dur="0.5s" repeatCount="indefinite" />
+                </circle>
+              )}
+            </g>
+          );
+        })}
+
+        {/* Faraday cage structure */}
+        {cageEnabled && (
           <g>
-            <rect x="180" y="50" width="140" height="180" rx="8" fill="none" stroke="#f59e0b" strokeWidth="6" />
-            {[...Array(7)].map((_, i) => (<line key={`v${i}`} x1={190 + i * 20} y1="50" x2={190 + i * 20} y2="230" stroke="#f59e0b" strokeWidth="2" />))}
-            {[...Array(9)].map((_, i) => (<line key={`h${i}`} x1="180" y1={60 + i * 20} x2="320" y2={60 + i * 20} stroke="#f59e0b" strokeWidth="2" />))}
-            {[...Array(4)].map((_, i) => (<circle key={`e${i}`} cx={183 + Math.sin(animPhase * 2 + i) * 3} cy={80 + i * 40} r="4" fill="#3b82f6" className="animate-pulse" />))}
-            {[...Array(4)].map((_, i) => (<circle key={`e2${i}`} cx={317 + Math.sin(animPhase * 2 + i + Math.PI) * 3} cy={80 + i * 40} r="4" fill="#3b82f6" className="animate-pulse" />))}
+            {/* Cage frame */}
+            <rect x="220" y="80" width="160" height="160" rx="8" fill="none" stroke="url(#cageGradient)" strokeWidth="6" />
+
+            {/* Mesh lines - vertical */}
+            {[...Array(Math.ceil(160 / meshSpacing))].map((_, i) => (
+              <line
+                key={`v${i}`}
+                x1={228 + i * meshSpacing}
+                y1="80"
+                x2={228 + i * meshSpacing}
+                y2="240"
+                stroke="#f59e0b"
+                strokeWidth="1.5"
+                opacity="0.7"
+              />
+            ))}
+
+            {/* Mesh lines - horizontal */}
+            {[...Array(Math.ceil(160 / meshSpacing))].map((_, i) => (
+              <line
+                key={`h${i}`}
+                x1="220"
+                y1={88 + i * meshSpacing}
+                x2="380"
+                y2={88 + i * meshSpacing}
+                stroke="#f59e0b"
+                strokeWidth="1.5"
+                opacity="0.7"
+              />
+            ))}
+
+            {/* Charge redistribution visualization - electrons moving on surface */}
+            {[...Array(6)].map((_, i) => {
+              const baseX = 223;
+              const baseY = 100 + i * 25;
+              const offset = chargeOscillation * 4;
+              return (
+                <g key={`charge-left-${i}`}>
+                  <circle
+                    cx={baseX + offset}
+                    cy={baseY}
+                    r="5"
+                    fill="#3b82f6"
+                    filter="url(#glow)"
+                  />
+                  <text x={baseX + offset} y={baseY + 3} textAnchor="middle" className="fill-white text-xs font-bold">-</text>
+                </g>
+              );
+            })}
+            {[...Array(6)].map((_, i) => {
+              const baseX = 377;
+              const baseY = 100 + i * 25;
+              const offset = -chargeOscillation * 4;
+              return (
+                <g key={`charge-right-${i}`}>
+                  <circle
+                    cx={baseX + offset}
+                    cy={baseY}
+                    r="5"
+                    fill="#ef4444"
+                    filter="url(#glow)"
+                  />
+                  <text x={baseX + offset} y={baseY + 3} textAnchor="middle" className="fill-white text-xs font-bold">+</text>
+                </g>
+              );
+            })}
+
+            {/* Zero field indicator inside */}
+            <g transform="translate(300, 160)">
+              <circle cx="0" cy="0" r="30" fill="#22c55e" fillOpacity="0.15" stroke="#22c55e" strokeWidth="1" strokeDasharray="4,2" />
+              <text x="0" y="-5" textAnchor="middle" className="fill-green-400 text-xs font-bold">E = 0</text>
+              <text x="0" y="10" textAnchor="middle" className="fill-green-300 text-xs">SHIELDED</text>
+            </g>
           </g>
         )}
 
-        {/* Phone inside */}
-        <g transform="translate(230, 100)">
-          <rect x="0" y="0" width="40" height="70" rx="6" fill="#374151" stroke="#6b7280" strokeWidth="2" />
-          <rect x="5" y="8" width="30" height="45" fill="#1f2937" />
-          <g transform="translate(8, 15)">
+        {/* Phone inside cage area */}
+        <g transform="translate(280, 130)">
+          <rect x="0" y="0" width="40" height="65" rx="6" fill="#374151" stroke="#6b7280" strokeWidth="2" />
+          <rect x="5" y="8" width="30" height="40" fill="#1f2937" />
+          {/* Signal bars */}
+          <g transform="translate(10, 15)">
             {[...Array(4)].map((_, i) => {
               const barHeight = 5 + i * 4;
               const barStrength = (i + 1) * 25;
-              const visible = strength >= barStrength;
-              return (<rect key={i} x={i * 7} y={20 - barHeight} width="5" height={barHeight} fill={visible ? '#22c55e' : '#4b5563'} />);
+              const visible = signalStrength >= barStrength;
+              return (
+                <rect
+                  key={i}
+                  x={i * 6}
+                  y={20 - barHeight}
+                  width="4"
+                  height={barHeight}
+                  fill={visible ? '#22c55e' : '#4b5563'}
+                  rx="1"
+                />
+              );
             })}
           </g>
-          <text x="20" y="65" textAnchor="middle" className="fill-gray-400 text-xs">{strength > 50 ? 'OK' : 'X'}</text>
+          <text x="20" y="58" textAnchor="middle" className={`text-xs font-bold ${signalStrength > 30 ? 'fill-green-400' : 'fill-red-400'}`}>
+            {signalStrength > 30 ? 'OK' : 'NO SIG'}
+          </text>
         </g>
 
-        {/* Signal strength indicator */}
-        <rect x="10" y="10" width="100" height="40" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="60" y="28" textAnchor="middle" className="fill-gray-400 text-xs">Inside Signal</text>
-        <text x="60" y="43" textAnchor="middle" className={`text-sm font-bold ${strength > 50 ? 'fill-green-400' : 'fill-red-400'}`}>{strength}%</text>
+        {/* Info panels */}
+        <g>
+          {/* Field strength outside */}
+          <rect x="10" y="260" width="120" height="50" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="1" />
+          <text x="70" y="280" textAnchor="middle" className="fill-gray-400 text-xs">External Field</text>
+          <text x="70" y="298" textAnchor="middle" className="fill-amber-400 text-sm font-bold">{fieldStrength}%</text>
+        </g>
 
-        {/* Cage status */}
-        <rect x="290" y="10" width="100" height="40" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="340" y="28" textAnchor="middle" className="fill-gray-400 text-xs">Cage</text>
-        <text x="340" y="43" textAnchor="middle" className={`text-sm font-bold ${cage ? 'fill-yellow-400' : 'fill-gray-500'}`}>{cage ? 'ON' : 'OFF'}</text>
+        <g>
+          {/* Field strength inside */}
+          <rect x="370" y="260" width="120" height="50" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="1" />
+          <text x="430" y="280" textAnchor="middle" className="fill-gray-400 text-xs">Inside Field</text>
+          <text x="430" y="298" textAnchor="middle" className={`text-sm font-bold ${cageEnabled ? 'fill-green-400' : 'fill-amber-400'}`}>
+            {cageEnabled ? `${signalStrength}%` : `${fieldStrength}%`}
+          </text>
+        </g>
+
+        {/* Shielding effectiveness */}
+        {cageEnabled && (
+          <g>
+            <rect x="190" y="260" width="120" height="50" rx="8" fill="#052e16" stroke="#22c55e" strokeWidth="1" />
+            <text x="250" y="280" textAnchor="middle" className="fill-green-400 text-xs">Shielding</text>
+            <text x="250" y="298" textAnchor="middle" className="fill-green-300 text-sm font-bold">
+              {Math.round((1 - signalStrength / fieldStrength) * 100)}%
+            </text>
+          </g>
+        )}
       </svg>
     );
   };
 
-  const renderMeshComparison = (mesh: 'small' | 'medium' | 'large', wave: 'long' | 'short') => {
-    const meshSizes = { small: 8, medium: 20, large: 40 };
-    const wavelengths = { long: 60, short: 15 };
-    const meshPixels = meshSizes[mesh];
-    const wavePixels = wavelengths[wave];
-    const effectiveness = getShieldingEffectiveness(mesh, wave);
+  // Twist play visualization - different cage shapes with gaps
+  const renderTwistVisualization = () => {
+    const effectiveness = getShieldingEffectiveness(twistMeshSize, twistWavelength, gapSize);
     const penetrates = effectiveness < 50;
+    const waveY = Math.sin(timeRef.current * 2) * 10;
+
+    const renderCageShape = () => {
+      switch (cageShape) {
+        case 'sphere':
+          return (
+            <g>
+              <ellipse cx="280" cy="160" rx="80" ry="80" fill="none" stroke="#f59e0b" strokeWidth="4" />
+              {/* Mesh pattern for sphere */}
+              {[...Array(8)].map((_, i) => (
+                <ellipse
+                  key={`h${i}`}
+                  cx="280"
+                  cy="160"
+                  rx={80 - i * 2}
+                  ry={Math.max(5, 80 - i * 20)}
+                  fill="none"
+                  stroke="#f59e0b"
+                  strokeWidth="1"
+                  opacity="0.5"
+                />
+              ))}
+              {[...Array(12)].map((_, i) => {
+                const angle = (i / 12) * Math.PI;
+                return (
+                  <line
+                    key={`v${i}`}
+                    x1={280 + Math.cos(angle) * 80}
+                    y1={80}
+                    x2={280 + Math.cos(angle) * 80}
+                    y2={240}
+                    stroke="#f59e0b"
+                    strokeWidth="1"
+                    opacity="0.5"
+                  />
+                );
+              })}
+              {/* Gap visualization */}
+              {gapSize !== 'none' && (
+                <rect
+                  x="260"
+                  y={gapSize === 'large' ? 120 : 140}
+                  width="40"
+                  height={gapSize === 'large' ? 80 : 40}
+                  fill="#0f172a"
+                  stroke="#ef4444"
+                  strokeWidth="2"
+                  strokeDasharray="4,2"
+                />
+              )}
+            </g>
+          );
+        case 'cylinder':
+          return (
+            <g>
+              <ellipse cx="280" cy="90" rx="70" ry="20" fill="none" stroke="#f59e0b" strokeWidth="3" />
+              <ellipse cx="280" cy="230" rx="70" ry="20" fill="none" stroke="#f59e0b" strokeWidth="3" />
+              <line x1="210" y1="90" x2="210" y2="230" stroke="#f59e0b" strokeWidth="3" />
+              <line x1="350" y1="90" x2="350" y2="230" stroke="#f59e0b" strokeWidth="3" />
+              {/* Mesh lines */}
+              {[...Array(6)].map((_, i) => (
+                <ellipse
+                  key={`ring${i}`}
+                  cx="280"
+                  cy={110 + i * 22}
+                  rx="70"
+                  ry="8"
+                  fill="none"
+                  stroke="#f59e0b"
+                  strokeWidth="1"
+                  opacity="0.5"
+                />
+              ))}
+              {[...Array(8)].map((_, i) => {
+                const angle = (i / 8) * Math.PI * 2;
+                const x = 280 + Math.cos(angle) * 70;
+                return (
+                  <line
+                    key={`vert${i}`}
+                    x1={x}
+                    y1="90"
+                    x2={x}
+                    y2="230"
+                    stroke="#f59e0b"
+                    strokeWidth="1"
+                    opacity="0.5"
+                  />
+                );
+              })}
+              {/* Gap */}
+              {gapSize !== 'none' && (
+                <rect
+                  x="260"
+                  y={gapSize === 'large' ? 130 : 150}
+                  width="40"
+                  height={gapSize === 'large' ? 60 : 30}
+                  fill="#0f172a"
+                  stroke="#ef4444"
+                  strokeWidth="2"
+                  strokeDasharray="4,2"
+                />
+              )}
+            </g>
+          );
+        default: // box
+          return (
+            <g>
+              <rect x="220" y="90" width="120" height="140" rx="4" fill="none" stroke="#f59e0b" strokeWidth="4" />
+              {/* Mesh */}
+              {[...Array(Math.ceil(120 / (twistMeshSize + 5)))].map((_, i) => (
+                <line
+                  key={`v${i}`}
+                  x1={228 + i * (twistMeshSize + 5)}
+                  y1="90"
+                  x2={228 + i * (twistMeshSize + 5)}
+                  y2="230"
+                  stroke="#f59e0b"
+                  strokeWidth="1"
+                  opacity="0.6"
+                />
+              ))}
+              {[...Array(Math.ceil(140 / (twistMeshSize + 5)))].map((_, i) => (
+                <line
+                  key={`h${i}`}
+                  x1="220"
+                  y1={98 + i * (twistMeshSize + 5)}
+                  x2="340"
+                  y2={98 + i * (twistMeshSize + 5)}
+                  stroke="#f59e0b"
+                  strokeWidth="1"
+                  opacity="0.6"
+                />
+              ))}
+              {/* Gap */}
+              {gapSize !== 'none' && (
+                <rect
+                  x="265"
+                  y={gapSize === 'large' ? 130 : 150}
+                  width="30"
+                  height={gapSize === 'large' ? 60 : 30}
+                  fill="#0f172a"
+                  stroke="#ef4444"
+                  strokeWidth="2"
+                  strokeDasharray="4,2"
+                />
+              )}
+            </g>
+          );
+      }
+    };
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill="#111827" />
-        <rect x="180" y="40" width="120" height="200" rx="4" fill="none" stroke="#6b7280" strokeWidth="2" />
-        <g>
-          {[...Array(Math.ceil(120 / meshPixels))].map((_, i) =>
-            [...Array(Math.ceil(200 / meshPixels))].map((_, j) => (
-              <rect key={`${i}-${j}`} x={180 + i * meshPixels + 2} y={40 + j * meshPixels + 2} width={meshPixels - 4} height={meshPixels - 4} fill="#111827" stroke="#f59e0b" strokeWidth="1" />
-            ))
-          )}
-        </g>
+      <svg viewBox="0 0 500 320" className="w-full h-64">
+        <rect width="500" height="320" fill="#0f172a" />
+
+        <text x="250" y="25" textAnchor="middle" className="fill-white text-sm font-bold">
+          Mesh Size vs Wavelength
+        </text>
+
         {/* Incoming waves */}
-        <g>
-          {[...Array(3)].map((_, i) => {
-            const x = 50 + i * 40;
-            return (
-              <path key={i} d={`M ${x} ${140 - wavePixels / 2} C ${x + 20} ${140 - wavePixels / 2}, ${x + 20} ${140 + wavePixels / 2}, ${x + 40} ${140 + wavePixels / 2} C ${x + 60} ${140 + wavePixels / 2}, ${x + 60} ${140 - wavePixels / 2}, ${x + 80} ${140 - wavePixels / 2}`} fill="none" stroke="#3b82f6" strokeWidth="3" opacity={1 - i * 0.2} />
-            );
-          })}
+        {[...Array(4)].map((_, i) => {
+          const x = 40 + i * 40;
+          const waveHeight = twistWavelength * 0.8;
+          return (
+            <path
+              key={i}
+              d={`M ${x} ${160 - waveHeight / 2 + waveY}
+                  C ${x + 20} ${160 - waveHeight / 2 + waveY},
+                    ${x + 20} ${160 + waveHeight / 2 + waveY},
+                    ${x + 40} ${160 + waveHeight / 2 + waveY}
+                  C ${x + 60} ${160 + waveHeight / 2 + waveY},
+                    ${x + 60} ${160 - waveHeight / 2 + waveY},
+                    ${x + 80} ${160 - waveHeight / 2 + waveY}`}
+              fill="none"
+              stroke="#3b82f6"
+              strokeWidth="3"
+              opacity={1 - i * 0.15}
+            />
+          );
+        })}
+
+        {/* Wavelength indicator */}
+        <g transform="translate(60, 260)">
+          <line x1="0" y1="0" x2={twistWavelength} y2="0" stroke="#3b82f6" strokeWidth="2" />
+          <line x1="0" y1="-5" x2="0" y2="5" stroke="#3b82f6" strokeWidth="2" />
+          <line x1={twistWavelength} y1="-5" x2={twistWavelength} y2="5" stroke="#3b82f6" strokeWidth="2" />
+          <text x={twistWavelength / 2} y="15" textAnchor="middle" className="fill-blue-400 text-xs">
+            wavelength = {twistWavelength}mm
+          </text>
         </g>
+
+        {/* Cage shape */}
+        {renderCageShape()}
+
+        {/* Mesh size indicator */}
+        <g transform="translate(380, 260)">
+          <rect x="0" y="-5" width={twistMeshSize} height={twistMeshSize} fill="none" stroke="#f59e0b" strokeWidth="2" />
+          <text x={twistMeshSize / 2 + 30} y="5" className="fill-amber-400 text-xs">
+            mesh = {twistMeshSize}mm
+          </text>
+        </g>
+
+        {/* Penetrating waves (if effectiveness is low) */}
         {penetrates && (
           <g className="animate-pulse">
-            <path d={`M 200 ${140 - wavePixels / 4} C 220 ${140 - wavePixels / 4}, 220 ${140 + wavePixels / 4}, 240 ${140 + wavePixels / 4} C 260 ${140 + wavePixels / 4}, 260 ${140 - wavePixels / 4}, 280 ${140 - wavePixels / 4}`} fill="none" stroke="#ef4444" strokeWidth="2" opacity="0.7" />
+            <path
+              d={`M 360 ${155 + waveY} Q 400 ${155 + waveY} 440 ${165 + waveY}`}
+              fill="none"
+              stroke="#ef4444"
+              strokeWidth="2"
+              opacity="0.7"
+            />
+            <text x="420" y="145" className="fill-red-400 text-xs font-bold">LEAK!</text>
           </g>
         )}
+
+        {/* Shielded indicator */}
         {!penetrates && (
-          <g>
-            <circle cx="240" cy="140" r="20" fill="#22c55e" fillOpacity="0.2" />
-            <text x="240" y="145" textAnchor="middle" className="fill-green-400 text-lg">OK</text>
+          <g transform="translate(280, 160)">
+            <circle cx="0" cy="0" r="25" fill="#22c55e" fillOpacity="0.2" />
+            <text x="0" y="5" textAnchor="middle" className="fill-green-400 text-sm font-bold">SAFE</text>
           </g>
         )}
-        <text x="100" y="260" textAnchor="middle" className="fill-blue-400 text-xs">Wave: {wave === 'long' ? '60mm' : '15mm'}</text>
-        <text x="240" y="260" textAnchor="middle" className="fill-yellow-400 text-xs">Mesh: {meshPixels}mm holes</text>
-        <rect x="20" y="20" width="140" height="60" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="90" y="40" textAnchor="middle" className="fill-gray-400 text-xs">Hole vs Wavelength</text>
-        <text x="90" y="58" textAnchor="middle" className={`text-sm font-bold ${meshPixels < wavePixels ? 'fill-green-400' : 'fill-red-400'}`}>{meshPixels < wavePixels ? 'BLOCKED' : 'LEAKS'}</text>
-        <rect x="280" y="20" width="100" height="60" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="330" y="40" textAnchor="middle" className="fill-gray-400 text-xs">Shielding</text>
-        <text x="330" y="60" textAnchor="middle" className={`text-lg font-bold ${effectiveness > 80 ? 'fill-green-400' : effectiveness > 40 ? 'fill-yellow-400' : 'fill-red-400'}`}>{effectiveness}%</text>
+
+        {/* Effectiveness panel */}
+        <rect x="350" y="70" width="140" height="70" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="1" />
+        <text x="420" y="95" textAnchor="middle" className="fill-gray-400 text-xs">Shielding Effectiveness</text>
+        <text
+          x="420"
+          y="125"
+          textAnchor="middle"
+          className={`text-2xl font-bold ${effectiveness > 80 ? 'fill-green-400' : effectiveness > 40 ? 'fill-yellow-400' : 'fill-red-400'}`}
+        >
+          {effectiveness}%
+        </text>
+
+        {/* Rule indicator */}
+        <rect x="10" y="70" width="140" height="50" rx="8" fill={twistMeshSize < twistWavelength ? '#052e16' : '#450a0a'} stroke={twistMeshSize < twistWavelength ? '#22c55e' : '#ef4444'} strokeWidth="1" />
+        <text x="80" y="90" textAnchor="middle" className={twistMeshSize < twistWavelength ? 'fill-green-400 text-xs' : 'fill-red-400 text-xs'}>
+          mesh {twistMeshSize < twistWavelength ? '<' : '>'} wavelength
+        </text>
+        <text x="80" y="108" textAnchor="middle" className={twistMeshSize < twistWavelength ? 'fill-green-300 text-xs font-bold' : 'fill-red-300 text-xs font-bold'}>
+          {twistMeshSize < twistWavelength ? 'BLOCKS' : 'LEAKS'}
+        </text>
       </svg>
     );
   };
@@ -423,6 +793,7 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
           fontSize: '16px',
+          zIndex: 10,
         }}
       >
         {buttonText}
@@ -493,8 +864,9 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
               ].map(option => (
                 <button
                   key={option.id}
-                  onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+                  onClick={() => handlePrediction(option.id)}
                   disabled={showPredictionFeedback}
+                  style={{ zIndex: 10 }}
                   className={`p-4 rounded-xl text-left transition-all duration-300 ${
                     showPredictionFeedback && selectedPrediction === option.id
                       ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
@@ -521,36 +893,122 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
     );
   }
 
-  // PLAY PHASE
+  // PLAY PHASE - Enhanced with interactive controls
   if (phase === 'play') {
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div className="flex flex-col items-center p-6">
+          <div className="flex flex-col items-center p-4">
             <h2 className="text-2xl font-bold text-white mb-4">Faraday Cage Simulator</h2>
-            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
-              {renderFaradayCage(cageEnabled, signalStrength, wavePhase)}
+
+            {/* Visualization */}
+            <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
+              {renderInteractiveFaradayCage()}
             </div>
-            <div className="flex justify-center mt-4">
-              <button
-                onMouseDown={(e) => { e.preventDefault(); setCageEnabled(!cageEnabled); }}
-                className={`px-8 py-4 rounded-lg font-bold text-lg ${cageEnabled ? 'bg-amber-600 text-white' : 'bg-slate-600 text-slate-300'}`}
-              >
-                {cageEnabled ? 'Cage ON' : 'Cage OFF'}
-              </button>
-            </div>
-            <div className="bg-gradient-to-r from-amber-900/40 to-yellow-900/40 rounded-xl p-4 max-w-2xl w-full mt-6">
-              <p className="text-slate-300 text-center">
-                {cageEnabled ? (
-                  <><span className="text-amber-400 font-bold">Signal blocked!</span> Free electrons redistribute to cancel the incoming field.</>
-                ) : (
-                  <><span className="text-green-400 font-bold">Full signal!</span> EM waves pass freely to the phone.</>
-                )}
-              </p>
+
+            {/* Control Panel */}
+            <div className="bg-slate-800/50 rounded-2xl p-6 w-full max-w-2xl">
+              <h3 className="text-lg font-bold text-amber-400 mb-4">Control Panel</h3>
+
+              {/* Cage Toggle */}
+              <div className="mb-6">
+                <button
+                  onClick={() => { setCageEnabled(!cageEnabled); setHasExperimented(true); playSound('click'); }}
+                  style={{ zIndex: 10 }}
+                  className={`w-full px-6 py-4 rounded-xl font-bold text-lg transition-all ${
+                    cageEnabled
+                      ? 'bg-amber-600 text-white shadow-lg shadow-amber-600/30'
+                      : 'bg-slate-600 text-slate-300 hover:bg-slate-500'
+                  }`}
+                >
+                  {cageEnabled ? '🛡️ Cage ENABLED' : '📡 Cage DISABLED'}
+                </button>
+              </div>
+
+              {/* Sliders */}
+              <div className="space-y-6">
+                {/* External Field Strength */}
+                <div>
+                  <label className="block text-sm font-bold text-amber-400 mb-2 uppercase tracking-wide">
+                    External Field Strength
+                  </label>
+                  <input
+                    type="range"
+                    min="20"
+                    max="100"
+                    value={fieldStrength}
+                    onChange={(e) => { setFieldStrength(parseInt(e.target.value)); setHasExperimented(true); }}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                  />
+                  <div className="flex justify-between text-xs text-slate-400 mt-1">
+                    <span>Weak</span>
+                    <span className="text-amber-400 font-bold">{fieldStrength}%</span>
+                    <span>Strong</span>
+                  </div>
+                </div>
+
+                {/* Mesh Density */}
+                <div>
+                  <label className="block text-sm font-bold text-blue-400 mb-2 uppercase tracking-wide">
+                    Cage Mesh Density
+                  </label>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={meshDensity}
+                    onChange={(e) => { setMeshDensity(parseInt(e.target.value)); setHasExperimented(true); }}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  />
+                  <div className="flex justify-between text-xs text-slate-400 mt-1">
+                    <span>Sparse</span>
+                    <span className="text-blue-400 font-bold">{meshDensity}%</span>
+                    <span>Dense</span>
+                  </div>
+                </div>
+
+                {/* Wave Frequency */}
+                <div>
+                  <label className="block text-sm font-bold text-purple-400 mb-2 uppercase tracking-wide">
+                    EM Wave Frequency
+                  </label>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={waveFrequency}
+                    onChange={(e) => { setWaveFrequency(parseInt(e.target.value)); setHasExperimented(true); }}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                  />
+                  <div className="flex justify-between text-xs text-slate-400 mt-1">
+                    <span>Low (Radio)</span>
+                    <span className="text-purple-400 font-bold">{waveFrequency} MHz</span>
+                    <span>High (Microwave)</span>
+                  </div>
+                </div>
+              </div>
+
+              {/* Results Panel */}
+              <div className={`mt-6 p-4 rounded-xl border ${cageEnabled ? 'bg-green-900/20 border-green-600' : 'bg-slate-700/50 border-slate-600'}`}>
+                <p className="text-slate-300 text-center">
+                  {cageEnabled ? (
+                    <>
+                      <span className="text-green-400 font-bold">Shielded! </span>
+                      Free electrons on the cage surface redistribute to create an opposing field,
+                      canceling the external field inside. Signal reduced to {signalStrength}%.
+                    </>
+                  ) : (
+                    <>
+                      <span className="text-amber-400 font-bold">No Protection. </span>
+                      EM waves pass freely through. The phone receives full signal strength.
+                    </>
+                  )}
+                </p>
+              </div>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'Continue to Review')}
+        {renderBottomBar(false, hasExperimented, 'Continue to Review')}
       </div>
     );
   }
@@ -625,8 +1083,9 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
               ].map(option => (
                 <button
                   key={option.id}
-                  onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+                  onClick={() => handleTwistPrediction(option.id)}
                   disabled={showTwistFeedback}
+                  style={{ zIndex: 10 }}
                   className={`p-4 rounded-xl text-left transition-all duration-300 ${
                     showTwistFeedback && twistPrediction === option.id
                       ? option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
@@ -653,46 +1112,159 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
     );
   }
 
-  // TWIST PLAY PHASE
+  // TWIST PLAY PHASE - Enhanced with shape selector and gap controls
   if (phase === 'twist_play') {
+    const effectiveness = getShieldingEffectiveness(twistMeshSize, twistWavelength, gapSize);
+
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div className="flex flex-col items-center p-6">
+          <div className="flex flex-col items-center p-4">
             <h2 className="text-2xl font-bold text-amber-400 mb-4">Mesh Size vs Wavelength</h2>
-            <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
-              {renderMeshComparison(meshSize, wavelength)}
-              <div className="grid grid-cols-2 gap-4 mt-6">
+
+            {/* Visualization */}
+            <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl">
+              {renderTwistVisualization()}
+            </div>
+
+            {/* Control Panel */}
+            <div className="bg-slate-800/50 rounded-2xl p-6 w-full max-w-2xl">
+
+              {/* Cage Shape Selector */}
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-amber-400 mb-3 uppercase tracking-wide">
+                  Cage Shape
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { id: 'box' as const, label: 'Cube', icon: '🔲' },
+                    { id: 'sphere' as const, label: 'Sphere', icon: '🔵' },
+                    { id: 'cylinder' as const, label: 'Cylinder', icon: '🛢️' }
+                  ].map(shape => (
+                    <button
+                      key={shape.id}
+                      onClick={() => { setCageShape(shape.id); setHasTestedTwist(true); playSound('click'); }}
+                      style={{ zIndex: 10 }}
+                      className={`p-3 rounded-xl font-bold transition-all ${
+                        cageShape === shape.id
+                          ? 'bg-amber-600 text-white'
+                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                      }`}
+                    >
+                      <div className="text-2xl mb-1">{shape.icon}</div>
+                      <div className="text-sm">{shape.label}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Gap/Hole Size Selector */}
+              <div className="mb-6">
+                <label className="block text-sm font-bold text-red-400 mb-3 uppercase tracking-wide">
+                  Gap in Shielding
+                </label>
+                <div className="grid grid-cols-3 gap-3">
+                  {[
+                    { id: 'none' as const, label: 'No Gap', desc: 'Perfect seal' },
+                    { id: 'small' as const, label: 'Small Gap', desc: '< wavelength' },
+                    { id: 'large' as const, label: 'Large Gap', desc: '> wavelength' }
+                  ].map(gap => (
+                    <button
+                      key={gap.id}
+                      onClick={() => { setGapSize(gap.id); setHasTestedTwist(true); playSound('click'); }}
+                      style={{ zIndex: 10 }}
+                      className={`p-3 rounded-xl font-bold transition-all ${
+                        gapSize === gap.id
+                          ? gap.id === 'none' ? 'bg-green-600 text-white' : gap.id === 'small' ? 'bg-yellow-600 text-white' : 'bg-red-600 text-white'
+                          : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                      }`}
+                    >
+                      <div className="text-sm font-bold">{gap.label}</div>
+                      <div className="text-xs opacity-70">{gap.desc}</div>
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Sliders */}
+              <div className="space-y-6">
+                {/* Wavelength Slider */}
                 <div>
-                  <p className="text-amber-400 font-medium mb-2">Mesh Hole Size</p>
-                  <div className="flex gap-2">
-                    {(['small', 'medium', 'large'] as const).map(size => (
-                      <button key={size} onMouseDown={(e) => { e.preventDefault(); setMeshSize(size); }} className={`flex-1 px-3 py-2 rounded-lg font-bold text-sm ${meshSize === size ? 'bg-amber-600 text-white' : 'bg-slate-600 text-slate-300'}`}>
-                        {size === 'small' ? '8mm' : size === 'medium' ? '20mm' : '40mm'}
-                      </button>
-                    ))}
+                  <label className="block text-sm font-bold text-blue-400 mb-2 uppercase tracking-wide">
+                    EM Wavelength
+                  </label>
+                  <input
+                    type="range"
+                    min="10"
+                    max="100"
+                    value={twistWavelength}
+                    onChange={(e) => { setTwistWavelength(parseInt(e.target.value)); setHasTestedTwist(true); }}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  />
+                  <div className="flex justify-between text-xs text-slate-400 mt-1">
+                    <span>10mm (Short)</span>
+                    <span className="text-blue-400 font-bold">{twistWavelength}mm</span>
+                    <span>100mm (Long)</span>
                   </div>
                 </div>
+
+                {/* Mesh Size Slider */}
                 <div>
-                  <p className="text-blue-400 font-medium mb-2">Wavelength</p>
-                  <div className="flex gap-2">
-                    {(['long', 'short'] as const).map(wave => (
-                      <button key={wave} onMouseDown={(e) => { e.preventDefault(); setWavelength(wave); }} className={`flex-1 px-3 py-2 rounded-lg font-bold text-sm ${wavelength === wave ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300'}`}>
-                        {wave === 'long' ? '60mm' : '15mm'}
-                      </button>
-                    ))}
+                  <label className="block text-sm font-bold text-amber-400 mb-2 uppercase tracking-wide">
+                    Mesh Hole Size
+                  </label>
+                  <input
+                    type="range"
+                    min="5"
+                    max="80"
+                    value={twistMeshSize}
+                    onChange={(e) => { setTwistMeshSize(parseInt(e.target.value)); setHasTestedTwist(true); }}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                  />
+                  <div className="flex justify-between text-xs text-slate-400 mt-1">
+                    <span>5mm (Fine)</span>
+                    <span className="text-amber-400 font-bold">{twistMeshSize}mm</span>
+                    <span>80mm (Coarse)</span>
                   </div>
                 </div>
               </div>
-              <div className={`mt-4 p-4 rounded-lg border ${getShieldingEffectiveness(meshSize, wavelength) > 80 ? 'bg-green-900/30 border-green-600' : getShieldingEffectiveness(meshSize, wavelength) > 40 ? 'bg-yellow-900/30 border-yellow-600' : 'bg-red-900/30 border-red-600'}`}>
-                <p className={`text-center ${getShieldingEffectiveness(meshSize, wavelength) > 80 ? 'text-green-300' : getShieldingEffectiveness(meshSize, wavelength) > 40 ? 'text-yellow-300' : 'text-red-300'}`}>
-                  <span className="font-bold">Rule:</span> Hole size must be much smaller than wavelength for effective shielding.
+
+              {/* Results Panel */}
+              <div className={`mt-6 p-4 rounded-xl border ${
+                effectiveness > 80 ? 'bg-green-900/20 border-green-600' :
+                effectiveness > 40 ? 'bg-yellow-900/20 border-yellow-600' :
+                'bg-red-900/20 border-red-600'
+              }`}>
+                <div className="flex justify-between items-center mb-2">
+                  <span className="text-slate-300 font-medium">Shielding Effectiveness:</span>
+                  <span className={`text-2xl font-bold ${
+                    effectiveness > 80 ? 'text-green-400' :
+                    effectiveness > 40 ? 'text-yellow-400' :
+                    'text-red-400'
+                  }`}>{effectiveness}%</span>
+                </div>
+                <p className="text-slate-400 text-sm">
+                  {twistMeshSize < twistWavelength ? (
+                    <>Mesh holes ({twistMeshSize}mm) are <span className="text-green-400 font-bold">smaller</span> than wavelength ({twistWavelength}mm). Waves are blocked!</>
+                  ) : (
+                    <>Mesh holes ({twistMeshSize}mm) are <span className="text-red-400 font-bold">larger</span> than wavelength ({twistWavelength}mm). Waves leak through!</>
+                  )}
+                  {gapSize !== 'none' && (
+                    <span className="text-red-400"> The {gapSize} gap further reduces shielding.</span>
+                  )}
+                </p>
+              </div>
+
+              {/* Key Rule */}
+              <div className="mt-4 p-4 bg-purple-900/30 rounded-xl border border-purple-600">
+                <p className="text-purple-300 text-center">
+                  <span className="font-bold">Golden Rule:</span> Mesh opening must be much smaller than the wavelength for effective shielding!
                 </p>
               </div>
             </div>
           </div>
         </div>
-        {renderBottomBar(false, true, 'See the Explanation')}
+        {renderBottomBar(false, hasTestedTwist, 'See the Explanation')}
       </div>
     );
   }
@@ -758,7 +1330,8 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
               {TRANSFER_APPS.map((app, index) => (
                 <button
                   key={index}
-                  onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+                  onClick={() => setActiveAppTab(index)}
+                  style={{ zIndex: 10 }}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     activeAppTab === index ? 'bg-amber-600 text-white'
                     : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
@@ -776,7 +1349,11 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
               </div>
               <p className="text-lg text-slate-300 mt-4">{TRANSFER_APPS[activeAppTab].description}</p>
               {!completedApps.has(activeAppTab) && (
-                <button onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
+                <button
+                  onClick={() => handleAppComplete(activeAppTab)}
+                  style={{ zIndex: 10 }}
+                  className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium"
+                >
                   Mark as Understood
                 </button>
               )}
@@ -837,7 +1414,8 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                     {q.options.map((option, oIndex) => (
                       <button
                         key={oIndex}
-                        onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                        onClick={() => handleTestAnswer(qIndex, oIndex)}
+                        style={{ zIndex: 10 }}
                         className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-amber-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                       >
                         {option.text}
@@ -847,8 +1425,9 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                 </div>
               ))}
               <button
-                onMouseDown={(e) => { e.preventDefault(); submitTest(); }}
+                onClick={submitTest}
                 disabled={testAnswers.includes(null)}
+                style={{ zIndex: 10 }}
                 className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(null) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-amber-600 to-yellow-600 text-white'}`}
               >
                 Submit Answers

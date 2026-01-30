@@ -87,6 +87,14 @@ export default function ThermalContactRenderer({
   const [animationFrame, setAnimationFrame] = useState(0);
   const [showMicroscopic, setShowMicroscopic] = useState(false);
 
+  // Interactive controls
+  const [initialHotTemp, setInitialHotTemp] = useState(80);
+  const [initialColdTemp, setInitialColdTemp] = useState(20);
+  const [blockMaterial, setBlockMaterial] = useState<'copper' | 'aluminum' | 'steel'>('copper');
+  const [interfaceThickness, setInterfaceThickness] = useState(0.5); // mm
+  const [showPhysicsPanel, setShowPhysicsPanel] = useState(true);
+  const [tempHistory, setTempHistory] = useState<{hot: number, cold: number}[]>([]);
+
   // Twist state - CPU cooling comparison
   const [cpuTemp, setCpuTemp] = useState(90);
   const [coolerType, setCoolerType] = useState<"no_paste" | "with_paste">("no_paste");
@@ -150,23 +158,34 @@ export default function ThermalContactRenderer({
     if (!simRunning) return;
 
     const currentInterface = interfaceOptions.find(o => o.type === interfaceType);
-    const conductivity = currentInterface?.conductivity || 1;
+    const interfaceConductivity = currentInterface?.conductivity || 1;
+    const materialK = materialConductivities[blockMaterial];
+
+    // Effective conductivity considers both interface and material
+    // Thicker interface = more resistance
+    const thicknessEffect = 1 / (1 + interfaceThickness * 0.5);
+    const effectiveConductivity = (interfaceConductivity * materialK / 100) * thicknessEffect;
 
     const interval = setInterval(() => {
       setSimTime((t) => t + 1);
 
       // Heat transfer rate proportional to conductivity and temp difference
-      const heatRate = conductivity * 0.02;
+      const heatRate = effectiveConductivity * 0.002;
       const tempDiff = hotBlockTemp - coldBlockTemp;
 
       if (tempDiff > 1) {
-        setHotBlockTemp((t) => Math.max(coldBlockTemp, t - heatRate * tempDiff * 0.1));
-        setColdBlockTemp((t) => Math.min(hotBlockTemp, t + heatRate * tempDiff * 0.1));
+        const hotNew = Math.max(coldBlockTemp, hotBlockTemp - heatRate * tempDiff);
+        const coldNew = Math.min(hotBlockTemp, coldBlockTemp + heatRate * tempDiff);
+        setHotBlockTemp(hotNew);
+        setColdBlockTemp(coldNew);
+
+        // Record temperature history for graph
+        setTempHistory(prev => [...prev.slice(-50), { hot: hotNew, cold: coldNew }]);
       }
     }, 100);
 
     return () => clearInterval(interval);
-  }, [simRunning, interfaceType, hotBlockTemp, coldBlockTemp]);
+  }, [simRunning, interfaceType, hotBlockTemp, coldBlockTemp, blockMaterial, interfaceThickness]);
 
   // CPU cooling simulation
   useEffect(() => {
@@ -186,14 +205,22 @@ export default function ThermalContactRenderer({
     return () => clearInterval(interval);
   }, [cpuSimRunning, coolerType]);
 
+  // Material thermal conductivities (W/m-K)
+  const materialConductivities = {
+    copper: 400,
+    aluminum: 205,
+    steel: 50
+  };
+
   // Start simulation
   const startSim = () => {
-    setHotBlockTemp(80);
-    setColdBlockTemp(20);
+    setHotBlockTemp(initialHotTemp);
+    setColdBlockTemp(initialColdTemp);
     setSimTime(0);
+    setTempHistory([{ hot: initialHotTemp, cold: initialColdTemp }]);
     setSimRunning(true);
     playSound("click");
-    emitEvent("simulation_started", { interfaceType });
+    emitEvent("simulation_started", { interfaceType, blockMaterial, interfaceThickness });
   };
 
   // Reset simulation
@@ -773,8 +800,130 @@ export default function ThermalContactRenderer({
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Thermal Contact Experiment</h2>
       <p className="text-slate-400 mb-6 text-center max-w-md">
-        Compare heat transfer through different interface types!
+        Adjust parameters and compare heat transfer through different interfaces!
       </p>
+
+      {/* Interactive Controls Panel */}
+      <div className="bg-slate-800/50 rounded-xl p-4 mb-4 w-full max-w-md border border-slate-700/50">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-semibold text-white text-sm">⚙️ Experiment Controls</h4>
+          <button
+            onClick={() => setShowPhysicsPanel(!showPhysicsPanel)}
+            className="text-slate-400 hover:text-white text-xs"
+            style={{ zIndex: 10 }}
+          >
+            {showPhysicsPanel ? 'Hide' : 'Show'}
+          </button>
+        </div>
+
+        {showPhysicsPanel && (
+          <div className="space-y-4">
+            {/* Hot Block Temperature */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-slate-300">Hot Block Initial Temp</span>
+                <span className="text-red-400 font-mono">{initialHotTemp}°C</span>
+              </div>
+              <input
+                type="range"
+                min="50"
+                max="150"
+                value={initialHotTemp}
+                onChange={(e) => setInitialHotTemp(parseInt(e.target.value))}
+                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+                disabled={simRunning}
+              />
+            </div>
+
+            {/* Cold Block Temperature */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-slate-300">Cold Block Initial Temp</span>
+                <span className="text-blue-400 font-mono">{initialColdTemp}°C</span>
+              </div>
+              <input
+                type="range"
+                min="-10"
+                max="40"
+                value={initialColdTemp}
+                onChange={(e) => setInitialColdTemp(parseInt(e.target.value))}
+                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                disabled={simRunning}
+              />
+            </div>
+
+            {/* Block Material Selector */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-slate-300">Block Material</span>
+                <span className="text-amber-400 font-mono">{materialConductivities[blockMaterial]} W/m-K</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                {(['copper', 'aluminum', 'steel'] as const).map(mat => (
+                  <button
+                    key={mat}
+                    onClick={() => setBlockMaterial(mat)}
+                    disabled={simRunning}
+                    className={`p-2 rounded-lg text-xs font-medium capitalize transition-all ${
+                      blockMaterial === mat
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                    }`}
+                    style={{ zIndex: 10 }}
+                  >
+                    {mat}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Interface Thickness */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-slate-300">Interface Thickness</span>
+                <span className="text-purple-400 font-mono">{interfaceThickness.toFixed(1)} mm</span>
+              </div>
+              <input
+                type="range"
+                min="0.1"
+                max="2"
+                step="0.1"
+                value={interfaceThickness}
+                onChange={(e) => setInterfaceThickness(parseFloat(e.target.value))}
+                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                disabled={simRunning}
+              />
+            </div>
+
+            {/* Temperature Graph */}
+            {tempHistory.length > 1 && (
+              <div className="pt-2 border-t border-slate-700">
+                <div className="text-xs text-slate-400 mb-1">Temperature History</div>
+                <svg viewBox="0 0 200 60" className="w-full h-16 bg-slate-900/50 rounded">
+                  {/* Grid lines */}
+                  <line x1="0" y1="30" x2="200" y2="30" stroke="#374151" strokeWidth="0.5" strokeDasharray="2,2" />
+
+                  {/* Hot temp line */}
+                  <polyline
+                    fill="none"
+                    stroke="#ef4444"
+                    strokeWidth="2"
+                    points={tempHistory.map((t, i) => `${i * (200 / Math.max(tempHistory.length - 1, 1))},${60 - (t.hot - initialColdTemp) / (initialHotTemp - initialColdTemp + 1) * 60}`).join(' ')}
+                  />
+
+                  {/* Cold temp line */}
+                  <polyline
+                    fill="none"
+                    stroke="#3b82f6"
+                    strokeWidth="2"
+                    points={tempHistory.map((t, i) => `${i * (200 / Math.max(tempHistory.length - 1, 1))},${60 - (t.cold - initialColdTemp) / (initialHotTemp - initialColdTemp + 1) * 60}`).join(' ')}
+                  />
+                </svg>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
         {renderHeatTransfer()}
@@ -782,28 +931,31 @@ export default function ThermalContactRenderer({
         <div className="flex gap-2 mt-4">
           {!simRunning ? (
             <button
-              onMouseDown={startSim}
+              onClick={startSim}
               className="flex-1 py-3 bg-orange-600 text-white rounded-lg font-bold hover:bg-orange-500"
+              style={{ zIndex: 10 }}
             >
-              &#128293; Start Heat Transfer
+              🔥 Start Heat Transfer
             </button>
           ) : (
             <button
-              onMouseDown={resetSim}
+              onClick={resetSim}
               className="flex-1 py-3 bg-slate-600 text-white rounded-lg font-bold hover:bg-slate-500"
+              style={{ zIndex: 10 }}
             >
               Reset
             </button>
           )}
           <button
-            onMouseDown={() => setShowMicroscopic(!showMicroscopic)}
+            onClick={() => setShowMicroscopic(!showMicroscopic)}
             className={`px-4 py-3 rounded-lg font-medium ${
               showMicroscopic
                 ? "bg-purple-600 text-white"
                 : "bg-slate-700 text-slate-300"
             }`}
+            style={{ zIndex: 10 }}
           >
-            &#128300;
+            🔬
           </button>
         </div>
       </div>
@@ -817,7 +969,7 @@ export default function ThermalContactRenderer({
           {interfaceOptions.map((opt) => (
             <button
               key={opt.type}
-              onMouseDown={() => {
+              onClick={() => {
                 setInterfaceType(opt.type);
                 resetSim();
               }}
@@ -826,6 +978,7 @@ export default function ThermalContactRenderer({
                   ? "bg-blue-600 text-white"
                   : "bg-slate-700 text-slate-300 hover:bg-slate-600"
               }`}
+              style={{ zIndex: 10 }}
             >
               {opt.name}
             </button>

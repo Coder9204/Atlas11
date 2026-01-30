@@ -87,12 +87,39 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
 
-  // Column simulation
+  // Column simulation - legacy discrete selection
   const [columnLength, setColumnLength] = useState<'short' | 'medium' | 'long'>('medium');
   const [appliedLoad, setAppliedLoad] = useState(0);
   const [hasBuckled, setHasBuckled] = useState(false);
   const [buckleAmount, setBuckleAmount] = useState(0);
   const [bucklingLoads, setBucklingLoads] = useState<Record<string, number>>({});
+
+  // Enhanced play phase - continuous sliders
+  const [columnLengthContinuous, setColumnLengthContinuous] = useState(1.5); // meters (0.5 to 3)
+  const [columnRadius, setColumnRadius] = useState(0.02); // meters (0.01 to 0.05)
+  const [appliedForce, setAppliedForce] = useState(0); // Newtons
+
+  // Material properties (Young's modulus in Pa)
+  const materials: Record<string, { name: string; E: number; color: string }> = {
+    steel: { name: 'Steel', E: 200e9, color: '#94A3B8' },
+    aluminum: { name: 'Aluminum', E: 69e9, color: '#CBD5E1' },
+    wood: { name: 'Wood (Oak)', E: 12e9, color: '#A16207' }
+  };
+
+  // End condition factors (K values for Euler buckling)
+  const endConditions: Record<string, { name: string; K: number; desc: string }> = {
+    'fixed-fixed': { name: 'Fixed-Fixed', K: 0.5, desc: 'Both ends rigidly fixed' },
+    'pinned-pinned': { name: 'Pinned-Pinned', K: 1.0, desc: 'Both ends free to rotate' },
+    'fixed-free': { name: 'Fixed-Free (Cantilever)', K: 2.0, desc: 'One end fixed, one free' },
+    'fixed-pinned': { name: 'Fixed-Pinned', K: 0.7, desc: 'One fixed, one pinned' }
+  };
+
+  // Twist phase - material and end condition selection
+  const [selectedMaterial, setSelectedMaterial] = useState<string>('steel');
+  const [selectedEndCondition, setSelectedEndCondition] = useState<string>('pinned-pinned');
+  const [twistColumnLength, setTwistColumnLength] = useState(1.5);
+  const [twistColumnRadius, setTwistColumnRadius] = useState(0.02);
+  const [twistAppliedForce, setTwistAppliedForce] = useState(0);
 
   // Twist: cross-section shape
   const [crossSection, setCrossSection] = useState<'solid' | 'hollow' | 'i-beam'>('solid');
@@ -100,6 +127,9 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
   const [twistHasBuckled, setTwistHasBuckled] = useState(false);
   const [twistBuckleAmount, setTwistBuckleAmount] = useState(0);
   const [twistExperimentsRun, setTwistExperimentsRun] = useState(0);
+
+  // Track experiments for play phase
+  const [playExperimentsRun, setPlayExperimentsRun] = useState(0);
 
   // Transfer and test state
   const [completedApps, setCompletedApps] = useState(0);
@@ -170,9 +200,39 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
   }, [playSound]);
 
   // ─────────────────────────────────────────────────────────────────────────
-  // BUCKLING PHYSICS
+  // BUCKLING PHYSICS - EULER FORMULA
+  // P_cr = π²EI / (KL)² where E=modulus, I=moment of inertia, K=end factor, L=length
   // ─────────────────────────────────────────────────────────────────────────
 
+  // Calculate moment of inertia for circular cross-section: I = π*r⁴/4
+  const getMomentOfInertia = (radius: number): number => {
+    return (Math.PI * Math.pow(radius, 4)) / 4;
+  };
+
+  // Calculate critical buckling load using Euler's formula
+  const calculateCriticalLoad = (
+    length: number, // meters
+    radius: number, // meters
+    materialKey: string = 'steel',
+    endConditionKey: string = 'pinned-pinned'
+  ): number => {
+    const E = materials[materialKey]?.E || materials.steel.E;
+    const K = endConditions[endConditionKey]?.K || 1.0;
+    const I = getMomentOfInertia(radius);
+    const effectiveLength = K * length;
+
+    // P_cr = π²EI / (KL)²
+    const Pcr = (Math.PI * Math.PI * E * I) / (effectiveLength * effectiveLength);
+    return Pcr;
+  };
+
+  // Get safety factor (applied load / critical load)
+  const getSafetyFactor = (appliedLoad: number, criticalLoad: number): number => {
+    if (appliedLoad === 0) return Infinity;
+    return criticalLoad / appliedLoad;
+  };
+
+  // Legacy function for discrete length selection
   const getCriticalLoad = (length: 'short' | 'medium' | 'long', section: 'solid' | 'hollow' | 'i-beam' = 'solid') => {
     let baseLoad = 50;
     const lengthFactors = { short: 4, medium: 1, long: 0.25 };
@@ -435,8 +495,9 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase('predict'); }}
+        onClick={() => goToPhase('predict')}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-indigo-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        style={{ zIndex: 10 }}
       >
         <span className="relative z-10 flex items-center gap-3">
           Make Your Prediction
@@ -474,8 +535,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           {predictionOptions.map(option => (
             <button
               key={option.id}
-              onMouseDown={(e) => {
-                e.preventDefault();
+              onClick={() => {
                 setPrediction(option.id);
                 playSound('click');
                 console.debug('prediction', { prediction: option.id });
@@ -485,6 +545,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                   ? 'border-indigo-500 bg-indigo-500/20 shadow-md'
                   : 'border-slate-700 hover:border-slate-600 bg-slate-800/50'
               }`}
+              style={{ zIndex: 10 }}
             >
               <span className="text-2xl">{option.icon}</span>
               <span className={prediction === option.id ? 'text-indigo-300 font-semibold' : 'text-slate-300'}>
@@ -499,8 +560,9 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
 
         {prediction && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase('play'); }}
+            onClick={() => goToPhase('play')}
             className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
+            style={{ zIndex: 10 }}
           >
             Start Experiments →
           </button>
@@ -509,125 +571,289 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
     );
   };
 
-  const renderPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-4">Buckling Lab</h2>
-      <p className="text-slate-400 mb-6">Test columns of different lengths</p>
+  const renderPlay = () => {
+    // Calculate critical load for current parameters
+    const criticalLoad = calculateCriticalLoad(columnLengthContinuous, columnRadius, 'steel', 'pinned-pinned');
+    const criticalLoadKN = criticalLoad / 1000; // Convert to kN for display
+    const maxSliderForce = Math.min(criticalLoad * 1.2, 1000000); // Max slider is 120% of critical or 1MN
+    const loadRatio = appliedForce / criticalLoad;
+    const safetyFactor = getSafetyFactor(appliedForce, criticalLoad);
+    const isBuckled = loadRatio >= 1;
+    const buckleDeflection = isBuckled ? 1 : loadRatio * 0.3;
 
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
-        {renderColumnVisualization(columnLength, appliedLoad, buckleAmount, hasBuckled)}
-      </div>
+    // Visualization colors based on stress state
+    const getColumnColor = () => {
+      if (isBuckled) return colors.buckled;
+      if (loadRatio > 0.8) return colors.stressed;
+      if (loadRatio > 0.5) return colors.accent;
+      return colors.column;
+    };
 
-      <div className="mb-4 w-full max-w-md">
-        <h4 className="font-semibold text-slate-300 mb-2">Select Column Length:</h4>
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { id: 'short' as const, label: 'Short', desc: '0.5m' },
-            { id: 'medium' as const, label: 'Medium', desc: '1m' },
-            { id: 'long' as const, label: 'Long', desc: '2m' }
-          ].map(col => (
-            <button
-              key={col.id}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setColumnLength(col.id);
-                resetColumn();
+    // Interactive column SVG
+    const renderInteractiveColumn = () => {
+      const svgHeight = 300;
+      const columnVisualHeight = 50 + (columnLengthContinuous - 0.5) * 80; // Scale length visually
+      const columnWidth = 8 + (columnRadius - 0.01) * 400; // Scale radius visually
+      const buckleOffset = buckleDeflection * 40;
+
+      return (
+        <svg viewBox="0 0 300 320" className="w-full h-72 md:h-80">
+          {/* Background */}
+          <rect x="0" y="0" width="300" height="320" fill="#1e293b" rx="12" />
+
+          {/* Ground/Base */}
+          <rect x="0" y="280" width="300" height="40" fill={colors.steel} />
+          <line x1="100" y1="280" x2="200" y2="280" stroke={colors.column} strokeWidth="4" />
+
+          {/* Applied Force Arrow */}
+          <g transform={`translate(150, ${40})`}>
+            <rect x="-40" y="-25" width="80" height="25" fill={colors.load} rx="4" />
+            <text x="0" y="-8" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">
+              {appliedForce >= 1000 ? `${(appliedForce / 1000).toFixed(1)} kN` : `${appliedForce.toFixed(0)} N`}
+            </text>
+            <polygon points="0,5 -12,-8 12,-8" fill={colors.load} />
+            {/* Force direction arrows */}
+            <line x1="0" y1="5" x2="0" y2="25" stroke={colors.load} strokeWidth="3" markerEnd="url(#arrowhead)" />
+          </g>
+
+          {/* Column */}
+          <g transform={`translate(150, ${280 - columnVisualHeight})`}>
+            {isBuckled || buckleDeflection > 0 ? (
+              <path
+                d={`M 0,0
+                    Q ${buckleOffset * Math.sin(Math.PI * 0.25)},${columnVisualHeight * 0.25}
+                      ${buckleOffset},${columnVisualHeight * 0.5}
+                    Q ${buckleOffset * Math.sin(Math.PI * 0.75)},${columnVisualHeight * 0.75}
+                      0,${columnVisualHeight}`}
+                stroke={getColumnColor()}
+                strokeWidth={columnWidth}
+                fill="none"
+                strokeLinecap="round"
+              />
+            ) : (
+              <rect
+                x={-columnWidth / 2}
+                y="0"
+                width={columnWidth}
+                height={columnVisualHeight}
+                fill={getColumnColor()}
+                rx="2"
+              />
+            )}
+          </g>
+
+          {/* Status Badge */}
+          <g transform="translate(150, 20)">
+            <rect
+              x="-55"
+              y="-12"
+              width="110"
+              height="24"
+              fill={isBuckled ? colors.buckled : loadRatio > 0.8 ? colors.stressed : colors.success}
+              rx="12"
+            />
+            <text x="0" y="5" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">
+              {isBuckled ? 'BUCKLED!' : loadRatio > 0.8 ? 'NEAR CRITICAL!' : 'STABLE'}
+            </text>
+          </g>
+
+          {/* Critical Load Indicator Line */}
+          <g transform={`translate(250, ${280 - columnVisualHeight})`}>
+            <line x1="0" y1="0" x2="0" y2={columnVisualHeight} stroke={colors.danger} strokeWidth="2" strokeDasharray="4,4" />
+            <text x="5" y={columnVisualHeight / 2} fill={colors.danger} fontSize="9" transform={`rotate(90, 5, ${columnVisualHeight / 2})`}>
+              P_cr = {criticalLoadKN.toFixed(1)} kN
+            </text>
+          </g>
+
+          {/* Safety Factor Display */}
+          <g transform="translate(40, 60)">
+            <rect x="-30" y="-15" width="60" height="50" fill="rgba(0,0,0,0.3)" rx="8" />
+            <text x="0" y="0" textAnchor="middle" fill={colors.neutral} fontSize="9">Safety</text>
+            <text x="0" y="15" textAnchor="middle" fill={safetyFactor > 2 ? colors.success : safetyFactor > 1 ? colors.accent : colors.danger} fontSize="14" fontWeight="bold">
+              {safetyFactor === Infinity ? '∞' : safetyFactor.toFixed(1)}
+            </text>
+            <text x="0" y="28" textAnchor="middle" fill={colors.neutral} fontSize="8">factor</text>
+          </g>
+
+          {/* Moment of Inertia Display */}
+          <g transform="translate(260, 60)">
+            <rect x="-30" y="-15" width="60" height="50" fill="rgba(0,0,0,0.3)" rx="8" />
+            <text x="0" y="0" textAnchor="middle" fill={colors.neutral} fontSize="9">I (inertia)</text>
+            <text x="0" y="15" textAnchor="middle" fill={colors.primary} fontSize="12" fontWeight="bold">
+              {(getMomentOfInertia(columnRadius) * 1e9).toFixed(2)}
+            </text>
+            <text x="0" y="28" textAnchor="middle" fill={colors.neutral} fontSize="8">×10⁻⁹ m⁴</text>
+          </g>
+
+          {/* Info text */}
+          <text x="150" y="305" textAnchor="middle" fill={colors.neutral} fontSize="10">
+            L = {columnLengthContinuous.toFixed(2)}m | r = {(columnRadius * 100).toFixed(1)}cm | P_cr = {criticalLoadKN.toFixed(1)} kN
+          </text>
+        </svg>
+      );
+    };
+
+    return (
+      <div className="flex flex-col items-center p-6">
+        <h2 className="text-2xl font-bold text-white mb-2">Interactive Buckling Lab</h2>
+        <p className="text-slate-400 mb-6">Adjust parameters and observe real-time buckling behavior</p>
+
+        {/* Interactive Visualization */}
+        <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 w-full max-w-lg">
+          {renderInteractiveColumn()}
+        </div>
+
+        {/* Euler Formula Display */}
+        <div className="bg-indigo-900/30 border border-indigo-500/30 rounded-xl p-3 mb-6 w-full max-w-lg text-center">
+          <p className="text-sm text-indigo-300 mb-1">Euler Buckling Formula:</p>
+          <p className="text-lg font-mono text-indigo-400">P<sub>cr</sub> = π²EI / (KL)²</p>
+        </div>
+
+        {/* Range Sliders */}
+        <div className="w-full max-w-lg space-y-5 mb-6">
+          {/* Column Length Slider */}
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-sm font-semibold text-slate-300">Column Length (L)</label>
+              <span className="text-lg font-bold text-indigo-400">{columnLengthContinuous.toFixed(2)} m</span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="3"
+              step="0.05"
+              value={columnLengthContinuous}
+              onChange={(e) => {
+                setColumnLengthContinuous(parseFloat(e.target.value));
+                setAppliedForce(0); // Reset force when changing parameters
               }}
-              className={`p-3 rounded-lg border-2 transition-all ${
-                columnLength === col.id
-                  ? 'border-indigo-500 bg-indigo-500/20 shadow-md'
-                  : 'border-slate-700 bg-slate-800/50'
-              }`}
-            >
-              <p className="font-medium text-white">{col.label}</p>
-              <p className="text-xs text-slate-400">{col.desc}</p>
-            </button>
-          ))}
+              className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+              style={{ zIndex: 10 }}
+            />
+            <div className="flex justify-between text-xs text-slate-500 mt-1">
+              <span>0.5m (short)</span>
+              <span>3m (tall)</span>
+            </div>
+          </div>
+
+          {/* Column Radius Slider */}
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-sm font-semibold text-slate-300">Column Radius (r)</label>
+              <span className="text-lg font-bold text-purple-400">{(columnRadius * 100).toFixed(1)} cm</span>
+            </div>
+            <input
+              type="range"
+              min="0.01"
+              max="0.05"
+              step="0.001"
+              value={columnRadius}
+              onChange={(e) => {
+                setColumnRadius(parseFloat(e.target.value));
+                setAppliedForce(0); // Reset force when changing parameters
+              }}
+              className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+              style={{ zIndex: 10 }}
+            />
+            <div className="flex justify-between text-xs text-slate-500 mt-1">
+              <span>1cm (thin)</span>
+              <span>5cm (thick)</span>
+            </div>
+          </div>
+
+          {/* Applied Force Slider */}
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-sm font-semibold text-slate-300">Applied Force (P)</label>
+              <span className={`text-lg font-bold ${isBuckled ? 'text-red-400' : loadRatio > 0.8 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                {appliedForce >= 1000 ? `${(appliedForce / 1000).toFixed(1)} kN` : `${appliedForce.toFixed(0)} N`}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max={maxSliderForce}
+              step={maxSliderForce / 100}
+              value={appliedForce}
+              onChange={(e) => {
+                const newForce = parseFloat(e.target.value);
+                setAppliedForce(newForce);
+                if (newForce >= criticalLoad && !isBuckled) {
+                  playSound('failure');
+                  setPlayExperimentsRun(prev => prev + 1);
+                }
+              }}
+              className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              style={{ zIndex: 10 }}
+            />
+            <div className="flex justify-between text-xs text-slate-500 mt-1">
+              <span>0</span>
+              <span className="text-red-400">Critical: {criticalLoadKN.toFixed(1)} kN</span>
+            </div>
+            {/* Visual load bar */}
+            <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-150 ${isBuckled ? 'bg-red-500' : loadRatio > 0.8 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                style={{ width: `${Math.min(loadRatio * 100, 100)}%` }}
+              />
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="flex items-center justify-center gap-4 mb-4">
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault();
-            handleLoadChange(-10);
-          }}
-          disabled={appliedLoad <= 0}
-          className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-2xl text-white disabled:opacity-50"
-        >
-          −
-        </button>
-
-        <div className="text-center px-4">
-          <p className="text-2xl font-bold text-blue-400">{appliedLoad}N</p>
-          <p className="text-sm text-slate-400">Applied Load</p>
-        </div>
-
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault();
-            handleLoadChange(10);
-          }}
-          disabled={hasBuckled}
-          className="w-12 h-12 rounded-full bg-blue-600 flex items-center justify-center text-2xl text-white disabled:opacity-50"
-        >
-          +
-        </button>
-      </div>
-
-      <div className="flex justify-center gap-3 mb-4">
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault();
-            resetColumn();
-          }}
-          className="px-6 py-2 rounded-lg bg-slate-700 text-white font-medium"
-        >
-          Reset
-        </button>
-        {hasBuckled && !bucklingLoads[columnLength] && (
+        {/* Action Buttons */}
+        <div className="flex justify-center gap-3 mb-6">
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setBucklingLoads(prev => ({ ...prev, [columnLength]: appliedLoad }));
-              playSound('success');
+            onClick={() => {
+              setAppliedForce(0);
+              playSound('click');
             }}
-            className="px-6 py-2 rounded-lg bg-indigo-500 text-white font-medium"
+            className="px-6 py-3 rounded-xl bg-slate-700 text-white font-semibold hover:bg-slate-600 transition-colors"
+            style={{ zIndex: 10 }}
           >
-            Record Result
+            Reset Force
+          </button>
+          <button
+            onClick={() => {
+              setColumnLengthContinuous(1.5);
+              setColumnRadius(0.02);
+              setAppliedForce(0);
+              playSound('click');
+            }}
+            className="px-6 py-3 rounded-xl bg-slate-700 text-white font-semibold hover:bg-slate-600 transition-colors"
+            style={{ zIndex: 10 }}
+          >
+            Reset All
+          </button>
+        </div>
+
+        {/* Physics Insight Box */}
+        <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-6 w-full max-w-lg">
+          <h4 className="font-bold text-amber-400 mb-2">Key Insight: The L² Effect</h4>
+          <p className="text-sm text-slate-300">
+            Notice how doubling the length <strong>quarters</strong> the critical load (1/L² relationship).
+            Meanwhile, doubling the radius increases critical load by <strong>16×</strong> (r⁴ in moment of inertia)!
+          </p>
+        </div>
+
+        {/* Progress to next phase */}
+        {playExperimentsRun >= 2 && (
+          <button
+            onClick={() => goToPhase('review')}
+            className="px-8 py-4 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 transition-all"
+            style={{ zIndex: 10 }}
+          >
+            Understand the Physics →
           </button>
         )}
+
+        {playExperimentsRun < 2 && (
+          <p className="text-slate-500 text-sm">
+            Buckle the column {2 - playExperimentsRun} more time{playExperimentsRun === 1 ? '' : 's'} to continue
+          </p>
+        )}
       </div>
-
-      {Object.keys(bucklingLoads).length > 0 && (
-        <div className="bg-indigo-500/10 border border-indigo-500/20 rounded-xl p-4 mb-4 w-full max-w-md">
-          <h4 className="font-semibold text-indigo-400 mb-2">Buckling Loads:</h4>
-          <div className="grid grid-cols-3 gap-2">
-            {Object.entries(bucklingLoads).map(([len, load]) => (
-              <div key={len} className="bg-slate-800 rounded-lg p-2 text-center">
-                <p className="text-sm font-medium text-slate-300 capitalize">{len}</p>
-                <p className="text-lg font-bold text-indigo-400">{load}N</p>
-              </div>
-            ))}
-          </div>
-          {Object.keys(bucklingLoads).length >= 2 && (
-            <p className="text-sm text-indigo-300 mt-2 text-center">
-              Notice: Short column holds 4x more than long column! (L² relationship)
-            </p>
-          )}
-        </div>
-      )}
-
-      {Object.keys(bucklingLoads).length >= 2 && (
-        <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase('review'); }}
-          className="px-6 py-3 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-semibold rounded-xl"
-        >
-          Understand the Physics →
-        </button>
-      )}
-    </div>
-  );
+    );
+  };
 
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
@@ -692,8 +918,9 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase('twist_predict'); }}
+        onClick={() => goToPhase('twist_predict')}
         className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+        style={{ zIndex: 10 }}
       >
         Try Shape Twist →
       </button>
@@ -749,8 +976,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
           {twistOptions.map(option => (
             <button
               key={option.id}
-              onMouseDown={(e) => {
-                e.preventDefault();
+              onClick={() => {
                 setTwistPrediction(option.id);
                 playSound('click');
                 console.debug('prediction', { prediction: option.id });
@@ -760,6 +986,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                   ? 'border-purple-500 bg-purple-500/20 shadow-md'
                   : 'border-slate-700 hover:border-slate-600 bg-slate-800/50'
               }`}
+              style={{ zIndex: 10 }}
             >
               <span className="text-2xl font-mono">{option.icon}</span>
               <span className={twistPrediction === option.id ? 'text-purple-300 font-semibold' : 'text-slate-300'}>
@@ -771,8 +998,9 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
 
         {twistPrediction && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase('twist_play'); }}
+            onClick={() => goToPhase('twist_play')}
             className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
+            style={{ zIndex: 10 }}
           >
             Test Shapes →
           </button>
@@ -781,106 +1009,378 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
     );
   };
 
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-4">Cross-Section Lab</h2>
-      <p className="text-slate-400 mb-6">Same material, different shapes</p>
+  const renderTwistPlay = () => {
+    // Calculate critical load for current twist parameters
+    const twistCriticalLoad = calculateCriticalLoad(
+      twistColumnLength,
+      twistColumnRadius,
+      selectedMaterial,
+      selectedEndCondition
+    );
+    const twistCriticalLoadKN = twistCriticalLoad / 1000;
+    const twistMaxSliderForce = Math.min(twistCriticalLoad * 1.2, 1000000);
+    const twistLoadRatio = twistAppliedForce / twistCriticalLoad;
+    const twistSafetyFactor = getSafetyFactor(twistAppliedForce, twistCriticalLoad);
+    const twistIsBuckled = twistLoadRatio >= 1;
+    const twistBuckleDeflection = twistIsBuckled ? 1 : twistLoadRatio * 0.3;
 
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
-        {renderColumnVisualization('medium', twistLoad, twistBuckleAmount, twistHasBuckled, crossSection)}
-      </div>
+    const currentMaterial = materials[selectedMaterial];
+    const currentEndCondition = endConditions[selectedEndCondition];
 
-      <div className="mb-4 w-full max-w-md">
-        <h4 className="font-semibold text-slate-300 mb-2">Select Cross-Section:</h4>
-        <div className="grid grid-cols-3 gap-2">
-          {[
-            { id: 'solid' as const, label: 'Solid', crit: getCriticalLoad('medium', 'solid') },
-            { id: 'hollow' as const, label: 'Hollow', crit: getCriticalLoad('medium', 'hollow') },
-            { id: 'i-beam' as const, label: 'I-Beam', crit: getCriticalLoad('medium', 'i-beam') }
-          ].map(sec => (
-            <button
-              key={sec.id}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setCrossSection(sec.id);
-                resetColumn(true);
+    // Get column color based on stress state
+    const getTwistColumnColor = () => {
+      if (twistIsBuckled) return colors.buckled;
+      if (twistLoadRatio > 0.8) return colors.stressed;
+      if (twistLoadRatio > 0.5) return colors.accent;
+      return currentMaterial.color;
+    };
+
+    // Interactive twist column SVG
+    const renderTwistInteractiveColumn = () => {
+      const columnVisualHeight = 50 + (twistColumnLength - 0.5) * 80;
+      const columnWidth = 8 + (twistColumnRadius - 0.01) * 400;
+      const buckleOffset = twistBuckleDeflection * 40;
+
+      // End condition visual markers
+      const renderEndCondition = (position: 'top' | 'bottom') => {
+        const y = position === 'top' ? 0 : columnVisualHeight;
+        const isFixed = selectedEndCondition.includes('fixed') &&
+          (position === 'bottom' || selectedEndCondition === 'fixed-fixed');
+        const isPinned = selectedEndCondition.includes('pinned') &&
+          (position === 'top' && selectedEndCondition === 'pinned-pinned') ||
+          (position === 'bottom' && selectedEndCondition === 'fixed-pinned') ||
+          (position === 'top' && selectedEndCondition === 'fixed-pinned');
+        const isFree = selectedEndCondition === 'fixed-free' && position === 'top';
+
+        if (isFixed) {
+          return (
+            <g transform={`translate(0, ${y})`}>
+              <rect x="-20" y={position === 'top' ? -8 : 0} width="40" height="8" fill={colors.steel} />
+              <line x1="-15" y1={position === 'top' ? -8 : 8} x2="-10" y2={position === 'top' ? -12 : 12} stroke={colors.steel} strokeWidth="2" />
+              <line x1="-5" y1={position === 'top' ? -8 : 8} x2="0" y2={position === 'top' ? -12 : 12} stroke={colors.steel} strokeWidth="2" />
+              <line x1="5" y1={position === 'top' ? -8 : 8} x2="10" y2={position === 'top' ? -12 : 12} stroke={colors.steel} strokeWidth="2" />
+              <line x1="15" y1={position === 'top' ? -8 : 8} x2="20" y2={position === 'top' ? -12 : 12} stroke={colors.steel} strokeWidth="2" />
+            </g>
+          );
+        }
+        if (isPinned || (position === 'top' && selectedEndCondition === 'pinned-pinned')) {
+          return (
+            <g transform={`translate(0, ${y})`}>
+              <circle cx="0" cy={position === 'top' ? -6 : 6} r="6" fill="none" stroke={colors.steel} strokeWidth="2" />
+              <circle cx="0" cy={position === 'top' ? -6 : 6} r="2" fill={colors.steel} />
+            </g>
+          );
+        }
+        if (isFree) {
+          return (
+            <g transform={`translate(0, ${y})`}>
+              <circle cx="0" cy="-4" r="3" fill={colors.accent} />
+              <text x="15" y="0" fill={colors.accent} fontSize="8">free</text>
+            </g>
+          );
+        }
+        return null;
+      };
+
+      return (
+        <svg viewBox="0 0 340 350" className="w-full h-80 md:h-96">
+          {/* Background */}
+          <rect x="0" y="0" width="340" height="350" fill="#1e293b" rx="12" />
+
+          {/* Ground/Base */}
+          <rect x="0" y="300" width="340" height="50" fill={colors.steel} />
+
+          {/* Applied Force Arrow */}
+          <g transform={`translate(150, ${50})`}>
+            <rect x="-45" y="-28" width="90" height="28" fill={colors.load} rx="4" />
+            <text x="0" y="-10" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">
+              {twistAppliedForce >= 1000 ? `${(twistAppliedForce / 1000).toFixed(1)} kN` : `${twistAppliedForce.toFixed(0)} N`}
+            </text>
+            <polygon points="0,5 -12,-8 12,-8" fill={colors.load} />
+          </g>
+
+          {/* Column */}
+          <g transform={`translate(150, ${300 - columnVisualHeight})`}>
+            {twistIsBuckled || twistBuckleDeflection > 0 ? (
+              <path
+                d={`M 0,0
+                    Q ${buckleOffset * Math.sin(Math.PI * 0.25)},${columnVisualHeight * 0.25}
+                      ${buckleOffset},${columnVisualHeight * 0.5}
+                    Q ${buckleOffset * Math.sin(Math.PI * 0.75)},${columnVisualHeight * 0.75}
+                      0,${columnVisualHeight}`}
+                stroke={getTwistColumnColor()}
+                strokeWidth={columnWidth}
+                fill="none"
+                strokeLinecap="round"
+              />
+            ) : (
+              <rect
+                x={-columnWidth / 2}
+                y="0"
+                width={columnWidth}
+                height={columnVisualHeight}
+                fill={getTwistColumnColor()}
+                rx="2"
+              />
+            )}
+            {/* End condition markers */}
+            {renderEndCondition('top')}
+            {renderEndCondition('bottom')}
+          </g>
+
+          {/* Status Badge */}
+          <g transform="translate(150, 20)">
+            <rect
+              x="-55"
+              y="-12"
+              width="110"
+              height="24"
+              fill={twistIsBuckled ? colors.buckled : twistLoadRatio > 0.8 ? colors.stressed : colors.success}
+              rx="12"
+            />
+            <text x="0" y="5" textAnchor="middle" fill="white" fontSize="11" fontWeight="bold">
+              {twistIsBuckled ? 'BUCKLED!' : twistLoadRatio > 0.8 ? 'NEAR CRITICAL!' : 'STABLE'}
+            </text>
+          </g>
+
+          {/* Material indicator */}
+          <g transform="translate(280, 80)">
+            <rect x="-35" y="-20" width="70" height="55" fill="rgba(0,0,0,0.3)" rx="8" />
+            <text x="0" y="-5" textAnchor="middle" fill={colors.neutral} fontSize="9">Material</text>
+            <rect x="-15" y="5" width="30" height="8" fill={currentMaterial.color} rx="2" />
+            <text x="0" y="28" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
+              {currentMaterial.name}
+            </text>
+          </g>
+
+          {/* End condition indicator */}
+          <g transform="translate(60, 80)">
+            <rect x="-45" y="-20" width="90" height="55" fill="rgba(0,0,0,0.3)" rx="8" />
+            <text x="0" y="-5" textAnchor="middle" fill={colors.neutral} fontSize="9">End Condition</text>
+            <text x="0" y="15" textAnchor="middle" fill={colors.accent} fontSize="10" fontWeight="bold">
+              K = {currentEndCondition.K}
+            </text>
+            <text x="0" y="28" textAnchor="middle" fill="white" fontSize="8">
+              {currentEndCondition.name.split(' ')[0]}
+            </text>
+          </g>
+
+          {/* Safety Factor */}
+          <g transform="translate(280, 180)">
+            <rect x="-35" y="-15" width="70" height="50" fill="rgba(0,0,0,0.3)" rx="8" />
+            <text x="0" y="0" textAnchor="middle" fill={colors.neutral} fontSize="9">Safety</text>
+            <text x="0" y="18" textAnchor="middle" fill={twistSafetyFactor > 2 ? colors.success : twistSafetyFactor > 1 ? colors.accent : colors.danger} fontSize="16" fontWeight="bold">
+              {twistSafetyFactor === Infinity ? '∞' : twistSafetyFactor.toFixed(1)}
+            </text>
+          </g>
+
+          {/* Young's Modulus */}
+          <g transform="translate(60, 180)">
+            <rect x="-45" y="-15" width="90" height="50" fill="rgba(0,0,0,0.3)" rx="8" />
+            <text x="0" y="0" textAnchor="middle" fill={colors.neutral} fontSize="9">E (modulus)</text>
+            <text x="0" y="18" textAnchor="middle" fill={colors.primary} fontSize="12" fontWeight="bold">
+              {(currentMaterial.E / 1e9).toFixed(0)} GPa
+            </text>
+          </g>
+
+          {/* Info text */}
+          <text x="170" y="330" textAnchor="middle" fill={colors.neutral} fontSize="10">
+            P_cr = {twistCriticalLoadKN.toFixed(1)} kN | K = {currentEndCondition.K} | E = {(currentMaterial.E / 1e9).toFixed(0)} GPa
+          </text>
+        </svg>
+      );
+    };
+
+    return (
+      <div className="flex flex-col items-center p-6">
+        <h2 className="text-2xl font-bold text-purple-400 mb-2">Material & End Condition Lab</h2>
+        <p className="text-slate-400 mb-6">Explore how material properties and boundary conditions affect buckling</p>
+
+        {/* Interactive Visualization */}
+        <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 w-full max-w-xl">
+          {renderTwistInteractiveColumn()}
+        </div>
+
+        {/* Material Selector */}
+        <div className="w-full max-w-xl mb-4">
+          <h4 className="font-semibold text-slate-300 mb-2">Select Material:</h4>
+          <div className="grid grid-cols-3 gap-2">
+            {Object.entries(materials).map(([key, mat]) => (
+              <button
+                key={key}
+                onClick={() => {
+                  setSelectedMaterial(key);
+                  setTwistAppliedForce(0);
+                  playSound('click');
+                }}
+                className={`p-3 rounded-xl border-2 transition-all ${
+                  selectedMaterial === key
+                    ? 'border-purple-500 bg-purple-500/20 shadow-lg'
+                    : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                }`}
+                style={{ zIndex: 10 }}
+              >
+                <div className="flex items-center gap-2 mb-1">
+                  <div className="w-4 h-4 rounded" style={{ backgroundColor: mat.color }} />
+                  <p className="font-medium text-white">{mat.name}</p>
+                </div>
+                <p className="text-xs text-slate-400">E = {(mat.E / 1e9).toFixed(0)} GPa</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* End Condition Selector */}
+        <div className="w-full max-w-xl mb-6">
+          <h4 className="font-semibold text-slate-300 mb-2">Select End Condition:</h4>
+          <div className="grid grid-cols-2 gap-2">
+            {Object.entries(endConditions).map(([key, cond]) => (
+              <button
+                key={key}
+                onClick={() => {
+                  setSelectedEndCondition(key);
+                  setTwistAppliedForce(0);
+                  playSound('click');
+                }}
+                className={`p-3 rounded-xl border-2 transition-all text-left ${
+                  selectedEndCondition === key
+                    ? 'border-amber-500 bg-amber-500/20 shadow-lg'
+                    : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
+                }`}
+                style={{ zIndex: 10 }}
+              >
+                <div className="flex justify-between items-center mb-1">
+                  <p className="font-medium text-white text-sm">{cond.name}</p>
+                  <span className="text-amber-400 font-bold">K = {cond.K}</span>
+                </div>
+                <p className="text-xs text-slate-400">{cond.desc}</p>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Range Sliders */}
+        <div className="w-full max-w-xl space-y-4 mb-6">
+          {/* Column Length Slider */}
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-sm font-semibold text-slate-300">Column Length (L)</label>
+              <span className="text-lg font-bold text-indigo-400">{twistColumnLength.toFixed(2)} m</span>
+            </div>
+            <input
+              type="range"
+              min="0.5"
+              max="3"
+              step="0.05"
+              value={twistColumnLength}
+              onChange={(e) => {
+                setTwistColumnLength(parseFloat(e.target.value));
+                setTwistAppliedForce(0);
               }}
-              className={`p-3 rounded-lg border-2 transition-all ${
-                crossSection === sec.id
-                  ? 'border-purple-500 bg-purple-500/20 shadow-md'
-                  : 'border-slate-700 bg-slate-800/50'
-              }`}
-            >
-              <p className="font-medium text-white">{sec.label}</p>
-              <p className="text-xs text-slate-400">Crit: {sec.crit}N</p>
-            </button>
-          ))}
+              className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-indigo-500"
+              style={{ zIndex: 10 }}
+            />
+          </div>
+
+          {/* Applied Force Slider */}
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <div className="flex justify-between items-center mb-2">
+              <label className="text-sm font-semibold text-slate-300">Applied Force (P)</label>
+              <span className={`text-lg font-bold ${twistIsBuckled ? 'text-red-400' : twistLoadRatio > 0.8 ? 'text-amber-400' : 'text-emerald-400'}`}>
+                {twistAppliedForce >= 1000 ? `${(twistAppliedForce / 1000).toFixed(1)} kN` : `${twistAppliedForce.toFixed(0)} N`}
+              </span>
+            </div>
+            <input
+              type="range"
+              min="0"
+              max={twistMaxSliderForce}
+              step={twistMaxSliderForce / 100}
+              value={twistAppliedForce}
+              onChange={(e) => {
+                const newForce = parseFloat(e.target.value);
+                setTwistAppliedForce(newForce);
+                if (newForce >= twistCriticalLoad && !twistIsBuckled) {
+                  playSound('failure');
+                  setTwistExperimentsRun(prev => prev + 1);
+                }
+              }}
+              className="w-full h-3 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              style={{ zIndex: 10 }}
+            />
+            <div className="flex justify-between text-xs text-slate-500 mt-1">
+              <span>0</span>
+              <span className="text-red-400">Critical: {twistCriticalLoadKN.toFixed(1)} kN</span>
+            </div>
+            {/* Visual load bar */}
+            <div className="mt-2 h-2 bg-slate-700 rounded-full overflow-hidden">
+              <div
+                className={`h-full transition-all duration-150 ${twistIsBuckled ? 'bg-red-500' : twistLoadRatio > 0.8 ? 'bg-amber-500' : 'bg-emerald-500'}`}
+                style={{ width: `${Math.min(twistLoadRatio * 100, 100)}%` }}
+              />
+            </div>
+          </div>
         </div>
-      </div>
 
-      <div className="flex items-center justify-center gap-4 mb-4">
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault();
-            handleLoadChange(-10, true);
-          }}
-          disabled={twistLoad <= 0}
-          className="w-12 h-12 rounded-full bg-slate-700 flex items-center justify-center text-2xl text-white disabled:opacity-50"
-        >
-          −
-        </button>
-
-        <div className="text-center px-4">
-          <p className="text-2xl font-bold text-purple-400">{twistLoad}N</p>
-          <p className="text-sm text-slate-400">Applied Load</p>
+        {/* Formula Explanation */}
+        <div className="bg-purple-900/30 border border-purple-500/30 rounded-xl p-4 mb-6 w-full max-w-xl">
+          <h4 className="font-bold text-purple-400 mb-2">How K Affects Critical Load</h4>
+          <p className="text-sm text-slate-300 mb-2">
+            The effective length factor <strong>K</strong> determines how end conditions affect buckling:
+          </p>
+          <ul className="text-sm text-slate-400 space-y-1">
+            <li>• <strong>Fixed-Fixed (K=0.5):</strong> 4x stronger than pinned-pinned</li>
+            <li>• <strong>Pinned-Pinned (K=1.0):</strong> Reference case</li>
+            <li>• <strong>Fixed-Free (K=2.0):</strong> 4x weaker than pinned-pinned</li>
+          </ul>
         </div>
 
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault();
-            handleLoadChange(10, true);
-          }}
-          disabled={twistHasBuckled}
-          className="w-12 h-12 rounded-full bg-purple-600 flex items-center justify-center text-2xl text-white disabled:opacity-50"
-        >
-          +
-        </button>
-      </div>
-
-      <div className="flex justify-center gap-3 mb-4">
-        <button
-          onMouseDown={(e) => {
-            e.preventDefault();
-            resetColumn(true);
-          }}
-          className="px-6 py-2 rounded-lg bg-slate-700 text-white font-medium"
-        >
-          Reset
-        </button>
-        {twistHasBuckled && (
+        {/* Action Buttons */}
+        <div className="flex justify-center gap-3 mb-6">
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setTwistExperimentsRun(prev => prev + 1);
-              resetColumn(true);
+            onClick={() => {
+              setTwistAppliedForce(0);
+              playSound('click');
             }}
-            className="px-6 py-2 rounded-lg bg-purple-500 text-white font-medium"
+            className="px-6 py-3 rounded-xl bg-slate-700 text-white font-semibold hover:bg-slate-600 transition-colors"
+            style={{ zIndex: 10 }}
           >
-            Try Another
+            Reset Force
+          </button>
+          <button
+            onClick={() => {
+              setSelectedMaterial('steel');
+              setSelectedEndCondition('pinned-pinned');
+              setTwistColumnLength(1.5);
+              setTwistColumnRadius(0.02);
+              setTwistAppliedForce(0);
+              playSound('click');
+            }}
+            className="px-6 py-3 rounded-xl bg-slate-700 text-white font-semibold hover:bg-slate-600 transition-colors"
+            style={{ zIndex: 10 }}
+          >
+            Reset All
+          </button>
+        </div>
+
+        {/* Progress to next phase */}
+        {twistExperimentsRun >= 2 && (
+          <button
+            onClick={() => goToPhase('twist_review')}
+            className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all"
+            style={{ zIndex: 10 }}
+          >
+            Review Findings →
           </button>
         )}
-      </div>
 
-      {twistExperimentsRun >= 2 && (
-        <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase('twist_review'); }}
-          className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
-        >
-          Review Findings →
-        </button>
-      )}
-    </div>
-  );
+        {twistExperimentsRun < 2 && (
+          <p className="text-slate-500 text-sm">
+            Buckle the column with {2 - twistExperimentsRun} more configuration{twistExperimentsRun === 1 ? '' : 's'} to continue
+          </p>
+        )}
+      </div>
+    );
+  };
 
   const renderTwistReview = () => (
     <div className="flex flex-col items-center p-6">
@@ -924,8 +1424,9 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase('transfer'); }}
+        onClick={() => goToPhase('transfer')}
         className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+        style={{ zIndex: 10 }}
       >
         See Applications →
       </button>
@@ -951,8 +1452,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         {realWorldApps.map((app, i) => (
           <button
             key={i}
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               if (completedApps <= i) {
                 setCompletedApps(i + 1);
                 playSound('complete');
@@ -963,6 +1463,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 ? 'bg-emerald-500/20 border-2 border-emerald-500'
                 : 'bg-slate-800/50 border-2 border-slate-700 hover:border-slate-600'
             }`}
+            style={{ zIndex: 10 }}
           >
             <span className="text-3xl">{app.icon}</span>
             <p className="text-sm font-medium mt-2" style={{ color: completedApps > i ? '#10B981' : app.color }}>{app.short}</p>
@@ -975,8 +1476,9 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
 
       {completedApps >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase('test'); }}
+          onClick={() => goToPhase('test')}
           className="px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
+          style={{ zIndex: 10 }}
         >
           Take the Test →
         </button>
@@ -1032,24 +1534,24 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
 
           {score >= 7 ? (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
+              onClick={() => {
                 setTestScore(score);
                 goToPhase('mastery');
               }}
               className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
+              style={{ zIndex: 10 }}
             >
               Complete Lesson →
             </button>
           ) : (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
+              onClick={() => {
                 setShowTestResults(false);
                 setTestAnswers(Array(10).fill(null));
                 goToPhase('review');
               }}
               className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+              style={{ zIndex: 10 }}
             >
               Review & Try Again
             </button>
@@ -1071,15 +1573,13 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 {q.options.map((opt, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleTestAnswer(qIndex, oIndex);
-                    }}
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
                     className={`p-2 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-indigo-600 text-white'
                         : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
                     }`}
+                    style={{ zIndex: 10 }}
                   >
                     {opt}
                   </button>
@@ -1090,13 +1590,14 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); }}
+          onClick={() => setShowTestResults(true)}
           disabled={!allAnswered}
           className={`px-6 py-3 rounded-xl font-semibold ${
             allAnswered
               ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white'
               : 'bg-slate-700 text-slate-500 cursor-not-allowed'
           }`}
+          style={{ zIndex: 10 }}
         >
           Submit Answers
         </button>
@@ -1139,12 +1640,12 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
         </div>
 
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             playSound('complete');
             onPhaseComplete?.();
           }}
           className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-bold text-lg rounded-xl"
+          style={{ zIndex: 10 }}
         >
           Complete Lesson
         </button>
@@ -1188,7 +1689,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
             {PHASES.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   currentPhase === p
                     ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
@@ -1197,6 +1698,7 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                style={{ zIndex: 10 }}
               />
             ))}
           </div>
@@ -1213,11 +1715,9 @@ const BucklingRenderer: React.FC<BucklingRendererProps> = ({
                 <span className="text-2xl">🧑‍🏫</span>
                 <p className="flex-1">{coachMessages[phase]}</p>
                 <button
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    setShowCoachMessage(false);
-                  }}
+                  onClick={() => setShowCoachMessage(false)}
                   className="text-white/80 hover:text-white"
+                  style={{ zIndex: 10 }}
                 >
                   ✕
                 </button>

@@ -119,6 +119,17 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
   const [ball2Vel, setBall2Vel] = useState(0);
   const [experimentsRun, setExperimentsRun] = useState(0);
 
+  // Interactive controls
+  const [initialVelocity, setInitialVelocity] = useState(4); // m/s
+  const [elasticityCoeff, setElasticityCoeff] = useState(1.0); // 0-1 (1 = perfectly elastic)
+  const [mass1, setMass1] = useState(1); // kg
+  const [mass2, setMass2] = useState(1); // kg
+  const [showPhysicsPanel, setShowPhysicsPanel] = useState(true);
+  const [momentumBefore, setMomentumBefore] = useState(0);
+  const [momentumAfter, setMomentumAfter] = useState(0);
+  const [energyBefore, setEnergyBefore] = useState(0);
+  const [energyAfter, setEnergyAfter] = useState(0);
+
   // Twist: mass ratio experiments
   const [massRatio, setMassRatio] = useState<'equal' | 'heavy_light' | 'light_heavy'>('equal');
   const [twistExperimentsRun, setTwistExperimentsRun] = useState(0);
@@ -193,26 +204,50 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
     setAnimationPhase('before');
     setIsAnimating(true);
 
-    // Mass values
-    let m1 = 1, m2 = 1;
-    if (masses === 'heavy_light') { m1 = 3; m2 = 1; }
-    if (masses === 'light_heavy') { m1 = 1; m2 = 3; }
+    // Mass values - use sliders if in play phase, preset if in twist phase
+    let m1: number, m2: number;
+    if (phase === 'play') {
+      m1 = mass1;
+      m2 = mass2;
+    } else {
+      m1 = 1;
+      m2 = 1;
+      if (masses === 'heavy_light') { m1 = 3; m2 = 1; }
+      if (masses === 'light_heavy') { m1 = 1; m2 = 3; }
+    }
 
     // Initial velocities
-    const v1i = 4; // Ball 1 moving right
+    const v1i = phase === 'play' ? initialVelocity : 4; // Ball 1 moving right
     const v2i = 0; // Ball 2 stationary
+
+    // Calculate initial momentum and energy
+    const p_before = m1 * v1i + m2 * v2i;
+    const ke_before = 0.5 * m1 * v1i * v1i + 0.5 * m2 * v2i * v2i;
+    setMomentumBefore(p_before);
+    setEnergyBefore(ke_before);
 
     // Calculate final velocities
     let v1f: number, v2f: number;
 
-    if (type === 'elastic') {
-      // Elastic collision formulas
-      v1f = ((m1 - m2) / (m1 + m2)) * v1i + ((2 * m2) / (m1 + m2)) * v2i;
-      v2f = ((2 * m1) / (m1 + m2)) * v1i + ((m2 - m1) / (m1 + m2)) * v2i;
-    } else {
-      // Inelastic (perfectly inelastic - they stick)
+    // Use elasticity coefficient for variable collision types
+    const e = phase === 'play' && type === 'elastic' ? elasticityCoeff : (type === 'elastic' ? 1 : 0);
+
+    if (e === 0) {
+      // Perfectly inelastic (they stick)
       v1f = v2f = (m1 * v1i + m2 * v2i) / (m1 + m2);
+    } else {
+      // General collision with coefficient of restitution
+      // v1f = (m1*v1i + m2*v2i + m2*e*(v2i-v1i)) / (m1+m2)
+      // v2f = (m1*v1i + m2*v2i + m1*e*(v1i-v2i)) / (m1+m2)
+      v1f = ((m1 - e * m2) * v1i + (1 + e) * m2 * v2i) / (m1 + m2);
+      v2f = ((m2 - e * m1) * v2i + (1 + e) * m1 * v1i) / (m1 + m2);
     }
+
+    // Calculate final momentum and energy
+    const p_after = m1 * v1f + m2 * v2f;
+    const ke_after = 0.5 * m1 * v1f * v1f + 0.5 * m2 * v2f * v2f;
+    setMomentumAfter(p_after);
+    setEnergyAfter(ke_after);
 
     // Animate approach
     let pos1 = 50;
@@ -366,8 +401,23 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
   // ─────────────────────────────────────────────────────────────────────────
 
   const renderCollisionVisualization = (type: 'elastic' | 'inelastic', masses: 'equal' | 'heavy_light' | 'light_heavy' = 'equal') => {
-    const m1Radius = masses === 'heavy_light' ? 30 : masses === 'light_heavy' ? 18 : 24;
-    const m2Radius = masses === 'light_heavy' ? 30 : masses === 'heavy_light' ? 18 : 24;
+    // Calculate radii based on mass (either from sliders or presets)
+    let m1Radius: number, m2Radius: number;
+    let displayMass1: string, displayMass2: string;
+
+    if (phase === 'play') {
+      // Use slider values
+      m1Radius = 12 + mass1 * 4;
+      m2Radius = 12 + mass2 * 4;
+      displayMass1 = `${mass1}kg`;
+      displayMass2 = `${mass2}kg`;
+    } else {
+      // Use presets for twist phase
+      m1Radius = masses === 'heavy_light' ? 30 : masses === 'light_heavy' ? 18 : 24;
+      m2Radius = masses === 'light_heavy' ? 30 : masses === 'heavy_light' ? 18 : 24;
+      displayMass1 = masses === 'heavy_light' ? '3m' : masses === 'light_heavy' ? 'm' : 'm';
+      displayMass2 = masses === 'light_heavy' ? '3m' : masses === 'heavy_light' ? 'm' : 'm';
+    }
 
     return (
       <svg viewBox="0 0 400 150" className="w-full h-40 md:h-48">
@@ -434,8 +484,8 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           stroke="white"
           strokeWidth="2"
         />
-        <text x={ball1Pos} y="80" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
-          {masses === 'heavy_light' ? '3m' : masses === 'light_heavy' ? 'm' : 'm'}
+        <text x={ball1Pos} y="80" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
+          {displayMass1}
         </text>
 
         {/* Ball 2 */}
@@ -447,8 +497,8 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
           stroke="white"
           strokeWidth="2"
         />
-        <text x={ball2Pos} y="80" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
-          {masses === 'light_heavy' ? '3m' : masses === 'heavy_light' ? 'm' : 'm'}
+        <text x={ball2Pos} y="80" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
+          {displayMass2}
         </text>
 
         {/* Type label */}
@@ -619,6 +669,134 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
     <div>
       {renderSectionHeader('Collision Lab', 'Compare elastic vs inelastic')}
 
+      {/* Interactive Controls Panel */}
+      <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-semibold text-white text-sm">⚙️ Physics Controls</h4>
+          <button
+            onClick={() => setShowPhysicsPanel(!showPhysicsPanel)}
+            className="text-slate-400 hover:text-white text-xs"
+            style={{ zIndex: 10 }}
+          >
+            {showPhysicsPanel ? 'Hide' : 'Show'}
+          </button>
+        </div>
+
+        {showPhysicsPanel && (
+          <div className="space-y-4">
+            {/* Mass 1 Slider */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-slate-300">Ball 1 Mass (Blue)</span>
+                <span className="text-blue-400 font-mono">{mass1} kg</span>
+              </div>
+              <input
+                type="range"
+                min="0.5"
+                max="5"
+                step="0.5"
+                value={mass1}
+                onChange={(e) => setMass1(parseFloat(e.target.value))}
+                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                disabled={isAnimating}
+              />
+            </div>
+
+            {/* Mass 2 Slider */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-slate-300">Ball 2 Mass (Red)</span>
+                <span className="text-red-400 font-mono">{mass2} kg</span>
+              </div>
+              <input
+                type="range"
+                min="0.5"
+                max="5"
+                step="0.5"
+                value={mass2}
+                onChange={(e) => setMass2(parseFloat(e.target.value))}
+                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+                disabled={isAnimating}
+              />
+            </div>
+
+            {/* Initial Velocity Slider */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-slate-300">Ball 1 Initial Velocity</span>
+                <span className="text-green-400 font-mono">{initialVelocity} m/s</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="10"
+                step="0.5"
+                value={initialVelocity}
+                onChange={(e) => setInitialVelocity(parseFloat(e.target.value))}
+                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                disabled={isAnimating}
+              />
+            </div>
+
+            {/* Elasticity Coefficient (only for elastic type) */}
+            {collisionType === 'elastic' && (
+              <div>
+                <div className="flex justify-between text-sm mb-1">
+                  <span className="text-slate-300">Elasticity Coefficient (e)</span>
+                  <span className="text-purple-400 font-mono">{elasticityCoeff.toFixed(2)}</span>
+                </div>
+                <input
+                  type="range"
+                  min="0"
+                  max="1"
+                  step="0.05"
+                  value={elasticityCoeff}
+                  onChange={(e) => setElasticityCoeff(parseFloat(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
+                  disabled={isAnimating}
+                />
+                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                  <span>Inelastic (0)</span>
+                  <span>Perfectly Elastic (1)</span>
+                </div>
+              </div>
+            )}
+
+            {/* Conservation Display */}
+            {animationPhase === 'after' && (
+              <div className="grid grid-cols-2 gap-3 pt-3 border-t border-slate-700">
+                <div className="bg-slate-900/50 rounded-lg p-3">
+                  <div className="text-xs text-slate-400 mb-1">Momentum (p = mv)</div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-300 text-sm">Before:</span>
+                    <span className="text-emerald-400 font-mono">{momentumBefore.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-300 text-sm">After:</span>
+                    <span className="text-emerald-400 font-mono">{momentumAfter.toFixed(2)}</span>
+                  </div>
+                  <div className="text-xs text-emerald-400 mt-1 text-center">✓ Conserved!</div>
+                </div>
+                <div className="bg-slate-900/50 rounded-lg p-3">
+                  <div className="text-xs text-slate-400 mb-1">Energy (KE = ½mv²)</div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-300 text-sm">Before:</span>
+                    <span className="text-amber-400 font-mono">{energyBefore.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between items-center">
+                    <span className="text-slate-300 text-sm">After:</span>
+                    <span className="text-amber-400 font-mono">{energyAfter.toFixed(2)}</span>
+                  </div>
+                  <div className={`text-xs mt-1 text-center ${Math.abs(energyBefore - energyAfter) < 0.01 ? 'text-emerald-400' : 'text-amber-400'}`}>
+                    {Math.abs(energyBefore - energyAfter) < 0.01 ? '✓ Conserved!' : `Lost: ${((1 - energyAfter / energyBefore) * 100).toFixed(0)}%`}
+                  </div>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+
       <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
         {renderCollisionVisualization(collisionType)}
       </div>
@@ -627,8 +805,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
         <h4 className="font-semibold text-gray-700 mb-2">Select Collision Type:</h4>
         <div className="grid grid-cols-2 gap-3">
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               if (!isAnimating) {
                 setCollisionType('elastic');
                 setBall1Pos(50);
@@ -642,14 +819,14 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
                 ? 'border-green-500 bg-green-50 shadow-md'
                 : 'border-gray-200 bg-white'
             }`}
+            style={{ zIndex: 10 }}
           >
             <span className="text-2xl">🎱</span>
             <p className="font-medium text-sm">Elastic (Bouncy)</p>
             <p className="text-xs text-gray-500">Like billiard balls</p>
           </button>
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               if (!isAnimating) {
                 setCollisionType('inelastic');
                 setBall1Pos(50);
@@ -663,6 +840,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
                 ? 'border-amber-500 bg-amber-50 shadow-md'
                 : 'border-gray-200 bg-white'
             }`}
+            style={{ zIndex: 10 }}
           >
             <span className="text-2xl">🧱</span>
             <p className="font-medium text-sm">Inelastic (Sticky)</p>
@@ -673,8 +851,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
 
       <div className="flex justify-center mb-4">
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             if (!isAnimating) {
               runCollision(collisionType);
               setExperimentsRun(prev => prev + 1);
@@ -686,6 +863,7 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
               ? 'bg-gray-200 text-gray-400'
               : 'bg-gradient-to-r from-blue-500 to-indigo-500 text-white shadow-lg hover:shadow-xl'
           }`}
+          style={{ zIndex: 10 }}
         >
           {isAnimating ? 'Colliding...' : '💥 Run Collision'}
         </button>

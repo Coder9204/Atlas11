@@ -75,6 +75,8 @@ const isValidPhase = (phase: string): phase is Phase => {
   return ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'].includes(phase);
 };
 
+const PHASES: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 // ─────────────────────────────────────────────────────────────────────────────
 // COMPONENT PROPS
 // ─────────────────────────────────────────────────────────────────────────────
@@ -117,6 +119,11 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   const [catchDistance, setCatchDistance] = useState<number | null>(null);
   const [reactionTime, setReactionTime] = useState<number | null>(null);
   const [attempts, setAttempts] = useState<number[]>([]);
+
+  // Interactive controls
+  const [gravity, setGravity] = useState(9.8); // m/s² - Earth default
+  const [rulerLength, setRulerLength] = useState(30); // cm
+  const [showPhysicsPanel, setShowPhysicsPanel] = useState(true);
 
   // Twist: distraction test
   const [distractionType, setDistractionType] = useState<'none' | 'visual' | 'audio' | 'math'>('none');
@@ -184,16 +191,29 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   // d = ½gt² → t = √(2d/g)
   const distanceToTime = (distanceCm: number): number => {
     const distanceM = distanceCm / 100;
-    const g = 9.8; // m/s²
-    return Math.sqrt((2 * distanceM) / g) * 1000; // Convert to ms
+    return Math.sqrt((2 * distanceM) / gravity) * 1000; // Convert to ms
   };
 
   // t = √(2d/g) → d = ½gt²
   const timeToDistance = (timeMs: number): number => {
     const timeS = timeMs / 1000;
-    const g = 9.8;
-    return (0.5 * g * timeS * timeS) * 100; // Convert to cm
+    return (0.5 * gravity * timeS * timeS) * 100; // Convert to cm
   };
+
+  // Calculate current velocity during fall
+  const getCurrentVelocity = (distanceCm: number): number => {
+    // v = √(2gd)
+    const distanceM = distanceCm / 100;
+    return Math.sqrt(2 * gravity * distanceM) * 100; // cm/s
+  };
+
+  // Gravity presets
+  const gravityPresets = [
+    { name: 'Moon', value: 1.62, emoji: '🌙' },
+    { name: 'Mars', value: 3.72, emoji: '🔴' },
+    { name: 'Earth', value: 9.8, emoji: '🌍' },
+    { name: 'Jupiter', value: 24.79, emoji: '🟠' }
+  ];
 
   // ─────────────────────────────────────────────────────────────────────────
   // RULER DROP SIMULATION
@@ -218,12 +238,12 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
       const animate = () => {
         const elapsed = (Date.now() - startTime) / 1000;
-        pos = 0.5 * 9.8 * elapsed * elapsed * 100; // cm
+        pos = 0.5 * gravity * elapsed * elapsed * 100; // cm
 
-        if (pos >= 30) {
+        if (pos >= rulerLength) {
           // Missed!
           setRulerState('missed');
-          setRulerPosition(30);
+          setRulerPosition(rulerLength);
           playSound('failure');
           return;
         }
@@ -427,15 +447,15 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
         <g transform={`translate(100, ${50 + rulerPosition * 8})`}>
           <rect x="-15" y="0" width="30" height="180" fill={colors.ruler} rx="3" stroke="#D97706" strokeWidth="2" />
 
-          {/* Ruler markings */}
-          {[0, 5, 10, 15, 20, 25, 30].map(cm => (
+          {/* Ruler markings - dynamic based on rulerLength */}
+          {Array.from({ length: Math.floor(rulerLength / 5) + 1 }, (_, i) => i * 5).map(cm => (
             <g key={cm} transform={`translate(0, ${cm * 6})`}>
               <line x1="-15" y1="0" x2="-8" y2="0" stroke="#92400E" strokeWidth="1" />
               <text x="-5" y="4" textAnchor="end" fill="#92400E" fontSize="8">{cm}</text>
             </g>
           ))}
 
-          <text x="8" y="90" fill="#92400E" fontSize="8" fontWeight="bold">cm</text>
+          <text x="8" y={rulerLength * 3} fill="#92400E" fontSize="8" fontWeight="bold">cm</text>
         </g>
 
         {/* Catch hand at bottom */}
@@ -637,6 +657,93 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
     <div>
       {renderSectionHeader('Ruler Drop Test', 'Catch it as fast as you can!')}
 
+      {/* Interactive Controls Panel */}
+      <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
+        <div className="flex items-center justify-between mb-3">
+          <h4 className="font-semibold text-white">⚙️ Physics Controls</h4>
+          <button
+            onClick={() => setShowPhysicsPanel(!showPhysicsPanel)}
+            className="text-slate-400 hover:text-white text-sm"
+            style={{ zIndex: 10 }}
+          >
+            {showPhysicsPanel ? 'Hide' : 'Show'}
+          </button>
+        </div>
+
+        {showPhysicsPanel && (
+          <div className="space-y-4">
+            {/* Gravity Slider */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-slate-300">Gravity Environment</span>
+                <span className="text-amber-400 font-mono">{gravity.toFixed(2)} m/s²</span>
+              </div>
+              <input
+                type="range"
+                min="1"
+                max="25"
+                step="0.1"
+                value={gravity}
+                onChange={(e) => setGravity(parseFloat(e.target.value))}
+                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+                disabled={rulerState !== 'ready'}
+              />
+              <div className="flex justify-between mt-2 gap-2">
+                {gravityPresets.map(preset => (
+                  <button
+                    key={preset.name}
+                    onClick={() => setGravity(preset.value)}
+                    disabled={rulerState !== 'ready'}
+                    className={`flex-1 py-1 px-2 rounded text-xs font-medium transition-all ${
+                      Math.abs(gravity - preset.value) < 0.1
+                        ? 'bg-amber-500 text-white'
+                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                    }`}
+                    style={{ zIndex: 10 }}
+                  >
+                    {preset.emoji} {preset.name}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Ruler Length Slider */}
+            <div>
+              <div className="flex justify-between text-sm mb-1">
+                <span className="text-slate-300">Ruler Length</span>
+                <span className="text-blue-400 font-mono">{rulerLength} cm</span>
+              </div>
+              <input
+                type="range"
+                min="15"
+                max="50"
+                step="5"
+                value={rulerLength}
+                onChange={(e) => setRulerLength(parseInt(e.target.value))}
+                className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                disabled={rulerState !== 'ready'}
+              />
+            </div>
+
+            {/* Real-time Physics Display */}
+            <div className="grid grid-cols-3 gap-2 pt-2 border-t border-slate-700">
+              <div className="text-center bg-slate-900/50 rounded p-2">
+                <div className="text-xs text-slate-400">Max Fall Time</div>
+                <div className="text-lg font-bold text-green-400">{distanceToTime(rulerLength).toFixed(0)}ms</div>
+              </div>
+              <div className="text-center bg-slate-900/50 rounded p-2">
+                <div className="text-xs text-slate-400">Current Distance</div>
+                <div className="text-lg font-bold text-blue-400">{rulerPosition.toFixed(1)}cm</div>
+              </div>
+              <div className="text-center bg-slate-900/50 rounded p-2">
+                <div className="text-xs text-slate-400">Fall Velocity</div>
+                <div className="text-lg font-bold text-purple-400">{getCurrentVelocity(rulerPosition).toFixed(0)}cm/s</div>
+              </div>
+            </div>
+          </div>
+        )}
+      </div>
+
       <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
         {renderRulerDrop()}
       </div>
@@ -644,33 +751,27 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
       <div className="flex justify-center gap-3 mb-4">
         {rulerState === 'ready' && (
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              startTest();
-            }}
+            onClick={() => startTest()}
             className="px-8 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-orange-500 text-white shadow-lg hover:shadow-xl"
+            style={{ zIndex: 10 }}
           >
             🎯 Start Test
           </button>
         )}
         {(rulerState === 'waiting' || rulerState === 'dropping') && (
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              catchRuler();
-            }}
+            onClick={() => catchRuler()}
             className="px-12 py-4 rounded-xl font-bold text-xl bg-gradient-to-r from-green-500 to-emerald-500 text-white shadow-lg hover:shadow-xl animate-pulse"
+            style={{ zIndex: 10 }}
           >
             👋 CATCH!
           </button>
         )}
         {(rulerState === 'caught' || rulerState === 'missed') && (
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              resetTest();
-            }}
+            onClick={() => resetTest()}
             className="px-8 py-3 rounded-xl font-semibold bg-gray-100 text-gray-700"
+            style={{ zIndex: 10 }}
           >
             Try Again
           </button>
@@ -698,9 +799,9 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
       {rulerState === 'missed' && (
         <div className="bg-red-50 rounded-xl p-4 mb-4">
           <p className="text-red-800 text-center">
-            <span className="font-bold">Missed!</span> The ruler fell more than 30cm.
+            <span className="font-bold">Missed!</span> The ruler fell more than {rulerLength}cm.
             <br />
-            Reaction time would be &gt;247ms
+            Reaction time would be &gt;{distanceToTime(rulerLength).toFixed(0)}ms
           </p>
         </div>
       )}

@@ -17,6 +17,13 @@ interface Magnet {
   y: number;
   angle: number;
   strength: number;
+  polarity?: 'normal' | 'reversed'; // For attract/repel demos
+}
+
+interface CompassProbe {
+  x: number;
+  y: number;
+  isDragging: boolean;
 }
 
 // ===============================================================================
@@ -189,7 +196,33 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
   const [selectedMagnet, setSelectedMagnet] = useState<number | null>(null);
   const [showEarthField, setShowEarthField] = useState(false);
 
+  // Play phase interactive controls
+  const [magnetStrength, setMagnetStrength] = useState(100);
+  const [probeDistance, setProbeDistance] = useState(80);
+  const [compassProbe, setCompassProbe] = useState<CompassProbe>({ x: 300, y: 140, isDragging: false });
+  const [showHeatMap, setShowHeatMap] = useState(false);
+  const [fieldStrengthAtProbe, setFieldStrengthAtProbe] = useState(0);
+
+  // Twist play phase controls
+  const [twistMode, setTwistMode] = useState<'two_magnets' | 'earth' | 'electromagnet'>('two_magnets');
+  const [secondMagnetPolarity, setSecondMagnetPolarity] = useState<'attract' | 'repel'>('attract');
+  const [electromagnetCurrent, setElectromagnetCurrent] = useState(50);
+  const [earthFieldIntensity, setEarthFieldIntensity] = useState(50);
+  const [twoMagnets] = useState<Magnet[]>([
+    { x: 120, y: 140, angle: 0, strength: 100 },
+    { x: 280, y: 140, angle: 180, strength: 100 }
+  ]);
+
   const lastClickRef = useRef(0);
+  const svgRef = useRef<SVGSVGElement>(null);
+
+  // Pre-generate stars for Earth field visualization (avoid hook in render function)
+  const earthStarsRef = useRef([...Array(30)].map(() => ({
+    x: Math.random() * 400,
+    y: Math.random() * 280,
+    r: Math.random() * 1.5,
+    opacity: 0.5 + Math.random() * 0.5
+  })));
 
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
@@ -218,14 +251,70 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
 
   useEffect(() => {
     if (phase === 'play') {
-      setMagnets([{ x: 200, y: 140, angle: 0, strength: 100 }]);
+      setMagnets([{ x: 200, y: 140, angle: 0, strength: magnetStrength }]);
       setShowFieldLines(true);
       setShowCompassGrid(false);
     }
     if (phase === 'twist_play') {
       setShowEarthField(false);
+      setTwistMode('two_magnets');
     }
-  }, [phase]);
+  }, [phase, magnetStrength]);
+
+  // Update magnet strength when slider changes
+  useEffect(() => {
+    if (phase === 'play' && magnets.length > 0) {
+      setMagnets(prev => prev.map((m, i) => i === 0 ? { ...m, strength: magnetStrength } : m));
+    }
+  }, [magnetStrength, phase]);
+
+  // Calculate field strength at probe position
+  useEffect(() => {
+    const { bx, by } = calculateField(compassProbe.x, compassProbe.y, magnets);
+    const strength = Math.sqrt(bx * bx + by * by);
+    setFieldStrengthAtProbe(strength);
+  }, [compassProbe.x, compassProbe.y, magnets]);
+
+  // Update probe position based on distance slider
+  useEffect(() => {
+    if (phase === 'play' && magnets.length > 0) {
+      const mainMagnet = magnets[0];
+      const angle = Math.atan2(compassProbe.y - mainMagnet.y, compassProbe.x - mainMagnet.x);
+      setCompassProbe(prev => ({
+        ...prev,
+        x: mainMagnet.x + Math.cos(angle) * probeDistance,
+        y: mainMagnet.y + Math.sin(angle) * probeDistance
+      }));
+    }
+  }, [probeDistance, phase]);
+
+  // Handle compass probe dragging
+  const handleProbeMouseDown = useCallback((e: React.MouseEvent) => {
+    e.preventDefault();
+    setCompassProbe(prev => ({ ...prev, isDragging: true }));
+  }, []);
+
+  const handleProbeMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
+    if (!compassProbe.isDragging || !svgRef.current) return;
+    const svg = svgRef.current;
+    const rect = svg.getBoundingClientRect();
+    const scaleX = 400 / rect.width;
+    const scaleY = 280 / rect.height;
+    const x = Math.max(20, Math.min(380, (e.clientX - rect.left) * scaleX));
+    const y = Math.max(20, Math.min(260, (e.clientY - rect.top) * scaleY));
+    setCompassProbe(prev => ({ ...prev, x, y }));
+    // Update distance slider to match
+    if (magnets.length > 0) {
+      const dx = x - magnets[0].x;
+      const dy = y - magnets[0].y;
+      const dist = Math.sqrt(dx * dx + dy * dy);
+      setProbeDistance(Math.min(150, Math.max(30, dist)));
+    }
+  }, [compassProbe.isDragging, magnets]);
+
+  const handleProbeMouseUp = useCallback(() => {
+    setCompassProbe(prev => ({ ...prev, isDragging: false }));
+  }, []);
 
   const addMagnet = () => {
     if (magnets.length >= 3) return;
@@ -291,15 +380,32 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
-  const renderMagneticField = (mags: Magnet[], fieldLines: boolean, compassGrid: boolean) => {
+  // Generate heat map data for field strength visualization
+  const generateHeatMap = useCallback((mags: Magnet[]) => {
+    const heatMapData: { x: number; y: number; strength: number }[] = [];
+    const gridSize = 15;
+    for (let x = 0; x < 400; x += gridSize) {
+      for (let y = 0; y < 280; y += gridSize) {
+        const { bx, by } = calculateField(x + gridSize/2, y + gridSize/2, mags);
+        const strength = Math.sqrt(bx * bx + by * by);
+        heatMapData.push({ x, y, strength });
+      }
+    }
+    // Normalize strengths
+    const maxStrength = Math.max(...heatMapData.map(d => d.strength), 1);
+    return heatMapData.map(d => ({ ...d, strength: d.strength / maxStrength }));
+  }, []);
+
+  const renderMagneticField = (mags: Magnet[], fieldLines: boolean, compassGrid: boolean, interactive: boolean = false) => {
     const fieldLineStarts: { x: number; y: number; reverse: boolean }[] = [];
     if (fieldLines) {
       for (const m of mags) {
         const nAngle = m.angle * Math.PI / 180;
         const nPoleX = m.x + Math.cos(nAngle) * 25;
         const nPoleY = m.y + Math.sin(nAngle) * 25;
-        for (let i = 0; i < 8; i++) {
-          const a = nAngle + (i - 3.5) * 0.3;
+        const lineCount = Math.max(4, Math.floor(m.strength / 15));
+        for (let i = 0; i < lineCount; i++) {
+          const a = nAngle + (i - (lineCount - 1) / 2) * 0.3;
           fieldLineStarts.push({ x: nPoleX + Math.cos(a) * 5, y: nPoleY + Math.sin(a) * 5, reverse: false });
         }
       }
@@ -333,9 +439,39 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
       }
     }
 
+    const heatMapData = showHeatMap ? generateHeatMap(mags) : [];
+
+    // Calculate probe compass angle
+    const { bx: probeBx, by: probeBy } = calculateField(compassProbe.x, compassProbe.y, mags);
+    const probeAngle = Math.atan2(probeBy, probeBx) * 180 / Math.PI;
+
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
+      <svg
+        ref={svgRef}
+        viewBox="0 0 400 280"
+        className="w-full h-56"
+        onMouseMove={interactive ? handleProbeMouseMove : undefined}
+        onMouseUp={interactive ? handleProbeMouseUp : undefined}
+        onMouseLeave={interactive ? handleProbeMouseUp : undefined}
+      >
         <rect width="400" height="280" fill="#111827" />
+
+        {/* Heat map layer */}
+        {showHeatMap && heatMapData.map((d, i) => {
+          const hue = 240 - d.strength * 240; // Blue (cold) to Red (hot)
+          return (
+            <rect
+              key={`heat-${i}`}
+              x={d.x}
+              y={d.y}
+              width="15"
+              height="15"
+              fill={`hsl(${hue}, 80%, 50%)`}
+              opacity={0.4}
+            />
+          );
+        })}
+
         {fieldLines && tracedLines.map((path, i) => (<path key={i} d={path} fill="none" stroke="#60a5fa" strokeWidth="1.5" opacity="0.6" />))}
         {compassGrid && compassPositions.map((pos, i) => {
           const { bx, by } = calculateField(pos.x, pos.y, mags);
@@ -350,51 +486,173 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
         })}
         {mags.map((m, i) => (
           <g key={i} transform={`translate(${m.x}, ${m.y}) rotate(${m.angle})`} style={{ cursor: 'pointer' }} onMouseDown={() => setSelectedMagnet(i)}>
-            <rect x="-30" y="-12" width="30" height="24" rx="4" fill="#ef4444" />
-            <rect x="0" y="-12" width="30" height="24" rx="4" fill="#3b82f6" />
-            <text x="-15" y="5" textAnchor="middle" className="fill-white text-xs font-bold">N</text>
-            <text x="15" y="5" textAnchor="middle" className="fill-white text-xs font-bold">S</text>
+            <rect x="-30" y="-12" width="30" height="24" rx="4" fill={m.polarity === 'reversed' ? '#3b82f6' : '#ef4444'} />
+            <rect x="0" y="-12" width="30" height="24" rx="4" fill={m.polarity === 'reversed' ? '#ef4444' : '#3b82f6'} />
+            <text x="-15" y="5" textAnchor="middle" className="fill-white text-xs font-bold">{m.polarity === 'reversed' ? 'S' : 'N'}</text>
+            <text x="15" y="5" textAnchor="middle" className="fill-white text-xs font-bold">{m.polarity === 'reversed' ? 'N' : 'S'}</text>
             {selectedMagnet === i && (<circle r="35" fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="4,4" />)}
           </g>
         ))}
+
+        {/* Interactive compass probe */}
+        {interactive && (
+          <g
+            transform={`translate(${compassProbe.x}, ${compassProbe.y})`}
+            style={{ cursor: compassProbe.isDragging ? 'grabbing' : 'grab' }}
+            onMouseDown={handleProbeMouseDown}
+          >
+            <circle r="20" fill="#1f2937" stroke={compassProbe.isDragging ? '#fbbf24' : '#6b7280'} strokeWidth="3" />
+            <g transform={`rotate(${probeAngle})`}>
+              <line x1="-12" y1="0" x2="12" y2="0" stroke="#ef4444" strokeWidth="3" />
+              <polygon points="12,0 6,-4 6,4" fill="#ef4444" />
+              <line x1="-12" y1="0" x2="0" y2="0" stroke="#3b82f6" strokeWidth="3" />
+            </g>
+            <circle cx="0" cy="0" r="3" fill="#fbbf24" />
+            <text x="0" y="35" textAnchor="middle" className="fill-cyan-400 text-xs font-bold">
+              B = {fieldStrengthAtProbe.toFixed(1)}
+            </text>
+          </g>
+        )}
+
         <rect x="10" y="10" width="100" height="40" rx="4" fill="#1f2937" opacity="0.9" />
         <text x="60" y="28" textAnchor="middle" className="fill-gray-400 text-xs">Magnets: {mags.length}</text>
-        <text x="60" y="43" textAnchor="middle" className="fill-gray-500 text-xs">Click to select</text>
+        <text x="60" y="43" textAnchor="middle" className="fill-gray-500 text-xs">{interactive ? 'Drag compass' : 'Click to select'}</text>
       </svg>
     );
   };
 
-  const renderEarthField = () => (
-    <svg viewBox="0 0 400 280" className="w-full h-56">
-      <rect width="400" height="280" fill="#0f172a" />
-      {[...Array(30)].map((_, i) => (<circle key={i} cx={Math.random() * 400} cy={Math.random() * 280} r={Math.random() * 1.5} fill="white" opacity={0.5 + Math.random() * 0.5} />))}
-      <circle cx="200" cy="140" r="80" fill="#1e40af" />
-      <ellipse cx="200" cy="140" rx="80" ry="30" fill="#22c55e" fillOpacity="0.5" />
-      <circle cx="180" cy="120" r="15" fill="#22c55e" fillOpacity="0.6" />
-      <circle cx="220" cy="150" r="20" fill="#22c55e" fillOpacity="0.6" />
-      <circle cx="200" cy="70" r="5" fill="#3b82f6" />
-      <text x="200" y="55" textAnchor="middle" className="fill-blue-400 text-xs">Magnetic S</text>
-      <circle cx="200" cy="210" r="5" fill="#ef4444" />
-      <text x="200" y="230" textAnchor="middle" className="fill-red-400 text-xs">Magnetic N</text>
-      {showEarthField && (
-        <g>
-          {[-1, 1].map(side => ([30, 60, 90, 120, 150].map((offset, i) => (<path key={`${side}-${i}`} d={`M ${200 + side * 5} 70 C ${200 + side * offset} 40, ${200 + side * offset} 240, ${200 + side * 5} 210`} fill="none" stroke="#60a5fa" strokeWidth="1.5" opacity={0.4 + (5 - i) * 0.1} />))))}
-          <polygon points="120,140 130,135 130,145" fill="#60a5fa" />
-          <polygon points="280,140 270,145 270,135" fill="#60a5fa" />
+  // Render two-magnet interaction visualization
+  const renderTwoMagnetField = () => {
+    const mags = twoMagnets.map((m, i) => ({
+      ...m,
+      polarity: i === 1 && secondMagnetPolarity === 'repel' ? 'reversed' as const : 'normal' as const
+    }));
+
+    return renderMagneticField(mags, true, false, false);
+  };
+
+  // Render electromagnet visualization
+  const renderElectromagnet = () => {
+    return (
+      <svg viewBox="0 0 400 280" className="w-full h-56">
+        <rect width="400" height="280" fill="#111827" />
+
+        {/* Electromagnet coil */}
+        <g transform="translate(200, 140)">
+          {/* Iron core */}
+          <rect x="-40" y="-15" width="80" height="30" rx="4" fill="#4b5563" />
+
+          {/* Wire coils */}
+          {[...Array(8)].map((_, i) => (
+            <ellipse
+              key={i}
+              cx={-35 + i * 10}
+              cy="0"
+              rx="8"
+              ry="20"
+              fill="none"
+              stroke="#f59e0b"
+              strokeWidth="3"
+              opacity={0.8}
+            />
+          ))}
+
+          {/* Current flow indicators */}
+          {electromagnetCurrent > 0 && (
+            <>
+              <circle cx="-50" cy="-25" r="4" fill="#22c55e" />
+              <text x="-50" y="-35" textAnchor="middle" className="fill-green-400 text-xs">+</text>
+              <circle cx="50" cy="-25" r="4" fill="#ef4444" />
+              <text x="50" y="-35" textAnchor="middle" className="fill-red-400 text-xs">-</text>
+            </>
+          )}
+
+          {/* Magnetic poles appear with current */}
+          {electromagnetCurrent > 20 && (
+            <>
+              <circle cx="-50" cy="0" r="8" fill="#ef4444" opacity={electromagnetCurrent / 100} />
+              <text x="-50" y="4" textAnchor="middle" className="fill-white text-xs font-bold">N</text>
+              <circle cx="50" cy="0" r="8" fill="#3b82f6" opacity={electromagnetCurrent / 100} />
+              <text x="50" y="4" textAnchor="middle" className="fill-white text-xs font-bold">S</text>
+            </>
+          )}
         </g>
-      )}
-      <g transform="translate(120, 140)">
-        <circle r="15" fill="#1f2937" stroke="#6b7280" strokeWidth="2" />
-        <line x1="0" y1="10" x2="0" y2="-10" stroke="#ef4444" strokeWidth="2" />
-        <polygon points="0,-10 -3,-5 3,-5" fill="#ef4444" />
-        <text x="0" y="30" textAnchor="middle" className="fill-gray-400 text-xs">Compass</text>
-      </g>
-      <rect x="280" y="20" width="110" height="70" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-      <text x="335" y="40" textAnchor="middle" className="fill-gray-400 text-xs">Earth&apos;s Field</text>
-      <text x="335" y="58" textAnchor="middle" className="fill-cyan-400 text-xs">~25-65 uT</text>
-      <text x="335" y="76" textAnchor="middle" className="fill-gray-500 text-xs">(very weak!)</text>
-    </svg>
-  );
+
+        {/* Field lines based on current */}
+        {electromagnetCurrent > 20 && [...Array(6)].map((_, i) => {
+          const spread = (i - 2.5) * 15;
+          return (
+            <path
+              key={i}
+              d={`M 150 ${140 + spread} C 100 ${140 + spread * 0.5}, 100 ${140 - spread * 0.5}, 150 ${140 - spread}
+                  M 250 ${140 - spread} C 300 ${140 - spread * 0.5}, 300 ${140 + spread * 0.5}, 250 ${140 + spread}`}
+              fill="none"
+              stroke="#60a5fa"
+              strokeWidth="1.5"
+              opacity={electromagnetCurrent / 150}
+            />
+          );
+        })}
+
+        {/* Info panel */}
+        <rect x="10" y="10" width="120" height="50" rx="4" fill="#1f2937" opacity="0.9" />
+        <text x="70" y="28" textAnchor="middle" className="fill-gray-400 text-xs">Electromagnet</text>
+        <text x="70" y="43" textAnchor="middle" className="fill-cyan-400 text-xs">Current: {electromagnetCurrent}%</text>
+        <text x="70" y="55" textAnchor="middle" className="fill-yellow-400 text-xs">B ~ I (proportional)</text>
+      </svg>
+    );
+  };
+
+  const renderEarthField = () => {
+    const stars = earthStarsRef.current;
+    const fieldOpacity = earthFieldIntensity / 100;
+
+    return (
+      <svg viewBox="0 0 400 280" className="w-full h-56">
+        <rect width="400" height="280" fill="#0f172a" />
+        {stars.map((star, i) => (
+          <circle key={i} cx={star.x} cy={star.y} r={star.r} fill="white" opacity={star.opacity} />
+        ))}
+        <circle cx="200" cy="140" r="80" fill="#1e40af" />
+        <ellipse cx="200" cy="140" rx="80" ry="30" fill="#22c55e" fillOpacity="0.5" />
+        <circle cx="180" cy="120" r="15" fill="#22c55e" fillOpacity="0.6" />
+        <circle cx="220" cy="150" r="20" fill="#22c55e" fillOpacity="0.6" />
+        <circle cx="200" cy="70" r="5" fill="#3b82f6" />
+        <text x="200" y="55" textAnchor="middle" className="fill-blue-400 text-xs">Magnetic S</text>
+        <circle cx="200" cy="210" r="5" fill="#ef4444" />
+        <text x="200" y="230" textAnchor="middle" className="fill-red-400 text-xs">Magnetic N</text>
+        {showEarthField && (
+          <g opacity={fieldOpacity}>
+            {[-1, 1].map(side => ([30, 60, 90, 120, 150].map((offset, i) => (
+              <path
+                key={`${side}-${i}`}
+                d={`M ${200 + side * 5} 70 C ${200 + side * offset} 40, ${200 + side * offset} 240, ${200 + side * 5} 210`}
+                fill="none"
+                stroke="#60a5fa"
+                strokeWidth={1 + earthFieldIntensity / 50}
+                opacity={0.4 + (5 - i) * 0.1}
+              />
+            ))))}
+            <polygon points="120,140 130,135 130,145" fill="#60a5fa" />
+            <polygon points="280,140 270,145 270,135" fill="#60a5fa" />
+          </g>
+        )}
+        <g transform="translate(120, 140)">
+          <circle r="15" fill="#1f2937" stroke="#6b7280" strokeWidth="2" />
+          <g transform={`rotate(${showEarthField ? -10 * (earthFieldIntensity / 100) : 0})`}>
+            <line x1="0" y1="10" x2="0" y2="-10" stroke="#ef4444" strokeWidth="2" />
+            <polygon points="0,-10 -3,-5 3,-5" fill="#ef4444" />
+          </g>
+          <text x="0" y="30" textAnchor="middle" className="fill-gray-400 text-xs">Compass</text>
+        </g>
+        <rect x="280" y="20" width="110" height="80" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
+        <text x="335" y="38" textAnchor="middle" className="fill-gray-400 text-xs">Earth&apos;s Field</text>
+        <text x="335" y="55" textAnchor="middle" className="fill-cyan-400 text-xs">~25-65 uT</text>
+        <text x="335" y="72" textAnchor="middle" className="fill-gray-500 text-xs">(very weak!)</text>
+        <text x="335" y="90" textAnchor="middle" className="fill-yellow-400 text-xs">Intensity: {earthFieldIntensity}%</text>
+      </svg>
+    );
+  };
 
   const colors = {
     textPrimary: '#f8fafc',
@@ -540,30 +798,135 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center p-6">
             <h2 className="text-2xl font-bold text-white mb-4">Magnetic Field Mapper</h2>
-            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
-              {renderMagneticField(magnets, showFieldLines, showCompassGrid)}
+
+            {/* Interactive Visualization */}
+            <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
+              {renderMagneticField(magnets, showFieldLines, showCompassGrid, true)}
             </div>
+
+            {/* Control Panel */}
+            <div className="bg-slate-800/60 rounded-2xl p-6 mb-4 w-full max-w-2xl">
+              <h3 className="text-lg font-bold text-white mb-4">Interactive Controls</h3>
+
+              {/* Magnet Strength Slider */}
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-slate-300 text-sm font-medium">Magnet Strength</label>
+                  <span className="text-cyan-400 text-sm font-bold">{magnetStrength}%</span>
+                </div>
+                <input
+                  type="range"
+                  min="20"
+                  max="200"
+                  value={magnetStrength}
+                  onChange={(e) => setMagnetStrength(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-red-500"
+                  style={{ zIndex: 10 }}
+                />
+                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                  <span>Weak</span>
+                  <span>Strong</span>
+                </div>
+              </div>
+
+              {/* Distance from Magnet Slider */}
+              <div className="mb-4">
+                <div className="flex justify-between items-center mb-2">
+                  <label className="text-slate-300 text-sm font-medium">Probe Distance</label>
+                  <span className="text-cyan-400 text-sm font-bold">{probeDistance.toFixed(0)} px</span>
+                </div>
+                <input
+                  type="range"
+                  min="30"
+                  max="150"
+                  value={probeDistance}
+                  onChange={(e) => setProbeDistance(Number(e.target.value))}
+                  className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+                  style={{ zIndex: 10 }}
+                />
+                <div className="flex justify-between text-xs text-slate-500 mt-1">
+                  <span>Close</span>
+                  <span>Far</span>
+                </div>
+              </div>
+
+              {/* Field Strength Display */}
+              <div className="bg-slate-900/50 rounded-lg p-3 mb-4">
+                <div className="flex justify-between items-center">
+                  <span className="text-slate-400 text-sm">Field at Probe (B):</span>
+                  <span className="text-yellow-400 font-bold">{fieldStrengthAtProbe.toFixed(2)} units</span>
+                </div>
+                <div className="text-xs text-slate-500 mt-1">
+                  B = mu_0 * m / (4 * pi * r^3) - Dipole field equation
+                </div>
+              </div>
+            </div>
+
+            {/* Visualization Toggle Buttons */}
             <div className="flex flex-wrap justify-center gap-2 mb-4">
-              <button onMouseDown={(e) => { e.preventDefault(); setShowFieldLines(!showFieldLines); }} className={`px-4 py-2 rounded-lg font-bold text-sm ${showFieldLines ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300'}`}>
+              <button
+                onClick={() => setShowFieldLines(!showFieldLines)}
+                style={{ zIndex: 10 }}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${showFieldLines ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+              >
                 Field Lines
               </button>
-              <button onMouseDown={(e) => { e.preventDefault(); setShowCompassGrid(!showCompassGrid); }} className={`px-4 py-2 rounded-lg font-bold text-sm ${showCompassGrid ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300'}`}>
+              <button
+                onClick={() => setShowCompassGrid(!showCompassGrid)}
+                style={{ zIndex: 10 }}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${showCompassGrid ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+              >
                 Compass Grid
               </button>
-              <button onMouseDown={(e) => { e.preventDefault(); addMagnet(); }} className="px-4 py-2 rounded-lg font-bold text-sm bg-slate-600 text-slate-300 hover:bg-slate-500" disabled={magnets.length >= 3}>
+              <button
+                onClick={() => setShowHeatMap(!showHeatMap)}
+                style={{ zIndex: 10 }}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${showHeatMap ? 'bg-orange-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+              >
+                Heat Map
+              </button>
+              <button
+                onClick={() => addMagnet()}
+                style={{ zIndex: 10 }}
+                className="px-4 py-2 rounded-lg font-bold text-sm bg-slate-600 text-slate-300 hover:bg-slate-500 disabled:opacity-50"
+                disabled={magnets.length >= 3}
+              >
                 + Add Magnet
               </button>
             </div>
+
+            {/* Magnet Controls when selected */}
             {selectedMagnet !== null && (
-              <div className="flex justify-center gap-4 mb-4">
-                <button onMouseDown={(e) => { e.preventDefault(); rotateMagnet(selectedMagnet, -30); }} className="px-4 py-2 bg-slate-600 text-white rounded-lg">Rotate Left</button>
-                <button onMouseDown={(e) => { e.preventDefault(); rotateMagnet(selectedMagnet, 30); }} className="px-4 py-2 bg-slate-600 text-white rounded-lg">Rotate Right</button>
-                <button onMouseDown={(e) => { e.preventDefault(); setMagnets(prev => prev.filter((_, i) => i !== selectedMagnet)); setSelectedMagnet(null); }} className="px-4 py-2 bg-red-600 text-white rounded-lg">Remove</button>
+              <div className="flex justify-center gap-3 mb-4 flex-wrap">
+                <button
+                  onClick={() => rotateMagnet(selectedMagnet, -30)}
+                  style={{ zIndex: 10 }}
+                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-all"
+                >
+                  Rotate Left
+                </button>
+                <button
+                  onClick={() => rotateMagnet(selectedMagnet, 30)}
+                  style={{ zIndex: 10 }}
+                  className="px-4 py-2 bg-slate-600 text-white rounded-lg hover:bg-slate-500 transition-all"
+                >
+                  Rotate Right
+                </button>
+                <button
+                  onClick={() => { setMagnets(prev => prev.filter((_, i) => i !== selectedMagnet)); setSelectedMagnet(null); }}
+                  style={{ zIndex: 10 }}
+                  className="px-4 py-2 bg-red-600 text-white rounded-lg hover:bg-red-500 transition-all"
+                >
+                  Remove
+                </button>
               </div>
             )}
+
+            {/* Info Panel */}
             <div className="bg-gradient-to-r from-red-900/40 to-blue-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
-              <p className="text-slate-300 text-center">
-                Field lines show direction (N to S outside magnet) and density shows strength. Try adding magnets!
+              <p className="text-slate-300 text-center text-sm">
+                <strong className="text-white">Drag the compass probe</strong> to measure field strength at different points.
+                Field lines show direction (N to S) and density indicates strength.
               </p>
             </div>
           </div>
@@ -671,22 +1034,177 @@ const MagneticMappingRenderer: React.FC<MagneticMappingRendererProps> = ({
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
           <div className="flex flex-col items-center p-6">
-            <h2 className="text-2xl font-bold text-amber-400 mb-4">Earth&apos;s Magnetic Field</h2>
-            <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
-              {renderEarthField()}
-              <div className="flex justify-center mt-6">
-                <button onMouseDown={(e) => { e.preventDefault(); setShowEarthField(!showEarthField); }} className={`px-6 py-3 rounded-lg font-bold ${showEarthField ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300'}`}>
-                  {showEarthField ? 'Hide Field Lines' : 'Show Field Lines'}
-                </button>
-              </div>
-              <div className="mt-4 p-4 bg-slate-700/50 rounded-lg">
-                <p className="text-slate-300 text-center">
-                  Earth acts like a giant bar magnet! But the magnetic poles are
-                  <span className="text-yellow-400 font-bold"> offset from the geographic poles</span>.
-                  Magnetic north moves ~40km/year!
-                </p>
-              </div>
+            <h2 className="text-2xl font-bold text-amber-400 mb-4">Advanced Magnetic Fields</h2>
+
+            {/* Mode Selection Tabs */}
+            <div className="flex gap-2 mb-4 flex-wrap justify-center">
+              <button
+                onClick={() => setTwistMode('two_magnets')}
+                style={{ zIndex: 10 }}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${twistMode === 'two_magnets' ? 'bg-purple-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+              >
+                Two Magnets
+              </button>
+              <button
+                onClick={() => setTwistMode('earth')}
+                style={{ zIndex: 10 }}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${twistMode === 'earth' ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+              >
+                Earth&apos;s Field
+              </button>
+              <button
+                onClick={() => setTwistMode('electromagnet')}
+                style={{ zIndex: 10 }}
+                className={`px-4 py-2 rounded-lg font-bold text-sm transition-all ${twistMode === 'electromagnet' ? 'bg-yellow-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+              >
+                Electromagnet
+              </button>
             </div>
+
+            {/* Two Magnets Mode */}
+            {twistMode === 'two_magnets' && (
+              <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
+                <h3 className="text-lg font-bold text-white mb-3 text-center">Magnet Interaction</h3>
+                {renderTwoMagnetField()}
+
+                {/* Polarity Control */}
+                <div className="mt-4 bg-slate-900/50 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-3">
+                    <span className="text-slate-300 text-sm font-medium">Second Magnet Orientation:</span>
+                  </div>
+                  <div className="flex gap-3 justify-center">
+                    <button
+                      onClick={() => setSecondMagnetPolarity('attract')}
+                      style={{ zIndex: 10 }}
+                      className={`px-6 py-3 rounded-lg font-bold transition-all ${secondMagnetPolarity === 'attract' ? 'bg-green-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+                    >
+                      Attract (N-S)
+                    </button>
+                    <button
+                      onClick={() => setSecondMagnetPolarity('repel')}
+                      style={{ zIndex: 10 }}
+                      className={`px-6 py-3 rounded-lg font-bold transition-all ${secondMagnetPolarity === 'repel' ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+                    >
+                      Repel (N-N)
+                    </button>
+                  </div>
+                  <p className="text-slate-400 text-sm text-center mt-3">
+                    {secondMagnetPolarity === 'attract'
+                      ? 'Field lines connect between opposite poles - attraction!'
+                      : 'Field lines push apart between like poles - repulsion!'}
+                  </p>
+                </div>
+              </div>
+            )}
+
+            {/* Earth's Field Mode */}
+            {twistMode === 'earth' && (
+              <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
+                <h3 className="text-lg font-bold text-white mb-3 text-center">Earth&apos;s Magnetic Field</h3>
+                {renderEarthField()}
+
+                {/* Earth Field Controls */}
+                <div className="mt-4 space-y-4">
+                  <div className="flex justify-center gap-3">
+                    <button
+                      onClick={() => setShowEarthField(!showEarthField)}
+                      style={{ zIndex: 10 }}
+                      className={`px-6 py-3 rounded-lg font-bold transition-all ${showEarthField ? 'bg-blue-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'}`}
+                    >
+                      {showEarthField ? 'Hide Field Lines' : 'Show Field Lines'}
+                    </button>
+                  </div>
+
+                  {/* Intensity Slider */}
+                  <div className="bg-slate-900/50 rounded-lg p-4">
+                    <div className="flex justify-between items-center mb-2">
+                      <label className="text-slate-300 text-sm font-medium">Field Intensity</label>
+                      <span className="text-cyan-400 text-sm font-bold">{earthFieldIntensity}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      value={earthFieldIntensity}
+                      onChange={(e) => setEarthFieldIntensity(Number(e.target.value))}
+                      className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-green-500"
+                      style={{ zIndex: 10 }}
+                    />
+                    <p className="text-slate-500 text-xs mt-2 text-center">
+                      Earth&apos;s field varies from ~25 uT (equator) to ~65 uT (poles)
+                    </p>
+                  </div>
+
+                  <div className="bg-slate-700/50 rounded-lg p-3">
+                    <p className="text-slate-300 text-center text-sm">
+                      Earth acts like a giant bar magnet! Magnetic poles are
+                      <span className="text-yellow-400 font-bold"> offset from geographic poles</span>.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Electromagnet Mode */}
+            {twistMode === 'electromagnet' && (
+              <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
+                <h3 className="text-lg font-bold text-white mb-3 text-center">Electromagnet</h3>
+                {renderElectromagnet()}
+
+                {/* Current Control */}
+                <div className="mt-4 bg-slate-900/50 rounded-lg p-4">
+                  <div className="flex justify-between items-center mb-2">
+                    <label className="text-slate-300 text-sm font-medium">Electric Current</label>
+                    <span className="text-yellow-400 text-sm font-bold">{electromagnetCurrent}%</span>
+                  </div>
+                  <input
+                    type="range"
+                    min="0"
+                    max="100"
+                    value={electromagnetCurrent}
+                    onChange={(e) => setElectromagnetCurrent(Number(e.target.value))}
+                    className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-yellow-500"
+                    style={{ zIndex: 10 }}
+                  />
+                  <div className="flex justify-between text-xs text-slate-500 mt-1">
+                    <span>Off</span>
+                    <span>Maximum</span>
+                  </div>
+                </div>
+
+                {/* Quick Controls */}
+                <div className="flex justify-center gap-3 mt-4">
+                  <button
+                    onClick={() => setElectromagnetCurrent(0)}
+                    style={{ zIndex: 10 }}
+                    className="px-4 py-2 bg-slate-600 text-slate-300 rounded-lg hover:bg-slate-500 transition-all"
+                  >
+                    Turn Off
+                  </button>
+                  <button
+                    onClick={() => setElectromagnetCurrent(50)}
+                    style={{ zIndex: 10 }}
+                    className="px-4 py-2 bg-yellow-600 text-white rounded-lg hover:bg-yellow-500 transition-all"
+                  >
+                    Medium
+                  </button>
+                  <button
+                    onClick={() => setElectromagnetCurrent(100)}
+                    style={{ zIndex: 10 }}
+                    className="px-4 py-2 bg-orange-600 text-white rounded-lg hover:bg-orange-500 transition-all"
+                  >
+                    Maximum
+                  </button>
+                </div>
+
+                <div className="bg-slate-700/50 rounded-lg p-3 mt-4">
+                  <p className="text-slate-300 text-center text-sm">
+                    <strong className="text-yellow-400">Key Principle:</strong> Magnetic field strength (B) is
+                    proportional to current (I). No current = no magnetism!
+                  </p>
+                </div>
+              </div>
+            )}
           </div>
         </div>
         {renderBottomBar(false, true, 'See the Explanation')}

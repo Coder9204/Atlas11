@@ -95,6 +95,12 @@ export default function SoapBoatRenderer({
   const [waterContaminated, setWaterContaminated] = useState(false);
   const [animating, setAnimating] = useState(false);
 
+  // Interactive controls
+  const [soapConcentration, setSoapConcentration] = useState(50); // % strength
+  const [waterTemperature, setWaterTemperature] = useState(20); // Celsius
+  const [boatMass, setBoatMass] = useState(5); // grams
+  const [showPhysicsPanel, setShowPhysicsPanel] = useState(true);
+
   // Twist state - different liquids
   const [liquidType, setLiquidType] = useState<'water' | 'soapyWater' | 'oil'>('water');
   const [twistBoatPosition, setTwistBoatPosition] = useState(50);
@@ -127,6 +133,19 @@ export default function SoapBoatRenderer({
     oil: 0.032
   };
 
+  // Calculate effective surface tension based on temperature
+  const getEffectiveSurfaceTension = (base: number, temp: number) => {
+    // Surface tension decreases with temperature (about 0.15% per degree C)
+    const tempFactor = 1 - (temp - 20) * 0.0015;
+    return base * Math.max(0.5, tempFactor);
+  };
+
+  // Calculate soap effectiveness based on concentration
+  const getSoapReduction = () => {
+    // Higher concentration = more reduction in surface tension
+    return (soapConcentration / 100) * 0.65; // Max 65% reduction at 100%
+  };
+
   // Add soap and animate boat
   const addSoap = () => {
     if (animating || soapAdded || waterContaminated) return;
@@ -140,15 +159,19 @@ export default function SoapBoatRenderer({
     let pos = boatPosition;
     let vel = 0;
 
+    const baseTension = getEffectiveSurfaceTension(surfaceTensions.water, waterTemperature);
+    const soapReduction = getSoapReduction();
+    const massEffect = 5 / boatMass; // Lighter boats move faster
+
     const interval = setInterval(() => {
-      spread += 3;
+      spread += 3 * (soapConcentration / 50); // Higher concentration spreads faster
       setSoapSpread(Math.min(spread, 100));
 
       // Force from surface tension difference
       if (spread < 80) {
-        const tensionFront = surfaceTensions.water;
-        const tensionBack = surfaceTensions.water * (1 - spread / 100);
-        const force = (tensionFront - tensionBack) * 0.5; // Simplified
+        const tensionFront = baseTension;
+        const tensionBack = baseTension * (1 - (spread / 100) * soapReduction);
+        const force = (tensionFront - tensionBack) * 0.5 * massEffect;
         vel += force * 50;
       }
 
@@ -613,14 +636,122 @@ export default function SoapBoatRenderer({
       // PLAY
       // ───────────────────────────────────────────────────
       case 'play':
+        const currentTension = getEffectiveSurfaceTension(surfaceTensions.water, waterTemperature);
+        const reducedTension = currentTension * (1 - getSoapReduction());
+
         return (
           <div className="flex flex-col items-center">
             <h2 style={{ fontSize: '1.5rem', marginBottom: '0.5rem', color: '#1e293b' }}>
               Soap Boat Experiment
             </h2>
             <p style={{ color: '#64748b', marginBottom: '1rem', textAlign: 'center' }}>
-              Click the soap bottle to add a drop behind the boat!
+              Adjust parameters and click the soap bottle to run the experiment!
             </p>
+
+            {/* Interactive Controls Panel */}
+            <div style={{
+              background: 'rgba(30, 41, 59, 0.8)',
+              borderRadius: '12px',
+              padding: '1rem',
+              marginBottom: '1rem',
+              width: '100%',
+              maxWidth: 450,
+              border: '1px solid rgba(71, 85, 105, 0.5)'
+            }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '0.75rem' }}>
+                <h4 style={{ color: 'white', fontWeight: 600, fontSize: '0.9rem' }}>⚙️ Experiment Controls</h4>
+                <button
+                  onClick={() => setShowPhysicsPanel(!showPhysicsPanel)}
+                  style={{ background: 'none', border: 'none', color: '#94a3b8', fontSize: '0.8rem', cursor: 'pointer' }}
+                >
+                  {showPhysicsPanel ? 'Hide' : 'Show'}
+                </button>
+              </div>
+
+              {showPhysicsPanel && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                  {/* Soap Concentration Slider */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                      <span style={{ color: '#cbd5e1', fontSize: '0.85rem' }}>Soap Concentration</span>
+                      <span style={{ color: '#a855f7', fontFamily: 'monospace' }}>{soapConcentration}%</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="10"
+                      max="100"
+                      value={soapConcentration}
+                      onChange={(e) => setSoapConcentration(parseInt(e.target.value))}
+                      disabled={soapAdded}
+                      style={{ width: '100%', accentColor: '#a855f7' }}
+                    />
+                  </div>
+
+                  {/* Water Temperature Slider */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                      <span style={{ color: '#cbd5e1', fontSize: '0.85rem' }}>Water Temperature</span>
+                      <span style={{ color: '#3b82f6', fontFamily: 'monospace' }}>{waterTemperature}°C</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="5"
+                      max="60"
+                      value={waterTemperature}
+                      onChange={(e) => setWaterTemperature(parseInt(e.target.value))}
+                      disabled={soapAdded}
+                      style={{ width: '100%', accentColor: '#3b82f6' }}
+                    />
+                    <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: '#64748b' }}>
+                      <span>Cold (5°C)</span>
+                      <span>Hot (60°C)</span>
+                    </div>
+                  </div>
+
+                  {/* Boat Mass Slider */}
+                  <div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem' }}>
+                      <span style={{ color: '#cbd5e1', fontSize: '0.85rem' }}>Boat Mass</span>
+                      <span style={{ color: '#22c55e', fontFamily: 'monospace' }}>{boatMass}g</span>
+                    </div>
+                    <input
+                      type="range"
+                      min="1"
+                      max="15"
+                      value={boatMass}
+                      onChange={(e) => setBoatMass(parseInt(e.target.value))}
+                      disabled={soapAdded}
+                      style={{ width: '100%', accentColor: '#22c55e' }}
+                    />
+                  </div>
+
+                  {/* Real-time Physics Display */}
+                  <div style={{
+                    display: 'grid',
+                    gridTemplateColumns: 'repeat(3, 1fr)',
+                    gap: '0.5rem',
+                    paddingTop: '0.75rem',
+                    borderTop: '1px solid rgba(71, 85, 105, 0.5)'
+                  }}>
+                    <div style={{ textAlign: 'center', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '0.5rem' }}>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Water γ</div>
+                      <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#3b82f6' }}>{(currentTension * 1000).toFixed(1)}</div>
+                      <div style={{ fontSize: '0.6rem', color: '#64748b' }}>mN/m</div>
+                    </div>
+                    <div style={{ textAlign: 'center', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '0.5rem' }}>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Soap γ</div>
+                      <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#a855f7' }}>{(reducedTension * 1000).toFixed(1)}</div>
+                      <div style={{ fontSize: '0.6rem', color: '#64748b' }}>mN/m</div>
+                    </div>
+                    <div style={{ textAlign: 'center', background: 'rgba(15, 23, 42, 0.5)', borderRadius: '8px', padding: '0.5rem' }}>
+                      <div style={{ fontSize: '0.7rem', color: '#94a3b8' }}>Δγ Force</div>
+                      <div style={{ fontSize: '1rem', fontWeight: 'bold', color: '#22c55e' }}>{((currentTension - reducedTension) * 1000).toFixed(1)}</div>
+                      <div style={{ fontSize: '0.6rem', color: '#64748b' }}>mN/m</div>
+                    </div>
+                  </div>
+                </div>
+              )}
+            </div>
 
             <svg viewBox="0 0 400 250" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }}>
               {/* Container */}

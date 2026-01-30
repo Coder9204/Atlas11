@@ -156,10 +156,27 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
   const [animPhase, setAnimPhase] = useState(0);
   const [turntableAngle, setTurntableAngle] = useState(0);
 
+  // Interactive slider parameters for play phase
+  const [frequency, setFrequency] = useState(2.45); // GHz - standard microwave frequency
+  const [cavityLength, setCavityLength] = useState(30); // cm - typical cavity size
+  const [powerLevel, setPowerLevel] = useState(100); // percentage
+
   // Twist state
   const [twistTurntable, setTwistTurntable] = useState(false);
   const [twistCookTime, setTwistCookTime] = useState(0);
   const [twistFoodTemp, setTwistFoodTemp] = useState<number[]>(Array(25).fill(20));
+
+  // Twist comparison state
+  const [twistNoTurntableTemp, setTwistNoTurntableTemp] = useState<number[]>(Array(25).fill(20));
+  const [twistWithTurntableTemp, setTwistWithTurntableTemp] = useState<number[]>(Array(25).fill(20));
+  const [twistComparisonRunning, setTwistComparisonRunning] = useState(false);
+  const [twistComparisonComplete, setTwistComparisonComplete] = useState(false);
+
+  // Food position state for twist
+  const [foodPosition, setFoodPosition] = useState<'center' | 'edge' | 'corner'>('center');
+
+  // Multi-mode cavity resonance
+  const [cavityMode, setCavityMode] = useState<1 | 2 | 3>(1);
 
   const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
@@ -212,14 +229,36 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
     }
   }, [phase, goToPhase]);
 
-  // Standing wave intensity pattern (simplified 2D)
-  const getIntensityAt = (x: number, y: number, angle: number) => {
+  // Calculate wavelength from frequency: λ = c/f
+  const wavelength = (3e8 / (frequency * 1e9)) * 100; // in cm
+
+  // Number of wavelengths that fit in cavity determines standing wave pattern
+  const nodesPerCavity = Math.floor(cavityLength / (wavelength / 2));
+
+  // Standing wave intensity pattern (simplified 2D) with frequency/cavity dependence
+  const getIntensityAt = (x: number, y: number, angle: number, mode: number = 1) => {
     const cos = Math.cos(angle);
     const sin = Math.sin(angle);
     const rx = x * cos - y * sin;
     const ry = x * sin + y * cos;
-    const intensity = Math.abs(Math.sin(rx * Math.PI * 2) * Math.sin(ry * Math.PI * 2));
-    return intensity;
+
+    // Scale based on how many half-wavelengths fit in the cavity
+    const scaleFactor = (cavityLength / 30) * (2.45 / frequency) * mode;
+    const intensity = Math.abs(
+      Math.sin(rx * Math.PI * 2 * scaleFactor) *
+      Math.sin(ry * Math.PI * 2 * scaleFactor)
+    );
+    return intensity * (powerLevel / 100);
+  };
+
+  // Get position offset for different food positions
+  const getFoodPositionOffset = () => {
+    switch (foodPosition) {
+      case 'center': return { x: 0, y: 0 };
+      case 'edge': return { x: 0.3, y: 0 };
+      case 'corner': return { x: 0.3, y: 0.3 };
+      default: return { x: 0, y: 0 };
+    }
   };
 
   // Animation Effect
@@ -242,8 +281,8 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
         return prev.map((temp, i) => {
           const x = (i % 5) / 4 - 0.5;
           const y = Math.floor(i / 5) / 4 - 0.5;
-          const intensity = getIntensityAt(x, y, turntableOn ? turntableAngle : 0);
-          const heating = intensity * 2;
+          const intensity = getIntensityAt(x, y, turntableOn ? turntableAngle : 0, 1);
+          const heating = intensity * 2 * (powerLevel / 100);
           return Math.min(100, temp + heating);
         });
       });
@@ -252,23 +291,42 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
     return () => clearInterval(interval);
   }, [isCooking, turntableOn, turntableAngle]);
 
-  // Twist cooking simulation
+  // Twist cooking simulation with side-by-side comparison
   useEffect(() => {
     if (phase !== 'twist_play') return;
-    if (twistCookTime <= 0) return;
+    if (!twistComparisonRunning) return;
+    if (twistCookTime <= 0) {
+      setTwistComparisonRunning(false);
+      setTwistComparisonComplete(true);
+      return;
+    }
+
+    const posOffset = getFoodPositionOffset();
 
     const cookInterval = setInterval(() => {
       setTwistCookTime(t => {
-        if (t <= 0) return 0;
+        if (t <= 0.1) return 0;
         return t - 0.1;
       });
 
-      setTwistFoodTemp(prev => {
+      // Cook without turntable
+      setTwistNoTurntableTemp(prev => {
         return prev.map((temp, i) => {
-          const x = (i % 5) / 4 - 0.5;
-          const y = Math.floor(i / 5) / 4 - 0.5;
-          const angle = twistTurntable ? (10 - twistCookTime) * 0.5 : 0;
-          const intensity = getIntensityAt(x, y, angle);
+          const x = (i % 5) / 4 - 0.5 + posOffset.x;
+          const y = Math.floor(i / 5) / 4 - 0.5 + posOffset.y;
+          const intensity = getIntensityAt(x, y, 0, cavityMode);
+          const heating = intensity * 3;
+          return Math.min(100, temp + heating);
+        });
+      });
+
+      // Cook with turntable
+      setTwistWithTurntableTemp(prev => {
+        return prev.map((temp, i) => {
+          const x = (i % 5) / 4 - 0.5 + posOffset.x;
+          const y = Math.floor(i / 5) / 4 - 0.5 + posOffset.y;
+          const angle = (10 - twistCookTime) * 0.5;
+          const intensity = getIntensityAt(x, y, angle, cavityMode);
           const heating = intensity * 3;
           return Math.min(100, temp + heating);
         });
@@ -276,7 +334,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
     }, 100);
 
     return () => clearInterval(cookInterval);
-  }, [phase, twistCookTime, twistTurntable]);
+  }, [phase, twistCookTime, twistComparisonRunning, foodPosition, cavityMode]);
 
   // Reset when returning to play phase
   useEffect(() => {
@@ -291,6 +349,12 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
       setTwistTurntable(false);
       setTwistCookTime(0);
       setTwistFoodTemp(Array(25).fill(20));
+      setTwistNoTurntableTemp(Array(25).fill(20));
+      setTwistWithTurntableTemp(Array(25).fill(20));
+      setTwistComparisonRunning(false);
+      setTwistComparisonComplete(false);
+      setFoodPosition('center');
+      setCavityMode(1);
     }
   }, [phase]);
 
@@ -338,10 +402,14 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
   // ═══════════════════════════════════════════════════════════════════════════
   // RENDER HELPERS
   // ═══════════════════════════════════════════════════════════════════════════
-  const renderMicrowaveScene = (temps: number[], cooking: boolean, turntable: boolean, angle: number) => {
+  const renderMicrowaveScene = (temps: number[], cooking: boolean, turntable: boolean, angle: number, showNodeLabels: boolean = true) => {
+    // numNodes is derived from nodesPerCavity for display purposes
+    // More nodes = more complex standing wave pattern
+    void nodesPerCavity; // Used in getIntensityAt via scaleFactor
+
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill="#111827" />
+      <svg viewBox="0 0 400 320" className="w-full h-64">
+        <rect width="400" height="320" fill="#111827" />
 
         {/* Microwave body */}
         <rect x="50" y="30" width="300" height="200" rx="10" fill="#374151" stroke="#4b5563" strokeWidth="3" />
@@ -360,28 +428,42 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
           <line key={`v${i}`} x1={75 + i * 8} y1="50" x2={75 + i * 8} y2="210" stroke="#1e293b" strokeWidth="1" />
         ))}
 
-        {/* Standing wave visualization (when cooking) */}
-        {cooking && (
-          <g opacity="0.4">
-            {[...Array(5)].map((_, yi) => (
-              [...Array(5)].map((_, xi) => {
-                const x = (xi / 4 - 0.5);
-                const y = (yi / 4 - 0.5);
-                const intensity = getIntensityAt(x, y, 0);
-                return (
+        {/* Animated standing wave pattern visualization */}
+        <g opacity="0.6">
+          {[...Array(7)].map((_, yi) => (
+            [...Array(7)].map((_, xi) => {
+              const x = (xi / 6 - 0.5);
+              const y = (yi / 6 - 0.5);
+              const intensity = getIntensityAt(x, y, 0, 1);
+              const pulseIntensity = intensity * (0.7 + 0.3 * Math.sin(animPhase * 2));
+              const isAntinode = intensity > 0.7;
+              const isNode = intensity < 0.15;
+
+              return (
+                <g key={`w${xi}-${yi}`}>
                   <circle
-                    key={`w${xi}-${yi}`}
-                    cx={95 + xi * 40}
-                    cy={75 + yi * 35}
-                    r={10 + intensity * 8}
-                    fill={intensity > 0.5 ? '#ef4444' : '#3b82f6'}
-                    opacity={0.3 + Math.sin(animPhase + xi + yi) * 0.2}
+                    cx={85 + xi * 28}
+                    cy={65 + yi * 22}
+                    r={4 + pulseIntensity * 10}
+                    fill={isAntinode ? '#ef4444' : isNode ? '#3b82f6' : '#eab308'}
+                    opacity={0.4 + pulseIntensity * 0.4}
                   />
-                );
-              })
-            ))}
-          </g>
-        )}
+                  {/* Node/Antinode labels */}
+                  {showNodeLabels && isAntinode && xi % 2 === 0 && yi % 2 === 0 && (
+                    <text x={85 + xi * 28} y={65 + yi * 22 - 12} textAnchor="middle" className="fill-red-300 text-xs font-bold" style={{ fontSize: '8px' }}>
+                      HOT
+                    </text>
+                  )}
+                  {showNodeLabels && isNode && xi % 2 === 0 && yi % 2 === 0 && (
+                    <text x={85 + xi * 28} y={65 + yi * 22 - 12} textAnchor="middle" className="fill-blue-300 text-xs font-bold" style={{ fontSize: '8px' }}>
+                      COLD
+                    </text>
+                  )}
+                </g>
+              );
+            })
+          ))}
+        </g>
 
         {/* Turntable */}
         <g transform={`translate(170, 180)`}>
@@ -433,16 +515,28 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
           {cookTime.toFixed(1)}s
         </text>
 
-        {/* Temperature legend */}
-        <g transform="translate(60, 240)">
-          <rect x="0" y="0" width="20" height="10" fill="#3b82f6" />
-          <text x="25" y="9" className="fill-gray-400 text-xs">Cold</text>
-          <rect x="70" y="0" width="20" height="10" fill="#22c55e" />
-          <text x="95" y="9" className="fill-gray-400 text-xs">Warm</text>
-          <rect x="140" y="0" width="20" height="10" fill="#eab308" />
-          <text x="165" y="9" className="fill-gray-400 text-xs">Hot</text>
-          <rect x="200" y="0" width="20" height="10" fill="#ef4444" />
-          <text x="225" y="9" className="fill-gray-400 text-xs">V.Hot</text>
+        {/* Temperature legend with node/antinode explanation */}
+        <g transform="translate(50, 240)">
+          <rect x="0" y="0" width="16" height="10" fill="#3b82f6" />
+          <text x="20" y="9" className="fill-gray-400 text-xs">Node (Cold)</text>
+          <rect x="90" y="0" width="16" height="10" fill="#eab308" />
+          <text x="110" y="9" className="fill-gray-400 text-xs">Between</text>
+          <rect x="170" y="0" width="16" height="10" fill="#ef4444" />
+          <text x="190" y="9" className="fill-gray-400 text-xs">Antinode (Hot)</text>
+        </g>
+
+        {/* Wavelength info */}
+        <g transform="translate(50, 260)">
+          <text x="0" y="10" className="fill-amber-400 text-xs">
+            {`λ = ${wavelength.toFixed(1)} cm | Nodes every ${(wavelength / 2).toFixed(1)} cm`}
+          </text>
+        </g>
+
+        {/* Power indicator */}
+        <g transform="translate(50, 280)">
+          <text x="0" y="10" className="fill-gray-400 text-xs">Power: {powerLevel}%</text>
+          <rect x="80" y="2" width="100" height="8" fill="#1f2937" rx="2" />
+          <rect x="80" y="2" width={powerLevel} height="8" fill="#22c55e" rx="2" />
         </g>
       </svg>
     );
@@ -562,8 +656,9 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onClick={() => goToNextPhase()}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        style={{ position: 'relative', zIndex: 10 }}
       >
         <span className="relative z-10 flex items-center gap-3">
           Investigate!
@@ -608,7 +703,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
             disabled={prediction !== null}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               prediction === option.id
@@ -616,6 +711,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
                 : prediction !== null && option.id === 'standing' ? 'bg-emerald-600/40 border-2 border-emerald-400'
                 : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
             }`}
+            style={{ position: 'relative', zIndex: 10 }}
           >
             <span className="mr-2">{option.icon}</span>
             <span className="text-slate-200">{option.text}</span>
@@ -628,8 +724,9 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
             {prediction === 'standing' ? '✓ Correct!' : 'Not quite!'} Standing waves create fixed patterns of high and low energy!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+            onClick={() => goToNextPhase()}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+            style={{ position: 'relative', zIndex: 10 }}
           >
             See It in Action
           </button>
@@ -641,14 +738,103 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
   const renderPlay = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Standing Wave Lab</h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
-        {renderMicrowaveScene(foodTemp, isCooking, turntableOn, turntableAngle)}
+
+      {/* Interactive sliders panel */}
+      <div className="bg-slate-800/60 rounded-2xl p-5 mb-4 w-full max-w-2xl border border-slate-700/50">
+        <h3 className="text-lg font-semibold text-amber-400 mb-4">Microwave Parameters</h3>
+        <div className="grid gap-5">
+          {/* Frequency slider */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-sm text-slate-300 font-medium">Microwave Frequency</label>
+              <span className="text-sm text-amber-400 font-mono">{frequency.toFixed(2)} GHz</span>
+            </div>
+            <input
+              type="range"
+              min="2.0"
+              max="3.0"
+              step="0.05"
+              value={frequency}
+              onChange={(e) => setFrequency(parseFloat(e.target.value))}
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
+              style={{ position: 'relative', zIndex: 10 }}
+            />
+            <div className="flex justify-between text-xs text-slate-500">
+              <span>2.0 GHz</span>
+              <span className="text-amber-400">Standard: 2.45 GHz</span>
+              <span>3.0 GHz</span>
+            </div>
+          </div>
+
+          {/* Cavity length slider */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-sm text-slate-300 font-medium">Cavity Length</label>
+              <span className="text-sm text-blue-400 font-mono">{cavityLength} cm</span>
+            </div>
+            <input
+              type="range"
+              min="20"
+              max="50"
+              step="1"
+              value={cavityLength}
+              onChange={(e) => setCavityLength(parseInt(e.target.value))}
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
+              style={{ position: 'relative', zIndex: 10 }}
+            />
+            <div className="flex justify-between text-xs text-slate-500">
+              <span>20 cm (Small)</span>
+              <span>50 cm (Large)</span>
+            </div>
+          </div>
+
+          {/* Power level slider */}
+          <div className="space-y-2">
+            <div className="flex justify-between items-center">
+              <label className="text-sm text-slate-300 font-medium">Power Level</label>
+              <span className="text-sm text-emerald-400 font-mono">{powerLevel}%</span>
+            </div>
+            <input
+              type="range"
+              min="10"
+              max="100"
+              step="10"
+              value={powerLevel}
+              onChange={(e) => setPowerLevel(parseInt(e.target.value))}
+              className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-emerald-500"
+              style={{ position: 'relative', zIndex: 10 }}
+            />
+            <div className="flex justify-between text-xs text-slate-500">
+              <span>10% (Low)</span>
+              <span>100% (High)</span>
+            </div>
+          </div>
+
+          {/* Calculated wavelength display */}
+          <div className="bg-gradient-to-r from-amber-900/30 to-orange-900/30 rounded-lg p-3 border border-amber-500/20">
+            <p className="text-sm text-slate-300">
+              <span className="text-amber-400 font-semibold">Calculated Wavelength:</span>{' '}
+              <span className="font-mono text-white">{wavelength.toFixed(2)} cm</span>
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              Formula: lambda = c / f = (3 x 10^8 m/s) / ({frequency} x 10^9 Hz)
+            </p>
+            <p className="text-xs text-slate-400 mt-1">
+              <span className="text-red-400">Hot spots</span> every {(wavelength / 2).toFixed(1)} cm (half wavelength)
+            </p>
+          </div>
+        </div>
       </div>
 
-      <div className="flex justify-center gap-4 mb-6">
+      {/* Microwave visualization */}
+      <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
+        {renderMicrowaveScene(foodTemp, isCooking, turntableOn, turntableAngle, true)}
+      </div>
+
+      {/* Control buttons */}
+      <div className="flex flex-wrap justify-center gap-4 mb-6">
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             const now = Date.now();
             if (now - lastClickRef.current < 200) return;
             lastClickRef.current = now;
@@ -658,12 +844,12 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
           className={`px-6 py-2 rounded-lg font-medium transition-all ${
             isCooking ? 'bg-red-600 text-white' : 'bg-emerald-600 text-white'
           }`}
+          style={{ position: 'relative', zIndex: 10 }}
         >
           {isCooking ? 'Stop' : 'Start Cooking'}
         </button>
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             const now = Date.now();
             if (now - lastClickRef.current < 200) return;
             lastClickRef.current = now;
@@ -673,12 +859,12 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
           className={`px-6 py-2 rounded-lg font-medium transition-all ${
             turntableOn ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'
           }`}
+          style={{ position: 'relative', zIndex: 10 }}
         >
           Turntable: {turntableOn ? 'ON' : 'OFF'}
         </button>
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             const now = Date.now();
             if (now - lastClickRef.current < 200) return;
             lastClickRef.current = now;
@@ -687,6 +873,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
             playSound('click');
           }}
           className="px-6 py-2 rounded-lg font-medium bg-slate-700 text-slate-300 hover:bg-slate-600"
+          style={{ position: 'relative', zIndex: 10 }}
         >
           Reset
         </button>
@@ -695,13 +882,18 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
       <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
         <p className="text-amber-300 text-sm text-center">
           <strong>Standing waves:</strong> When microwaves bounce back and forth, they interfere to create
-          fixed patterns of high energy (antinodes) and low energy (nodes).
+          fixed patterns of high energy (antinodes - <span className="text-red-400">HOT</span>) and
+          low energy (nodes - <span className="text-blue-400">COLD</span>).
+        </p>
+        <p className="text-slate-400 text-xs text-center mt-2">
+          Try adjusting the frequency and see how the wavelength and hot spot spacing changes!
         </p>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onClick={() => goToNextPhase()}
         className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+        style={{ position: 'relative', zIndex: 10 }}
       >
         Review the Science
       </button>
@@ -737,8 +929,9 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
         </div>
       </div>
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onClick={() => goToNextPhase()}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+        style={{ position: 'relative', zIndex: 10 }}
       >
         Discover the Twist
       </button>
@@ -762,7 +955,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
             disabled={twistPrediction !== null}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               twistPrediction === option.id
@@ -770,6 +963,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
                 : twistPrediction !== null && option.id === 'even' ? 'bg-emerald-600/40 border-2 border-emerald-400'
                 : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
             }`}
+            style={{ position: 'relative', zIndex: 10 }}
           >
             <span className="mr-2">{option.icon}</span>
             <span className="text-slate-200">{option.text}</span>
@@ -782,8 +976,9 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
             {twistPrediction === 'even' ? '✓ Exactly!' : 'Not quite!'} The turntable moves food through the pattern for even heating!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+            onClick={() => goToNextPhase()}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+            style={{ position: 'relative', zIndex: 10 }}
           >
             See How It Works
           </button>
@@ -793,55 +988,250 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
   );
 
   const renderTwistPlay = () => {
-    const startCooking = (withTurntable: boolean) => {
+    const startComparison = () => {
       const now = Date.now();
       if (now - lastClickRef.current < 200) return;
       lastClickRef.current = now;
-      setTwistTurntable(withTurntable);
-      setTwistFoodTemp(Array(25).fill(20));
+      setTwistNoTurntableTemp(Array(25).fill(20));
+      setTwistWithTurntableTemp(Array(25).fill(20));
       setTwistCookTime(10);
+      setTwistComparisonRunning(true);
+      setTwistComparisonComplete(false);
       playSound('click');
     };
 
+    const resetComparison = () => {
+      setTwistNoTurntableTemp(Array(25).fill(20));
+      setTwistWithTurntableTemp(Array(25).fill(20));
+      setTwistCookTime(0);
+      setTwistComparisonRunning(false);
+      setTwistComparisonComplete(false);
+    };
+
+    // Calculate evenness scores
+    const calcVariance = (temps: number[]) => {
+      const avg = temps.reduce((a, b) => a + b, 0) / temps.length;
+      return Math.sqrt(temps.reduce((acc, t) => acc + Math.pow(t - avg, 2), 0) / temps.length);
+    };
+
+    const noTurntableVariance = calcVariance(twistNoTurntableTemp);
+    const withTurntableVariance = calcVariance(twistWithTurntableTemp);
+
     return (
       <div className="flex flex-col items-center p-6">
-        <h2 className="text-2xl font-bold text-amber-400 mb-4">Turntable vs No Turntable</h2>
-        <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
-          {renderTwistScene(twistFoodTemp, twistTurntable)}
+        <h2 className="text-2xl font-bold text-amber-400 mb-4">Turntable Comparison Lab</h2>
+
+        {/* Controls panel */}
+        <div className="bg-slate-800/60 rounded-2xl p-5 mb-4 w-full max-w-3xl border border-slate-700/50">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Food position selector */}
+            <div className="space-y-3">
+              <label className="text-sm text-slate-300 font-medium block">Food Position</label>
+              <div className="flex gap-2">
+                {(['center', 'edge', 'corner'] as const).map((pos) => (
+                  <button
+                    key={pos}
+                    onClick={() => {
+                      if (!twistComparisonRunning) {
+                        setFoodPosition(pos);
+                        resetComparison();
+                      }
+                    }}
+                    disabled={twistComparisonRunning}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all capitalize ${
+                      foodPosition === pos
+                        ? 'bg-amber-600 text-white'
+                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                    } ${twistComparisonRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    style={{ position: 'relative', zIndex: 10 }}
+                  >
+                    {pos}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500">
+                Where the food is placed on the turntable plate
+              </p>
+            </div>
+
+            {/* Cavity mode selector */}
+            <div className="space-y-3">
+              <label className="text-sm text-slate-300 font-medium block">Cavity Resonance Mode</label>
+              <div className="flex gap-2">
+                {([1, 2, 3] as const).map((mode) => (
+                  <button
+                    key={mode}
+                    onClick={() => {
+                      if (!twistComparisonRunning) {
+                        setCavityMode(mode);
+                        resetComparison();
+                      }
+                    }}
+                    disabled={twistComparisonRunning}
+                    className={`px-4 py-2 rounded-lg text-sm font-medium transition-all ${
+                      cavityMode === mode
+                        ? 'bg-blue-600 text-white'
+                        : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+                    } ${twistComparisonRunning ? 'opacity-50 cursor-not-allowed' : ''}`}
+                    style={{ position: 'relative', zIndex: 10 }}
+                  >
+                    Mode {mode}
+                  </button>
+                ))}
+              </div>
+              <p className="text-xs text-slate-500">
+                Different resonance modes create different hot spot patterns
+              </p>
+            </div>
+          </div>
         </div>
 
-        <div className="flex justify-center gap-4 mb-6">
+        {/* Side-by-side comparison visualization */}
+        <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-3xl">
+          <div className="grid md:grid-cols-2 gap-6">
+            {/* Without turntable */}
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-red-400 mb-3">Without Turntable</h3>
+              <div className="bg-slate-900/50 rounded-xl p-4">
+                <div className="grid grid-cols-5 gap-1 mx-auto w-fit mb-3">
+                  {twistNoTurntableTemp.map((temp, i) => (
+                    <div
+                      key={i}
+                      className="w-8 h-8 rounded-sm transition-colors duration-200"
+                      style={{ backgroundColor: tempToColor(temp) }}
+                      title={`${temp.toFixed(0)}C`}
+                    />
+                  ))}
+                </div>
+                <div className="text-sm text-slate-400">
+                  Avg: {(twistNoTurntableTemp.reduce((a, b) => a + b, 0) / 25).toFixed(0)}C
+                </div>
+                <div className="text-sm text-slate-500">
+                  Variation: +/-{noTurntableVariance.toFixed(1)}C
+                </div>
+                {twistComparisonComplete && (
+                  <div className={`mt-2 text-sm font-semibold ${noTurntableVariance > 15 ? 'text-red-400' : 'text-yellow-400'}`}>
+                    {noTurntableVariance > 15 ? 'Very Uneven!' : 'Somewhat Uneven'}
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* With turntable */}
+            <div className="text-center">
+              <h3 className="text-lg font-semibold text-emerald-400 mb-3">With Turntable</h3>
+              <div className="bg-slate-900/50 rounded-xl p-4">
+                <div className="grid grid-cols-5 gap-1 mx-auto w-fit mb-3">
+                  {twistWithTurntableTemp.map((temp, i) => (
+                    <div
+                      key={i}
+                      className="w-8 h-8 rounded-sm transition-colors duration-200"
+                      style={{ backgroundColor: tempToColor(temp) }}
+                      title={`${temp.toFixed(0)}C`}
+                    />
+                  ))}
+                </div>
+                <div className="text-sm text-slate-400">
+                  Avg: {(twistWithTurntableTemp.reduce((a, b) => a + b, 0) / 25).toFixed(0)}C
+                </div>
+                <div className="text-sm text-slate-500">
+                  Variation: +/-{withTurntableVariance.toFixed(1)}C
+                </div>
+                {twistComparisonComplete && (
+                  <div className={`mt-2 text-sm font-semibold ${withTurntableVariance < 10 ? 'text-emerald-400' : 'text-yellow-400'}`}>
+                    {withTurntableVariance < 10 ? 'Even Heating!' : 'More Even'}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Progress indicator */}
+          {twistComparisonRunning && (
+            <div className="mt-6 text-center">
+              <div className="text-amber-400 font-medium mb-2">
+                Cooking... {twistCookTime.toFixed(1)}s remaining
+              </div>
+              <div className="w-full bg-slate-700 rounded-full h-2">
+                <div
+                  className="bg-amber-500 h-2 rounded-full transition-all duration-100"
+                  style={{ width: `${((10 - twistCookTime) / 10) * 100}%` }}
+                />
+              </div>
+            </div>
+          )}
+
+          {/* Legend */}
+          <div className="mt-6 flex justify-center gap-4 text-xs text-slate-400">
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#3b82f6' }} />
+              <span>Cold (20C)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#22c55e' }} />
+              <span>Warm</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#eab308' }} />
+              <span>Hot</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-4 h-4 rounded" style={{ backgroundColor: '#ef4444' }} />
+              <span>Very Hot (100C)</span>
+            </div>
+          </div>
+        </div>
+
+        {/* Control buttons */}
+        <div className="flex flex-wrap justify-center gap-4 mb-6">
           <button
-            onMouseDown={(e) => { e.preventDefault(); startCooking(false); }}
-            disabled={twistCookTime > 0}
-            className={`px-6 py-2 rounded-lg font-medium transition-all ${
-              twistCookTime > 0 && !twistTurntable
-                ? 'bg-amber-700 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+            onClick={startComparison}
+            disabled={twistComparisonRunning}
+            className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+              twistComparisonRunning
+                ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
+                : 'bg-gradient-to-r from-amber-600 to-orange-600 text-white hover:shadow-lg hover:shadow-amber-500/25'
             }`}
+            style={{ position: 'relative', zIndex: 10 }}
           >
-            Cook WITHOUT turntable
+            {twistComparisonComplete ? 'Run Again' : 'Start Comparison'}
           </button>
           <button
-            onMouseDown={(e) => { e.preventDefault(); startCooking(true); }}
-            disabled={twistCookTime > 0}
-            className={`px-6 py-2 rounded-lg font-medium transition-all ${
-              twistCookTime > 0 && twistTurntable
-                ? 'bg-blue-700 text-white'
-                : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-            }`}
+            onClick={resetComparison}
+            disabled={twistComparisonRunning}
+            className="px-6 py-3 rounded-xl font-medium bg-slate-700 text-slate-300 hover:bg-slate-600"
+            style={{ position: 'relative', zIndex: 10 }}
           >
-            Cook WITH turntable
+            Reset
           </button>
         </div>
 
-        {twistCookTime > 0 && (
-          <p className="text-center text-amber-400 mb-4">Cooking... {twistCookTime.toFixed(1)}s remaining</p>
+        {/* Explanation */}
+        <div className="bg-gradient-to-r from-blue-900/30 to-cyan-900/30 rounded-xl p-4 max-w-2xl w-full mb-6 border border-blue-500/20">
+          <p className="text-blue-300 text-sm text-center mb-2">
+            <strong>Multi-Mode Cavity:</strong> Real microwaves have multiple resonance modes that create complex overlapping patterns.
+          </p>
+          <p className="text-slate-400 text-xs text-center">
+            Mode 1 = Simple pattern | Mode 2 = More nodes | Mode 3 = Complex pattern
+          </p>
+        </div>
+
+        {twistComparisonComplete && (
+          <div className="bg-gradient-to-r from-emerald-900/40 to-teal-900/40 rounded-xl p-4 max-w-2xl w-full mb-6 border border-emerald-500/30">
+            <p className="text-emerald-300 text-sm text-center">
+              <strong>Result:</strong> The turntable reduces temperature variation by{' '}
+              <span className="font-mono text-white">
+                {Math.max(0, noTurntableVariance - withTurntableVariance).toFixed(1)}C
+              </span>
+              {' '}by moving food through the standing wave pattern!
+            </p>
+          </div>
         )}
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+          onClick={() => goToNextPhase()}
           className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+          style={{ position: 'relative', zIndex: 10 }}
         >
           Review Discovery
         </button>
@@ -871,8 +1261,9 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
         </div>
       </div>
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+        onClick={() => goToNextPhase()}
         className="px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+        style={{ position: 'relative', zIndex: 10 }}
       >
         Explore Real-World Applications
       </button>
@@ -887,12 +1278,13 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
         {TRANSFER_APPS.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(index); }}
+            onClick={() => handleAppComplete(index)}
             className={`p-4 rounded-xl border-2 transition-all text-left ${
               completedApps.has(index)
                 ? 'border-emerald-500 bg-emerald-900/30'
                 : 'border-slate-700 bg-slate-800/50 hover:border-slate-600'
             }`}
+            style={{ position: 'relative', zIndex: 10 }}
           >
             <div className="text-3xl mb-2">{app.icon}</div>
             <h3 className="text-white font-semibold text-sm">{app.title}</h3>
@@ -908,8 +1300,9 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
       </div>
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToNextPhase(); }}
+          onClick={() => goToNextPhase()}
           className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+          style={{ position: 'relative', zIndex: 10 }}
         >
           Take the Knowledge Test
         </button>
@@ -931,15 +1324,17 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
           <p className="text-slate-300 mb-6">{score >= passingScore ? 'Excellent! You\'ve mastered standing waves!' : 'Keep studying! Review and try again.'}</p>
           {score >= passingScore ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); playSound('complete'); goToNextPhase(); }}
+              onClick={() => { playSound('complete'); goToNextPhase(); }}
               className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
+              style={{ position: 'relative', zIndex: 10 }}
             >
               Claim Your Mastery Badge
             </button>
           ) : (
             <button
-              onMouseDown={(e) => { e.preventDefault(); setTestAnswers([]); goToPhase('review'); }}
+              onClick={() => { setTestAnswers([]); goToPhase('review'); }}
               className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+              style={{ position: 'relative', zIndex: 10 }}
             >
               Review & Try Again
             </button>
@@ -958,8 +1353,9 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
           {question.options.map((option, i) => (
             <button
               key={i}
-              onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(i, option.correct); }}
+              onClick={() => handleTestAnswer(i, option.correct)}
               className="p-4 rounded-xl bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent text-left text-slate-200"
+              style={{ position: 'relative', zIndex: 10 }}
             >
               {option.text}
             </button>
@@ -981,7 +1377,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔄</div><p className="text-sm text-slate-300">Turntable Solution</p></div>
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🍡</div><p className="text-sm text-slate-300">Marshmallow Test</p></div>
         </div>
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase('hook'); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">Explore Again</button>
+        <button onClick={() => goToPhase('hook')} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl" style={{ position: 'relative', zIndex: 10 }}>Explore Again</button>
       </div>
     </div>
   );
@@ -1018,7 +1414,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
             {PHASE_ORDER.map((p, index) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
@@ -1027,6 +1423,7 @@ const MicrowaveStandingWaveRenderer: React.FC<Props> = ({ currentPhase, onPhaseC
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                style={{ position: 'relative', zIndex: 10 }}
               />
             ))}
           </div>
