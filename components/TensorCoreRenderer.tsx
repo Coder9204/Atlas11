@@ -50,16 +50,126 @@ const colors = {
 };
 
 const TEST_QUESTIONS = [
-  { text: 'Tensor cores perform matrix multiply-accumulate (D = A*B + C) in one operation', correct: true },
-  { text: 'SIMD means single instruction, multiple data - many calculations in parallel', correct: true },
-  { text: 'Systolic arrays flow data through a grid of processing elements', correct: true },
-  { text: 'FP32 precision always gives better AI accuracy than FP16', correct: false },
-  { text: 'INT8 precision enables roughly 4x more throughput than FP32', correct: true },
-  { text: 'Tensor cores are slower than regular GPU cores for matrix math', correct: false },
-  { text: 'Fused multiply-add reduces memory operations by combining two ops', correct: true },
-  { text: 'Lower precision uses less memory bandwidth per operation', correct: true },
-  { text: 'AI training typically needs higher precision than inference', correct: true },
-  { text: 'Modern tensor cores can process mixed-precision operations', correct: true },
+  // Q1: Core Concept - Matrix Multiply-Accumulate (Easy)
+  {
+    scenario: "NVIDIA's H100 GPU contains 456 tensor cores, each capable of performing matrix multiply-accumulate operations. A single tensor core processes D = A x B + C in one clock cycle.",
+    question: "What makes the fused multiply-accumulate (FMA) operation more efficient than separate multiply and add operations?",
+    options: [
+      { id: 'faster_clock', label: "Tensor cores run at a faster clock speed than CUDA cores" },
+      { id: 'fused', label: "FMA reduces memory operations by combining two ops and avoiding intermediate storage", correct: true },
+      { id: 'parallel', label: "FMA uses multiple GPU cores working together" },
+      { id: 'cache', label: "FMA stores all results in a special high-speed cache" },
+    ],
+    explanation: "Fused multiply-accumulate combines multiplication and addition into a single operation, eliminating the need to write intermediate results to memory. This reduces memory bandwidth requirements and latency, which are often the bottlenecks in computation."
+  },
+  // Q2: Core Concept - SIMD Architecture (Easy)
+  {
+    scenario: "When running a large language model like GPT-4, the GPU executes billions of multiply-add operations. The architecture uses SIMD (Single Instruction, Multiple Data) to accelerate these computations.",
+    question: "How does SIMD parallelism enable tensor cores to achieve such high throughput?",
+    options: [
+      { id: 'sequential', label: "SIMD processes one operation at a time but at very high speed" },
+      { id: 'multiple', label: "One instruction triggers the same operation across many data elements simultaneously", correct: true },
+      { id: 'prediction', label: "SIMD predicts future operations and pre-computes them" },
+      { id: 'compression', label: "SIMD compresses data so more fits in memory" },
+    ],
+    explanation: "SIMD enables massive parallelism by applying a single instruction to multiple data elements at once. Instead of processing matrix elements one by one, tensor cores compute entire blocks simultaneously, dramatically increasing throughput."
+  },
+  // Q3: Core Concept - Systolic Arrays (Medium)
+  {
+    scenario: "Inside each tensor core, data flows through a systolic array - a grid of processing elements (PEs) where data ripples through like waves. Matrix A flows horizontally while Matrix B flows vertically.",
+    question: "What is the key advantage of the systolic array architecture for matrix multiplication?",
+    options: [
+      { id: 'random', label: "PEs can access any matrix element randomly for flexibility" },
+      { id: 'reuse', label: "Each input element is reused multiple times as it flows through the array, maximizing efficiency", correct: true },
+      { id: 'storage', label: "Systolic arrays store the entire result matrix before outputting" },
+      { id: 'simple', label: "Systolic arrays use simpler math operations than regular multiplication" },
+    ],
+    explanation: "Data reuse is the superpower of systolic arrays! As each element flows through the grid, it participates in multiple calculations. This minimizes memory accesses - the biggest energy and time cost in modern computing."
+  },
+  // Q4: Precision Modes - FP16/BF16 (Medium)
+  {
+    scenario: "Meta trained their LLaMA models using BF16 (bfloat16) precision instead of FP32. Despite using only 16 bits per number, the model achieved state-of-the-art performance.",
+    question: "Why can AI training often succeed with half-precision formats like FP16 or BF16?",
+    options: [
+      { id: 'lossless', label: "BF16 can represent all the same numbers as FP32 with no loss" },
+      { id: 'neural', label: "Neural networks are inherently noise-tolerant, so small precision loss doesn't hurt final accuracy", correct: true },
+      { id: 'gradients', label: "Gradients during training are always very small numbers that fit in 16 bits" },
+      { id: 'compress', label: "The training framework automatically compresses FP32 to BF16 when needed" },
+    ],
+    explanation: "Neural networks are remarkably robust to noise! The millions of parameters average out small numerical errors. BF16 keeps FP32's range (important for gradients) while sacrificing some precision. The result: 2x throughput with minimal accuracy impact."
+  },
+  // Q5: Precision Modes - INT8 Quantization (Medium-Hard)
+  {
+    scenario: "A startup deploys their chatbot using INT8 quantization. The model runs 4x faster than FP32, and users report the same quality responses.",
+    question: "How does INT8 enable 4x throughput improvement over FP32?",
+    options: [
+      { id: 'bits', label: "INT8 uses 8 bits vs 32 bits, so 4x more operations fit in the same hardware", correct: true },
+      { id: 'simpler', label: "Integer math requires fewer transistors than floating-point math" },
+      { id: 'cache', label: "INT8 values fit entirely in the processor cache" },
+      { id: 'skipping', label: "INT8 allows skipping zero-value multiplications" },
+    ],
+    explanation: "With INT8, you pack 4x more values into the same memory and compute units that would hold FP32 values. Tensor cores can process 4x more INT8 operations per cycle. For inference, where weights are fixed, quantization preserves accuracy while quadrupling speed."
+  },
+  // Q6: Tensor Core vs CUDA Core (Medium)
+  {
+    scenario: "A researcher compares matrix multiplication performance: CUDA cores achieve 19.5 TFLOPS on their RTX 4090, while tensor cores achieve 330 TFLOPS for the same operation.",
+    question: "Why are tensor cores approximately 16x faster than CUDA cores for matrix multiplication?",
+    options: [
+      { id: 'clock', label: "Tensor cores run at 16x higher clock frequency" },
+      { id: 'specialized', label: "Tensor cores are specialized circuits that compute entire 4x4 matrix blocks in one operation", correct: true },
+      { id: 'memory', label: "Tensor cores have 16x more dedicated memory" },
+      { id: 'voltage', label: "Tensor cores operate at higher voltage for more speed" },
+    ],
+    explanation: "CUDA cores are general-purpose: one multiply-add per clock. Tensor cores are specialized matrix engines that compute an entire 4x4 or larger matrix multiply in one cycle. This specialization trades flexibility for massive throughput on AI workloads."
+  },
+  // Q7: AI Training Benefits (Hard)
+  {
+    scenario: "Training GPT-4 reportedly required 25,000 A100 GPUs running for 90-100 days. Without tensor cores, this would have taken approximately 8-16x longer.",
+    question: "Beyond raw compute speed, what other benefit do tensor cores provide for large-scale AI training?",
+    options: [
+      { id: 'accuracy', label: "Tensor cores produce more accurate gradients than regular compute" },
+      { id: 'energy', label: "Specialized hardware is more energy-efficient, reducing power costs from $10M+ to manageable levels", correct: true },
+      { id: 'memory', label: "Tensor cores expand the available GPU memory capacity" },
+      { id: 'network', label: "Tensor cores accelerate network communication between GPUs" },
+    ],
+    explanation: "Energy efficiency is crucial at scale! Tensor cores deliver more FLOPS per watt than general-purpose cores. For a training run costing millions in compute, energy efficiency means the difference between viable and impossible projects."
+  },
+  // Q8: Throughput Calculations (Hard)
+  {
+    scenario: "An H100 tensor core can perform a 4x4 FP16 matrix multiply-accumulate in one cycle. At 1.5 GHz clock speed, you want to calculate the theoretical peak throughput.",
+    question: "A 4x4 matrix multiply involves how many multiply-accumulate operations, and what's the theoretical ops/second for one tensor core?",
+    options: [
+      { id: 'wrong1', label: "16 ops (4x4 result elements); 24 billion ops/second" },
+      { id: 'correct', label: "64 multiply-adds (4x4x4 for full matmul); 96 billion ops/second", correct: true },
+      { id: 'wrong2', label: "32 ops (two 4x4 matrices); 48 billion ops/second" },
+      { id: 'wrong3', label: "128 ops (multiply then add separately); 192 billion ops/second" },
+    ],
+    explanation: "Each element in the 4x4 result requires 4 multiply-adds (dot product of row and column). That's 4x4x4 = 64 multiply-add operations. At 1.5 GHz: 64 ops x 1.5 billion cycles = 96 billion ops/second per tensor core!"
+  },
+  // Q9: Mixed Precision Training (Hard)
+  {
+    scenario: "Modern AI frameworks use 'mixed precision' training: forward pass in FP16, loss calculation in FP32, and gradient scaling to prevent underflow.",
+    question: "Why do we need FP32 for loss calculation even when using FP16 tensor cores for the forward pass?",
+    options: [
+      { id: 'habit', label: "It's a legacy requirement from older frameworks that hasn't been updated" },
+      { id: 'accuracy', label: "FP16 can't represent the small gradient values accurately, causing training to fail", correct: true },
+      { id: 'speed', label: "FP32 loss calculation is actually faster due to hardware optimization" },
+      { id: 'memory', label: "Loss values need to be stored in main memory which only supports FP32" },
+    ],
+    explanation: "Gradients during backpropagation can be tiny (1e-8 or smaller). FP16 can only represent values down to ~6e-8 - smaller values become zero! Loss scaling multiplies loss by 1024+, keeping gradients in FP16's representable range, then divides after computation."
+  },
+  // Q10: Real-World Performance (Expert)
+  {
+    scenario: "A company benchmarks their transformer model: CPU takes 1000ms per inference, GPU with CUDA cores takes 50ms, and GPU with tensor cores takes 8ms using FP16.",
+    question: "The tensor core speedup seems less than theoretical maximum. What typically limits real-world tensor core performance?",
+    options: [
+      { id: 'thermal', label: "Tensor cores overheat and throttle during sustained computation" },
+      { id: 'memory', label: "Memory bandwidth - data can't be fed to tensor cores fast enough", correct: true },
+      { id: 'driver', label: "GPU drivers add overhead that slows down tensor core operations" },
+      { id: 'precision', label: "FP16 requires extra conversion steps that add latency" },
+    ],
+    explanation: "Memory bandwidth is the real bottleneck! Tensor cores can compute faster than data arrives from GPU memory. Optimizations like operator fusion, memory layout tuning, and batch size selection all aim to keep tensor cores fed with data to maximize utilization."
+  },
 ];
 
 const TRANSFER_APPLICATIONS = [
@@ -160,7 +270,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [testAnswers, setTestAnswers] = useState<(boolean | null)[]>(new Array(10).fill(null));
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
@@ -205,9 +315,9 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
     { id: 'error', label: 'Lower precision causes too many errors to be useful' },
   ];
 
-  const handleTestAnswer = (answer: boolean) => {
+  const handleTestAnswer = (answerId: string) => {
     const newAnswers = [...testAnswers];
-    newAnswers[currentTestIndex] = answer;
+    newAnswers[currentTestIndex] = answerId;
     setTestAnswers(newAnswers);
   };
 
@@ -226,11 +336,12 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
   const submitTest = () => {
     let score = 0;
     testAnswers.forEach((answer, i) => {
-      if (answer === TEST_QUESTIONS[i].correct) score++;
+      const correctOption = TEST_QUESTIONS[i].options.find(o => o.correct);
+      if (answer === correctOption?.id) score++;
     });
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+    if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
@@ -1076,30 +1187,40 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
 
   // TEST PHASE
   if (phase === 'test') {
+    const totalQuestions = TEST_QUESTIONS.length;
+
     if (testSubmitted) {
+      const passed = testScore >= 7;
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
           {renderProgressBar()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
             <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              background: passed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
               padding: '24px',
               borderRadius: '12px',
               textAlign: 'center',
             }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+              <h2 style={{ color: passed ? colors.success : colors.error, marginBottom: '8px' }}>
+                {passed ? 'Excellent!' : 'Keep Learning!'}
               </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
+              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / {totalQuestions}</p>
               <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You understand tensor core matrix math!' : 'Review the concepts and try again.'}
+                {passed ? 'You understand tensor core architecture!' : 'Review the concepts and try again.'}
               </p>
             </div>
 
+            <div style={{ margin: '16px' }}>
+              <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px', color: colors.textMuted }}>Question-by-Question Review</p>
+            </div>
+
             {TEST_QUESTIONS.map((q, i) => {
+              const correctOption = q.options.find(o => o.correct);
+              const correctId = correctOption?.id;
               const userAnswer = testAnswers[i];
-              const isCorrect = userAnswer === q.correct;
+              const userOption = q.options.find(o => o.id === userAnswer);
+              const isCorrect = userAnswer === correctId;
               return (
                 <div key={i} style={{
                   background: colors.bgCard,
@@ -1108,15 +1229,32 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
                   borderRadius: '12px',
                   borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
                 }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '8px' }}>{i + 1}. {q.text}</p>
-                  <p style={{ color: isCorrect ? colors.success : colors.error, fontSize: '14px' }}>
-                    Your answer: {userAnswer ? 'True' : 'False'} | Correct: {q.correct ? 'True' : 'False'}
-                  </p>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '8px' }}>
+                    <span style={{ color: colors.textMuted, fontSize: '12px', fontWeight: 600 }}>Q{i + 1}</span>
+                    <span style={{ color: isCorrect ? colors.success : colors.error, fontSize: '12px', fontWeight: 600 }}>
+                      {isCorrect ? 'Correct' : 'Incorrect'}
+                    </span>
+                  </div>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '8px', fontStyle: 'italic' }}>{q.scenario}</p>
+                  <p style={{ color: colors.textPrimary, fontSize: '14px', marginBottom: '12px', fontWeight: 500 }}>{q.question}</p>
+                  <div style={{ fontSize: '13px', marginBottom: '8px' }}>
+                    <p style={{ color: isCorrect ? colors.success : colors.error }}>
+                      Your answer: {userOption?.label || 'No answer'}
+                    </p>
+                    {!isCorrect && (
+                      <p style={{ color: colors.success, marginTop: '4px' }}>
+                        Correct answer: {correctOption?.label}
+                      </p>
+                    )}
+                  </div>
+                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', marginTop: '8px' }}>
+                    <p style={{ color: colors.textSecondary, fontSize: '12px', lineHeight: 1.5 }}>{q.explanation}</p>
+                  </div>
                 </div>
               );
             })}
           </div>
-          {renderBottomBar(testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(passed, passed ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
@@ -1131,7 +1269,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
           <div style={{ padding: '16px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
               <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestIndex + 1} / {TEST_QUESTIONS.length}</span>
+              <span style={{ color: colors.textSecondary }}>{currentTestIndex + 1} / {totalQuestions}</span>
             </div>
 
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
@@ -1145,51 +1283,79 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
                     borderRadius: '2px',
                     background: testAnswers[i] !== null ? colors.accent : i === currentTestIndex ? colors.textMuted : 'rgba(255,255,255,0.1)',
                     cursor: 'pointer',
+                    zIndex: 10,
                   }}
                 />
               ))}
             </div>
 
+            {/* Scenario */}
+            <div style={{
+              background: 'rgba(139, 92, 246, 0.1)',
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '12px',
+              borderLeft: `3px solid ${colors.matrixA}`,
+            }}>
+              <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.6, fontStyle: 'italic' }}>
+                {currentQ.scenario}
+              </p>
+            </div>
+
+            {/* Question */}
             <div style={{
               background: colors.bgCard,
               padding: '20px',
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>
-                {currentQ.text}
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, fontWeight: 500 }}>
+                {currentQ.question}
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={() => handleTestAnswer(true)}
-                style={{
-                  ...buttonStyle,
-                  flex: 1,
-                  padding: '16px',
-                  background: testAnswers[currentTestIndex] === true ? 'rgba(16, 185, 129, 0.3)' : 'transparent',
-                  border: testAnswers[currentTestIndex] === true ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.2)',
-                  color: colors.textPrimary,
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                TRUE
-              </button>
-              <button
-                onClick={() => handleTestAnswer(false)}
-                style={{
-                  ...buttonStyle,
-                  flex: 1,
-                  padding: '16px',
-                  background: testAnswers[currentTestIndex] === false ? 'rgba(239, 68, 68, 0.3)' : 'transparent',
-                  border: testAnswers[currentTestIndex] === false ? `2px solid ${colors.error}` : '1px solid rgba(255,255,255,0.2)',
-                  color: colors.textPrimary,
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                FALSE
-              </button>
+            {/* Multiple Choice Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {currentQ.options.map((option, optIdx) => {
+                const isSelected = testAnswers[currentTestIndex] === option.id;
+                const optionLetter = String.fromCharCode(65 + optIdx);
+                return (
+                  <button
+                    key={option.id}
+                    onClick={() => handleTestAnswer(option.id)}
+                    style={{
+                      ...buttonStyle,
+                      display: 'flex',
+                      alignItems: 'flex-start',
+                      gap: '12px',
+                      padding: '14px 16px',
+                      background: isSelected ? 'rgba(16, 185, 129, 0.2)' : 'transparent',
+                      border: isSelected ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                      color: colors.textPrimary,
+                      textAlign: 'left',
+                      borderRadius: '10px',
+                      WebkitTapHighlightColor: 'transparent',
+                      zIndex: 10,
+                    }}
+                  >
+                    <span style={{
+                      minWidth: '24px',
+                      height: '24px',
+                      borderRadius: '50%',
+                      background: isSelected ? colors.accent : 'rgba(255,255,255,0.1)',
+                      color: isSelected ? 'white' : colors.textSecondary,
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      fontSize: '12px',
+                      fontWeight: 600,
+                    }}>
+                      {optionLetter}
+                    </span>
+                    <span style={{ fontSize: '14px', lineHeight: 1.4 }}>{option.label}</span>
+                  </button>
+                );
+              })}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
@@ -1203,11 +1369,12 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
                   color: currentTestIndex === 0 ? colors.textMuted : colors.textPrimary,
                   cursor: currentTestIndex === 0 ? 'not-allowed' : 'pointer',
                   WebkitTapHighlightColor: 'transparent',
+                  zIndex: 10,
                 }}
               >
                 Previous
               </button>
-              {currentTestIndex < TEST_QUESTIONS.length - 1 ? (
+              {currentTestIndex < totalQuestions - 1 ? (
                 <button
                   onClick={nextTestQuestion}
                   style={{
@@ -1215,6 +1382,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
                     background: colors.accent,
                     color: 'white',
                     WebkitTapHighlightColor: 'transparent',
+                    zIndex: 10,
                   }}
                 >
                   Next
@@ -1229,6 +1397,7 @@ const TensorCoreRenderer: React.FC<TensorCoreRendererProps> = ({
                     color: 'white',
                     cursor: allAnswered ? 'pointer' : 'not-allowed',
                     WebkitTapHighlightColor: 'transparent',
+                    zIndex: 10,
                   }}
                 >
                   Submit Test

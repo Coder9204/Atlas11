@@ -5,6 +5,23 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Lab',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
+};
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -21,21 +38,15 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
-
 interface Props {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
+  setTestScore?: (score: number) => void;
 }
 
-const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete, setTestScore }) => {
+  const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -44,30 +55,28 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
   const [showTestResults, setShowTestResults] = useState(false);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
-  const [isMobile, setIsMobile] = useState(false);
 
   const [carAngle, setCarAngle] = useState(0);
   const [speed, setSpeed] = useState(5);
   const [radius, setRadius] = useState(70);
+  const [mass, setMass] = useState(1);
   const [showVectors, setShowVectors] = useState(true);
   const [isAnimating, setIsAnimating] = useState(true);
   const [isSliding, setIsSliding] = useState(false);
-  const [bankAngle, setBankAngle] = useState(0);
 
-  const navigationLockRef = useRef(false);
+  // Twist simulation state
+  const [stringBroken, setStringBroken] = useState(false);
+  const [ballPosition, setBallPosition] = useState({ x: 0, y: 0 });
+  const [releaseAngle, setReleaseAngle] = useState(0);
+
   const lastClickRef = useRef(0);
 
-  // Mobile detection
+  // Phase sync from external control
   useEffect(() => {
-    setIsMobile(/iPhone|iPad|iPod|Android/i.test(navigator.userAgent));
-  }, []);
-
-  // Phase sync
-  useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
@@ -94,17 +103,14 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
     } catch { /* Audio not available */ }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     onPhaseComplete?.(newPhase);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onPhaseComplete, onGameEvent]);
 
-  const centripetalForce = (speed * speed) / radius;
+  const centripetalForce = (mass * speed * speed) / radius;
   const maxFriction = 0.8;
 
   useEffect(() => {
@@ -125,6 +131,18 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
     }
   }, [phase, onGameEvent]);
 
+  // Twist simulation animation
+  useEffect(() => {
+    if (!stringBroken) return;
+    const interval = setInterval(() => {
+      setBallPosition(prev => ({
+        x: prev.x + Math.cos(releaseAngle) * 3,
+        y: prev.y + Math.sin(releaseAngle) * 3
+      }));
+    }, 50);
+    return () => clearInterval(interval);
+  }, [stringBroken, releaseAngle]);
+
   const handlePrediction = useCallback((prediction: string) => {
     const now = Date.now();
     if (now - lastClickRef.current < 200) return;
@@ -132,7 +150,8 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'B' ? 'success' : 'failure');
-  }, [playSound]);
+    onGameEvent?.({ type: 'prediction_made', data: { prediction, correct: prediction === 'B' } });
+  }, [playSound, onGameEvent]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
     const now = Date.now();
@@ -140,8 +159,9 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
     lastClickRef.current = now;
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
-    playSound(prediction === 'C' ? 'success' : 'failure');
-  }, [playSound]);
+    playSound(prediction === 'B' ? 'success' : 'failure');
+    onGameEvent?.({ type: 'twist_prediction_made', data: { prediction, correct: prediction === 'B' } });
+  }, [playSound, onGameEvent]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
     const now = Date.now();
@@ -152,7 +172,8 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
       newAnswers[questionIndex] = answerIndex;
       return newAnswers;
     });
-  }, []);
+    onGameEvent?.({ type: 'test_answered', data: { questionIndex, answerIndex } });
+  }, [onGameEvent]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
     const now = Date.now();
@@ -160,7 +181,20 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
     lastClickRef.current = now;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
-  }, [playSound]);
+    onGameEvent?.({ type: 'app_explored', data: { appIndex } });
+  }, [playSound, onGameEvent]);
+
+  const breakString = useCallback(() => {
+    const angleRad = carAngle * Math.PI / 180;
+    setReleaseAngle(angleRad + Math.PI / 2); // Tangent direction
+    setBallPosition({ x: 0, y: 0 });
+    setStringBroken(true);
+  }, [carAngle]);
+
+  const resetTwistSim = useCallback(() => {
+    setStringBroken(false);
+    setBallPosition({ x: 0, y: 0 });
+  }, []);
 
   const testQuestions = [
     {
@@ -191,12 +225,12 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
       ]
     },
     {
-      question: "'Centrifugal force' is:",
+      question: "When a ball on a string is released, it travels:",
       options: [
-        { text: "A real force pushing outward", correct: false },
-        { text: "An apparent force in rotating frames", correct: true },
-        { text: "Same as centripetal force", correct: false },
-        { text: "A gravitational effect", correct: false }
+        { text: "In a spiral outward", correct: false },
+        { text: "In a straight line tangent to the circle", correct: true },
+        { text: "Directly away from the center", correct: false },
+        { text: "Continues in a circle briefly", correct: false }
       ]
     },
     {
@@ -209,12 +243,12 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
       ]
     },
     {
-      question: "A banked curve works by using:",
+      question: "'Centrifugal force' is:",
       options: [
-        { text: "Air lift", correct: false },
-        { text: "A component of normal force", correct: true },
-        { text: "Engine braking", correct: false },
-        { text: "Magnetic rails", correct: false }
+        { text: "A real force pushing outward", correct: false },
+        { text: "An apparent force in rotating frames", correct: true },
+        { text: "Same as centripetal force", correct: false },
+        { text: "A gravitational effect", correct: false }
       ]
     },
     {
@@ -245,12 +279,12 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
       ]
     },
     {
-      question: "Ideal banking angle depends on:",
+      question: "What happens to the centripetal force if you double the mass?",
       options: [
-        { text: "Only speed", correct: false },
-        { text: "Only radius", correct: false },
-        { text: "Both speed and radius", correct: true },
-        { text: "Always 45°", correct: false }
+        { text: "It halves", correct: false },
+        { text: "It stays the same", correct: false },
+        { text: "It doubles", correct: true },
+        { text: "It quadruples", correct: false }
       ]
     }
   ];
@@ -318,29 +352,88 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
     );
   };
 
-  const renderBankedCurve = () => {
-    const bankRad = bankAngle * Math.PI / 180;
+  const renderTwistSimulation = (size: number = 280) => {
+    const centerX = size / 2;
+    const centerY = size / 2;
+    const simRadius = 80;
+    const ballX = centerX + Math.cos(carAngle * Math.PI / 180) * simRadius;
+    const ballY = centerY + Math.sin(carAngle * Math.PI / 180) * simRadius;
+
     return (
-      <svg width="220" height="160" className="mx-auto">
-        <polygon points="20,140 200,100 200,120 20,160" fill="#4b5563" />
-        <g transform={`translate(110, 110) rotate(${-bankAngle})`}>
-          <rect x="-15" y="-10" width="30" height="20" rx="3" fill="#f59e0b" />
-          <line x1="0" y1="-10" x2={-Math.sin(bankRad) * 40} y2={-10 - Math.cos(bankRad) * 40} stroke="#a855f7" strokeWidth="2" markerEnd="url(#arrowPurple)" />
-          <text x={-Math.sin(bankRad) * 45 - 5} y={-15 - Math.cos(bankRad) * 40} fill="#a855f7" fontSize="10">N</text>
-        </g>
-        <line x1="110" y1="110" x2="110" y2="150" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowGreenDown)" />
-        <text x="118" y="145" fill="#22c55e" fontSize="10">mg</text>
-        {bankAngle > 5 && (
-          <g>
-            <line x1="110" y1="110" x2="70" y2="110" stroke="#ef4444" strokeWidth="2" strokeDasharray="4 2" markerEnd="url(#arrowRedLeft)" />
-            <text x="55" y="108" fill="#ef4444" fontSize="9">N sinθ</text>
-          </g>
+      <svg width={size} height={size} className="overflow-visible">
+        {/* Background */}
+        <circle cx={centerX} cy={centerY} r={simRadius + 30} fill="#1e293b" />
+
+        {/* Path indicator */}
+        <circle cx={centerX} cy={centerY} r={simRadius} fill="none" stroke="#475569" strokeWidth="2" strokeDasharray="5 5" />
+
+        {/* Center point */}
+        <circle cx={centerX} cy={centerY} r="8" fill="#fbbf24" />
+
+        {!stringBroken ? (
+          <>
+            {/* String */}
+            <line x1={centerX} y1={centerY} x2={ballX} y2={ballY} stroke="#94a3b8" strokeWidth="3" />
+
+            {/* Ball */}
+            <circle cx={ballX} cy={ballY} r="15" fill="#3b82f6" />
+            <circle cx={ballX - 4} cy={ballY - 4} r="4" fill="#93c5fd" opacity="0.5" />
+
+            {/* Velocity vector */}
+            <line
+              x1={ballX}
+              y1={ballY}
+              x2={ballX + Math.cos((carAngle + 90) * Math.PI / 180) * 40}
+              y2={ballY + Math.sin((carAngle + 90) * Math.PI / 180) * 40}
+              stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowGreenTwist)"
+            />
+            <text
+              x={ballX + Math.cos((carAngle + 90) * Math.PI / 180) * 50}
+              y={ballY + Math.sin((carAngle + 90) * Math.PI / 180) * 50}
+              fill="#22c55e" fontSize="14" fontWeight="bold"
+            >v</text>
+          </>
+        ) : (
+          <>
+            {/* Broken string at center */}
+            <line x1={centerX} y1={centerY} x2={centerX + 20} y2={centerY + 10} stroke="#ef4444" strokeWidth="2" />
+
+            {/* Ball flying tangentially */}
+            <circle
+              cx={ballX + ballPosition.x}
+              cy={ballY + ballPosition.y}
+              r="15"
+              fill="#ef4444"
+            />
+            <circle
+              cx={ballX + ballPosition.x - 4}
+              cy={ballY + ballPosition.y - 4}
+              r="4"
+              fill="#fca5a5"
+              opacity="0.5"
+            />
+
+            {/* Tangent line showing path */}
+            <line
+              x1={ballX}
+              y1={ballY}
+              x2={ballX + Math.cos(releaseAngle) * 100}
+              y2={ballY + Math.sin(releaseAngle) * 100}
+              stroke="#22c55e"
+              strokeWidth="2"
+              strokeDasharray="5 5"
+            />
+
+            <text x={centerX} y={size - 20} fill="#ef4444" fontSize="12" fontWeight="bold" textAnchor="middle">
+              Ball travels in a STRAIGHT LINE!
+            </text>
+          </>
         )}
-        <text x="110" y="155" textAnchor="middle" fill="#94a3b8" fontSize="10">Bank angle: {bankAngle}°</text>
+
         <defs>
-          <marker id="arrowPurple" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto"><path d="M0,0 L0,6 L8,3 z" fill="#a855f7" /></marker>
-          <marker id="arrowGreenDown" markerWidth="8" markerHeight="8" refX="3" refY="7" orient="auto"><path d="M0,0 L6,0 L3,8 z" fill="#22c55e" /></marker>
-          <marker id="arrowRedLeft" markerWidth="8" markerHeight="8" refX="0" refY="3" orient="auto"><path d="M8,0 L8,6 L0,3 z" fill="#ef4444" /></marker>
+          <marker id="arrowGreenTwist" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            <path d="M0,0 L0,6 L9,3 z" fill="#22c55e" />
+          </marker>
         </defs>
       </svg>
     );
@@ -348,81 +441,34 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
 
   const applications = [
     {
-      title: "Highway Engineering",
-      icon: "🛣️",
-      description: "Highway curves are banked to allow cars to turn safely at higher speeds without relying solely on friction.",
-      details: "Engineers use θ = arctan(v²/rg) to calculate the ideal banking angle. Exit ramps have speed warnings because the banking is designed for a specific velocity.",
-      animation: (
-        <svg width="200" height="120" className="mx-auto">
-          <path d="M10,100 Q100,20 190,100" fill="none" stroke="#4b5563" strokeWidth="35" />
-          <path d="M10,100 Q100,20 190,100" fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="8 4" />
-          <g transform={`translate(${100 + Math.cos(carAngle * 0.02 - 1) * 60}, ${60 + Math.sin(carAngle * 0.02 - 1) * 30}) rotate(${carAngle * 0.3})`}>
-            <rect x="-8" y="-5" width="16" height="10" rx="2" fill="#3b82f6" />
-          </g>
-          <text x="100" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">Superelevated curve</text>
-        </svg>
-      )
-    },
-    {
-      title: "Roller Coaster Loops",
+      title: "Roller Coasters",
       icon: "🎢",
       description: "At the top of a loop, gravity and the track's normal force both point toward the center, providing centripetal force.",
-      details: "Clothoid loops (teardrop shaped) keep g-forces manageable. At the top: N + mg = mv²/r, so you feel lighter but stay on track!",
-      animation: (
-        <svg width="200" height="120" className="mx-auto">
-          <circle cx="100" cy="70" r="40" fill="none" stroke="#64748b" strokeWidth="5" />
-          <g transform={`translate(${100 + Math.cos((carAngle * 2 + 90) * Math.PI / 180) * 40}, ${70 + Math.sin((carAngle * 2 + 90) * Math.PI / 180) * 40}) rotate(${carAngle * 2})`}>
-            <rect x="-6" y="-4" width="12" height="8" rx="2" fill="#ef4444" />
-          </g>
-          <line x1="100" y1="30" x2="100" y2="45" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowGreenDown)" />
-          <line x1="100" y1="30" x2="100" y2="50" stroke="#a855f7" strokeWidth="2" />
-          <text x="100" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">Both forces toward center</text>
-        </svg>
-      )
+      details: "Clothoid loops (teardrop shaped) keep g-forces manageable. At the top: N + mg = mv²/r, so you feel lighter but stay on track!"
     },
     {
-      title: "Centrifuges",
-      icon: "🔬",
-      description: "Lab centrifuges spin samples at high speeds to separate substances by density using 'centrifugal' effects.",
-      details: "In the rotating frame, denser particles experience more 'outward push' and collect at the bottom. Speeds can exceed 100,000 RPM!",
-      animation: (
-        <svg width="200" height="120" className="mx-auto">
-          <circle cx="100" cy="60" r="40" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
-          <g transform={`rotate(${carAngle * 3}, 100, 60)`}>
-            <rect x="55" y="55" width="90" height="10" rx="2" fill="#94a3b8" />
-            <rect x="50" y="52" width="15" height="16" rx="2" fill="#3b82f6" />
-            <rect x="135" y="52" width="15" height="16" rx="2" fill="#3b82f6" />
-            <rect x="52" y="60" width="11" height="6" fill="#60a5fa" />
-            <rect x="137" y="60" width="11" height="6" fill="#60a5fa" />
-          </g>
-          <text x="100" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">High-speed separation</text>
-        </svg>
-      )
+      title: "Satellites",
+      icon: "🛰️",
+      description: "Satellites orbit Earth because gravity provides the centripetal force needed for circular motion.",
+      details: "At orbital altitude, gravity = mv²/r. The International Space Station orbits at 7.66 km/s, completing one orbit every 90 minutes!"
     },
     {
-      title: "Washing Machine Spin",
+      title: "Washing Machines",
       icon: "🫧",
       description: "The spin cycle uses circular motion to force water out of clothes through holes in the drum.",
-      details: "Clothes press against the drum wall while water escapes through perforations. Typical spin speeds: 800-1400 RPM.",
-      animation: (
-        <svg width="200" height="120" className="mx-auto">
-          <circle cx="100" cy="60" r="40" fill="#1e293b" stroke="#64748b" strokeWidth="2" />
-          {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map(a => (
-            <circle key={a} cx={100 + Math.cos(a * Math.PI / 180) * 35} cy={60 + Math.sin(a * Math.PI / 180) * 35} r="2" fill="#475569" />
-          ))}
-          <g transform={`rotate(${carAngle * 4}, 100, 60)`}>
-            <ellipse cx="85" cy="60" rx="10" ry="8" fill="#ec4899" />
-            <ellipse cx="115" cy="55" rx="8" ry="10" fill="#3b82f6" />
-            <ellipse cx="105" cy="70" rx="9" ry="7" fill="#22c55e" />
-          </g>
-          {[0, 90, 180, 270].map(a => (
-            <circle key={a} cx={100 + Math.cos((a + carAngle * 2) * Math.PI / 180) * 48} cy={60 + Math.sin((a + carAngle * 2) * Math.PI / 180) * 48} r="2" fill="#60a5fa" opacity="0.6" />
-          ))}
-          <text x="100" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">Water escapes outward</text>
-        </svg>
-      )
+      details: "Clothes press against the drum wall while water escapes through perforations. Typical spin speeds: 800-1400 RPM."
+    },
+    {
+      title: "Car Turns",
+      icon: "🚗",
+      description: "When a car turns on a flat road, friction between tires and pavement provides the centripetal force.",
+      details: "If you turn too fast, the required centripetal force exceeds available friction, and the car slides! Banked curves help by using a component of normal force."
     }
   ];
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // PHASE RENDERERS
+  // ═══════════════════════════════════════════════════════════════════════════
 
   const renderHook = () => (
     <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
@@ -434,11 +480,11 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
 
       {/* Main title with gradient */}
       <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-cyan-100 to-blue-200 bg-clip-text text-transparent">
-        The Force That Curves
+        Centripetal Force
       </h1>
 
       <p className="text-lg text-slate-400 max-w-md mb-10">
-        Discover what really happens when objects move in circles
+        Discover the force that keeps objects moving in circles
       </p>
 
       {/* Premium card with graphic */}
@@ -467,11 +513,12 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
+        style={{ zIndex: 10 }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
-          Discover the Truth
+          Make Your Prediction
           <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
@@ -481,15 +528,15 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
       {/* Feature hints */}
       <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
         <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
+          <span className="text-cyan-400">*</span>
           Interactive Lab
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
+          <span className="text-cyan-400">*</span>
           Real-World Examples
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
+          <span className="text-cyan-400">*</span>
           Knowledge Test
         </div>
       </div>
@@ -510,12 +557,13 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
           { id: 'A', text: 'Forward, in the direction of motion' },
           { id: 'B', text: 'Toward the center of the circle' },
           { id: 'C', text: 'Outward, away from the center' },
-          { id: 'D', text: 'No net force—it\'s moving at constant speed' }
+          { id: 'D', text: 'No net force - it\'s moving at constant speed' }
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
             disabled={showPredictionFeedback}
+            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
                 ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
@@ -531,13 +579,14 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
       {showPredictionFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Correct! This inward force is called <span className="text-cyan-400">centripetal force</span>—"center-seeking"!
+            Correct! This inward force is called <span className="text-cyan-400">centripetal force</span> - "center-seeking"!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onClick={() => goToPhase('play')}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
           >
-            Explore the Physics →
+            Explore the Physics
           </button>
         </div>
       )}
@@ -550,26 +599,31 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
       <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
         {renderCircularMotion(showVectors, 280)}
       </div>
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-3xl mb-6">
         <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Speed: {speed.toFixed(1)}</label>
+          <label className="text-slate-300 text-sm block mb-2">Mass: {mass.toFixed(1)} kg</label>
+          <input type="range" min="0.5" max="3" step="0.1" value={mass} onChange={(e) => setMass(parseFloat(e.target.value))} className="w-full accent-blue-500" />
+          <p className="text-xs text-slate-400 mt-1">More mass = more force needed</p>
+        </div>
+        <div className="bg-slate-700/50 rounded-xl p-4">
+          <label className="text-slate-300 text-sm block mb-2">Speed: {speed.toFixed(1)} m/s</label>
           <input type="range" min="2" max="15" step="0.5" value={speed} onChange={(e) => setSpeed(parseFloat(e.target.value))} className="w-full accent-blue-500" />
           <p className="text-xs text-slate-400 mt-1">Higher speed = more force needed</p>
         </div>
         <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-slate-300 text-sm block mb-2">Curve Radius: {radius}px</label>
+          <label className="text-slate-300 text-sm block mb-2">Radius: {radius} m</label>
           <input type="range" min="40" max="100" value={radius} onChange={(e) => setRadius(parseInt(e.target.value))} className="w-full accent-blue-500" />
           <p className="text-xs text-slate-400 mt-1">Tighter curve = more force needed</p>
         </div>
       </div>
-      <div className="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-xl p-4 max-w-2xl w-full mb-6">
+      <div className="bg-gradient-to-r from-blue-900/40 to-cyan-900/40 rounded-xl p-4 max-w-3xl w-full mb-6">
         <div className="grid grid-cols-3 gap-4 text-center">
           <div>
-            <div className={`text-2xl font-bold ${isSliding ? 'text-red-400' : 'text-cyan-400'}`}>{centripetalForce.toFixed(2)}</div>
+            <div className={`text-2xl font-bold ${isSliding ? 'text-red-400' : 'text-cyan-400'}`}>{centripetalForce.toFixed(2)} N</div>
             <div className="text-sm text-slate-300">Required F_c</div>
           </div>
           <div>
-            <div className="text-2xl font-bold text-amber-400">{(maxFriction * 10).toFixed(1)}</div>
+            <div className="text-2xl font-bold text-amber-400">{(maxFriction * 10).toFixed(1)} N</div>
             <div className="text-sm text-slate-300">Max Friction</div>
           </div>
           <div>
@@ -579,22 +633,34 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
         </div>
       </div>
       <div className="flex gap-4 mb-6">
-        <button onMouseDown={(e) => { e.preventDefault(); setIsAnimating(!isAnimating); }} className={`px-4 py-2 rounded-lg font-medium ${isAnimating ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'} text-white`}>
-          {isAnimating ? '⏸ Pause' : '▶ Play'}
+        <button
+          onClick={() => setIsAnimating(!isAnimating)}
+          style={{ zIndex: 10 }}
+          className={`px-4 py-2 rounded-lg font-medium ${isAnimating ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'} text-white`}
+        >
+          {isAnimating ? 'Pause' : 'Play'}
         </button>
-        <button onMouseDown={(e) => { e.preventDefault(); setShowVectors(!showVectors); }} className={`px-4 py-2 rounded-lg font-medium ${showVectors ? 'bg-blue-600' : 'bg-slate-600'} text-white`}>
-          {showVectors ? '👁 Vectors ON' : '👁 Vectors OFF'}
+        <button
+          onClick={() => setShowVectors(!showVectors)}
+          style={{ zIndex: 10 }}
+          className={`px-4 py-2 rounded-lg font-medium ${showVectors ? 'bg-blue-600' : 'bg-slate-600'} text-white`}
+        >
+          Vectors {showVectors ? 'ON' : 'OFF'}
         </button>
       </div>
       <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl">
         <h3 className="text-lg font-semibold text-cyan-400 mb-2">Key Formula: F = mv²/r</h3>
         <p className="text-slate-300 text-sm">
-          <span className="text-green-400">v</span> (velocity) is tangent. <span className="text-red-400">F_c</span> points to center.
-          Friction provides this force—if F_c exceeds max friction, the car slides!
+          <span className="text-green-400">v</span> (velocity) is tangent to the circle. <span className="text-red-400">F_c</span> points toward the center.
+          Friction provides this force - if F_c exceeds max friction, the car slides!
         </p>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
-        Review the Concepts →
+      <button
+        onClick={() => goToPhase('review')}
+        style={{ zIndex: 10 }}
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+      >
+        Review the Concepts
       </button>
     </div>
   );
@@ -604,64 +670,69 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
       <h2 className="text-2xl font-bold text-white mb-6">Understanding Centripetal Force</h2>
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">↪️ Centripetal Force</h3>
+          <h3 className="text-xl font-bold text-cyan-400 mb-3">Centripetal Force</h3>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• "Center-seeking"—always toward the center</li>
-            <li>• F = mv²/r (mass × velocity² / radius)</li>
-            <li>• Changes direction, not speed</li>
-            <li>• Not a new force—provided by friction, tension, gravity, etc.</li>
+            <li>* "Center-seeking" - always toward the center</li>
+            <li>* F = mv²/r (mass x velocity² / radius)</li>
+            <li>* Changes direction, not speed</li>
+            <li>* Not a new force - provided by friction, tension, gravity, etc.</li>
           </ul>
         </div>
         <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-red-400 mb-3">↩️ "Centrifugal Force"</h3>
+          <h3 className="text-xl font-bold text-red-400 mb-3">"Centrifugal Force"</h3>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• NOT a real force—it's fictitious</li>
-            <li>• Only appears in rotating reference frames</li>
-            <li>• You feel "pushed out" because you want to go straight</li>
-            <li>• Newton's 1st Law: objects resist direction changes</li>
+            <li>* NOT a real force - it's fictitious</li>
+            <li>* Only appears in rotating reference frames</li>
+            <li>* You feel "pushed out" because you want to go straight</li>
+            <li>* Newton's 1st Law: objects resist direction changes</li>
           </ul>
         </div>
         <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">🧮 The Physics</h3>
+          <h3 className="text-xl font-bold text-emerald-400 mb-3">The Physics</h3>
           <p className="text-slate-300 text-sm">
             <strong>Centripetal acceleration:</strong> a = v²/r always toward center<br />
             <strong>Newton's 2nd Law:</strong> F = ma = mv²/r<br />
-            <strong>Double the speed?</strong> Requires 4× the force! (v² relationship)
+            <strong>Double the speed?</strong> Requires 4x the force! (v² relationship)
           </p>
         </div>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-        Discover a Surprising Twist →
+      <button
+        onClick={() => goToPhase('twist_predict')}
+        style={{ zIndex: 10 }}
+        className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+      >
+        Discover a Surprising Twist
       </button>
     </div>
   );
 
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">🌟 The Twist Challenge</h2>
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Twist Challenge</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <p className="text-lg text-slate-300 mb-4">
-          Race tracks and highway ramps have banked (tilted) curves. At the right speed, a car can navigate the turn with zero friction.
+          Imagine swinging a ball on a string in a circle above your head. The string provides the centripetal force.
         </p>
         <p className="text-lg text-cyan-400 font-medium">
-          How does banking eliminate the need for friction?
+          What happens if the string suddenly breaks?
         </p>
       </div>
       <div className="grid gap-3 w-full max-w-xl">
         {[
-          { id: 'A', text: 'Banking creates an outward centrifugal push' },
-          { id: 'B', text: 'The car naturally goes faster on a bank' },
-          { id: 'C', text: 'A component of the normal force provides centripetal force' },
-          { id: 'D', text: 'Gravity is stronger on banked curves' }
+          { id: 'A', text: 'The ball spirals outward' },
+          { id: 'B', text: 'The ball flies off in a straight line tangent to the circle' },
+          { id: 'C', text: 'The ball flies directly away from the center' },
+          { id: 'D', text: 'The ball falls straight down' }
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
             disabled={showTwistFeedback}
+            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                : showTwistFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
                 : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
             }`}
           >
@@ -673,10 +744,14 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
       {showTwistFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Exactly! The tilted surface redirects the normal force to have an inward component!
+            Exactly! The ball continues in a straight line because there's no longer any force to change its direction!
           </p>
-          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-            See How Banked Curves Work →
+          <button
+            onClick={() => goToPhase('twist_play')}
+            style={{ zIndex: 10 }}
+            className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+          >
+            See It In Action
           </button>
         </div>
       )}
@@ -685,46 +760,75 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
 
   const renderTwistPlay = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Banked Curve Physics</h2>
+      <h2 className="text-2xl font-bold text-amber-400 mb-4">Tangential Release</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
-        {renderBankedCurve()}
+        {renderTwistSimulation(280)}
       </div>
-      <div className="bg-slate-700/50 rounded-xl p-4 w-full max-w-2xl mb-6">
-        <label className="text-slate-300 text-sm block mb-2">Bank Angle: {bankAngle}°</label>
-        <input type="range" min="0" max="45" value={bankAngle} onChange={(e) => setBankAngle(parseInt(e.target.value))} className="w-full accent-amber-500" />
+      <div className="flex gap-4 mb-6">
+        {!stringBroken ? (
+          <button
+            onClick={breakString}
+            style={{ zIndex: 10 }}
+            className="px-6 py-3 bg-red-600 hover:bg-red-500 text-white font-semibold rounded-xl"
+          >
+            Break the String!
+          </button>
+        ) : (
+          <button
+            onClick={resetTwistSim}
+            style={{ zIndex: 10 }}
+            className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-semibold rounded-xl"
+          >
+            Reset Simulation
+          </button>
+        )}
       </div>
       <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 max-w-2xl">
-        <h3 className="text-lg font-bold text-amber-400 mb-3">Why Banking Works:</h3>
+        <h3 className="text-lg font-bold text-amber-400 mb-3">What You're Seeing:</h3>
         <ul className="space-y-2 text-slate-300 text-sm">
-          <li>• Normal force N is perpendicular to the tilted road</li>
-          <li>• N has a horizontal component: <span className="text-cyan-400">N sin(θ)</span> toward center</li>
-          <li>• This horizontal component provides centripetal force!</li>
-          <li>• At the "design speed," friction isn't needed at all</li>
+          <li>* The ball moves in a circle because the string pulls it toward the center</li>
+          <li>* The velocity is always TANGENT to the circle (perpendicular to the string)</li>
+          <li>* When the string breaks, there's no more centripetal force</li>
+          <li>* Without a force to change its direction, the ball travels in a straight line!</li>
         </ul>
-        <p className="text-cyan-400 mt-4 text-sm">NASCAR tracks are banked up to 33°—allowing cars to turn at 200+ mph!</p>
+        <p className="text-cyan-400 mt-4 text-sm">This is Newton's First Law in action - objects in motion stay in motion in a straight line unless acted upon by a force!</p>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-        Review the Discovery →
+      <button
+        onClick={() => goToPhase('twist_review')}
+        style={{ zIndex: 10 }}
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+      >
+        Review the Discovery
       </button>
     </div>
   );
 
   const renderTwistReview = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">🌟 Key Discovery</h2>
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">Key Discovery: Newton's First Law</h2>
       <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 max-w-2xl mb-6">
-        <h3 className="text-xl font-bold text-amber-400 mb-4">Centripetal Force Has Many Sources!</h3>
-        <ul className="space-y-2 text-slate-300 text-sm">
-          <li>• <strong>Flat road:</strong> Friction</li>
-          <li>• <strong>Banked road:</strong> Component of normal force</li>
-          <li>• <strong>Planets orbiting:</strong> Gravity</li>
-          <li>• <strong>Ball on string:</strong> Tension</li>
-          <li>• <strong>Roller coaster loop:</strong> Normal force ± gravity</li>
-        </ul>
-        <p className="text-emerald-400 font-medium mt-4">The physics is the same—F = mv²/r—but the SOURCE varies!</p>
+        <h3 className="text-xl font-bold text-amber-400 mb-4">Why Objects Don't Fly Outward!</h3>
+        <div className="space-y-4 text-slate-300 text-sm">
+          <p>
+            <strong className="text-white">The Common Misconception:</strong> Many people think objects in circular motion are "trying to fly outward" due to centrifugal force.
+          </p>
+          <p>
+            <strong className="text-white">The Truth:</strong> Objects actually want to go STRAIGHT (Newton's First Law). The centripetal force constantly pulls them inward, curving their path into a circle.
+          </p>
+          <p>
+            <strong className="text-white">When Released:</strong> Without the inward force, the object doesn't spiral out - it continues in a straight line in whatever direction it was moving at that instant (tangent to the circle).
+          </p>
+        </div>
+        <div className="mt-4 p-3 bg-slate-800/50 rounded-xl">
+          <p className="text-emerald-400 font-medium">Key Insight: Centripetal force doesn't push or pull objects along the circle - it curves their path!</p>
+        </div>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
-        Explore Real-World Applications →
+      <button
+        onClick={() => goToPhase('transfer')}
+        style={{ zIndex: 10 }}
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+      >
+        Explore Real-World Applications
       </button>
     </div>
   );
@@ -736,14 +840,15 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
         {applications.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+            onClick={() => setActiveAppTab(index)}
+            style={{ zIndex: 10 }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppTab === index ? 'bg-blue-600 text-white'
               : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
               : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
-            {app.icon} {app.title.split(' ')[0]}
+            {app.icon} {app.title}
           </button>
         ))}
       </div>
@@ -752,12 +857,15 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
           <span className="text-3xl">{applications[activeAppTab].icon}</span>
           <h3 className="text-xl font-bold text-white">{applications[activeAppTab].title}</h3>
         </div>
-        {applications[activeAppTab].animation}
         <p className="text-lg text-slate-300 mt-4 mb-3">{applications[activeAppTab].description}</p>
         <p className="text-sm text-slate-400">{applications[activeAppTab].details}</p>
         {!completedApps.has(activeAppTab) && (
-          <button onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
-            ✓ Mark as Understood
+          <button
+            onClick={() => handleAppComplete(activeAppTab)}
+            style={{ zIndex: 10 }}
+            className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium"
+          >
+            Mark as Understood
           </button>
         )}
       </div>
@@ -767,90 +875,140 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
         <span className="text-slate-400">{completedApps.size}/4</span>
       </div>
       {completedApps.size >= 4 && (
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
-          Take the Knowledge Test →
+        <button
+          onClick={() => goToPhase('test')}
+          style={{ zIndex: 10 }}
+          className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+        >
+          Take the Knowledge Test
         </button>
       )}
     </div>
   );
 
-  const renderTest = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
-      {!showTestResults ? (
-        <div className="space-y-6 max-w-2xl w-full">
-          {testQuestions.map((q, qIndex) => (
-            <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
-              <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
-              <div className="grid gap-2">
-                {q.options.map((option, oIndex) => (
-                  <button
-                    key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
-                  >
-                    {option.text}
-                  </button>
-                ))}
-              </div>
-            </div>
-          ))}
-          <button
-            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); }}
-            disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'}`}
-          >
-            Submit Answers
-          </button>
-        </div>
-      ) : (
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
-          <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
-          <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? 'Excellent! You\'ve mastered centripetal force!' : 'Keep studying! Review and try again.'}</p>
-          {calculateScore() >= 7 ? (
-            <button onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }} className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
-              Claim Your Mastery Badge →
-            </button>
-          ) : (
-            <button onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }} className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl">
-              Review & Try Again
-            </button>
-          )}
-        </div>
-      )}
-    </div>
-  );
+  const renderTest = () => {
+    const handleSubmitTest = () => {
+      const score = calculateScore();
+      setShowTestResults(true);
+      setTestScore?.(score);
+      onGameEvent?.({ type: 'test_completed', data: { score, total: 10 } });
+    };
 
-  const renderMastery = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      <div className="bg-gradient-to-br from-blue-900/50 via-cyan-900/50 to-teal-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">🚗</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Circular Motion Master!</h1>
-        <p className="text-xl text-slate-300 mb-6">You've mastered centripetal force and circular motion!</p>
-        <div className="grid grid-cols-2 gap-4 mb-6">
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">↪️</div><p className="text-sm text-slate-300">Centripetal Force</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🛣️</div><p className="text-sm text-slate-300">Banked Curves</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🎢</div><p className="text-sm text-slate-300">Vertical Loops</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🔬</div><p className="text-sm text-slate-300">Centrifuges</p></div>
-        </div>
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">↺ Explore Again</button>
+    return (
+      <div className="flex flex-col items-center p-6">
+        <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
+        {!showTestResults ? (
+          <div className="space-y-6 max-w-2xl w-full">
+            {testQuestions.map((q, qIndex) => (
+              <div key={qIndex} className="bg-slate-800/50 rounded-xl p-4">
+                <p className="text-white font-medium mb-3">{qIndex + 1}. {q.question}</p>
+                <div className="grid gap-2">
+                  {q.options.map((option, oIndex) => (
+                    <button
+                      key={oIndex}
+                      onClick={() => handleTestAnswer(qIndex, oIndex)}
+                      style={{ zIndex: 10 }}
+                      className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
+                    >
+                      {option.text}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            ))}
+            <button
+              onClick={handleSubmitTest}
+              disabled={testAnswers.includes(-1)}
+              style={{ zIndex: 10 }}
+              className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-cyan-600 text-white'}`}
+            >
+              Submit Answers
+            </button>
+          </div>
+        ) : (
+          <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
+            <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
+            <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
+            <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? 'Excellent! You\'ve mastered centripetal force!' : 'Keep studying! Review and try again.'}</p>
+            {calculateScore() >= 7 ? (
+              <button
+                onClick={() => goToPhase('mastery')}
+                style={{ zIndex: 10 }}
+                className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
+              >
+                Claim Your Mastery Badge
+              </button>
+            ) : (
+              <button
+                onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
+                style={{ zIndex: 10 }}
+                className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
+              >
+                Review and Try Again
+              </button>
+            )}
+          </div>
+        )}
       </div>
-    </div>
-  );
+    );
+  };
+
+  const renderMastery = () => {
+    useEffect(() => {
+      onGameEvent?.({ type: 'mastery_achieved', data: { topic: 'centripetal_force' } });
+    }, []);
+
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
+        <div className="bg-gradient-to-br from-blue-900/50 via-cyan-900/50 to-teal-900/50 rounded-3xl p-8 max-w-2xl">
+          <div className="text-8xl mb-6">🚗</div>
+          <h1 className="text-3xl font-bold text-white mb-4">Circular Motion Master!</h1>
+          <p className="text-xl text-slate-300 mb-6">You've mastered centripetal force and circular motion!</p>
+          <div className="grid grid-cols-2 gap-4 mb-6">
+            <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">F=mv²/r</div><p className="text-sm text-slate-300">Centripetal Force</p></div>
+            <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🎢</div><p className="text-sm text-slate-300">Roller Coaster Loops</p></div>
+            <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🛰️</div><p className="text-sm text-slate-300">Satellite Orbits</p></div>
+            <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🚗</div><p className="text-sm text-slate-300">Car Turns</p></div>
+          </div>
+          <div className="space-y-3">
+            <button
+              onClick={() => goToPhase('hook')}
+              style={{ zIndex: 10 }}
+              className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
+            >
+              Explore Again
+            </button>
+            <div>
+              <button
+                onClick={() => window.location.href = '/dashboard'}
+                style={{ zIndex: 10 }}
+                className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-medium rounded-xl"
+              >
+                Return to Dashboard
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // MAIN RENDER
+  // ═══════════════════════════════════════════════════════════════════════════
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -867,14 +1025,15 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, 
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Centripetal Force</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}

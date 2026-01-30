@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // HOOKE'S LAW RENDERER - PREMIUM PHYSICS GAME
@@ -22,17 +22,28 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+// String-based phases
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook',
+  'predict': 'Predict',
+  'play': 'Lab',
+  'review': 'Review',
+  'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab',
+  'twist_review': 'Twist Review',
+  'transfer': 'Transfer',
+  'test': 'Test',
+  'mastery': 'Mastery'
 };
 
 interface HookesLawRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // Test Questions
@@ -205,9 +216,9 @@ const realWorldApps = [
   }
 ];
 
-const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, currentPhase = 0, onPhaseComplete }) => {
+const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
   // Core State
-  const [phase, setPhase] = useState<number>(currentPhase);
+  const [phase, setPhase] = useState<Phase>('hook');
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [time, setTime] = useState(0);
@@ -223,10 +234,6 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
   const [isOscillating, setIsOscillating] = useState(false);
   const [showForceArrows, setShowForceArrows] = useState(true);
 
-  // Navigation debounce
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
-
   // Mobile detection
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -238,10 +245,10 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
 
   // Phase sync
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase !== undefined && gamePhase !== phase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
   // Animation loop
   useEffect(() => {
@@ -280,26 +287,26 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
     if (onGameEvent) onGameEvent({ type, data });
   }, [onGameEvent]);
 
-  // Phase navigation with 200ms debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  // Phase navigation - simplified without locks
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     emitEvent('phase_change', { phase: newPhase, phaseLabel: phaseLabels[newPhase] });
     if (onPhaseComplete) onPhaseComplete(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onPhaseComplete, emitEvent]);
 
   const goNext = useCallback(() => {
-    if (phase < PHASES.length - 1) goToPhase(phase + 1);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
   }, [phase, goToPhase]);
 
   const goBack = useCallback(() => {
-    if (phase > 0) goToPhase(phase - 1);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
   }, [phase, goToPhase]);
 
   // Calculations
@@ -321,14 +328,15 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
       <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
         <span className="text-sm font-semibold text-white/80 tracking-wide">Hooke's Law</span>
         <div className="flex items-center gap-1.5">
-          {PHASES.map((p) => (
+          {phaseOrder.map((p) => (
             <button
               key={p}
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+              onClick={() => goToPhase(p)}
+              style={{ zIndex: 10 }}
               className={`h-2 rounded-full transition-all duration-300 ${
                 phase === p
                   ? 'bg-emerald-400 w-6 shadow-lg shadow-emerald-400/30'
-                  : phase > p
+                  : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                     ? 'bg-emerald-500 w-2'
                     : 'bg-slate-700 w-2 hover:bg-slate-600'
               }`}
@@ -432,7 +440,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
   // ============================================================================
   // PHASE: HOOK
   // ============================================================================
-  if (phase === 0) {
+  if (phase === 'hook') {
     return (
       <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
@@ -485,7 +493,8 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
             </div>
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+              onClick={() => goToPhase('predict')}
+              style={{ zIndex: 10 }}
               className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-emerald-500 to-teal-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98]"
             >
               <span className="relative z-10 flex items-center gap-3">
@@ -519,7 +528,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
   // ============================================================================
   // PHASE: PREDICT
   // ============================================================================
-  if (phase === 1) {
+  if (phase === 'predict') {
     const predictions = [
       { id: 'half', label: '2.5 cm (half as much)', desc: 'Heavier objects compress springs more tightly' },
       { id: 'same', label: '5 cm (same amount)', desc: 'Springs have a fixed maximum stretch' },
@@ -550,6 +559,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
                 <button
                   key={p.id}
                   onClick={() => setPrediction(p.id)}
+                  style={{ zIndex: 10 }}
                   className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-200 ${
                     prediction === p.id
                       ? 'bg-emerald-500/20 border-2 border-emerald-500'
@@ -568,14 +578,16 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
 
             <div className="flex gap-4">
               <button
-                onMouseDown={(e) => { e.preventDefault(); goBack(); }}
+                onClick={() => goBack()}
+                style={{ zIndex: 10 }}
                 className="px-6 py-3 rounded-xl font-medium text-slate-400 hover:text-white transition-colors"
               >
                 Back
               </button>
               <button
-                onMouseDown={(e) => { e.preventDefault(); if (prediction) goToPhase(2); }}
+                onClick={() => { if (prediction) goToPhase('play'); }}
                 disabled={!prediction}
+                style={{ zIndex: 10 }}
                 className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
                   prediction
                     ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white'
@@ -594,7 +606,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
   // ============================================================================
   // PHASE: PLAY (Spring Lab)
   // ============================================================================
-  if (phase === 2) {
+  if (phase === 'play') {
     return (
       <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
@@ -648,7 +660,8 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
 
             <div className="flex gap-3 mb-6 justify-center">
               <button
-                onMouseDown={() => setShowForceArrows(!showForceArrows)}
+                onClick={() => setShowForceArrows(!showForceArrows)}
+                style={{ zIndex: 10 }}
                 className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
                   showForceArrows
                     ? 'bg-emerald-500/20 border-2 border-emerald-500 text-emerald-400'
@@ -658,7 +671,8 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
                 {showForceArrows ? 'Hide' : 'Show'} Forces
               </button>
               <button
-                onMouseDown={() => setIsOscillating(!isOscillating)}
+                onClick={() => setIsOscillating(!isOscillating)}
+                style={{ zIndex: 10 }}
                 className={`px-4 py-2 rounded-lg font-semibold text-sm transition-all ${
                   isOscillating
                     ? 'bg-amber-500/20 border-2 border-amber-500 text-amber-400'
@@ -676,13 +690,15 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
 
             <div className="flex gap-4">
               <button
-                onMouseDown={(e) => { e.preventDefault(); goBack(); }}
+                onClick={() => goBack()}
+                style={{ zIndex: 10 }}
                 className="px-6 py-3 rounded-xl font-medium text-slate-400 hover:text-white transition-colors"
               >
                 Back
               </button>
               <button
-                onMouseDown={(e) => { e.preventDefault(); goNext(); }}
+                onClick={() => goNext()}
+                style={{ zIndex: 10 }}
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl"
               >
                 Understand the Physics
@@ -697,7 +713,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
   // ============================================================================
   // PHASE: REVIEW
   // ============================================================================
-  if (phase === 3) {
+  if (phase === 'review') {
     const userWasRight = prediction === 'double';
 
     return (
@@ -754,13 +770,15 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
 
             <div className="flex gap-4">
               <button
-                onMouseDown={(e) => { e.preventDefault(); goBack(); }}
+                onClick={() => goBack()}
+                style={{ zIndex: 10 }}
                 className="px-6 py-3 rounded-xl font-medium text-slate-400 hover:text-white transition-colors"
               >
                 Back
               </button>
               <button
-                onMouseDown={(e) => { e.preventDefault(); goNext(); }}
+                onClick={() => goNext()}
+                style={{ zIndex: 10 }}
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl"
               >
                 The Elastic Limit
@@ -775,7 +793,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
   // ============================================================================
   // PHASE: TWIST PREDICT
   // ============================================================================
-  if (phase === 4) {
+  if (phase === 'twist_predict') {
     const twistOptions = [
       { id: 'break', label: 'The spring breaks immediately' },
       { id: 'same', label: 'Nothing - springs can stretch infinitely' },
@@ -806,6 +824,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
                 <button
                   key={opt.id}
                   onClick={() => setTwistPrediction(opt.id)}
+                  style={{ zIndex: 10 }}
                   className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-200 ${
                     twistPrediction === opt.id
                       ? 'bg-amber-500/20 border-2 border-amber-500'
@@ -821,14 +840,16 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
 
             <div className="flex gap-4">
               <button
-                onMouseDown={(e) => { e.preventDefault(); goBack(); }}
+                onClick={() => goBack()}
+                style={{ zIndex: 10 }}
                 className="px-6 py-3 rounded-xl font-medium text-slate-400 hover:text-white transition-colors"
               >
                 Back
               </button>
               <button
-                onMouseDown={(e) => { e.preventDefault(); if (twistPrediction) goNext(); }}
+                onClick={() => { if (twistPrediction) goNext(); }}
                 disabled={!twistPrediction}
+                style={{ zIndex: 10 }}
                 className={`flex-1 px-6 py-3 rounded-xl font-semibold transition-all ${
                   twistPrediction
                     ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
@@ -847,7 +868,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
   // ============================================================================
   // PHASE: TWIST PLAY
   // ============================================================================
-  if (phase === 5) {
+  if (phase === 'twist_play') {
     return (
       <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
@@ -895,13 +916,15 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
 
             <div className="flex gap-4">
               <button
-                onMouseDown={(e) => { e.preventDefault(); goBack(); }}
+                onClick={() => goBack()}
+                style={{ zIndex: 10 }}
                 className="px-6 py-3 rounded-xl font-medium text-slate-400 hover:text-white transition-colors"
               >
                 Back
               </button>
               <button
-                onMouseDown={(e) => { e.preventDefault(); goNext(); }}
+                onClick={() => goNext()}
+                style={{ zIndex: 10 }}
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
               >
                 Key Insight
@@ -916,7 +939,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
   // ============================================================================
   // PHASE: TWIST REVIEW
   // ============================================================================
-  if (phase === 6) {
+  if (phase === 'twist_review') {
     const userWasRight = twistPrediction === 'deform';
 
     return (
@@ -954,13 +977,15 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
 
             <div className="flex gap-4">
               <button
-                onMouseDown={(e) => { e.preventDefault(); goBack(); }}
+                onClick={() => goBack()}
+                style={{ zIndex: 10 }}
                 className="px-6 py-3 rounded-xl font-medium text-slate-400 hover:text-white transition-colors"
               >
                 Back
               </button>
               <button
-                onMouseDown={(e) => { e.preventDefault(); goNext(); }}
+                onClick={() => goNext()}
+                style={{ zIndex: 10 }}
                 className="flex-1 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl"
               >
                 Real World Applications
@@ -975,7 +1000,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
   // ============================================================================
   // PHASE: TRANSFER (Real World Applications)
   // ============================================================================
-  if (phase === 7) {
+  if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const allCompleted = completedApps.size >= realWorldApps.length;
 
@@ -1002,7 +1027,8 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
                 return (
                   <button
                     key={idx}
-                    onMouseDown={() => setSelectedApp(idx)}
+                    onClick={() => setSelectedApp(idx)}
+                    style={{ zIndex: 10 }}
                     className={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
                       isCurrent
                         ? 'text-white'
@@ -1010,7 +1036,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
                           ? 'bg-emerald-500/20 text-emerald-400 border border-emerald-500'
                           : 'bg-slate-800/50 text-slate-400'
                     }`}
-                    style={isCurrent ? { background: a.color } : {}}
+                    style={isCurrent ? { background: a.color, zIndex: 10 } : { zIndex: 10 }}
                   >
                     {isCompleted ? '✓' : a.icon} {a.title.split(' ')[0]}
                   </button>
@@ -1049,17 +1075,14 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
 
               {!completedApps.has(selectedApp) ? (
                 <button
-                  onMouseDown={() => {
+                  onClick={() => {
                     const newCompleted = new Set(completedApps);
                     newCompleted.add(selectedApp);
                     setCompletedApps(newCompleted);
                     playSound('complete');
-                    if (selectedApp < realWorldApps.length - 1) {
-                      setTimeout(() => setSelectedApp(selectedApp + 1), 300);
-                    }
                   }}
+                  style={{ background: app.color, zIndex: 10 }}
                   className="w-full py-3 rounded-xl font-semibold text-white"
-                  style={{ background: app.color }}
                 >
                   Mark as Understood
                 </button>
@@ -1072,22 +1095,34 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
 
             <div className="flex justify-between mt-6">
               <button
-                onMouseDown={(e) => { e.preventDefault(); goBack(); }}
+                onClick={() => goBack()}
+                style={{ zIndex: 10 }}
                 className="px-6 py-3 rounded-xl font-medium text-slate-400 hover:text-white transition-colors"
               >
                 Back
               </button>
-              <button
-                onMouseDown={(e) => { e.preventDefault(); if (allCompleted) goNext(); }}
-                disabled={!allCompleted}
-                className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                  allCompleted
-                    ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white'
-                    : 'bg-slate-700 text-slate-500 cursor-not-allowed opacity-50'
-                }`}
-              >
-                Take the Quiz
-              </button>
+              {selectedApp < realWorldApps.length - 1 ? (
+                <button
+                  onClick={() => setSelectedApp(selectedApp + 1)}
+                  style={{ zIndex: 10 }}
+                  className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl"
+                >
+                  Next Application →
+                </button>
+              ) : (
+                <button
+                  onClick={() => { if (allCompleted) goNext(); }}
+                  disabled={!allCompleted}
+                  style={{ zIndex: 10 }}
+                  className={`px-6 py-3 rounded-xl font-semibold transition-all ${
+                    allCompleted
+                      ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white'
+                      : 'bg-slate-700 text-slate-500 cursor-not-allowed opacity-50'
+                  }`}
+                >
+                  Take the Quiz
+                </button>
+              )}
             </div>
           </div>
         </div>
@@ -1098,7 +1133,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
   // ============================================================================
   // PHASE: TEST
   // ============================================================================
-  if (phase === 8) {
+  if (phase === 'test') {
     const q = testQuestions[testQuestion];
     const totalCorrect = calculateTestScore();
 
@@ -1125,7 +1160,8 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
                 {passed ? 'You\'ve mastered Hooke\'s Law!' : 'Review the concepts and try again.'}
               </p>
               <button
-                onMouseDown={(e) => { e.preventDefault(); passed ? goNext() : goToPhase(3); }}
+                onClick={() => passed ? goNext() : goToPhase('review')}
+                style={{ zIndex: 10 }}
                 className={`px-8 py-4 rounded-xl font-semibold text-lg ${
                   passed
                     ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white'
@@ -1188,6 +1224,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
                         emitEvent('test_answered', { questionIndex: testQuestion, correct: opt.correct });
                       }
                     }}
+                    style={{ zIndex: 10 }}
                     className={`p-4 rounded-xl text-left transition-all text-sm ${
                       showResult
                         ? isCorrect
@@ -1223,7 +1260,8 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
             <div className="flex justify-between">
               {testQuestion > 0 ? (
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); setTestQuestion(testQuestion - 1); }}
+                  onClick={() => setTestQuestion(testQuestion - 1)}
+                  style={{ zIndex: 10 }}
                   className="px-6 py-3 rounded-xl font-medium text-slate-400 hover:text-white transition-colors"
                 >
                   Previous
@@ -1232,14 +1270,16 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
               {testAnswers[testQuestion] !== null && (
                 testQuestion < testQuestions.length - 1 ? (
                   <button
-                    onMouseDown={(e) => { e.preventDefault(); setTestQuestion(testQuestion + 1); }}
+                    onClick={() => setTestQuestion(testQuestion + 1)}
+                    style={{ zIndex: 10 }}
                     className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl"
                   >
                     Next Question
                   </button>
                 ) : (
                   <button
-                    onMouseDown={(e) => { e.preventDefault(); setTestSubmitted(true); }}
+                    onClick={() => setTestSubmitted(true)}
+                    style={{ zIndex: 10 }}
                     className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl"
                   >
                     See Results
@@ -1256,7 +1296,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
   // ============================================================================
   // PHASE: MASTERY
   // ============================================================================
-  if (phase === 9) {
+  if (phase === 'mastery') {
     return (
       <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
         <div className="absolute inset-0 bg-gradient-to-br from-slate-900 via-[#0a1628] to-slate-900" />
@@ -1296,7 +1336,8 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, curr
             </div>
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(0); emitEvent('mastery_achieved', {}); }}
+              onClick={() => { goToPhase('hook'); emitEvent('mastery_achieved', {}); }}
+              style={{ zIndex: 10 }}
               className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold text-lg rounded-xl shadow-lg shadow-emerald-500/25"
             >
               Explore Again

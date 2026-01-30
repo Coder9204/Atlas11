@@ -1,10 +1,19 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook', 'predict': 'Predict', 'play': 'Lab', 'review': 'Review', 'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab', 'twist_review': 'Twist Review', 'transfer': 'Transfer', 'test': 'Test', 'mastery': 'Mastery'
+};
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -21,23 +30,17 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
-
 interface Props {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════
-const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
+  const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -58,10 +61,6 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
 
   // Molecule positions
   const [molecules, setMolecules] = useState<Array<{x: number, y: number, vx: number, vy: number}>>([]);
-  const [pistonAngle, setPistonAngle] = useState(0);
-
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
 
   // Mobile detection
   useEffect(() => {
@@ -73,10 +72,10 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
 
   // Phase sync
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase !== undefined && gamePhase !== phase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
   // Initialize molecules
   useEffect(() => {
@@ -91,14 +90,14 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
 
   // Boyle's Law: PV = constant (at constant T)
   useEffect(() => {
-    if (phase === 2) {
+    if (phase === 'play') {
       setPressure(100 / volume);
     }
   }, [volume, phase]);
 
   // Charles's Law: V/T = constant (at constant P)
   useEffect(() => {
-    if (phase === 5) {
+    if (phase === 'twist_play') {
       setTwistVolume((twistTemp / 300) * 100);
     }
   }, [twistTemp, phase]);
@@ -107,8 +106,8 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
   useEffect(() => {
     const interval = setInterval(() => {
       setMolecules(prev => {
-        const containerHeight = phase === 2 ? (volume / 100) * 150 : (twistVolume / 100) * 150;
-        const speed = phase === 5 ? Math.sqrt(twistTemp / 300) : 1;
+        const containerHeight = phase === 'play' ? (volume / 100) * 150 : (twistVolume / 100) * 150;
+        const speed = phase === 'twist_play' ? Math.sqrt(twistTemp / 300) : 1;
 
         return prev.map(mol => {
           let newX = mol.x + mol.vx * speed;
@@ -131,7 +130,6 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
           return { x: newX, y: newY, vx: newVx, vy: newVy };
         });
       });
-      setPistonAngle(prev => (prev + 1) % 360);
     }, 30);
     return () => clearInterval(interval);
   }, [phase, volume, twistVolume, twistTemp]);
@@ -161,30 +159,22 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
     } catch { /* Audio not available */ }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (navigationLockRef.current || now - lastClickRef.current < 200) return;
-    navigationLockRef.current = true;
-    lastClickRef.current = now;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
-    if (newPhase === 2) {
+    if (newPhase === 'play') {
       setVolume(100);
       setPressure(1);
     }
-    if (newPhase === 5) {
+    if (newPhase === 'twist_play') {
       setTwistTemp(300);
       setTwistVolume(100);
     }
     onPhaseComplete?.(newPhase);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onPhaseComplete, onGameEvent]);
 
   const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'C' ? 'success' : 'failure');
@@ -192,9 +182,6 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
   }, [playSound, onGameEvent]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'B' ? 'success' : 'failure');
@@ -202,9 +189,6 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
   }, [playSound, onGameEvent]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;
@@ -214,9 +198,6 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
   }, [playSound]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
     onGameEvent?.({ type: 'app_explored', data: { appIndex } });
@@ -308,7 +289,6 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
   // Temperature effect visualization for Charles's Law
   const renderTempViz = () => {
     const containerHeight = (twistVolume / 100) * 150;
-    const moleculeSpeed = Math.sqrt(twistTemp / 300);
 
     return (
       <svg viewBox="0 0 250 220" className="w-full h-full">
@@ -479,8 +459,9 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-violet-500 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        style={{ zIndex: 10 }}
       >
         <span className="relative z-10 flex items-center gap-3">
           Explore Gas Behavior
@@ -546,7 +527,7 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
@@ -554,6 +535,7 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
                 : showPredictionFeedback && option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400'
                 : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
             }`}
+            style={{ zIndex: 10 }}
           >
             <span className="font-bold text-white">{option.id}.</span>
             <span className="text-slate-200 ml-2">{option.text}</span>
@@ -567,8 +549,9 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
             Correct! This is <span className="text-violet-400">Boyle's Law</span>: P1V1 = P2V2. Half the volume means double the pressure!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onClick={() => goToPhase('play')}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 transition-all"
+            style={{ zIndex: 10 }}
           >
             Explore the Physics
           </button>
@@ -635,8 +618,9 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        onClick={() => goToPhase('review')}
         className="mt-8 px-8 py-4 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 transition-all"
+        style={{ zIndex: 10 }}
       >
         Understand the Physics
       </button>
@@ -691,8 +675,9 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onClick={() => goToPhase('twist_predict')}
         className="px-8 py-4 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 transition-all"
+        style={{ zIndex: 10 }}
       >
         Explore Temperature Effects
       </button>
@@ -739,7 +724,7 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
@@ -747,6 +732,7 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
                 : showTwistFeedback && option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400'
                 : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
             }`}
+            style={{ zIndex: 10 }}
           >
             <span className="font-bold text-white">{option.id}.</span>
             <span className="text-slate-200 ml-2">{option.text}</span>
@@ -760,8 +746,9 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
             Correct! This is <span className="text-amber-400">Charles's Law</span>: V1/T1 = V2/T2. 450K/300K = 1.5, so volume increases by 50%!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onClick={() => goToPhase('twist_play')}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all"
+            style={{ zIndex: 10 }}
           >
             Explore Temperature Effects
           </button>
@@ -828,8 +815,9 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onClick={() => goToPhase('twist_review')}
         className="mt-8 px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all"
+        style={{ zIndex: 10 }}
       >
         Deep Understanding
       </button>
@@ -879,84 +867,102 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onClick={() => goToPhase('transfer')}
         className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 transition-all"
+        style={{ zIndex: 10 }}
       >
         Real World Applications
       </button>
     </div>
   );
 
-  const renderTransfer = () => (
-    <div className="flex flex-col p-6 max-w-3xl mx-auto">
-      <h2 className="text-2xl font-bold text-white mb-2">Real-World Applications</h2>
-      <p className="text-slate-400 mb-6">Gas laws in action everywhere</p>
+  const renderTransfer = () => {
+    const handleNextApplication = () => {
+      if (activeAppTab < applications.length - 1) {
+        if (!completedApps.has(activeAppTab)) {
+          handleAppComplete(activeAppTab);
+        }
+        setActiveAppTab(activeAppTab + 1);
+      } else {
+        if (!completedApps.has(activeAppTab)) {
+          handleAppComplete(activeAppTab);
+        }
+      }
+    };
 
-      {/* App tabs */}
-      <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
-        {applications.map((app, i) => (
-          <button
-            key={i}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(i); }}
-            className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${
-              activeAppTab === i
-                ? 'bg-gradient-to-r from-violet-600 to-cyan-600 text-white'
-                : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-            } ${completedApps.has(i) ? 'ring-2 ring-emerald-500' : ''}`}
-          >
-            {completedApps.has(i) && <span className="mr-1">✓</span>}
-            {app.title}
-          </button>
-        ))}
-      </div>
+    return (
+      <div className="flex flex-col p-6 max-w-3xl mx-auto">
+        <h2 className="text-2xl font-bold text-white mb-2">Real-World Applications</h2>
+        <p className="text-slate-400 mb-6">Gas laws in action everywhere</p>
 
-      {/* Current app content */}
-      <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50 mb-6">
-        <h3 className="text-xl font-bold text-white mb-3">{applications[activeAppTab].title}</h3>
-        <p className="text-slate-300 mb-4">{applications[activeAppTab].description}</p>
-        <p className="text-sm text-slate-400 mb-4">{applications[activeAppTab].details}</p>
-
-        {/* Stats */}
-        <div className="grid grid-cols-3 gap-3 mb-4">
-          {applications[activeAppTab].stats.map((stat, i) => (
-            <div key={i} className="bg-slate-700/50 rounded-xl p-3 text-center">
-              <div className="text-lg font-bold text-violet-400">{stat.value}</div>
-              <div className="text-xs text-slate-400">{stat.label}</div>
-            </div>
+        {/* App tabs */}
+        <div className="flex gap-2 mb-6 overflow-x-auto pb-2">
+          {applications.map((app, i) => (
+            <button
+              key={i}
+              onClick={() => setActiveAppTab(i)}
+              className={`px-4 py-2 rounded-xl font-medium whitespace-nowrap transition-all ${
+                activeAppTab === i
+                  ? 'bg-gradient-to-r from-violet-600 to-cyan-600 text-white'
+                  : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
+              } ${completedApps.has(i) ? 'ring-2 ring-emerald-500' : ''}`}
+              style={{ zIndex: 10 }}
+            >
+              {completedApps.has(i) && <span className="mr-1">✓</span>}
+              {app.title}
+            </button>
           ))}
         </div>
 
-        {!completedApps.has(activeAppTab) && (
+        {/* Current app content */}
+        <div className="bg-slate-800/50 rounded-2xl p-6 border border-slate-700/50 mb-6">
+          <h3 className="text-xl font-bold text-white mb-3">{applications[activeAppTab].title}</h3>
+          <p className="text-slate-300 mb-4">{applications[activeAppTab].description}</p>
+          <p className="text-sm text-slate-400 mb-4">{applications[activeAppTab].details}</p>
+
+          {/* Stats */}
+          <div className="grid grid-cols-3 gap-3 mb-4">
+            {applications[activeAppTab].stats.map((stat, i) => (
+              <div key={i} className="bg-slate-700/50 rounded-xl p-3 text-center">
+                <div className="text-lg font-bold text-violet-400">{stat.value}</div>
+                <div className="text-xs text-slate-400">{stat.label}</div>
+              </div>
+            ))}
+          </div>
+
+          {/* Next Application button */}
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+            onClick={handleNextApplication}
             className="w-full py-3 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 transition-all"
+            style={{ zIndex: 10 }}
           >
-            Mark as Explored
+            {activeAppTab < applications.length - 1 ? 'Next Application →' : 'Complete Applications'}
+          </button>
+        </div>
+
+        {/* Progress */}
+        <div className="text-center mb-6">
+          <p className="text-slate-400">{completedApps.size} of {applications.length} applications explored</p>
+          <div className="w-full bg-slate-700 rounded-full h-2 mt-2">
+            <div
+              className="bg-gradient-to-r from-violet-500 to-cyan-500 h-2 rounded-full transition-all"
+              style={{ width: `${(completedApps.size / applications.length) * 100}%` }}
+            />
+          </div>
+        </div>
+
+        {completedApps.size >= applications.length && (
+          <button
+            onClick={() => goToPhase('test')}
+            className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 transition-all mx-auto"
+            style={{ zIndex: 10 }}
+          >
+            Take the Test
           </button>
         )}
       </div>
-
-      {/* Progress */}
-      <div className="text-center mb-6">
-        <p className="text-slate-400">{completedApps.size} of {applications.length} applications explored</p>
-        <div className="w-full bg-slate-700 rounded-full h-2 mt-2">
-          <div
-            className="bg-gradient-to-r from-violet-500 to-cyan-500 h-2 rounded-full transition-all"
-            style={{ width: `${(completedApps.size / applications.length) * 100}%` }}
-          />
-        </div>
-      </div>
-
-      {completedApps.size >= applications.length && (
-        <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
-          className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 transition-all mx-auto"
-        >
-          Take the Test
-        </button>
-      )}
-    </div>
-  );
+    );
+  };
 
   const renderTest = () => {
     if (showTestResults) {
@@ -982,16 +988,16 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
           <p className="text-slate-400 mb-8">You scored {percentage}%</p>
 
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               if (percentage >= 70) {
-                goToPhase(9);
+                goToPhase('mastery');
               } else {
                 setShowTestResults(false);
                 setTestAnswers(Array(10).fill(-1));
               }
             }}
             className="px-8 py-4 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 transition-all"
+            style={{ zIndex: 10 }}
           >
             {percentage >= 70 ? 'Complete Lesson' : 'Review & Retry'}
           </button>
@@ -1027,12 +1033,13 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
           {question.options.map((option, i) => (
             <button
               key={i}
-              onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(questionIndex, i); }}
+              onClick={() => handleTestAnswer(questionIndex, i)}
               className={`p-4 rounded-xl text-left transition-all duration-300 ${
                 testAnswers[questionIndex] === i
                   ? 'bg-violet-600/40 border-2 border-violet-400'
                   : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
               }`}
+              style={{ zIndex: 10 }}
             >
               <span className="font-bold text-white mr-2">{String.fromCharCode(65 + i)}.</span>
               <span className="text-slate-200">{option.text}</span>
@@ -1043,9 +1050,7 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
         <div className="flex gap-4">
           {questionIndex > 0 && (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const prevIndex = questionIndex - 1;
+              onClick={() => {
                 setTestAnswers(prev => {
                   const newAnswers = [...prev];
                   newAnswers[questionIndex] = -1;
@@ -1053,6 +1058,7 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
                 });
               }}
               className="px-6 py-3 bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-600 transition-all"
+              style={{ zIndex: 10 }}
             >
               Previous
             </button>
@@ -1061,21 +1067,22 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
           {testAnswers[questionIndex] !== -1 && (
             questionIndex < testQuestions.length - 1 ? (
               <button
-                onMouseDown={(e) => { e.preventDefault(); }}
+                onClick={() => {}}
                 className="px-6 py-3 bg-gradient-to-r from-violet-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-violet-500/25 transition-all"
+                style={{ zIndex: 10 }}
               >
                 Next
               </button>
             ) : (
               <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
+                onClick={() => {
                   if (testAnswers.every(a => a !== -1)) {
                     setShowTestResults(true);
                     onGameEvent?.({ type: 'test_completed', data: { score: calculateScore() } });
                   }
                 }}
                 className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-emerald-500/25 transition-all"
+                style={{ zIndex: 10 }}
               >
                 Submit Test
               </button>
@@ -1131,12 +1138,12 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
         </div>
 
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             playSound('complete');
             onGameEvent?.({ type: 'mastery_achieved', data: { score: calculateScore() } });
           }}
           className="px-10 py-5 bg-gradient-to-r from-violet-500 to-cyan-600 text-white text-lg font-semibold rounded-2xl hover:shadow-lg hover:shadow-violet-500/25 hover:scale-[1.02] active:scale-[0.98] transition-all"
+          style={{ zIndex: 10 }}
         >
           Complete Lesson 🎓
         </button>
@@ -1167,39 +1174,43 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseCo
 
           {/* Phase dots */}
           <div className="flex items-center gap-2">
-            {PHASES.map((p) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); if (p < phase) goToPhase(p); }}
-                className={`transition-all duration-300 rounded-full ${
-                  p === phase
-                    ? 'h-2 w-6 bg-violet-500'
-                    : p < phase
-                      ? 'h-2 w-2 bg-emerald-500 cursor-pointer hover:bg-emerald-400'
-                      : 'h-2 w-2 bg-slate-600'
-                }`}
-              />
-            ))}
+            {phaseOrder.map((p, index) => {
+              const currentIndex = phaseOrder.indexOf(phase);
+              return (
+                <button
+                  key={p}
+                  onClick={() => { if (index < currentIndex) goToPhase(p); }}
+                  className={`transition-all duration-300 rounded-full ${
+                    p === phase
+                      ? 'h-2 w-6 bg-violet-500'
+                      : index < currentIndex
+                        ? 'h-2 w-2 bg-emerald-500 cursor-pointer hover:bg-emerald-400'
+                        : 'h-2 w-2 bg-slate-600'
+                  }`}
+                  style={{ zIndex: 10 }}
+                />
+              );
+            })}
           </div>
 
           <div className="text-sm text-slate-400">
-            {phase + 1} / {PHASES.length}
+            {phaseOrder.indexOf(phase) + 1} / {phaseOrder.length}
           </div>
         </div>
       </div>
 
       {/* Content area with padding for fixed header */}
       <div className="relative z-10 pt-20 pb-8">
-        {phase === 0 && renderHook()}
-        {phase === 1 && renderPredict()}
-        {phase === 2 && renderPlay()}
-        {phase === 3 && renderReview()}
-        {phase === 4 && renderTwistPredict()}
-        {phase === 5 && renderTwistPlay()}
-        {phase === 6 && renderTwistReview()}
-        {phase === 7 && renderTransfer()}
-        {phase === 8 && renderTest()}
-        {phase === 9 && renderMastery()}
+        {phase === 'hook' && renderHook()}
+        {phase === 'predict' && renderPredict()}
+        {phase === 'play' && renderPlay()}
+        {phase === 'review' && renderReview()}
+        {phase === 'twist_predict' && renderTwistPredict()}
+        {phase === 'twist_play' && renderTwistPlay()}
+        {phase === 'twist_review' && renderTwistReview()}
+        {phase === 'transfer' && renderTransfer()}
+        {phase === 'test' && renderTest()}
+        {phase === 'mastery' && renderMastery()}
       </div>
     </div>
   );

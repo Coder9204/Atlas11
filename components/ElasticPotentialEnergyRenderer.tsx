@@ -25,11 +25,17 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-// Gold standard: Props with currentPhase and onPhaseComplete
+// Phase type definition
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+// Phase order array
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+// Gold standard: Props with gamePhase and onPhaseComplete
 interface Props {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // Gold standard: TestQuestion interface
@@ -56,9 +62,9 @@ interface TransferApp {
   color: string;
 }
 
-const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentPhase = 0, onPhaseComplete }) => {
-  // Gold standard: Numeric phase system 0-9
-  const [phase, setPhase] = useState<number>(currentPhase);
+const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhase = 'hook', onPhaseComplete }) => {
+  // Gold standard: String phase system
+  const [phase, setPhase] = useState<Phase>((gamePhase as Phase) || 'hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -77,8 +83,6 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
   const [showEnergyBars, setShowEnergyBars] = useState(true);
   const [releaseMode, setReleaseMode] = useState(false);
 
-  // Navigation ref for 400ms debouncing
-  const isNavigating = useRef(false);
   const animationRef = useRef<number | null>(null);
 
   // Responsive design
@@ -120,20 +124,19 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
     }
   }, []);
 
-  // Gold standard: Phase navigation with 400ms debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    if (isNavigating.current) return;
-    isNavigating.current = true;
+  // Gold standard: Simplified phase navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('click');
 
     // Call onPhaseComplete for completed phase before moving
-    if (newPhase > phase) {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const newIndex = phaseOrder.indexOf(newPhase);
+    if (newIndex > currentIndex) {
       onPhaseComplete?.(phase);
     }
 
     setPhase(newPhase);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase } });
-    setTimeout(() => { isNavigating.current = false; }, 400);
   }, [playSound, onGameEvent, phase, onPhaseComplete]);
 
   // Calculate elastic potential energy: PE = ½kx²
@@ -155,7 +158,6 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
         const newT = t + elapsed;
         // Damped oscillation
         const damping = Math.exp(-0.5 * newT);
-        const currentDisp = displacement * damping * Math.cos(omega * newT);
 
         if (damping < 0.05) {
           setIsAnimating(false);
@@ -185,7 +187,6 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
 
   // Event handlers
   const handlePrediction = useCallback((prediction: string) => {
-    if (isNavigating.current) return;
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'C' ? 'correct' : 'incorrect');
@@ -193,7 +194,6 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
   }, [playSound, onGameEvent]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
-    if (isNavigating.current) return;
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'B' ? 'correct' : 'incorrect');
@@ -201,7 +201,6 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
   }, [playSound, onGameEvent]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    if (isNavigating.current) return;
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;
@@ -212,7 +211,6 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
   }, [playSound, onGameEvent]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
-    if (isNavigating.current) return;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
     onGameEvent?.({ type: 'app_completed', data: { appIndex } });
@@ -557,20 +555,18 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
   };
 
   // Phase labels
-  const phaseLabels: Record<number, string> = {
-    0: 'Hook',
-    1: 'Predict',
-    2: 'Explore',
-    3: 'Review',
-    4: 'Twist',
-    5: 'Twist Lab',
-    6: 'Discovery',
-    7: 'Apply',
-    8: 'Test',
-    9: 'Mastery'
+  const phaseLabels: Record<Phase, string> = {
+    'hook': 'Hook',
+    'predict': 'Predict',
+    'play': 'Explore',
+    'review': 'Review',
+    'twist_predict': 'Twist',
+    'twist_play': 'Twist Lab',
+    'twist_review': 'Discovery',
+    'transfer': 'Apply',
+    'test': 'Test',
+    'mastery': 'Mastery'
   };
-
-  const phases: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
 
   // Phase renders
   const renderHook = () => (
@@ -607,19 +603,20 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
 
         <div className="flex flex-col sm:flex-row gap-3 justify-center">
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               setDisplacement(0.15);
               onGameEvent?.({ type: 'spring_compressed', data: { displacement: 0.15 } });
             }}
             className="px-6 py-3 bg-emerald-600 hover:bg-emerald-500 text-white font-semibold rounded-xl transition-colors"
+            style={{ zIndex: 10 }}
           >
             Compress Spring
           </button>
           <button
-            onMouseDown={(e) => { e.preventDefault(); startRelease(); }}
+            onClick={() => startRelease()}
             disabled={displacement < 0.05}
             className={`px-6 py-3 ${displacement >= 0.05 ? 'bg-amber-600 hover:bg-amber-500' : 'bg-slate-600'} text-white font-semibold rounded-xl transition-colors`}
+            style={{ zIndex: 10 }}
           >
             Release!
           </button>
@@ -628,8 +625,9 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
 
       {/* Premium CTA Button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
         className="group mt-8 px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white text-lg font-semibold rounded-2xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300 shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] flex items-center gap-2"
+        style={{ zIndex: 10 }}
       >
         Discover the Formula
         <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -666,7 +664,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
@@ -677,6 +675,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
                 ? 'bg-emerald-600/40 border-2 border-emerald-400'
                 : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
             }`}
+            style={{ zIndex: 10 }}
           >
             <span className="font-bold text-white">{option.id}.</span>
             <span className="text-slate-200 ml-2">{option.text}</span>
@@ -693,8 +692,9 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
             Double the compression = 2² = 4× the energy. This is because PE = ½kx²
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onClick={() => goToPhase('play')}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+            style={{ zIndex: 10 }}
           >
             Explore the Physics →
           </button>
@@ -774,19 +774,21 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
           {/* Action buttons */}
           <div className="flex gap-3">
             <button
-              onMouseDown={(e) => { e.preventDefault(); startRelease(); }}
+              onClick={() => startRelease()}
               disabled={displacement < 0.03}
               className={`flex-1 py-3 rounded-xl font-semibold transition-colors ${
                 displacement >= 0.03 ? 'bg-amber-600 hover:bg-amber-500 text-white' : 'bg-slate-600 text-slate-400'
               }`}
+              style={{ zIndex: 10 }}
             >
               🚀 Release Spring
             </button>
             <button
-              onMouseDown={(e) => { e.preventDefault(); setShowEnergyBars(!showEnergyBars); }}
+              onClick={() => setShowEnergyBars(!showEnergyBars)}
               className={`px-4 py-3 rounded-xl font-semibold transition-colors ${
                 showEnergyBars ? 'bg-emerald-600 text-white' : 'bg-slate-600 text-slate-300'
               }`}
+              style={{ zIndex: 10 }}
             >
               ⚡
             </button>
@@ -803,8 +805,9 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        onClick={() => goToPhase('review')}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+        style={{ zIndex: 10 }}
       >
         Review the Concepts →
       </button>
@@ -858,8 +861,9 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onClick={() => goToPhase('twist_predict')}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
+        style={{ zIndex: 10 }}
       >
         Discover a Surprising Twist →
       </button>
@@ -888,7 +892,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
@@ -899,6 +903,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
                 ? 'bg-emerald-600/40 border-2 border-emerald-400'
                 : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
             }`}
+            style={{ zIndex: 10 }}
           >
             <span className="font-bold text-white">{option.id}.</span>
             <span className="text-slate-200 ml-2">{option.text}</span>
@@ -915,8 +920,9 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
             While force only doubles (F = kx), you push through twice the distance. Work = Force × Distance, so total work quadruples.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onClick={() => goToPhase('twist_play')}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
+            style={{ zIndex: 10 }}
           >
             Explore This Effect →
           </button>
@@ -975,8 +981,9 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onClick={() => goToPhase('twist_review')}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
+        style={{ zIndex: 10 }}
       >
         Review Discovery →
       </button>
@@ -1006,8 +1013,9 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onClick={() => goToPhase('transfer')}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+        style={{ zIndex: 10 }}
       >
         Explore Real-World Applications →
       </button>
@@ -1023,7 +1031,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
         {transferApps.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppIndex(index); }}
+            onClick={() => setActiveAppIndex(index)}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppIndex === index
                 ? `bg-gradient-to-r ${app.color} text-white`
@@ -1031,6 +1039,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
                 ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
                 : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
+            style={{ zIndex: 10 }}
           >
             {app.icon} {app.short}
           </button>
@@ -1099,8 +1108,9 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
 
         {!completedApps.has(activeAppIndex) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppIndex); }}
+            onClick={() => handleAppComplete(activeAppIndex)}
             className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors w-full"
+            style={{ zIndex: 10 }}
           >
             Mark as Understood
           </button>
@@ -1121,10 +1131,22 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
         <span className="text-slate-400">{completedApps.size}/4</span>
       </div>
 
+      {/* Next Application button */}
+      {activeAppIndex < transferApps.length - 1 && (
+        <button
+          onClick={() => setActiveAppIndex(activeAppIndex + 1)}
+          className="mt-4 px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl transition-all duration-300"
+          style={{ zIndex: 10 }}
+        >
+          Next Application →
+        </button>
+      )}
+
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          onClick={() => goToPhase('test')}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+          style={{ zIndex: 10 }}
         >
           Take the Knowledge Test →
         </button>
@@ -1148,12 +1170,13 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-emerald-600 text-white'
                         : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
                     }`}
+                    style={{ zIndex: 10 }}
                   >
                     {option.text}
                   </button>
@@ -1163,8 +1186,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
           ))}
 
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               setShowTestResults(true);
               onGameEvent?.({ type: 'test_completed', data: { score: calculateScore() } });
             }}
@@ -1174,6 +1196,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
                 ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
                 : 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:from-emerald-500 hover:to-teal-500'
             }`}
+            style={{ zIndex: 10 }}
           >
             Submit Answers
           </button>
@@ -1193,20 +1216,21 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
 
             {calculateScore() >= 7 ? (
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
+                onClick={() => goToPhase('mastery')}
                 className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+                style={{ zIndex: 10 }}
               >
                 Claim Your Mastery Badge →
               </button>
             ) : (
               <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
+                onClick={() => {
                   setShowTestResults(false);
                   setTestAnswers(Array(10).fill(-1));
-                  goToPhase(3);
+                  goToPhase('review');
                 }}
                 className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+                style={{ zIndex: 10 }}
               >
                 Review & Try Again
               </button>
@@ -1272,9 +1296,8 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
 
         <div className="flex gap-4 justify-center">
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setPhase(0);
+            onClick={() => {
+              setPhase('hook');
               setShowPredictionFeedback(false);
               setSelectedPrediction(null);
               setTwistPrediction(null);
@@ -1285,6 +1308,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
               onGameEvent?.({ type: 'mastery_achieved', data: {} });
             }}
             className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
+            style={{ zIndex: 10 }}
           >
             ↺ Explore Again
           </button>
@@ -1311,14 +1335,15 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
             Elastic Potential Energy
           </span>
           <div className="flex gap-1.5 items-center">
-            {phases.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p ? 'bg-emerald-500 w-6' : p < phase ? 'bg-emerald-500 w-2' : 'bg-slate-600 w-2'
+                  phase === p ? 'bg-emerald-500 w-6' : phaseOrder.indexOf(p) < phaseOrder.indexOf(phase) ? 'bg-emerald-500 w-2' : 'bg-slate-600 w-2'
                 }`}
                 title={phaseLabels[p]}
+                style={{ zIndex: 10 }}
               />
             ))}
           </div>
@@ -1330,16 +1355,16 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, currentP
 
       {/* Main content */}
       <div className="relative z-10 pt-14 pb-8">
-        {phase === 0 && renderHook()}
-        {phase === 1 && renderPredict()}
-        {phase === 2 && renderPlay()}
-        {phase === 3 && renderReview()}
-        {phase === 4 && renderTwistPredict()}
-        {phase === 5 && renderTwistPlay()}
-        {phase === 6 && renderTwistReview()}
-        {phase === 7 && renderTransfer()}
-        {phase === 8 && renderTest()}
-        {phase === 9 && renderMastery()}
+        {phase === 'hook' && renderHook()}
+        {phase === 'predict' && renderPredict()}
+        {phase === 'play' && renderPlay()}
+        {phase === 'review' && renderReview()}
+        {phase === 'twist_predict' && renderTwistPredict()}
+        {phase === 'twist_play' && renderTwistPlay()}
+        {phase === 'twist_review' && renderTwistReview()}
+        {phase === 'transfer' && renderTransfer()}
+        {phase === 'test' && renderTest()}
+        {phase === 'mastery' && renderMastery()}
       </div>
     </div>
   );

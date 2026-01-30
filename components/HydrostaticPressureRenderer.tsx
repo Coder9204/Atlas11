@@ -1,1246 +1,1072 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// =============================================
-// TYPES
-// =============================================
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'depth_changed'
-  | 'fluid_changed'
-  | 'pressure_calculated'
-  | 'paradox_discovered'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+// ============================================================================
+// HYDROSTATIC PRESSURE - Premium Design (10-Phase Structure)
+// ============================================================================
 
-interface TestQuestion {
-  scenario: string;
-  question: string;
-  options: { text: string; correct: boolean }[];
-  explanation: string;
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+interface GameEvent {
+  type: string;
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
 
-interface TransferApp {
-  icon: string;
-  title: string;
-  short: string;
-  tagline: string;
-  description: string;
-  connection: string;
-  howItWorks: string[];
-  stats: { value: string; label: string }[];
-  examples: string[];
-  companies: string[];
-  futureImpact: string;
-  color: string;
+interface HydrostaticPressureRendererProps {
+  gamePhase?: string;
+  onGameEvent?: (event: GameEvent) => void;
 }
 
-interface Props {
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
-  onGameEvent?: (event: { type: GameEventType; data?: Record<string, unknown> }) => void;
-}
+// Premium Color System
+const colors = {
+  bgDeep: '#030712',
+  bgSurface: '#0f172a',
+  bgElevated: '#1e293b',
+  bgHover: '#334155',
+  textPrimary: '#f8fafc',
+  textSecondary: '#e2e8f0',
+  textTertiary: '#94a3b8',
+  textMuted: '#64748b',
+  primary: '#06b6d4',
+  primaryHover: '#0891b2',
+  secondary: '#3b82f6',
+  accent: '#8b5cf6',
+  success: '#22c55e',
+  successBg: 'rgba(34, 197, 94, 0.15)',
+  warning: '#f59e0b',
+  warningBg: 'rgba(245, 158, 11, 0.15)',
+  error: '#ef4444',
+  errorBg: 'rgba(239, 68, 68, 0.15)',
+};
 
-// =============================================
-// CONSTANTS
-// =============================================
-const phaseNames = [
-  'Hook',
-  'Predict',
-  'Experiment',
-  'Measure',
-  'Paradox',
-  'Challenge',
-  'Apply',
-  'Transfer',
-  'Test',
-  'Mastery'
-];
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
-const GRAVITY = 9.81; // m/s²
-const ATM_PRESSURE = 101325; // Pa (1 atm)
+// Constants
+const GRAVITY = 9.81;
+const ATM_PRESSURE = 101325;
 
-const testQuestions: TestQuestion[] = [
+// Test questions
+const testQuestions = [
   {
-    scenario: "You're designing an underwater research station at the bottom of a lake. The engineering team needs to calculate wall thickness to withstand the pressure at 20 meters depth.",
-    question: "What is the total pressure on the station walls at 20m depth in fresh water?",
-    options: [
-      { text: "About 3 atmospheres - 1 atm surface + 2 atm from water depth", correct: true },
-      { text: "About 1 atmosphere - depth doesn't affect pressure", correct: false },
-      { text: "About 20 atmospheres - 1 atm per meter", correct: false },
-      { text: "About 2 atmospheres - only the water pressure counts", correct: false }
+    q: "At 10 meters depth in fresh water, what is the approximate total pressure?",
+    opts: [
+      { text: "1 atmosphere", correct: false },
+      { text: "2 atmospheres", correct: true },
+      { text: "10 atmospheres", correct: false },
+      { text: "0.5 atmospheres", correct: false }
     ],
-    explanation: "At 20m depth, hydrostatic pressure adds about 2 atm (P = ρgh = 1000 × 9.81 × 20 ≈ 196 kPa ≈ 2 atm). Adding the 1 atm surface pressure gives approximately 3 atm total."
+    exp: "At 10m depth, hydrostatic pressure adds about 1 atm to the surface pressure. Total = 1 atm (surface) + 1 atm (water) = 2 atm."
   },
   {
-    scenario: "A municipal engineer is designing two water tanks for a hilltop community. Tank A is wide and shallow (50m diameter, 5m tall), while Tank B is narrow and tall (5m diameter, 50m tall).",
-    question: "Which tank provides higher water pressure to homes at the base of the hill?",
-    options: [
-      { text: "Tank B - pressure depends only on height, not volume", correct: true },
-      { text: "Tank A - more water volume means more pressure", correct: false },
-      { text: "Equal pressure - same amount of water", correct: false },
-      { text: "Tank A - wider base distributes pressure more", correct: false }
+    q: "In the equation P = ρgh, what does ρ (rho) represent?",
+    opts: [
+      { text: "Gravity", correct: false },
+      { text: "Depth", correct: false },
+      { text: "Fluid density", correct: true },
+      { text: "Pressure", correct: false }
     ],
-    explanation: "This is the Hydrostatic Paradox: pressure depends only on depth (P = ρgh), not on volume. Tank B's 50m height creates 10× more pressure than Tank A's 5m, regardless of their volumes."
+    exp: "ρ (rho) is the density of the fluid in kg/m³. Water is about 1000 kg/m³, seawater about 1025 kg/m³."
   },
   {
-    scenario: "A scuba diver descends from the surface to 30 meters in a tropical ocean. Before diving, their tank shows 200 bar of air pressure.",
-    question: "Why must divers ascend slowly despite having plenty of air remaining?",
-    options: [
-      { text: "Dissolved nitrogen in blood forms dangerous bubbles if pressure drops too quickly", correct: true },
-      { text: "The tank pressure decreases too quickly during ascent", correct: false },
-      { text: "Water temperature changes cause equipment malfunction", correct: false },
-      { text: "Buoyancy becomes uncontrollable at shallow depths", correct: false }
+    q: "Why does pressure increase with depth in a fluid?",
+    opts: [
+      { text: "Temperature increases with depth", correct: false },
+      { text: "The weight of fluid above pushes down", correct: true },
+      { text: "Gravity gets stronger at depth", correct: false },
+      { text: "The fluid compresses at depth", correct: false }
     ],
-    explanation: "At 30m (4 atm), nitrogen dissolves into blood at 4× the surface rate. Rapid ascent causes these dissolved gases to form bubbles - like opening a shaken soda - causing decompression sickness ('the bends')."
+    exp: "Hydrostatic pressure comes from the weight of the fluid column above. More depth = more weight = more pressure."
   },
   {
-    scenario: "The Hoover Dam holds back Lake Mead, which can reach 180 meters deep. Engineers observe that the dam is 200 meters thick at the base but only 14 meters thick at the top.",
-    question: "Why is the dam so much thicker at the bottom?",
-    options: [
-      { text: "Hydrostatic pressure increases linearly with depth, requiring more strength at bottom", correct: true },
-      { text: "The bottom needs more weight to prevent sliding", correct: false },
-      { text: "Construction limitations require a wider base", correct: false },
-      { text: "Water flows faster at the bottom, requiring reinforcement", correct: false }
+    q: "Three containers of different shapes are filled to the same height. Which has the highest pressure at the bottom?",
+    opts: [
+      { text: "The widest container", correct: false },
+      { text: "The narrowest container", correct: false },
+      { text: "All have equal pressure", correct: true },
+      { text: "Cannot determine without knowing volumes", correct: false }
     ],
-    explanation: "At 180m depth, pressure is about 18 atm (1.8 MPa). The dam must resist this enormous sideways force. Since P = ρgh increases linearly with depth, the structural requirements increase proportionally."
+    exp: "This is the Hydrostatic Paradox! Pressure depends only on depth (P = ρgh), not on container shape or volume."
   },
   {
-    scenario: "An astronaut on the International Space Station notices their face appears puffy and their legs are thinner than on Earth. Medical monitoring shows fluid redistribution in their body.",
-    question: "What causes this 'puffy face syndrome' in microgravity?",
-    options: [
-      { text: "Without gravity, there's no hydrostatic pressure gradient to keep blood in lower body", correct: true },
-      { text: "Space radiation causes tissue swelling", correct: false },
-      { text: "Lower air pressure in the station causes expansion", correct: false },
-      { text: "Lack of exercise reduces circulation", correct: false }
+    q: "A diver at 30m experiences how many atmospheres of total pressure?",
+    opts: [
+      { text: "3 atm", correct: false },
+      { text: "4 atm", correct: true },
+      { text: "30 atm", correct: false },
+      { text: "2 atm", correct: false }
     ],
-    explanation: "On Earth, hydrostatic pressure keeps about 2 liters of blood in your legs. In microgravity, without the ρgh gradient, blood redistributes evenly, causing facial puffiness and thin legs - a direct demonstration of hydrostatic effects."
+    exp: "At 30m: 1 atm surface pressure + 3 atm from water (10m ≈ 1 atm) = 4 atmospheres total."
   },
   {
-    scenario: "A hydraulic car lift uses Pascal's principle. A mechanic applies 50 N of force to a small piston (area 0.01 m²), which connects to a large piston (area 0.5 m²) supporting a car.",
-    question: "What maximum weight can this lift support?",
-    options: [
-      { text: "2,500 N - pressure transmits equally, force multiplies by area ratio", correct: true },
-      { text: "50 N - force cannot be amplified", correct: false },
-      { text: "25 N - force is divided by area ratio", correct: false },
-      { text: "5,000 N - force multiplies by 100", correct: false }
+    q: "Why must divers ascend slowly from deep dives?",
+    opts: [
+      { text: "To avoid getting tired", correct: false },
+      { text: "To let dissolved gases release safely", correct: true },
+      { text: "To save air in the tank", correct: false },
+      { text: "To adjust to temperature changes", correct: false }
     ],
-    explanation: "By Pascal's principle, pressure transmits equally throughout the fluid: P = F₁/A₁ = F₂/A₂. So F₂ = F₁ × (A₂/A₁) = 50 × (0.5/0.01) = 50 × 50 = 2,500 N. This is hydraulic force multiplication."
+    exp: "At depth, nitrogen dissolves into blood due to pressure. Rapid ascent causes gas bubbles to form (decompression sickness or 'the bends')."
   },
   {
-    scenario: "A submarine descends to the Mariana Trench, reaching a depth of 10,900 meters. The submarine's hull is made of titanium designed to withstand extreme compression.",
-    question: "What approximate pressure does the hull experience at this depth?",
-    options: [
-      { text: "About 1,100 atmospheres - roughly 1 atm per 10 meters of seawater", correct: true },
-      { text: "About 110 atmospheres - seawater is less dense than expected", correct: false },
-      { text: "About 10,900 atmospheres - 1 atm per meter", correct: false },
-      { text: "About 100 atmospheres - pressure stops increasing at depth", correct: false }
+    q: "Why are dams thicker at the bottom than at the top?",
+    opts: [
+      { text: "To look more impressive", correct: false },
+      { text: "Because pressure increases with depth", correct: true },
+      { text: "To hold more concrete", correct: false },
+      { text: "For aesthetic reasons", correct: false }
     ],
-    explanation: "Using P = ρgh with seawater (ρ ≈ 1025 kg/m³): P = 1025 × 9.81 × 10900 ≈ 110 MPa ≈ 1,086 atm. This is why only specially designed vessels can reach these depths - the pressure is crushing."
+    exp: "Water pressure increases linearly with depth (P = ρgh). The bottom faces the highest pressure and needs the most structural strength."
   },
   {
-    scenario: "A city water tower stands 40 meters tall. An engineer needs to determine if this height is sufficient to supply water to the 10th floor of a building (30 meters high) without pumps.",
-    question: "Will the water tower provide adequate pressure to reach the 10th floor?",
-    options: [
-      { text: "Yes - the 10m height difference creates enough pressure to push water up", correct: true },
-      { text: "No - water cannot flow uphill without pumps", correct: false },
-      { text: "Only if the pipe diameter is large enough", correct: false },
-      { text: "Only during low-demand periods", correct: false }
+    q: "How does a water tower provide pressure to homes?",
+    opts: [
+      { text: "Electric pumps in the tower", correct: false },
+      { text: "Gravity creates hydrostatic pressure from height", correct: true },
+      { text: "Compressed air in the tank", correct: false },
+      { text: "The tower spins to create pressure", correct: false }
     ],
-    explanation: "With 40m tower height and 30m building height, there's a 10m head difference. This creates ρgh = 1000 × 9.81 × 10 ≈ 98 kPa of driving pressure - about 1 atm, plenty to push water to the 10th floor."
+    exp: "Water towers use gravity: the height of water creates pressure P = ρgh. A 30m tower provides about 3 atm of pressure."
   },
   {
-    scenario: "A blood pressure cuff measures 120/80 mmHg when placed on a patient's arm at heart level. The doctor wants to understand how position affects readings.",
-    question: "If the cuff were placed on the ankle instead (about 1m below heart), how would the reading change?",
-    options: [
-      { text: "Increase by about 75 mmHg due to the hydrostatic column of blood", correct: true },
-      { text: "Decrease because blood has to pump against gravity", correct: false },
-      { text: "Stay the same - the heart pumps equally everywhere", correct: false },
-      { text: "Increase by about 10 mmHg - blood is mostly water", correct: false }
+    q: "In Pascal's barrel experiment, why did a small amount of water burst the barrel?",
+    opts: [
+      { text: "The water was very hot", correct: false },
+      { text: "The tall tube created high pressure despite small volume", correct: true },
+      { text: "The barrel was made of weak material", correct: false },
+      { text: "Air pressure pushed on the barrel", correct: false }
     ],
-    explanation: "Blood (ρ ≈ 1060 kg/m³) creates a hydrostatic column: P = ρgh = 1060 × 9.81 × 1 ≈ 10,400 Pa ≈ 78 mmHg. Ankle readings are typically 80-100 mmHg higher than arm readings for this reason."
+    exp: "A 10m tall tube creates ~1 atm of additional pressure regardless of its width. Height, not volume, determines pressure."
   },
   {
-    scenario: "Pascal's famous barrel experiment in 1646 used a sealed barrel filled with water, with a tall thin tube inserted through the top. He climbed to a balcony and poured water into the tube.",
-    question: "What happened when Pascal poured just a few cups of water into the 10-meter tall tube?",
-    options: [
-      { text: "The barrel burst - the height created enormous pressure regardless of volume", correct: true },
-      { text: "Nothing unusual - the small volume couldn't create significant pressure", correct: false },
-      { text: "Water slowly leaked from the barrel seams", correct: false },
-      { text: "The tube overflowed but the barrel was fine", correct: false }
+    q: "If you replaced water with mercury (13.6× denser), how would the pressure at 1m depth compare?",
+    opts: [
+      { text: "Same pressure", correct: false },
+      { text: "13.6 times higher", correct: true },
+      { text: "13.6 times lower", correct: false },
+      { text: "Slightly higher", correct: false }
     ],
-    explanation: "This dramatic demonstration proved the Hydrostatic Paradox: a 10m column creates P = 1000 × 9.81 × 10 ≈ 100 kPa ≈ 1 atm of additional pressure - regardless of the tube's tiny volume. The barrel couldn't withstand this and burst spectacularly."
+    exp: "P = ρgh. Since mercury's density is 13.6× water's density, the pressure at the same depth is 13.6× higher."
   }
 ];
 
-const transferApps: TransferApp[] = [
+// Transfer applications
+const transferApps = [
   {
-    icon: "🏗️",
     title: "Dam Engineering",
-    short: "Dams",
-    tagline: "Holding back millions of tons of water",
-    description: "Modern dams are marvels of hydrostatic engineering, designed to withstand pressure that increases dramatically with depth. Every meter of water adds predictable force.",
-    connection: "The fundamental equation P = ρgh determines dam wall thickness at every level. Engineers must account for hydrostatic pressure acting perpendicular to the dam face, which increases linearly with depth.",
-    howItWorks: [
-      "Calculate pressure at each depth using P = ρgh",
-      "Design wall thickness to resist horizontal hydrostatic force",
-      "Include safety factors for dynamic loads (waves, earthquakes)",
-      "Install pressure relief systems and monitoring sensors",
-      "Use curved shapes to transfer loads to canyon walls"
-    ],
+    subtitle: "Holding Back Millions of Tons",
+    icon: "🏗️",
+    desc: "Modern dams must resist enormous hydrostatic forces. Engineers design walls that are thicker at the bottom where pressure is highest, following P = ρgh precisely.",
+    connection: "The hydrostatic equation determines exactly how thick each section of the dam must be to withstand the water pressure at that depth.",
     stats: [
-      { value: "1.8 MPa", label: "Pressure at 180m depth" },
-      { value: "200m", label: "Hoover Dam base thickness" },
-      { value: "6.6M tons", label: "Concrete in Three Gorges Dam" },
-      { value: "$100B+", label: "Global dam infrastructure value" }
+      { val: "1.8 MPa", label: "Pressure at 180m" },
+      { val: "200m", label: "Hoover Dam thickness" },
+      { val: "6.6M tons", label: "Three Gorges concrete" }
     ],
-    examples: [
-      "Hoover Dam withstands 180m water column",
-      "Three Gorges Dam - world's largest hydroelectric",
-      "Oroville Dam spillway failure analysis",
-      "Vajont Dam disaster - wave overtopping"
-    ],
-    companies: ["Bechtel", "China Three Gorges Corporation", "Strabag", "Bureau of Reclamation"],
-    futureImpact: "Climate change is altering precipitation patterns, requiring dams to handle both extreme floods and droughts. New designs incorporate hydrostatic principles with smart sensors.",
-    color: "from-slate-600 to-gray-600"
+    color: colors.primary
   },
   {
+    title: "Scuba Diving",
+    subtitle: "Surviving the Depths",
     icon: "🤿",
-    title: "Scuba Diving & Deep Sea",
-    short: "Diving",
-    tagline: "Exploring the pressure frontier",
-    description: "Divers experience hydrostatic pressure directly as they descend. Understanding P = ρgh is literally a matter of life and death for managing nitrogen absorption and decompression.",
-    connection: "Every 10m of seawater adds about 1 atmosphere of pressure. Divers breathe compressed air at ambient pressure, but must manage gas dissolution into blood tissues following Henry's Law.",
-    howItWorks: [
-      "Pressure doubles at 10m, triples at 20m, etc.",
-      "Nitrogen dissolves into blood proportionally to pressure",
-      "Ascent speed limited to allow safe nitrogen off-gassing",
-      "Decompression stops required for deep/long dives",
-      "Dive computers continuously calculate safe ascent profiles"
-    ],
+    desc: "Divers experience firsthand how pressure increases with depth. Every 10m adds about 1 atm. Understanding this keeps divers safe from decompression sickness.",
+    connection: "Divers breathe air at ambient pressure. The deeper they go, the more nitrogen dissolves in their blood due to increased pressure.",
     stats: [
-      { value: "40m", label: "Recreational dive limit" },
-      { value: "332m", label: "World record scuba depth" },
-      { value: "1,100 atm", label: "Mariana Trench pressure" },
-      { value: "15-30 ft/min", label: "Safe ascent rate" }
+      { val: "40m", label: "Recreational limit" },
+      { val: "4 atm", label: "Pressure at 30m" },
+      { val: "1,100 atm", label: "Mariana Trench" }
     ],
-    examples: [
-      "Technical diving with mixed gases",
-      "Saturation diving for offshore work",
-      "James Cameron's Deepsea Challenger",
-      "Navy submarine rescue operations"
-    ],
-    companies: ["Rolex (Deepsea)", "Triton Submarines", "PADI", "Dräger"],
-    futureImpact: "New materials and life support systems are enabling deeper exploration. Understanding hydrostatic physiology is key to human presence in extreme depths.",
-    color: "from-blue-600 to-cyan-600"
+    color: colors.secondary
   },
   {
-    icon: "🗼",
-    title: "Municipal Water Systems",
-    short: "Water",
-    tagline: "Gravity-powered delivery to millions",
-    description: "Cities have used elevated water storage for centuries. The height of water towers directly determines delivery pressure using the fundamental hydrostatic equation.",
-    connection: "A water tower's height creates pressure P = ρgh at ground level. A 30m tower provides about 3 atm - enough to reach the 3rd floor without pumps. This passive system requires no electricity.",
-    howItWorks: [
-      "Elevate water storage to create potential energy",
-      "Height converts to pressure via P = ρgh",
-      "Pumps fill towers during low-demand periods",
-      "Gravity provides consistent pressure 24/7",
-      "Multiple towers balance pressure across city zones"
-    ],
+    title: "Blood Pressure",
+    subtitle: "Hydrostatics in Your Body",
+    icon: "💓",
+    desc: "Blood is a fluid, so it follows hydrostatic principles. Standing up causes blood to pool in your legs due to the pressure difference between head and feet.",
+    connection: "A 1.7m tall person has about 130 mmHg pressure difference between head and feet when standing, purely from hydrostatics.",
     stats: [
-      { value: "30-50m", label: "Typical tower height" },
-      { value: "3-5 atm", label: "Delivery pressure range" },
-      { value: "500K gal", label: "Large tower capacity" },
-      { value: "99.9%", label: "System reliability" }
+      { val: "~130 mmHg", label: "Head-foot difference" },
+      { val: "1060 kg/m³", label: "Blood density" },
+      { val: "100+ adj/min", label: "Body compensates" }
     ],
-    examples: [
-      "New York City's hilltop reservoirs",
-      "Singapore's elevated storage network",
-      "Dubai's pressure-boosted high-rises",
-      "Rural water tower systems"
-    ],
-    companies: ["American Water", "Veolia", "Xylem", "Suez"],
-    futureImpact: "Smart water systems combine traditional hydrostatic principles with IoT sensors and predictive maintenance to reduce losses and optimize pressure management.",
-    color: "from-sky-600 to-blue-600"
+    color: colors.accent
   },
   {
-    icon: "🚗",
     title: "Hydraulic Systems",
-    short: "Hydraulics",
-    tagline: "Pascal's principle in action",
-    description: "From car brakes to construction equipment, hydraulic systems use incompressible fluids to transmit force. Pascal's principle - that pressure transmits equally - enables enormous force multiplication.",
-    connection: "Pascal's principle states that pressure applied to an enclosed fluid transmits equally throughout. Combined with different piston areas (F = P × A), small forces can lift tons.",
-    howItWorks: [
-      "Apply force to small piston (high pressure, low volume)",
-      "Pressure transmits equally through hydraulic fluid",
-      "Large piston receives same pressure over larger area",
-      "Force multiplies by ratio of piston areas",
-      "Trade-off: large piston moves shorter distance"
-    ],
+    subtitle: "Pascal's Principle at Work",
+    icon: "🚗",
+    desc: "Car brakes, excavators, and lifts all use hydraulic fluid to transmit force. Pascal's principle ensures pressure transmits equally throughout the fluid.",
+    connection: "By using different piston sizes, small forces can lift heavy loads. The pressure (P = F/A) is the same, but force scales with area.",
     stats: [
-      { value: "50:1", label: "Typical force multiplication" },
-      { value: "700 bar", label: "Industrial hydraulic pressure" },
-      { value: "100+ tons", label: "Hydraulic press capacity" },
-      { value: "$50B", label: "Global hydraulics market" }
+      { val: "50:1", label: "Force multiplication" },
+      { val: "700 bar", label: "Industrial pressure" },
+      { val: "100+ tons", label: "Press capacity" }
     ],
-    examples: [
-      "Automotive brake systems",
-      "Excavators and construction equipment",
-      "Aircraft control surfaces",
-      "Industrial stamping presses"
-    ],
-    companies: ["Bosch Rexroth", "Parker Hannifin", "Caterpillar", "Eaton"],
-    futureImpact: "Electro-hydraulic systems combine the force density of hydraulics with precision electric control. Biodegradable fluids are reducing environmental impact.",
-    color: "from-orange-600 to-red-600"
+    color: colors.warning
   }
 ];
 
-// =============================================
-// COMPONENT
-// =============================================
-const HydrostaticPressureRenderer: React.FC<Props> = ({
-  currentPhase = 0,
-  onPhaseComplete,
-  onGameEvent
-}) => {
-  // Phase and navigation state
-  const [phase, setPhase] = useState(currentPhase);
+const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = ({ onGameEvent }) => {
+  // State
+  const [phase, setPhase] = useState<Phase>('hook');
   const [isMobile, setIsMobile] = useState(false);
-  const navigationLockRef = useRef(false);
 
   // Prediction states
   const [prediction, setPrediction] = useState<string | null>(null);
-  const [showPredictionResult, setShowPredictionResult] = useState(false);
-  const [paradoxPrediction, setParadoxPrediction] = useState<string | null>(null);
-  const [showParadoxResult, setShowParadoxResult] = useState(false);
+  const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
 
   // Simulation states
   const [depth, setDepth] = useState(10);
   const [fluidDensity, setFluidDensity] = useState(1000);
   const [showPressureArrows, setShowPressureArrows] = useState(true);
   const [animationOffset, setAnimationOffset] = useState(0);
-  const [isAnimating, setIsAnimating] = useState(true);
+
+  // Twist simulation
+  const [selectedContainer, setSelectedContainer] = useState<number | null>(null);
+  const [experimentCount, setExperimentCount] = useState(0);
 
   // Transfer states
   const [activeApp, setActiveApp] = useState(0);
-  const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+  const [completedApps, setCompletedApps] = useState<boolean[]>([false, false, false, false]);
 
   // Test states
   const [currentQuestion, setCurrentQuestion] = useState(0);
-  const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [correctAnswers, setCorrectAnswers] = useState(0);
-  const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
+  const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
+  const [testScore, setTestScore] = useState(0);
+  const [showExplanation, setShowExplanation] = useState(false);
 
-  // =============================================
-  // CALCULATIONS
-  // =============================================
+  // Animation ref
+  const animationRef = useRef<number>();
+
+  // Calculations
   const hydrostaticPressure = fluidDensity * GRAVITY * depth;
   const totalPressure = ATM_PRESSURE + hydrostaticPressure;
   const pressureInAtm = totalPressure / ATM_PRESSURE;
 
-  // =============================================
-  // EFFECTS
-  // =============================================
+  // Responsive check
   useEffect(() => {
-    const checkMobile = () => setIsMobile(window.innerWidth < 768);
-    checkMobile();
-    window.addEventListener('resize', checkMobile);
-    return () => window.removeEventListener('resize', checkMobile);
+    const check = () => setIsMobile(window.innerWidth < 768);
+    check();
+    window.addEventListener('resize', check);
+    return () => window.removeEventListener('resize', check);
   }, []);
 
+  // Animation loop
   useEffect(() => {
-    setPhase(currentPhase);
-  }, [currentPhase]);
-
-  useEffect(() => {
-    if (!isAnimating) return;
-    const interval = setInterval(() => {
+    const animate = () => {
       setAnimationOffset(prev => (prev + 1) % 60);
-    }, 50);
-    return () => clearInterval(interval);
-  }, [isAnimating]);
-
-  // =============================================
-  // AUDIO
-  // =============================================
-  const playSound = useCallback((type: 'click' | 'success' | 'error' | 'transition' | 'complete' | 'bubble') => {
-    try {
-      const audioContext = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      const oscillator = audioContext.createOscillator();
-      const gainNode = audioContext.createGain();
-
-      oscillator.connect(gainNode);
-      gainNode.connect(audioContext.destination);
-
-      switch (type) {
-        case 'click':
-          oscillator.frequency.setValueAtTime(600, audioContext.currentTime);
-          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-          gainNode.gain.exponentialDecayTo?.(0.01, audioContext.currentTime + 0.1);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.1);
-          break;
-        case 'success':
-          oscillator.frequency.setValueAtTime(523, audioContext.currentTime);
-          oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.1);
-          oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.2);
-          gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-          gainNode.gain.exponentialDecayTo?.(0.01, audioContext.currentTime + 0.3);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.3);
-          break;
-        case 'error':
-          oscillator.frequency.setValueAtTime(330, audioContext.currentTime);
-          oscillator.frequency.setValueAtTime(277, audioContext.currentTime + 0.15);
-          gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-          gainNode.gain.exponentialDecayTo?.(0.01, audioContext.currentTime + 0.3);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.3);
-          break;
-        case 'bubble':
-          oscillator.type = 'sine';
-          oscillator.frequency.setValueAtTime(200, audioContext.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.1);
-          gainNode.gain.setValueAtTime(0.08, audioContext.currentTime);
-          gainNode.gain.exponentialDecayTo?.(0.01, audioContext.currentTime + 0.15);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.15);
-          break;
-        case 'transition':
-          oscillator.frequency.setValueAtTime(440, audioContext.currentTime);
-          oscillator.frequency.exponentialRampToValueAtTime(880, audioContext.currentTime + 0.15);
-          gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
-          gainNode.gain.exponentialDecayTo?.(0.01, audioContext.currentTime + 0.2);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.2);
-          break;
-        case 'complete':
-          oscillator.frequency.setValueAtTime(523, audioContext.currentTime);
-          oscillator.frequency.setValueAtTime(659, audioContext.currentTime + 0.15);
-          oscillator.frequency.setValueAtTime(784, audioContext.currentTime + 0.3);
-          oscillator.frequency.setValueAtTime(1047, audioContext.currentTime + 0.45);
-          gainNode.gain.setValueAtTime(0.15, audioContext.currentTime);
-          gainNode.gain.exponentialDecayTo?.(0.01, audioContext.currentTime + 0.6);
-          oscillator.start(audioContext.currentTime);
-          oscillator.stop(audioContext.currentTime + 0.6);
-          break;
-      }
-    } catch {
-      // Audio not available
-    }
+      animationRef.current = requestAnimationFrame(animate);
+    };
+    animationRef.current = requestAnimationFrame(animate);
+    return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
   }, []);
 
-  // =============================================
-  // NAVIGATION
-  // =============================================
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    if (newPhase < 0 || newPhase > 9) return;
+  // Reset test on entry
+  useEffect(() => {
+    if (phase === 'test') {
+      setCurrentQuestion(0);
+      setTestAnswers(Array(10).fill(null));
+      setTestScore(0);
+      setShowExplanation(false);
+    }
+  }, [phase]);
 
-    navigationLockRef.current = true;
-    playSound('transition');
-    setPhase(newPhase);
-
+  // Event emitter
+  const emit = useCallback((type: string, details: Record<string, unknown> = {}) => {
     onGameEvent?.({
-      type: 'phase_change',
-      data: { from: phase, to: newPhase, phaseName: phaseNames[newPhase] }
+      type,
+      gameType: 'hydrostatic_pressure',
+      gameTitle: 'Hydrostatic Pressure',
+      details: { phase, ...details },
+      timestamp: Date.now()
     });
+  }, [onGameEvent, phase]);
 
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
-  }, [phase, playSound, onGameEvent]);
+  // Sound
+  const playSound = useCallback((type: 'click' | 'success' | 'error' | 'bubble') => {
+    try {
+      const ctx = new AudioContext();
+      const osc = ctx.createOscillator();
+      const gain = ctx.createGain();
+      osc.connect(gain);
+      gain.connect(ctx.destination);
 
-  const completePhase = useCallback(() => {
-    onPhaseComplete?.(phase);
-    if (phase < 9) {
-      goToPhase(phase + 1);
-    }
-  }, [phase, onPhaseComplete, goToPhase]);
+      if (type === 'bubble') {
+        osc.type = 'sine';
+        osc.frequency.setValueAtTime(200, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(400, ctx.currentTime + 0.1);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+      } else {
+        const freq = type === 'success' ? 800 : type === 'error' ? 300 : 500;
+        osc.frequency.value = freq;
+        gain.gain.setValueAtTime(0.1, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.15);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.15);
+      }
+    } catch {}
+  }, []);
 
-  // =============================================
-  // EVENT HANDLERS
-  // =============================================
-  const handlePrediction = useCallback((answer: string) => {
-    setPrediction(answer);
-    setShowPredictionResult(true);
-    const isCorrect = answer === 'B';
-    playSound(isCorrect ? 'success' : 'error');
-    onGameEvent?.({ type: 'prediction_made', data: { answer, correct: isCorrect } });
-  }, [playSound, onGameEvent]);
-
-  const handleParadoxPrediction = useCallback((answer: string) => {
-    setParadoxPrediction(answer);
-    setShowParadoxResult(true);
-    const isCorrect = answer === 'C';
-    playSound(isCorrect ? 'success' : 'error');
-    onGameEvent?.({ type: 'paradox_discovered', data: { answer, correct: isCorrect } });
-  }, [playSound, onGameEvent]);
-
-  const handleDepthChange = useCallback((newDepth: number) => {
-    setDepth(newDepth);
-    playSound('bubble');
-    onGameEvent?.({ type: 'depth_changed', data: { depth: newDepth } });
-  }, [playSound, onGameEvent]);
-
-  const handleFluidChange = useCallback((density: number) => {
-    setFluidDensity(density);
+  // Navigation
+  const goToPhase = useCallback((p: Phase) => {
     playSound('click');
-    onGameEvent?.({ type: 'fluid_changed', data: { density } });
-  }, [playSound, onGameEvent]);
+    setPhase(p);
+    emit('phase_changed', { to: p });
+  }, [playSound, emit]);
 
-  const handleAppExplore = useCallback((index: number) => {
-    setActiveApp(index);
-    if (!completedApps.has(index)) {
-      setCompletedApps(prev => new Set([...prev, index]));
-      playSound('success');
-      onGameEvent?.({ type: 'app_explored', data: { app: transferApps[index].title } });
-    }
-  }, [completedApps, playSound, onGameEvent]);
-
-  const handleAnswerSelect = useCallback((index: number) => {
-    if (answeredQuestions.has(currentQuestion)) return;
-
-    setSelectedAnswer(index);
-    setShowResult(true);
-
-    const isCorrect = testQuestions[currentQuestion].options[index].correct;
-    if (isCorrect) {
-      setCorrectAnswers(prev => prev + 1);
+  // Test answer handler
+  const handleAnswer = useCallback((idx: number) => {
+    if (testAnswers[currentQuestion] !== null) return;
+    const newAnswers = [...testAnswers];
+    newAnswers[currentQuestion] = idx;
+    setTestAnswers(newAnswers);
+    setShowExplanation(true);
+    if (testQuestions[currentQuestion].opts[idx]?.correct) {
+      setTestScore(s => s + 1);
       playSound('success');
     } else {
       playSound('error');
     }
+  }, [currentQuestion, testAnswers, playSound]);
 
-    setAnsweredQuestions(prev => new Set([...prev, currentQuestion]));
-    onGameEvent?.({ type: 'test_answered', data: { question: currentQuestion, correct: isCorrect } });
-  }, [currentQuestion, answeredQuestions, playSound, onGameEvent]);
-
-  const handleNextQuestion = useCallback(() => {
-    if (currentQuestion < testQuestions.length - 1) {
-      setCurrentQuestion(prev => prev + 1);
-      setSelectedAnswer(null);
-      setShowResult(false);
-    } else {
-      onGameEvent?.({ type: 'test_completed', data: { score: correctAnswers, total: testQuestions.length } });
-      if (correctAnswers >= 7) {
-        playSound('complete');
-        completePhase();
-      }
+  // Return to dashboard
+  const handleReturnToDashboard = useCallback(() => {
+    emit('button_clicked', { action: 'return_to_dashboard' });
+    if (typeof window !== 'undefined') {
+      window.location.href = '/';
     }
-  }, [currentQuestion, correctAnswers, playSound, completePhase, onGameEvent]);
+  }, [emit]);
 
-  // =============================================
-  // RENDER FUNCTIONS
-  // =============================================
-
-  const renderPressureTank = (width: number = 400, height: number = 320) => {
+  // ============================================================================
+  // VISUALIZATION
+  // ============================================================================
+  const renderPressureTank = () => {
+    const width = isMobile ? 320 : 400;
+    const height = isMobile ? 280 : 320;
     const tankTop = 50;
-    const tankHeight = 200;
-    const tankLeft = 80;
-    const tankWidth = 160;
-    const depthRatio = depth / 50; // max depth 50m for visualization
+    const tankHeight = 180;
+    const tankLeft = 60;
+    const tankWidth = 140;
+    const depthRatio = depth / 50;
     const objectY = tankTop + depthRatio * tankHeight;
 
     return (
-      <svg width={width} height={height} className="mx-auto">
+      <svg width={width} height={height} style={{ display: 'block', margin: '0 auto' }}>
         <defs>
           <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.6" />
             <stop offset="100%" stopColor="#0369a1" stopOpacity="0.9" />
           </linearGradient>
-          <marker id="pressureArrowGreen" markerWidth="6" markerHeight="6" refX="0" refY="3" orient="auto">
+          <marker id="pressureArrow" markerWidth="6" markerHeight="6" refX="0" refY="3" orient="auto">
             <path d="M0,0 L0,6 L6,3 z" fill="#22c55e" />
           </marker>
         </defs>
 
-        {/* Background */}
         <rect x="0" y="0" width={width} height={height} fill="#0f172a" rx="12" />
 
-        {/* Tank body */}
+        {/* Tank */}
         <rect x={tankLeft} y={tankTop} width={tankWidth} height={tankHeight}
               fill="url(#waterGradient)" stroke="#64748b" strokeWidth="3" rx="8" />
 
-        {/* Surface line */}
+        {/* Surface */}
         <line x1={tankLeft} y1={tankTop + 5} x2={tankLeft + tankWidth} y2={tankTop + 5}
               stroke="#7dd3fc" strokeWidth="2" strokeDasharray="5,5" />
-        <text x={tankLeft - 10} y={tankTop + 8} textAnchor="end" fill="#7dd3fc" fontSize="10">Surface</text>
+        <text x={tankLeft - 8} y={tankTop + 8} textAnchor="end" fill="#7dd3fc" fontSize="10">0m</text>
 
         {/* Depth markers */}
-        {[0, 10, 20, 30, 40, 50].map((d, i) => {
+        {[10, 20, 30, 40, 50].map((d) => {
           const y = tankTop + (d / 50) * tankHeight;
           return (
-            <g key={i}>
-              <line x1={tankLeft - 8} y1={y} x2={tankLeft} y2={y} stroke="#94a3b8" strokeWidth="1" />
-              <text x={tankLeft - 12} y={y + 4} textAnchor="end" fill="#94a3b8" fontSize="9">{d}m</text>
+            <g key={d}>
+              <line x1={tankLeft - 6} y1={y} x2={tankLeft} y2={y} stroke="#64748b" strokeWidth="1" />
+              <text x={tankLeft - 8} y={y + 4} textAnchor="end" fill="#64748b" fontSize="9">{d}m</text>
             </g>
           );
         })}
 
-        {/* Object/Diver at current depth */}
+        {/* Diver/Object */}
         <g transform={`translate(${tankLeft + tankWidth/2}, ${Math.min(objectY, tankTop + tankHeight - 20)})`}>
-          <circle r="18" fill="#fbbf24" stroke="#f59e0b" strokeWidth="2" />
-          <text y="5" textAnchor="middle" fill="#1e293b" fontSize="10" fontWeight="bold">
-            {depth}m
-          </text>
+          <circle r="16" fill="#fbbf24" stroke="#f59e0b" strokeWidth="2" />
+          <text y="5" textAnchor="middle" fill="#1e293b" fontSize="10" fontWeight="bold">{depth}m</text>
         </g>
 
-        {/* Pressure arrows from all directions */}
+        {/* Pressure arrows */}
         {showPressureArrows && (
           <g transform={`translate(${tankLeft + tankWidth/2}, ${Math.min(objectY, tankTop + tankHeight - 20)})`}>
             {[0, 60, 120, 180, 240, 300].map((angle, i) => {
-              const length = 25 + (depth / 50) * 30;
+              const length = 20 + (depth / 50) * 25;
               const rad = (angle * Math.PI) / 180;
-              const x1 = Math.cos(rad) * 25;
-              const y1 = Math.sin(rad) * 25;
-              const x2 = Math.cos(rad) * (25 + length);
-              const y2 = Math.sin(rad) * (25 + length);
+              const x1 = Math.cos(rad) * 22;
+              const y1 = Math.sin(rad) * 22;
+              const x2 = Math.cos(rad) * (22 + length);
+              const y2 = Math.sin(rad) * (22 + length);
               return (
-                <line
-                  key={i}
-                  x1={x2} y1={y2}
-                  x2={x1} y2={y1}
-                  stroke="#22c55e"
-                  strokeWidth="2"
-                  markerEnd="url(#pressureArrowGreen)"
-                  opacity={0.8}
-                />
+                <line key={i} x1={x2} y1={y2} x2={x1} y2={y1}
+                      stroke="#22c55e" strokeWidth="2" markerEnd="url(#pressureArrow)" opacity={0.8} />
               );
             })}
           </g>
         )}
 
-        {/* Bubbles animation */}
+        {/* Bubbles */}
         {[1, 2, 3].map(i => {
           const bubbleY = tankTop + tankHeight - ((animationOffset * 2 + i * 40) % tankHeight);
-          const bubbleX = tankLeft + 30 + i * 40;
+          const bubbleX = tankLeft + 25 + i * 35;
           return (
-            <circle
-              key={i}
-              cx={bubbleX}
-              cy={bubbleY}
-              r={3 + i}
-              fill="white"
-              opacity={0.3 + (bubbleY - tankTop) / tankHeight * 0.3}
-            />
+            <circle key={i} cx={bubbleX} cy={bubbleY} r={2 + i}
+                    fill="white" opacity={0.3 + (bubbleY - tankTop) / tankHeight * 0.3} />
           );
         })}
 
-        {/* Pressure readout panel */}
-        <rect x={width - 130} y="60" width="120" height="130" fill="#1e293b" rx="8" stroke="#374151" />
-        <text x={width - 70} y="82" textAnchor="middle" fill="#94a3b8" fontSize="11" fontWeight="bold">PRESSURE</text>
+        {/* Pressure readout */}
+        <rect x={width - 115} y="50" width="105" height="120" fill="#1e293b" rx="8" stroke="#374151" />
+        <text x={width - 62} y="72" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold">PRESSURE</text>
 
-        <text x={width - 70} y="108" textAnchor="middle" fill="#22c55e" fontSize="18" fontWeight="bold">
+        <text x={width - 62} y="98" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">
           {(hydrostaticPressure / 1000).toFixed(1)}
         </text>
-        <text x={width - 70} y="122" textAnchor="middle" fill="#94a3b8" fontSize="10">kPa (hydrostatic)</text>
+        <text x={width - 62} y="112" textAnchor="middle" fill="#94a3b8" fontSize="9">kPa (hydrostatic)</text>
 
-        <text x={width - 70} y="152" textAnchor="middle" fill="#3b82f6" fontSize="18" fontWeight="bold">
+        <text x={width - 62} y="138" textAnchor="middle" fill="#3b82f6" fontSize="16" fontWeight="bold">
           {pressureInAtm.toFixed(2)}
         </text>
-        <text x={width - 70} y="166" textAnchor="middle" fill="#94a3b8" fontSize="10">atm (total)</text>
+        <text x={width - 62} y="152" textAnchor="middle" fill="#94a3b8" fontSize="9">atm (total)</text>
 
         {/* Formula */}
-        <text x={width/2} y={height - 35} textAnchor="middle" fill="#fbbf24" fontSize="12" fontWeight="bold">
-          P = ρgh = {fluidDensity} × 9.81 × {depth}
-        </text>
-        <text x={width/2} y={height - 15} textAnchor="middle" fill="#94a3b8" fontSize="11">
-          = {(hydrostaticPressure / 1000).toFixed(1)} kPa = {(hydrostaticPressure / ATM_PRESSURE).toFixed(2)} atm
+        <text x={width/2} y={height - 25} textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">
+          P = ρgh = {fluidDensity} × 9.81 × {depth} = {(hydrostaticPressure / 1000).toFixed(1)} kPa
         </text>
       </svg>
     );
   };
 
-  const renderPhase0 = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-      {/* Premium Badge */}
-      <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-full bg-cyan-500/10 border border-cyan-500/20 mb-6">
-        <div className="w-2 h-2 rounded-full bg-cyan-500 animate-pulse" />
-        <span className="text-cyan-400 text-sm font-medium">Fluid Mechanics</span>
+  // Container comparison visualization
+  const renderContainerComparison = () => {
+    const width = isMobile ? 320 : 400;
+    const height = 200;
+    const waterHeight = 80;
+
+    return (
+      <svg width={width} height={height} style={{ display: 'block', margin: '0 auto' }}>
+        <rect width={width} height={height} fill="#0f172a" rx="12" />
+
+        {/* Wide container */}
+        <g transform={`translate(${width * 0.17}, 30)`}>
+          <rect x="-40" y={100 - waterHeight} width="80" height={waterHeight} fill="#3b82f6" opacity="0.5" rx="4" />
+          <rect x="-40" y={100 - waterHeight} width="80" height={waterHeight} fill="none" stroke="#64748b" strokeWidth="2" rx="4" />
+          <text x="0" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">Wide</text>
+          <text x="0" y="128" textAnchor="middle" fill="#64748b" fontSize="9">1000 L</text>
+          {selectedContainer === 0 && (
+            <circle cx="0" cy={100 - waterHeight + 70} r="6" fill="#f59e0b" />
+          )}
+        </g>
+
+        {/* Medium container */}
+        <g transform={`translate(${width * 0.5}, 30)`}>
+          <rect x="-20" y={100 - waterHeight} width="40" height={waterHeight} fill="#3b82f6" opacity="0.5" rx="4" />
+          <rect x="-20" y={100 - waterHeight} width="40" height={waterHeight} fill="none" stroke="#64748b" strokeWidth="2" rx="4" />
+          <text x="0" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">Medium</text>
+          <text x="0" y="128" textAnchor="middle" fill="#64748b" fontSize="9">100 L</text>
+          {selectedContainer === 1 && (
+            <circle cx="0" cy={100 - waterHeight + 70} r="6" fill="#f59e0b" />
+          )}
+        </g>
+
+        {/* Narrow container */}
+        <g transform={`translate(${width * 0.83}, 30)`}>
+          <rect x="-5" y={100 - waterHeight} width="10" height={waterHeight} fill="#3b82f6" opacity="0.5" rx="2" />
+          <rect x="-5" y={100 - waterHeight} width="10" height={waterHeight} fill="none" stroke="#64748b" strokeWidth="2" rx="2" />
+          <text x="0" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">Narrow</text>
+          <text x="0" y="128" textAnchor="middle" fill="#64748b" fontSize="9">1 L</text>
+          {selectedContainer === 2 && (
+            <circle cx="0" cy={100 - waterHeight + 70} r="6" fill="#f59e0b" />
+          )}
+        </g>
+
+        {/* Height indicator */}
+        <line x1={width - 25} y1={30 + 100 - waterHeight} x2={width - 25} y2={30 + 100}
+              stroke="#fbbf24" strokeWidth="2" markerStart="url(#heightArrow)" markerEnd="url(#heightArrow)" />
+        <text x={width - 15} y={30 + 100 - waterHeight/2} fill="#fbbf24" fontSize="9"
+              transform={`rotate(90, ${width - 15}, ${30 + 100 - waterHeight/2})`}>Same height!</text>
+
+        {/* Result text */}
+        <text x={width/2} y={height - 20} textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">
+          All have EQUAL pressure at the bottom!
+        </text>
+      </svg>
+    );
+  };
+
+  // ============================================================================
+  // PHASE RENDERERS
+  // ============================================================================
+
+  // Hook Phase
+  const renderHook = () => (
+    <div style={{ minHeight: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: isMobile ? '24px 16px' : '48px 24px', textAlign: 'center' }}>
+      {/* Category pill */}
+      <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '6px 14px', background: `${colors.primary}20`, border: `1px solid ${colors.primary}40`, borderRadius: '100px', marginBottom: '24px' }}>
+        <div style={{ width: '6px', height: '6px', background: colors.primary, borderRadius: '50%' }} />
+        <span style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em', textTransform: 'uppercase' }}>Fluid Mechanics</span>
       </div>
 
-      {/* Gradient Title */}
-      <h1 className={`${isMobile ? 'text-3xl' : 'text-4xl'} font-bold bg-gradient-to-r from-cyan-400 via-blue-400 to-teal-400 bg-clip-text text-transparent mb-3`}>
-        Hydrostatic Pressure
+      {/* Title */}
+      <h1 style={{ fontSize: isMobile ? '32px' : '48px', fontWeight: 700, lineHeight: 1.1, marginBottom: '16px', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 50%, ${colors.accent} 100%)`, WebkitBackgroundClip: 'text', WebkitTextFillColor: 'transparent', backgroundClip: 'text' }}>
+        Hydrostatic<br />Pressure
       </h1>
 
-      {/* Subtitle */}
-      <p className="text-slate-400 text-lg mb-8 max-w-md">
-        Discover why the ocean depths are so crushing
+      <p style={{ fontSize: isMobile ? '16px' : '18px', color: colors.textSecondary, maxWidth: '420px', lineHeight: 1.6, marginBottom: '32px' }}>
+        Why do your ears hurt when you dive deep?<br />Why are submarines built so strong?
       </p>
 
-      {/* Premium Card */}
-      <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 max-w-2xl shadow-2xl mb-8">
-        <svg width={isMobile ? 300 : 380} height={200} className="mx-auto">
+      {/* Visual */}
+      <div style={{ width: '100%', maxWidth: '420px', background: `linear-gradient(135deg, ${colors.bgSurface} 0%, ${colors.bgDeep} 100%)`, borderRadius: '20px', padding: '20px', border: `1px solid ${colors.bgHover}`, marginBottom: '32px' }}>
+        <svg width={isMobile ? 280 : 340} height={160} style={{ display: 'block', margin: '0 auto' }}>
           <defs>
-            <linearGradient id="hookWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#38bdf8" />
-              <stop offset="100%" stopColor="#0369a1" />
+            <linearGradient id="hookWater" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#0369a1" stopOpacity="0.9" />
             </linearGradient>
           </defs>
-          <rect width={isMobile ? 300 : 380} height="200" fill="#0c1929" rx="10" />
+          <rect width={isMobile ? 280 : 340} height="160" fill="#0f172a" rx="12" />
 
-          {/* Swimming pool cross-section */}
-          <path d={isMobile
-            ? "M20,40 L20,180 L280,180 L280,40 Q250,40 250,70 L250,160 L50,160 L50,70 Q50,40 20,40"
-            : "M30,40 L30,180 L350,180 L350,40 Q310,40 310,80 L310,160 L70,160 L70,80 Q70,40 30,40"
-          }
-                fill="url(#hookWaterGrad)" opacity="0.7" />
+          {/* Pool cross-section */}
+          <rect x="40" y="20" width={isMobile ? 200 : 260} height="120" fill="url(#hookWater)" rx="4" />
 
-          {/* Surface indicators */}
-          <text x={isMobile ? 80 : 100} y="30" fill="#94a3b8" fontSize="10">Surface: 1 atm</text>
-          <circle cx={isMobile ? 80 : 100} cy="55" r="10" fill="#fbbf24" />
+          {/* Surface diver */}
+          <circle cx="70" cy="35" r="12" fill="#fbbf24" />
+          <text x="70" y="55" textAnchor="middle" fill="#7dd3fc" fontSize="9">1 atm</text>
 
           {/* Deep diver */}
-          <text x={isMobile ? 180 : 220} y="120" fill="#ef4444" fontSize="10" fontWeight="bold">10m: 2 atm!</text>
-          <circle cx={isMobile ? 180 : 220} cy="140" r="10" fill="#fbbf24" />
+          <circle cx={isMobile ? 200 : 240} cy="115" r="12" fill="#fbbf24" />
+          <text x={isMobile ? 200 : 240} y="100" textAnchor="middle" fill="#ef4444" fontSize="9" fontWeight="bold">2× pressure!</text>
+
+          {/* Depth indicator */}
+          <text x={isMobile ? 265 : 320} y="75" fill="#94a3b8" fontSize="9">10m</text>
         </svg>
 
-        <p className={`${isMobile ? 'text-lg' : 'text-xl'} text-slate-300 mt-6 mb-4`}>
-          Why do your ears hurt when you dive to the bottom of a deep pool?
-        </p>
-        <p className="text-lg text-cyan-400 font-medium">
-          At just 10 meters deep, the pressure DOUBLES!
+        <p style={{ color: colors.primary, fontSize: '16px', fontWeight: 600, marginTop: '16px' }}>
+          At just 10 meters, pressure DOUBLES!
         </p>
       </div>
 
-      {/* Premium CTA Button */}
+      {/* Quote */}
+      <div style={{ maxWidth: '380px', padding: '16px 20px', background: colors.bgSurface, borderRadius: '12px', borderLeft: `3px solid ${colors.primary}`, marginBottom: '32px' }}>
+        <p style={{ fontSize: '14px', color: colors.textTertiary, fontStyle: 'italic', margin: 0, lineHeight: 1.5 }}>
+          "Every 10 meters of water adds about 1 atmosphere of pressure."
+        </p>
+        <p style={{ fontSize: '12px', color: colors.textMuted, marginTop: '8px', marginBottom: 0 }}>— Diving Physics</p>
+      </div>
+
+      {/* CTA */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); completePhase(); }}
-        className="group px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-lg font-semibold rounded-2xl hover:from-cyan-500 hover:to-blue-500 transition-all duration-300 shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] flex items-center gap-2"
+        onClick={() => goToPhase('predict')}
+        style={{ zIndex: 10, padding: '16px 40px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', boxShadow: `0 8px 32px ${colors.primary}40`, touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
       >
-        Discover the Science
-        <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
-        </svg>
+        Discover Why →
       </button>
 
-      {/* Subtle Hint */}
-      <p className="mt-4 text-slate-500 text-sm">
-        Tap to begin your exploration
+      <div style={{ display: 'flex', gap: '16px', marginTop: '24px' }}>
+        {[{ icon: '⏱', text: '5 min' }, { icon: '🧪', text: 'Lab' }, { icon: '📝', text: 'Quiz' }].map((f, i) => (
+          <span key={i} style={{ fontSize: '12px', color: colors.textMuted }}>{f.icon} {f.text}</span>
+        ))}
+      </div>
+    </div>
+  );
+
+  // Predict Phase
+  const renderPredict = () => {
+    const options = [
+      { id: 'cold', label: 'Water gets colder and denser', desc: 'Temperature changes with depth', icon: '❄️' },
+      { id: 'weight', label: 'Weight of water above pushes down', desc: 'More water = more weight', icon: '⬇️' },
+      { id: 'gravity', label: 'Gravity is stronger at depth', desc: 'Gravity pulls harder below', icon: '🌍' }
+    ];
+
+    return (
+      <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '560px', margin: '0 auto' }}>
+        <p style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px' }}>Step 2 • Make Your Prediction</p>
+        <h2 style={{ fontSize: isMobile ? '24px' : '28px', fontWeight: 700, color: colors.textPrimary, marginBottom: '8px', lineHeight: 1.2 }}>Why Does Pressure Increase With Depth?</h2>
+        <p style={{ fontSize: '15px', color: colors.textSecondary, marginBottom: '28px', lineHeight: 1.5 }}>What causes the crushing pressure deep underwater?</p>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '28px' }}>
+          {options.map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => { if (prediction !== opt.id) { playSound('click'); setPrediction(opt.id); emit('prediction_made', { prediction: opt.id }); } }}
+              style={{ zIndex: 10, display: 'flex', alignItems: 'center', gap: '16px', padding: '16px 20px', textAlign: 'left', background: prediction === opt.id ? colors.successBg : colors.bgSurface, border: `2px solid ${prediction === opt.id ? colors.success : 'transparent'}`, borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+            >
+              <span style={{ fontSize: '28px' }}>{opt.icon}</span>
+              <div style={{ flex: 1 }}>
+                <p style={{ color: colors.textPrimary, fontWeight: 600, fontSize: '15px', margin: 0 }}>{opt.label}</p>
+                <p style={{ color: colors.textTertiary, fontSize: '13px', margin: '4px 0 0' }}>{opt.desc}</p>
+              </div>
+              {prediction === opt.id && <span style={{ color: colors.success, fontSize: '20px' }}>✓</span>}
+            </button>
+          ))}
+        </div>
+
+        {prediction && (
+          <button
+            onClick={() => goToPhase('play')}
+            style={{ zIndex: 10, width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+          >
+            Explore the Depths →
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  // Play Phase
+  const renderPlay = () => (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ padding: isMobile ? '16px 20px' : '20px 32px', borderBottom: `1px solid ${colors.bgHover}`, flexShrink: 0, background: colors.bgSurface }}>
+        <p style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em', textTransform: 'uppercase', margin: '0 0 8px' }}>Step 3 • Interactive Lab</p>
+        <h1 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary, margin: '0 0 4px' }}>PRESSURE vs DEPTH</h1>
+        <p style={{ fontSize: isMobile ? '14px' : '16px', color: colors.textSecondary, margin: 0 }}>
+          Adjust the depth slider and watch pressure change in real-time
+        </p>
+      </div>
+
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
+        {/* Visualization */}
+        <div style={{ padding: isMobile ? '20px' : '28px', background: colors.bgDeep }}>
+          <div style={{ maxWidth: '500px', margin: '0 auto', background: colors.bgSurface, borderRadius: '16px', padding: '16px', border: `1px solid ${colors.bgHover}` }}>
+            {renderPressureTank()}
+          </div>
+        </div>
+
+        {/* Controls */}
+        <div style={{ padding: isMobile ? '20px' : '28px', background: colors.bgSurface, borderTop: `1px solid ${colors.bgHover}`, borderBottom: `1px solid ${colors.bgHover}` }}>
+          <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+            {/* Depth slider */}
+            <div style={{ marginBottom: '20px' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '8px' }}>
+                <span style={{ fontSize: '14px', fontWeight: 600, color: colors.textSecondary }}>Depth</span>
+                <span style={{ fontSize: '14px', fontWeight: 700, color: colors.primary }}>{depth} meters</span>
+              </div>
+              <input
+                type="range"
+                min="0"
+                max="50"
+                value={depth}
+                onChange={(e) => { setDepth(Number(e.target.value)); playSound('bubble'); }}
+                style={{ width: '100%', height: '8px', borderRadius: '4px', background: colors.bgElevated, cursor: 'pointer' }}
+              />
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '4px' }}>
+                <span style={{ fontSize: '11px', color: colors.textMuted }}>Surface</span>
+                <span style={{ fontSize: '11px', color: colors.textMuted }}>50m</span>
+              </div>
+            </div>
+
+            {/* Fluid selector */}
+            <div style={{ marginBottom: '20px' }}>
+              <span style={{ fontSize: '14px', fontWeight: 600, color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>Fluid Type</span>
+              <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
+                {[
+                  { value: 1000, label: 'Fresh Water' },
+                  { value: 1025, label: 'Salt Water' },
+                  { value: 13600, label: 'Mercury' }
+                ].map(fluid => (
+                  <button
+                    key={fluid.value}
+                    onClick={() => { setFluidDensity(fluid.value); playSound('click'); }}
+                    style={{ zIndex: 10, padding: '10px 16px', fontSize: '13px', fontWeight: 600, background: fluidDensity === fluid.value ? colors.primary : colors.bgElevated, color: fluidDensity === fluid.value ? '#fff' : colors.textSecondary, border: 'none', borderRadius: '8px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+                  >
+                    {fluid.label}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Toggle pressure arrows */}
+            <button
+              onClick={() => setShowPressureArrows(!showPressureArrows)}
+              style={{ zIndex: 10, width: '100%', padding: '12px', fontSize: '14px', fontWeight: 600, background: showPressureArrows ? colors.success : colors.bgElevated, color: showPressureArrows ? '#fff' : colors.textSecondary, border: 'none', borderRadius: '8px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+            >
+              {showPressureArrows ? '● Pressure Arrows ON' : '○ Pressure Arrows OFF'}
+            </button>
+          </div>
+        </div>
+
+        {/* Key observation */}
+        <div style={{ padding: isMobile ? '20px' : '28px', background: colors.bgDeep }}>
+          <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+            <div style={{ background: colors.successBg, border: `1px solid ${colors.success}40`, borderRadius: '12px', padding: '16px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '15px', margin: 0, lineHeight: 1.6 }}>
+                <strong style={{ color: colors.success }}>Key Insight:</strong> Pressure acts <strong>equally in all directions</strong> at any depth. Notice how the arrows point inward from all sides!
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div style={{ padding: isMobile ? '14px 20px' : '18px 32px', borderTop: `1px solid ${colors.bgHover}`, flexShrink: 0, background: colors.bgSurface }}>
+        <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+          <button
+            onClick={() => goToPhase('review')}
+            style={{ zIndex: 10, width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+          >
+            Learn the Equation →
+          </button>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Review Phase
+  const renderReview = () => (
+    <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '560px', margin: '0 auto' }}>
+      <p style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px' }}>Step 4 • The Science</p>
+      <h2 style={{ fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: colors.textPrimary, marginBottom: '20px' }}>The Hydrostatic Equation</h2>
+
+      {/* Equation card */}
+      <div style={{ background: `linear-gradient(135deg, ${colors.primary}20 0%, ${colors.secondary}20 100%)`, borderRadius: '16px', padding: '24px', marginBottom: '24px', textAlign: 'center' }}>
+        <p style={{ fontSize: '36px', fontWeight: 700, color: colors.primary, fontFamily: 'monospace', margin: '0 0 8px' }}>P = ρgh</p>
+        <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0 }}>Hydrostatic Pressure Equation</p>
+      </div>
+
+      {/* Variable explanations */}
+      <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
+        {[
+          { symbol: 'P', name: 'Pressure', unit: 'Pascals (Pa)', color: colors.primary },
+          { symbol: 'ρ', name: 'Fluid Density', unit: 'kg/m³', color: colors.warning },
+          { symbol: 'g', name: 'Gravity', unit: '9.81 m/s²', color: colors.success },
+          { symbol: 'h', name: 'Depth', unit: 'meters (m)', color: colors.accent }
+        ].map(v => (
+          <div key={v.symbol} style={{ display: 'flex', alignItems: 'center', gap: '16px', background: colors.bgSurface, borderRadius: '12px', padding: '14px 18px' }}>
+            <span style={{ fontSize: '28px', fontWeight: 700, fontFamily: 'monospace', color: v.color, width: '36px', textAlign: 'center' }}>{v.symbol}</span>
+            <div>
+              <p style={{ color: colors.textPrimary, fontWeight: 600, fontSize: '15px', margin: 0 }}>{v.name}</p>
+              <p style={{ color: colors.textMuted, fontSize: '13px', margin: '2px 0 0' }}>{v.unit}</p>
+            </div>
+          </div>
+        ))}
+      </div>
+
+      {/* Total pressure note */}
+      <div style={{ background: colors.warningBg, border: `1px solid ${colors.warning}40`, borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+        <p style={{ color: colors.warning, fontWeight: 700, margin: '0 0 8px' }}>Don't Forget Atmospheric Pressure!</p>
+        <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+          <strong>P<sub>total</sub> = P<sub>atm</sub> + ρgh</strong><br />
+          At the surface, you already have 1 atm (101,325 Pa) pressing on you!
+        </p>
+      </div>
+
+      {/* Quick reference */}
+      <div style={{ background: colors.bgSurface, borderRadius: '12px', padding: '16px', marginBottom: '24px' }}>
+        <p style={{ color: colors.textTertiary, fontWeight: 600, margin: '0 0 12px' }}>Quick Reference (Water)</p>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '8px' }}>
+          {[
+            { depth: '0m', atm: '1 atm' },
+            { depth: '10m', atm: '2 atm' },
+            { depth: '30m', atm: '4 atm' },
+            { depth: '100m', atm: '11 atm' }
+          ].map(r => (
+            <div key={r.depth} style={{ textAlign: 'center', padding: '10px', background: colors.bgElevated, borderRadius: '8px' }}>
+              <p style={{ color: colors.primary, fontWeight: 700, fontSize: '14px', margin: 0 }}>{r.depth}</p>
+              <p style={{ color: colors.textMuted, fontSize: '11px', margin: '4px 0 0' }}>{r.atm}</p>
+            </div>
+          ))}
+        </div>
+      </div>
+
+      <p style={{ textAlign: 'center', fontSize: '14px', color: colors.textMuted, marginBottom: '24px' }}>
+        Your prediction: {prediction === 'weight' ? '✅ Correct!' : '🤔 Now you understand!'}
       </p>
+
+      <button
+        onClick={() => goToPhase('twist_predict')}
+        style={{ zIndex: 10, width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+      >
+        A Surprising Paradox →
+      </button>
     </div>
   );
 
-  const renderPhase1 = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-6`}>
-        Make Your Prediction
-      </h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <p className="text-lg text-slate-300 mb-4">
-          Why does pressure increase as you go deeper in water?
+  // Twist Predict Phase
+  const renderTwistPredict = () => {
+    const options = [
+      { id: 'wide', label: 'Wide container (most water)', desc: 'More volume = more pressure?' },
+      { id: 'narrow', label: 'Narrow container (least water)', desc: 'Concentrated column?' },
+      { id: 'equal', label: 'All equal pressure', desc: 'Only depth matters?' }
+    ];
+
+    return (
+      <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '560px', margin: '0 auto' }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 12px', background: colors.warningBg, borderRadius: '6px', marginBottom: '16px' }}>
+          <span style={{ fontSize: '14px' }}>🌀</span>
+          <span style={{ fontSize: '11px', color: colors.warning, fontWeight: 600 }}>TWIST: The Paradox!</span>
+        </div>
+
+        <h2 style={{ fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: colors.warning, marginBottom: '8px' }}>Different Shapes, Same Height</h2>
+        <p style={{ fontSize: '15px', color: colors.textSecondary, marginBottom: '24px' }}>Three containers with vastly different volumes, but filled to the same height. Which has more pressure at the bottom?</p>
+
+        {/* Visual */}
+        <div style={{ background: colors.bgSurface, borderRadius: '16px', padding: '16px', marginBottom: '24px' }}>
+          {renderContainerComparison()}
+        </div>
+
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+          {options.map(opt => (
+            <button
+              key={opt.id}
+              onClick={() => { if (twistPrediction !== opt.id) { playSound('click'); setTwistPrediction(opt.id); } }}
+              style={{ zIndex: 10, padding: '16px 20px', textAlign: 'left', background: twistPrediction === opt.id ? colors.warningBg : colors.bgSurface, border: `2px solid ${twistPrediction === opt.id ? colors.warning : 'transparent'}`, borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+            >
+              <p style={{ color: colors.textPrimary, fontWeight: 600, fontSize: '15px', margin: 0 }}>{opt.label}</p>
+              <p style={{ color: colors.textTertiary, fontSize: '13px', margin: '4px 0 0' }}>{opt.desc}</p>
+            </button>
+          ))}
+        </div>
+
+        {twistPrediction && (
+          <button
+            onClick={() => goToPhase('twist_play')}
+            style={{ zIndex: 10, width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+          >
+            Test Your Prediction →
+          </button>
+        )}
+      </div>
+    );
+  };
+
+  // Twist Play Phase
+  const renderTwistPlay = () => (
+    <div style={{ height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' }}>
+      <div style={{ padding: isMobile ? '16px 20px' : '20px 32px', borderBottom: `1px solid ${colors.bgHover}`, flexShrink: 0, background: colors.bgSurface }}>
+        <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '4px 12px', background: colors.warningBg, borderRadius: '6px', marginBottom: '8px' }}>
+          <span style={{ fontSize: '14px' }}>🌀</span>
+          <span style={{ fontSize: '11px', color: colors.warning, fontWeight: 600 }}>TWIST EXPERIMENT</span>
+        </div>
+        <h1 style={{ fontSize: isMobile ? '22px' : '28px', fontWeight: 700, color: colors.textPrimary, margin: '0 0 4px' }}>CONTAINER COMPARISON</h1>
+        <p style={{ fontSize: isMobile ? '14px' : '16px', color: colors.textSecondary, margin: 0 }}>
+          Click each container to measure pressure at the bottom
         </p>
-        <svg width={isMobile ? 280 : 340} height={140} className="mx-auto">
-          <rect width={isMobile ? 280 : 340} height="140" fill="#0f172a" rx="8" />
-          <rect x={(isMobile ? 280 : 340)/2 - 40} y="20" width="80" height="90" fill="#3b82f6" opacity="0.5" rx="4" />
-          <text x={(isMobile ? 280 : 340)/2} y="50" textAnchor="middle" fill="#ffffff" fontSize="11">Water above</text>
-          <text x={(isMobile ? 280 : 340)/2} y="68" textAnchor="middle" fill="#ffffff" fontSize="11">pushes down</text>
-          <line x1={(isMobile ? 280 : 340)/2} y1="75" x2={(isMobile ? 280 : 340)/2} y2="105" stroke="#22c55e" strokeWidth="3" markerEnd="url(#predArrowGreen)" />
-          <text x={(isMobile ? 280 : 340)/2} y="130" textAnchor="middle" fill="#94a3b8" fontSize="10">More depth = More weight = More pressure</text>
-          <defs>
-            <marker id="predArrowGreen" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
-              <path d="M0,0 L8,4 L0,8 z" fill="#22c55e" />
-            </marker>
-          </defs>
-        </svg>
       </div>
-      <div className="grid gap-3 w-full max-w-md">
-        {[
-          { id: 'A', text: 'Water gets colder and denser at depth' },
-          { id: 'B', text: 'The weight of water above pushes down' },
-          { id: 'C', text: 'Gravity is stronger at greater depths' },
-          { id: 'D', text: 'Light pressure adds to water pressure' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
-            disabled={showPredictionResult}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showPredictionResult && prediction === option.id
-                ? option.id === 'B'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionResult && option.id === 'B'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
+
+      <div style={{ flex: 1, minHeight: 0, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch', touchAction: 'pan-y' }}>
+        <div style={{ padding: isMobile ? '20px' : '28px', background: colors.bgDeep }}>
+          <div style={{ maxWidth: '500px', margin: '0 auto', background: colors.bgSurface, borderRadius: '16px', padding: '16px', border: `1px solid ${colors.bgHover}` }}>
+            {renderContainerComparison()}
+          </div>
+        </div>
+
+        <div style={{ padding: isMobile ? '20px' : '28px', background: colors.bgSurface, borderTop: `1px solid ${colors.bgHover}`, borderBottom: `1px solid ${colors.bgHover}` }}>
+          <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+            <p style={{ fontSize: '14px', fontWeight: 600, color: colors.textSecondary, marginBottom: '16px' }}>Select a container to measure:</p>
+            <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', flexWrap: 'wrap' }}>
+              {['Wide (1000L)', 'Medium (100L)', 'Narrow (1L)'].map((label, i) => (
+                <button
+                  key={i}
+                  onClick={() => {
+                    setSelectedContainer(i);
+                    setExperimentCount(c => c + 1);
+                    playSound('success');
+                  }}
+                  style={{ zIndex: 10, padding: '14px 24px', fontSize: '14px', fontWeight: 600, background: selectedContainer === i ? colors.primary : colors.bgElevated, color: selectedContainer === i ? '#fff' : colors.textSecondary, border: 'none', borderRadius: '10px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
+
+            {selectedContainer !== null && (
+              <div style={{ marginTop: '20px', padding: '16px', background: colors.successBg, border: `1px solid ${colors.success}40`, borderRadius: '12px', textAlign: 'center' }}>
+                <p style={{ color: colors.success, fontWeight: 700, fontSize: '18px', margin: '0 0 8px' }}>
+                  Pressure: {(1000 * 9.81 * 0.8 / 1000).toFixed(1)} kPa
+                </p>
+                <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>
+                  Same as the other containers!
+                </p>
+              </div>
+            )}
+
+            <p style={{ textAlign: 'center', fontSize: '13px', color: colors.textMuted, margin: '16px 0 0' }}>
+              Measurements: {experimentCount} (try all 3)
+            </p>
+          </div>
+        </div>
+
+        <div style={{ padding: isMobile ? '20px' : '28px', background: colors.bgDeep }}>
+          <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+            <div style={{ background: colors.warningBg, border: `1px solid ${colors.warning}40`, borderRadius: '12px', padding: '16px' }}>
+              <p style={{ color: colors.warning, fontWeight: 700, margin: '0 0 8px' }}>The Hydrostatic Paradox!</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, lineHeight: 1.6 }}>
+                Despite huge differences in volume, all containers have <strong>identical pressure</strong> at the bottom because they have the same <strong>height</strong>!
+              </p>
+            </div>
+          </div>
+        </div>
       </div>
-      {showPredictionResult && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-md">
-          <p className={`font-semibold ${prediction === 'B' ? 'text-emerald-400' : 'text-amber-400'}`}>
-            {prediction === 'B'
-              ? '✓ Correct! The weight of water above creates hydrostatic pressure.'
-              : '✗ Not quite. Think about what physically pushes on you underwater.'}
-          </p>
-          <button
-            onMouseDown={(e) => { e.preventDefault(); completePhase(); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all"
-          >
-            Explore the Physics →
-          </button>
+
+      {experimentCount >= 3 && (
+        <div style={{ padding: isMobile ? '14px 20px' : '18px 32px', borderTop: `1px solid ${colors.bgHover}`, flexShrink: 0, background: colors.bgSurface }}>
+          <div style={{ maxWidth: '500px', margin: '0 auto' }}>
+            <button
+              onClick={() => goToPhase('twist_review')}
+              style={{ zIndex: 10, width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+            >
+              Understand the Paradox →
+            </button>
+          </div>
         </div>
       )}
     </div>
   );
 
-  const renderPhase2 = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-4`}>
-        Hydrostatic Pressure Lab
-      </h2>
+  // Twist Review Phase
+  const renderTwistReview = () => (
+    <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '560px', margin: '0 auto' }}>
+      <p style={{ fontSize: '11px', fontWeight: 600, color: colors.warning, letterSpacing: '0.05em', textTransform: 'uppercase', marginBottom: '8px' }}>Step 7 • Deep Understanding</p>
+      <h2 style={{ fontSize: isMobile ? '22px' : '26px', fontWeight: 700, color: colors.warning, marginBottom: '20px' }}>Why Shape Doesn't Matter</h2>
 
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
-        {renderPressureTank(isMobile ? 340 : 420, isMobile ? 280 : 320)}
-      </div>
-
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-4">
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-sm text-slate-300 mb-2 block">Depth: {depth} m</label>
-          <input
-            type="range"
-            min="0"
-            max="50"
-            value={depth}
-            onChange={(e) => handleDepthChange(Number(e.target.value))}
-            className="w-full"
-          />
-        </div>
-        <div className="bg-slate-700/50 rounded-xl p-4">
-          <label className="text-sm text-slate-300 mb-2 block">Fluid Type</label>
-          <select
-            value={fluidDensity}
-            onChange={(e) => handleFluidChange(Number(e.target.value))}
-            className="w-full bg-slate-600 text-white p-2 rounded-lg"
-          >
-            <option value={1000}>Fresh Water (1,000 kg/m³)</option>
-            <option value={1025}>Salt Water (1,025 kg/m³)</option>
-            <option value={13600}>Mercury (13,600 kg/m³)</option>
-            <option value={789}>Ethanol (789 kg/m³)</option>
-          </select>
-        </div>
-      </div>
-
-      <button
-        onMouseDown={(e) => { e.preventDefault(); setShowPressureArrows(!showPressureArrows); }}
-        className={`px-4 py-2 rounded-xl font-semibold mb-4 transition-all ${
-          showPressureArrows
-            ? 'bg-cyan-600 hover:bg-cyan-500 text-white'
-            : 'bg-slate-700 hover:bg-slate-600 text-slate-200'
-        }`}
-      >
-        {showPressureArrows ? 'Hide Pressure Arrows' : 'Show Pressure Arrows'}
-      </button>
-
-      <div className="bg-gradient-to-r from-cyan-900/30 to-blue-900/30 rounded-xl p-4 max-w-2xl">
-        <h3 className="text-cyan-400 font-bold mb-2">Key Observations:</h3>
-        <ul className="text-slate-300 text-sm space-y-1">
-          <li>• Pressure increases <span className="text-cyan-400">linearly</span> with depth</li>
-          <li>• Pressure acts <span className="text-amber-400">equally in all directions</span> at any point</li>
-          <li>• Denser fluids create <span className="text-emerald-400">higher pressure</span> at same depth</li>
-          <li>• Every 10m of water adds approximately <span className="text-cyan-400">1 atmosphere</span></li>
-        </ul>
-      </div>
-
-      <button
-        onMouseDown={(e) => { e.preventDefault(); completePhase(); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all"
-      >
-        Learn the Formula →
-      </button>
-    </div>
-  );
-
-  const renderPhase3 = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-6`}>
-        The Hydrostatic Equation
-      </h2>
-
-      <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/40 rounded-2xl p-6 max-w-2xl mb-6">
-        <div className="bg-slate-800/50 p-6 rounded-xl mb-6 text-center">
-          <p className="text-4xl font-mono text-cyan-400 font-bold mb-2">P = ρgh</p>
-          <p className="text-slate-400">Hydrostatic Pressure Equation</p>
-        </div>
-
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-mono text-cyan-400 font-bold w-8">P</span>
-              <span className="text-slate-300">Pressure (Pascals)</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-mono text-amber-400 font-bold w-8">ρ</span>
-              <span className="text-slate-300">Fluid density (kg/m³)</span>
-            </div>
-          </div>
-          <div className="space-y-3">
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-mono text-emerald-400 font-bold w-8">g</span>
-              <span className="text-slate-300">Gravity (9.81 m/s²)</span>
-            </div>
-            <div className="flex items-center gap-3">
-              <span className="text-2xl font-mono text-purple-400 font-bold w-8">h</span>
-              <span className="text-slate-300">Depth below surface (m)</span>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl">
-        <h3 className="text-lg font-bold text-emerald-400 mb-4">Quick Reference:</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 text-center">
-          <div className="bg-slate-700/50 rounded-xl p-3">
-            <p className="text-cyan-400 font-bold">0m</p>
-            <p className="text-sm text-slate-400">1 atm</p>
-          </div>
-          <div className="bg-slate-700/50 rounded-xl p-3">
-            <p className="text-cyan-400 font-bold">10m</p>
-            <p className="text-sm text-slate-400">2 atm</p>
-          </div>
-          <div className="bg-slate-700/50 rounded-xl p-3">
-            <p className="text-cyan-400 font-bold">30m</p>
-            <p className="text-sm text-slate-400">4 atm</p>
-          </div>
-          <div className="bg-slate-700/50 rounded-xl p-3">
-            <p className="text-cyan-400 font-bold">11km</p>
-            <p className="text-sm text-slate-400">~1,100 atm!</p>
-          </div>
-        </div>
-        <p className="text-slate-400 text-sm mt-4 text-center">
-          Mariana Trench depth - pressure crushes most submarines!
+      {/* Key insight */}
+      <div style={{ background: colors.warningBg, borderRadius: '16px', padding: '24px', marginBottom: '24px', textAlign: 'center' }}>
+        <p style={{ fontSize: '20px', fontWeight: 700, color: colors.warning, margin: '0 0 12px' }}>P = ρgh</p>
+        <p style={{ color: colors.textSecondary, fontSize: '15px', margin: 0, lineHeight: 1.6 }}>
+          Notice: <strong>Volume doesn't appear!</strong><br />
+          Pressure depends ONLY on density, gravity, and <strong>height</strong>.
         </p>
       </div>
 
-      <button
-        onMouseDown={(e) => { e.preventDefault(); completePhase(); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all"
-      >
-        Discover the Paradox →
-      </button>
-    </div>
-  );
-
-  const renderPhase4 = () => (
-    <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-purple-400 mb-6`}>
-        The Hydrostatic Paradox
-      </h2>
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <svg width={isMobile ? 300 : 380} height={160} className="mx-auto">
-          <rect width={isMobile ? 300 : 380} height="160" fill="#0f172a" rx="8" />
-
-          {/* Wide tank */}
-          <rect x="30" y="40" width="80" height="80" fill="#3b82f6" opacity="0.5" rx="4" />
-          <text x="70" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">Wide tank</text>
-          <text x="70" y="25" textAnchor="middle" fill="#ffffff" fontSize="10">1000 L</text>
-
-          {/* Medium tube */}
-          <rect x={(isMobile ? 150 : 180) - 20} y="40" width="40" height="80" fill="#3b82f6" opacity="0.5" rx="4" />
-          <text x={isMobile ? 150 : 180} y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">Tube</text>
-          <text x={isMobile ? 150 : 180} y="25" textAnchor="middle" fill="#ffffff" fontSize="10">10 L</text>
-
-          {/* Thin tube */}
-          <rect x={(isMobile ? 240 : 300) - 5} y="40" width="10" height="80" fill="#3b82f6" opacity="0.5" rx="2" />
-          <text x={isMobile ? 240 : 300} y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">Thin tube</text>
-          <text x={isMobile ? 240 : 300} y="25" textAnchor="middle" fill="#ffffff" fontSize="10">0.1 L</text>
-
-          {/* Height indicator */}
-          <line x1={(isMobile ? 280 : 350)} y1="40" x2={(isMobile ? 280 : 350)} y2="120" stroke="#fbbf24" strokeWidth="2" />
-          <text x={(isMobile ? 285 : 360)} y="80" textAnchor="start" fill="#fbbf24" fontSize="10" transform={`rotate(90, ${isMobile ? 285 : 360}, 80)`}>Same height!</text>
-        </svg>
-        <p className="text-lg text-slate-300 mb-4 mt-4">
-          Three containers with vastly different water volumes, but filled to the same height.
+      {/* Pascal's barrel */}
+      <div style={{ background: colors.bgSurface, borderRadius: '16px', padding: '20px', marginBottom: '24px' }}>
+        <h3 style={{ color: colors.accent, fontWeight: 700, fontSize: '16px', margin: '0 0 12px' }}>Pascal's Famous Barrel (1646)</h3>
+        <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0, lineHeight: 1.6 }}>
+          Blaise Pascal attached a thin 10-meter tube to a sealed barrel. By adding just a few cups of water to the tube, he created enough pressure to <strong style={{ color: colors.error }}>burst the barrel!</strong>
         </p>
-        <p className="text-lg text-purple-400 font-medium">
-          Which has the highest pressure at the bottom?
+        <p style={{ color: colors.textMuted, fontSize: '13px', margin: '12px 0 0' }}>
+          The tiny volume of water created ~1 atm of extra pressure because of the height.
         </p>
       </div>
 
-      <div className="grid gap-3 w-full max-w-md">
-        {[
-          { id: 'A', text: 'Wide tank - most water means most pressure' },
-          { id: 'B', text: 'Thin tube - water is more concentrated' },
-          { id: 'C', text: 'All equal! Only height matters' },
-          { id: 'D', text: 'Cannot determine without exact volumes' }
-        ].map(option => (
-          <button
-            key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleParadoxPrediction(option.id); }}
-            disabled={showParadoxResult}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
-              showParadoxResult && paradoxPrediction === option.id
-                ? option.id === 'C'
-                  ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                  : 'bg-red-600/40 border-2 border-red-400'
-                : showParadoxResult && option.id === 'C'
-                ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-            }`}
-          >
-            <span className="font-bold text-white">{option.id}.</span>
-            <span className="text-slate-200 ml-2">{option.text}</span>
-          </button>
-        ))}
-      </div>
-
-      {showParadoxResult && (
-        <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-md">
-          <p className={`font-semibold ${paradoxPrediction === 'C' ? 'text-emerald-400' : 'text-amber-400'}`}>
-            {paradoxPrediction === 'C'
-              ? '✓ Exactly! This is the Hydrostatic Paradox!'
-              : '✗ Surprising, but pressure only depends on height!'}
-          </p>
-          <p className="text-slate-400 text-sm mt-2">
-            P = ρgh - volume doesn't appear in the equation! Only depth matters.
-          </p>
-          <button
-            onMouseDown={(e) => { e.preventDefault(); completePhase(); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all"
-          >
-            See Pascal's Proof →
-          </button>
+      {/* Why it works */}
+      <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
+        <div style={{ background: colors.successBg, border: `1px solid ${colors.success}40`, borderRadius: '12px', padding: '16px' }}>
+          <p style={{ color: colors.success, fontWeight: 700, margin: '0 0 4px' }}>✓ What Matters</p>
+          <p style={{ color: colors.textTertiary, fontSize: '13px', margin: 0 }}>The vertical height of the fluid column above the measurement point</p>
         </div>
-      )}
-    </div>
-  );
-
-  const renderPhase5 = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-purple-400 mb-6`}>
-        Pascal's Barrel Experiment (1646)
-      </h2>
-
-      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
-        <svg width={isMobile ? 280 : 350} height={200} className="mx-auto">
-          <rect width={isMobile ? 280 : 350} height="200" fill="#0f172a" rx="8" />
-
-          {/* Building with balcony */}
-          <rect x="20" y="30" width="60" height="160" fill="#64748b" />
-          <rect x="60" y="50" width="30" height="10" fill="#94a3b8" />
-
-          {/* Pascal on balcony */}
-          <circle cx="75" cy="45" r="8" fill="#fcd9b6" />
-          <rect x="70" y="53" width="10" height="15" fill="#3b82f6" />
-
-          {/* Thin tube from balcony to barrel */}
-          <line x1="75" y1="68" x2="75" y2="10" stroke="#60a5fa" strokeWidth="4" />
-          <rect x="73" y="10" width="4" height="10" fill="#3b82f6" opacity="0.8" />
-
-          {/* Barrel */}
-          <ellipse cx={(isMobile ? 200 : 250)} cy="175" rx="50" ry="15" fill="#8b4513" />
-          <rect x={(isMobile ? 150 : 200)} y="110" width="100" height="65" fill="#8b4513" />
-          <ellipse cx={(isMobile ? 200 : 250)} cy="110" rx="50" ry="15" fill="#a0522d" />
-
-          {/* Water in barrel */}
-          <ellipse cx={(isMobile ? 200 : 250)} cy="115" rx="45" ry="12" fill="#3b82f6" opacity="0.6" />
-
-          {/* Tube connecting to barrel */}
-          <path d={`M75,68 L75,100 L${isMobile ? 200 : 250},100 L${isMobile ? 200 : 250},110`}
-                fill="none" stroke="#60a5fa" strokeWidth="4" />
-
-          {/* Explosion marks */}
-          <text x={(isMobile ? 200 : 250)} y="145" textAnchor="middle" fill="#ef4444" fontSize="20">💥</text>
-
-          <text x={(isMobile ? 140 : 175)} y="195" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="bold">
-            BURST!
-          </text>
-        </svg>
-
-        <div className="mt-4 space-y-3 text-slate-300">
-          <p className="font-semibold text-purple-400">What happened:</p>
-          <ul className="text-sm space-y-2">
-            <li>• Pascal attached a thin 10-meter tube to a sealed barrel of water</li>
-            <li>• He climbed to a balcony and poured just a few cups of water into the tube</li>
-            <li>• The tiny volume of water created <span className="text-cyan-400">enormous pressure</span> due to the 10m height</li>
-            <li>• The barrel <span className="text-red-400 font-bold">BURST</span> from less than 1 liter of added water!</li>
-          </ul>
+        <div style={{ background: colors.errorBg, border: `1px solid ${colors.error}40`, borderRadius: '12px', padding: '16px' }}>
+          <p style={{ color: colors.error, fontWeight: 700, margin: '0 0 4px' }}>✗ What Doesn't Matter</p>
+          <p style={{ color: colors.textTertiary, fontSize: '13px', margin: 0 }}>Container shape, total volume, or cross-sectional area</p>
         </div>
       </div>
 
-      <div className="bg-gradient-to-r from-purple-900/30 to-pink-900/30 rounded-xl p-4 max-w-2xl">
-        <p className="text-emerald-400 font-semibold mb-2">The Lesson:</p>
-        <p className="text-slate-300 text-sm">
-          A 10m water column creates P = 1000 × 9.81 × 10 ≈ <span className="text-cyan-400">100 kPa ≈ 1 atm</span> of pressure -
-          regardless of how thin the tube is. Shape and volume are irrelevant; <span className="text-amber-400">only height matters!</span>
-        </p>
-      </div>
+      <p style={{ textAlign: 'center', fontSize: '14px', color: colors.textMuted, marginBottom: '24px' }}>
+        Your prediction: {twistPrediction === 'equal' ? '✅ You got it!' : '🤯 Mind-blowing, right?'}
+      </p>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); completePhase(); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all"
-      >
-        Apply the Knowledge →
-      </button>
-    </div>
-  );
-
-  const renderPhase6 = () => (
-    <div className="flex flex-col items-center p-6">
-      <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-6`}>
-        Summary: Hydrostatic Pressure
-      </h2>
-
-      <div className="grid md:grid-cols-2 gap-6 max-w-4xl mb-6">
-        <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/40 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">The Core Equation</h3>
-          <div className="text-4xl text-center text-white font-mono mb-4">P = ρgh</div>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• Pressure increases linearly with depth</li>
-            <li>• Every 10m of water ≈ +1 atmosphere</li>
-            <li>• Denser fluids = higher pressure</li>
-            <li>• Shape/volume don't matter - only height!</li>
-          </ul>
-        </div>
-
-        <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">Key Principles</h3>
-          <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• Pressure acts equally in all directions</li>
-            <li>• This is Pascal's Principle</li>
-            <li>• Hydrostatic Paradox: volume ≠ pressure</li>
-            <li>• Enables hydraulic force multiplication</li>
-          </ul>
-        </div>
-      </div>
-
-      <div className="bg-gradient-to-br from-emerald-900/40 to-teal-900/40 rounded-2xl p-6 max-w-4xl">
-        <h3 className="text-xl font-bold text-emerald-400 mb-4">Key Applications</h3>
-        <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <div className="text-center">
-            <div className="text-3xl mb-2">🏗️</div>
-            <p className="text-sm text-slate-300">Dam Design</p>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl mb-2">🤿</div>
-            <p className="text-sm text-slate-300">Diving Safety</p>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl mb-2">🗼</div>
-            <p className="text-sm text-slate-300">Water Towers</p>
-          </div>
-          <div className="text-center">
-            <div className="text-3xl mb-2">🚗</div>
-            <p className="text-sm text-slate-300">Hydraulics</p>
-          </div>
-        </div>
-      </div>
-
-      <button
-        onMouseDown={(e) => { e.preventDefault(); completePhase(); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all"
+        onClick={() => goToPhase('transfer')}
+        style={{ zIndex: 10, width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
       >
         See Real-World Applications →
       </button>
     </div>
   );
 
-  const renderPhase7 = () => {
+  // Transfer Phase
+  const renderTransfer = () => {
     const app = transferApps[activeApp];
+    const allDone = completedApps.every(Boolean);
+    const isLast = activeApp === transferApps.length - 1;
+
+    const handleContinue = () => {
+      const newCompleted = [...completedApps];
+      newCompleted[activeApp] = true;
+      setCompletedApps(newCompleted);
+      playSound('success');
+      emit('app_completed', { appNumber: activeApp + 1, appTitle: app.title });
+      if (!isLast) {
+        setActiveApp(activeApp + 1);
+      }
+    };
 
     return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-6`}>
-          Real-World Applications
-        </h2>
-
-        <div className="flex gap-2 mb-6 flex-wrap justify-center">
-          {transferApps.map((a, index) => (
-            <button
-              key={index}
-              onMouseDown={(e) => { e.preventDefault(); handleAppExplore(index); }}
-              className={`px-4 py-2 rounded-xl font-medium transition-all ${
-                activeApp === index
-                  ? `bg-gradient-to-r ${a.color} text-white`
-                  : completedApps.has(index)
-                  ? 'bg-emerald-900/30 text-emerald-400 border border-emerald-600'
-                  : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
-              }`}
-            >
-              {a.icon} {a.short}
-            </button>
-          ))}
+      <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+          <div>
+            <p style={{ fontSize: '11px', fontWeight: 600, color: colors.primary, letterSpacing: '0.05em', textTransform: 'uppercase', margin: '0 0 4px' }}>Step 8 • Real World</p>
+            <h2 style={{ fontSize: isMobile ? '20px' : '24px', fontWeight: 700, color: colors.textPrimary, margin: 0 }}>Applications</h2>
+          </div>
+          <span style={{ fontSize: '13px', color: colors.textMuted, background: colors.bgElevated, padding: '6px 12px', borderRadius: '20px' }}>
+            {completedApps.filter(Boolean).length}/4 done
+          </span>
         </div>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-3xl w-full">
-          <div className="flex items-center gap-4 mb-4">
-            <span className="text-5xl">{app.icon}</span>
-            <div>
-              <h3 className="text-xl font-bold text-white">{app.title}</h3>
-              <p className="text-slate-400">{app.tagline}</p>
-            </div>
-          </div>
+        {/* Tabs */}
+        <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', overflowX: 'auto', paddingBottom: '4px' }}>
+          {transferApps.map((a, i) => {
+            const isCompleted = completedApps[i];
+            const isCurrent = activeApp === i;
+            const isLocked = i > 0 && !completedApps[i - 1] && !completedApps[i];
 
-          <p className="text-slate-300 mb-4">{app.description}</p>
-
-          <div className={`bg-gradient-to-r ${app.color} bg-opacity-20 rounded-xl p-4 mb-4`}>
-            <h4 className="font-semibold text-white mb-2">Physics Connection:</h4>
-            <p className="text-slate-200 text-sm">{app.connection}</p>
-          </div>
-
-          <div className="grid md:grid-cols-2 gap-4 mb-4">
-            <div className="bg-slate-700/50 rounded-xl p-4">
-              <h4 className="font-semibold text-cyan-400 mb-2">How It Works:</h4>
-              <ul className="text-slate-300 text-sm space-y-1">
-                {app.howItWorks.slice(0, 3).map((item, i) => (
-                  <li key={i}>• {item}</li>
-                ))}
-              </ul>
-            </div>
-            <div className="bg-slate-700/50 rounded-xl p-4">
-              <h4 className="font-semibold text-amber-400 mb-2">Key Stats:</h4>
-              <div className="grid grid-cols-2 gap-2">
-                {app.stats.slice(0, 4).map((stat, i) => (
-                  <div key={i} className="text-center">
-                    <div className="text-lg font-bold text-white">{stat.value}</div>
-                    <div className="text-xs text-slate-400">{stat.label}</div>
-                  </div>
-                ))}
-              </div>
-            </div>
-          </div>
-
-          <div className="bg-slate-700/30 rounded-xl p-4">
-            <h4 className="font-semibold text-purple-400 mb-2">Industry Leaders:</h4>
-            <div className="flex flex-wrap gap-2">
-              {app.companies.map((company, i) => (
-                <span key={i} className="px-3 py-1 bg-slate-600/50 rounded-full text-sm text-slate-300">
-                  {company}
-                </span>
-              ))}
-            </div>
-          </div>
-        </div>
-
-        <div className="mt-4 flex items-center gap-2">
-          <span className="text-slate-400">Explored:</span>
-          <div className="flex gap-1">
-            {transferApps.map((_, i) => (
-              <div
+            return (
+              <button
                 key={i}
-                className={`w-3 h-3 rounded-full transition-all ${
-                  completedApps.has(i) ? 'bg-emerald-500' : 'bg-slate-600'
-                }`}
-              />
+                onClick={() => { if (!isLocked) setActiveApp(i); }}
+                disabled={isLocked}
+                style={{ zIndex: 10, display: 'flex', alignItems: 'center', gap: '6px', padding: '10px 16px', fontSize: '13px', fontWeight: 600, whiteSpace: 'nowrap', background: isCurrent ? colors.primary : isCompleted ? colors.successBg : colors.bgSurface, color: isCurrent ? '#fff' : isCompleted ? colors.success : isLocked ? colors.textMuted : colors.textSecondary, border: `1px solid ${isCurrent ? colors.primary : isCompleted ? colors.success + '40' : colors.bgHover}`, borderRadius: '10px', cursor: isLocked ? 'not-allowed' : 'pointer', opacity: isLocked ? 0.5 : 1, touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+              >
+                {isCompleted ? '✓' : isLocked ? '🔒' : a.icon}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* App Content */}
+        <div style={{ background: colors.bgSurface, borderRadius: '20px', padding: '24px', border: `1px solid ${colors.bgHover}` }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '16px', marginBottom: '16px' }}>
+            <div style={{ width: '56px', height: '56px', borderRadius: '14px', background: `${app.color}20`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px' }}>
+              {app.icon}
+            </div>
+            <div>
+              <h3 style={{ fontSize: '20px', fontWeight: 700, color: app.color, margin: 0 }}>{app.title}</h3>
+              <p style={{ fontSize: '13px', color: colors.textMuted, margin: '2px 0 0' }}>{app.subtitle}</p>
+            </div>
+          </div>
+
+          <p style={{ color: colors.textSecondary, fontSize: '15px', lineHeight: 1.6, marginBottom: '20px' }}>{app.desc}</p>
+
+          <div style={{ background: `${app.color}15`, borderRadius: '12px', padding: '14px', marginBottom: '20px' }}>
+            <p style={{ color: app.color, fontSize: '14px', margin: 0 }}><strong>Physics Connection:</strong> {app.connection}</p>
+          </div>
+
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '12px', marginBottom: '24px' }}>
+            {app.stats.map((s, i) => (
+              <div key={i} style={{ background: colors.bgDeep, borderRadius: '10px', padding: '12px', textAlign: 'center' }}>
+                <p style={{ color: colors.textPrimary, fontWeight: 700, fontSize: '16px', margin: '0 0 4px' }}>{s.val}</p>
+                <p style={{ color: colors.textMuted, fontSize: '11px', margin: 0 }}>{s.label}</p>
+              </div>
             ))}
           </div>
-          <span className="text-slate-400">{completedApps.size}/{transferApps.length}</span>
+
+          {!completedApps[activeApp] && (
+            <button
+              onClick={isLast && completedApps.slice(0, -1).every(Boolean) ? () => { handleContinue(); goToPhase('test'); } : handleContinue}
+              style={{ zIndex: 10, width: '100%', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${app.color} 0%, ${app.color}cc 100%)`, border: 'none', borderRadius: '12px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+            >
+              {isLast ? 'Complete & Take Test →' : `Continue →`}
+            </button>
+          )}
+
+          {completedApps[activeApp] && !allDone && (
+            <p style={{ textAlign: 'center', color: colors.success, fontSize: '14px', margin: 0 }}>✓ Completed! Select another tab above.</p>
+          )}
         </div>
 
-        {completedApps.size >= transferApps.length && (
+        {allDone && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); completePhase(); }}
-            className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all"
+            onClick={() => goToPhase('test')}
+            style={{ zIndex: 10, width: '100%', marginTop: '24px', padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', boxShadow: `0 8px 32px ${colors.primary}40`, touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
           >
             Take the Knowledge Test →
           </button>
@@ -1249,221 +1075,217 @@ const HydrostaticPressureRenderer: React.FC<Props> = ({
     );
   };
 
-  const renderPhase8 = () => {
-    const question = testQuestions[currentQuestion];
-    const progress = (answeredQuestions.size / testQuestions.length) * 100;
+  // Test Phase
+  const renderTest = () => {
+    const q = testQuestions[currentQuestion];
+    const answered = testAnswers[currentQuestion] !== null;
+    const allAnswered = testAnswers.every(a => a !== null);
 
     return (
-      <div className="flex flex-col items-center p-6">
-        <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-4`}>
-          Knowledge Test
-        </h2>
-
-        <div className="w-full max-w-2xl mb-6">
-          <div className="flex justify-between text-sm text-slate-400 mb-2">
-            <span>Question {currentQuestion + 1} of {testQuestions.length}</span>
-            <span>{correctAnswers} correct</span>
-          </div>
-          <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-            <div
-              className="h-full bg-gradient-to-r from-cyan-500 to-blue-500 transition-all duration-500"
-              style={{ width: `${progress}%` }}
-            />
-          </div>
+      <div style={{ padding: isMobile ? '24px 16px' : '32px 24px', maxWidth: '600px', margin: '0 auto' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+          <span style={{ fontSize: '13px', color: colors.textMuted, background: colors.bgElevated, padding: '6px 12px', borderRadius: '20px' }}>
+            Question {currentQuestion + 1} of 10
+          </span>
+          <span style={{ fontSize: '13px', color: colors.success, background: colors.successBg, padding: '6px 12px', borderRadius: '20px', fontWeight: 600 }}>
+            Score: {testScore}/{testAnswers.filter(a => a !== null).length}
+          </span>
         </div>
 
-        <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full mb-6">
-          <div className="bg-slate-700/50 rounded-xl p-4 mb-4">
-            <p className="text-sm text-cyan-400 font-medium mb-2">Scenario:</p>
-            <p className="text-slate-300">{question.scenario}</p>
+        <div style={{ height: '6px', background: colors.bgElevated, borderRadius: '3px', marginBottom: '24px', overflow: 'hidden' }}>
+          <div style={{ height: '100%', background: colors.primary, borderRadius: '3px', width: `${((currentQuestion + 1) / 10) * 100}%`, transition: 'width 0.3s' }} />
+        </div>
+
+        <div style={{ background: colors.bgSurface, borderRadius: '20px', padding: '24px', border: `1px solid ${colors.bgHover}` }}>
+          <h3 style={{ color: colors.textPrimary, fontSize: '17px', fontWeight: 600, marginBottom: '20px', lineHeight: 1.5 }}>{q.q}</h3>
+
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+            {q.opts.map((opt, i) => {
+              let bg = colors.bgElevated;
+              let border = 'transparent';
+              if (answered) {
+                if (opt.correct) { bg = colors.successBg; border = colors.success; }
+                else if (i === testAnswers[currentQuestion]) { bg = colors.errorBg; border = colors.error; }
+              }
+              return (
+                <button
+                  key={i}
+                  onClick={() => handleAnswer(i)}
+                  disabled={answered}
+                  style={{ zIndex: 10, padding: '14px 18px', textAlign: 'left', fontSize: '15px', background: bg, color: colors.textPrimary, border: `2px solid ${border}`, borderRadius: '12px', cursor: answered ? 'default' : 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+                >
+                  <span style={{ fontWeight: 600, marginRight: '10px', color: colors.textMuted }}>{String.fromCharCode(65 + i)}.</span>
+                  {opt.text}
+                </button>
+              );
+            })}
           </div>
 
-          <p className="text-lg text-white font-medium mb-4">{question.question}</p>
+          {showExplanation && (
+            <div style={{ marginTop: '20px', padding: '16px', background: colors.successBg, border: `1px solid ${colors.success}40`, borderRadius: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', margin: 0 }}>💡 {q.exp}</p>
+            </div>
+          )}
+        </div>
 
-          <div className="space-y-3">
-            {question.options.map((option, index) => (
-              <button
-                key={index}
-                onMouseDown={(e) => { e.preventDefault(); handleAnswerSelect(index); }}
-                disabled={answeredQuestions.has(currentQuestion)}
-                className={`w-full p-4 rounded-xl text-left transition-all ${
-                  showResult
-                    ? option.correct
-                      ? 'bg-emerald-600/40 border-2 border-emerald-400'
-                      : selectedAnswer === index
-                      ? 'bg-red-600/40 border-2 border-red-400'
-                      : 'bg-slate-700/30 border-2 border-transparent opacity-50'
-                    : selectedAnswer === index
-                    ? 'bg-cyan-600/40 border-2 border-cyan-400'
-                    : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
-                }`}
-              >
-                <span className="text-slate-200">{option.text}</span>
-              </button>
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
+          <button
+            onClick={() => { if (currentQuestion > 0) { setCurrentQuestion(currentQuestion - 1); setShowExplanation(testAnswers[currentQuestion - 1] !== null); } }}
+            disabled={currentQuestion === 0}
+            style={{ zIndex: 10, padding: '12px 24px', fontSize: '14px', fontWeight: 600, background: colors.bgElevated, color: currentQuestion === 0 ? colors.textMuted : colors.textSecondary, border: 'none', borderRadius: '10px', cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer', opacity: currentQuestion === 0 ? 0.5 : 1, touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+          >
+            ← Back
+          </button>
+
+          {currentQuestion < 9 ? (
+            <button
+              onClick={() => { setCurrentQuestion(currentQuestion + 1); setShowExplanation(testAnswers[currentQuestion + 1] !== null); }}
+              style={{ zIndex: 10, padding: '12px 24px', fontSize: '14px', fontWeight: 600, background: colors.bgElevated, color: colors.textSecondary, border: 'none', borderRadius: '10px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+            >
+              Next →
+            </button>
+          ) : allAnswered ? (
+            <button
+              onClick={() => { emit('game_completed', { score: testScore, total: 10, passed: testScore >= 7 }); goToPhase('mastery'); }}
+              style={{ zIndex: 10, padding: '12px 24px', fontSize: '14px', fontWeight: 600, background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, color: '#fff', border: 'none', borderRadius: '10px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+            >
+              Complete →
+            </button>
+          ) : (
+            <span style={{ fontSize: '13px', color: colors.textMuted, alignSelf: 'center' }}>Answer all to continue</span>
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // Mastery Phase
+  const renderMastery = () => {
+    const pct = Math.round((testScore / 10) * 100);
+    const passed = testScore >= 7;
+
+    const concepts = [
+      { icon: '📐', title: 'P = ρgh equation' },
+      { icon: '⬇️', title: 'Pressure increases with depth' },
+      { icon: '🌀', title: 'Hydrostatic Paradox' },
+      { icon: '↔️', title: 'Pressure acts equally in all directions' },
+      { icon: '🔄', title: 'Pascal\'s Principle' }
+    ];
+
+    return (
+      <div style={{ padding: isMobile ? '24px 16px' : '48px 24px', maxWidth: '500px', margin: '0 auto', textAlign: 'center' }}>
+        <div style={{ fontSize: '80px', marginBottom: '16px' }}>{passed ? '🌊' : '📚'}</div>
+        <h1 style={{ fontSize: isMobile ? '28px' : '36px', fontWeight: 700, color: colors.textPrimary, marginBottom: '8px' }}>
+          {passed ? 'Pressure Master!' : 'Keep Diving!'}
+        </h1>
+
+        <div style={{ fontSize: '48px', fontWeight: 700, color: passed ? colors.success : colors.warning, marginBottom: '8px' }}>{pct}%</div>
+        <p style={{ color: colors.textSecondary, marginBottom: '32px' }}>{testScore}/10 correct</p>
+
+        <div style={{ background: colors.bgSurface, borderRadius: '20px', padding: '24px', marginBottom: '32px', textAlign: 'left' }}>
+          <h3 style={{ fontSize: '16px', fontWeight: 700, color: colors.primary, marginBottom: '16px', textAlign: 'center' }}>
+            {passed ? 'Concepts Mastered' : 'Key Concepts'}
+          </h3>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {concepts.map((c, i) => (
+              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                <span style={{ fontSize: '20px' }}>{c.icon}</span>
+                <span style={{ color: colors.textSecondary, fontSize: '14px' }}>
+                  {passed && <span style={{ color: colors.success, marginRight: '6px' }}>✓</span>}
+                  {c.title}
+                </span>
+              </div>
             ))}
           </div>
-
-          {showResult && (
-            <div className={`mt-4 p-4 rounded-xl ${
-              question.options[selectedAnswer!]?.correct
-                ? 'bg-emerald-900/30 border border-emerald-600'
-                : 'bg-amber-900/30 border border-amber-600'
-            }`}>
-              <p className={`font-semibold mb-2 ${
-                question.options[selectedAnswer!]?.correct ? 'text-emerald-400' : 'text-amber-400'
-              }`}>
-                {question.options[selectedAnswer!]?.correct ? '✓ Correct!' : '✗ Not quite'}
-              </p>
-              <p className="text-slate-300 text-sm">{question.explanation}</p>
-            </div>
-          )}
         </div>
 
-        {showResult && (
-          <button
-            onMouseDown={(e) => { e.preventDefault(); handleNextQuestion(); }}
-            className="px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all"
-          >
-            {currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results →'}
-          </button>
-        )}
-      </div>
-    );
-  };
-
-  const renderPhase9 = () => {
-    const passed = correctAnswers >= 7;
-
-    return (
-      <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
-        <div className={`rounded-3xl p-8 max-w-2xl ${
-          passed
-            ? 'bg-gradient-to-br from-cyan-900/50 via-blue-900/50 to-purple-900/50'
-            : 'bg-gradient-to-br from-slate-800/50 to-slate-900/50'
-        }`}>
-          <div className="text-8xl mb-6">{passed ? '🌊' : '📚'}</div>
-          <h1 className={`text-3xl font-bold mb-4 ${passed ? 'text-white' : 'text-slate-300'}`}>
-            {passed ? 'Hydrostatic Pressure Master!' : 'Keep Learning!'}
-          </h1>
-
-          <div className="text-5xl font-bold text-cyan-400 mb-4">
-            {correctAnswers}/10
-          </div>
-
-          <p className="text-xl text-slate-300 mb-6">
-            {passed
-              ? "You've mastered the physics of fluid pressure! From deep-sea diving to hydraulic systems."
-              : "Review the concepts and try again. Understanding hydrostatic pressure is fundamental to fluid mechanics."}
-          </p>
-
-          {passed && (
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
-              <div className="bg-slate-800/50 rounded-xl p-4">
-                <div className="text-2xl mb-2">📐</div>
-                <p className="text-sm text-slate-300">P = ρgh</p>
-              </div>
-              <div className="bg-slate-800/50 rounded-xl p-4">
-                <div className="text-2xl mb-2">🎯</div>
-                <p className="text-sm text-slate-300">Pascal's Paradox</p>
-              </div>
-              <div className="bg-slate-800/50 rounded-xl p-4">
-                <div className="text-2xl mb-2">🏗️</div>
-                <p className="text-sm text-slate-300">Dam Engineering</p>
-              </div>
-              <div className="bg-slate-800/50 rounded-xl p-4">
-                <div className="text-2xl mb-2">🚗</div>
-                <p className="text-sm text-slate-300">Hydraulics</p>
-              </div>
-            </div>
-          )}
-
-          <div className="flex gap-4 justify-center">
-            <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setCurrentQuestion(0);
-                setSelectedAnswer(null);
-                setShowResult(false);
-                setCorrectAnswers(0);
-                setAnsweredQuestions(new Set());
-                goToPhase(passed ? 0 : 8);
-              }}
-              className={`px-6 py-3 rounded-xl font-semibold transition-all ${
-                passed
-                  ? 'bg-slate-700 hover:bg-slate-600 text-white'
-                  : 'bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white'
-              }`}
-            >
-              {passed ? '↺ Start Over' : 'Try Again'}
-            </button>
-            {!passed && (
+        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+          {passed ? (
+            <>
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
-                className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white rounded-xl font-semibold transition-all"
+                onClick={handleReturnToDashboard}
+                style={{ zIndex: 10, padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
               >
-                Review Concepts
+                🏠 Return to Dashboard
               </button>
-            )}
-          </div>
+              <button
+                onClick={() => goToPhase('hook')}
+                style={{ zIndex: 10, padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.textSecondary, background: 'transparent', border: `1px solid ${colors.bgHover}`, borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              >
+                🔬 Review Lesson
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => goToPhase('test')}
+                style={{ zIndex: 10, padding: '16px', fontSize: '16px', fontWeight: 600, color: '#fff', background: `linear-gradient(135deg, ${colors.warning} 0%, #ea580c 100%)`, border: 'none', borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent', userSelect: 'none' }}
+              >
+                ↺ Retake Test
+              </button>
+              <button
+                onClick={() => goToPhase('hook')}
+                style={{ zIndex: 10, padding: '16px', fontSize: '14px', fontWeight: 600, color: colors.textSecondary, background: 'transparent', border: `1px solid ${colors.bgHover}`, borderRadius: '14px', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              >
+                🔬 Review Lesson
+              </button>
+              <button
+                onClick={handleReturnToDashboard}
+                style={{ zIndex: 10, padding: '12px', fontSize: '13px', color: colors.textMuted, background: 'transparent', border: 'none', textDecoration: 'underline', cursor: 'pointer', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              >
+                Return to Dashboard
+              </button>
+            </>
+          )}
         </div>
       </div>
     );
   };
 
-  // =============================================
-  // MAIN RENDER
-  // =============================================
+  // Phase router
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderPhase0();
-      case 1: return renderPhase1();
-      case 2: return renderPhase2();
-      case 3: return renderPhase3();
-      case 4: return renderPhase4();
-      case 5: return renderPhase5();
-      case 6: return renderPhase6();
-      case 7: return renderPhase7();
-      case 8: return renderPhase8();
-      case 9: return renderPhase9();
-      default: return renderPhase0();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
+      default: return renderHook();
     }
   };
 
+  const currentIdx = phaseOrder.indexOf(phase);
+
   return (
-    <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
-      {/* Premium Background Layers */}
-      <div className="absolute inset-0 bg-gradient-to-br from-cyan-950/50 via-transparent to-blue-950/50" />
-      <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top,_var(--tw-gradient-stops))] from-cyan-900/20 via-transparent to-transparent" />
+    <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', background: colors.bgDeep, color: colors.textPrimary, fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif' }}>
+      {/* Background effects */}
+      <div style={{ position: 'absolute', inset: 0, background: `radial-gradient(ellipse at 30% 20%, ${colors.primary}08 0%, transparent 50%), radial-gradient(ellipse at 70% 80%, ${colors.secondary}05 0%, transparent 50%)`, pointerEvents: 'none' }} />
 
-      {/* Ambient Glow Circles */}
-      <div className="absolute top-1/4 -left-32 w-96 h-96 bg-cyan-500/10 rounded-full blur-3xl" />
-      <div className="absolute bottom-1/4 -right-32 w-96 h-96 bg-blue-500/10 rounded-full blur-3xl" />
-      <div className="absolute top-3/4 left-1/2 -translate-x-1/2 w-96 h-96 bg-teal-500/5 rounded-full blur-3xl" />
+      {/* Header */}
+      <div style={{ flexShrink: 0, display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 16px', background: `${colors.bgSurface}e6`, backdropFilter: 'blur(12px)', borderBottom: `1px solid ${colors.bgHover}`, position: 'relative', zIndex: 50 }}>
+        <span style={{ fontSize: '15px', fontWeight: 600, color: colors.textPrimary }}>Hydrostatic Pressure</span>
 
-      {/* Progress bar */}
-      <div className="fixed top-0 left-0 right-0 z-50 backdrop-blur-xl bg-slate-900/70 border-b border-white/10">
-        <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
-          <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-slate-400`}>
-            {isMobile ? 'Hydrostatic' : 'Hydrostatic Pressure'}
-          </span>
-          <div className="flex gap-1.5 items-center">
-            {phaseNames.map((_, i) => (
-              <button
-                key={i}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(i); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === i ? 'bg-cyan-500 w-6' : i < phase ? 'bg-cyan-500 w-2' : 'bg-slate-600 w-2'
-                }`}
-                title={phaseNames[i]}
-              />
-            ))}
-          </div>
-          <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-slate-500`}>{phaseNames[phase]}</span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          {phaseOrder.map((p, i) => (
+            <button
+              key={p}
+              onClick={() => { if (i <= currentIdx) goToPhase(p); }}
+              style={{ zIndex: 10, width: phase === p ? '24px' : '8px', height: '8px', borderRadius: '4px', border: 'none', background: phase === p ? colors.primary : i < currentIdx ? colors.success : colors.bgElevated, cursor: i <= currentIdx ? 'pointer' : 'default', transition: 'all 0.2s', touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              title={p}
+            />
+          ))}
         </div>
+
+        <span style={{ fontSize: '13px', fontWeight: 500, color: colors.primary }}>{currentIdx + 1}/10</span>
       </div>
 
-      {/* Main content */}
-      <div className="relative z-10 pt-14 pb-8">
+      {/* Content */}
+      <div style={{ flex: '1 1 0%', minHeight: 0, overflowY: 'auto', overflowX: 'hidden', WebkitOverflowScrolling: 'touch' }}>
         {renderPhase()}
       </div>
     </div>

@@ -1,3 +1,5 @@
+'use client';
+
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================================================
@@ -8,6 +10,24 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // Relationship: E = -dV/dr (field is negative gradient of potential)
 // Units: Volts (V) = Joules per Coulomb (J/C)
 // ============================================================================
+
+// Phase type - 10-phase structure per spec
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Scenario',
+  twist_play: 'Voltage Lab',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
+};
 
 type GameEventType =
   | 'phase_change'
@@ -56,17 +76,16 @@ interface SourceCharge {
 
 interface Props {
   onGameEvent?: (event: { type: GameEventType; data?: Record<string, unknown> }) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 const ElectricPotentialRenderer: React.FC<Props> = ({
   onGameEvent,
-  currentPhase = 0,
   onPhaseComplete
 }) => {
   // ==================== STATE ====================
-  const [phase, setPhase] = useState(currentPhase);
+  const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -76,6 +95,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppIndex, setActiveAppIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
+  const [testScore, setTestScore] = useState(0);
 
   // Simulation state
   const [sourceCharges, setSourceCharges] = useState<SourceCharge[]>([
@@ -84,16 +104,13 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
   const [testChargePos, setTestChargePos] = useState({ x: 300, y: 200 });
   const [isDragging, setIsDragging] = useState(false);
   const [showEquipotentials, setShowEquipotentials] = useState(true);
-  const [showFieldLines, setShowFieldLines] = useState(false);
   const [selectedConfig, setSelectedConfig] = useState<'single' | 'dipole' | 'parallel'>('single');
   const [plateVoltage, setPlateVoltage] = useState(100); // V for parallel plates
-  const [animating, setAnimating] = useState(false);
 
   // Constants
   const k = 8.99e9; // Coulomb's constant N⋅m²/C²
 
   // Refs
-  const navigationLockRef = useRef(false);
   const svgRef = useRef<SVGSVGElement>(null);
 
   // ==================== EFFECTS ====================
@@ -186,19 +203,15 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
   }, []);
 
   // ==================== NAVIGATION ====================
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('click');
+    const currentIndex = phaseOrder.indexOf(phase);
+    const newIndex = phaseOrder.indexOf(newPhase);
 
     setPhase(newPhase);
-    if (onPhaseComplete && newPhase > phase) {
+    if (onPhaseComplete && newIndex > currentIndex) {
       onPhaseComplete(phase);
     }
-
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
   }, [phase, onPhaseComplete, playSound]);
 
   // ==================== PHYSICS CALCULATIONS ====================
@@ -254,23 +267,12 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
     return { Ex, Ey, E };
   }, [sourceCharges, selectedConfig, plateVoltage]);
 
-  const calculateWork = useCallback((x1: number, y1: number, x2: number, y2: number, q: number): number => {
-    // W = q × ΔV = q × (V_initial - V_final)
-    const V1 = calculatePotential(x1, y1);
-    const V2 = calculatePotential(x2, y2);
-    const q_C = q * 1e-6;
-    return q_C * (V1 - V2);
-  }, [calculatePotential]);
-
   // Current potential and field at test charge
   const currentPotential = calculatePotential(testChargePos.x, testChargePos.y);
   const currentField = calculateField(testChargePos.x, testChargePos.y);
 
   // ==================== EVENT HANDLERS ====================
   const handlePrediction = useCallback((prediction: string) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'B' ? 'correct' : 'incorrect');
@@ -281,14 +283,9 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         data: { prediction, correct: prediction === 'B' }
       });
     }
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [onGameEvent, playSound]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'C' ? 'correct' : 'incorrect');
@@ -299,14 +296,9 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         data: { prediction, correct: prediction === 'C', twist: true }
       });
     }
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [onGameEvent, playSound]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;
@@ -320,14 +312,9 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         data: { questionIndex, answerIndex }
       });
     }
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [onGameEvent, playSound]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
 
@@ -337,8 +324,6 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         data: { appIndex, appTitle: transferApps[appIndex].title }
       });
     }
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [onGameEvent, playSound]);
 
   const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
@@ -521,7 +506,65 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
     },
     {
       icon: "⚡",
-      title: "Capacitors & Energy Storage",
+      title: "Defibrillators & Medical",
+      short: "Defibrillators",
+      tagline: "Life-saving voltage pulses",
+      description: "Defibrillators use high-voltage capacitors to deliver controlled electrical shocks that restore normal heart rhythm during cardiac emergencies.",
+      connection: "The capacitor stores energy U = ½CV², then releases it as a controlled voltage pulse. The potential difference drives current through the heart to reset electrical activity.",
+      howItWorks: [
+        "Capacitor charges to 1000-3000V over several seconds",
+        "Energy stored reaches 200-360 Joules",
+        "Discharge delivers current through chest in milliseconds",
+        "Potential difference drives synchronized depolarization of heart muscle"
+      ],
+      stats: [
+        { value: "1-3 kV", label: "Voltage" },
+        { value: "200-360 J", label: "Energy" },
+        { value: "10-20 ms", label: "Pulse Duration" },
+        { value: "30-50 A", label: "Peak Current" }
+      ],
+      examples: [
+        "AED devices in public spaces",
+        "Hospital defibrillators",
+        "Implantable cardioverter-defibrillators (ICDs)",
+        "Pacemakers with defibrillation capability"
+      ],
+      companies: ["Philips", "Medtronic", "Boston Scientific", "ZOLL"],
+      futureImpact: "Smaller, smarter devices with AI-guided shock delivery and wearable defibrillators for high-risk patients.",
+      color: "from-red-600 to-pink-600"
+    },
+    {
+      icon: "⚡",
+      title: "Van de Graaff Generators",
+      short: "Van de Graaff",
+      tagline: "Million-volt demonstrations",
+      description: "Van de Graaff generators use mechanical charge separation to create extremely high voltages, demonstrating electrostatic principles and powering particle accelerators.",
+      connection: "Charge is continuously transferred to a metal sphere, raising its potential V = kQ/r. The larger the sphere, the more charge it can hold at a given potential before breakdown.",
+      howItWorks: [
+        "Rubber belt picks up charge from lower electrode",
+        "Belt transports charge to hollow metal sphere",
+        "Charge accumulates on outer surface of sphere",
+        "Potential rises until limited by air breakdown (~3 MV/m)"
+      ],
+      stats: [
+        { value: "500 kV", label: "Teaching Model" },
+        { value: "5-15 MV", label: "Research Models" },
+        { value: "3 MV/m", label: "Air Breakdown" },
+        { value: "~100 μA", label: "Typical Current" }
+      ],
+      examples: [
+        "Physics classroom demonstrations",
+        "Tandem Van de Graaff accelerators",
+        "Nuclear physics research",
+        "X-ray generation for medical imaging"
+      ],
+      companies: ["National Electrostatics Corp", "HVEE", "MIT", "BNL"],
+      futureImpact: "Modern electrostatic accelerators enable nuclear medicine isotope production and materials analysis.",
+      color: "from-purple-600 to-violet-600"
+    },
+    {
+      icon: "💡",
+      title: "Capacitor Energy Storage",
       short: "Capacitors",
       tagline: "Storing charge at controlled potential",
       description: "Capacitors store electric potential energy by accumulating charge on conductive plates separated by an insulator, enabling rapid energy release in electronics.",
@@ -542,78 +585,20 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         "Camera flash capacitors",
         "Computer RAM memory cells",
         "Supercapacitor hybrid buses",
-        "Defibrillator charge storage"
+        "Power supply filtering"
       ],
       companies: ["Maxwell", "Murata", "Vishay", "TDK"],
       futureImpact: "Hybrid capacitor-battery systems enable regenerative braking in vehicles and grid-scale frequency regulation for renewable energy.",
       color: "from-yellow-600 to-amber-600"
-    },
-    {
-      icon: "🖥️",
-      title: "Electron Beam Technology",
-      short: "E-Beams",
-      tagline: "Accelerating electrons with potential",
-      description: "Electron beam systems use high voltage differences to accelerate electrons to precise energies for displays, welding, lithography, and scientific instruments.",
-      connection: "Electrons accelerated through potential difference V gain kinetic energy KE = eV. A 30kV potential gives electrons energies useful for welding; 100kV enables transmission electron microscopy.",
-      howItWorks: [
-        "Electrons are emitted from a heated cathode",
-        "High voltage accelerates electrons: KE = eV",
-        "Magnetic or electric fields focus and steer the beam",
-        "Controlled energy deposition at the target"
-      ],
-      stats: [
-        { value: "30-150kV", label: "E-beam Welding" },
-        { value: "200-300kV", label: "TEM Microscope" },
-        { value: "10-50kV", label: "Lithography" },
-        { value: "0.999c", label: "Near Light Speed" }
-      ],
-      examples: [
-        "Electron microscopes (SEM, TEM)",
-        "Semiconductor lithography",
-        "Electron beam welding",
-        "CRT displays (historical)"
-      ],
-      companies: ["JEOL", "FEI/Thermo Fisher", "Hitachi", "Carl Zeiss"],
-      futureImpact: "Advanced e-beam lithography enables sub-10nm chip manufacturing, while electron microscopy approaches atomic resolution for materials science.",
-      color: "from-blue-600 to-cyan-600"
-    },
-    {
-      icon: "💡",
-      title: "Photomultiplier Tubes",
-      short: "PMTs",
-      tagline: "Amplifying single photons",
-      description: "Photomultiplier tubes use cascading potential differences to amplify single-photon detection events into measurable electrical signals, enabling sensitive light detection.",
-      connection: "Each dynode stage is held at progressively higher potential, accelerating electrons between stages. The potential difference determines energy gain and secondary emission yield.",
-      howItWorks: [
-        "Photon strikes photocathode, releasing one electron",
-        "Electron accelerated by potential difference to first dynode",
-        "Impact releases multiple secondary electrons",
-        "Cascade through 10-14 dynode stages amplifies signal 10⁶-10⁸×"
-      ],
-      stats: [
-        { value: "10⁸", label: "Gain Factor" },
-        { value: "1-2kV", label: "Operating V" },
-        { value: "ns", label: "Response Time" },
-        { value: "1 photon", label: "Detection" }
-      ],
-      examples: [
-        "Medical PET/CT scanners",
-        "Neutrino detectors (Super-K)",
-        "Astronomy telescopes",
-        "Radiation detection"
-      ],
-      companies: ["Hamamatsu", "Photonis", "ET Enterprises", "Burle"],
-      futureImpact: "Silicon photomultipliers (SiPMs) are replacing traditional PMTs with solid-state alternatives, enabling compact medical imaging and quantum optics experiments.",
-      color: "from-purple-600 to-violet-600"
     }
   ];
 
   // ==================== SCORE CALCULATION ====================
-  const calculateScore = () => {
+  const calculateScore = useCallback(() => {
     return testAnswers.reduce((score, answer, index) => {
       return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
     }, 0);
-  };
+  }, [testAnswers, testQuestions]);
 
   // ==================== RENDER HELPERS ====================
   const formatVoltage = (v: number): string => {
@@ -754,7 +739,8 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
       {/* Premium CTA Button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
+        style={{ zIndex: 10 }}
         className="group mt-8 px-8 py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white text-lg font-semibold rounded-2xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300 shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] flex items-center gap-2"
       >
         Explore Electric Potential
@@ -820,7 +806,8 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
+            style={{ zIndex: 10 }}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
@@ -841,16 +828,17 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       {showPredictionFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Correct! The charge gains kinetic energy as it "falls" to lower potential!
+            Correct! The charge gains kinetic energy as it "falls" to lower potential!
           </p>
           <p className="text-slate-400 text-sm mt-2">
-            ΔKE = q × ΔV = q × (V_A - V_B) = q × 1000V. The potential energy converts to kinetic energy.
+            Delta KE = q x Delta V = q x (V_A - V_B) = q x 1000V. The potential energy converts to kinetic energy.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onClick={() => goToPhase('play')}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
           >
-            Explore the Simulation →
+            Explore the Simulation
           </button>
         </div>
       )}
@@ -872,10 +860,8 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         ].map(config => (
           <button
             key={config.id}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setSelectedConfig(config.id as 'single' | 'dipole' | 'parallel');
-            }}
+            onClick={() => setSelectedConfig(config.id as 'single' | 'dipole' | 'parallel')}
+            style={{ zIndex: 10 }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               selectedConfig === config.id
                 ? 'bg-amber-600 text-white'
@@ -970,7 +956,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
                 fontSize="18"
                 fontWeight="bold"
               >
-                {charge.q > 0 ? '+' : '−'}
+                {charge.q > 0 ? '+' : '-'}
               </text>
             </g>
           ))}
@@ -1028,7 +1014,8 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         {/* Controls */}
         <div className="mt-4 flex flex-wrap gap-2 justify-center">
           <button
-            onMouseDown={(e) => { e.preventDefault(); setShowEquipotentials(!showEquipotentials); }}
+            onClick={() => setShowEquipotentials(!showEquipotentials)}
+            style={{ zIndex: 10 }}
             className={`px-3 py-2 rounded-lg text-sm font-medium transition-all ${
               showEquipotentials ? 'bg-amber-600 text-white' : 'bg-slate-700 text-slate-300'
             }`}
@@ -1077,18 +1064,19 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         <h3 className="text-lg font-bold text-amber-400 mb-2">Key Insight</h3>
         <p className="text-slate-300 text-sm">
           <strong>Equipotential surfaces</strong> are always perpendicular to electric field lines.
-          Moving along an equipotential requires <strong>no work</strong> because ΔV = 0!
+          Moving along an equipotential requires <strong>no work</strong> because Delta V = 0!
         </p>
         <p className="text-cyan-400 text-sm mt-2">
-          V = kq/r for a point charge. Potential decreases as 1/r (slower than field's 1/r²).
+          V = kq/r for a point charge. Potential decreases as 1/r (slower than field's 1/r squared).
         </p>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        onClick={() => goToPhase('review')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
       >
-        Review the Concepts →
+        Review the Concepts
       </button>
     </div>
   );
@@ -1101,46 +1089,46 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-amber-400 mb-3">⚡ What is Electric Potential?</h3>
+          <h3 className="text-xl font-bold text-amber-400 mb-3">What is Electric Potential?</h3>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• <strong>V = W/q</strong>: Work per unit charge to move from infinity</li>
-            <li>• <strong>V = U/q</strong>: Potential energy per unit charge</li>
-            <li>• Measured in Volts (V) = Joules per Coulomb</li>
-            <li>• Positive charges create positive potential</li>
-            <li>• Only <strong>potential differences</strong> (ΔV) are physically meaningful</li>
+            <li><strong>V = W/q</strong>: Work per unit charge to move from infinity</li>
+            <li><strong>V = U/q</strong>: Potential energy per unit charge</li>
+            <li>Measured in Volts (V) = Joules per Coulomb</li>
+            <li>Positive charges create positive potential</li>
+            <li>Only <strong>potential differences</strong> (Delta V) are physically meaningful</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">🔋 Point Charge Potential</h3>
+          <h3 className="text-xl font-bold text-cyan-400 mb-3">Point Charge Potential</h3>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• <strong>V = kq/r</strong> for a point charge</li>
-            <li>• k = 8.99 × 10⁹ N⋅m²/C²</li>
-            <li>• Potential is a <strong>scalar</strong> (no direction)</li>
-            <li>• Potentials from multiple charges simply add</li>
-            <li>• V → 0 as r → ∞ (reference point at infinity)</li>
+            <li><strong>V = kq/r</strong> for a point charge</li>
+            <li>k = 8.99 x 10^9 N m^2/C^2</li>
+            <li>Potential is a <strong>scalar</strong> (no direction)</li>
+            <li>Potentials from multiple charges simply add</li>
+            <li>V approaches 0 as r approaches infinity (reference point at infinity)</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">🔄 Relationship to Electric Field</h3>
+          <h3 className="text-xl font-bold text-purple-400 mb-3">Relationship to Electric Field</h3>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• <strong>E = -dV/dr</strong>: Field is negative gradient of potential</li>
-            <li>• Field points from high V to low V</li>
-            <li>• For uniform field: <strong>E = V/d</strong></li>
-            <li>• Equipotentials ⊥ field lines (always)</li>
-            <li>• Closer equipotentials = stronger field</li>
+            <li><strong>E = -dV/dr</strong>: Field is negative gradient of potential</li>
+            <li>Field points from high V to low V</li>
+            <li>For uniform field: <strong>E = V/d</strong></li>
+            <li>Equipotentials are perpendicular to field lines (always)</li>
+            <li>Closer equipotentials = stronger field</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">💡 Energy & Work</h3>
+          <h3 className="text-xl font-bold text-emerald-400 mb-3">Energy and Work</h3>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• <strong>W = qΔV</strong>: Work done by field on charge</li>
-            <li>• <strong>U = qV</strong>: Potential energy of charge at V</li>
-            <li>• Positive charge gains KE moving to lower V</li>
-            <li>• Electron gains KE moving to higher V</li>
-            <li>• 1 eV = energy gained by e⁻ through 1V</li>
+            <li><strong>W = q Delta V</strong>: Work done by field on charge</li>
+            <li><strong>U = qV</strong>: Potential energy of charge at V</li>
+            <li>Positive charge gains KE moving to lower V</li>
+            <li>Electron gains KE moving to higher V</li>
+            <li>1 eV = energy gained by e- through 1V</li>
           </ul>
         </div>
       </div>
@@ -1157,7 +1145,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
             <div className="text-xs text-slate-500 mt-1">Field-potential</div>
           </div>
           <div className="bg-slate-900/50 rounded-lg p-3">
-            <div className="text-emerald-400 font-mono text-sm">W = qΔV</div>
+            <div className="text-emerald-400 font-mono text-sm">W = q Delta V</div>
             <div className="text-xs text-slate-500 mt-1">Work done</div>
           </div>
           <div className="bg-slate-900/50 rounded-lg p-3">
@@ -1168,10 +1156,11 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onClick={() => goToPhase('twist_predict')}
+        style={{ zIndex: 10 }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
-        Discover a Surprising Twist →
+        Discover a Surprising Twist
       </button>
     </div>
   );
@@ -1182,49 +1171,56 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         The Twist Challenge
       </h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+        <p className="text-lg text-slate-300 mb-4">
+          A 9V battery is connected to a circuit. You measure the potential at various points.
+        </p>
         <svg viewBox="0 0 300 200" className="w-full max-w-sm mx-auto mb-4">
-          {/* Hollow conductor */}
-          <ellipse cx="150" cy="100" rx="100" ry="80" fill="none" stroke="#f59e0b" strokeWidth="8" />
-          <ellipse cx="150" cy="100" rx="85" ry="65" fill="#1e293b" />
+          {/* Battery symbol */}
+          <rect x="50" y="60" width="10" height="80" fill="#ef4444" />
+          <rect x="70" y="75" width="10" height="50" fill="#3b82f6" />
 
-          {/* Charges on surface */}
-          {Array.from({ length: 12 }).map((_, i) => {
-            const angle = (i / 12) * 2 * Math.PI;
-            const x = 150 + 95 * Math.cos(angle);
-            const y = 100 + 75 * Math.sin(angle);
-            return (
-              <g key={i}>
-                <circle cx={x} cy={y} r="6" fill="#ef4444" />
-                <text x={x} y={y + 3} textAnchor="middle" fill="white" fontSize="8">+</text>
-              </g>
-            );
-          })}
+          {/* Wire connections */}
+          <line x1="55" y1="60" x2="55" y2="40" stroke="#f59e0b" strokeWidth="3" />
+          <line x1="55" y1="40" x2="250" y2="40" stroke="#f59e0b" strokeWidth="3" />
+          <line x1="250" y1="40" x2="250" y2="160" stroke="#f59e0b" strokeWidth="3" />
+          <line x1="250" y1="160" x2="55" y2="160" stroke="#f59e0b" strokeWidth="3" />
+          <line x1="75" y1="140" x2="75" y2="160" stroke="#f59e0b" strokeWidth="3" />
 
-          {/* Test point inside */}
-          <circle cx="150" cy="100" r="8" fill="#3b82f6" stroke="#fff" strokeWidth="2" />
-          <text x="150" y="103" textAnchor="middle" fill="white" fontSize="8">?</text>
+          {/* Resistor */}
+          <rect x="140" y="35" width="40" height="10" fill="#64748b" />
 
-          <text x="150" y="180" textAnchor="middle" fill="#94a3b8" fontSize="12">Charged hollow conductor</text>
+          {/* Labels */}
+          <text x="55" y="110" textAnchor="middle" fill="#ef4444" fontSize="10">+9V</text>
+          <text x="75" y="110" textAnchor="middle" fill="#3b82f6" fontSize="10">0V</text>
+          <text x="160" y="25" textAnchor="middle" fill="#64748b" fontSize="10">Resistor</text>
+
+          {/* Question marks at different points */}
+          <circle cx="100" cy="40" r="10" fill="#f59e0b" opacity="0.5" />
+          <text x="100" y="44" textAnchor="middle" fill="white" fontSize="12">A</text>
+
+          <circle cx="200" cy="40" r="10" fill="#f59e0b" opacity="0.5" />
+          <text x="200" y="44" textAnchor="middle" fill="white" fontSize="12">B</text>
+
+          <circle cx="200" cy="160" r="10" fill="#f59e0b" opacity="0.5" />
+          <text x="200" y="164" textAnchor="middle" fill="white" fontSize="12">C</text>
         </svg>
 
-        <p className="text-lg text-slate-300 mb-4">
-          A hollow metal sphere is charged to +10,000V on its outer surface. All the charge resides on the outside.
-        </p>
         <p className="text-lg text-cyan-400 font-medium">
-          What is the electric potential <strong>inside</strong> the hollow sphere?
+          What is the potential difference (voltage) across the resistor?
         </p>
       </div>
 
       <div className="grid gap-3 w-full max-w-xl">
         {[
-          { id: 'A', text: 'Zero volts (no charge inside means no potential)' },
-          { id: 'B', text: 'Higher than the surface (charge "concentrates" in center)' },
-          { id: 'C', text: 'Same as the surface (+10,000V everywhere inside)' },
-          { id: 'D', text: 'Varies with position (maximum at center)' }
+          { id: 'A', text: '0V - All points in a circuit have the same potential' },
+          { id: 'B', text: '4.5V - Half the battery voltage' },
+          { id: 'C', text: '9V - The full battery voltage appears across the resistor' },
+          { id: 'D', text: '18V - Voltage doubles through the resistor' }
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
+            style={{ zIndex: 10 }}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
@@ -1245,16 +1241,17 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       {showTwistFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Correct! The potential is constant throughout the interior!
+            Correct! The full 9V appears across the resistor in a simple circuit!
           </p>
           <p className="text-slate-400 text-sm mt-2">
-            Even though E = 0 inside, the potential equals the surface value everywhere inside. This is because V doesn't depend on E, but on the integral of E from infinity - and that's the same for all interior points!
+            In a series circuit with one resistor, all the voltage drop occurs across that resistor. The wires have negligible resistance, so there's no voltage drop along them.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onClick={() => goToPhase('twist_play')}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
           >
-            Explore This Further →
+            Explore Voltage in Circuits
           </button>
         </div>
       )}
@@ -1264,7 +1261,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
   const renderTwistPlay = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-purple-400 mb-4`}>
-        Potential Inside Conductors
+        Potential Difference in Circuits
       </h2>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
@@ -1272,76 +1269,85 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           {/* Background */}
           <rect x="0" y="0" width="400" height="300" fill="#1e293b" rx="15" />
 
-          {/* Equipotential lines outside */}
-          <ellipse cx="200" cy="150" rx="180" ry="140" fill="none" stroke="#22c55e" strokeWidth="1" strokeDasharray="4,4" opacity="0.3" />
-          <ellipse cx="200" cy="150" rx="150" ry="120" fill="none" stroke="#22c55e" strokeWidth="1" strokeDasharray="4,4" opacity="0.4" />
-          <ellipse cx="200" cy="150" rx="120" ry="95" fill="none" stroke="#22c55e" strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
+          {/* Battery */}
+          <rect x="40" y="100" width="15" height="100" fill="#ef4444" />
+          <rect x="60" y="120" width="15" height="60" fill="#3b82f6" />
+          <text x="55" y="90" textAnchor="middle" fill="#ef4444" fontSize="12">+9V</text>
+          <text x="55" y="240" textAnchor="middle" fill="#3b82f6" fontSize="12">0V (ref)</text>
 
-          {/* Conductor shell */}
-          <ellipse cx="200" cy="150" rx="90" ry="70" fill="#f59e0b" opacity="0.3" />
-          <ellipse cx="200" cy="150" rx="90" ry="70" fill="none" stroke="#f59e0b" strokeWidth="6" />
+          {/* Top wire - high potential */}
+          <line x1="47" y1="100" x2="47" y2="50" stroke="#ef4444" strokeWidth="4" />
+          <line x1="47" y1="50" x2="350" y2="50" stroke="#ef4444" strokeWidth="4" />
+          <line x1="350" y1="50" x2="350" y2="120" stroke="#ef4444" strokeWidth="4" />
 
-          {/* Interior - same potential (highlighted) */}
-          <ellipse cx="200" cy="150" rx="70" ry="55" fill="#f59e0b" opacity="0.15" />
-          <text x="200" y="145" textAnchor="middle" fill="#f59e0b" fontSize="14" fontWeight="bold">V = V₀</text>
-          <text x="200" y="165" textAnchor="middle" fill="#f59e0b" fontSize="11">everywhere inside</text>
+          {/* Resistor 1 */}
+          <rect x="330" y="120" width="40" height="60" fill="#64748b" stroke="#94a3b8" strokeWidth="2" rx="3" />
+          <text x="350" y="155" textAnchor="middle" fill="white" fontSize="10">R1</text>
 
-          {/* Surface charges */}
-          {Array.from({ length: 16 }).map((_, i) => {
-            const angle = (i / 16) * 2 * Math.PI;
-            const x = 200 + 90 * Math.cos(angle);
-            const y = 150 + 70 * Math.sin(angle);
-            return (
-              <g key={i}>
-                <circle cx={x} cy={y} r="5" fill="#ef4444" />
-                <text x={x} y={y + 3} textAnchor="middle" fill="white" fontSize="7">+</text>
-              </g>
-            );
-          })}
+          {/* Middle wire */}
+          <line x1="350" y1="180" x2="350" y2="200" stroke="#f59e0b" strokeWidth="4" />
+          <line x1="350" y1="200" x2="200" y2="200" stroke="#f59e0b" strokeWidth="4" />
 
-          {/* Labels */}
-          <text x="350" y="50" textAnchor="end" fill="#22c55e" fontSize="10">Lower V</text>
-          <text x="200" y="250" textAnchor="middle" fill="#f59e0b" fontSize="10">Surface: V = V₀</text>
+          {/* Resistor 2 */}
+          <rect x="180" y="170" width="40" height="60" fill="#64748b" stroke="#94a3b8" strokeWidth="2" rx="3" />
+          <text x="200" y="205" textAnchor="middle" fill="white" fontSize="10">R2</text>
 
-          {/* E = 0 inside indicator */}
-          <text x="200" y="185" textAnchor="middle" fill="#ef4444" fontSize="10">E = 0</text>
+          {/* Bottom wire - low potential */}
+          <line x1="200" y1="230" x2="200" y2="250" stroke="#3b82f6" strokeWidth="4" />
+          <line x1="200" y1="250" x2="47" y2="250" stroke="#3b82f6" strokeWidth="4" />
+          <line x1="67" y1="200" x2="67" y2="250" stroke="#3b82f6" strokeWidth="4" />
+
+          {/* Voltage labels */}
+          <circle cx="200" cy="50" r="15" fill="#ef4444" opacity="0.3" />
+          <text x="200" y="55" textAnchor="middle" fill="#ef4444" fontSize="10">9V</text>
+
+          <circle cx="350" cy="200" r="15" fill="#f59e0b" opacity="0.3" />
+          <text x="350" y="205" textAnchor="middle" fill="#f59e0b" fontSize="10">4.5V</text>
+
+          <circle cx="200" cy="250" r="15" fill="#3b82f6" opacity="0.3" />
+          <text x="200" y="255" textAnchor="middle" fill="#3b82f6" fontSize="10">0V</text>
+
+          {/* Voltage drop annotations */}
+          <text x="380" y="150" fill="#22c55e" fontSize="9">Delta V = 4.5V</text>
+          <text x="140" y="200" fill="#22c55e" fontSize="9">Delta V = 4.5V</text>
         </svg>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4 max-w-2xl mb-6">
         <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-xl p-4">
-          <h3 className="text-lg font-bold text-amber-400 mb-2">Why is V constant inside?</h3>
+          <h3 className="text-lg font-bold text-amber-400 mb-2">Voltage = Potential Difference</h3>
           <ul className="text-sm text-slate-300 space-y-1">
-            <li>• E = 0 inside a conductor (charges redistribute)</li>
-            <li>• E = -dV/dr, so if E = 0, then dV/dr = 0</li>
-            <li>• No change in V means V is constant</li>
-            <li>• Interior connects to surface: V_inside = V_surface</li>
+            <li>Voltage is always measured BETWEEN two points</li>
+            <li>Delta V = V_A - V_B (difference in electric potential)</li>
+            <li>A battery creates and maintains a potential difference</li>
+            <li>Current flows from high to low potential</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-xl p-4">
-          <h3 className="text-lg font-bold text-purple-400 mb-2">The Faraday Cage Effect</h3>
+          <h3 className="text-lg font-bold text-purple-400 mb-2">Kirchhoff's Voltage Law</h3>
           <ul className="text-sm text-slate-300 space-y-1">
-            <li>• Shields interior from external fields</li>
-            <li>• Used in electronics, MRI rooms, cars during lightning</li>
-            <li>• Even mesh conductors provide shielding</li>
-            <li>• Critical for electromagnetic compatibility (EMC)</li>
+            <li>Sum of voltages around any closed loop = 0</li>
+            <li>Energy gained from battery = Energy lost in resistors</li>
+            <li>9V = 4.5V + 4.5V (in the example above)</li>
+            <li>This is conservation of energy!</li>
           </ul>
         </div>
       </div>
 
       <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl">
-        <h3 className="text-lg font-semibold text-cyan-400 mb-2">The Counterintuitive Truth</h3>
+        <h3 className="text-lg font-semibold text-cyan-400 mb-2">The Key Insight</h3>
         <p className="text-slate-300 text-sm">
-          You might expect the potential to be highest at the center of a charged sphere, like pressure in a balloon. But electric potential doesn't work that way! The potential is determined by the work needed to bring a test charge from infinity—and that's the same whether you stop at the surface or continue to the center (since E = 0 inside, no additional work is done).
+          Electric potential at a single point has no physical meaning by itself - only the DIFFERENCE in potential (voltage) between two points matters. That's why we always need a reference point (like ground = 0V). A 9V battery doesn't have "9 volts" - it maintains a 9V DIFFERENCE between its terminals.
         </p>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onClick={() => goToPhase('twist_review')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
-        Review This Discovery →
+        Review This Discovery
       </button>
     </div>
   );
@@ -1349,54 +1355,59 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
   const renderTwistReview = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-purple-400 mb-6`}>
-        Key Discovery: Conductors and Potential
+        Key Discovery: Voltage as Potential Difference
       </h2>
 
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl mb-6">
-        <h3 className="text-xl font-bold text-purple-400 mb-4">Three Key Facts About Conductors</h3>
+        <h3 className="text-xl font-bold text-purple-400 mb-4">Three Key Facts About Voltage</h3>
         <div className="space-y-4 text-slate-300">
           <div className="flex items-start gap-3">
             <div className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold shrink-0">1</div>
-            <p><strong>E = 0 inside</strong>: Free charges redistribute until the internal field vanishes completely.</p>
+            <p><strong>Voltage = Potential Difference</strong>: Always measured between two points, never at a single point.</p>
           </div>
           <div className="flex items-start gap-3">
             <div className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold shrink-0">2</div>
-            <p><strong>V = constant inside</strong>: Since E = -∇V, zero field means no potential gradient. The entire conductor is an equipotential.</p>
+            <p><strong>Energy per Charge</strong>: 1 Volt = 1 Joule per Coulomb. Voltage tells us how much energy each coulomb of charge gains or loses.</p>
           </div>
           <div className="flex items-start gap-3">
             <div className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold shrink-0">3</div>
-            <p><strong>All charge on surface</strong>: Excess charge resides entirely on the outer surface of the conductor.</p>
+            <p><strong>Drives Current</strong>: Voltage is the "electrical pressure" that pushes current through circuits. No voltage difference = no current flow.</p>
           </div>
         </div>
       </div>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl">
-        <h3 className="text-lg font-bold text-amber-400 mb-3">Practical Applications</h3>
+        <h3 className="text-lg font-bold text-amber-400 mb-3">Real-World Voltage Examples</h3>
         <div className="grid grid-cols-2 gap-4 text-sm">
           <div className="bg-slate-900/50 rounded-lg p-3">
-            <div className="text-lg mb-1">🚗</div>
-            <div className="text-slate-300">Cars protect occupants from lightning (Faraday cage)</div>
+            <div className="text-2xl mb-1">🔌</div>
+            <div className="text-amber-400 font-bold">120-240V AC</div>
+            <div className="text-slate-400">Home outlets</div>
           </div>
           <div className="bg-slate-900/50 rounded-lg p-3">
-            <div className="text-lg mb-1">🔬</div>
-            <div className="text-slate-300">MRI rooms shielded from external EM interference</div>
+            <div className="text-2xl mb-1">⚡</div>
+            <div className="text-amber-400 font-bold">300,000,000 V</div>
+            <div className="text-slate-400">Lightning strike</div>
           </div>
           <div className="bg-slate-900/50 rounded-lg p-3">
-            <div className="text-lg mb-1">📱</div>
-            <div className="text-slate-300">Electronic device shielding prevents interference</div>
+            <div className="text-2xl mb-1">💊</div>
+            <div className="text-amber-400 font-bold">70 mV</div>
+            <div className="text-slate-400">Neuron membrane</div>
           </div>
           <div className="bg-slate-900/50 rounded-lg p-3">
-            <div className="text-lg mb-1">⚡</div>
-            <div className="text-slate-300">High-voltage equipment safety enclosures</div>
+            <div className="text-2xl mb-1">🚗</div>
+            <div className="text-amber-400 font-bold">400-800V</div>
+            <div className="text-slate-400">EV battery packs</div>
           </div>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onClick={() => goToPhase('transfer')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
       >
-        Explore Real-World Applications →
+        Explore Real-World Applications
       </button>
     </div>
   );
@@ -1412,7 +1423,8 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         {transferApps.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppIndex(index); }}
+            onClick={() => setActiveAppIndex(index)}
+            style={{ zIndex: 10 }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppIndex === index
                 ? 'bg-amber-600 text-white'
@@ -1448,7 +1460,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
             <h4 className="font-semibold text-cyan-400 mb-2">How It Works</h4>
             <ul className="text-sm text-slate-300 space-y-1">
               {transferApps[activeAppIndex].howItWorks.map((step, i) => (
-                <li key={i}>• {step}</li>
+                <li key={i}>{step}</li>
               ))}
             </ul>
           </div>
@@ -1480,10 +1492,11 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
         {!completedApps.has(activeAppIndex) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppIndex); }}
+            onClick={() => handleAppComplete(activeAppIndex)}
+            style={{ zIndex: 10 }}
             className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition-colors"
           >
-            ✓ Mark as Understood
+            Mark as Understood
           </button>
         )}
       </div>
@@ -1504,10 +1517,11 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          onClick={() => goToPhase('test')}
+          style={{ zIndex: 10 }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
         >
-          Take the Knowledge Test →
+          Take the Knowledge Test
         </button>
       )}
     </div>
@@ -1533,7 +1547,8 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
+                    style={{ zIndex: 10 }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-amber-600 text-white'
@@ -1548,11 +1563,13 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           ))}
 
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
+              const score = calculateScore();
+              setTestScore(score);
               setShowTestResults(true);
-              playSound(calculateScore() >= 7 ? 'complete' : 'incorrect');
+              playSound(score >= 7 ? 'complete' : 'incorrect');
             }}
+            style={{ zIndex: 10 }}
             disabled={testAnswers.includes(-1)}
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
               testAnswers.includes(-1)
@@ -1566,12 +1583,12 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       ) : (
         <div className="max-w-2xl w-full">
           <div className="bg-slate-800/50 rounded-2xl p-6 text-center mb-6">
-            <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
+            <div className="text-6xl mb-4">{testScore >= 7 ? '🎉' : '📚'}</div>
             <h3 className="text-2xl font-bold text-white mb-2">
-              Score: {calculateScore()}/10
+              Score: {testScore}/10
             </h3>
             <p className="text-slate-300 mb-4">
-              {calculateScore() >= 7
+              {testScore >= 7
                 ? 'Excellent! You\'ve mastered electric potential!'
                 : 'Keep studying! Review the concepts and try again.'}
             </p>
@@ -1591,7 +1608,7 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
                   </p>
                   <p className={`text-sm mb-2 ${isCorrect ? 'text-emerald-400' : 'text-red-400'}`}>
                     Your answer: {q.options[testAnswers[qIndex]]?.text}
-                    {isCorrect ? ' ✓' : ' ✗'}
+                    {isCorrect ? ' (Correct)' : ' (Incorrect)'}
                   </p>
                   <p className="text-slate-400 text-sm">{q.explanation}</p>
                 </div>
@@ -1599,24 +1616,25 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
             })}
           </div>
 
-          {calculateScore() >= 7 ? (
+          {testScore >= 7 ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
+              onClick={() => goToPhase('mastery')}
+              style={{ zIndex: 10 }}
               className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
             >
-              Claim Your Mastery Badge →
+              Claim Your Mastery Badge
             </button>
           ) : (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
+              onClick={() => {
                 setShowTestResults(false);
                 setTestAnswers(Array(10).fill(-1));
-                goToPhase(3);
+                goToPhase('review');
               }}
+              style={{ zIndex: 10 }}
               className="w-full py-4 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
             >
-              Review & Try Again
+              Review and Try Again
             </button>
           )}
         </div>
@@ -1632,34 +1650,49 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           Electric Potential Master!
         </h1>
         <p className="text-xl text-slate-300 mb-6">
-          You've mastered the physics of electric potential and voltage!
+          Congratulations! You've mastered the physics of electric potential and voltage!
         </p>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-slate-800/50 rounded-xl p-4">
             <div className="text-2xl mb-2">🔋</div>
             <p className="text-sm text-slate-300">V = kq/r</p>
+            <p className="text-xs text-slate-500">Point charge potential</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
             <div className="text-2xl mb-2">⚡</div>
             <p className="text-sm text-slate-300">E = -dV/dr</p>
+            <p className="text-xs text-slate-500">Field-potential relation</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
             <div className="text-2xl mb-2">💡</div>
-            <p className="text-sm text-slate-300">W = qΔV</p>
+            <p className="text-sm text-slate-300">W = q Delta V</p>
+            <p className="text-xs text-slate-500">Work and energy</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🛡️</div>
-            <p className="text-sm text-slate-300">V = const inside conductor</p>
+            <div className="text-2xl mb-2">🔌</div>
+            <p className="text-sm text-slate-300">Voltage = Delta V</p>
+            <p className="text-xs text-slate-500">Potential difference</p>
           </div>
+        </div>
+
+        <div className="bg-slate-800/70 rounded-xl p-4 mb-6">
+          <h3 className="text-lg font-bold text-amber-400 mb-2">You've Learned:</h3>
+          <ul className="text-sm text-slate-300 space-y-1 text-left">
+            <li>How electric potential describes energy per unit charge</li>
+            <li>The relationship between potential and electric field</li>
+            <li>How voltage drives current in circuits</li>
+            <li>Real-world applications from batteries to defibrillators</li>
+          </ul>
         </div>
 
         <div className="flex gap-4 justify-center">
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+            onClick={() => goToPhase('hook')}
+            style={{ zIndex: 10 }}
             className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
           >
-            ↺ Explore Again
+            Explore Again
           </button>
         </div>
       </div>
@@ -1669,25 +1702,19 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
   // ==================== PHASE ROUTER ====================
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
-
-  const phaseNames = [
-    'Hook', 'Predict', 'Explore', 'Review',
-    'Twist', 'Twist Explore', 'Twist Review',
-    'Apply', 'Test', 'Mastery'
-  ];
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
@@ -1705,18 +1732,19 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
           <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-slate-400`}>Electric Potential</span>
           <div className="flex gap-1.5 items-center">
-            {phaseNames.map((name, i) => (
+            {phaseOrder.map((p, i) => (
               <button
-                key={i}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(i); }}
+                key={p}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === i ? 'bg-amber-500 w-6' : phase > i ? 'bg-amber-500 w-2' : 'bg-slate-600 w-2'
+                  phase === p ? 'bg-amber-500 w-6' : phaseOrder.indexOf(phase) > i ? 'bg-amber-500 w-2' : 'bg-slate-600 w-2'
                 }`}
-                title={name}
+                title={phaseLabels[p]}
               />
             ))}
           </div>
-          <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-slate-500`}>{phaseNames[phase]}</span>
+          <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-slate-500`}>{phaseLabels[phase]}</span>
         </div>
       </div>
 

@@ -59,18 +59,19 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Lab',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
 };
 
 interface Particle {
@@ -84,18 +85,15 @@ interface Particle {
 
 interface ConvectionCurrentsRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
-export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, onPhaseComplete }: ConvectionCurrentsRendererProps) {
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
-
+export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onPhaseComplete }: ConvectionCurrentsRendererProps) {
   // Core State
-  const [phase, setPhase] = useState<number>(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
-    return 0;
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
   });
   const [isMobile, setIsMobile] = useState(false);
 
@@ -249,10 +247,10 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
 
   // Phase sync
   useEffect(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
-      setPhase(currentPhase);
+    if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase]);
+  }, [gamePhase]);
 
   // Audio feedback
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -285,35 +283,24 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
     onGameEvent?.({ type, data });
   }, [onGameEvent]);
 
-  // Navigation with debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    if (!PHASES.includes(newPhase)) return;
-    navigationLockRef.current = true;
+  // Navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (!phaseOrder.includes(newPhase)) return;
     setPhase(newPhase);
     playSound('transition');
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [phase, playSound, emitEvent, onPhaseComplete]);
 
   const goNext = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex < PHASES.length - 1) goToPhase(PHASES[currentIndex + 1]);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentIndex + 1]);
   }, [phase, goToPhase]);
 
   const goBack = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex > 0) goToPhase(PHASES[currentIndex - 1]);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]);
   }, [phase, goToPhase]);
-
-  // Debounced state update helper
-  const safeNavigate = useCallback((action: () => void) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-    action();
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, []);
 
   // Initialize particles for main simulation
   const initParticles = useCallback(() => {
@@ -348,17 +335,17 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
   }, []);
 
   useEffect(() => {
-    if (phase === 2) {
+    if (phase === 'play') {
       initParticles();
     }
-    if (phase === 5) {
+    if (phase === 'twist_play') {
       initPotParticles();
     }
   }, [phase, initParticles, initPotParticles]);
 
   // Main convection simulation
   useEffect(() => {
-    if (phase === 2 && isSimulating && heatSource !== 'off') {
+    if (phase === 'play' && isSimulating && heatSource !== 'off') {
       const simulate = () => {
         setParticles(prev => prev.map(p => {
           let newTemp = p.temp;
@@ -424,7 +411,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
 
   // Pot simulation
   useEffect(() => {
-    if (phase === 5 && isPotSimulating && burnerPower > 0) {
+    if (phase === 'twist_play' && isPotSimulating && burnerPower > 0) {
       const simulate = () => {
         setPotParticles(prev => prev.map(p => {
           let newTemp = p.temp;
@@ -545,8 +532,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
     return (
       <button
         style={{ ...baseStyle, ...variants[variant] }}
-        onMouseDown={(e) => {
-          e.preventDefault();
+        onClick={() => {
           if (!disabled) onClick();
         }}
         disabled={disabled}
@@ -557,8 +543,8 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
   }
 
   function renderProgressBar() {
-    const currentIndex = PHASES.indexOf(phase);
-    const progress = ((currentIndex + 1) / PHASES.length) * 100;
+    const currentIndex = phaseOrder.indexOf(phase);
+    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
 
     return (
       <div style={{ marginBottom: premiumDesign.spacing.lg }}>
@@ -569,7 +555,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
           fontSize: '12px',
           color: premiumDesign.colors.text.muted,
         }}>
-          <span>Phase {currentIndex + 1} of {PHASES.length}</span>
+          <span>Phase {currentIndex + 1} of {phaseOrder.length}</span>
           <span>{phaseLabels[phase]}</span>
         </div>
         <div style={{
@@ -654,7 +640,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
 
         {/* Premium CTA button */}
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+          onClick={() => goToPhase('predict')}
           className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-red-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98]"
         >
           <span className="relative z-10 flex items-center gap-3">
@@ -739,10 +725,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
               }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                safeNavigate(() => setPrediction(p.id));
-              }}
+              onClick={() => setPrediction(p.id)}
             >
               {p.text}
             </button>
@@ -750,10 +733,10 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(0) },
+          { text: '← Back', onClick: () => goToPhase('hook') },
           {
             text: 'Test My Prediction →',
-            onClick: nextPhase,
+            onClick: goNext,
             disabled: !prediction,
           }
         )}
@@ -901,10 +884,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
                     cursor: 'pointer',
                     textTransform: 'capitalize',
                   }}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    setHeatSource(pos as any);
-                  }}
+                  onClick={() => setHeatSource(pos as 'bottom' | 'left' | 'right' | 'off')}
                 >
                   {pos === 'off' ? '❄️ Off' : `🔥 ${pos}`}
                 </button>
@@ -934,10 +914,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
                   color: premiumDesign.colors.text.secondary,
                   cursor: 'pointer',
                 }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  initParticles();
-                }}
+                onClick={() => initParticles()}
               >
                 🔄 Reset Particles
               </button>
@@ -957,8 +934,8 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(1) },
-          { text: 'Review Results →', onClick: nextPhase }
+          { text: '← Back', onClick: () => goToPhase('predict') },
+          { text: 'Review Results →', onClick: goNext }
         )}
       </div>
     );
@@ -1054,22 +1031,19 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
                 }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  safeNavigate(() => setReviewStep(i));
-                }}
+                onClick={() => setReviewStep(i)}
               />
             ))}
           </div>
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(2) },
+          { text: '← Back', onClick: () => goToPhase('play') },
           {
             text: reviewStep < reviewContent.length - 1 ? 'Continue →' : 'Try a Twist →',
             onClick: () => {
               if (reviewStep < reviewContent.length - 1) {
-                safeNavigate(() => setReviewStep(r => r + 1));
+                setReviewStep(r => r + 1);
               } else {
                 goNext();
               }
@@ -1135,10 +1109,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
               }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                safeNavigate(() => setTwistPrediction(p.id));
-              }}
+              onClick={() => setTwistPrediction(p.id)}
             >
               {p.text}
             </button>
@@ -1146,10 +1117,10 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(3) },
+          { text: '← Back', onClick: () => goToPhase('review') },
           {
             text: 'Test My Prediction →',
-            onClick: nextPhase,
+            onClick: goNext,
             disabled: !twistPrediction,
           }
         )}
@@ -1336,10 +1307,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
                   color: premiumDesign.colors.text.secondary,
                   cursor: 'pointer',
                 }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  initPotParticles();
-                }}
+                onClick={() => initPotParticles()}
               >
                 🔄 Reset Water
               </button>
@@ -1375,8 +1343,8 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(4) },
-          { text: 'Review Results →', onClick: nextPhase }
+          { text: '← Back', onClick: () => goToPhase('twist_predict') },
+          { text: 'Review Results →', onClick: goNext }
         )}
       </div>
     );
@@ -1478,22 +1446,19 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
                 }}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  safeNavigate(() => setTwistReviewStep(i));
-                }}
+                onClick={() => setTwistReviewStep(i)}
               />
             ))}
           </div>
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(5) },
+          { text: '← Back', onClick: () => goToPhase('twist_play') },
           {
             text: twistReviewStep < twistReviewContent.length - 1 ? 'Continue →' : 'Real-World Examples →',
             onClick: () => {
               if (twistReviewStep < twistReviewContent.length - 1) {
-                safeNavigate(() => setTwistReviewStep(t => t + 1));
+                setTwistReviewStep(t => t + 1);
               } else {
                 goNext();
               }
@@ -1573,10 +1538,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
                 fontSize: '14px',
                 transition: 'all 0.3s ease',
               }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                safeNavigate(() => setActiveApp(index));
-              }}
+              onClick={() => setActiveApp(index)}
             >
               {completedApps.has(index) && '✓ '}{app.title.split(' ')[0]}
             </button>
@@ -1638,17 +1600,14 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
                 fontWeight: 600,
                 cursor: 'pointer',
               }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                safeNavigate(() => {
-                  const newCompleted = new Set(completedApps);
-                  newCompleted.add(activeApp);
-                  setCompletedApps(newCompleted);
-                  // Auto-advance to next unread
-                  if (activeApp < applications.length - 1) {
-                    setActiveApp(activeApp + 1);
-                  }
-                });
+              onClick={() => {
+                const newCompleted = new Set(completedApps);
+                newCompleted.add(activeApp);
+                setCompletedApps(newCompleted);
+                // Auto-advance to next unread
+                if (activeApp < applications.length - 1) {
+                  setActiveApp(activeApp + 1);
+                }
               }}
             >
               ✓ Mark as Read
@@ -1666,10 +1625,10 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(6) },
+          { text: '← Back', onClick: () => goToPhase('twist_review') },
           {
             text: completedApps.size === applications.length ? 'Take the Quiz →' : `Explore ${applications.length - completedApps.size} More →`,
-            onClick: nextPhase,
+            onClick: goNext,
             disabled: completedApps.size < applications.length,
           }
         )}
@@ -1739,7 +1698,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
                   setTestComplete(false);
                   setCurrentQuestion(0);
                   setTestScore(0);
-                  goToPhase(3);
+                  goToPhase('review');
                 }
               },
               passed ? 'success' : 'primary'
@@ -1818,10 +1777,9 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
                 <button
                   key={index}
                   style={buttonStyle}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     if (!showExplanation) {
-                      safeNavigate(() => setSelectedAnswer(index));
+                      setSelectedAnswer(index);
                     }
                   }}
                   disabled={showExplanation}
@@ -1855,12 +1813,10 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
             renderButton(
               'Check Answer',
               () => {
-                safeNavigate(() => {
-                  setShowExplanation(true);
-                  if (selectedAnswer !== null && question.options[selectedAnswer]?.correct) {
-                    setTestScore(s => s + 1);
-                  }
-                });
+                setShowExplanation(true);
+                if (selectedAnswer !== null && question.options[selectedAnswer]?.correct) {
+                  setTestScore(s => s + 1);
+                }
               },
               'primary',
               selectedAnswer === null
@@ -1869,15 +1825,13 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
             renderButton(
               currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results',
               () => {
-                safeNavigate(() => {
-                  if (currentQuestion < testQuestions.length - 1) {
-                    setCurrentQuestion(c => c + 1);
-                    setSelectedAnswer(null);
-                    setShowExplanation(false);
-                  } else {
-                    setTestComplete(true);
-                  }
-                });
+                if (currentQuestion < testQuestions.length - 1) {
+                  setCurrentQuestion(c => c + 1);
+                  setSelectedAnswer(null);
+                  setShowExplanation(false);
+                } else {
+                  setTestComplete(true);
+                }
               },
               'primary'
             )
@@ -1952,7 +1906,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
         </div>
 
         <div style={{ display: 'flex', gap: premiumDesign.spacing.md, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {renderButton('← Review Again', () => goToPhase(0), 'secondary')}
+          {renderButton('← Review Again', () => goToPhase('hook'), 'secondary')}
         </div>
       </div>
     );
@@ -1972,14 +1926,14 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Convection Currents</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-orange-400 w-6 shadow-lg shadow-orange-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
@@ -1993,16 +1947,16 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, currentPhase, 
 
       {/* Main content */}
       <div className="relative pt-16 pb-12 max-w-4xl mx-auto px-4">
-        {phase === 0 && renderHookPhase()}
-        {phase === 1 && renderPredictPhase()}
-        {phase === 2 && renderPlayPhase()}
-        {phase === 3 && renderReviewPhase()}
-        {phase === 4 && renderTwistPredictPhase()}
-        {phase === 5 && renderTwistPlayPhase()}
-        {phase === 6 && renderTwistReviewPhase()}
-        {phase === 7 && renderTransferPhase()}
-        {phase === 8 && renderTestPhase()}
-        {phase === 9 && renderMasteryPhase()}
+        {phase === 'hook' && renderHookPhase()}
+        {phase === 'predict' && renderPredictPhase()}
+        {phase === 'play' && renderPlayPhase()}
+        {phase === 'review' && renderReviewPhase()}
+        {phase === 'twist_predict' && renderTwistPredictPhase()}
+        {phase === 'twist_play' && renderTwistPlayPhase()}
+        {phase === 'twist_review' && renderTwistReviewPhase()}
+        {phase === 'transfer' && renderTransferPhase()}
+        {phase === 'test' && renderTestPhase()}
+        {phase === 'mastery' && renderMasteryPhase()}
       </div>
     </div>
   );

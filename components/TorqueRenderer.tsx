@@ -6,6 +6,23 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // TORQUE - Premium 10-Phase Educational Game
 // ============================================================================
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Play',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Play',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
+};
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -22,23 +39,9 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
-};
-
 interface TorqueRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
+  gamePhase?: string;
   onPhaseComplete?: (phase: number) => void;
 }
 
@@ -47,25 +50,18 @@ interface TorqueRendererProps {
 // ============================================================================
 const TorqueRenderer: React.FC<TorqueRendererProps> = ({
   onGameEvent,
-  currentPhase,
+  gamePhase,
   onPhaseComplete
 }) => {
-  // Navigation debouncing refs
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
-
   // Phase state
-  const [phase, setPhase] = useState<number>(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
-    return 0;
-  });
+  const [phase, setPhase] = useState<Phase>('hook');
 
   // Sync phase with external prop
   useEffect(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase]);
+  }, [gamePhase]);
 
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -147,19 +143,14 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     window.dispatchEvent(new CustomEvent('returnToDashboard'));
   }, [emitEvent]);
 
-  // Navigation with debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    if (!PHASES.includes(newPhase)) return;
-    navigationLockRef.current = true;
+  // Navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (!phaseOrder.includes(newPhase)) return;
     setPhase(newPhase);
     playSound('transition');
+    const phaseIndex = phaseOrder.indexOf(newPhase);
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
-    onPhaseComplete?.(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
+    onPhaseComplete?.(phaseIndex);
   }, [phase, playSound, emitEvent, onPhaseComplete]);
 
   // Door physics
@@ -200,9 +191,6 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
   }, [emitEvent]);
 
   const handleTestAnswer = useCallback((answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     if (answeredQuestions.has(currentQuestion)) return;
     setSelectedAnswer(answerIndex);
     setShowExplanation(true);
@@ -217,7 +205,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     emitEvent('test_answered', { question: currentQuestion, answer: answerIndex, correct: isCorrect });
   }, [currentQuestion, answeredQuestions, emitEvent, playSound]);
 
-  // Test questions
+  // Test questions - 10 questions with correct: true markers
   const testQuestions = [
     { question: "Why is it easier to open a door by pushing at the handle (far from hinge)?", options: [
       { text: "The handle is smoother", correct: false },
@@ -281,14 +269,21 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     ], explanation: "Using t = F x r: 20 = F x 0.5, solving for F gives F = 40 N." }
   ];
 
-  // Real-world applications
+  // Real-world applications - 4 applications
   const applications = [
     {
       id: 'wrench',
-      title: "Wrench & Bolts",
+      title: "Wrenches",
       description: "Longer wrenches provide more torque with less effort. Mechanics use breaker bars for stubborn bolts - maximum leverage from extended handles!",
       formula: "t = F x r",
       insight: "2x handle length = 2x torque",
+    },
+    {
+      id: 'seesaw',
+      title: "Seesaws",
+      description: "Torque balance determines equilibrium. A heavier child sits closer to the pivot to balance a lighter child sitting farther away.",
+      formula: "m1r1 = m2r2",
+      insight: "Balance point shifts with mass",
     },
     {
       id: 'steering',
@@ -298,18 +293,11 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       insight: "Larger radius = less effort",
     },
     {
-      id: 'seesaw',
-      title: "Seesaw Balance",
-      description: "Torque balance determines equilibrium. A heavier child sits closer to the pivot to balance a lighter child sitting farther away.",
-      formula: "m1r1 = m2r2",
-      insight: "Balance point shifts with mass",
-    },
-    {
-      id: 'bicycle',
-      title: "Bicycle Pedals",
-      description: "The crank arm length affects your torque output. Longer cranks provide more leverage but require greater leg movement per rotation.",
-      formula: "t = F x crank length",
-      insight: "Typical crank: 170-175mm",
+      id: 'engine',
+      title: "Engines",
+      description: "Engine torque determines pulling power. Diesel engines produce high torque at low RPM, making them ideal for heavy vehicles and towing.",
+      formula: "Power = t x omega",
+      insight: "Torque = rotational strength",
     }
   ];
 
@@ -446,6 +434,62 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     );
   };
 
+  // Seesaw visualization for twist phases
+  const renderSeesawVisualization = () => {
+    const svgWidth = Math.min(360, isMobile ? 320 : 360);
+
+    return (
+      <svg width="100%" height={200} viewBox={`0 0 ${svgWidth} 200`} className="block mx-auto">
+        <defs>
+          <linearGradient id="seesaw-board-grad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#8b7355" />
+            <stop offset="100%" stopColor="#6b5344" />
+          </linearGradient>
+        </defs>
+
+        {/* Background */}
+        <rect width={svgWidth} height={200} fill="#08050c" />
+
+        {/* Ground */}
+        <rect x={0} y={160} width={svgWidth} height={40} fill="#1a1a2e" />
+
+        {/* Fulcrum (triangle) */}
+        <polygon points={`${svgWidth/2},130 ${svgWidth/2 - 30},160 ${svgWidth/2 + 30},160`} fill="#4b5563" stroke="#6b7280" strokeWidth={2} />
+
+        {/* Seesaw board */}
+        <rect x={40} y={118} width={svgWidth - 80} height={12} rx={4} fill="url(#seesaw-board-grad)" />
+
+        {/* Left weight (heavier, closer to center) */}
+        <g transform={`translate(100, 90)`}>
+          <circle r={28} fill="#ef4444" stroke="#dc2626" strokeWidth={2}>
+            <animate attributeName="cy" values="-2;2;-2" dur="3s" repeatCount="indefinite" />
+          </circle>
+          <text y={6} textAnchor="middle" fill="#fff" fontSize={14} fontWeight="700">5kg</text>
+        </g>
+
+        {/* Right weight (lighter, farther from center) */}
+        <g transform={`translate(${svgWidth - 80}, 90)`}>
+          <circle r={20} fill="#22c55e" stroke="#16a34a" strokeWidth={2}>
+            <animate attributeName="cy" values="2;-2;2" dur="3s" repeatCount="indefinite" />
+          </circle>
+          <text y={5} textAnchor="middle" fill="#fff" fontSize={12} fontWeight="700">2kg</text>
+        </g>
+
+        {/* Distance labels */}
+        <line x1={svgWidth/2} y1={145} x2={100} y2={145} stroke="#3b82f6" strokeWidth={2} strokeDasharray="4,4" />
+        <text x={150} y={155} textAnchor="middle" fill="#3b82f6" fontSize={10}>r1 (short)</text>
+
+        <line x1={svgWidth/2} y1={145} x2={svgWidth - 80} y2={145} stroke="#f97316" strokeWidth={2} strokeDasharray="4,4" />
+        <text x={svgWidth - 130} y={155} textAnchor="middle" fill="#f97316" fontSize={10}>r2 (long)</text>
+
+        {/* Balance equation */}
+        <text x={svgWidth/2} y={185} textAnchor="middle" fill="#a855f7" fontSize={12} fontWeight="600">
+          5kg x r1 = 2kg x r2 (Balanced!)
+        </text>
+      </svg>
+    );
+  };
+
   // Application graphics for transfer phase
   const renderApplicationGraphic = (appId: string) => {
     const svgWidth = isMobile ? 280 : 320;
@@ -477,28 +521,6 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
           </g>
         )}
 
-        {appId === 'steering' && (
-          <g>
-            {/* Steering wheel */}
-            <circle cx={svgWidth/2} cy={65} r={45} fill="none" stroke="#374151" strokeWidth={9} />
-            <circle cx={svgWidth/2} cy={65} r={45} fill="none" stroke="#4b5563" strokeWidth={5} />
-            <circle cx={svgWidth/2} cy={65} r={14} fill="#1f2937" stroke="#4b5563" strokeWidth={2} />
-            {/* Spokes */}
-            <line x1={svgWidth/2} y1={65} x2={svgWidth/2} y2={24} stroke="#4b5563" strokeWidth={5} />
-            <line x1={svgWidth/2} y1={65} x2={svgWidth/2 - 36} y2={92} stroke="#4b5563" strokeWidth={5} />
-            <line x1={svgWidth/2} y1={65} x2={svgWidth/2 + 36} y2={92} stroke="#4b5563" strokeWidth={5} />
-            {/* Hands and force arrows */}
-            <circle cx={svgWidth/2 - 45} cy={65} r={7} fill="#f97316" />
-            <line x1={svgWidth/2 - 45} y1={55} x2={svgWidth/2 - 45} y2={38} stroke="#22c55e" strokeWidth={3} />
-            <polygon points={`${svgWidth/2 - 45},34 ${svgWidth/2 - 50},42 ${svgWidth/2 - 40},42`} fill="#22c55e" />
-            <circle cx={svgWidth/2 + 45} cy={65} r={7} fill="#f97316" />
-            <line x1={svgWidth/2 + 45} y1={75} x2={svgWidth/2 + 45} y2={92} stroke="#22c55e" strokeWidth={3} />
-            <polygon points={`${svgWidth/2 + 45},96 ${svgWidth/2 + 40},88 ${svgWidth/2 + 50},88`} fill="#22c55e" />
-            {/* Rotation indicator */}
-            <text x={svgWidth/2 + 68} y={68} fill="#a855f7" fontSize={13} fontWeight="700">t</text>
-          </g>
-        )}
-
         {appId === 'seesaw' && (
           <g>
             {/* Fulcrum */}
@@ -521,32 +543,50 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
           </g>
         )}
 
-        {appId === 'bicycle' && (
+        {appId === 'steering' && (
           <g>
-            {/* Chainring */}
-            <circle cx={svgWidth/2} cy={65} r={36} fill="none" stroke="#4b5563" strokeWidth={5} />
-            <circle cx={svgWidth/2} cy={65} r={36} fill="none" stroke="#374151" strokeWidth={2} strokeDasharray="7,3" />
-            <circle cx={svgWidth/2} cy={65} r={9} fill="#1f2937" stroke="#4b5563" strokeWidth={2} />
-            {/* Chain teeth */}
-            {[...Array(14)].map((_, i) => (
-              <circle key={i}
-                cx={svgWidth/2 + 34 * Math.cos(i * Math.PI / 7)}
-                cy={65 + 34 * Math.sin(i * Math.PI / 7)}
-                r={2.5} fill="#4b5563" />
-            ))}
-            {/* Crank arm */}
-            <line x1={svgWidth/2} y1={65} x2={svgWidth/2} y2={110} stroke="#6b7280" strokeWidth={7} strokeLinecap="round" />
-            {/* Pedal */}
-            <rect x={svgWidth/2 - 16} y={107} width={32} height={11} rx={3} fill="#374151" stroke="#4b5563" strokeWidth={1} />
-            {/* Foot */}
-            <ellipse cx={svgWidth/2} cy={104} rx={13} ry={7} fill="#f97316" opacity={0.8} />
-            {/* Force arrow */}
-            <line x1={svgWidth/2} y1={122} x2={svgWidth/2} y2={127} stroke="#22c55e" strokeWidth={3} />
-            <polygon points={`${svgWidth/2},130 ${svgWidth/2 - 5},123 ${svgWidth/2 + 5},123`} fill="#22c55e" />
-            <text x={svgWidth/2 + 18} y={128} fill="#22c55e" fontSize={11} fontWeight="600">F</text>
-            {/* Crank length label */}
-            <line x1={svgWidth/2 + 10} y1={65} x2={svgWidth/2 + 10} y2={110} stroke="#f97316" strokeWidth={1} strokeDasharray="3,3" />
-            <text x={svgWidth/2 + 26} y={92} fill="#f97316" fontSize={9}>crank (r)</text>
+            {/* Steering wheel */}
+            <circle cx={svgWidth/2} cy={65} r={45} fill="none" stroke="#374151" strokeWidth={9} />
+            <circle cx={svgWidth/2} cy={65} r={45} fill="none" stroke="#4b5563" strokeWidth={5} />
+            <circle cx={svgWidth/2} cy={65} r={14} fill="#1f2937" stroke="#4b5563" strokeWidth={2} />
+            {/* Spokes */}
+            <line x1={svgWidth/2} y1={65} x2={svgWidth/2} y2={24} stroke="#4b5563" strokeWidth={5} />
+            <line x1={svgWidth/2} y1={65} x2={svgWidth/2 - 36} y2={92} stroke="#4b5563" strokeWidth={5} />
+            <line x1={svgWidth/2} y1={65} x2={svgWidth/2 + 36} y2={92} stroke="#4b5563" strokeWidth={5} />
+            {/* Hands and force arrows */}
+            <circle cx={svgWidth/2 - 45} cy={65} r={7} fill="#f97316" />
+            <line x1={svgWidth/2 - 45} y1={55} x2={svgWidth/2 - 45} y2={38} stroke="#22c55e" strokeWidth={3} />
+            <polygon points={`${svgWidth/2 - 45},34 ${svgWidth/2 - 50},42 ${svgWidth/2 - 40},42`} fill="#22c55e" />
+            <circle cx={svgWidth/2 + 45} cy={65} r={7} fill="#f97316" />
+            <line x1={svgWidth/2 + 45} y1={75} x2={svgWidth/2 + 45} y2={92} stroke="#22c55e" strokeWidth={3} />
+            <polygon points={`${svgWidth/2 + 45},96 ${svgWidth/2 + 40},88 ${svgWidth/2 + 50},88`} fill="#22c55e" />
+            {/* Rotation indicator */}
+            <text x={svgWidth/2 + 68} y={68} fill="#a855f7" fontSize={13} fontWeight="700">t</text>
+          </g>
+        )}
+
+        {appId === 'engine' && (
+          <g>
+            {/* Engine block */}
+            <rect x={svgWidth/2 - 50} y={30} width={100} height={70} rx={8} fill="#374151" stroke="#4b5563" strokeWidth={2} />
+            {/* Crankshaft circle */}
+            <circle cx={svgWidth/2} cy={65} r={25} fill="#1f2937" stroke="#6b7280" strokeWidth={3} />
+            {/* Piston */}
+            <rect x={svgWidth/2 - 15} y={15} width={30} height={35} rx={4} fill="#6b7280">
+              <animate attributeName="y" values="15;25;15" dur="0.5s" repeatCount="indefinite" />
+            </rect>
+            {/* Connecting rod */}
+            <line x1={svgWidth/2} y1={45} x2={svgWidth/2} y2={65} stroke="#9ca3af" strokeWidth={6} strokeLinecap="round">
+              <animate attributeName="y1" values="45;55;45" dur="0.5s" repeatCount="indefinite" />
+            </line>
+            {/* Rotation arrow */}
+            <path d={`M ${svgWidth/2 + 35} 55 A 35 35 0 0 1 ${svgWidth/2 + 35} 75`} stroke="#22c55e" strokeWidth={3} fill="none" />
+            <polygon points={`${svgWidth/2 + 35},80 ${svgWidth/2 + 30},72 ${svgWidth/2 + 40},72`} fill="#22c55e" />
+            {/* Torque label */}
+            <text x={svgWidth/2 + 55} y={68} fill="#a855f7" fontSize={12} fontWeight="700">Torque</text>
+            {/* Output shaft */}
+            <rect x={svgWidth/2 + 50} y={58} width={40} height={14} rx={4} fill="#4b5563" />
+            <text x={svgWidth/2 + 70} y={90} textAnchor="middle" fill="#7a6890" fontSize={9}>Power out</text>
           </g>
         )}
       </svg>
@@ -567,7 +607,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
       {/* Main title with gradient */}
       <h1 className="text-4xl md:text-5xl font-bold mb-4 bg-gradient-to-r from-white via-purple-100 to-orange-200 bg-clip-text text-transparent">
-        The Door Handle Mystery
+        Torque: The Rotational Force
       </h1>
 
       <p className="text-lg text-slate-400 max-w-md mb-10">
@@ -590,7 +630,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
               Where should you push to need the <em className="text-purple-400">least</em> force?
             </p>
             <p className="text-lg text-slate-400 leading-relaxed">
-              Discover the physics behind every door handle placement!
+              Torque is the rotational equivalent of force - it makes things spin!
             </p>
           </div>
         </div>
@@ -598,7 +638,8 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
+        style={{ zIndex: 10 }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-purple-500 to-orange-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -640,15 +681,12 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              const now = Date.now();
-              if (now - lastClickRef.current < 200) return;
-              lastClickRef.current = now;
+            onClick={() => {
               setPrediction(option.id);
               playSound(option.id === 'far_edge' ? 'success' : 'click');
               emitEvent('prediction_made', { prediction: option.id });
             }}
+            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-4 ${
               prediction === option.id
                 ? 'border-purple-500 bg-purple-500/20'
@@ -663,7 +701,8 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
       {prediction && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+          onClick={() => goToPhase('play')}
+          style={{ zIndex: 10 }}
           className="px-8 py-4 bg-gradient-to-r from-purple-600 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-purple-500/25 transition-all"
         >
           Test It! {'\u2192'}
@@ -708,22 +747,25 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       <div className="flex gap-3 mb-6">
         {doorAngle === 0 ? (
           <button
-            onMouseDown={(e) => { e.preventDefault(); pushDoor(); }}
+            onClick={() => pushDoor()}
             disabled={isPushing}
+            style={{ zIndex: 10 }}
             className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl disabled:opacity-50"
           >
             {'\uD83D\uDC46'} Push Door!
           </button>
         ) : (
           <button
-            onMouseDown={(e) => { e.preventDefault(); resetDoor(); }}
+            onClick={() => resetDoor()}
+            style={{ zIndex: 10 }}
             className="px-6 py-3 bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-600"
           >
             {'\u21BA'} Reset
           </button>
         )}
         <button
-          onMouseDown={(e) => { e.preventDefault(); setShowForceVector(!showForceVector); }}
+          onClick={() => setShowForceVector(!showForceVector)}
+          style={{ zIndex: 10 }}
           className={`px-4 py-3 rounded-xl font-medium ${showForceVector ? 'bg-blue-600' : 'bg-slate-700'} text-white`}
         >
           {showForceVector ? '\uD83D\uDC41 Vectors ON' : '\uD83D\uDC41 Vectors OFF'}
@@ -736,7 +778,8 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
       {experimentCount >= 3 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+          onClick={() => goToPhase('review')}
+          style={{ zIndex: 10 }}
           className="px-8 py-4 bg-gradient-to-r from-purple-600 to-orange-600 text-white font-semibold rounded-xl"
         >
           I see the pattern! {'\u2192'}
@@ -752,7 +795,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
       <div className="bg-gradient-to-br from-purple-900/40 to-slate-900/60 rounded-2xl p-6 max-w-lg w-full border border-purple-500/30 mb-6">
         <p className="text-3xl text-purple-400 font-mono font-bold text-center mb-4">
-          {'\u03C4'} = F {'\u00D7'} r
+          {'\u03C4'} = r {'\u00D7'} F = rF sin({'\u03B8'})
         </p>
         <p className="text-slate-300 text-center leading-relaxed">
           To rotate something, you need <em className="text-purple-400">torque</em>.
@@ -776,37 +819,39 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
       </p>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onClick={() => goToPhase('twist_predict')}
+        style={{ zIndex: 10 }}
         className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
       >
-        What About a Sticky Hinge? {'\u2192'}
+        Next Challenge: Balancing! {'\u2192'}
       </button>
     </div>
   );
 
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center px-6 py-8">
-      <div className="text-5xl mb-4">{'\uD83D\uDD25'}</div>
-      <h2 className="text-2xl md:text-3xl font-bold text-amber-400 mb-2">Plot Twist: Sticky Hinge!</h2>
-      <p className="text-slate-400 mb-8">What if the hinge is rusty and sticky?</p>
+      <div className="text-5xl mb-4">{'\u2696\uFE0F'}</div>
+      <h2 className="text-2xl md:text-3xl font-bold text-amber-400 mb-2">Plot Twist: The Seesaw!</h2>
+      <p className="text-slate-400 mb-8">How do you balance a seesaw with unequal weights?</p>
+
+      <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 max-w-md w-full border border-slate-700/50">
+        {renderSeesawVisualization()}
+      </div>
 
       <div className="flex flex-col gap-3 w-full max-w-md mb-8">
         {[
-          { id: 'same', label: "Same force - friction doesn't matter" },
-          { id: 'more', label: "More force needed - must overcome friction" },
-          { id: 'less', label: "Less force - friction helps somehow" }
+          { id: 'heavy_far', label: "Put the heavy weight farther from pivot" },
+          { id: 'heavy_close', label: "Put the heavy weight closer to pivot" },
+          { id: 'impossible', label: "It's impossible to balance unequal weights" }
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              const now = Date.now();
-              if (now - lastClickRef.current < 200) return;
-              lastClickRef.current = now;
+            onClick={() => {
               setTwistPrediction(option.id);
-              playSound(option.id === 'more' ? 'success' : 'click');
+              playSound(option.id === 'heavy_close' ? 'success' : 'click');
               emitEvent('twist_prediction_made', { twistPrediction: option.id });
             }}
+            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl border-2 transition-all duration-300 text-left ${
               twistPrediction === option.id
                 ? 'border-amber-500 bg-amber-500/20'
@@ -820,123 +865,157 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
       {twistPrediction && (
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
-            setHasFriction(true);
-            resetDoor();
-            goToPhase(5);
-          }}
+          onClick={() => goToPhase('twist_play')}
+          style={{ zIndex: 10 }}
           className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
         >
-          Test Sticky Hinge! {'\u2192'}
+          Try the Seesaw! {'\u2192'}
         </button>
       )}
     </div>
   );
 
-  const renderTwistPlay = () => (
-    <div className="flex flex-col items-center px-6 py-8">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Friction Experiment</h2>
+  const renderTwistPlay = () => {
+    const [leftWeight, setLeftWeight] = useState(5);
+    const [leftPosition, setLeftPosition] = useState(0.4);
+    const [rightWeight, setRightWeight] = useState(2);
+    const [rightPosition, setRightPosition] = useState(0.8);
 
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 max-w-md w-full border border-slate-700/50">
-        {renderVisualization()}
-      </div>
+    const leftTorque = leftWeight * leftPosition;
+    const rightTorque = rightWeight * rightPosition;
+    const isBalanced = Math.abs(leftTorque - rightTorque) < 0.5;
 
-      {/* Hinge toggle */}
-      <div className="flex gap-3 items-center mb-6">
-        <span className="text-slate-300 text-sm">Hinge:</span>
-        <button
-          onMouseDown={(e) => { e.preventDefault(); setHasFriction(false); resetDoor(); }}
-          disabled={isPushing}
-          className={`px-4 py-2 rounded-lg font-semibold text-sm ${!hasFriction ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-        >
-          Smooth
-        </button>
-        <button
-          onMouseDown={(e) => { e.preventDefault(); setHasFriction(true); resetDoor(); }}
-          disabled={isPushing}
-          className={`px-4 py-2 rounded-lg font-semibold text-sm ${hasFriction ? 'bg-orange-600 text-white' : 'bg-slate-700 text-slate-400'}`}
-        >
-          {'\uD83D\uDD25'} Sticky
-        </button>
-      </div>
+    return (
+      <div className="flex flex-col items-center px-6 py-8">
+        <h2 className="text-2xl font-bold text-amber-400 mb-4">Seesaw Balance Lab</h2>
 
-      {/* Slider */}
-      <div className="w-full max-w-md mb-6">
-        <label className="text-sm text-slate-300 mb-2 block">
-          Push position: <span className="text-purple-400 font-semibold">{(pushPosition * 100).toFixed(0)}%</span>
-        </label>
-        <input
-          type="range"
-          min="0.1"
-          max="1"
-          step="0.05"
-          value={pushPosition}
-          onChange={(e) => { setPushPosition(parseFloat(e.target.value)); resetDoor(); }}
-          disabled={isPushing}
-          className="w-full accent-purple-500"
-        />
-      </div>
+        {/* Interactive seesaw visualization */}
+        <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 max-w-md w-full border border-slate-700/50">
+          <svg width="100%" height={180} viewBox="0 0 360 180" className="block mx-auto">
+            <rect width={360} height={180} fill="#08050c" />
 
-      <div className="flex gap-3 mb-6">
-        {doorAngle === 0 ? (
+            {/* Ground */}
+            <rect x={0} y={150} width={360} height={30} fill="#1a1a2e" />
+
+            {/* Fulcrum */}
+            <polygon points="180,120 150,150 210,150" fill="#4b5563" stroke="#6b7280" strokeWidth={2} />
+
+            {/* Seesaw board - tilts based on balance */}
+            <g transform={`rotate(${(rightTorque - leftTorque) * 3}, 180, 115)`}>
+              <rect x={30} y={108} width={300} height={14} rx={4} fill="#8b7355" />
+
+              {/* Left weight */}
+              <g transform={`translate(${30 + leftPosition * 150}, 80)`}>
+                <circle r={18 + leftWeight * 2} fill="#ef4444" stroke="#dc2626" strokeWidth={2} />
+                <text y={5} textAnchor="middle" fill="#fff" fontSize={12} fontWeight="700">{leftWeight}kg</text>
+              </g>
+
+              {/* Right weight */}
+              <g transform={`translate(${180 + rightPosition * 150}, 80)`}>
+                <circle r={18 + rightWeight * 2} fill="#22c55e" stroke="#16a34a" strokeWidth={2} />
+                <text y={5} textAnchor="middle" fill="#fff" fontSize={12} fontWeight="700">{rightWeight}kg</text>
+              </g>
+            </g>
+
+            {/* Balance indicator */}
+            <text x={180} y={175} textAnchor="middle" fill={isBalanced ? '#22c55e' : '#f97316'} fontSize={14} fontWeight="700">
+              {isBalanced ? 'BALANCED!' : `Tilting ${leftTorque > rightTorque ? 'Left' : 'Right'}`}
+            </text>
+          </svg>
+        </div>
+
+        {/* Controls */}
+        <div className="grid grid-cols-2 gap-4 w-full max-w-md mb-6">
+          <div className="bg-red-500/10 rounded-xl p-4 border border-red-500/30">
+            <p className="text-red-400 font-semibold text-sm mb-2">Left Weight</p>
+            <input
+              type="range" min="1" max="10" value={leftWeight}
+              onChange={(e) => setLeftWeight(parseInt(e.target.value))}
+              className="w-full accent-red-500"
+            />
+            <p className="text-white text-center mt-1">{leftWeight} kg</p>
+            <p className="text-slate-400 text-xs mt-2">Position: {(leftPosition * 100).toFixed(0)}%</p>
+            <input
+              type="range" min="0.1" max="1" step="0.1" value={leftPosition}
+              onChange={(e) => setLeftPosition(parseFloat(e.target.value))}
+              className="w-full accent-red-500"
+            />
+          </div>
+          <div className="bg-green-500/10 rounded-xl p-4 border border-green-500/30">
+            <p className="text-green-400 font-semibold text-sm mb-2">Right Weight</p>
+            <input
+              type="range" min="1" max="10" value={rightWeight}
+              onChange={(e) => setRightWeight(parseInt(e.target.value))}
+              className="w-full accent-green-500"
+            />
+            <p className="text-white text-center mt-1">{rightWeight} kg</p>
+            <p className="text-slate-400 text-xs mt-2">Position: {(rightPosition * 100).toFixed(0)}%</p>
+            <input
+              type="range" min="0.1" max="1" step="0.1" value={rightPosition}
+              onChange={(e) => setRightPosition(parseFloat(e.target.value))}
+              className="w-full accent-green-500"
+            />
+          </div>
+        </div>
+
+        {/* Torque display */}
+        <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 max-w-md w-full mb-6">
+          <p className="text-center text-slate-300">
+            Left: <span className="text-red-400 font-semibold">{leftTorque.toFixed(1)}</span> N-m |
+            Right: <span className="text-green-400 font-semibold">{rightTorque.toFixed(1)}</span> N-m
+          </p>
+          <p className="text-center text-purple-400 text-sm mt-2">
+            {'\u03A3\u03C4'} = {(leftTorque - rightTorque).toFixed(1)} N-m
+          </p>
+        </div>
+
+        {isBalanced && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); pushDoor(); }}
-            disabled={isPushing}
-            className="px-6 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white font-semibold rounded-xl disabled:opacity-50"
+            onClick={() => goToPhase('twist_review')}
+            style={{ zIndex: 10 }}
+            className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
           >
-            {'\uD83D\uDC46'} Push!
-          </button>
-        ) : (
-          <button
-            onMouseDown={(e) => { e.preventDefault(); resetDoor(); }}
-            className="px-6 py-3 bg-slate-700 text-white font-semibold rounded-xl hover:bg-slate-600"
-          >
-            {'\u21BA'} Reset
+            I balanced it! {'\u2192'}
           </button>
         )}
       </div>
-
-      <p className="text-slate-400 text-sm mb-6">Compare smooth vs sticky hinge forces!</p>
-
-      {experimentCount >= 5 && (
-        <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
-          className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
-        >
-          I understand! {'\u2192'}
-        </button>
-      )}
-    </div>
-  );
+    );
+  };
 
   const renderTwistReview = () => (
     <div className="flex flex-col items-center px-6 py-8">
-      <div className="text-5xl mb-4">{'\u2699\uFE0F'}</div>
-      <h2 className="text-2xl md:text-3xl font-bold text-amber-400 mb-6">Friction Adds Resistance</h2>
+      <div className="text-5xl mb-4">{'\u2696\uFE0F'}</div>
+      <h2 className="text-2xl md:text-3xl font-bold text-amber-400 mb-6">Rotational Equilibrium</h2>
 
       <div className="bg-gradient-to-br from-amber-900/40 to-slate-900/60 rounded-2xl p-6 max-w-lg w-full border border-amber-500/30 mb-6">
-        <p className="text-orange-400 font-semibold text-center text-lg mb-3">
-          Friction creates a resisting torque!
+        <p className="text-3xl text-amber-400 font-mono font-bold text-center mb-4">
+          {'\u03A3\u03C4'} = 0
         </p>
         <p className="text-slate-300 text-center leading-relaxed">
-          You need extra torque to overcome the friction at the hinge. This means more force at any position!
+          For an object to be in rotational equilibrium, the sum of all torques must equal zero.
+          Clockwise torques balance counterclockwise torques!
         </p>
       </div>
 
-      <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 max-w-lg w-full mb-6">
-        <p className="text-white text-center">
-          <span className="text-emerald-400 font-semibold">Smooth:</span> {'\u03C4'} needed = 15 N-m<br />
-          <span className="text-orange-400 font-semibold">Sticky:</span> {'\u03C4'} needed = 30 N-m (2x more!)
-        </p>
+      <div className="grid gap-4 max-w-lg w-full mb-6">
+        <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4">
+          <p className="font-semibold text-purple-400 mb-1">Balance Condition</p>
+          <p className="text-slate-300 text-sm">m1 x r1 = m2 x r2</p>
+          <p className="text-slate-400 text-xs mt-1">Heavier objects need shorter lever arms!</p>
+        </div>
+        <div className="bg-cyan-500/10 border border-cyan-500/30 rounded-xl p-4">
+          <p className="font-semibold text-cyan-400 mb-1">Real-World Applications</p>
+          <p className="text-slate-300 text-sm">Bridges, cranes, mobiles, and even your body use this principle!</p>
+        </div>
       </div>
 
-      <p className={`text-sm mb-6 ${twistPrediction === 'more' ? 'text-emerald-400' : 'text-slate-400'}`}>
-        Your prediction: {twistPrediction === 'more' ? '\u2713 Correct!' : 'Now you understand!'}
+      <p className={`text-sm mb-6 ${twistPrediction === 'heavy_close' ? 'text-emerald-400' : 'text-slate-400'}`}>
+        Your prediction: {twistPrediction === 'heavy_close' ? '\u2713 Correct!' : 'Now you understand!'}
       </p>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onClick={() => goToPhase('transfer')}
+        style={{ zIndex: 10 }}
         className="px-8 py-4 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-xl"
       >
         See Real-World Examples {'\u2192'}
@@ -984,11 +1063,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
           {!completedApps.has(activeApp) && (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const now = Date.now();
-                if (now - lastClickRef.current < 200) return;
-                lastClickRef.current = now;
+              onClick={() => {
                 const newCompleted = new Set(completedApps);
                 newCompleted.add(activeApp);
                 setCompletedApps(newCompleted);
@@ -998,6 +1073,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
                   setTimeout(() => setActiveApp(activeApp + 1), 300);
                 }
               }}
+              style={{ zIndex: 10 }}
               className="w-full mt-4 py-3 bg-emerald-500/20 border border-emerald-500/50 text-emerald-400 font-semibold rounded-xl"
             >
               {'\u2713'} Mark "{app.title}" as Read
@@ -1014,8 +1090,9 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
         {/* Navigation */}
         <div className="flex gap-4">
           <button
-            onMouseDown={(e) => { e.preventDefault(); setActiveApp(Math.max(0, activeApp - 1)); }}
+            onClick={() => setActiveApp(Math.max(0, activeApp - 1))}
             disabled={activeApp === 0}
+            style={{ zIndex: 10 }}
             className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg disabled:opacity-50"
           >
             {'\u2190'} Previous
@@ -1023,15 +1100,17 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
           {activeApp < applications.length - 1 ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); setActiveApp(activeApp + 1); }}
+              onClick={() => setActiveApp(activeApp + 1)}
               disabled={!completedApps.has(activeApp)}
+              style={{ zIndex: 10 }}
               className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg disabled:opacity-50"
             >
               Next {'\u2192'}
             </button>
           ) : allAppsCompleted ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+              onClick={() => goToPhase('test')}
+              style={{ zIndex: 10 }}
               className="px-6 py-2 bg-gradient-to-r from-blue-600 to-cyan-600 text-white font-semibold rounded-lg"
             >
               Take the Quiz {'\u2192'}
@@ -1088,8 +1167,9 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
               return (
                 <button
                   key={idx}
-                  onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(idx); }}
+                  onClick={() => handleTestAnswer(idx)}
                   disabled={isAnswered}
+                  style={{ zIndex: 10 }}
                   className={`p-4 rounded-xl border-2 text-left transition-all ${bgClass}`}
                 >
                   <span className={`text-sm ${textClass}`}>{option.text}</span>
@@ -1109,16 +1189,13 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
         <div className="flex gap-4">
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              const now = Date.now();
-              if (now - lastClickRef.current < 200) return;
-              lastClickRef.current = now;
+            onClick={() => {
               setCurrentQuestion(prev => Math.max(0, prev - 1));
               setSelectedAnswer(null);
               setShowExplanation(answeredQuestions.has(currentQuestion - 1));
             }}
             disabled={currentQuestion === 0}
+            style={{ zIndex: 10 }}
             className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg disabled:opacity-50"
           >
             {'\u2190'} Back
@@ -1126,22 +1203,20 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
           {currentQuestion < testQuestions.length - 1 ? (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const now = Date.now();
-                if (now - lastClickRef.current < 200) return;
-                lastClickRef.current = now;
+              onClick={() => {
                 setCurrentQuestion(prev => prev + 1);
                 setSelectedAnswer(null);
                 setShowExplanation(answeredQuestions.has(currentQuestion + 1));
               }}
+              style={{ zIndex: 10 }}
               className="px-4 py-2 bg-slate-700 text-slate-300 rounded-lg"
             >
               Next {'\u2192'}
             </button>
           ) : answeredQuestions.size === testQuestions.length ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
+              onClick={() => goToPhase('mastery')}
+              style={{ zIndex: 10 }}
               className="px-6 py-2 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-lg"
             >
               Complete {'\u2192'}
@@ -1159,7 +1234,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     const passed = correctAnswers >= 7;
 
     const resetGame = () => {
-      setPhase(0);
+      setPhase('hook');
       setExperimentCount(0);
       setCurrentQuestion(0);
       setCorrectAnswers(0);
@@ -1195,7 +1270,7 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
         <div className="text-7xl mb-6">{passed ? '\uD83C\uDFC6' : '\uD83D\uDCDA'}</div>
 
         <h2 className="text-3xl md:text-4xl font-bold text-white mb-2">
-          {passed ? 'Torque Master!' : 'Keep Practicing!'}
+          {passed ? 'Congratulations! Torque Master!' : 'Keep Practicing!'}
         </h2>
 
         <div className={`text-5xl font-bold mb-2 ${passed ? 'text-emerald-400' : 'text-amber-400'}`}>{percentage}%</div>
@@ -1205,10 +1280,10 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
           <h3 className="text-purple-400 font-semibold mb-4">{passed ? 'Concepts Mastered' : 'Key Concepts'}</h3>
           <ul className="text-left space-y-2">
             {[
-              '{\\u03C4} = Force x Lever arm',
+              '{\\u03C4} = r x F = rF sin(theta)',
               'Longer lever arm = less force needed',
-              'Door handles maximize leverage',
-              'Friction requires extra torque'
+              'Rotational equilibrium: Sum of torques = 0',
+              'Real applications: Wrenches, Seesaws, Steering, Engines'
             ].map((item, idx) => (
               <li key={idx} className="text-slate-300 text-sm flex items-center gap-2">
                 <span className="text-emerald-400">{passed ? '\u2713' : '\u25CB'}</span> {item.replace('{\\u03C4}', '\u03C4')}
@@ -1221,13 +1296,15 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
           {passed ? (
             <>
               <button
-                onMouseDown={(e) => { e.preventDefault(); handleReturnToDashboard(); }}
+                onClick={() => handleReturnToDashboard()}
+                style={{ zIndex: 10 }}
                 className="w-full px-8 py-4 bg-gradient-to-r from-purple-600 to-orange-600 text-white font-semibold rounded-xl"
               >
                 {'\uD83C\uDFE0'} Return to Dashboard
               </button>
               <button
-                onMouseDown={(e) => { e.preventDefault(); resetGame(); }}
+                onClick={() => resetGame()}
+                style={{ zIndex: 10 }}
                 className="w-full px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl border border-slate-600"
               >
                 {'\uD83D\uDD2C'} Review Lesson
@@ -1236,19 +1313,22 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
           ) : (
             <>
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+                onClick={() => goToPhase('test')}
+                style={{ zIndex: 10 }}
                 className="w-full px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
               >
                 {'\u21BA'} Retake Test
               </button>
               <button
-                onMouseDown={(e) => { e.preventDefault(); resetGame(); }}
+                onClick={() => resetGame()}
+                style={{ zIndex: 10 }}
                 className="w-full px-8 py-4 bg-slate-700 hover:bg-slate-600 text-white font-semibold rounded-xl border border-slate-600"
               >
                 {'\uD83D\uDD2C'} Review Lesson
               </button>
               <button
-                onMouseDown={(e) => { e.preventDefault(); handleReturnToDashboard(); }}
+                onClick={() => handleReturnToDashboard()}
+                style={{ zIndex: 10 }}
                 className="text-slate-500 underline text-sm mt-2"
               >
                 Return to Dashboard
@@ -1265,19 +1345,21 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
   // ============================================================================
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
+
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
@@ -1292,14 +1374,15 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Torque</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p, idx) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-purple-400 w-6 shadow-lg shadow-purple-400/30'
-                    : phase > p
+                    : currentPhaseIndex > idx
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}

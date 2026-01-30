@@ -4,41 +4,31 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================================================
 // STATIC VS KINETIC FRICTION RENDERER - Premium Design System
+// Complete 10-phase learning experience
 // ============================================================================
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+  type: string;
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
-
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
 
 interface StaticKineticFrictionRendererProps {
   width?: number;
   height?: number;
   onComplete?: () => void;
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 type Surface = 'wood' | 'rubber' | 'ice';
@@ -164,58 +154,6 @@ const CarTiresSVG: React.FC = () => (
   </svg>
 );
 
-const SportShoesSVG: React.FC = () => (
-  <svg width="200" height="140" viewBox="0 0 200 140">
-    <defs>
-      <linearGradient id="shoeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#3b82f6" />
-        <stop offset="100%" stopColor="#1d4ed8" />
-      </linearGradient>
-      <linearGradient id="soleGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#374151" />
-        <stop offset="100%" stopColor="#1f2937" />
-      </linearGradient>
-      <linearGradient id="courtGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#854d0e" />
-        <stop offset="100%" stopColor="#713f12" />
-      </linearGradient>
-      <filter id="shoeShadow">
-        <feDropShadow dx="0" dy="4" stdDeviation="4" floodOpacity="0.4" />
-      </filter>
-    </defs>
-
-    {/* Court floor */}
-    <rect x="0" y="105" width="200" height="35" fill="url(#courtGrad)" />
-    <line x1="0" y1="105" x2="200" y2="105" stroke="#a16207" strokeWidth="2" />
-    <line x1="100" y1="105" x2="100" y2="140" stroke="#a16207" strokeWidth="1" strokeDasharray="4,4" />
-
-    {/* Shoe */}
-    <g filter="url(#shoeShadow)">
-      {/* Sole */}
-      <path d="M35 95 Q25 95 25 85 L25 80 L130 80 L145 85 Q155 90 155 100 L155 105 L35 105 Z" fill="url(#soleGrad)" />
-      {/* Tread pattern */}
-      {[40, 55, 70, 85, 100, 115, 130, 145].map((x, i) => (
-        <rect key={i} x={x} y="98" width="8" height="6" rx="1" fill="#111827" />
-      ))}
-      {/* Upper */}
-      <path d="M30 80 Q20 60 40 45 L90 35 Q120 30 140 50 L145 75 L145 80 L30 80 Z" fill="url(#shoeGrad)" />
-      {/* Logo swoosh */}
-      <path d="M45 65 Q80 55 110 60 Q85 62 55 70 Z" fill="white" opacity="0.9" />
-      {/* Laces */}
-      <circle cx="70" cy="55" r="3" fill="white" />
-      <circle cx="85" cy="50" r="3" fill="white" />
-      <circle cx="100" cy="48" r="3" fill="white" />
-    </g>
-
-    {/* Friction indicator */}
-    <g transform="translate(165, 70)">
-      <text x="0" y="0" fill={design.colors.accentPrimary} fontSize="10" fontWeight="600">High</text>
-      <text x="0" y="12" fill={design.colors.accentPrimary} fontSize="10" fontWeight="600">Grip!</text>
-      <path d="M-5 5 L-15 5" stroke={design.colors.accentPrimary} strokeWidth="2" />
-    </g>
-  </svg>
-);
-
 const BrakeSystemSVG: React.FC = () => (
   <svg width="200" height="140" viewBox="0 0 200 140">
     <defs>
@@ -287,6 +225,52 @@ const BrakeSystemSVG: React.FC = () => (
   </svg>
 );
 
+const WalkingSVG: React.FC = () => (
+  <svg width="200" height="140" viewBox="0 0 200 140">
+    <defs>
+      <linearGradient id="floorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#4a4a4a" />
+        <stop offset="100%" stopColor="#333333" />
+      </linearGradient>
+    </defs>
+
+    {/* Floor */}
+    <rect x="0" y="110" width="200" height="30" fill="url(#floorGrad)" />
+    <line x1="0" y1="110" x2="200" y2="110" stroke="#666" strokeWidth="2" />
+
+    {/* Person walking */}
+    <g transform="translate(100, 50)">
+      {/* Head */}
+      <circle cx="0" cy="-35" r="12" fill="#fcd9b6" stroke="#e5c4a1" strokeWidth="2" />
+      {/* Body */}
+      <line x1="0" y1="-23" x2="0" y2="10" stroke="#3b82f6" strokeWidth="8" strokeLinecap="round" />
+      {/* Arms */}
+      <line x1="0" y1="-15" x2="-15" y2="5" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" />
+      <line x1="0" y1="-15" x2="15" y2="-5" stroke="#3b82f6" strokeWidth="4" strokeLinecap="round" />
+      {/* Legs */}
+      <line x1="0" y1="10" x2="-12" y2="50" stroke="#1e40af" strokeWidth="5" strokeLinecap="round" />
+      <line x1="0" y1="10" x2="15" y2="45" stroke="#1e40af" strokeWidth="5" strokeLinecap="round" />
+      {/* Feet */}
+      <ellipse cx="-12" cy="55" rx="10" ry="5" fill="#333" />
+      <ellipse cx="15" cy="50" rx="10" ry="5" fill="#333" />
+    </g>
+
+    {/* Friction arrow - foot pushing back */}
+    <g>
+      <path d="M65 108 L45 108 L50 103 M45 108 L50 113" stroke={design.colors.staticFriction} strokeWidth="2" fill="none" />
+      <text x="35" y="98" fill={design.colors.staticFriction} fontSize="8" fontWeight="600">Push</text>
+    </g>
+
+    {/* Friction arrow - ground pushing forward */}
+    <g>
+      <path d="M95 108 L115 108 L110 103 M115 108 L110 113" stroke={design.colors.success} strokeWidth="2" fill="none" />
+      <text x="115" y="98" fill={design.colors.success} fontSize="8" fontWeight="600">Friction</text>
+    </g>
+
+    <text x="100" y="135" textAnchor="middle" fill={design.colors.textSecondary} fontSize="10">Walking requires friction</text>
+  </svg>
+);
+
 const ClimbingSVG: React.FC = () => (
   <svg width="200" height="140" viewBox="0 0 200 140">
     <defs>
@@ -334,18 +318,6 @@ const ClimbingSVG: React.FC = () => (
       <ellipse cx="6" cy="-8" rx="2" ry="4" fill="#fef3c7" opacity="0.8" />
     </g>
 
-    {/* Chalk particles */}
-    {[0, 1, 2, 3, 4].map((i) => (
-      <circle
-        key={i}
-        cx={140 + Math.random() * 20}
-        cy={30 + Math.random() * 20}
-        r={1 + Math.random() * 2}
-        fill="white"
-        opacity="0.5"
-      />
-    ))}
-
     {/* Friction indicator */}
     <g transform="translate(10, 60)">
       <text x="0" y="0" fill={design.colors.success} fontSize="9" fontWeight="600" transform="rotate(-90)">HIGH FRICTION</text>
@@ -361,10 +333,10 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   height = 500,
   onComplete,
   onGameEvent,
-  currentPhase,
+  gamePhase,
   onPhaseComplete
 }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>('hook');
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [surface, setSurface] = useState<Surface>('wood');
@@ -384,7 +356,6 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   const [activeApp, setActiveApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
 
-  const navigationLockRef = useRef(false);
   const animationRef = useRef<number>();
 
   const surfaceProperties: Record<Surface, { staticCoef: number; kineticCoef: number; color: string; name: string }> = {
@@ -399,10 +370,10 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
 
   // Sync with external phase control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase]);
+  }, [gamePhase, phase]);
 
   // Web Audio API sound
   const playSound = useCallback((type: 'click' | 'success' | 'error' | 'transition' = 'click') => {
@@ -488,8 +459,8 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
 
   const applications = [
     { title: "Car Tires & Grip", description: "Tire tread patterns maximize friction with road surfaces. Racing slicks use smooth rubber for max contact on dry tracks, while treaded tires channel water for wet grip.", stats: "\u03bc rubber-asphalt \u2248 0.7-0.9", SVG: CarTiresSVG },
-    { title: "Sports Footwear", description: "Basketball shoes maximize court grip for quick stops and pivots. Different sports require different friction profiles - spikes for grass, smooth soles for courts.", stats: "Court shoes: \u03bc \u2248 0.8+", SVG: SportShoesSVG },
     { title: "Brake Systems", description: "Brake pads convert kinetic energy to heat through friction. ABS keeps tires in static friction regime - wheels roll rather than slide for maximum stopping power.", stats: "Brake pad \u03bc \u2248 0.35-0.45", SVG: BrakeSystemSVG },
+    { title: "Walking & Running", description: "Every step relies on static friction between your foot and the ground. Your foot pushes back, friction pushes you forward. On ice, low friction makes walking dangerous.", stats: "Shoe-floor \u03bc \u2248 0.4-0.8", SVG: WalkingSVG },
     { title: "Rock Climbing", description: "Climbers use chalk to increase hand-rock friction. Climbing shoes have sticky rubber compounds with friction coefficients exceeding 1.0 on textured rock.", stats: "Climbing rubber \u03bc > 1.0", SVG: ClimbingSVG }
   ];
 
@@ -498,118 +469,38 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   }, []);
 
   // Emit events
-  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
-    if (onGameEvent) {
-      onGameEvent({ type, data });
-    }
-  }, [onGameEvent]);
-
-  // Alias for emit
-  const emit = useCallback((category: string, data?: Record<string, unknown>, action?: string) => {
-    emitEvent('parameter_changed', { category, action, ...data });
-  }, [emitEvent]);
+  const emit = useCallback((type: string, details: Record<string, unknown> = {}) => {
+    onGameEvent?.({
+      type,
+      gameType: 'static_kinetic_friction',
+      gameTitle: 'Static vs Kinetic Friction',
+      details: { phase, ...details },
+      timestamp: Date.now()
+    });
+  }, [onGameEvent, phase]);
 
   // Return to dashboard handler
   const handleReturnToDashboard = useCallback(() => {
-    emitEvent('mastery_achieved', { action: 'return_to_dashboard' });
+    emit('mastery_achieved', { action: 'return_to_dashboard' });
     window.dispatchEvent(new CustomEvent('returnToDashboard'));
-  }, [emitEvent]);
+  }, [emit]);
 
-  // Phase navigation with 400ms debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  // Phase navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
-    emitEvent('phase_change', { from: phase, to: newPhase });
+    emit('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [emitEvent, phase, playSound, onPhaseComplete]);
+  }, [emit, phase, playSound, onPhaseComplete]);
 
   const goNext = useCallback(() => {
-    if (phase < PHASES.length - 1) {
-      goToPhase(phase + 1);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
     } else if (onComplete) {
       onComplete();
     }
   }, [phase, goToPhase, onComplete]);
-
-  const goBack = useCallback(() => {
-    if (phase > 0) {
-      goToPhase(phase - 1);
-    }
-  }, [phase, goToPhase]);
-
-  // Render button helper function
-  const renderButton = (
-    label: string,
-    onClick: () => void,
-    variant: 'primary' | 'secondary' | 'ghost' | 'success' = 'primary',
-    options?: { disabled?: boolean; fullWidth?: boolean; size?: 'sm' | 'md' | 'lg' }
-  ) => {
-    const { disabled = false, fullWidth = false, size = 'md' } = options || {};
-    const sizes = {
-      sm: { padding: '10px 18px', fontSize: '13px' },
-      md: { padding: '14px 28px', fontSize: '15px' },
-      lg: { padding: '18px 36px', fontSize: '17px' }
-    };
-
-    const baseStyle: React.CSSProperties = {
-      ...sizes[size],
-      borderRadius: design.radius.md,
-      fontWeight: 600,
-      fontFamily: design.font.sans,
-      border: 'none',
-      cursor: disabled ? 'not-allowed' : 'pointer',
-      opacity: disabled ? 0.4 : 1,
-      transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
-      width: fullWidth ? '100%' : 'auto',
-      display: 'inline-flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      gap: '8px',
-      letterSpacing: '-0.01em',
-      WebkitTapHighlightColor: 'transparent',
-      userSelect: 'none',
-    };
-
-    const variants: Record<string, React.CSSProperties> = {
-      primary: {
-        background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
-        color: '#000',
-        boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.accentPrimary)}`
-      },
-      secondary: {
-        background: design.colors.bgTertiary,
-        color: design.colors.textPrimary,
-        border: `1px solid ${design.colors.border}`
-      },
-      ghost: {
-        background: 'transparent',
-        color: design.colors.textSecondary
-      },
-      success: {
-        background: `linear-gradient(135deg, ${design.colors.success} 0%, #059669 100%)`,
-        color: '#fff',
-        boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.success)}`
-      }
-    };
-
-    return (
-      <button
-        onMouseDown={(e) => {
-          if (disabled || navigationLockRef.current) return;
-          e.preventDefault();
-          navigationLockRef.current = true;
-          onClick();
-          setTimeout(() => { navigationLockRef.current = false; }, 400);
-        }}
-        style={{ ...baseStyle, ...variants[variant] }}
-      >
-        {label}
-      </button>
-    );
-  };
 
   const startPulling = useCallback(() => {
     if (isPulling) return;
@@ -621,7 +512,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
     setPeakForce(0);
     setSteadyForce(0);
 
-    emit('interaction', { surface, staticMax: staticFrictionMax, kinetic: kineticFriction }, 'pull_start');
+    emit('interaction', { surface, staticMax: staticFrictionMax, kinetic: kineticFriction, action: 'pull_start' });
 
     let force = 0;
     let slipped = false;
@@ -669,7 +560,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
     setForceHistory([]);
     setPeakForce(0);
     setSteadyForce(0);
-    emit('interaction', { action: 'reset' }, 'reset');
+    emit('interaction', { action: 'reset' });
   }, [emit]);
 
   const handleTestAnswer = useCallback((answerIndex: number) => {
@@ -679,7 +570,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
     const isCorrect = testQuestions[currentQuestion].options[answerIndex]?.correct;
     if (isCorrect) setCorrectAnswers(prev => prev + 1);
     setAnsweredQuestions(prev => new Set([...prev, currentQuestion]));
-    emit('interaction', { question: currentQuestion, answer: answerIndex, correct: isCorrect }, 'answer_submit');
+    emit('interaction', { question: currentQuestion, answer: answerIndex, correct: isCorrect, action: 'answer_submit' });
   }, [currentQuestion, answeredQuestions, emit, testQuestions]);
 
   // ============================================================================
@@ -864,7 +755,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         filter: `drop-shadow(0 8px 24px ${design.colors.accentGlow})`,
         animation: 'float 3s ease-in-out infinite'
       }}>
-        <span style={{ display: 'inline-block', animation: 'slideBox 2s ease-in-out infinite' }}>📦</span>
+        <span style={{ display: 'inline-block', animation: 'slideBox 2s ease-in-out infinite' }}>&#128230;</span>
       </div>
 
       <h1 style={{
@@ -877,7 +768,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         letterSpacing: '-0.02em',
         lineHeight: 1.2
       }}>
-        The Friction Force Jump
+        Static vs Kinetic Friction
       </h1>
 
       <p style={{
@@ -889,7 +780,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         maxWidth: 340,
         lineHeight: 1.6
       }}>
-        Pull a heavy box across the floor. Something strange happens when it starts sliding...
+        Have you ever noticed it takes more effort to START pushing a heavy box than to KEEP it moving? Let's discover why!
       </p>
 
       <div style={{
@@ -902,7 +793,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         boxShadow: design.shadow.glow(design.colors.accentPrimary)
       }}>
         <p style={{
-          fontSize: 20,
+          fontSize: 18,
           color: design.colors.accentSecondary,
           fontFamily: design.font.sans,
           textAlign: 'center',
@@ -910,11 +801,28 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
           lineHeight: 1.5,
           margin: 0
         }}>
-          "Is it harder to START sliding or to KEEP sliding?"
+          "Why is it harder to START sliding than to KEEP sliding?"
         </p>
       </div>
 
-      {renderButton("Let's Find Out", () => goToPhase(1), 'primary', { size: 'lg' })}
+      <button
+        onClick={() => goToPhase('predict')}
+        style={{
+          zIndex: 10,
+          padding: '18px 36px',
+          fontSize: '17px',
+          borderRadius: design.radius.md,
+          fontWeight: 600,
+          fontFamily: design.font.sans,
+          border: 'none',
+          cursor: 'pointer',
+          background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
+          color: '#000',
+          boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.accentPrimary)}`
+        }}
+      >
+        Let's Find Out
+      </button>
 
       <p style={{
         fontSize: 13,
@@ -923,7 +831,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         fontFamily: design.font.sans,
         letterSpacing: '0.02em'
       }}>
-        Static vs Kinetic Friction \u2022 \u03bcs vs \u03bck
+        Static vs Kinetic Friction - \u03bcs vs \u03bck
       </p>
 
       <style>{`
@@ -949,7 +857,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
       height: '100%',
       background: design.colors.bgPrimary
     }}>
-      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>🤔</div>
+      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>&#129300;</div>
       <h2 style={{
         fontSize: 24,
         fontWeight: 700,
@@ -964,25 +872,23 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         fontFamily: design.font.sans,
         textAlign: 'center'
       }}>
-        When pulling a block, which requires more force?
+        Why is it harder to START moving a heavy object than to KEEP it moving?
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, width: '100%', maxWidth: 360 }}>
         {[
-          { id: 'start_harder', label: 'Starting to slide requires more force', icon: '🏋️' },
-          { id: 'keep_harder', label: 'Keeping it sliding requires more force', icon: '🔄' },
-          { id: 'same', label: 'Both require the same force', icon: '⚖️' }
+          { id: 'inertia', label: 'Objects at rest want to stay at rest (inertia)', icon: '&#128260;' },
+          { id: 'friction_type', label: 'Different types of friction act before and after sliding', icon: '&#128300;' },
+          { id: 'weight', label: 'The object feels heavier when not moving', icon: '&#9878;&#65039;' }
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
-              if (navigationLockRef.current) return;
-              navigationLockRef.current = true;
+            onClick={() => {
               setPrediction(option.id);
               emit('prediction', { prediction: option.id });
-              setTimeout(() => { navigationLockRef.current = false; }, 400);
             }}
             style={{
+              zIndex: 10,
               padding: `${design.spacing.md}px ${design.spacing.lg}px`,
               borderRadius: design.radius.md,
               border: prediction === option.id ? `2px solid ${design.colors.accentPrimary}` : `1px solid ${design.colors.border}`,
@@ -995,7 +901,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
               boxShadow: prediction === option.id ? design.shadow.glow(design.colors.accentPrimary) : 'none'
             }}
           >
-            <span style={{ fontSize: 28 }}>{option.icon}</span>
+            <span style={{ fontSize: 28 }} dangerouslySetInnerHTML={{ __html: option.icon }} />
             <span style={{ fontSize: 15, color: design.colors.textPrimary, fontFamily: design.font.sans, fontWeight: 500, textAlign: 'left' }}>
               {option.label}
             </span>
@@ -1005,7 +911,24 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
 
       {prediction && (
         <div style={{ marginTop: design.spacing.xl }}>
-          {renderButton('Test It!', () => goToPhase(2))}
+          <button
+            onClick={() => goToPhase('play')}
+            style={{
+              zIndex: 10,
+              padding: '14px 28px',
+              fontSize: '15px',
+              borderRadius: design.radius.md,
+              fontWeight: 600,
+              fontFamily: design.font.sans,
+              border: 'none',
+              cursor: 'pointer',
+              background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
+              color: '#000',
+              boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.accentPrimary)}`
+            }}
+          >
+            Test It!
+          </button>
         </div>
       )}
     </div>
@@ -1036,15 +959,71 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         </div>
 
         <div style={{ display: 'flex', gap: design.spacing.md }}>
-          {!isPulling && blockPosition === 0 && renderButton('Start Pulling!', startPulling, 'success')}
-          {(isPulling || blockPosition > 0) && renderButton('Reset', resetExperiment, 'secondary')}
+          {!isPulling && blockPosition === 0 && (
+            <button
+              onClick={startPulling}
+              style={{
+                zIndex: 10,
+                padding: '14px 28px',
+                fontSize: '15px',
+                borderRadius: design.radius.md,
+                fontWeight: 600,
+                fontFamily: design.font.sans,
+                border: 'none',
+                cursor: 'pointer',
+                background: `linear-gradient(135deg, ${design.colors.success} 0%, #059669 100%)`,
+                color: '#fff',
+                boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.success)}`
+              }}
+            >
+              Start Pulling!
+            </button>
+          )}
+          {(isPulling || blockPosition > 0) && (
+            <button
+              onClick={resetExperiment}
+              style={{
+                zIndex: 10,
+                padding: '14px 28px',
+                fontSize: '15px',
+                borderRadius: design.radius.md,
+                fontWeight: 600,
+                fontFamily: design.font.sans,
+                border: `1px solid ${design.colors.border}`,
+                cursor: 'pointer',
+                background: design.colors.bgTertiary,
+                color: design.colors.textPrimary
+              }}
+            >
+              Reset
+            </button>
+          )}
         </div>
 
         <p style={{ fontSize: 13, color: design.colors.textTertiary, fontFamily: design.font.sans, textAlign: 'center' }}>
           Watch the force graph! Notice the peak then drop.
         </p>
 
-        {experimentCount >= 2 && renderButton('I see the pattern!', () => goToPhase(3))}
+        {experimentCount >= 2 && (
+          <button
+            onClick={() => goToPhase('review')}
+            style={{
+              zIndex: 10,
+              padding: '14px 28px',
+              fontSize: '15px',
+              borderRadius: design.radius.md,
+              fontWeight: 600,
+              fontFamily: design.font.sans,
+              border: 'none',
+              cursor: 'pointer',
+              background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
+              color: '#000',
+              boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.accentPrimary)}`
+            }}
+          >
+            I see the pattern!
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1059,14 +1038,14 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
       background: design.colors.bgPrimary,
       overflowY: 'auto'
     }}>
-      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>💡</div>
+      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>&#128161;</div>
       <h2 style={{
         fontSize: 24,
         fontWeight: 700,
         color: design.colors.textPrimary,
         marginBottom: design.spacing.md,
         fontFamily: design.font.sans
-      }}>Static {'>'} Kinetic Friction!</h2>
+      }}>The Friction Equations</h2>
 
       <div style={{
         background: design.colors.bgSecondary,
@@ -1077,25 +1056,46 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         width: '100%',
         border: `1px solid ${design.colors.border}`
       }}>
-        <p style={{
-          fontSize: 17,
-          color: design.colors.accentPrimary,
-          fontFamily: design.font.sans,
-          textAlign: 'center',
-          fontWeight: 600
-        }}>
-          It's harder to START sliding than to KEEP sliding!
-        </p>
-        <p style={{
-          fontSize: 14,
-          color: design.colors.textSecondary,
-          fontFamily: design.font.sans,
-          textAlign: 'center',
-          marginTop: design.spacing.md,
-          lineHeight: 1.6
-        }}>
-          When surfaces are at rest, they interlock more completely at the microscopic level.
-        </p>
+        <div style={{ marginBottom: design.spacing.md }}>
+          <p style={{
+            fontSize: 18,
+            color: design.colors.staticFriction,
+            fontFamily: design.font.mono,
+            textAlign: 'center',
+            fontWeight: 700,
+            marginBottom: 4
+          }}>
+            Fs_max = \u03bcs \u00d7 N
+          </p>
+          <p style={{
+            fontSize: 13,
+            color: design.colors.textSecondary,
+            fontFamily: design.font.sans,
+            textAlign: 'center'
+          }}>
+            Maximum static friction (before sliding)
+          </p>
+        </div>
+        <div>
+          <p style={{
+            fontSize: 18,
+            color: design.colors.kineticFriction,
+            fontFamily: design.font.mono,
+            textAlign: 'center',
+            fontWeight: 700,
+            marginBottom: 4
+          }}>
+            Fk = \u03bck \u00d7 N
+          </p>
+          <p style={{
+            fontSize: 13,
+            color: design.colors.textSecondary,
+            fontFamily: design.font.sans,
+            textAlign: 'center'
+          }}>
+            Kinetic friction (while sliding)
+          </p>
+        </div>
       </div>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, maxWidth: 360, width: '100%', marginBottom: design.spacing.md }}>
@@ -1106,10 +1106,10 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
           padding: design.spacing.md
         }}>
           <p style={{ fontSize: 14, fontWeight: 600, color: design.colors.staticFriction, fontFamily: design.font.sans, marginBottom: 4 }}>
-            Static Friction:
+            Static Friction (\u03bcs):
           </p>
           <p style={{ fontSize: 13, color: design.colors.textPrimary, fontFamily: design.font.sans, margin: 0 }}>
-            Full interlocking \u2192 Maximum resistance to starting motion
+            Surfaces interlock when at rest. Must overcome maximum to start sliding.
           </p>
         </div>
         <div style={{
@@ -1119,24 +1119,41 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
           padding: design.spacing.md
         }}>
           <p style={{ fontSize: 14, fontWeight: 600, color: design.colors.kineticFriction, fontFamily: design.font.sans, marginBottom: 4 }}>
-            Kinetic Friction:
+            Kinetic Friction (\u03bck):
           </p>
           <p style={{ fontSize: 13, color: design.colors.textPrimary, fontFamily: design.font.sans, margin: 0 }}>
-            Surfaces sliding \u2192 Bonds break before fully forming
+            While sliding, bonds break before fully forming. Always less than static!
           </p>
         </div>
       </div>
 
       <p style={{
         fontSize: 14,
-        color: prediction === 'start_harder' ? design.colors.success : design.colors.textSecondary,
+        color: prediction === 'friction_type' ? design.colors.success : design.colors.textSecondary,
         fontFamily: design.font.sans,
         marginBottom: design.spacing.lg
       }}>
-        Your prediction: {prediction === 'start_harder' ? '\u2705 Correct!' : '\ud83e\udd14 Now you understand!'}
+        Your prediction: {prediction === 'friction_type' ? '&#10004; Correct!' : '&#129300; Now you understand!'}
       </p>
 
-      {renderButton('What About Different Surfaces?', () => goToPhase(4))}
+      <button
+        onClick={() => goToPhase('twist_predict')}
+        style={{
+          zIndex: 10,
+          padding: '14px 28px',
+          fontSize: '15px',
+          borderRadius: design.radius.md,
+          fontWeight: 600,
+          fontFamily: design.font.sans,
+          border: 'none',
+          cursor: 'pointer',
+          background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
+          color: '#000',
+          boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.accentPrimary)}`
+        }}
+      >
+        What About Different Surfaces?
+      </button>
     </div>
   );
 
@@ -1149,14 +1166,14 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
       height: '100%',
       background: design.colors.bgPrimary
     }}>
-      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>🧊</div>
+      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>&#129482;</div>
       <h2 style={{
         fontSize: 22,
         fontWeight: 700,
         color: design.colors.textPrimary,
         marginBottom: design.spacing.sm,
         fontFamily: design.font.sans
-      }}>Plot Twist: Change the Surface!</h2>
+      }}>Plot Twist: Different Surfaces!</h2>
       <p style={{
         fontSize: 15,
         color: design.colors.textSecondary,
@@ -1164,25 +1181,23 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         fontFamily: design.font.sans,
         textAlign: 'center'
       }}>
-        How does the surface material affect the friction "jump"?
+        Wood, rubber, and ice all have different friction. What do you think determines the coefficient?
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, width: '100%', maxWidth: 360 }}>
         {[
-          { id: 'same_ratio', label: "Same ratio - all surfaces behave the same" },
-          { id: 'different', label: "Different surfaces have different ratios" },
-          { id: 'ice_no_jump', label: "Ice has almost no friction jump" }
+          { id: 'roughness', label: "Surface roughness determines friction" },
+          { id: 'materials', label: "The materials in contact determine friction" },
+          { id: 'temperature', label: "Temperature is the main factor" }
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
-              if (navigationLockRef.current) return;
-              navigationLockRef.current = true;
+            onClick={() => {
               setTwistPrediction(option.id);
               emit('prediction', { twistPrediction: option.id });
-              setTimeout(() => { navigationLockRef.current = false; }, 400);
             }}
             style={{
+              zIndex: 10,
               padding: `${design.spacing.md}px ${design.spacing.lg}px`,
               borderRadius: design.radius.md,
               border: twistPrediction === option.id ? `2px solid ${design.colors.accentPrimary}` : `1px solid ${design.colors.border}`,
@@ -1199,7 +1214,24 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
 
       {twistPrediction && (
         <div style={{ marginTop: design.spacing.xl }}>
-          {renderButton('Compare Surfaces!', () => goToPhase(5))}
+          <button
+            onClick={() => goToPhase('twist_play')}
+            style={{
+              zIndex: 10,
+              padding: '14px 28px',
+              fontSize: '15px',
+              borderRadius: design.radius.md,
+              fontWeight: 600,
+              fontFamily: design.font.sans,
+              border: 'none',
+              cursor: 'pointer',
+              background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
+              color: '#000',
+              boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.accentPrimary)}`
+            }}
+          >
+            Compare Surfaces!
+          </button>
         </div>
       )}
     </div>
@@ -1222,15 +1254,15 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
           {(['wood', 'rubber', 'ice'] as Surface[]).map((s) => (
             <button
               key={s}
-              onMouseDown={() => {
-                if (isPulling || navigationLockRef.current) return;
-                navigationLockRef.current = true;
-                setSurface(s);
-                resetExperiment();
-                emit('interaction', { surface: s }, 'surface_change');
-                setTimeout(() => { navigationLockRef.current = false; }, 400);
+              onClick={() => {
+                if (!isPulling) {
+                  setSurface(s);
+                  resetExperiment();
+                  emit('interaction', { surface: s, action: 'surface_change' });
+                }
               }}
               style={{
+                zIndex: 10,
                 padding: `${design.spacing.sm}px ${design.spacing.md}px`,
                 borderRadius: design.radius.md,
                 border: 'none',
@@ -1288,11 +1320,67 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         </div>
 
         <div style={{ display: 'flex', gap: design.spacing.md }}>
-          {!isPulling && blockPosition === 0 && renderButton('Pull!', startPulling, 'success')}
-          {(isPulling || blockPosition > 0) && renderButton('Reset', resetExperiment, 'secondary')}
+          {!isPulling && blockPosition === 0 && (
+            <button
+              onClick={startPulling}
+              style={{
+                zIndex: 10,
+                padding: '14px 28px',
+                fontSize: '15px',
+                borderRadius: design.radius.md,
+                fontWeight: 600,
+                fontFamily: design.font.sans,
+                border: 'none',
+                cursor: 'pointer',
+                background: `linear-gradient(135deg, ${design.colors.success} 0%, #059669 100%)`,
+                color: '#fff',
+                boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.success)}`
+              }}
+            >
+              Pull!
+            </button>
+          )}
+          {(isPulling || blockPosition > 0) && (
+            <button
+              onClick={resetExperiment}
+              style={{
+                zIndex: 10,
+                padding: '14px 28px',
+                fontSize: '15px',
+                borderRadius: design.radius.md,
+                fontWeight: 600,
+                fontFamily: design.font.sans,
+                border: `1px solid ${design.colors.border}`,
+                cursor: 'pointer',
+                background: design.colors.bgTertiary,
+                color: design.colors.textPrimary
+              }}
+            >
+              Reset
+            </button>
+          )}
         </div>
 
-        {experimentCount >= 4 && renderButton('I understand!', () => goToPhase(6))}
+        {experimentCount >= 4 && (
+          <button
+            onClick={() => goToPhase('twist_review')}
+            style={{
+              zIndex: 10,
+              padding: '14px 28px',
+              fontSize: '15px',
+              borderRadius: design.radius.md,
+              fontWeight: 600,
+              fontFamily: design.font.sans,
+              border: 'none',
+              cursor: 'pointer',
+              background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
+              color: '#000',
+              boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.accentPrimary)}`
+            }}
+          >
+            I understand!
+          </button>
+        )}
       </div>
     </div>
   );
@@ -1307,14 +1395,14 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
       background: design.colors.bgPrimary,
       overflowY: 'auto'
     }}>
-      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>🔬</div>
+      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>&#128300;</div>
       <h2 style={{
         fontSize: 22,
         fontWeight: 700,
         color: design.colors.textPrimary,
         marginBottom: design.spacing.md,
         fontFamily: design.font.sans
-      }}>Surface Material Matters!</h2>
+      }}>Materials Determine Friction!</h2>
 
       <div style={{
         background: design.colors.bgSecondary,
@@ -1325,12 +1413,15 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         width: '100%',
         border: `1px solid ${design.colors.border}`
       }}>
+        <p style={{ fontSize: 15, color: design.colors.accentSecondary, fontFamily: design.font.sans, textAlign: 'center', fontWeight: 600, marginBottom: design.spacing.md }}>
+          The coefficient of friction depends on BOTH surfaces in contact!
+        </p>
         <p style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans, lineHeight: 1.8, margin: 0 }}>
-          <strong style={{ color: '#2d2d2d', background: '#e5e5e5', padding: '2px 6px', borderRadius: 4 }}>Rubber:</strong> High friction, ratio \u2248 1.5\u00d7
+          <strong style={{ color: '#2d2d2d', background: '#e5e5e5', padding: '2px 6px', borderRadius: 4 }}>Rubber:</strong> Soft, deforms around irregularities, high friction
           <br/>
-          <strong style={{ color: '#8b7355' }}>Wood:</strong> Medium friction, medium jump
+          <strong style={{ color: '#8b7355' }}>Wood:</strong> Medium roughness, moderate friction
           <br/>
-          <strong style={{ color: '#a8d5e5' }}>Ice:</strong> Low friction, HUGE ratio \u2248 3.3\u00d7
+          <strong style={{ color: '#a8d5e5' }}>Ice:</strong> Very smooth, minimal interlocking, low friction
         </p>
       </div>
 
@@ -1344,20 +1435,37 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         width: '100%'
       }}>
         <p style={{ fontSize: 14, color: design.colors.accentSecondary, fontFamily: design.font.sans, textAlign: 'center', lineHeight: 1.6, margin: 0 }}>
-          Ice has low absolute friction, but a high static/kinetic ratio. That's why it's hard to start walking on ice, but once sliding, you can't stop!
+          Key insight: Friction coefficients are determined experimentally for each pair of materials. There's no simple formula - it depends on the microscopic properties of both surfaces!
         </p>
       </div>
 
       <p style={{
         fontSize: 14,
-        color: twistPrediction === 'different' ? design.colors.success : design.colors.textSecondary,
+        color: twistPrediction === 'materials' ? design.colors.success : design.colors.textSecondary,
         fontFamily: design.font.sans,
         marginBottom: design.spacing.lg
       }}>
-        Your prediction: {twistPrediction === 'different' || twistPrediction === 'ice_no_jump' ? '\u2705 Good thinking!' : '\ud83e\udd14 Now you see the pattern!'}
+        Your prediction: {twistPrediction === 'materials' ? '&#10004; Excellent thinking!' : '&#129300; Now you see the pattern!'}
       </p>
 
-      {renderButton('See Real Examples', () => goToPhase(7))}
+      <button
+        onClick={() => goToPhase('transfer')}
+        style={{
+          zIndex: 10,
+          padding: '14px 28px',
+          fontSize: '15px',
+          borderRadius: design.radius.md,
+          fontWeight: 600,
+          fontFamily: design.font.sans,
+          border: 'none',
+          cursor: 'pointer',
+          background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
+          color: '#000',
+          boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.accentPrimary)}`
+        }}
+      >
+        See Real-World Applications
+      </button>
     </div>
   );
 
@@ -1398,13 +1506,11 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             return (
               <button
                 key={idx}
-                onMouseDown={() => {
-                  if (!isUnlocked || navigationLockRef.current) return;
-                  navigationLockRef.current = true;
-                  setActiveApp(idx);
-                  setTimeout(() => { navigationLockRef.current = false; }, 400);
+                onClick={() => {
+                  if (isUnlocked) setActiveApp(idx);
                 }}
                 style={{
+                  zIndex: 10,
                   flex: 1,
                   padding: `${design.spacing.sm}px ${design.spacing.xs}px`,
                   borderRadius: design.radius.sm,
@@ -1419,7 +1525,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
                   opacity: isUnlocked ? 1 : 0.5
                 }}
               >
-                {completedApps.has(idx) && <span style={{ marginRight: 2 }}>✓</span>}
+                {completedApps.has(idx) && <span style={{ marginRight: 2 }}>&#10003;</span>}
                 {a.title.split(' ')[0]}
               </button>
             );
@@ -1481,16 +1587,14 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
               fontFamily: design.font.mono,
               fontWeight: 600
             }}>
-              \ud83d\udcca {app.stats}
+              &#128202; {app.stats}
             </span>
           </div>
 
           {/* Mark as Read button */}
           {!completedApps.has(activeApp) ? (
             <button
-              onMouseDown={() => {
-                if (navigationLockRef.current) return;
-                navigationLockRef.current = true;
+              onClick={() => {
                 const newCompleted = new Set(completedApps);
                 newCompleted.add(activeApp);
                 setCompletedApps(newCompleted);
@@ -1498,9 +1602,9 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
                 if (activeApp < applications.length - 1) {
                   setTimeout(() => setActiveApp(activeApp + 1), 300);
                 }
-                setTimeout(() => { navigationLockRef.current = false; }, 400);
               }}
               style={{
+                zIndex: 10,
                 width: '100%',
                 padding: `${design.spacing.sm}px ${design.spacing.md}px`,
                 borderRadius: design.radius.md,
@@ -1514,7 +1618,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
                 transition: 'all 0.2s ease'
               }}
             >
-              ✓ Mark "{app.title}" as Read
+              &#10003; Mark "{app.title}" as Read
             </button>
           ) : (
             <div style={{
@@ -1525,14 +1629,32 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
               fontSize: 14,
               fontFamily: design.font.sans
             }}>
-              ✓ Completed
+              &#10003; Completed
             </div>
           )}
         </div>
 
         <div style={{ marginTop: design.spacing.md }}>
           {completedApps.size >= applications.length ? (
-            renderButton('Take the Quiz!', () => goToPhase(8), 'primary', { fullWidth: true })
+            <button
+              onClick={() => goToPhase('test')}
+              style={{
+                zIndex: 10,
+                width: '100%',
+                padding: '14px 28px',
+                fontSize: '15px',
+                borderRadius: design.radius.md,
+                fontWeight: 600,
+                fontFamily: design.font.sans,
+                border: 'none',
+                cursor: 'pointer',
+                background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
+                color: '#000',
+                boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.accentPrimary)}`
+              }}
+            >
+              Take the Quiz!
+            </button>
           ) : (
             <div style={{
               textAlign: 'center',
@@ -1615,13 +1737,11 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
               return (
                 <button
                   key={idx}
-                  onMouseDown={() => {
-                    if (isAnswered || navigationLockRef.current) return;
-                    navigationLockRef.current = true;
-                    handleTestAnswer(idx);
-                    setTimeout(() => { navigationLockRef.current = false; }, 400);
+                  onClick={() => {
+                    if (!isAnswered) handleTestAnswer(idx);
                   }}
                   style={{
+                    zIndex: 10,
                     padding: `${design.spacing.md}px ${design.spacing.md}px`,
                     borderRadius: design.radius.md,
                     border: `1px solid ${border}`,
@@ -1648,27 +1768,78 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
               padding: design.spacing.md
             }}>
               <p style={{ fontSize: 13, color: design.colors.accentSecondary, fontFamily: design.font.sans, lineHeight: 1.5, margin: 0 }}>
-                \ud83d\udca1 {q.explanation}
+                &#128161; {q.explanation}
               </p>
             </div>
           )}
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: design.spacing.md }}>
-          {renderButton('\u2190 Back', () => {
-            setCurrentQuestion(prev => Math.max(0, prev - 1));
-            setSelectedAnswer(null);
-            setShowExplanation(answeredQuestions.has(currentQuestion - 1));
-          }, 'secondary', { disabled: currentQuestion === 0 })}
+          <button
+            onClick={() => {
+              setCurrentQuestion(prev => Math.max(0, prev - 1));
+              setSelectedAnswer(null);
+              setShowExplanation(answeredQuestions.has(currentQuestion - 1));
+            }}
+            disabled={currentQuestion === 0}
+            style={{
+              zIndex: 10,
+              padding: '14px 28px',
+              fontSize: '15px',
+              borderRadius: design.radius.md,
+              fontWeight: 600,
+              fontFamily: design.font.sans,
+              border: `1px solid ${design.colors.border}`,
+              cursor: currentQuestion === 0 ? 'not-allowed' : 'pointer',
+              background: design.colors.bgTertiary,
+              color: design.colors.textPrimary,
+              opacity: currentQuestion === 0 ? 0.4 : 1
+            }}
+          >
+            &#8592; Back
+          </button>
 
           {currentQuestion < testQuestions.length - 1 ? (
-            renderButton('Next \u2192', () => {
-              setCurrentQuestion(prev => prev + 1);
-              setSelectedAnswer(null);
-              setShowExplanation(answeredQuestions.has(currentQuestion + 1));
-            }, 'secondary')
+            <button
+              onClick={() => {
+                setCurrentQuestion(prev => prev + 1);
+                setSelectedAnswer(null);
+                setShowExplanation(answeredQuestions.has(currentQuestion + 1));
+              }}
+              style={{
+                zIndex: 10,
+                padding: '14px 28px',
+                fontSize: '15px',
+                borderRadius: design.radius.md,
+                fontWeight: 600,
+                fontFamily: design.font.sans,
+                border: `1px solid ${design.colors.border}`,
+                cursor: 'pointer',
+                background: design.colors.bgTertiary,
+                color: design.colors.textPrimary
+              }}
+            >
+              Next &#8594;
+            </button>
           ) : answeredQuestions.size === testQuestions.length ? (
-            renderButton('Complete!', () => goToPhase(9))
+            <button
+              onClick={() => goToPhase('mastery')}
+              style={{
+                zIndex: 10,
+                padding: '14px 28px',
+                fontSize: '15px',
+                borderRadius: design.radius.md,
+                fontWeight: 600,
+                fontFamily: design.font.sans,
+                border: 'none',
+                cursor: 'pointer',
+                background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
+                color: '#000',
+                boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.accentPrimary)}`
+              }}
+            >
+              Complete!
+            </button>
           ) : (
             <span style={{ fontSize: 13, color: design.colors.textTertiary, fontFamily: design.font.sans, alignSelf: 'center' }}>
               Answer all questions
@@ -1684,7 +1855,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
     const passed = correctAnswers >= 7;
 
     const resetGame = () => {
-      setPhase(0);
+      setPhase('hook');
       setExperimentCount(0);
       setCurrentQuestion(0);
       setCorrectAnswers(0);
@@ -1730,7 +1901,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
                   fontSize: '20px'
                 }}
               >
-                {['\ud83d\udce6', '\ud83d\udd04', '\u2b50', '\u2728', '\ud83c\udfc6'][Math.floor(Math.random() * 5)]}
+                {['&#128230;', '&#128260;', '&#11088;', '&#10024;', '&#127942;'][Math.floor(Math.random() * 5)]}
               </div>
             ))}
           </>
@@ -1741,7 +1912,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
           marginBottom: design.spacing.md,
           filter: `drop-shadow(0 8px 24px ${design.colors.accentGlow})`
         }}>
-          {passed ? '\ud83c\udfc6' : '\ud83d\udcda'}
+          {passed ? '&#127942;' : '&#128218;'}
         </div>
 
         <h2 style={{
@@ -1752,7 +1923,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
           fontFamily: design.font.sans,
           textAlign: 'center'
         }}>
-          {passed ? 'Friction Master!' : 'Keep Practicing!'}
+          {passed ? 'Congratulations! Friction Master!' : 'Keep Practicing!'}
         </h2>
 
         <div style={{
@@ -1791,14 +1962,14 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
             marginBottom: design.spacing.md,
             textAlign: 'center'
           }}>
-            {passed ? 'Concepts Mastered:' : 'Key Concepts:'}
+            {passed ? 'Concepts Mastered:' : 'Key Concepts to Review:'}
           </h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {[
               'Static friction > kinetic friction',
-              'Force peaks then drops at slip',
-              'f = \u03bcN (friction = coef \u00d7 normal)',
-              'Surface material changes \u03bc values'
+              'Fs_max = \u03bcs \u00d7 N (max static)',
+              'Fk = \u03bck \u00d7 N (kinetic)',
+              'Coefficients depend on materials'
             ].map((item, idx) => (
               <li key={idx} style={{
                 fontSize: 13,
@@ -1809,38 +1980,50 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
                 alignItems: 'center',
                 gap: design.spacing.sm
               }}>
-                <span style={{ color: design.colors.success }}>{passed ? '\u2713' : '\u25CB'}</span> {item}
+                <span style={{ color: design.colors.success }}>{passed ? '&#10003;' : '&#9675;'}</span> {item}
               </li>
             ))}
           </ul>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, width: '100%', maxWidth: 340 }}>
-          {passed ? (
-            <>
-              {renderButton('\ud83c\udfe0 Return to Dashboard', handleReturnToDashboard, true)}
-              {renderButton('\ud83d\udd2c Review Lesson', resetGame)}
-            </>
-          ) : (
-            <>
-              {renderButton('\u21ba Retake Test', () => goToPhase(8), true)}
-              {renderButton('\ud83d\udd2c Review Lesson', resetGame)}
-              <button
-                onClick={handleReturnToDashboard}
-                style={{
-                  background: 'transparent',
-                  border: 'none',
-                  color: design.colors.textTertiary,
-                  fontSize: 14,
-                  cursor: 'pointer',
-                  textDecoration: 'underline',
-                  marginTop: design.spacing.sm
-                }}
-              >
-                Return to Dashboard
-              </button>
-            </>
-          )}
+          <button
+            onClick={handleReturnToDashboard}
+            style={{
+              zIndex: 10,
+              width: '100%',
+              padding: '14px 28px',
+              fontSize: '15px',
+              borderRadius: design.radius.md,
+              fontWeight: 600,
+              fontFamily: design.font.sans,
+              border: 'none',
+              cursor: 'pointer',
+              background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
+              color: '#000',
+              boxShadow: `${design.shadow.md}, ${design.shadow.glow(design.colors.accentPrimary)}`
+            }}
+          >
+            &#127968; Return to Dashboard
+          </button>
+          <button
+            onClick={resetGame}
+            style={{
+              zIndex: 10,
+              width: '100%',
+              padding: '14px 28px',
+              fontSize: '15px',
+              borderRadius: design.radius.md,
+              fontWeight: 600,
+              fontFamily: design.font.sans,
+              border: `1px solid ${design.colors.border}`,
+              cursor: 'pointer',
+              background: design.colors.bgTertiary,
+              color: design.colors.textPrimary
+            }}
+          >
+            &#128300; {passed ? 'Review Lesson' : 'Try Again'}
+          </button>
         </div>
       </div>
     );
@@ -1849,17 +2032,30 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   // ============================================================================
   // RENDER
   // ============================================================================
-  const phaseRenderers: Record<number, () => JSX.Element> = {
-    0: renderHook,
-    1: renderPredict,
-    2: renderPlay,
-    3: renderReview,
-    4: renderTwistPredict,
-    5: renderTwistPlay,
-    6: renderTwistReview,
-    7: renderTransfer,
-    8: renderTest,
-    9: renderMastery
+  const phaseRenderers: Record<Phase, () => JSX.Element> = {
+    hook: renderHook,
+    predict: renderPredict,
+    play: renderPlay,
+    review: renderReview,
+    twist_predict: renderTwistPredict,
+    twist_play: renderTwistPlay,
+    twist_review: renderTwistReview,
+    transfer: renderTransfer,
+    test: renderTest,
+    mastery: renderMastery
+  };
+
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Lab',
+    review: 'Review',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Lab',
+    twist_review: 'Twist Review',
+    transfer: 'Transfer',
+    test: 'Test',
+    mastery: 'Mastery'
   };
 
   return (
@@ -1875,18 +2071,19 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Static vs Kinetic Friction</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={() => goToPhase(p)}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
-                    : p < phase
+                    : phaseOrder.indexOf(p) < phaseOrder.indexOf(phase)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                style={{ zIndex: 10 }}
               />
             ))}
           </div>

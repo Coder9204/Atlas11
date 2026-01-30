@@ -6,6 +6,10 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 // WAVE SPEED & TENSION - Premium Design System
 // ============================================================================
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -22,47 +26,45 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook',
+  'predict': 'Predict',
+  'play': 'Lab',
+  'review': 'Review',
+  'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab',
+  'twist_review': 'Twist Review',
+  'transfer': 'Transfer',
+  'test': 'Test',
+  'mastery': 'Mastery'
 };
 
 interface WaveSpeedTensionRendererProps {
   onComplete?: () => void;
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
-const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onComplete, onGameEvent, currentPhase, onPhaseComplete }) => {
+const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onComplete, onGameEvent, gamePhase, onPhaseComplete }) => {
   // Navigation debouncing
   const lastClickRef = useRef(0);
-  const navigationLockRef = useRef(false);
 
   // Phase state
-  const [phase, setPhase] = useState<number>(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
-    return 0;
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
   });
 
   // Sync phase with external prop
   useEffect(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
-      setPhase(currentPhase);
+    if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase]);
+  }, [gamePhase]);
 
   // Game state
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -123,32 +125,25 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     onGameEvent?.({ type, data });
   }, [onGameEvent]);
 
-  // Navigation with debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    if (navigationLockRef.current) return;
-    if (!PHASES.includes(newPhase)) return;
+  // Navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (!phaseOrder.includes(newPhase)) return;
 
-    lastClickRef.current = now;
-    navigationLockRef.current = true;
     playSound('transition');
     setPhase(newPhase);
     emitEvent('phase_change', { from: phase, to: newPhase });
     onPhaseComplete?.(newPhase);
 
-    if (newPhase === 2 || newPhase === 5) {
+    if (newPhase === 'play' || newPhase === 'twist_play') {
       setPulsePosition(0);
       setIsPulseSent(false);
       setPulseComplete(false);
       setStopwatchTime(0);
-      if (newPhase === 2) {
+      if (newPhase === 'play') {
         setTension(50);
         setLinearDensity(0.01);
       }
     }
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [emitEvent, phase, playSound, onPhaseComplete]);
 
   // Wave speed physics
@@ -158,8 +153,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
   // Pulse animation
   useEffect(() => {
-    if ((phase === 2 || phase === 5) && isPulseSent && !pulseComplete) {
-      const speed = phase === 5 ? twistWaveSpeed : waveSpeed;
+    if ((phase === 'play' || phase === 'twist_play') && isPulseSent && !pulseComplete) {
+      const speed = phase === 'twist_play' ? twistWaveSpeed : waveSpeed;
       const startTime = Date.now();
 
       const animate = () => {
@@ -554,7 +549,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
   const renderPhase = () => {
     // HOOK
-    if (phase === 0) {
+    if (phase === 'hook') {
       return (
         <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-amber-500/10 rounded-full blur-3xl animate-pulse" />
@@ -590,8 +585,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
           </div>
 
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+            onClick={() => goToPhase('predict')}
             className="px-10 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all"
+            style={{ zIndex: 10 }}
           >
             Start Experiment
           </button>
@@ -604,7 +600,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     }
 
     // PREDICT
-    if (phase === 1) {
+    if (phase === 'predict') {
       const options = [
         { id: 'faster', label: 'Pulse travels faster', desc: 'Higher tension = faster pulse', icon: '🚀' },
         { id: 'slower', label: 'Pulse travels slower', desc: 'Higher tension = slower pulse', icon: '🐢' },
@@ -626,8 +622,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               {options.map((opt) => (
                 <button
                   key={opt.id}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     setPrediction(opt.id);
                     emitEvent('prediction_made', { prediction: opt.id, label: opt.label });
                   }}
@@ -636,6 +631,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       ? 'border-amber-500 bg-amber-500/10 text-white'
                       : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
                   }`}
+                  style={{ zIndex: 10 }}
                 >
                   <span className="text-2xl">{opt.icon}</span>
                   <div>
@@ -655,13 +651,14 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
             <div className="flex justify-end">
               <button
-                onMouseDown={(e) => { e.preventDefault(); if (prediction) goToPhase(2); }}
+                onClick={() => { if (prediction) goToPhase('play'); }}
                 disabled={!prediction}
                 className={`px-8 py-3 rounded-xl font-bold transition-all ${
                   prediction
                     ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30'
                     : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                 }`}
+                style={{ zIndex: 10 }}
               >
                 Test It →
               </button>
@@ -671,8 +668,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       );
     }
 
-    // LAB
-    if (phase === 2) {
+    // LAB (play)
+    if (phase === 'play') {
       return (
         <div className="flex flex-col min-h-[80vh]">
           <div className="flex-1 flex items-center justify-center p-4 min-h-64">
@@ -683,8 +680,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
             <div className="max-w-xl mx-auto">
               <div className="flex justify-center mb-6">
                 <button
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     if (isPulseSent) return;
                     setPulsePosition(0);
                     setIsPulseSent(true);
@@ -698,6 +694,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
                       : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30'
                   }`}
+                  style={{ zIndex: 10 }}
                 >
                   {isPulseSent ? '🏃 Traveling...' : '🎯 Send Pulse'}
                 </button>
@@ -730,13 +727,14 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
               <div className="flex justify-end">
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); if (pulseComplete) goToPhase(3); }}
+                  onClick={() => { if (pulseComplete) goToPhase('review'); }}
                   disabled={!pulseComplete}
                   className={`px-6 py-2 rounded-xl font-bold transition-all ${
                     pulseComplete
                       ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
                       : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
+                  style={{ zIndex: 10 }}
                 >
                   Understand Why →
                 </button>
@@ -748,7 +746,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     }
 
     // REVIEW
-    if (phase === 3) {
+    if (phase === 'review') {
       return (
         <div className="flex flex-col min-h-[80vh] px-6 py-8">
           <div className="max-w-2xl mx-auto w-full">
@@ -791,8 +789,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
             <div className="flex justify-end">
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+                onClick={() => goToPhase('twist_predict')}
                 className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg shadow-amber-500/30"
+                style={{ zIndex: 10 }}
               >
                 Explore Mass Effect →
               </button>
@@ -803,7 +802,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     }
 
     // TWIST PREDICT
-    if (phase === 4) {
+    if (phase === 'twist_predict') {
       const options = [
         { id: 'faster', label: 'Wave travels faster', desc: 'More mass = more momentum = faster', icon: '🚀' },
         { id: 'slower', label: 'Wave travels slower', desc: 'More mass = more inertia = slower', icon: '🐢' },
@@ -825,8 +824,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               {options.map((opt) => (
                 <button
                   key={opt.id}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     setTwistPrediction(opt.id);
                     emitEvent('twist_prediction_made', { prediction: opt.id });
                   }}
@@ -835,6 +833,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       ? 'border-violet-500 bg-violet-500/10 text-white'
                       : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
                   }`}
+                  style={{ zIndex: 10 }}
                 >
                   <span className="text-2xl">{opt.icon}</span>
                   <div>
@@ -854,13 +853,14 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
             <div className="flex justify-end">
               <button
-                onMouseDown={(e) => { e.preventDefault(); if (twistPrediction) goToPhase(5); }}
+                onClick={() => { if (twistPrediction) goToPhase('twist_play'); }}
                 disabled={!twistPrediction}
                 className={`px-8 py-3 rounded-xl font-bold transition-all ${
                   twistPrediction
                     ? 'bg-gradient-to-r from-violet-500 to-violet-600 text-white shadow-lg shadow-violet-500/30'
                     : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                 }`}
+                style={{ zIndex: 10 }}
               >
                 Test Your Prediction →
               </button>
@@ -870,8 +870,8 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
       );
     }
 
-    // TWIST LAB
-    if (phase === 5) {
+    // TWIST LAB (twist_play)
+    if (phase === 'twist_play') {
       return (
         <div className="flex flex-col min-h-[80vh]">
           <div className="flex-1 flex items-center justify-center p-4 min-h-64">
@@ -882,8 +882,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
             <div className="max-w-xl mx-auto">
               <div className="flex justify-center mb-6">
                 <button
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     if (isPulseSent) return;
                     setPulsePosition(0);
                     setIsPulseSent(true);
@@ -897,6 +896,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       ? 'bg-slate-800 text-slate-600 cursor-not-allowed'
                       : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white shadow-lg shadow-amber-500/30'
                   }`}
+                  style={{ zIndex: 10 }}
                 >
                   {isPulseSent ? '🏃 Traveling...' : '🎯 Send Pulse'}
                 </button>
@@ -929,13 +929,14 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
               <div className="flex justify-end">
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); if (pulseComplete) goToPhase(6); }}
+                  onClick={() => { if (pulseComplete) goToPhase('twist_review'); }}
                   disabled={!pulseComplete}
                   className={`px-6 py-2 rounded-xl font-bold transition-all ${
                     pulseComplete
                       ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
                       : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
+                  style={{ zIndex: 10 }}
                 >
                   See the Full Picture →
                 </button>
@@ -947,7 +948,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     }
 
     // TWIST REVIEW
-    if (phase === 6) {
+    if (phase === 'twist_review') {
       return (
         <div className="flex flex-col min-h-[80vh] px-6 py-8">
           <div className="max-w-xl mx-auto w-full">
@@ -987,8 +988,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
             <div className="flex justify-end">
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+                onClick={() => goToPhase('transfer')}
                 className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold shadow-lg shadow-amber-500/30"
+                style={{ zIndex: 10 }}
               >
                 Real-World Applications →
               </button>
@@ -999,7 +1001,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     }
 
     // TRANSFER
-    if (phase === 7) {
+    if (phase === 'transfer') {
       const app = applications[activeApp];
       const allAppsCompleted = completedApps.size === applications.length;
 
@@ -1032,8 +1034,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               return (
                 <button
                   key={a.id}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     const now = Date.now();
                     if (now - lastClickRef.current < 200 || !canAccess) return;
                     lastClickRef.current = now;
@@ -1047,6 +1048,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                         ? 'bg-emerald-500/10 text-emerald-400'
                         : 'text-slate-500 opacity-50 cursor-not-allowed'
                   }`}
+                  style={{ zIndex: 10 }}
                 >
                   {a.icon} {isCompleted && !isCurrent ? '✓ ' : ''}{isMobile ? '' : a.title}
                 </button>
@@ -1082,8 +1084,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
               {!completedApps.has(activeApp) ? (
                 <button
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     const now = Date.now();
                     if (now - lastClickRef.current < 200) return;
                     lastClickRef.current = now;
@@ -1091,18 +1092,31 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     newCompleted.add(activeApp);
                     setCompletedApps(newCompleted);
                     emitEvent('app_explored', { app: app.title });
-                    if (activeApp < applications.length - 1) {
-                      setTimeout(() => setActiveApp(activeApp + 1), 300);
-                    }
                   }}
                   className="w-full py-4 rounded-xl bg-emerald-500/10 border-2 border-emerald-500 text-emerald-400 font-semibold text-lg"
+                  style={{ zIndex: 10 }}
                 >
                   ✓ Mark "{app.title}" as Read
                 </button>
               ) : (
-                <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center">
-                  <span className="text-emerald-400 font-semibold">✓ Completed</span>
-                </div>
+                activeApp < applications.length - 1 ? (
+                  <button
+                    onClick={() => {
+                      const now = Date.now();
+                      if (now - lastClickRef.current < 200) return;
+                      lastClickRef.current = now;
+                      setActiveApp(activeApp + 1);
+                    }}
+                    className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold text-lg"
+                    style={{ zIndex: 10 }}
+                  >
+                    Next Application →
+                  </button>
+                ) : (
+                  <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center">
+                    <span className="text-emerald-400 font-semibold">✓ Completed</span>
+                  </div>
+                )
               )}
             </div>
           </div>
@@ -1115,8 +1129,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     ✓ All {applications.length} applications read!
                   </div>
                   <button
-                    onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+                    onClick={() => goToPhase('test')}
                     className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/30"
+                    style={{ zIndex: 10 }}
                   >
                     Take the Test →
                   </button>
@@ -1133,7 +1148,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     }
 
     // TEST
-    if (phase === 8) {
+    if (phase === 'test') {
       if (testSubmitted) {
         const score = testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0);
         const percentage = Math.round((score / testQuestions.length) * 100);
@@ -1160,10 +1175,9 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
             </p>
 
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
+              onClick={() => {
                 if (passed) {
-                  goToPhase(9);
+                  goToPhase('mastery');
                 } else {
                   setTestSubmitted(false);
                   setTestIndex(0);
@@ -1171,6 +1185,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                 }
               }}
               className="px-10 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30"
+              style={{ zIndex: 10 }}
             >
               {passed ? 'Complete Lesson' : 'Try Again'}
             </button>
@@ -1213,8 +1228,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
               {q.options.map((opt, i) => (
                 <button
                   key={i}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     const newAnswers = [...testAnswers];
                     newAnswers[testIndex] = i;
                     setTestAnswers(newAnswers);
@@ -1224,6 +1238,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                       ? 'border-amber-500 bg-amber-500/10 text-white'
                       : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
                   }`}
+                  style={{ zIndex: 10 }}
                 >
                   {opt.text}
                 </button>
@@ -1233,31 +1248,32 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
 
           <div className="flex justify-between gap-4 pt-4 border-t border-slate-800">
             <button
-              onMouseDown={(e) => { e.preventDefault(); if (testIndex > 0) setTestIndex(testIndex - 1); }}
+              onClick={() => { if (testIndex > 0) setTestIndex(testIndex - 1); }}
               disabled={testIndex === 0}
               className={`px-6 py-3 rounded-xl font-bold transition-all ${
                 testIndex === 0 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
               }`}
+              style={{ zIndex: 10 }}
             >
               ← Previous
             </button>
 
             {testIndex < testQuestions.length - 1 ? (
               <button
-                onMouseDown={(e) => { e.preventDefault(); if (selected !== null) setTestIndex(testIndex + 1); }}
+                onClick={() => { if (selected !== null) setTestIndex(testIndex + 1); }}
                 disabled={selected === null}
                 className={`px-6 py-3 rounded-xl font-bold transition-all ${
                   selected !== null
                     ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white'
                     : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                 }`}
+                style={{ zIndex: 10 }}
               >
                 Next →
               </button>
             ) : (
               <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
+                onClick={() => {
                   if (testAnswers.every(a => a !== null)) {
                     setTestSubmitted(true);
                     emitEvent('test_completed', {
@@ -1272,6 +1288,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
                     ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white'
                     : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                 }`}
+                style={{ zIndex: 10 }}
               >
                 Submit Test
               </button>
@@ -1282,7 +1299,7 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
     }
 
     // MASTERY
-    if (phase === 9) {
+    if (phase === 'mastery') {
       return (
         <div className="relative flex flex-col items-center justify-center min-h-[80vh] px-6 text-center overflow-hidden">
           {/* Confetti */}
@@ -1320,12 +1337,12 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
           </div>
 
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               emitEvent('mastery_achieved', { game: 'wave_speed_tension' });
               if (onComplete) onComplete();
             }}
             className="px-10 py-4 rounded-xl bg-gradient-to-r from-amber-500 to-orange-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30 z-10"
+            style={{ zIndex: 10 }}
           >
             Complete Lesson 🎉
           </button>
@@ -1360,18 +1377,19 @@ const WaveSpeedTensionRenderer: React.FC<WaveSpeedTensionRendererProps> = ({ onC
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Wave Speed & Tension</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                style={{ zIndex: 10 }}
               />
             ))}
           </div>

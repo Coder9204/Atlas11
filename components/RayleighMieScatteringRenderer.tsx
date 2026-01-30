@@ -22,24 +22,27 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook',
+  'predict': 'Predict',
+  'play': 'Lab',
+  'review': 'Review',
+  'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab',
+  'twist_review': 'Twist Review',
+  'transfer': 'Transfer',
+  'test': 'Test',
+  'mastery': 'Mastery'
 };
 
 interface RayleighMieScatteringRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // Premium Design System
@@ -266,13 +269,11 @@ const testQuestions = [
   },
 ];
 
-export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhase, onPhaseComplete }: RayleighMieScatteringRendererProps) {
-  const navigationLockRef = useRef(false);
-
+export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, onPhaseComplete }: RayleighMieScatteringRendererProps) {
   // Core state
-  const [phase, setPhase] = useState<number>(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
-    return 0;
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
   });
   const [prediction, setPrediction] = useState<number | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<number | null>(null);
@@ -290,12 +291,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
 
   // Animation state
   const [lightRays, setLightRays] = useState<Array<{ id: number; x: number; color: string; scattered: boolean }>>([]);
-  const animationRef = useRef<number | null>(null);
   const rayIdRef = useRef(0);
-
-  // Button debounce locks
-  const navigationLock = useRef(false);
-  const tabLock = useRef(false);
 
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
@@ -308,10 +304,10 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
 
   // Phase sync
   useEffect(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase]);
+  }, [gamePhase]);
 
   // Type-based sound feedback
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -345,43 +341,32 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
     onGameEvent?.({ type, data });
   }, [onGameEvent]);
 
-  // Handle button click with debounce
-  const handleButtonClick = useCallback((action: () => void, lock: React.MutableRefObject<boolean>) => {
-    if (lock.current) return;
-    lock.current = true;
-    action();
-    setTimeout(() => { lock.current = false; }, 400);
-  }, []);
-
-  // Navigation with debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    if (!PHASES.includes(newPhase)) return;
-    navigationLockRef.current = true;
+  // Navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (!phaseOrder.includes(newPhase)) return;
     setPhase(newPhase);
     playSound('transition');
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [phase, playSound, emitEvent, onPhaseComplete]);
 
   const goNext = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex < PHASES.length - 1) goToPhase(PHASES[currentIndex + 1]);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentIndex + 1]);
   }, [phase, goToPhase]);
 
   const goBack = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex > 0) goToPhase(PHASES[currentIndex - 1]);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]);
   }, [phase, goToPhase]);
 
   // Light ray animation
   useEffect(() => {
-    if (phase !== 2 && phase !== 5) return;
+    if (phase !== 'play' && phase !== 'twist_play') return;
 
     const addRay = () => {
       const rayColors = ['#3B82F6', '#22C55E', '#EAB308', '#F97316', '#EF4444']; // Blue, Green, Yellow, Orange, Red
-      const newRays = rayColors.map((color, i) => ({
+      const newRays = rayColors.map((color) => ({
         id: rayIdRef.current++,
         x: 0,
         color,
@@ -471,15 +456,6 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
     size?: 'sm' | 'md' | 'lg';
     disabled?: boolean;
   }) {
-    const btnLock = useRef(false);
-
-    const handleClick = () => {
-      if (disabled || btnLock.current) return;
-      btnLock.current = true;
-      onClick?.();
-      setTimeout(() => { btnLock.current = false; }, 400);
-    };
-
     const baseStyle: React.CSSProperties = {
       fontFamily: typography.fontFamily,
       fontWeight: 600,
@@ -488,6 +464,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
       cursor: disabled ? 'not-allowed' : 'pointer',
       transition: 'all 0.2s',
       opacity: disabled ? 0.5 : 1,
+      zIndex: 10,
     };
 
     const variants: Record<string, React.CSSProperties> = {
@@ -505,7 +482,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
 
     return (
       <button
-        onMouseDown={handleClick}
+        onClick={() => !disabled && onClick?.()}
         style={{ ...baseStyle, ...variants[variant], ...sizes[size] }}
       >
         {children}
@@ -520,17 +497,18 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Rayleigh vs Mie Scattering</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-sky-400 w-6 shadow-lg shadow-sky-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
+                style={{ zIndex: 10 }}
                 title={phaseLabels[p]}
               />
             ))}
@@ -645,6 +623,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
               background: viewAngle === 'side' ? `${colors.sky}20` : 'transparent',
               cursor: 'pointer',
               fontFamily: typography.fontFamily,
+              zIndex: 10,
             }}
           >
             <div style={{ fontSize: 20, marginBottom: spacing.xs }}>👁️</div>
@@ -670,6 +649,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
               background: viewAngle === 'through' ? `${colors.orange}20` : 'transparent',
               cursor: 'pointer',
               fontFamily: typography.fontFamily,
+              zIndex: 10,
             }}
           >
             <div style={{ fontSize: 20, marginBottom: spacing.xs }}>🎯</div>
@@ -720,7 +700,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
   // ============================================================================
   // PHASE: HOOK
   // ============================================================================
-  if (phase === 0) {
+  if (phase === 'hook') {
     return (
       <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
         {/* Premium background gradient */}
@@ -782,8 +762,9 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
 
             {/* Premium CTA button */}
             <button
-              onMouseDown={() => handleButtonClick(() => goToPhase(1), navigationLock)}
+              onClick={() => goToPhase('predict')}
               className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-sky-500 to-indigo-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-sky-500/25 hover:scale-[1.02] active:scale-[0.98]"
+              style={{ zIndex: 10 }}
             >
               <span className="relative z-10 flex items-center gap-3">
                 Discover Why
@@ -813,7 +794,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
   // ============================================================================
   // PHASE: PREDICT
   // ============================================================================
-  if (phase === 1) {
+  if (phase === 'predict') {
     const predictions = [
       { id: 0, label: 'Blue light is absorbed least', icon: '🔵', description: 'Atmosphere lets blue through more' },
       { id: 1, label: 'Blue light is scattered most', icon: '💫', description: 'Small particles bounce blue around' },
@@ -888,6 +869,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
                     textAlign: 'left',
                     transition: 'all 0.2s',
                     fontFamily: typography.fontFamily,
+                    zIndex: 10,
                   }}
                 >
                   <span style={{ fontSize: 28 }}>{p.icon}</span>
@@ -914,7 +896,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
             <div style={{ display: 'flex', gap: spacing.md }}>
               <Button onClick={goBack} variant="ghost">← Back</Button>
               <Button
-                onClick={() => handleButtonClick(() => goToPhase(2), navigationLock)}
+                onClick={() => goToPhase('play')}
                 disabled={prediction === null}
               >
                 Test It Out →
@@ -929,7 +911,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
   // ============================================================================
   // PHASE: PLAY
   // ============================================================================
-  if (phase === 2) {
+  if (phase === 'play') {
     return (
       <div style={{
         display: 'flex',
@@ -1074,7 +1056,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
             {/* Navigation */}
             <div style={{ display: 'flex', gap: spacing.md }}>
               <Button onClick={goBack} variant="ghost">← Back</Button>
-              <Button onClick={() => handleButtonClick(goNext, navigationLock)}>
+              <Button onClick={goNext}>
                 Continue to Review →
               </Button>
             </div>
@@ -1087,7 +1069,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
   // ============================================================================
   // PHASE: REVIEW
   // ============================================================================
-  if (phase === 3) {
+  if (phase === 'review') {
     const userWasRight = prediction === 1;
 
     return (
@@ -1235,7 +1217,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
             {/* Navigation */}
             <div style={{ display: 'flex', gap: spacing.md }}>
               <Button onClick={goBack} variant="ghost">← Back</Button>
-              <Button onClick={() => handleButtonClick(goNext, navigationLock)}>
+              <Button onClick={goNext}>
                 Try a Twist →
               </Button>
             </div>
@@ -1248,7 +1230,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
   // ============================================================================
   // PHASE: TWIST PREDICT
   // ============================================================================
-  if (phase === 4) {
+  if (phase === 'twist_predict') {
     const twistOptions = [
       { id: 0, label: 'More vivid (brighter red)', icon: '🔴', description: 'Longer path = more red light' },
       { id: 1, label: 'Less vivid (dimmer)', icon: '⚫', description: 'All light gets scattered away' },
@@ -1366,6 +1348,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
                     textAlign: 'left',
                     transition: 'all 0.2s',
                     fontFamily: typography.fontFamily,
+                    zIndex: 10,
                   }}
                 >
                   <span style={{ fontSize: 28 }}>{opt.icon}</span>
@@ -1392,7 +1375,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
             <div style={{ display: 'flex', gap: spacing.md }}>
               <Button onClick={goBack} variant="ghost">← Back</Button>
               <Button
-                onClick={() => handleButtonClick(goNext, navigationLock)}
+                onClick={goNext}
                 disabled={twistPrediction === null}
               >
                 Explore →
@@ -1407,7 +1390,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
   // ============================================================================
   // PHASE: TWIST PLAY
   // ============================================================================
-  if (phase === 5) {
+  if (phase === 'twist_play') {
     return (
       <div style={{
         display: 'flex',
@@ -1530,7 +1513,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
             {/* Navigation */}
             <div style={{ display: 'flex', gap: spacing.md }}>
               <Button onClick={goBack} variant="ghost">← Back</Button>
-              <Button onClick={() => handleButtonClick(goNext, navigationLock)}>
+              <Button onClick={goNext}>
                 See the Insight →
               </Button>
             </div>
@@ -1543,7 +1526,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
   // ============================================================================
   // PHASE: TWIST REVIEW
   // ============================================================================
-  if (phase === 6) {
+  if (phase === 'twist_review') {
     const userWasRight = twistPrediction === 0;
 
     return (
@@ -1664,7 +1647,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
             {/* Navigation */}
             <div style={{ display: 'flex', gap: spacing.md }}>
               <Button onClick={goBack} variant="ghost">← Back</Button>
-              <Button onClick={() => handleButtonClick(goNext, navigationLock)}>
+              <Button onClick={goNext}>
                 Real World Applications →
               </Button>
             </div>
@@ -1677,16 +1660,18 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
   // ============================================================================
   // PHASE: TRANSFER (Real World Applications) - SEQUENTIAL NAVIGATION
   // ============================================================================
-  if (phase === 7) {
+  if (phase === 'transfer') {
     const app = applications[selectedApp];
     const allCompleted = completedApps.every(c => c);
     const completedCount = completedApps.filter(c => c).length;
 
-    const handleCompleteApp = () => {
+    const handleNextApplication = () => {
+      // Mark current as completed
       const newCompleted = [...completedApps];
       newCompleted[selectedApp] = true;
       setCompletedApps(newCompleted);
 
+      // Move to next application if available
       if (selectedApp < applications.length - 1) {
         setSelectedApp(selectedApp + 1);
       }
@@ -1755,9 +1740,9 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
             return (
               <button
                 key={a.id}
-                onMouseDown={() => {
+                onClick={() => {
                   if (!isLocked) {
-                    handleButtonClick(() => setSelectedApp(idx), tabLock);
+                    setSelectedApp(idx);
                   }
                 }}
                 style={{
@@ -1776,6 +1761,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
                   display: 'flex',
                   alignItems: 'center',
                   gap: spacing.sm,
+                  zIndex: 10,
                 }}
               >
                 {a.icon} {a.title.split(' ')[0]}
@@ -1870,7 +1856,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
         }}>
           {selectedApp > 0 ? (
             <button
-              onMouseDown={() => handleButtonClick(() => setSelectedApp(selectedApp - 1), tabLock)}
+              onClick={() => setSelectedApp(selectedApp - 1)}
               style={{
                 padding: '12px 24px',
                 borderRadius: radius.md,
@@ -1881,6 +1867,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
                 fontFamily: typography.fontFamily,
                 fontSize: 15,
                 fontWeight: 500,
+                zIndex: 10,
               }}
             >
               ← Previous
@@ -1889,7 +1876,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
 
           {allCompleted ? (
             <button
-              onMouseDown={() => handleButtonClick(() => goToPhase(8), navigationLock)}
+              onClick={() => goToPhase('test')}
               style={{
                 padding: '12px 24px',
                 borderRadius: radius.md,
@@ -1900,13 +1887,14 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
                 fontFamily: typography.fontFamily,
                 fontSize: 15,
                 fontWeight: 600,
+                zIndex: 10,
               }}
             >
               Take the Quiz →
             </button>
-          ) : (
+          ) : selectedApp < applications.length - 1 ? (
             <button
-              onMouseDown={() => handleButtonClick(handleCompleteApp, tabLock)}
+              onClick={handleNextApplication}
               style={{
                 padding: '12px 24px',
                 borderRadius: radius.md,
@@ -1917,9 +1905,28 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
                 fontFamily: typography.fontFamily,
                 fontSize: 15,
                 fontWeight: 600,
+                zIndex: 10,
               }}
             >
-              {completedApps[selectedApp] ? 'Next Application →' : 'Mark Complete & Continue →'}
+              Next Application →
+            </button>
+          ) : (
+            <button
+              onClick={handleNextApplication}
+              style={{
+                padding: '12px 24px',
+                borderRadius: radius.md,
+                border: 'none',
+                background: colors.brand,
+                color: '#FFFFFF',
+                cursor: 'pointer',
+                fontFamily: typography.fontFamily,
+                fontSize: 15,
+                fontWeight: 600,
+                zIndex: 10,
+              }}
+            >
+              Complete Applications →
             </button>
           )}
         </div>
@@ -1930,7 +1937,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
   // ============================================================================
   // PHASE: TEST
   // ============================================================================
-  if (phase === 8) {
+  if (phase === 'test') {
     const q = testQuestions[testIndex];
     const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0);
 
@@ -1951,7 +1958,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
               <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.xl }}>
                 {passed ? 'You\'ve mastered light scattering!' : 'Review the concepts and try again.'}
               </p>
-              <Button onClick={() => passed ? goNext() : goToPhase(3)} variant={passed ? 'success' : 'primary'} size="lg">
+              <Button onClick={() => passed ? goNext() : goToPhase('review')} variant={passed ? 'success' : 'primary'} size="lg">
                 {passed ? 'Complete! →' : 'Review Material'}
               </Button>
             </div>
@@ -2017,6 +2024,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
                       cursor: showResult ? 'default' : 'pointer',
                       transition: 'all 0.2s',
                       fontFamily: typography.fontFamily,
+                      zIndex: 10,
                     }}
                   >
                     <span style={{
@@ -2072,7 +2080,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
   // ============================================================================
   // PHASE: MASTERY
   // ============================================================================
-  if (phase === 9) {
+  if (phase === 'mastery') {
     return (
       <div style={{
         display: 'flex',
@@ -2170,7 +2178,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
 
             {/* CTA */}
             <button
-              onMouseDown={() => handleButtonClick(() => { emitEvent('mastery_achieved'); }, navigationLock)}
+              onClick={() => emitEvent('mastery_achieved')}
               style={{
                 padding: '16px 48px',
                 borderRadius: radius.lg,
@@ -2182,6 +2190,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, currentPhas
                 cursor: 'pointer',
                 fontFamily: typography.fontFamily,
                 boxShadow: `0 4px 20px ${colors.successBg}`,
+                zIndex: 10,
               }}
             >
               Complete Lesson ✓

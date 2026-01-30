@@ -54,16 +54,126 @@ const PCIE_SPECS = {
 };
 
 const TEST_QUESTIONS = [
-  { text: 'PCIe bandwidth doubles with each new generation.', correct: true },
-  { text: 'Adding more GPUs always makes training proportionally faster.', correct: false },
-  { text: 'NVLink provides significantly higher bandwidth than PCIe for GPU-to-GPU communication.', correct: true },
-  { text: 'PCIe x16 means 16 separate data lanes working in parallel.', correct: true },
-  { text: 'Communication overhead becomes negligible as you add more GPUs.', correct: false },
-  { text: 'A PCIe 4.0 x16 connection provides about 32 GB/s of bandwidth.', correct: true },
-  { text: 'GPUs can only communicate through the CPU in all systems.', correct: false },
-  { text: 'Data transfer time increases as model size grows beyond GPU memory.', correct: true },
-  { text: 'NVLink allows direct GPU-to-GPU data transfer bypassing the CPU.', correct: true },
-  { text: 'Scaling efficiency typically improves as you add more GPUs.', correct: false },
+  // Q1: PCIe Generations and Speeds (Easy) - Correct: B
+  {
+    scenario: "Your company is building a new AI training server. The motherboard supports PCIe 4.0 and PCIe 5.0 slots. You need to understand the bandwidth differences.",
+    question: "How does PCIe 5.0 bandwidth compare to PCIe 4.0 for the same lane configuration (e.g., x16)?",
+    options: [
+      { id: 'same', label: "They have the same bandwidth - only latency improves" },
+      { id: 'double', label: "PCIe 5.0 provides approximately double the bandwidth per lane", correct: true },
+      { id: 'quadruple', label: "PCIe 5.0 provides four times the bandwidth" },
+      { id: 'slight', label: "PCIe 5.0 is only about 20% faster" },
+    ],
+    explanation: "Each PCIe generation roughly doubles the per-lane bandwidth. PCIe 4.0 provides ~2 GB/s per lane, while PCIe 5.0 provides ~4 GB/s per lane. This means a PCIe 5.0 x16 slot offers ~64 GB/s compared to ~32 GB/s for PCIe 4.0 x16."
+  },
+  // Q2: Lane Configurations (Easy) - Correct: C
+  {
+    scenario: "You're installing an NVIDIA RTX 4090 GPU which requires a PCIe x16 slot. Your motherboard has both x16 and x8 slots available.",
+    question: "What does 'x16' mean in PCIe x16, and what happens if you install a x16 card in a x8 slot?",
+    options: [
+      { id: 'speed', label: "x16 means 16 GB/s speed; x8 slot won't work at all" },
+      { id: 'version', label: "x16 is the PCIe version; the card will run at x8 version" },
+      { id: 'lanes', label: "x16 means 16 parallel data lanes; the card will work but at half bandwidth", correct: true },
+      { id: 'power', label: "x16 refers to power delivery; the card will run but may throttle" },
+    ],
+    explanation: "The 'x' number indicates parallel data lanes. A PCIe x16 card uses 16 lanes simultaneously, like a 16-lane highway. Installing in an x8 slot works (PCIe is backward compatible) but halves your bandwidth since you're only using 8 lanes."
+  },
+  // Q3: Encoding Overhead - 128b/130b (Medium) - Correct: A
+  {
+    scenario: "A colleague claims PCIe 4.0 x16 should provide exactly 32 GB/s, but benchmarks show only ~31.5 GB/s usable bandwidth.",
+    question: "What causes this ~1.5% reduction from the theoretical maximum bandwidth?",
+    options: [
+      { id: 'encoding', label: "128b/130b encoding adds 2 overhead bits per 128 data bits for error detection", correct: true },
+      { id: 'cable', label: "Cable resistance reduces signal strength by about 1.5%" },
+      { id: 'driver', label: "GPU drivers reserve 1.5% for system overhead" },
+      { id: 'cooling', label: "Thermal throttling reduces bandwidth in typical conditions" },
+    ],
+    explanation: "PCIe 4.0 and 5.0 use 128b/130b encoding: every 128 bits of data requires 130 bits to transmit (2 extra bits for synchronization and error detection). This gives 128/130 = 98.46% efficiency. Earlier PCIe 3.0 used 8b/10b encoding with only 80% efficiency!"
+  },
+  // Q4: Bandwidth Calculation (Medium) - Correct: D
+  {
+    scenario: "You're calculating the theoretical bandwidth for a new GPU connection. The specs show: PCIe 4.0, x16 configuration, bidirectional communication.",
+    question: "What is the correct formula and approximate total bandwidth for this PCIe 4.0 x16 connection?",
+    options: [
+      { id: 'wrong1', label: "4.0 × 16 = 64 GB/s total" },
+      { id: 'wrong2', label: "2 GB/s × 16 lanes = 32 GB/s unidirectional only" },
+      { id: 'wrong3', label: "16 GT/s × 16 lanes × 8 bits = 2048 GB/s" },
+      { id: 'correct', label: "~2 GB/s per lane × 16 lanes = ~32 GB/s each direction (~64 GB/s bidirectional)", correct: true },
+    ],
+    explanation: "PCIe 4.0 provides ~2 GB/s per lane (after encoding overhead). With 16 lanes, you get ~32 GB/s in each direction. Since PCIe is full-duplex, total bidirectional bandwidth is ~64 GB/s, though most operations are predominantly one direction."
+  },
+  // Q5: Duplex Communication (Medium) - Correct: B
+  {
+    scenario: "During deep learning training, your GPU needs to both receive training data from system memory AND send computed gradients back to the CPU for aggregation.",
+    question: "How does PCIe handle simultaneous sending and receiving of data?",
+    options: [
+      { id: 'halfduplex', label: "PCIe is half-duplex - it switches between sending and receiving, halving effective throughput" },
+      { id: 'fullduplex', label: "PCIe is full-duplex - dedicated lanes for each direction allow simultaneous bidirectional transfer", correct: true },
+      { id: 'timeshare', label: "PCIe time-shares lanes at nanosecond intervals to simulate bidirectional transfer" },
+      { id: 'buffer', label: "PCIe uses large buffers to queue operations; only one direction active at a time" },
+    ],
+    explanation: "PCIe is inherently full-duplex with separate transmit and receive pairs in each lane. This means a x16 slot has 16 lanes sending AND 16 lanes receiving simultaneously. During training, the GPU can receive the next batch while sending gradients from the current batch."
+  },
+  // Q6: Multi-GPU Scaling (Hard) - Correct: C
+  {
+    scenario: "Your AI lab has a server with 8 identical GPUs connected via PCIe. You expect 8x speedup for your training job, but benchmarks show only 5.5x actual speedup.",
+    question: "What is the PRIMARY reason for this sub-linear scaling efficiency?",
+    options: [
+      { id: 'power', label: "Power supply limitations reduce individual GPU performance" },
+      { id: 'memory', label: "Each GPU has less memory available due to system overhead" },
+      { id: 'communication', label: "Gradient synchronization across GPUs creates communication overhead that grows with GPU count", correct: true },
+      { id: 'pcie', label: "PCIe bandwidth is shared equally, giving each GPU only 1/8th the bandwidth" },
+    ],
+    explanation: "With data parallelism, GPUs must synchronize gradients after each batch (all-reduce operation). Communication time is largely independent of compute time, so adding GPUs increases sync overhead. This follows Amdahl's Law: the non-parallelizable portion (communication) limits total speedup."
+  },
+  // Q7: NVLink vs PCIe (Hard) - Correct: A
+  {
+    scenario: "NVIDIA's DGX H100 system uses NVLink 4.0 to connect 8 GPUs, achieving 900 GB/s total interconnect bandwidth. A comparable PCIe-only system uses PCIe 5.0 x16.",
+    question: "Why do data centers pay premium prices for NVLink instead of using PCIe for GPU-to-GPU communication?",
+    options: [
+      { id: 'bandwidth', label: "NVLink provides 10-14x higher bandwidth (900 GB/s vs ~64 GB/s) enabling efficient large model training", correct: true },
+      { id: 'latency', label: "NVLink has lower latency, but bandwidth is similar to PCIe 5.0" },
+      { id: 'power', label: "NVLink uses significantly less power per GB transferred" },
+      { id: 'cpu', label: "NVLink allows direct GPU-CPU communication, bypassing system memory" },
+    ],
+    explanation: "NVLink's massive bandwidth advantage (900 GB/s vs ~64 GB/s for PCIe 5.0 x16) is crucial for training large language models where GPUs must share billions of parameters. PCIe would create a severe bottleneck during gradient synchronization, making training impractically slow."
+  },
+  // Q8: Latency Considerations (Hard) - Correct: D
+  {
+    scenario: "Two systems have identical PCIe bandwidth. System A has 100ns PCIe latency, System B has 500ns. Both transfer 1GB data chunks during training.",
+    question: "For large AI training workloads, which system performs better and why?",
+    options: [
+      { id: 'a_much', label: "System A is 5x faster because latency directly multiplies transfer time" },
+      { id: 'b_better', label: "System B is better because higher latency allows more data buffering" },
+      { id: 'equal', label: "They perform identically since bandwidth is the same" },
+      { id: 'a_slight', label: "System A is slightly better; latency matters for small transfers but bandwidth dominates for large transfers", correct: true },
+    ],
+    explanation: "For large transfers, bandwidth dominates total time: 1GB at 32 GB/s = ~31ms transfer time. The 400ns latency difference is negligible (0.001%). However, latency matters for small, frequent transfers like control signals. AI training with large batches is bandwidth-bound, not latency-bound."
+  },
+  // Q9: Real-World Application (Expert) - Correct: B
+  {
+    scenario: "Apple's M3 Max chip uses unified memory architecture where CPU and GPU share 400+ GB/s memory bandwidth. Traditional discrete GPUs use PCIe at ~64 GB/s for CPU-GPU transfers.",
+    question: "Why might a discrete GPU with 900 GB/s memory bandwidth still outperform Apple Silicon for large AI training, despite the PCIe bottleneck?",
+    options: [
+      { id: 'compute', label: "Discrete GPUs have faster clock speeds than Apple Silicon" },
+      { id: 'internal', label: "Once data is on GPU, its 900 GB/s internal bandwidth is used repeatedly; PCIe is only needed for initial data loading", correct: true },
+      { id: 'drivers', label: "NVIDIA CUDA drivers are more optimized than Apple Metal" },
+      { id: 'cooling', label: "Better cooling allows sustained higher performance" },
+    ],
+    explanation: "Deep learning kernels are compute-bound, not I/O-bound for trained models. Data loaded once (via slow PCIe) is processed through many layers using fast GPU memory bandwidth. The 900 GB/s is used for weight access, activations, and gradients - all happening internally. PCIe only transfers input batches and final outputs."
+  },
+  // Q10: System Design (Expert) - Correct: C
+  {
+    scenario: "You're designing a multi-GPU training system. Budget allows either: (A) 4 GPUs with PCIe 5.0 x16 each, or (B) 8 GPUs with PCIe 4.0 x8 each. Both options have similar total cost.",
+    question: "For training a 70B parameter language model using data parallelism, which configuration likely performs better?",
+    options: [
+      { id: 'option_a', label: "Option A: Fewer GPUs means less communication overhead" },
+      { id: 'option_b', label: "Option B: More GPUs always train faster regardless of interconnect" },
+      { id: 'depends', label: "Option A: Higher per-GPU bandwidth reduces gradient sync time; 8 GPUs at x8 would bottleneck severely", correct: true },
+      { id: 'same', label: "Both perform similarly since total system bandwidth is comparable" },
+    ],
+    explanation: "Large model training is communication-intensive. Option B's 8 GPUs at PCIe 4.0 x8 (~16 GB/s each) would create severe bottlenecks during all-reduce operations. Option A's 4 GPUs at PCIe 5.0 x16 (~64 GB/s each) provides 4x per-GPU bandwidth, leading to better scaling efficiency despite fewer GPUs."
+  },
 ];
 
 const TRANSFER_APPS = [
@@ -103,7 +213,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [testAnswers, setTestAnswers] = useState<(boolean | null)[]>(new Array(10).fill(null));
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
@@ -175,7 +285,8 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({
 
   const calculateTestScore = () => {
     return testAnswers.reduce((score, answer, index) => {
-      if (answer === TEST_QUESTIONS[index].correct) return score + 1;
+      const correctOption = TEST_QUESTIONS[index].options.find(o => o.correct);
+      if (answer === correctOption?.id) return score + 1;
       return score;
     }, 0);
   };
@@ -857,53 +968,237 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({
   );
 
   const renderTest = () => {
+    const totalQuestions = TEST_QUESTIONS.length;
+
     if (testSubmitted) {
       const score = calculateTestScore();
       const passed = score >= 7;
 
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, padding: '24px', paddingBottom: '100px', overflowY: 'auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
               <div style={{
-                fontSize: '64px',
-                marginBottom: '16px'
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                margin: '0 auto 12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '36px',
+                background: passed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                border: `3px solid ${passed ? colors.success : colors.warning}`
               }}>
-                {passed ? 'Trophy' : 'Book'}
+                {score === totalQuestions ? 'Trophy' : score >= 9 ? 'Star' : score >= 7 ? 'Check' : 'Book'}
               </div>
-              <h2 style={{ color: passed ? colors.success : colors.warning, fontSize: '28px' }}>
-                {score}/10 Correct
+              <h2 style={{ color: passed ? colors.success : colors.warning, fontSize: '28px', marginBottom: '8px' }}>
+                {score}/{totalQuestions} Correct
               </h2>
-              <p style={{ color: colors.textSecondary }}>
-                {passed ? 'Excellent! You understand PCIe bandwidth limits.' : 'Review the material and try again.'}
+              <p style={{ color: colors.textSecondary, marginBottom: '16px' }}>
+                {score === totalQuestions ? "Perfect! You've mastered PCIe bandwidth!" :
+                 score >= 9 ? 'Excellent! You deeply understand PCIe concepts.' :
+                 score >= 7 ? 'Great job! You understand the key concepts.' :
+                 'Keep exploring - hardware concepts take time!'}
+              </p>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(new Array(10).fill(null));
+                    setCurrentTestIndex(0);
+                  }}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '12px',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    background: colors.bgCard,
+                    color: colors.textSecondary,
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  Retake Test
+                </button>
+                <button
+                  onClick={() => goNext()}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '12px',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    background: passed ? colors.success : colors.warning,
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  {passed ? 'Claim Mastery' : 'Review Lesson'}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px', color: colors.textMuted }}>
+                Question-by-Question Review
               </p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {TEST_QUESTIONS.map((q, i) => (
-                <div key={i} style={{
-                  padding: '12px',
-                  borderRadius: '8px',
-                  background: testAnswers[i] === q.correct ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                  borderLeft: `3px solid ${testAnswers[i] === q.correct ? colors.success : colors.error}`,
-                }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>{q.text}</p>
-                  <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
-                    Correct answer: {q.correct ? 'True' : 'False'}
-                  </p>
-                </div>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {TEST_QUESTIONS.map((q, i) => {
+                const correctOption = q.options.find(o => o.correct);
+                const correctId = correctOption?.id;
+                const userAnswer = testAnswers[i];
+                const userOption = q.options.find(o => o.id === userAnswer);
+                const isCorrect = userAnswer === correctId;
+
+                return (
+                  <div key={i} style={{
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    background: colors.bgCard,
+                    border: `2px solid ${isCorrect ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`
+                  }}>
+                    <div style={{
+                      padding: '16px',
+                      background: isCorrect ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          background: isCorrect ? colors.success : colors.error,
+                          color: 'white'
+                        }}>
+                          {isCorrect ? 'Y' : 'X'}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: '14px', fontWeight: 'bold', color: colors.textPrimary, margin: 0 }}>
+                            Question {i + 1}
+                          </p>
+                          <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0 }}>
+                            {q.question}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        background: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        border: `1px solid ${isCorrect ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                      }}>
+                        <p style={{
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.1em',
+                          marginBottom: '4px',
+                          color: isCorrect ? colors.success : colors.error
+                        }}>
+                          {isCorrect ? 'Your Answer (Correct!)' : 'Your Answer'}
+                        </p>
+                        <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0 }}>
+                          {userOption?.label || 'No answer selected'}
+                        </p>
+                      </div>
+
+                      {!isCorrect && (
+                        <div style={{
+                          padding: '12px',
+                          borderRadius: '12px',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          border: '1px solid rgba(16, 185, 129, 0.3)'
+                        }}>
+                          <p style={{
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            marginBottom: '4px',
+                            color: colors.success
+                          }}>
+                            Correct Answer
+                          </p>
+                          <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0 }}>
+                            {correctOption?.label}
+                          </p>
+                        </div>
+                      )}
+
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        background: 'rgba(255,255,255,0.05)'
+                      }}>
+                        <p style={{
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.1em',
+                          marginBottom: '4px',
+                          color: colors.accent
+                        }}>
+                          Why?
+                        </p>
+                        <p style={{ fontSize: '12px', lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                          {q.explanation}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{
+              marginTop: '24px',
+              padding: '16px',
+              borderRadius: '16px',
+              textAlign: 'center',
+              background: colors.bgCard,
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              <p style={{ fontSize: '14px', marginBottom: '12px', color: colors.textSecondary }}>
+                {passed ? 'Want to improve your score?' : 'Review the explanations above and try again!'}
+              </p>
+              <button
+                onClick={() => {
+                  setTestSubmitted(false);
+                  setTestAnswers(new Array(10).fill(null));
+                  setCurrentTestIndex(0);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '12px',
+                  fontWeight: 'bold',
+                  fontSize: '14px',
+                  background: colors.accent,
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer',
+                  zIndex: 10,
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                Retake Test
+              </button>
             </div>
           </div>
-          {renderBottomBar(passed, passed ? 'Complete Mastery' : 'Review & Retry', () => {
-            if (passed) {
-              goNext();
-            } else {
-              setTestSubmitted(false);
-              setTestAnswers(new Array(10).fill(null));
-              setCurrentTestIndex(0);
-            }
-          })}
         </div>
       );
     }
@@ -912,81 +1207,113 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
-          <h2 style={{ color: colors.textPrimary, fontSize: '24px', textAlign: 'center', marginBottom: '8px' }}>
-            Knowledge Test
-          </h2>
-          <p style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
-            Question {currentTestIndex + 1} of 10
+        <div style={{ flex: 1, padding: '24px', paddingBottom: '100px', overflowY: 'auto' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <p style={{
+              fontSize: '10px',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              marginBottom: '8px',
+              color: colors.warning
+            }}>
+              Knowledge Test
+            </p>
+            <h2 style={{ fontSize: '24px', fontWeight: 'bold', marginBottom: '16px', color: colors.textPrimary }}>
+              Question {currentTestIndex + 1} of {totalQuestions}
+            </h2>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {Array.from({ length: totalQuestions }, (_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    height: '8px',
+                    flex: 1,
+                    borderRadius: '9999px',
+                    background: i === currentTestIndex ? colors.warning :
+                               testAnswers[i] !== null ? colors.success :
+                               'rgba(255,255,255,0.1)'
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div style={{
+            padding: '20px',
+            borderRadius: '16px',
+            marginBottom: '24px',
+            background: 'rgba(6, 182, 212, 0.15)',
+            border: '1px solid rgba(6, 182, 212, 0.3)'
+          }}>
+            <p style={{
+              fontSize: '10px',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              marginBottom: '8px',
+              color: colors.accent
+            }}>
+              Scenario
+            </p>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0 }}>
+              {currentQ.scenario}
+            </p>
+          </div>
+
+          <p style={{ fontSize: '18px', fontWeight: 'bold', marginBottom: '24px', color: colors.textPrimary }}>
+            {currentQ.question}
           </p>
 
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', justifyContent: 'center' }}>
-            {TEST_QUESTIONS.map((_, i) => (
+          <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
+            {currentQ.options.map((opt, i) => (
               <button
-                key={i}
-                onClick={() => setCurrentTestIndex(i)}
+                key={opt.id}
+                onClick={() => {
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentTestIndex] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
                 style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '4px',
-                  border: 'none',
-                  background: testAnswers[i] !== null
-                    ? (testAnswers[i] === TEST_QUESTIONS[i].correct ? colors.success : colors.error)
-                    : (i === currentTestIndex ? colors.accent : 'rgba(255,255,255,0.1)'),
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  textAlign: 'left',
+                  background: testAnswers[currentTestIndex] === opt.id ? 'rgba(245, 158, 11, 0.2)' : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentTestIndex] === opt.id ? colors.warning : 'rgba(255,255,255,0.1)'}`,
                   cursor: 'pointer',
+                  zIndex: 10,
                   WebkitTapHighlightColor: 'transparent',
                 }}
-              />
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: testAnswers[currentTestIndex] === opt.id ? colors.warning : 'rgba(255,255,255,0.1)'
+                }}>
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    color: testAnswers[currentTestIndex] === opt.id ? colors.textPrimary : colors.textMuted
+                  }}>
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                </div>
+                <p style={{
+                  fontSize: '14px',
+                  color: testAnswers[currentTestIndex] === opt.id ? colors.textPrimary : colors.textSecondary,
+                  margin: 0
+                }}>
+                  {opt.label}
+                </p>
+              </button>
             ))}
-          </div>
-
-          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
-            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>{currentQ.text}</p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button
-              onClick={() => {
-                const newAnswers = [...testAnswers];
-                newAnswers[currentTestIndex] = true;
-                setTestAnswers(newAnswers);
-              }}
-              style={{
-                flex: 1,
-                padding: '16px',
-                borderRadius: '12px',
-                border: testAnswers[currentTestIndex] === true ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.2)',
-                background: testAnswers[currentTestIndex] === true ? 'rgba(16, 185, 129, 0.2)' : colors.bgCard,
-                color: colors.textPrimary,
-                fontSize: '18px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              TRUE
-            </button>
-            <button
-              onClick={() => {
-                const newAnswers = [...testAnswers];
-                newAnswers[currentTestIndex] = false;
-                setTestAnswers(newAnswers);
-              }}
-              style={{
-                flex: 1,
-                padding: '16px',
-                borderRadius: '12px',
-                border: testAnswers[currentTestIndex] === false ? `2px solid ${colors.error}` : '1px solid rgba(255,255,255,0.2)',
-                background: testAnswers[currentTestIndex] === false ? 'rgba(239, 68, 68, 0.2)' : colors.bgCard,
-                color: colors.textPrimary,
-                fontSize: '18px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              FALSE
-            </button>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
@@ -1000,12 +1327,13 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({
                 background: 'transparent',
                 color: currentTestIndex === 0 ? colors.textMuted : colors.textPrimary,
                 cursor: currentTestIndex === 0 ? 'not-allowed' : 'pointer',
+                zIndex: 10,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
               Previous
             </button>
-            {currentTestIndex < 9 ? (
+            {currentTestIndex < totalQuestions - 1 ? (
               <button
                 onClick={() => setCurrentTestIndex(currentTestIndex + 1)}
                 style={{
@@ -1015,6 +1343,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({
                   background: colors.accent,
                   color: 'white',
                   cursor: 'pointer',
+                  zIndex: 10,
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1031,6 +1360,7 @@ const PCIeBandwidthRenderer: React.FC<PCIeBandwidthRendererProps> = ({
                   background: testAnswers.includes(null) ? colors.textMuted : colors.success,
                   color: 'white',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  zIndex: 10,
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >

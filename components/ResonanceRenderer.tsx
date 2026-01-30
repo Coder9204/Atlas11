@@ -6,6 +6,23 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // RESONANCE - Premium Apple/Airbnb Design System
 // ============================================================================
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook',
+  'predict': 'Predict',
+  'play': 'Lab',
+  'review': 'Review',
+  'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab',
+  'twist_review': 'Twist Review',
+  'transfer': 'Transfer',
+  'test': 'Test',
+  'mastery': 'Mastery'
+};
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -22,26 +39,12 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
-};
-
 interface ResonanceRendererProps {
   width?: number;
   height?: number;
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // ============================================================================
@@ -93,22 +96,19 @@ const design = {
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
-const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  // Navigation debouncing
-  const navigationLockRef = useRef(false);
-
+const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
   // Phase state
-  const [phase, setPhase] = useState<number>(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
-    return 0;
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
   });
 
   // Sync phase with external prop
   useEffect(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase]);
+  }, [gamePhase]);
 
   // Game state
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -170,26 +170,23 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
     onGameEvent?.({ type, data });
   }, [onGameEvent]);
 
-  // Navigation with debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    if (!PHASES.includes(newPhase)) return;
-    navigationLockRef.current = true;
+  // Navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (!phaseOrder.includes(newPhase)) return;
     setPhase(newPhase);
     playSound('transition');
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [phase, playSound, emitEvent, onPhaseComplete]);
 
   const goNext = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex < PHASES.length - 1) goToPhase(PHASES[currentIndex + 1]);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentIndex + 1]);
   }, [phase, goToPhase]);
 
   const goBack = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex > 0) goToPhase(PHASES[currentIndex - 1]);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]);
   }, [phase, goToPhase]);
 
   // Render button helper function
@@ -231,11 +228,9 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
 
     return (
       <button
-        onMouseDown={() => {
-          if (navigationLockRef.current || disabled) return;
-          navigationLockRef.current = true;
+        onClick={() => {
+          if (disabled) return;
           onClick();
-          setTimeout(() => { navigationLockRef.current = false; }, 400);
         }}
         disabled={disabled}
         style={{
@@ -251,6 +246,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
           opacity: disabled ? 0.5 : 1,
           border: 'none',
           outline: 'none',
+          zIndex: 10,
           ...sizeStyles[size],
           ...variantStyles[variant]
         }}
@@ -269,7 +265,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
 
   // Track resonance discovery
   useEffect(() => {
-    if ((phase === 2 || phase === 5) && isAtResonance && !foundResonance) {
+    if ((phase === 'play' || phase === 'twist_play') && isAtResonance && !foundResonance) {
       setFoundResonance(true);
       emitEvent('simulation_started', { frequency: drivingFrequency, resonanceFound: true });
     }
@@ -339,26 +335,28 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
 
   // Progress bar (Premium Design)
   const renderProgressBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
     return (
       <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Resonance</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p, idx) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={(e) => { e.preventDefault(); goToPhase(p); }}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-violet-400 w-6 shadow-lg shadow-violet-400/30'
-                    : phase > p
+                    : currentIndex > idx
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
               />
             ))}
           </div>
-          <span className="text-sm font-medium text-violet-400">{phase + 1} / {PHASES.length}</span>
+          <span className="text-sm font-medium text-violet-400">{currentIndex + 1} / {phaseOrder.length}</span>
         </div>
       </div>
     );
@@ -735,7 +733,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
   // ==================== PHASE RENDERS ====================
 
   // HOOK - Premium welcome screen
-  if (phase === 0) {
+  if (phase === 'hook') {
     return (
       <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
         {/* Premium background gradient */}
@@ -790,7 +788,8 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
 
             {/* Premium CTA button */}
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+              onClick={(e) => { e.preventDefault(); goToPhase('predict'); }}
+              style={{ zIndex: 10 }}
               className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-violet-500 to-purple-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-violet-500/25 hover:scale-[1.02] active:scale-[0.98]"
             >
               <span className="relative z-10 flex items-center gap-3">
@@ -819,7 +818,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
   }
 
   // PREDICT
-  if (phase === 1) {
+  if (phase === 'predict') {
     const options = [
       { id: 'nothing', text: 'Nothing special happens at any particular frequency' },
       { id: 'resonance', text: 'At one specific frequency, amplitude becomes maximum' },
@@ -848,12 +847,9 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
               {options.map((opt) => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => {
-                    if (navigationLockRef.current) return;
-                    navigationLockRef.current = true;
+                  onClick={() => {
                     setPrediction(opt.id);
                     emitEvent('prediction_made', { value: opt.id });
-                    setTimeout(() => { navigationLockRef.current = false; }, 400);
                   }}
                   style={{
                     padding: '18px 24px',
@@ -865,7 +861,8 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                     fontWeight: 500,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    zIndex: 10
                   }}
                 >
                   {opt.text}
@@ -874,7 +871,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
             </div>
 
             <div style={{ marginTop: design.spacing.xl, display: 'flex', justifyContent: 'flex-end' }}>
-              {renderButton('Test Your Prediction', () => goToPhase(2), 'primary', !prediction)}
+              {renderButton('Test Your Prediction', () => goToPhase('play'), 'primary', !prediction)}
             </div>
           </div>
         </div>
@@ -883,7 +880,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
   }
 
   // PLAY - Interactive experiment
-  if (phase === 2) {
+  if (phase === 'play') {
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
@@ -927,7 +924,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                     {isAtResonance ? '🎉 You found resonance!' : `Target: ${resonantFreq} Hz`}
                   </span>
                 </div>
-                {renderButton(foundResonance ? 'Continue' : 'Find Resonance First', () => goToPhase(3), 'primary', !foundResonance)}
+                {renderButton(foundResonance ? 'Continue' : 'Find Resonance First', () => goToPhase('review'), 'primary', !foundResonance)}
               </div>
             </div>
           </div>
@@ -937,7 +934,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
   }
 
   // REVIEW
-  if (phase === 3) {
+  if (phase === 'review') {
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
@@ -991,7 +988,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              {renderButton('Continue', () => goToPhase(4))}
+              {renderButton('Continue', () => goToPhase('twist_predict'))}
             </div>
           </div>
         </div>
@@ -1000,7 +997,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
   }
 
   // TWIST PREDICT
-  if (phase === 4) {
+  if (phase === 'twist_predict') {
     const options = [
       { id: 'increase', text: 'Resonant frequency increases' },
       { id: 'decrease', text: 'Resonant frequency decreases' },
@@ -1029,12 +1026,9 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
               {options.map((opt) => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => {
-                    if (navigationLockRef.current) return;
-                    navigationLockRef.current = true;
+                  onClick={() => {
                     setTwistPrediction(opt.id);
                     emitEvent('twist_prediction_made', { value: opt.id });
-                    setTimeout(() => { navigationLockRef.current = false; }, 400);
                   }}
                   style={{
                     padding: '18px 24px',
@@ -1046,7 +1040,8 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                     fontWeight: 500,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    zIndex: 10
                   }}
                 >
                   {opt.text}
@@ -1055,7 +1050,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
             </div>
 
             <div style={{ marginTop: design.spacing.xl, display: 'flex', justifyContent: 'flex-end' }}>
-              {renderButton('Test It', () => goToPhase(5), 'primary', !twistPrediction)}
+              {renderButton('Test It', () => goToPhase('twist_play'), 'primary', !twistPrediction)}
             </div>
           </div>
         </div>
@@ -1064,7 +1059,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
   }
 
   // TWIST PLAY
-  if (phase === 5) {
+  if (phase === 'twist_play') {
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
@@ -1118,7 +1113,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                   <span style={{ fontSize: '12px', color: design.colors.textMuted }}>Natural Freq: </span>
                   <span style={{ fontSize: '18px', fontWeight: 800, color: design.colors.accentPrimary }}>{resonantFreq} Hz</span>
                 </div>
-                {renderButton('Continue', () => goToPhase(6))}
+                {renderButton('Continue', () => goToPhase('twist_review'))}
               </div>
             </div>
           </div>
@@ -1128,7 +1123,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
   }
 
   // TWIST REVIEW
-  if (phase === 6) {
+  if (phase === 'twist_review') {
     return (
       <div style={containerStyle}>
         {renderProgressBar()}
@@ -1170,7 +1165,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'flex-end' }}>
-              {renderButton('See Real Applications', () => goToPhase(7))}
+              {renderButton('See Real Applications', () => goToPhase('transfer'))}
             </div>
           </div>
         </div>
@@ -1179,7 +1174,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
   }
 
   // TRANSFER - Tabbed applications with sequential navigation
-  if (phase === 7) {
+  if (phase === 'transfer') {
     const app = applications[activeApp];
     const allAppsCompleted = completedApps.size >= applications.length;
 
@@ -1199,11 +1194,8 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
             {applications.map((a, idx) => (
               <button
                 key={a.id}
-                onMouseDown={() => {
-                  if (navigationLockRef.current) return;
-                  navigationLockRef.current = true;
+                onClick={() => {
                   setActiveApp(idx);
-                  setTimeout(() => { navigationLockRef.current = false; }, 300);
                 }}
                 style={{
                   padding: '10px 20px',
@@ -1216,7 +1208,8 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                   cursor: 'pointer',
                   whiteSpace: 'nowrap',
                   transition: 'all 0.2s ease',
-                  position: 'relative'
+                  position: 'relative',
+                  zIndex: 10
                 }}
               >
                 {completedApps.has(idx) && (
@@ -1286,17 +1279,11 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: design.spacing.md }}>
                 {!completedApps.has(activeApp) ? (
                   <button
-                    onMouseDown={() => {
-                      if (navigationLockRef.current) return;
-                      navigationLockRef.current = true;
+                    onClick={() => {
                       const newCompleted = new Set(completedApps);
                       newCompleted.add(activeApp);
                       setCompletedApps(newCompleted);
                       emitEvent('app_explored', { app: app.id });
-                      if (activeApp < applications.length - 1) {
-                        setTimeout(() => setActiveApp(activeApp + 1), 300);
-                      }
-                      setTimeout(() => { navigationLockRef.current = false; }, 400);
                     }}
                     style={{
                       padding: '14px 24px',
@@ -1307,7 +1294,8 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                       fontSize: '14px',
                       fontWeight: 600,
                       cursor: 'pointer',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      zIndex: 10
                     }}
                   >
                     ✓ Mark "{app.title}" as Read
@@ -1326,8 +1314,30 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                   </div>
                 )}
 
-                {allAppsCompleted ? (
-                  renderButton('Take Quiz', () => goToPhase(8), 'success')
+                {/* Next Application button - advances through applications */}
+                {activeApp < applications.length - 1 ? (
+                  <button
+                    onClick={() => {
+                      setActiveApp(activeApp + 1);
+                    }}
+                    style={{
+                      padding: '14px 24px',
+                      borderRadius: design.radius.lg,
+                      background: `linear-gradient(135deg, ${design.colors.accentPrimary} 0%, ${design.colors.accentSecondary} 100%)`,
+                      border: 'none',
+                      color: '#fff',
+                      fontSize: '14px',
+                      fontWeight: 600,
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease',
+                      boxShadow: `0 4px 20px ${design.colors.accentGlow}`,
+                      zIndex: 10
+                    }}
+                  >
+                    Next Application →
+                  </button>
+                ) : allAppsCompleted ? (
+                  renderButton('Take Quiz', () => goToPhase('test'), 'success')
                 ) : (
                   <div style={{
                     padding: '14px 24px',
@@ -1349,7 +1359,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
   }
 
   // TEST
-  if (phase === 8) {
+  if (phase === 'test') {
     const q = questions[testIndex];
     const answered = answers[testIndex] !== null;
 
@@ -1369,7 +1379,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                score >= 6 ? "Good job! Review the concepts you missed." :
                "Keep practicing! Review the material and try again."}
             </p>
-            {renderButton('Complete Lesson', () => goToPhase(9), 'success', false, 'lg')}
+            {renderButton('Complete Lesson', () => goToPhase('mastery'), 'success', false, 'lg')}
           </div>
         </div>
       );
@@ -1411,14 +1421,12 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                 return (
                   <button
                     key={i}
-                    onMouseDown={() => {
-                      if (answered || navigationLockRef.current) return;
-                      navigationLockRef.current = true;
+                    onClick={() => {
+                      if (answered) return;
                       const newAnswers = [...answers];
                       newAnswers[testIndex] = i;
                       setAnswers(newAnswers);
                       emitEvent('test_answered', { questionIndex: testIndex, correct: option.correct });
-                      setTimeout(() => { navigationLockRef.current = false; }, 400);
                     }}
                     disabled={answered}
                     style={{
@@ -1431,7 +1439,8 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
                       fontWeight: 500,
                       cursor: answered ? 'default' : 'pointer',
                       textAlign: 'left',
-                      transition: 'all 0.2s ease'
+                      transition: 'all 0.2s ease',
+                      zIndex: 10
                     }}
                   >
                     {option.text}
@@ -1481,7 +1490,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
   }
 
   // MASTERY
-  if (phase === 9) {
+  if (phase === 'mastery') {
     return (
       <div style={{
         ...containerStyle,
@@ -1586,7 +1595,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
 
           <div style={{ display: 'flex', gap: design.spacing.md }}>
             {renderButton('Replay Lesson', () => {
-              setPhase(0);
+              setPhase('hook');
               setTestIndex(0);
               setAnswers(Array(10).fill(null));
               setShowResult(false);
@@ -1595,7 +1604,7 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, curr
               setDrivingFrequency(100);
               setCompletedApps(new Set());
             }, 'ghost')}
-            {renderButton('Free Exploration', () => goToPhase(2))}
+            {renderButton('Free Exploration', () => goToPhase('play'))}
           </div>
         </div>
       </div>

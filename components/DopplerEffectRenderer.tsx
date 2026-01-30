@@ -20,18 +20,19 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+// String-based phases
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook', 'predict': 'Predict', 'play': 'Lab', 'review': 'Review', 'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab', 'twist_review': 'Twist Review', 'transfer': 'Transfer', 'test': 'Test', 'mastery': 'Mastery'
 };
 
 interface DopplerEffectRendererProps {
   onComplete?: () => void;
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // --- PREMIUM DESIGN TOKENS ---
@@ -81,20 +82,19 @@ const design = {
 
 
 // --- MAIN COMPONENT ---
-const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplete, onGameEvent, currentPhase, onPhaseComplete }) => {
+const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplete, onGameEvent, gamePhase, onPhaseComplete }) => {
   // --- PHASE MANAGEMENT ---
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
-  const navigationLockRef = useRef(false);
+  const [phase, setPhase] = useState<Phase>((gamePhase as Phase) ?? 'hook');
   const lastClickRef = useRef(0);
   const [activeApp, setActiveApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
 
   // Sync with external phase control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase !== undefined && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase]);
+  }, [gamePhase]);
 
   // Web Audio API sound
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -158,39 +158,37 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   }, [onGameEvent]);
 
   // --- NAVIGATION ---
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     emitEvent('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(newPhase);
 
-    if (newPhase === 2 || newPhase === 5) {
+    if (newPhase === 'play' || newPhase === 'twist_play') {
       setSourcePosition(0);
       setWaveHistory([]);
       setPassCount(0);
       setIsAnimating(true);
-      if (newPhase === 2) {
+      if (newPhase === 'play') {
         setSourceSpeed(30);
         setObserverSpeed(0);
       }
     }
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [emitEvent, phase, playSound, onPhaseComplete]);
 
   const goNext = useCallback(() => {
-    if (phase < PHASES.length - 1) {
-      goToPhase(phase + 1);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
     } else if (onComplete) {
       onComplete();
     }
   }, [phase, goToPhase, onComplete]);
 
   const goBack = useCallback(() => {
-    if (phase > 0) {
-      goToPhase(phase - 1);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
     }
   }, [phase, goToPhase]);
 
@@ -232,12 +230,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
 
     return (
       <button
-        onMouseDown={(e) => {
+        onClick={(e) => {
           e.preventDefault();
-          if (disabled || navigationLockRef.current) return;
-          navigationLockRef.current = true;
+          if (disabled) return;
           onClick();
-          setTimeout(() => { navigationLockRef.current = false; }, 400);
         }}
         disabled={disabled}
         style={{
@@ -268,7 +264,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   }, []);
 
   useEffect(() => {
-    if ((phase === 2 || phase === 5) && isAnimating) {
+    if ((phase === 'play' || phase === 'twist_play') && isAnimating) {
       const interval = setInterval(() => {
         setSourcePosition(prev => {
           const newPos = prev + sourceSpeed * 0.02;
@@ -284,7 +280,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   }, [phase, isAnimating, sourceSpeed]);
 
   useEffect(() => {
-    if ((phase === 2 || phase === 5) && isAnimating) {
+    if ((phase === 'play' || phase === 'twist_play') && isAnimating) {
       const interval = setInterval(() => {
         setWaveHistory(prev => {
           const newWaves = [...prev, { x: sourcePosition, t: time, id: Date.now() + Math.random() }];
@@ -296,7 +292,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   }, [phase, isAnimating, sourcePosition, time]);
 
   useEffect(() => {
-    if (phase === 2 || phase === 5) {
+    if (phase === 'play' || phase === 'twist_play') {
       const normalizedPos = sourcePosition / 100;
       if (normalizedPos < 0.3) setTeachingMilestone('approaching');
       else if (normalizedPos < 0.55) setTeachingMilestone('passing');
@@ -470,6 +466,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
 
   // --- RENDER HELPERS ---
   const renderProgressBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
     return (
       <div style={{
         display: 'flex',
@@ -481,23 +478,23 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
         gap: design.spacing.md,
       }}>
         <div style={{ display: 'flex', gap: design.spacing.xs }}>
-          {PHASES.map((p) => (
+          {phaseOrder.map((p, idx) => (
             <div
               key={p}
-              onClick={() => p < phase && goToPhase(p)}
+              onClick={() => idx < currentIndex && goToPhase(p)}
               style={{
                 width: p === phase ? 24 : 10,
                 height: 10,
                 borderRadius: design.radius.full,
-                background: p < phase ? design.colors.success : p === phase ? design.colors.accentPrimary : design.colors.bgGlow,
-                cursor: p < phase ? 'pointer' : 'default',
+                background: idx < currentIndex ? design.colors.success : p === phase ? design.colors.accentPrimary : design.colors.bgGlow,
+                cursor: idx < currentIndex ? 'pointer' : 'default',
                 transition: 'all 0.3s ease',
               }}
             />
           ))}
         </div>
         <span style={{ fontSize: design.typography.caption.size, fontWeight: 700, color: design.colors.textMuted }}>
-          {phase + 1}/{PHASES.length}
+          {currentIndex + 1}/{phaseOrder.length}
         </span>
         <div style={{
           padding: `${design.spacing.xs}px ${design.spacing.md}px`,
@@ -514,6 +511,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   };
 
   const renderBottomNav = (canBack: boolean, canNext: boolean, nextLabel: string, onNext?: () => void) => {
+    const currentIndex = phaseOrder.indexOf(phase);
     return (
       <div style={{
         display: 'flex',
@@ -523,10 +521,10 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
         background: design.colors.bgCard,
         borderTop: `1px solid ${design.colors.bgGlow}`,
       }}>
-        {renderButton('← Back', () => phase > 0 && goToPhase(phase - 1), 'ghost', { disabled: !canBack || phase === 0 })}
+        {renderButton('← Back', () => currentIndex > 0 && goToPhase(phaseOrder[currentIndex - 1]), 'ghost', { disabled: !canBack || phase === 'hook' })}
         {renderButton(`${nextLabel} →`, () => {
           if (onNext) onNext();
-          else if (phase < PHASES.length - 1) goToPhase(phase + 1);
+          else if (currentIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentIndex + 1]);
         }, 'primary', { disabled: !canNext })}
       </div>
     );
@@ -909,20 +907,23 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Doppler Effect</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
-              <button
-                key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p
-                    ? 'bg-red-400 w-6 shadow-lg shadow-red-400/30'
-                    : phase > p
-                      ? 'bg-emerald-500 w-2'
-                      : 'bg-slate-700 w-2 hover:bg-slate-600'
-                }`}
-                title={phaseLabels[p]}
-              />
-            ))}
+            {phaseOrder.map((p, idx) => {
+              const currentIndex = phaseOrder.indexOf(phase);
+              return (
+                <button
+                  key={p}
+                  onClick={(e) => { e.preventDefault(); goToPhase(p); }}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    phase === p
+                      ? 'bg-red-400 w-6 shadow-lg shadow-red-400/30'
+                      : currentIndex > idx
+                        ? 'bg-emerald-500 w-2'
+                        : 'bg-slate-700 w-2 hover:bg-slate-600'
+                  }`}
+                  title={phaseLabels[p]}
+                />
+              );
+            })}
           </div>
           <span className="text-sm font-medium text-red-400">{phaseLabels[phase]}</span>
         </div>
@@ -936,7 +937,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   );
 
   // HOOK PHASE
-  if (phase === 0) {
+  if (phase === 'hook') {
     return (
       <PremiumWrapper>
         <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
@@ -981,7 +982,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
 
           {/* Premium CTA button */}
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+            onClick={(e) => { e.preventDefault(); goToPhase('predict'); }}
             className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-red-500 to-rose-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 hover:scale-[1.02] active:scale-[0.98]"
           >
             <span className="relative z-10 flex items-center gap-3">
@@ -1013,7 +1014,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   }
 
   // PREDICT PHASE
-  if (phase === 1) {
+  if (phase === 'predict') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
         {renderProgressBar()}
@@ -1038,7 +1039,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => {
+                  onClick={() => {
                     setPrediction(opt.id);
                     emitEvent('prediction_made', { prediction: opt.id, label: opt.label });
                   }}
@@ -1086,7 +1087,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   }
 
   // PLAY PHASE
-  if (phase === 2) {
+  if (phase === 'play') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
         {renderProgressBar()}
@@ -1151,7 +1152,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   }
 
   // REVIEW PHASE
-  if (phase === 3) {
+  if (phase === 'review') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
         {renderProgressBar()}
@@ -1248,7 +1249,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   }
 
   // TWIST_PREDICT PHASE
-  if (phase === 4) {
+  if (phase === 'twist_predict') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
         {renderProgressBar()}
@@ -1299,7 +1300,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => {
+                  onClick={() => {
                     setTwistPrediction(opt.id);
                     emitEvent('twist_prediction_made', { prediction: opt.id });
                   }}
@@ -1334,7 +1335,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   }
 
   // TWIST_PLAY PHASE
-  if (phase === 5) {
+  if (phase === 'twist_play') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
         {renderProgressBar()}
@@ -1406,7 +1407,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   }
 
   // TWIST_REVIEW PHASE
-  if (phase === 6) {
+  if (phase === 'twist_review') {
     return (
       <div style={{ display: 'flex', flexDirection: 'column', height: '100%', background: design.colors.bgDeep }}>
         {renderProgressBar()}
@@ -1475,7 +1476,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   }
 
   // TRANSFER PHASE
-  if (phase === 7) {
+  if (phase === 'transfer') {
     const app = applications[activeApp];
 
     return (
@@ -1498,11 +1499,9 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               return (
                 <button
                   key={a.id}
-                  onMouseDown={() => {
-                    if (navigationLockRef.current || !isUnlocked) return;
-                    navigationLockRef.current = true;
+                  onClick={() => {
+                    if (!isUnlocked) return;
                     setActiveApp(i);
-                    setTimeout(() => { navigationLockRef.current = false; }, 300);
                   }}
                   style={{
                     display: 'flex',
@@ -1590,16 +1589,13 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               <div style={{ marginTop: design.spacing.md }}>
                 {!completedApps.has(activeApp) ? (
                   <button
-                    onMouseDown={() => {
-                      if (navigationLockRef.current) return;
-                      navigationLockRef.current = true;
+                    onClick={() => {
                       const newCompleted = new Set(completedApps);
                       newCompleted.add(activeApp);
                       setCompletedApps(newCompleted);
                       if (activeApp < applications.length - 1) {
                         setTimeout(() => setActiveApp(activeApp + 1), 300);
                       }
-                      setTimeout(() => { navigationLockRef.current = false; }, 400);
                     }}
                     style={{
                       width: '100%',
@@ -1643,7 +1639,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   }
 
   // TEST PHASE
-  if (phase === 8) {
+  if (phase === 'test') {
     if (testSubmitted) {
       const score = testAnswers.reduce((acc, ans, i) => acc + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0);
       const percentage = Math.round((score / testQuestions.length) * 100);
@@ -1694,7 +1690,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
 
             {renderButton(passed ? 'Complete Lesson' : 'Try Again', () => {
               if (passed) {
-                goToPhase(9);
+                goToPhase('mastery');
               } else {
                 setTestSubmitted(false);
                 setTestIndex(0);
@@ -1756,7 +1752,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
               {q.options.map((opt, i) => (
                 <button
                   key={i}
-                  onMouseDown={() => {
+                  onClick={() => {
                     const newAnswers = [...testAnswers];
                     newAnswers[testIndex] = i;
                     setTestAnswers(newAnswers);
@@ -1813,7 +1809,7 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
   }
 
   // MASTERY PHASE
-  if (phase === 9) {
+  if (phase === 'mastery') {
     return (
       <div style={{
         display: 'flex',

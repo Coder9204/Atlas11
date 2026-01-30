@@ -8,6 +8,10 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // Northern Hemisphere: deflects RIGHT, Southern Hemisphere: deflects LEFT
 // ============================================================================
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -44,15 +48,25 @@ interface TransferApp {
 
 interface Props {
   onGameEvent?: (event: { type: GameEventType; data?: Record<string, unknown> }) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
-// Physics constants
-const EARTH_ANGULAR_VELOCITY = 7.29e-5; // rad/s
+const phaseNames: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Explore',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Demo',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
+};
 
-const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState(0);
+const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
+  const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -68,14 +82,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
   const [animPhase, setAnimPhase] = useState(0);
   const [ballLaunched, setBallLaunched] = useState(false);
 
-  const navigationLockRef = useRef(false);
   const audioContextRef = useRef<AudioContext | null>(null);
-
-  const phaseNames = [
-    'Hook', 'Predict', 'Explore', 'Review',
-    'Twist Predict', 'Twist Demo', 'Twist Review',
-    'Transfer', 'Test', 'Mastery'
-  ];
 
   // Responsive check
   useEffect(() => {
@@ -87,10 +94,10 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
 
   // Sync with external phase control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
   // Animation loop
   useEffect(() => {
@@ -174,50 +181,36 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
     }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    if (newPhase < 0 || newPhase > 9) return;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (!phaseOrder.includes(newPhase)) return;
     playSound('transition');
 
-    if (onPhaseComplete && newPhase > phase) {
+    const currentIndex = phaseOrder.indexOf(phase);
+    const newIndex = phaseOrder.indexOf(newPhase);
+
+    if (onPhaseComplete && newIndex > currentIndex) {
       onPhaseComplete(phase);
     }
 
     setPhase(newPhase);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseName: phaseNames[newPhase] } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [phase, playSound, onPhaseComplete, onGameEvent, phaseNames]);
+  }, [phase, playSound, onPhaseComplete, onGameEvent]);
 
   const handlePrediction = useCallback((prediction: string) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'curves' ? 'correct' : 'incorrect');
     onGameEvent?.({ type: 'prediction_made', data: { prediction, correct: prediction === 'curves' } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'no_weak' ? 'correct' : 'incorrect');
     onGameEvent?.({ type: 'twist_prediction_made', data: { prediction, correct: prediction === 'no_weak' } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = answerIndex;
     setTestAnswers(newAnswers);
@@ -225,8 +218,6 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
     const isCorrect = testQuestions[questionIndex].options[answerIndex].correct;
     playSound(isCorrect ? 'correct' : 'incorrect');
     onGameEvent?.({ type: 'test_answered', data: { questionIndex, answerIndex, isCorrect } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [testAnswers, playSound, onGameEvent]);
 
   const calculateTestScore = useCallback(() => {
@@ -239,14 +230,9 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
   }, [testAnswers]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
     onGameEvent?.({ type: 'app_explored', data: { appIndex, appTitle: transferApps[appIndex].title } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent]);
 
   // 10 scenario-based test questions with explanations
@@ -578,7 +564,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
 
   const renderPhaseContent = () => {
     switch (phase) {
-      case 0: // Hook
+      case 'hook':
         return (
           <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
             {/* Premium badge */}
@@ -666,7 +652,8 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
 
             {/* Premium CTA button */}
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+              onClick={() => goToPhase('predict')}
+              style={{ zIndex: 10 }}
               className="group relative px-8 py-4 bg-gradient-to-r from-sky-600 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-sky-500/25 hover:shadow-sky-500/40 hover:scale-[1.02] active:scale-[0.98]"
             >
               <span className="relative z-10 flex items-center gap-2">
@@ -676,11 +663,11 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
                 </svg>
               </span>
             </button>
-            <p className="mt-6 text-sm text-slate-500">Explore Earth's rotation and atmospheric dynamics</p>
+            <p className="mt-6 text-sm text-slate-500">Explore Earth&apos;s rotation and atmospheric dynamics</p>
           </div>
         );
 
-      case 1: // Predict
+      case 'predict':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-sky-400 mb-6">Make Your Prediction</h2>
@@ -696,8 +683,9 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
               ].map(option => (
                 <button
                   key={option.id}
-                  onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+                  onClick={() => handlePrediction(option.id)}
                   disabled={showPredictionFeedback}
+                  style={{ zIndex: 10 }}
                   className={`p-4 rounded-xl text-left transition-all ${
                     showPredictionFeedback && option.id === 'curves'
                       ? 'bg-green-600 text-white ring-2 ring-green-400'
@@ -713,13 +701,14 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
             {showPredictionFeedback && (
               <div className="bg-slate-800 p-5 rounded-xl mb-4 max-w-md">
                 <p className={`font-bold text-lg mb-2 ${selectedPrediction === 'curves' ? 'text-green-400' : 'text-sky-400'}`}>
-                  {selectedPrediction === 'curves' ? '✓ Excellent prediction!' : 'Think about the rotating platform!'}
+                  {selectedPrediction === 'curves' ? 'Excellent prediction!' : 'Think about the rotating platform!'}
                 </p>
                 <p className="text-slate-300 mb-3">
                   The ball curves away from its intended path! From your rotating perspective, it appears to deflect - this is the <span className="text-sky-400 font-bold">Coriolis effect</span>.
                 </p>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+                  onClick={() => goToPhase('play')}
+                  style={{ zIndex: 10 }}
                   className="mt-2 px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-colors"
                 >
                   See It In Action
@@ -729,7 +718,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           </div>
         );
 
-      case 2: // Play/Explore
+      case 'play':
         const earthRotation = animPhase * 0.5;
         const deflectionDir = hemisphere === 'north' ? 1 : -1;
         const ballProgress = ballLaunched ? Math.min((animPhase % 100) / 100, 1) : 0;
@@ -822,7 +811,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
                   <rect width="100" height="65" fill="#1e293b" rx="6" />
                   <text x="50" y="18" textAnchor="middle" fontSize="11" fill="#94a3b8" fontWeight="bold">Rotation</text>
                   <text x="50" y="38" textAnchor="middle" fontSize="14" fill={hemisphere === 'north' ? '#22c55e' : '#ef4444'} fontWeight="bold">
-                    {hemisphere === 'north' ? 'CCW ↺' : 'CW ↻'}
+                    {hemisphere === 'north' ? 'CCW' : 'CW'}
                   </text>
                   <text x="50" y="55" textAnchor="middle" fontSize="10" fill="#64748b">
                     Deflects {hemisphere === 'north' ? 'RIGHT' : 'LEFT'}
@@ -848,12 +837,12 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
                 <label className="text-slate-300 text-sm block mb-2">Hemisphere</label>
                 <div className="flex gap-2">
                   <button
-                    onMouseDown={(e) => {
-                      e.preventDefault();
+                    onClick={() => {
                       setHemisphere('north');
                       setBallLaunched(false);
                       onGameEvent?.({ type: 'hemisphere_changed', data: { hemisphere: 'north' } });
                     }}
+                    style={{ zIndex: 10 }}
                     className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
                       hemisphere === 'north' ? 'bg-sky-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                     }`}
@@ -861,12 +850,12 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
                     North
                   </button>
                   <button
-                    onMouseDown={(e) => {
-                      e.preventDefault();
+                    onClick={() => {
                       setHemisphere('south');
                       setBallLaunched(false);
                       onGameEvent?.({ type: 'hemisphere_changed', data: { hemisphere: 'south' } });
                     }}
+                    style={{ zIndex: 10 }}
                     className={`flex-1 py-2 rounded-lg font-semibold transition-all ${
                       hemisphere === 'south' ? 'bg-sky-500 text-white' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                     }`}
@@ -876,15 +865,15 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
                 </div>
               </div>
               <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
+                onClick={() => {
                   setBallLaunched(true);
                   playSound('whoosh');
                   onGameEvent?.({ type: 'ball_launched', data: { hemisphere } });
                 }}
+                style={{ zIndex: 10 }}
                 className="bg-amber-500 hover:bg-amber-600 text-white rounded-xl font-bold py-4 transition-all"
               >
-                🎾 Throw Ball!
+                Throw Ball!
               </button>
             </div>
 
@@ -897,7 +886,8 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
             </div>
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+              onClick={() => goToPhase('review')}
+              style={{ zIndex: 10 }}
               className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-bold rounded-xl transition-colors"
             >
               Understand the Physics
@@ -905,14 +895,14 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           </div>
         );
 
-      case 3: // Review
+      case 'review':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-sky-400 mb-6">The Science Revealed</h2>
 
             {selectedPrediction === 'curves' ? (
               <div className="bg-green-500/20 border border-green-500 rounded-xl p-4 mb-6 max-w-lg">
-                <p className="text-green-400 font-semibold">✓ Your prediction was correct! The ball curves.</p>
+                <p className="text-green-400 font-semibold">Your prediction was correct! The ball curves.</p>
               </div>
             ) : (
               <div className="bg-amber-500/20 border border-amber-500 rounded-xl p-4 mb-6 max-w-lg">
@@ -922,16 +912,16 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
 
             <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 max-w-2xl mb-6`}>
               <div className="bg-slate-800 p-5 rounded-xl">
-                <h3 className="text-lg font-bold text-sky-400 mb-3">🌍 Earth Is a Merry-Go-Round</h3>
+                <h3 className="text-lg font-bold text-sky-400 mb-3">Earth Is a Merry-Go-Round</h3>
                 <p className="text-slate-300 text-sm">
                   Earth rotates on its axis once per day. From space (inertial frame), objects move in straight lines. But from our rotating perspective, they appear to <span className="text-cyan-400 font-bold">curve</span>.
                 </p>
               </div>
 
               <div className="bg-slate-800 p-5 rounded-xl">
-                <h3 className="text-lg font-bold text-cyan-400 mb-3">⚡ The Coriolis Force</h3>
+                <h3 className="text-lg font-bold text-cyan-400 mb-3">The Coriolis Force</h3>
                 <div className="bg-slate-900 p-3 rounded-lg text-center mb-2">
-                  <span className="text-sky-400 font-mono text-lg">F = -2m(ω × v)</span>
+                  <span className="text-sky-400 font-mono text-lg">F = -2m(omega x v)</span>
                 </div>
                 <p className="text-slate-300 text-sm">
                   A &quot;fictitious force&quot; - not a real push, but an apparent deflection from observing in a rotating reference frame.
@@ -939,29 +929,30 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
               </div>
 
               <div className={`bg-gradient-to-r from-sky-900/50 to-cyan-900/50 p-5 rounded-xl ${isMobile ? '' : 'col-span-2'}`}>
-                <h3 className="text-lg font-bold text-sky-400 mb-4">🧭 Direction Rules</h3>
+                <h3 className="text-lg font-bold text-sky-400 mb-4">Direction Rules</h3>
                 <div className="grid grid-cols-2 gap-4">
                   <div className="bg-slate-800/50 p-4 rounded-lg text-center">
-                    <div className="text-2xl mb-2">🌎</div>
+                    <div className="text-2xl mb-2">Northern</div>
                     <div className="text-green-400 font-bold">Northern Hemisphere</div>
                     <div className="text-slate-300 text-sm">Objects deflect <span className="text-green-400">RIGHT</span></div>
-                    <div className="text-slate-400 text-xs mt-1">Hurricanes spin CCW ↺</div>
+                    <div className="text-slate-400 text-xs mt-1">Hurricanes spin CCW</div>
                   </div>
                   <div className="bg-slate-800/50 p-4 rounded-lg text-center">
-                    <div className="text-2xl mb-2">🌍</div>
+                    <div className="text-2xl mb-2">Southern</div>
                     <div className="text-red-400 font-bold">Southern Hemisphere</div>
                     <div className="text-slate-300 text-sm">Objects deflect <span className="text-red-400">LEFT</span></div>
-                    <div className="text-slate-400 text-xs mt-1">Hurricanes spin CW ↻</div>
+                    <div className="text-slate-400 text-xs mt-1">Hurricanes spin CW</div>
                   </div>
                 </div>
                 <p className="text-slate-400 text-sm mt-3 text-center">
-                  At the equator (0° latitude), there&apos;s no Coriolis deflection because sin(0°) = 0
+                  At the equator (0 degrees latitude), there&apos;s no Coriolis deflection because sin(0) = 0
                 </p>
               </div>
             </div>
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+              onClick={() => goToPhase('twist_predict')}
+              style={{ zIndex: 10 }}
               className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl transition-all"
             >
               Explore a Twist
@@ -969,10 +960,10 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           </div>
         );
 
-      case 4: // Twist Predict
+      case 'twist_predict':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-            <h2 className="text-2xl font-bold text-purple-400 mb-6">🔄 The Twist: Toilet Drains</h2>
+            <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist: Toilet Drains</h2>
             <div className="bg-slate-800 p-5 rounded-xl mb-6 max-w-lg">
               <p className="text-slate-200 text-center mb-4">
                 Popular myth says toilets and sinks drain in <span className="text-purple-400 font-bold">opposite directions</span> in each hemisphere due to the Coriolis effect.
@@ -990,8 +981,9 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
               ].map(option => (
                 <button
                   key={option.id}
-                  onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+                  onClick={() => handleTwistPrediction(option.id)}
                   disabled={showTwistFeedback}
+                  style={{ zIndex: 10 }}
                   className={`p-4 rounded-xl text-left transition-all ${
                     showTwistFeedback && option.id === 'no_weak'
                       ? 'bg-green-600 text-white ring-2 ring-green-400'
@@ -1007,14 +999,15 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
             {showTwistFeedback && (
               <div className="bg-slate-800 p-5 rounded-xl max-w-md">
                 <p className={`font-bold text-lg mb-2 ${twistPrediction === 'no_weak' ? 'text-green-400' : 'text-purple-400'}`}>
-                  {twistPrediction === 'no_weak' ? '✓ Exactly right!' : 'Myth busted!'}
+                  {twistPrediction === 'no_weak' ? 'Exactly right!' : 'Myth busted!'}
                 </p>
                 <p className="text-slate-300">
                   The Coriolis effect is <span className="text-red-400 font-bold">far too weak</span> at sink/toilet scales!
                   It only matters for large-scale phenomena (100+ km).
                 </p>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+                  onClick={() => goToPhase('twist_play')}
+                  style={{ zIndex: 10 }}
                   className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-colors"
                 >
                   See Why
@@ -1024,7 +1017,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           </div>
         );
 
-      case 5: // Twist Play/Demo
+      case 'twist_play':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-purple-400 mb-4">The Scale Problem</h2>
@@ -1058,7 +1051,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
                   </g>
                   <circle cx="0" cy="0" r="10" fill="#0f172a" stroke="#64748b" strokeWidth="2" />
 
-                  <text x="0" y="65" textAnchor="middle" fontSize="12" fill="#22c55e" fontWeight="bold">✓ STRONG</text>
+                  <text x="0" y="65" textAnchor="middle" fontSize="12" fill="#22c55e" fontWeight="bold">STRONG</text>
                   <text x="0" y="80" textAnchor="middle" fontSize="10" fill="#64748b">Hours to form</text>
                 </g>
 
@@ -1076,7 +1069,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
                     </path>
                   </g>
 
-                  <text x="0" y="65" textAnchor="middle" fontSize="12" fill="#ef4444" fontWeight="bold">✗ NEGLIGIBLE</text>
+                  <text x="0" y="65" textAnchor="middle" fontSize="12" fill="#ef4444" fontWeight="bold">NEGLIGIBLE</text>
                   <text x="0" y="80" textAnchor="middle" fontSize="10" fill="#64748b">Seconds to drain</text>
                 </g>
 
@@ -1091,16 +1084,17 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
             </div>
 
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-4 max-w-lg">
-              <h4 className="text-amber-400 font-semibold mb-2">🧮 The Math</h4>
+              <h4 className="text-amber-400 font-semibold mb-2">The Math</h4>
               <p className="text-slate-300 text-sm">
-                Coriolis acceleration ≈ 2ωv sin(φ)<br />
-                For a sink: ~10<sup>-5</sup> m/s² (barely measurable!)<br />
+                Coriolis acceleration is approximately 2 omega v sin(phi)<br />
+                For a sink: ~10^-5 m/s squared (barely measurable!)<br />
                 <span className="text-amber-400">That&apos;s 10 million times weaker than other effects!</span>
               </p>
             </div>
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+              onClick={() => goToPhase('twist_review')}
+              style={{ zIndex: 10 }}
               className="px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-colors"
             >
               Learn the Truth
@@ -1108,14 +1102,14 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           </div>
         );
 
-      case 6: // Twist Review
+      case 'twist_review':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-purple-400 mb-6">Myth Busted!</h2>
 
             {twistPrediction === 'no_weak' ? (
               <div className="bg-green-500/20 border border-green-500 rounded-xl p-4 mb-6 max-w-lg">
-                <p className="text-green-400 font-semibold">✓ You saw through the myth!</p>
+                <p className="text-green-400 font-semibold">You saw through the myth!</p>
               </div>
             ) : (
               <div className="bg-amber-500/20 border border-amber-500 rounded-xl p-4 mb-6 max-w-lg">
@@ -1125,7 +1119,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
 
             <div className="grid grid-cols-1 gap-4 max-w-lg mb-6">
               <div className="bg-slate-800 p-5 rounded-xl">
-                <h3 className="text-lg font-bold text-red-400 mb-2">❌ The Myth</h3>
+                <h3 className="text-lg font-bold text-red-400 mb-2">The Myth</h3>
                 <p className="text-slate-300 text-sm">
                   &quot;Water drains counterclockwise in the Northern Hemisphere and clockwise in the Southern.&quot;
                   This is one of the most persistent physics myths!
@@ -1133,14 +1127,14 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
               </div>
 
               <div className="bg-slate-800 p-5 rounded-xl">
-                <h3 className="text-lg font-bold text-green-400 mb-2">✓ The Truth</h3>
+                <h3 className="text-lg font-bold text-green-400 mb-2">The Truth</h3>
                 <p className="text-slate-300 text-sm">
                   At sink/toilet scale, Coriolis is about <span className="text-green-400 font-bold">10 million times weaker</span> than other factors like basin shape, residual water motion, and drain design.
                 </p>
               </div>
 
               <div className="bg-slate-800 p-5 rounded-xl">
-                <h3 className="text-lg font-bold text-sky-400 mb-2">📏 Scale Matters!</h3>
+                <h3 className="text-lg font-bold text-sky-400 mb-2">Scale Matters!</h3>
                 <p className="text-slate-300 text-sm">
                   Coriolis only dominates for <span className="text-sky-400 font-bold">large-scale (100+ km), long-duration</span> phenomena: hurricanes, ocean currents, global wind patterns - not your bathroom!
                 </p>
@@ -1148,7 +1142,8 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
             </div>
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+              onClick={() => goToPhase('transfer')}
+              style={{ zIndex: 10 }}
               className="px-8 py-3 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 text-white font-bold rounded-xl transition-all"
             >
               See Real Applications
@@ -1156,7 +1151,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           </div>
         );
 
-      case 7: // Transfer
+      case 'transfer':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-green-400 mb-6">Real-World Applications</h2>
@@ -1165,14 +1160,15 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
               {transferApps.map((app, index) => (
                 <button
                   key={index}
-                  onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+                  onClick={() => setActiveAppTab(index)}
+                  style={{ zIndex: 10 }}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     activeAppTab === index
                       ? `bg-gradient-to-r ${app.color} text-white`
                       : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                   }`}
                 >
-                  {completedApps.has(index) && '✓ '}{app.short}
+                  {completedApps.has(index) && 'Done '}{app.short}
                 </button>
               ))}
             </div>
@@ -1221,10 +1217,11 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
 
                 {!completedApps.has(activeAppTab) && (
                   <button
-                    onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+                    onClick={() => handleAppComplete(activeAppTab)}
+                    style={{ zIndex: 10 }}
                     className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors"
                   >
-                    Mark as Understood ✓
+                    Mark as Understood
                   </button>
                 )}
               </div>
@@ -1236,7 +1233,8 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
 
             {completedApps.size >= 3 && (
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+                onClick={() => goToPhase('test')}
+                style={{ zIndex: 10 }}
                 className="mt-4 px-8 py-3 bg-gradient-to-r from-sky-600 to-cyan-600 hover:from-sky-500 hover:to-cyan-500 text-white font-bold rounded-xl transition-all"
               >
                 Take the Knowledge Test
@@ -1245,7 +1243,7 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           </div>
         );
 
-      case 8: // Test
+      case 'test':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-sky-400 mb-6">Knowledge Test</h2>
@@ -1259,8 +1257,9 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
                     {q.options.map((option, oIndex) => (
                       <button
                         key={oIndex}
-                        onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                        onClick={() => handleTestAnswer(qIndex, oIndex)}
                         disabled={showTestResults}
+                        style={{ zIndex: 10 }}
                         className={`p-3 rounded-lg text-sm text-left transition-all ${
                           showTestResults && option.correct
                             ? 'bg-green-600 text-white'
@@ -1286,12 +1285,12 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
 
             {!showTestResults && testAnswers.every(a => a !== -1) && (
               <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
+                onClick={() => {
                   setShowTestResults(true);
                   playSound('complete');
                   onGameEvent?.({ type: 'test_completed', data: { score: calculateTestScore() } });
                 }}
+                style={{ zIndex: 10 }}
                 className="mt-6 px-8 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors"
               >
                 Submit Answers
@@ -1310,7 +1309,8 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
                 </p>
                 {calculateTestScore() >= 7 && (
                   <button
-                    onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
+                    onClick={() => goToPhase('mastery')}
+                    style={{ zIndex: 10 }}
                     className="mt-4 px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-bold rounded-xl transition-all"
                   >
                     Claim Your Mastery Badge!
@@ -1321,10 +1321,10 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           </div>
         );
 
-      case 9: // Mastery
+      case 'mastery':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center">
-            <div className="text-8xl mb-6">🏆</div>
+            <div className="text-8xl mb-6">Trophy</div>
             <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-sky-400 via-cyan-400 to-teal-400 mb-4">
               Coriolis Effect Master!
             </h2>
@@ -1334,23 +1334,23 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
               </p>
               <div className="text-left text-slate-300 space-y-3">
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">✓</span>
+                  <span className="text-green-400 text-xl">Done</span>
                   <span>Coriolis is an apparent deflection in rotating frames</span>
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">✓</span>
+                  <span className="text-green-400 text-xl">Done</span>
                   <span>Right deflection in NH, left in SH</span>
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">✓</span>
-                  <span><span className="text-sky-400 font-mono">F = 2m(ω × v)</span> - the Coriolis force</span>
+                  <span className="text-green-400 text-xl">Done</span>
+                  <span><span className="text-sky-400 font-mono">F = 2m(omega x v)</span> - the Coriolis force</span>
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">✓</span>
+                  <span className="text-green-400 text-xl">Done</span>
                   <span>Only significant at large scales (100+ km)</span>
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">✓</span>
+                  <span className="text-green-400 text-xl">Done</span>
                   <span>Toilet drain myth: BUSTED!</span>
                 </p>
               </div>
@@ -1360,13 +1360,15 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
             </p>
             <div className="mt-6 flex gap-4">
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+                onClick={() => goToPhase('hook')}
+                style={{ zIndex: 10 }}
                 className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
               >
                 Start Over
               </button>
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+                onClick={() => goToPhase('play')}
+                style={{ zIndex: 10 }}
                 className="px-6 py-2 bg-sky-600 hover:bg-sky-500 text-white font-medium rounded-xl transition-colors"
               >
                 Explore More
@@ -1393,18 +1395,19 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-medium text-sky-400">Coriolis Effect</span>
           <div className="flex gap-1.5">
-            {phaseNames.map((name, i) => (
+            {phaseOrder.map((p, i) => (
               <button
-                key={i}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(i); }}
+                key={p}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === i
+                  phase === p
                     ? 'bg-gradient-to-r from-sky-400 to-cyan-400 w-6 shadow-lg shadow-sky-500/50'
-                    : phase > i
+                    : phaseOrder.indexOf(phase) > i
                     ? 'bg-emerald-500 w-2'
                     : 'bg-slate-600 w-2 hover:bg-slate-500'
                 }`}
-                title={name}
+                title={phaseNames[p]}
               />
             ))}
           </div>

@@ -62,18 +62,21 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook',
+  'predict': 'Predict',
+  'play': 'Lab',
+  'review': 'Review',
+  'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab',
+  'twist_review': 'Twist Review',
+  'transfer': 'Transfer',
+  'test': 'Test',
+  'mastery': 'Mastery'
 };
 
 interface ChargedObject {
@@ -88,18 +91,15 @@ interface ChargedObject {
 
 interface StaticElectricityRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
-export default function StaticElectricityRenderer({ onGameEvent, currentPhase, onPhaseComplete }: StaticElectricityRendererProps) {
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
-
+export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPhaseComplete }: StaticElectricityRendererProps) {
   // Core State
-  const [phase, setPhase] = useState<number>(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
-    return 0;
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
   });
   const [isMobile, setIsMobile] = useState(false);
 
@@ -253,10 +253,10 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
 
   // Phase sync
   useEffect(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase]);
+  }, [gamePhase]);
 
   // Audio feedback
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -289,38 +289,24 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
     onGameEvent?.({ type, data });
   }, [onGameEvent]);
 
-  // Navigation with debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    if (navigationLockRef.current) return;
-    if (!PHASES.includes(newPhase)) return;
-    lastClickRef.current = now;
-    navigationLockRef.current = true;
+  // Navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (!phaseOrder.includes(newPhase)) return;
     setPhase(newPhase);
     playSound('transition');
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [phase, playSound, emitEvent, onPhaseComplete]);
 
   const goNext = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex < PHASES.length - 1) goToPhase(PHASES[currentIndex + 1]);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentIndex + 1]);
   }, [phase, goToPhase]);
 
   const goBack = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex > 0) goToPhase(PHASES[currentIndex - 1]);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]);
   }, [phase, goToPhase]);
-
-  // Debounced state update helper
-  const safeNavigate = useCallback((action: () => void) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-    action();
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, []);
 
   // Initialize hair strands
   const initHair = useCallback(() => {
@@ -356,20 +342,20 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
   }, []);
 
   useEffect(() => {
-    if (phase === 2) {
+    if (phase === 'play') {
       initHair();
       initPaper();
       setBalloonCharge(0);
       setRubCount(0);
     }
-    if (phase === 5) {
+    if (phase === 'twist_play') {
       initChargedObjects();
     }
   }, [phase, initHair, initPaper, initChargedObjects]);
 
   // Update hair based on balloon charge
   useEffect(() => {
-    if (phase === 2 && balloonCharge !== 0) {
+    if (phase === 'play' && balloonCharge !== 0) {
       setHairStrands(prev => prev.map((strand, i) => {
         // Hair stands up and spreads due to positive charge
         const spreadAngle = Math.abs(balloonCharge) * 15;
@@ -384,7 +370,7 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
 
   // Update paper attraction
   useEffect(() => {
-    if (phase === 2 && isSimulating) {
+    if (phase === 'play' && isSimulating) {
       setPaperPieces(prev => prev.map(piece => {
         if (Math.abs(balloonCharge) > 3) {
           // Calculate distance to balloon (positioned at x:150, y:100)
@@ -408,7 +394,7 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
 
   // Twist simulation - Coulomb's law
   useEffect(() => {
-    if (phase === 5 && isTwistSimulating) {
+    if (phase === 'twist_play' && isTwistSimulating) {
       const simulate = () => {
         setChargedObjects(prev => {
           const updated = prev.map(obj => {
@@ -494,6 +480,7 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
       transition: 'all 0.3s ease',
       fontFamily: premiumDesign.typography.fontFamily,
       opacity: disabled ? 0.5 : 1,
+      zIndex: 10,
     };
 
     const variants = {
@@ -517,7 +504,7 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
     return (
       <button
         style={{ ...baseStyle, ...variants[variant] }}
-        onMouseDown={(e) => {
+        onClick={(e) => {
           e.preventDefault();
           if (!disabled) onClick();
         }}
@@ -529,8 +516,8 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
   }
 
   function renderProgressBar() {
-    const currentIndex = PHASES.indexOf(phase);
-    const progress = ((currentIndex + 1) / PHASES.length) * 100;
+    const currentIndex = phaseOrder.indexOf(phase);
+    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
 
     return (
       <div style={{ marginBottom: premiumDesign.spacing.lg }}>
@@ -541,7 +528,7 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
           fontSize: '12px',
           color: premiumDesign.colors.text.muted,
         }}>
-          <span>Phase {currentIndex + 1} of {PHASES.length}</span>
+          <span>Phase {currentIndex + 1} of {phaseOrder.length}</span>
           <span>{phaseLabels[phase]}</span>
         </div>
         <div style={{
@@ -659,12 +646,12 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
         </div>
 
         {renderBottomBar(
-          hookStep > 0 ? { text: '← Back', onClick: () => safeNavigate(() => setHookStep(h => h - 1)) } : undefined,
+          hookStep > 0 ? { text: '← Back', onClick: () => setHookStep(h => h - 1) } : undefined,
           {
             text: hookStep < hookContent.length - 1 ? 'Continue →' : 'Make a Prediction →',
             onClick: () => {
               if (hookStep < hookContent.length - 1) {
-                safeNavigate(() => setHookStep(h => h + 1));
+                setHookStep(h => h + 1);
               } else {
                 goNext();
               }
@@ -729,10 +716,11 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
-                safeNavigate(() => setPrediction(p.id));
+                setPrediction(p.id);
               }}
             >
               {p.text}
@@ -741,10 +729,10 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(0) },
+          { text: '← Back', onClick: () => goToPhase('hook') },
           {
             text: 'Test My Prediction →',
-            onClick: nextPhase,
+            onClick: goNext,
             disabled: !prediction,
           }
         )}
@@ -953,8 +941,9 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                   fontWeight: 600,
                   cursor: 'pointer',
                   marginBottom: premiumDesign.spacing.md,
+                  zIndex: 10,
                 }}
-                onMouseDown={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
                   rubBalloon();
                 }}
@@ -989,8 +978,9 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                   background: 'transparent',
                   color: premiumDesign.colors.text.secondary,
                   cursor: 'pointer',
+                  zIndex: 10,
                 }}
-                onMouseDown={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
                   setBalloonCharge(0);
                   setRubCount(0);
@@ -1017,8 +1007,8 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(1) },
-          { text: 'Review Results →', onClick: nextPhase }
+          { text: '← Back', onClick: () => goToPhase('predict') },
+          { text: 'Review Results →', onClick: goNext }
         )}
       </div>
     );
@@ -1118,10 +1108,11 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                     : premiumDesign.colors.background.tertiary,
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
+                  zIndex: 10,
                 }}
-                onMouseDown={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
-                  safeNavigate(() => setReviewStep(i));
+                  setReviewStep(i);
                 }}
               />
             ))}
@@ -1129,12 +1120,12 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(2) },
+          { text: '← Back', onClick: () => goToPhase('play') },
           {
             text: reviewStep < reviewContent.length - 1 ? 'Continue →' : 'Try a Twist →',
             onClick: () => {
               if (reviewStep < reviewContent.length - 1) {
-                safeNavigate(() => setReviewStep(r => r + 1));
+                setReviewStep(r => r + 1);
               } else {
                 goNext();
               }
@@ -1199,10 +1190,11 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
-                safeNavigate(() => setTwistPrediction(p.id));
+                setTwistPrediction(p.id);
               }}
             >
               {p.text}
@@ -1211,10 +1203,10 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(3) },
+          { text: '← Back', onClick: () => goToPhase('review') },
           {
             text: 'Test My Prediction →',
-            onClick: nextPhase,
+            onClick: goNext,
             disabled: !twistPrediction,
           }
         )}
@@ -1364,8 +1356,9 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                     fontWeight: 'bold',
                     fontSize: '18px',
                     cursor: 'pointer',
+                    zIndex: 10,
                   }}
-                  onMouseDown={(e) => {
+                  onClick={(e) => {
                     e.preventDefault();
                     addCharge(1);
                   }}
@@ -1383,8 +1376,9 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                     fontWeight: 'bold',
                     fontSize: '18px',
                     cursor: 'pointer',
+                    zIndex: 10,
                   }}
-                  onMouseDown={(e) => {
+                  onClick={(e) => {
                     e.preventDefault();
                     addCharge(-1);
                   }}
@@ -1417,8 +1411,9 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                   background: 'transparent',
                   color: premiumDesign.colors.text.secondary,
                   cursor: 'pointer',
+                  zIndex: 10,
                 }}
-                onMouseDown={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
                   initChargedObjects();
                   setIsTwistSimulating(false);
@@ -1457,8 +1452,8 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(4) },
-          { text: 'Review Results →', onClick: nextPhase }
+          { text: '← Back', onClick: () => goToPhase('twist_predict') },
+          { text: 'Review Results →', onClick: goNext }
         )}
       </div>
     );
@@ -1559,10 +1554,11 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                     : premiumDesign.colors.background.tertiary,
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
+                  zIndex: 10,
                 }}
-                onMouseDown={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
-                  safeNavigate(() => setTwistReviewStep(i));
+                  setTwistReviewStep(i);
                 }}
               />
             ))}
@@ -1570,12 +1566,12 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(5) },
+          { text: '← Back', onClick: () => goToPhase('twist_play') },
           {
             text: twistReviewStep < twistReviewContent.length - 1 ? 'Continue →' : 'Real-World Examples →',
             onClick: () => {
               if (twistReviewStep < twistReviewContent.length - 1) {
-                safeNavigate(() => setTwistReviewStep(t => t + 1));
+                setTwistReviewStep(t => t + 1);
               } else {
                 goNext();
               }
@@ -1654,10 +1650,11 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                 cursor: 'pointer',
                 fontSize: '14px',
                 transition: 'all 0.3s ease',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
-                safeNavigate(() => setActiveApp(index));
+                setActiveApp(index);
               }}
             >
               {completedApps.has(index) && '✓ '}{app.title.split(' ')[0]}
@@ -1704,36 +1701,39 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
             </p>
           </div>
 
-          {!completedApps.has(activeApp) && (
-            <button
-              style={{
-                display: 'block',
-                width: '100%',
-                marginTop: premiumDesign.spacing.lg,
-                padding: premiumDesign.spacing.md,
-                borderRadius: premiumDesign.radius.md,
-                border: 'none',
-                background: premiumDesign.colors.gradient.primary,
-                color: 'white',
-                fontSize: '16px',
-                fontWeight: 600,
-                cursor: 'pointer',
-              }}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                safeNavigate(() => {
-                  const newCompleted = new Set(completedApps);
-                  newCompleted.add(activeApp);
-                  setCompletedApps(newCompleted);
-                  if (activeApp < applications.length - 1) {
-                    setActiveApp(activeApp + 1);
-                  }
-                });
-              }}
-            >
-              ✓ Mark as Read
-            </button>
-          )}
+          <button
+            style={{
+              display: 'block',
+              width: '100%',
+              marginTop: premiumDesign.spacing.lg,
+              padding: premiumDesign.spacing.md,
+              borderRadius: premiumDesign.radius.md,
+              border: 'none',
+              background: completedApps.has(activeApp)
+                ? premiumDesign.colors.background.tertiary
+                : premiumDesign.colors.gradient.primary,
+              color: 'white',
+              fontSize: '16px',
+              fontWeight: 600,
+              cursor: 'pointer',
+              zIndex: 10,
+            }}
+            onClick={(e) => {
+              e.preventDefault();
+              if (!completedApps.has(activeApp)) {
+                const newCompleted = new Set(completedApps);
+                newCompleted.add(activeApp);
+                setCompletedApps(newCompleted);
+              }
+              if (activeApp < applications.length - 1) {
+                setActiveApp(activeApp + 1);
+              }
+            }}
+          >
+            {completedApps.has(activeApp)
+              ? (activeApp < applications.length - 1 ? 'Next Application →' : '✓ Completed')
+              : 'Next Application →'}
+          </button>
         </div>
 
         <div style={{
@@ -1745,10 +1745,10 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(6) },
+          { text: '← Back', onClick: () => goToPhase('twist_review') },
           {
             text: completedApps.size === applications.length ? 'Take the Quiz →' : `Explore ${applications.length - completedApps.size} More →`,
-            onClick: nextPhase,
+            onClick: goNext,
             disabled: completedApps.size < applications.length,
           }
         )}
@@ -1818,7 +1818,7 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                   setTestComplete(false);
                   setCurrentQuestion(0);
                   setTestScore(0);
-                  goToPhase(3);
+                  goToPhase('review');
                 }
               },
               passed ? 'success' : 'primary'
@@ -1878,6 +1878,7 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                 cursor: showExplanation ? 'default' : 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
+                zIndex: 10,
               };
 
               if (showExplanation) {
@@ -1897,10 +1898,10 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
                 <button
                   key={index}
                   style={buttonStyle}
-                  onMouseDown={(e) => {
+                  onClick={(e) => {
                     e.preventDefault();
                     if (!showExplanation) {
-                      safeNavigate(() => setSelectedAnswer(index));
+                      setSelectedAnswer(index);
                     }
                   }}
                   disabled={showExplanation}
@@ -1934,12 +1935,10 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
             renderButton(
               'Check Answer',
               () => {
-                safeNavigate(() => {
-                  setShowExplanation(true);
-                  if (question.options[selectedAnswer as number]?.correct) {
-                    setTestScore(s => s + 1);
-                  }
-                });
+                setShowExplanation(true);
+                if (question.options[selectedAnswer as number]?.correct) {
+                  setTestScore(s => s + 1);
+                }
               },
               'primary',
               selectedAnswer === null
@@ -1948,15 +1947,13 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
             renderButton(
               currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results',
               () => {
-                safeNavigate(() => {
-                  if (currentQuestion < testQuestions.length - 1) {
-                    setCurrentQuestion(c => c + 1);
-                    setSelectedAnswer(null);
-                    setShowExplanation(false);
-                  } else {
-                    setTestComplete(true);
-                  }
-                });
+                if (currentQuestion < testQuestions.length - 1) {
+                  setCurrentQuestion(c => c + 1);
+                  setSelectedAnswer(null);
+                  setShowExplanation(false);
+                } else {
+                  setTestComplete(true);
+                }
               },
               'primary'
             )
@@ -2031,7 +2028,7 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
         </div>
 
         <div style={{ display: 'flex', gap: premiumDesign.spacing.md, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {renderButton('← Review Again', () => goToPhase(0), 'secondary')}
+          {renderButton('← Review Again', () => goToPhase('hook'), 'secondary')}
         </div>
       </div>
     );
@@ -2058,14 +2055,14 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Static Electricity</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={() => goToPhase(p)}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
-                    : p < phase
+                    : phaseOrder.indexOf(p) < phaseOrder.indexOf(phase)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
@@ -2079,18 +2076,17 @@ export default function StaticElectricityRenderer({ onGameEvent, currentPhase, o
 
       <div className="relative pt-16" style={{ padding: isMobile ? premiumDesign.spacing.md : premiumDesign.spacing.xl, paddingTop: '64px', maxWidth: 900, margin: '0 auto' }}>
         {/* Phase Content */}
-        {phase === 0 && renderHookPhase()}
-        {phase === 1 && renderPredictPhase()}
-        {phase === 2 && renderPlayPhase()}
-        {phase === 3 && renderReviewPhase()}
-        {phase === 4 && renderTwistPredictPhase()}
-        {phase === 5 && renderTwistPlayPhase()}
-        {phase === 6 && renderTwistReviewPhase()}
-        {phase === 7 && renderTransferPhase()}
-        {phase === 8 && renderTestPhase()}
-        {phase === 9 && renderMasteryPhase()}
+        {phase === 'hook' && renderHookPhase()}
+        {phase === 'predict' && renderPredictPhase()}
+        {phase === 'play' && renderPlayPhase()}
+        {phase === 'review' && renderReviewPhase()}
+        {phase === 'twist_predict' && renderTwistPredictPhase()}
+        {phase === 'twist_play' && renderTwistPlayPhase()}
+        {phase === 'twist_review' && renderTwistReviewPhase()}
+        {phase === 'transfer' && renderTransferPhase()}
+        {phase === 'test' && renderTestPhase()}
+        {phase === 'mastery' && renderMasteryPhase()}
       </div>
     </div>
   );
 }
-

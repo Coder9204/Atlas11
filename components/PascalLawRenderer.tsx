@@ -8,6 +8,10 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // Conservation of energy: Work = Force × Distance remains constant
 // ============================================================================
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -46,19 +50,20 @@ interface TransferApp {
 
 interface Props {
   onGameEvent?: (event: { type: GameEventType; data?: Record<string, unknown> }) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
-const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
+const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
   // Core game state
-  const [phase, setPhase] = useState(currentPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<number | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<number | null>(null);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
   const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
   const [showTestResults, setShowTestResults] = useState(false);
+  const [testScore, setTestScore] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
   const [expandedApp, setExpandedApp] = useState<number | null>(null);
@@ -72,8 +77,11 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
   const [animationProgress, setAnimationProgress] = useState(0);
   const [showPressureWaves, setShowPressureWaves] = useState(true);
 
-  // Navigation refs
-  const navigationLockRef = useRef(false);
+  // Brake system simulation
+  const [brakePedalForce, setBrakePedalForce] = useState(0);
+  const [brakeAnimating, setBrakeAnimating] = useState(false);
+
+  // Audio ref
   const audioContextRef = useRef<AudioContext | null>(null);
 
   // Physics calculations
@@ -85,11 +93,18 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
   const workIn = inputForce * inputDistance;
   const workOut = outputForce * outputDistance;
 
-  const phaseNames = [
-    'Hook', 'Predict', 'Explore', 'Review',
-    'Twist Predict', 'Twist Explore', 'Twist Review',
-    'Transfer', 'Test', 'Mastery'
-  ];
+  const phaseNames: Record<Phase, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Explore',
+    review: 'Review',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Explore',
+    twist_review: 'Twist Review',
+    transfer: 'Transfer',
+    test: 'Test',
+    mastery: 'Mastery'
+  };
 
   // Responsive handling
   useEffect(() => {
@@ -139,8 +154,7 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
           oscillator.frequency.setValueAtTime(659.25, ctx.currentTime + 0.1);
           oscillator.frequency.setValueAtTime(783.99, ctx.currentTime + 0.2);
           gainNode.gain.setValueAtTime(0.3, ctx.currentTime);
-          gainNode.gain.exponentialDecayTo?.(0.01, ctx.currentTime + 0.3) ||
-            gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.3);
+          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.3);
           oscillator.start(ctx.currentTime);
           oscillator.stop(ctx.currentTime + 0.3);
           break;
@@ -194,44 +208,34 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
     }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
-    if (onPhaseComplete && newPhase > 0) {
-      onPhaseComplete(newPhase - 1);
+    const currentIndex = phaseOrder.indexOf(newPhase);
+    if (onPhaseComplete && currentIndex > 0) {
+      onPhaseComplete(phaseOrder[currentIndex - 1]);
     }
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onPhaseComplete]);
 
   const handlePrediction = useCallback((index: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
     setSelectedPrediction(index);
     setShowPredictionFeedback(true);
     playSound(index === 1 ? 'correct' : 'incorrect');
     if (onGameEvent) {
       onGameEvent({ type: 'prediction_made', data: { prediction: index, correct: index === 1 } });
     }
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent]);
 
   const handleTwistPrediction = useCallback((index: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
     setTwistPrediction(index);
     setShowTwistFeedback(true);
     playSound(index === 2 ? 'correct' : 'incorrect');
     if (onGameEvent) {
       onGameEvent({ type: 'prediction_made', data: { prediction: index, correct: index === 2, twist: true } });
     }
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;
@@ -240,18 +244,14 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
     if (onGameEvent) {
       onGameEvent({ type: 'test_answered', data: { questionIndex, answerIndex } });
     }
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [onGameEvent]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
     if (onGameEvent) {
       onGameEvent({ type: 'app_explored', data: { appIndex, appTitle: transferApps[appIndex].title } });
     }
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent]);
 
   const startAnimation = useCallback(() => {
@@ -392,8 +392,8 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
   const transferApps: TransferApp[] = [
     {
       icon: "🚗",
-      title: "Automotive Hydraulic Systems",
-      short: "Vehicle Hydraulics",
+      title: "Car Brakes",
+      short: "Car Brakes",
       tagline: "From brakes to suspension: hydraulics keep you safe on the road",
       description: "Modern vehicles rely on Pascal's Law for critical safety systems. Hydraulic brakes multiply pedal force to stop multi-ton vehicles, power steering makes maneuvering effortless, and active suspension systems provide comfort while maintaining control.",
       connection: "Pascal's Law enables small pedal forces to create massive braking forces at all wheels simultaneously, ensuring proportional and predictable stopping power in any condition.",
@@ -416,8 +416,8 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
     },
     {
       icon: "🏗️",
-      title: "Construction & Heavy Equipment",
-      short: "Heavy Equipment",
+      title: "Hydraulic Lifts",
+      short: "Hydraulic Lifts",
       tagline: "Moving mountains with the physics of pressure",
       description: "Excavators, bulldozers, cranes, and loaders all depend on hydraulic systems to transform small control inputs into tremendous forces. A single operator can precisely control machinery capable of lifting dozens of tons.",
       connection: "Pascal's Law allows compact cylinders to generate forces measured in tons while maintaining precise control through proportional valves and feedback systems.",
@@ -439,33 +439,9 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
       color: "from-yellow-600 to-amber-600"
     },
     {
-      icon: "✈️",
-      title: "Aviation Control Systems",
-      short: "Aircraft Hydraulics",
-      tagline: "Turning pilot inputs into precise control at 600 mph",
-      description: "Aircraft use hydraulic systems to move flight control surfaces (ailerons, elevators, rudder), deploy landing gear, activate thrust reversers, and operate cargo doors. The Boeing 747 has over 2,400 gallons of hydraulic fluid flowing through miles of tubing.",
-      connection: "Pascal's Law enables lightweight actuators to move massive control surfaces against aerodynamic forces that can exceed 50,000 lbs, while providing the precise response pilots need for safe flight.",
-      howItWorks: "Engine-driven pumps maintain 3,000 PSI pressure in three independent hydraulic systems for redundancy. Fly-by-wire computers translate pilot stick movements into precise actuator commands. Accumulators store pressurized fluid for emergency power.",
-      stats: [
-        "System pressure: 3,000-5,000 PSI",
-        "B747 hydraulic fluid capacity: 2,400 gallons",
-        "Actuator response time: <50 milliseconds",
-        "Control surface force: up to 50,000 lbs"
-      ],
-      examples: [
-        "Landing gear: Hydraulic retraction in under 10 seconds",
-        "Thrust reversers: Redirect jet exhaust for braking",
-        "Spoilers/speedbrakes: Deploy in milliseconds",
-        "Cargo door operation: Safe handling of tons of freight"
-      ],
-      companies: ["Parker Aerospace", "Moog Inc.", "Eaton", "Collins Aerospace"],
-      futureImpact: "More-electric aircraft are supplementing hydraulics with electro-hydrostatic actuators (EHAs) that combine the power of hydraulics with the efficiency of electric systems, reducing weight and maintenance while maintaining redundancy.",
-      color: "from-blue-600 to-cyan-600"
-    },
-    {
-      icon: "🏭",
-      title: "Industrial Manufacturing",
-      short: "Industrial Presses",
+      icon: "🔧",
+      title: "Hydraulic Press",
+      short: "Hydraulic Press",
       tagline: "Millions of pounds of force shaping the modern world",
       description: "Hydraulic presses shape everything from car body panels to smartphone cases. Injection molding machines use hydraulic pressure to force molten plastic into precision molds. Metal forming operations rely on controlled hydraulic force for consistent quality.",
       connection: "Pascal's Law enables generating enormous forces (millions of pounds) from relatively compact systems, with precise control over speed, position, and force throughout the forming operation.",
@@ -485,6 +461,30 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
       companies: ["Bosch Rexroth", "Danfoss", "Enerpac", "Schuler Group"],
       futureImpact: "Industry 4.0 integration enables predictive maintenance through hydraulic system monitoring. Hybrid electric-hydraulic systems reduce energy consumption by 50% while maintaining the force capabilities only hydraulics can provide.",
       color: "from-purple-600 to-pink-600"
+    },
+    {
+      icon: "✈️",
+      title: "Aircraft Controls",
+      short: "Aircraft Controls",
+      tagline: "Turning pilot inputs into precise control at 600 mph",
+      description: "Aircraft use hydraulic systems to move flight control surfaces (ailerons, elevators, rudder), deploy landing gear, activate thrust reversers, and operate cargo doors. The Boeing 747 has over 2,400 gallons of hydraulic fluid flowing through miles of tubing.",
+      connection: "Pascal's Law enables lightweight actuators to move massive control surfaces against aerodynamic forces that can exceed 50,000 lbs, while providing the precise response pilots need for safe flight.",
+      howItWorks: "Engine-driven pumps maintain 3,000 PSI pressure in three independent hydraulic systems for redundancy. Fly-by-wire computers translate pilot stick movements into precise actuator commands. Accumulators store pressurized fluid for emergency power.",
+      stats: [
+        "System pressure: 3,000-5,000 PSI",
+        "B747 hydraulic fluid capacity: 2,400 gallons",
+        "Actuator response time: <50 milliseconds",
+        "Control surface force: up to 50,000 lbs"
+      ],
+      examples: [
+        "Landing gear: Hydraulic retraction in under 10 seconds",
+        "Thrust reversers: Redirect jet exhaust for braking",
+        "Spoilers/speedbrakes: Deploy in milliseconds",
+        "Cargo door operation: Safe handling of tons of freight"
+      ],
+      companies: ["Parker Aerospace", "Moog Inc.", "Eaton", "Collins Aerospace"],
+      futureImpact: "More-electric aircraft are supplementing hydraulics with electro-hydrostatic actuators (EHAs) that combine the power of hydraulics with the efficiency of electric systems, reducing weight and maintenance while maintaining redundancy.",
+      color: "from-blue-600 to-cyan-600"
     }
   ];
 
@@ -756,6 +756,115 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
     );
   };
 
+  const renderBrakeSystem = () => {
+    const pedalProgress = brakePedalForce / 100;
+    const caliperClamp = pedalProgress * 15;
+    const masterCylinderArea = 2; // cm²
+    const caliperArea = 20; // cm²
+    const brakeForce = (brakePedalForce * caliperArea / masterCylinderArea);
+
+    return (
+      <svg width={isMobile ? 340 : 450} height={280} viewBox="0 0 450 280" className="mx-auto">
+        <defs>
+          <linearGradient id="brakeFluid" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+          <linearGradient id="rotorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#475569" />
+            <stop offset="50%" stopColor="#64748b" />
+            <stop offset="100%" stopColor="#334155" />
+          </linearGradient>
+        </defs>
+
+        {/* Title */}
+        <text x="225" y="20" textAnchor="middle" fill="#94a3b8" fontSize="14" fontWeight="bold">
+          Hydraulic Brake System
+        </text>
+
+        {/* Brake Pedal */}
+        <g transform={`translate(30, ${100 + pedalProgress * 30})`}>
+          <rect x="0" y="0" width="50" height="15" fill="#64748b" rx="3" />
+          <rect x="45" y="-40" width="8" height="50" fill="#475569" />
+          <text x="25" y="35" textAnchor="middle" fill="#94a3b8" fontSize="10">Pedal</text>
+        </g>
+
+        {/* Master Cylinder */}
+        <rect x="90" y="95" width="60" height="40" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="3" />
+        <rect x="95" y={105 + pedalProgress * 10} width="20" height="20" fill="#94a3b8" stroke="#64748b" strokeWidth="2" rx="2" />
+        <text x="120" y="150" textAnchor="middle" fill="#94a3b8" fontSize="9">Master</text>
+        <text x="120" y="160" textAnchor="middle" fill="#94a3b8" fontSize="9">2 cm²</text>
+
+        {/* Brake Lines */}
+        <path
+          d="M150,115 L200,115 L200,60 L280,60"
+          fill="none"
+          stroke="url(#brakeFluid)"
+          strokeWidth="8"
+          strokeLinecap="round"
+        />
+        <path
+          d="M150,115 L200,115 L200,170 L280,170"
+          fill="none"
+          stroke="url(#brakeFluid)"
+          strokeWidth="8"
+          strokeLinecap="round"
+        />
+
+        {/* Pressure indicator */}
+        {brakePedalForce > 0 && (
+          <g>
+            <rect x="180" y="100" width="50" height="25" fill="#1e293b" stroke="#fcd34d" strokeWidth="1" rx="3" />
+            <text x="205" y="117" textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="bold">
+              {(brakePedalForce / masterCylinderArea).toFixed(0)} N/cm²
+            </text>
+          </g>
+        )}
+
+        {/* Front Wheel/Rotor */}
+        <g transform="translate(320, 60)">
+          <circle cx="40" cy="0" r="35" fill="url(#rotorGrad)" stroke="#334155" strokeWidth="3" />
+          <circle cx="40" cy="0" r="15" fill="#1e293b" />
+          {/* Brake caliper */}
+          <rect x={10 - caliperClamp} y="-12" width="15" height="24" fill="#ef4444" rx="2" />
+          <rect x={55 + caliperClamp} y="-12" width="15" height="24" fill="#ef4444" rx="2" />
+          <text x="40" y="55" textAnchor="middle" fill="#94a3b8" fontSize="9">Front Caliper</text>
+          <text x="40" y="65" textAnchor="middle" fill="#94a3b8" fontSize="9">20 cm²</text>
+        </g>
+
+        {/* Rear Wheel/Rotor */}
+        <g transform="translate(320, 170)">
+          <circle cx="40" cy="0" r="35" fill="url(#rotorGrad)" stroke="#334155" strokeWidth="3" />
+          <circle cx="40" cy="0" r="15" fill="#1e293b" />
+          {/* Brake caliper */}
+          <rect x={10 - caliperClamp} y="-12" width="15" height="24" fill="#ef4444" rx="2" />
+          <rect x={55 + caliperClamp} y="-12" width="15" height="24" fill="#ef4444" rx="2" />
+          <text x="40" y="55" textAnchor="middle" fill="#94a3b8" fontSize="9">Rear Caliper</text>
+          <text x="40" y="65" textAnchor="middle" fill="#94a3b8" fontSize="9">20 cm²</text>
+        </g>
+
+        {/* Force readouts */}
+        <g transform="translate(30, 200)">
+          <rect x="0" y="0" width="100" height="50" fill="#1e293b" stroke="#22c55e" strokeWidth="1" rx="4" />
+          <text x="50" y="18" textAnchor="middle" fill="#22c55e" fontSize="10">Input Force</text>
+          <text x="50" y="38" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">{brakePedalForce} N</text>
+        </g>
+
+        <g transform="translate(150" y="200)">
+          <rect x="0" y="0" width="120" height="50" fill="#1e293b" stroke="#ef4444" strokeWidth="1" rx="4" />
+          <text x="60" y="18" textAnchor="middle" fill="#ef4444" fontSize="10">Output (per wheel)</text>
+          <text x="60" y="38" textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="bold">{brakeForce.toFixed(0)} N</text>
+        </g>
+
+        <g transform="translate(290, 200)">
+          <rect x="0" y="0" width="100" height="50" fill="#1e293b" stroke="#a855f7" strokeWidth="1" rx="4" />
+          <text x="50" y="18" textAnchor="middle" fill="#a855f7" fontSize="10">Multiplication</text>
+          <text x="50" y="38" textAnchor="middle" fill="#a855f7" fontSize="16" fontWeight="bold">{(caliperArea / masterCylinderArea)}×</text>
+        </g>
+      </svg>
+    );
+  };
+
   // ============================================================================
   // PHASE RENDERERS
   // ============================================================================
@@ -788,7 +897,8 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
           and lifts a 2-ton car!
         </p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); startAnimation(); }}
+          onClick={() => startAnimation()}
+          style={{ position: 'relative', zIndex: 10 }}
           className="w-full px-6 py-3 bg-slate-700/50 hover:bg-slate-600/50 text-white font-medium rounded-xl transition-colors border border-white/10"
         >
           Push the Small Piston
@@ -797,7 +907,8 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
 
       {/* CTA Button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
+        style={{ position: 'relative', zIndex: 10 }}
         className="group px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-emerald-500/25 hover:shadow-emerald-500/40 flex items-center gap-2"
       >
         Discover the Secret
@@ -830,7 +941,8 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
         ].map((text, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(index); }}
+            onClick={() => handlePrediction(index)}
+            style={{ position: 'relative', zIndex: 10 }}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === index
@@ -850,13 +962,14 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
       {showPredictionFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Correct! This is <span className="text-cyan-400">Pascal's Law</span> - pressure transmits equally everywhere!
+            {selectedPrediction === 1 ? '✓ Correct!' : '✗ Not quite.'} This is <span className="text-cyan-400">Pascal's Law</span> - pressure transmits equally everywhere!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onClick={() => goToPhase('play')}
+            style={{ position: 'relative', zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
           >
-            Explore the Physics →
+            Explore the Physics
           </button>
         </div>
       )}
@@ -920,10 +1033,11 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
           />
         </div>
         <button
-          onMouseDown={(e) => { e.preventDefault(); startAnimation(); }}
+          onClick={() => startAnimation()}
+          style={{ position: 'relative', zIndex: 10 }}
           className="p-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold transition-colors"
         >
-          ⚡ Activate Hydraulics
+          Activate Hydraulics
         </button>
       </div>
 
@@ -943,10 +1057,11 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        onClick={() => goToPhase('review')}
+        style={{ position: 'relative', zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
       >
-        Review the Concepts →
+        Review the Concepts
       </button>
     </div>
   );
@@ -957,71 +1072,73 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
 
       <div className="grid md:grid-cols-2 gap-4 md:gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-4 md:p-6">
-          <h3 className="text-lg md:text-xl font-bold text-red-400 mb-3">The Core Principle</h3>
+          <h3 className="text-lg md:text-xl font-bold text-red-400 mb-3">P₁ = P₂ (Equal Pressure)</h3>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• Pressure applied to a confined fluid transmits equally in all directions</li>
-            <li>• P = F/A (Pressure = Force ÷ Area)</li>
-            <li>• The fluid must be incompressible (liquids, not gases)</li>
-            <li>• Pressure acts perpendicular to all surfaces</li>
-            <li>• Works regardless of the container's shape!</li>
+            <li>Pressure applied to a confined fluid transmits equally in all directions</li>
+            <li>P = F/A (Pressure = Force / Area)</li>
+            <li>The fluid must be incompressible (liquids, not gases)</li>
+            <li>Pressure acts perpendicular to all surfaces</li>
+            <li>Works regardless of the container's shape!</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-4 md:p-6">
-          <h3 className="text-lg md:text-xl font-bold text-cyan-400 mb-3">Force Multiplication</h3>
+          <h3 className="text-lg md:text-xl font-bold text-cyan-400 mb-3">F₁/A₁ = F₂/A₂</h3>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• Same pressure on different areas = different forces</li>
-            <li>• F₂ = F₁ × (A₂/A₁)</li>
-            <li>• A small piston pushing creates large output force</li>
-            <li>• The ratio of areas determines the mechanical advantage</li>
-            <li>• 10× larger area = 10× more force output</li>
+            <li>Same pressure on different areas = different forces</li>
+            <li>This is the key to force multiplication!</li>
+            <li>A small piston pushing creates large output force</li>
+            <li>The ratio of areas determines the mechanical advantage</li>
+            <li>10× larger area = 10× more force output</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-4 md:p-6 md:col-span-2">
-          <h3 className="text-lg md:text-xl font-bold text-emerald-400 mb-3">The Mathematics</h3>
+          <h3 className="text-lg md:text-xl font-bold text-emerald-400 mb-3">Mechanical Advantage</h3>
           <div className="text-slate-300 text-sm space-y-2">
             <p><strong>Pascal's Law:</strong> P₁ = P₂ (pressure is equal everywhere in the fluid)</p>
             <p><strong>Therefore:</strong> F₁/A₁ = F₂/A₂</p>
             <p><strong>Solving for output:</strong> F₂ = F₁ × (A₂/A₁)</p>
             <p className="text-cyan-400 mt-3">
-              Example: A 100 N push on a 1 cm² piston creates 100 N/cm² pressure. That same pressure on a 10 cm² piston produces 1000 N of force!
+              Example: A 100 N push on a 1 cm² piston creates 100 N/cm² pressure. That same pressure on a 10 cm² piston produces 1000 N of force - a 10× mechanical advantage!
             </p>
           </div>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onClick={() => goToPhase('twist_predict')}
+        style={{ position: 'relative', zIndex: 10 }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
-        Discover a Surprising Twist →
+        Discover a Surprising Twist
       </button>
     </div>
   );
 
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-4 md:p-6">
-      <h2 className="text-xl md:text-2xl font-bold text-purple-400 mb-6">The Twist Challenge</h2>
+      <h2 className="text-xl md:text-2xl font-bold text-purple-400 mb-6">Brake System Challenge</h2>
       <div className="bg-slate-800/50 rounded-2xl p-4 md:p-6 max-w-2xl mb-6">
         <p className="text-base md:text-lg text-slate-300 mb-4">
-          A hydraulic lift multiplies your force by 20×. You push 100 N and get 2000 N output!
+          A car's brake system has a master cylinder (2 cm²) connected to four brake calipers (20 cm² each). When you press the brake pedal with 100 N of force...
         </p>
         <p className="text-base md:text-lg text-cyan-400 font-medium">
-          Are you getting "free" energy? Where's the catch?
+          What is the total braking force across all four wheels?
         </p>
       </div>
 
       <div className="grid gap-3 w-full max-w-xl">
         {[
-          'There is no catch - hydraulics create free energy',
-          'The hydraulic fluid heats up and absorbs the extra energy',
-          'You trade force for distance - the output moves 20× less',
-          'The system requires electricity to work'
+          '100 N total - force just gets distributed to all wheels',
+          '1,000 N total - each wheel gets 250 N (1000/4)',
+          '4,000 N total - each wheel gets the full 1,000 N independently',
+          '10,000 N total - pressure multiplies between wheels too'
         ].map((text, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(index); }}
+            onClick={() => handleTwistPrediction(index)}
+            style={{ position: 'relative', zIndex: 10 }}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === index
@@ -1042,16 +1159,17 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
       {showTwistFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Correct! Work In = Work Out. Force × Distance is conserved!
+            {twistPrediction === 2 ? '✓ Correct!' : '✗ Not quite.'} Each caliper gets the FULL multiplied force independently!
           </p>
           <p className="text-slate-400 text-sm mt-2">
-            If you multiply force by 20, you must push 20× farther to move the output the same distance.
+            Pressure transmits equally to ALL brake calipers. Each 20 cm² caliper produces 1,000 N (10× multiplication). Four calipers = 4,000 N total braking force from just 100 N of pedal input!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onClick={() => goToPhase('twist_play')}
+            style={{ position: 'relative', zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
           >
-            See the Trade-off →
+            Explore the Brake System
           </button>
         </div>
       )}
@@ -1060,74 +1178,86 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
 
   const renderTwistPlay = () => (
     <div className="flex flex-col items-center p-4 md:p-6">
-      <h2 className="text-xl md:text-2xl font-bold text-purple-400 mb-4">The Force-Distance Trade-off</h2>
+      <h2 className="text-xl md:text-2xl font-bold text-purple-400 mb-4">Interactive Brake System</h2>
 
-      <div className="bg-slate-800/50 rounded-2xl p-4 md:p-6 max-w-2xl mb-6">
-        {renderWorkConservation()}
+      <div className="bg-slate-800/50 rounded-2xl p-4 md:p-6 max-w-3xl mb-6">
+        {renderBrakeSystem()}
 
-        <div className="mt-4 grid grid-cols-2 gap-4 text-center">
-          <div className="bg-green-900/30 rounded-lg p-3 border border-green-500/30">
-            <div className="text-lg font-bold text-green-400">Work In</div>
-            <div className="text-xl md:text-2xl font-mono text-white">{workIn.toFixed(0)} J</div>
-            <div className="text-sm text-slate-400">F₁ × d₁</div>
-          </div>
-          <div className="bg-red-900/30 rounded-lg p-3 border border-red-500/30">
-            <div className="text-lg font-bold text-red-400">Work Out</div>
-            <div className="text-xl md:text-2xl font-mono text-white">{workOut.toFixed(0)} J</div>
-            <div className="text-sm text-slate-400">F₂ × d₂</div>
+        <div className="mt-6">
+          <label className="text-sm text-slate-400 block mb-2">Brake Pedal Force: {brakePedalForce} N</label>
+          <input
+            type="range"
+            min="0"
+            max="200"
+            value={brakePedalForce}
+            onChange={(e) => setBrakePedalForce(Number(e.target.value))}
+            className="w-full accent-red-500"
+          />
+          <div className="flex justify-between text-xs text-slate-500 mt-1">
+            <span>Light press</span>
+            <span>Hard brake</span>
           </div>
         </div>
       </div>
 
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-4 md:p-6 max-w-2xl">
-        <h3 className="text-lg font-bold text-purple-400 mb-3">Conservation of Energy:</h3>
+        <h3 className="text-lg font-bold text-purple-400 mb-3">Hydraulic Multiplication in Brakes:</h3>
         <ul className="space-y-2 text-slate-300 text-sm">
-          <li>• <strong>Work = Force × Distance</strong></li>
-          <li>• If you multiply force by 20, distance is divided by 20</li>
-          <li>• To lift a car 1 cm, you must push 20 cm!</li>
-          <li>• This is why hydraulic jacks require many pump strokes</li>
+          <li><strong>Master Cylinder:</strong> Small piston (2 cm²) creates high pressure</li>
+          <li><strong>Brake Lines:</strong> Transmit pressure equally to all calipers</li>
+          <li><strong>Calipers:</strong> Large pistons (20 cm²) multiply force at each wheel</li>
+          <li><strong>Key Insight:</strong> Each wheel gets 10× your pedal force INDEPENDENTLY!</li>
         </ul>
         <p className="text-cyan-400 mt-4 text-sm">
-          No free lunch! Hydraulics make work easier, not less. You trade distance for force.
+          This is why you can stop a 2-ton car with just your foot - Pascal's Law working in every brake system!
         </p>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onClick={() => goToPhase('twist_review')}
+        style={{ position: 'relative', zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
-        Review the Discovery →
+        Review the Discovery
       </button>
     </div>
   );
 
   const renderTwistReview = () => (
     <div className="flex flex-col items-center p-4 md:p-6">
-      <h2 className="text-xl md:text-2xl font-bold text-purple-400 mb-6">Key Discovery</h2>
+      <h2 className="text-xl md:text-2xl font-bold text-purple-400 mb-6">Hydraulic Multiplication Explained</h2>
 
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-4 md:p-6 max-w-2xl mb-6">
-        <h3 className="text-lg md:text-xl font-bold text-purple-400 mb-4">Pascal's Law + Conservation of Energy</h3>
+        <h3 className="text-lg md:text-xl font-bold text-purple-400 mb-4">Key Discoveries</h3>
         <div className="space-y-4 text-slate-300">
-          <p>
-            Hydraulic systems follow two fundamental principles:
-          </p>
-          <ol className="list-decimal list-inside space-y-2 text-sm">
-            <li><strong>Pascal's Law:</strong> Pressure transmits equally → Force multiplies with area ratio</li>
-            <li><strong>Conservation of Energy:</strong> Work In = Work Out → Distance decreases proportionally</li>
-            <li><strong>Mechanical Advantage:</strong> You gain force but lose distance (or vice versa)</li>
-            <li><strong>Practical Benefit:</strong> Easier to apply small force over large distance than large force over small distance</li>
-          </ol>
-          <p className="text-emerald-400 font-medium mt-4">
-            Hydraulics don't create energy - they transform it into a more useful form!
-          </p>
+          <div className="bg-slate-800/50 rounded-lg p-4">
+            <h4 className="text-cyan-400 font-semibold mb-2">1. Pressure Distributes Equally</h4>
+            <p className="text-sm">When you apply force to a master cylinder, the pressure (F/A) is transmitted equally to ALL connected cylinders - not split between them!</p>
+          </div>
+          <div className="bg-slate-800/50 rounded-lg p-4">
+            <h4 className="text-emerald-400 font-semibold mb-2">2. Each Output Gets Full Multiplication</h4>
+            <p className="text-sm">Every brake caliper experiences the same pressure and produces its own multiplied force. Four calipers = four times the force, not the force divided by four.</p>
+          </div>
+          <div className="bg-slate-800/50 rounded-lg p-4">
+            <h4 className="text-yellow-400 font-semibold mb-2">3. Work is Still Conserved</h4>
+            <p className="text-sm">The brake pedal must travel farther to move all four caliper pistons. More output cylinders = more pedal travel required (hydraulic fluid must fill all of them).</p>
+          </div>
         </div>
       </div>
 
+      <div className="bg-slate-800/50 rounded-xl p-4 max-w-2xl mb-6">
+        <h4 className="text-lg font-semibold text-white mb-2">Real-World Impact</h4>
+        <p className="text-slate-300 text-sm">
+          A typical brake system provides 40:1 total mechanical advantage (including pedal leverage + hydraulic multiplication). Your 50 N foot pressure becomes 2,000+ N of braking force at each wheel!
+        </p>
+      </div>
+
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onClick={() => goToPhase('transfer')}
+        style={{ position: 'relative', zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
       >
-        Explore Real-World Applications →
+        Explore Real-World Applications
       </button>
     </div>
   );
@@ -1144,7 +1274,8 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
           {transferApps.map((a, index) => (
             <button
               key={index}
-              onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); setExpandedApp(null); }}
+              onClick={() => { setActiveAppTab(index); setExpandedApp(null); }}
+              style={{ position: 'relative', zIndex: 10 }}
               className={`px-3 md:px-4 py-2 rounded-lg font-medium transition-all text-sm md:text-base ${
                 activeAppTab === index
                   ? `bg-gradient-to-r ${a.color} text-white`
@@ -1176,10 +1307,11 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
           </div>
 
           <button
-            onMouseDown={(e) => { e.preventDefault(); setExpandedApp(expandedApp === activeAppTab ? null : activeAppTab); }}
+            onClick={() => setExpandedApp(expandedApp === activeAppTab ? null : activeAppTab)}
+            style={{ position: 'relative', zIndex: 10 }}
             className="text-cyan-400 hover:text-cyan-300 text-sm font-medium mb-4"
           >
-            {expandedApp === activeAppTab ? '▼ Hide Details' : '▶ Show More Details'}
+            {expandedApp === activeAppTab ? 'Hide Details' : 'Show More Details'}
           </button>
 
           {expandedApp === activeAppTab && (
@@ -1194,7 +1326,7 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
                   <h4 className="font-semibold text-green-400 mb-2">Key Statistics</h4>
                   <ul className="text-slate-300 text-sm space-y-1">
                     {app.stats.map((stat, i) => (
-                      <li key={i}>• {stat}</li>
+                      <li key={i}>{stat}</li>
                     ))}
                   </ul>
                 </div>
@@ -1202,7 +1334,7 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
                   <h4 className="font-semibold text-blue-400 mb-2">Real Examples</h4>
                   <ul className="text-slate-300 text-sm space-y-1">
                     {app.examples.map((ex, i) => (
-                      <li key={i}>• {ex}</li>
+                      <li key={i}>{ex}</li>
                     ))}
                   </ul>
                 </div>
@@ -1228,10 +1360,11 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
 
           {!completedApps.has(activeAppTab) && (
             <button
-              onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+              onClick={() => handleAppComplete(activeAppTab)}
+              style={{ position: 'relative', zIndex: 10 }}
               className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
             >
-              ✓ Mark as Understood
+              Mark as Understood
             </button>
           )}
         </div>
@@ -1254,10 +1387,11 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
 
         {completedApps.size >= 4 && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+            onClick={() => goToPhase('test')}
+            style={{ position: 'relative', zIndex: 10 }}
             className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
           >
-            Take the Knowledge Test →
+            Take the Knowledge Test
           </button>
         )}
       </div>
@@ -1282,7 +1416,8 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
+                    style={{ position: 'relative', zIndex: 10 }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-red-600 text-white'
@@ -1297,13 +1432,15 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
           ))}
 
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
+              const score = calculateScore();
+              setTestScore(score);
               setShowTestResults(true);
               if (onGameEvent) {
-                onGameEvent({ type: 'test_completed', data: { score: calculateScore(), total: 10 } });
+                onGameEvent({ type: 'test_completed', data: { score, total: 10 } });
               }
             }}
+            style={{ position: 'relative', zIndex: 10 }}
             disabled={testAnswers.includes(-1)}
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
               testAnswers.includes(-1)
@@ -1317,12 +1454,12 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
       ) : (
         <div className="max-w-3xl w-full space-y-4">
           <div className="bg-slate-800/50 rounded-2xl p-6 text-center">
-            <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
+            <div className="text-6xl mb-4">{testScore >= 7 ? '🎉' : '📚'}</div>
             <h3 className="text-2xl font-bold text-white mb-2">
-              Score: {calculateScore()}/10
+              Score: {testScore}/10
             </h3>
             <p className="text-slate-300 mb-6">
-              {calculateScore() >= 7
+              {testScore >= 7
                 ? 'Excellent! You\'ve mastered Pascal\'s Law and hydraulic systems!'
                 : 'Keep studying! Review the explanations below and try again.'}
             </p>
@@ -1351,21 +1488,22 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
             })}
           </div>
 
-          {calculateScore() >= 7 ? (
+          {testScore >= 7 ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
+              onClick={() => goToPhase('mastery')}
+              style={{ position: 'relative', zIndex: 10 }}
               className="w-full py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
             >
-              Claim Your Mastery Badge →
+              Claim Your Mastery Badge
             </button>
           ) : (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
+              onClick={() => {
                 setShowTestResults(false);
                 setTestAnswers(Array(10).fill(-1));
-                goToPhase(3);
+                goToPhase('review');
               }}
+              style={{ position: 'relative', zIndex: 10 }}
               className="w-full py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
             >
               Review & Try Again
@@ -1379,15 +1517,18 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
   const renderMastery = () => {
     useEffect(() => {
       if (onGameEvent) {
-        onGameEvent({ type: 'mastery_achieved', data: { score: calculateScore() } });
+        onGameEvent({ type: 'mastery_achieved', data: { score: testScore } });
       }
     }, []);
 
     return (
       <div className="flex flex-col items-center justify-center min-h-[500px] p-4 md:p-6 text-center">
         <div className="bg-gradient-to-br from-red-900/50 via-orange-900/50 to-yellow-900/50 rounded-3xl p-6 md:p-8 max-w-2xl">
-          <div className="text-7xl md:text-8xl mb-6">⚙️</div>
-          <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">Pascal's Law Master!</h1>
+          <div className="text-7xl md:text-8xl mb-6">🏆</div>
+          <h1 className="text-2xl md:text-3xl font-bold text-white mb-4">Congratulations!</h1>
+          <h2 className="text-xl md:text-2xl font-bold bg-gradient-to-r from-emerald-400 to-cyan-400 bg-clip-text text-transparent mb-4">
+            Pascal's Law Master
+          </h2>
           <p className="text-lg md:text-xl text-slate-300 mb-6">
             You've mastered hydraulic systems and force multiplication through Pascal's Law!
           </p>
@@ -1417,12 +1558,29 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
             <p className="text-slate-400 text-sm mt-2">Pressure is constant throughout a confined fluid</p>
           </div>
 
+          <div className="bg-slate-800/30 rounded-xl p-4 mb-6">
+            <h3 className="text-lg font-bold text-emerald-400 mb-2">Your Score</h3>
+            <p className="text-3xl font-bold text-white">{testScore}/10</p>
+          </div>
+
           <div className="flex gap-4 justify-center">
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+              onClick={() => goToPhase('hook')}
+              style={{ position: 'relative', zIndex: 10 }}
               className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
             >
-              ↺ Explore Again
+              Explore Again
+            </button>
+            <button
+              onClick={() => {
+                if (typeof window !== 'undefined') {
+                  window.location.href = '/dashboard';
+                }
+              }}
+              style={{ position: 'relative', zIndex: 10 }}
+              className="px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-medium rounded-xl transition-colors"
+            >
+              Return to Dashboard
             </button>
           </div>
         </div>
@@ -1436,16 +1594,16 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -1468,16 +1626,17 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
           </div>
           {/* Phase dots */}
           <div className="flex justify-between px-1">
-            {phaseNames.map((_, i) => (
+            {phaseOrder.map((p, i) => (
               <button
-                key={i}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(i); }}
+                key={p}
+                onClick={() => goToPhase(p)}
+                style={{ position: 'relative', zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  i <= phase
+                  phaseOrder.indexOf(phase) >= i
                     ? 'bg-emerald-500'
                     : 'bg-slate-700'
-                } ${i === phase ? 'w-6' : 'w-2'}`}
-                title={phaseNames[i]}
+                } ${phase === p ? 'w-6' : 'w-2'}`}
+                title={phaseNames[p]}
               />
             ))}
           </div>

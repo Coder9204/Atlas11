@@ -10,17 +10,19 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 interface Props {
   onGameEvent?: (event: { type: string; data?: Record<string, unknown> }) => void;
-  gamePhase?: number;
+  gamePhase?: string;
 }
 
-type Phase = 0 | 1 | 2 | 3 | 4 | 5 | 6 | 7 | 8 | 9;
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   const getInitialPhase = (): Phase => {
-    if (gamePhase !== undefined && gamePhase >= 0 && gamePhase <= 9) {
+    if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase)) {
       return gamePhase as Phase;
     }
-    return 0;
+    return 'hook';
   };
 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
@@ -41,14 +43,20 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   const [rxGain, setRxGain] = useState(30); // dBi
   const [animPhase, setAnimPhase] = useState(0);
 
-  const navigationLockRef = useRef(false);
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  const phaseNames = [
-    'Hook', 'Predict', 'Play', 'Review',
-    'Twist Predict', 'Twist Play', 'Twist Review',
-    'Transfer', 'Test', 'Mastery'
-  ];
+  const phaseNames: Record<Phase, string> = {
+    'hook': 'Hook',
+    'predict': 'Predict',
+    'play': 'Play',
+    'review': 'Review',
+    'twist_predict': 'Twist Predict',
+    'twist_play': 'Twist Play',
+    'twist_review': 'Twist Review',
+    'transfer': 'Transfer',
+    'test': 'Test',
+    'mastery': 'Mastery'
+  };
 
   // Physics calculations
   const calculateLinkBudget = useCallback(() => {
@@ -85,10 +93,10 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
 
   // Sync phase with gamePhase prop changes (for resume functionality)
   useEffect(() => {
-    if (gamePhase !== undefined && gamePhase >= 0 && gamePhase <= 9 && gamePhase !== phase) {
+    if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
       setPhase(gamePhase as Phase);
     }
-  }, [gamePhase]);
+  }, [gamePhase, phase]);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -159,76 +167,82 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
     }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    if (newPhase < 0 || newPhase > 9) return;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (!phaseOrder.includes(newPhase)) return;
     playSound('transition');
-
-    setPhase(newPhase as Phase);
+    setPhase(newPhase);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseName: phaseNames[newPhase] } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent, phaseNames]);
 
   const goNext = useCallback(() => {
-    if (phase < 9) goToPhase(phase + 1);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
   }, [phase, goToPhase]);
 
   const goBack = useCallback(() => {
-    if (phase > 0) goToPhase(phase - 1);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
   }, [phase, goToPhase]);
 
   // Progress bar showing all 10 phases
-  const renderProgressBar = () => (
-    <div style={{
-      display: 'flex',
-      alignItems: 'center',
-      justifyContent: 'center',
-      padding: '12px 16px',
-      borderBottom: '1px solid #334155',
-      backgroundColor: '#0f172a',
-      gap: '16px'
-    }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-        <div style={{ display: 'flex', gap: '6px' }}>
-          {phaseNames.map((name, i) => (
-            <div
-              key={i}
-              onClick={() => i <= phase && goToPhase(i)}
-              style={{
-                height: '8px',
-                width: i === phase ? '24px' : '8px',
-                borderRadius: '4px',
-                backgroundColor: i < phase ? '#22c55e' : i === phase ? '#06b6d4' : '#334155',
-                cursor: i <= phase ? 'pointer' : 'default',
-                transition: 'all 0.3s'
-              }}
-              title={name}
-            />
-          ))}
-        </div>
-        <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b' }}>
-          {phase + 1} / {phaseNames.length}
-        </span>
-      </div>
+  const renderProgressBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
+    return (
       <div style={{
-        padding: '4px 12px',
-        borderRadius: '12px',
-        background: 'rgba(6, 182, 212, 0.2)',
-        color: '#06b6d4',
-        fontSize: '11px',
-        fontWeight: 700
+        display: 'flex',
+        alignItems: 'center',
+        justifyContent: 'center',
+        padding: '12px 16px',
+        borderBottom: '1px solid #334155',
+        backgroundColor: '#0f172a',
+        gap: '16px'
       }}>
-        {phaseNames[phase]}
+        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+          <div style={{ display: 'flex', gap: '6px' }}>
+            {phaseOrder.map((p, i) => (
+              <div
+                key={p}
+                onClick={() => i <= currentIndex && goToPhase(p)}
+                style={{
+                  height: '8px',
+                  width: phase === p ? '24px' : '8px',
+                  borderRadius: '4px',
+                  backgroundColor: i < currentIndex ? '#22c55e' : phase === p ? '#06b6d4' : '#334155',
+                  cursor: i <= currentIndex ? 'pointer' : 'default',
+                  transition: 'all 0.3s',
+                  zIndex: 10
+                }}
+                title={phaseNames[p]}
+              />
+            ))}
+          </div>
+          <span style={{ fontSize: '12px', fontWeight: 'bold', color: '#64748b' }}>
+            {currentIndex + 1} / {phaseOrder.length}
+          </span>
+        </div>
+        <div style={{
+          padding: '4px 12px',
+          borderRadius: '12px',
+          background: 'rgba(6, 182, 212, 0.2)',
+          color: '#06b6d4',
+          fontSize: '11px',
+          fontWeight: 700
+        }}>
+          {phaseNames[phase]}
+        </div>
       </div>
-    </div>
-  );
+    );
+  };
 
   // Bottom navigation bar with Back/Next
   const renderBottomBar = (canGoNext: boolean = true, nextLabel: string = 'Next') => {
-    const canBack = phase > 0;
-    const isLastPhase = phase === 9;
+    const currentIndex = phaseOrder.indexOf(phase);
+    const canBack = currentIndex > 0;
+    const isLastPhase = phase === 'mastery';
 
     return (
       <div style={{
@@ -252,7 +266,8 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             color: canBack ? '#e2e8f0' : '#475569',
             border: '1px solid #334155',
             cursor: canBack ? 'pointer' : 'not-allowed',
-            opacity: canBack ? 1 : 0.5
+            opacity: canBack ? 1 : 0.5,
+            zIndex: 10
           }}
         >
           Back
@@ -276,7 +291,8 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
               border: 'none',
               cursor: canGoNext ? 'pointer' : 'not-allowed',
               opacity: canGoNext ? 1 : 0.5,
-              boxShadow: canGoNext ? '0 2px 12px rgba(6, 182, 212, 0.3)' : 'none'
+              boxShadow: canGoNext ? '0 2px 12px rgba(6, 182, 212, 0.3)' : 'none',
+              zIndex: 10
             }}
           >
             {nextLabel}
@@ -284,7 +300,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         )}
         {isLastPhase && (
           <button
-            onClick={() => goToPhase(0)}
+            onClick={() => goToPhase('hook')}
             style={{
               padding: '12px 24px',
               borderRadius: '10px',
@@ -294,7 +310,8 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
               color: '#ffffff',
               border: 'none',
               cursor: 'pointer',
-              boxShadow: '0 2px 12px rgba(34, 197, 94, 0.3)'
+              boxShadow: '0 2px 12px rgba(34, 197, 94, 0.3)',
+              zIndex: 10
             }}
           >
             Start Over
@@ -305,33 +322,20 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   };
 
   const handlePrediction = useCallback((prediction: string) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'antenna' ? 'correct' : 'incorrect');
     onGameEvent?.({ type: 'prediction_made', data: { prediction, correct: prediction === 'antenna' } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'more_loss' ? 'correct' : 'incorrect');
     onGameEvent?.({ type: 'twist_prediction_made', data: { prediction, correct: prediction === 'more_loss' } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = answerIndex;
     setTestAnswers(newAnswers);
@@ -339,8 +343,6 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
     const isCorrect = testQuestions[questionIndex].options[answerIndex].correct;
     playSound(isCorrect ? 'correct' : 'incorrect');
     onGameEvent?.({ type: 'test_answered', data: { questionIndex, answerIndex, isCorrect } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [testAnswers, playSound, onGameEvent]);
 
   const calculateTestScore = useCallback(() => {
@@ -353,14 +355,9 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
   }, [testAnswers]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
     onGameEvent?.({ type: 'app_explored', data: { appIndex, appTitle: transferApps[appIndex].title } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent]);
 
   const testQuestions = [
@@ -648,7 +645,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
 
   const renderPhaseContent = () => {
     switch (phase) {
-      case 0: // Hook
+      case 'hook':
         return (
           <div className="flex flex-col items-center justify-center min-h-[500px] px-6 py-8 text-center">
             <div className="inline-flex items-center gap-2 px-4 py-2 bg-cyan-500/10 border border-cyan-500/20 rounded-full mb-6">
@@ -668,8 +665,8 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             </div>
 
             <button
-              onClick={() => goToPhase(1)}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
+              onClick={() => goToPhase('predict')}
+              style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
               className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all hover:scale-[1.02]"
             >
               Discover Link Budgets
@@ -677,7 +674,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           </div>
         );
 
-      case 1: // Predict
+      case 'predict':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-cyan-400 mb-6">Make Your Prediction</h2>
@@ -696,7 +693,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
                   key={option.id}
                   onClick={() => handlePrediction(option.id)}
                   disabled={showPredictionFeedback}
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
                   className={`p-4 rounded-xl text-left transition-all ${
                     showPredictionFeedback && option.id === 'antenna'
                       ? 'bg-green-600 text-white ring-2 ring-green-400'
@@ -719,8 +716,8 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
                   High-gain antennas are the key! They focus signal energy into a narrow beam, effectively multiplying power in that direction by thousands or millions of times.
                 </p>
                 <button
-                  onClick={() => goToPhase(2)}
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  onClick={() => goToPhase('play')}
+                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
                   className="mt-2 px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl"
                 >
                   Explore Link Budgets
@@ -730,7 +727,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           </div>
         );
 
-      case 2: // Play
+      case 'play':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-cyan-400 mb-4">Link Budget Calculator</h2>
@@ -751,8 +748,8 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             </div>
 
             <button
-              onClick={() => goToPhase(3)}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
+              onClick={() => goToPhase('review')}
+              style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
               className="mt-4 px-6 py-2 bg-cyan-600 hover:bg-cyan-500 text-white font-bold rounded-xl"
             >
               Review the Physics
@@ -760,7 +757,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           </div>
         );
 
-      case 3: // Review
+      case 'review':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-cyan-400 mb-6">The Link Budget Equation</h2>
@@ -798,8 +795,8 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             </div>
 
             <button
-              onClick={() => goToPhase(4)}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
+              onClick={() => goToPhase('twist_predict')}
+              style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
               className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-bold rounded-xl"
             >
               Explore the Twist
@@ -807,7 +804,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           </div>
         );
 
-      case 4: // Twist Predict
+      case 'twist_predict':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-purple-400 mb-6">The Frequency Trade-off</h2>
@@ -831,7 +828,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
                   key={option.id}
                   onClick={() => handleTwistPrediction(option.id)}
                   disabled={showTwistFeedback}
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
                   className={`p-4 rounded-xl text-left transition-all ${
                     showTwistFeedback && option.id === 'more_loss'
                       ? 'bg-green-600 text-white ring-2 ring-green-400'
@@ -854,8 +851,8 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
                   FSPL includes 20*log10(f) - doubling frequency adds 6 dB of loss! This is why high-bandwidth Ka-band links need even larger antennas.
                 </p>
                 <button
-                  onClick={() => goToPhase(5)}
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  onClick={() => goToPhase('twist_play')}
+                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
                   className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl"
                 >
                   See the Trade-off
@@ -865,7 +862,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           </div>
         );
 
-      case 5: // Twist Play
+      case 'twist_play':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-purple-400 mb-4">Frequency vs Data Rate Trade-off</h2>
@@ -904,8 +901,8 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             </div>
 
             <button
-              onClick={() => goToPhase(6)}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
+              onClick={() => goToPhase('twist_review')}
+              style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
               className="mt-6 px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl"
             >
               Understand the Trade-off
@@ -913,7 +910,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           </div>
         );
 
-      case 6: // Twist Review
+      case 'twist_review':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-purple-400 mb-6">The Bandwidth-Loss Trade-off</h2>
@@ -942,8 +939,8 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
             </div>
 
             <button
-              onClick={() => goToPhase(7)}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
+              onClick={() => goToPhase('transfer')}
+              style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
               className="px-8 py-3 bg-gradient-to-r from-green-600 to-teal-600 text-white font-bold rounded-xl"
             >
               See Real Applications
@@ -951,7 +948,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           </div>
         );
 
-      case 7: // Transfer
+      case 'transfer':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-green-400 mb-6">Real-World Applications</h2>
@@ -961,7 +958,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
                 <button
                   key={index}
                   onClick={() => setActiveAppTab(index)}
-                  style={{ WebkitTapHighlightColor: 'transparent' }}
+                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     activeAppTab === index
                       ? 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white'
@@ -986,7 +983,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
                 {!completedApps.has(activeAppTab) && (
                   <button
                     onClick={() => handleAppComplete(activeAppTab)}
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                    style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
                     className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg"
                   >
                     Mark as Understood
@@ -997,19 +994,23 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
 
             <p className="text-slate-400 mt-4">Completed: {completedApps.size} / {transferApps.length}</p>
 
-            {completedApps.size >= 3 && (
-              <button
-                onClick={() => goToPhase(8)}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-                className="mt-4 px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold rounded-xl"
-              >
-                Take the Test
-              </button>
-            )}
+            <button
+              onClick={() => {
+                if (activeAppTab < transferApps.length - 1) {
+                  setActiveAppTab(activeAppTab + 1);
+                } else {
+                  goToPhase('test');
+                }
+              }}
+              style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
+              className="mt-4 px-8 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-bold rounded-xl"
+            >
+              {activeAppTab < transferApps.length - 1 ? 'Next Application \u2192' : 'Take the Test'}
+            </button>
           </div>
         );
 
-      case 8: // Test
+      case 'test':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-cyan-400 mb-6">Knowledge Test</h2>
@@ -1024,7 +1025,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
                         key={oIndex}
                         onClick={() => handleTestAnswer(qIndex, oIndex)}
                         disabled={showTestResults}
-                        style={{ WebkitTapHighlightColor: 'transparent' }}
+                        style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
                         className={`p-3 rounded-lg text-sm text-left transition-all ${
                           showTestResults && option.correct
                             ? 'bg-green-600 text-white'
@@ -1050,7 +1051,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
                   playSound('complete');
                   onGameEvent?.({ type: 'test_completed', data: { score: calculateTestScore() } });
                 }}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
+                style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
                 className="mt-6 px-8 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl"
               >
                 Submit Answers
@@ -1064,8 +1065,8 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
                 </p>
                 {calculateTestScore() >= 7 && (
                   <button
-                    onClick={() => goToPhase(9)}
-                    style={{ WebkitTapHighlightColor: 'transparent' }}
+                    onClick={() => goToPhase('mastery')}
+                    style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
                     className="mt-4 px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 text-white font-bold rounded-xl"
                   >
                     Claim Mastery Badge!
@@ -1076,7 +1077,7 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
           </div>
         );
 
-      case 9: // Mastery
+      case 'mastery':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center">
             <div className="text-8xl mb-6">Trophy</div>
@@ -1107,8 +1108,8 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
               </div>
             </div>
             <button
-              onClick={() => goToPhase(0)}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
+              onClick={() => goToPhase('hook')}
+              style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
               className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
             >
               Start Over
@@ -1131,21 +1132,25 @@ const LinkBudgetRenderer: React.FC<Props> = ({ onGameEvent, gamePhase }) => {
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-medium text-cyan-400">Link Budget</span>
           <div className="flex gap-1.5">
-            {phaseNames.map((name, i) => (
-              <button
-                key={i}
-                onClick={() => goToPhase(i)}
-                style={{ WebkitTapHighlightColor: 'transparent' }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === i
-                    ? 'bg-gradient-to-r from-cyan-400 to-blue-400 w-6'
-                    : phase > i
-                    ? 'bg-emerald-500 w-2'
-                    : 'bg-slate-600 w-2 hover:bg-slate-500'
-                }`}
-                title={name}
-              />
-            ))}
+            {phaseOrder.map((p) => {
+              const currentIndex = phaseOrder.indexOf(phase);
+              const pIndex = phaseOrder.indexOf(p);
+              return (
+                <button
+                  key={p}
+                  onClick={() => goToPhase(p)}
+                  style={{ WebkitTapHighlightColor: 'transparent', zIndex: 10 }}
+                  className={`h-2 rounded-full transition-all duration-300 ${
+                    phase === p
+                      ? 'bg-gradient-to-r from-cyan-400 to-blue-400 w-6'
+                      : pIndex < currentIndex
+                      ? 'bg-emerald-500 w-2'
+                      : 'bg-slate-600 w-2 hover:bg-slate-500'
+                  }`}
+                  title={phaseNames[p]}
+                />
+              );
+            })}
           </div>
           <span className="text-sm text-slate-400 font-medium">{phaseNames[phase]}</span>
         </div>

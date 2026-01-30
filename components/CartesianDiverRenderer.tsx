@@ -4,35 +4,25 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ============================================================================
 // CARTESIAN DIVER RENDERER - BUOYANCY & PRESSURE
-// Premium 10-screen educational game with premium design
+// Premium 10-phase educational game with premium design
 // ============================================================================
 
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+  type: string;
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
-
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
 
 interface Props {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // ============================================================================
@@ -43,24 +33,22 @@ const predictions = {
   initial: {
     question: "You have a sealed plastic bottle filled with water and a small dropper with an air bubble inside. When you squeeze the bottle hard, what happens to the dropper?",
     options: [
-      { id: 'A', text: 'Nothing - it stays in place' },
-      { id: 'B', text: 'It rises to the top' },
-      { id: 'C', text: 'It sinks to the bottom' },
-      { id: 'D', text: 'It spins around' },
+      { id: 'A', text: 'Nothing - it stays in place', correct: false },
+      { id: 'B', text: 'It rises to the top', correct: false },
+      { id: 'C', text: 'It sinks to the bottom', correct: true },
+      { id: 'D', text: 'It spins around', correct: false },
     ],
-    correct: 'C',
     explanation: "When you squeeze the bottle, you increase the pressure throughout the water. This compresses the air bubble inside the dropper (Boyle's Law: PV = constant). With less air volume, the dropper displaces less water, reducing its buoyancy. When buoyancy becomes less than its weight, it sinks!"
   },
   twist: {
-    question: "You adjust the dropper so it floats perfectly in the middle - neutrally buoyant. Now the temperature drops by 10°C. What happens?",
+    question: "Now imagine you have three divers with different amounts of trapped air. One has a large air bubble, one medium, and one small. You squeeze the bottle gently. Which diver sinks first?",
     options: [
-      { id: 'A', text: "It stays perfectly neutral - temperature doesn't matter" },
-      { id: 'B', text: 'It slowly sinks as the water contracts' },
-      { id: 'C', text: 'It slowly rises as the air contracts more than water' },
-      { id: 'D', text: 'It sinks because cold water is denser' },
+      { id: 'A', text: 'The diver with the large air bubble', correct: false },
+      { id: 'B', text: 'The diver with the medium air bubble', correct: false },
+      { id: 'C', text: 'The diver with the small air bubble', correct: true },
+      { id: 'D', text: 'They all sink at exactly the same time', correct: false },
     ],
-    correct: 'C',
-    explanation: "Gases contract much more than liquids when cooled! The air bubble shrinks significantly, while the water barely contracts. This reduces the dropper's buoyancy and it sinks. Real submarines face this challenge - cold ocean layers affect their buoyancy unexpectedly!"
+    explanation: "The diver with the smallest air bubble has the least margin of buoyancy. When pressure increases, all bubbles compress proportionally, but the smallest bubble loses its buoyancy first. This is why submarines must carefully calibrate their ballast - too little reserve buoyancy and they sink unexpectedly!"
   }
 };
 
@@ -70,36 +58,36 @@ const realWorldApplications = [
     title: 'Submarines',
     icon: '🚢',
     subtitle: 'Controlling buoyancy with ballast tanks',
-    description: 'Submarines use the same principle as Cartesian divers! They have ballast tanks that can be filled with water (to sink) or compressed air (to rise).',
+    description: 'Submarines use the same principle as Cartesian divers! They have ballast tanks that can be filled with water (to sink) or compressed air (to rise). By precisely controlling the air/water ratio, submarines can hover at any depth.',
     formula: 'Buoyancy = rho_water x V_displaced x g = Weight for neutral buoyancy',
-    realExample: 'A nuclear submarine can hover motionless at 300m depth by precisely balancing its ballast tanks.',
+    realExample: 'A nuclear submarine can hover motionless at 300m depth by precisely balancing its ballast tanks. Even a 1% change in buoyancy can cause unwanted depth changes.',
   },
   {
     id: 'fish',
     title: 'Fish Swim Bladders',
     icon: '🐟',
     subtitle: "Nature's buoyancy control",
-    description: 'Most fish have a swim bladder - an internal air sac they can inflate or deflate. By adjusting the gas volume, fish control their buoyancy without constantly swimming.',
+    description: 'Most bony fish have a swim bladder - an internal gas-filled organ they can inflate or deflate. By adjusting the gas volume, fish control their buoyancy without constantly swimming, saving precious energy.',
     formula: 'Fish adjusts V_bladder to match: rho_fish x V_fish = rho_water x V_fish',
-    realExample: 'Goldfish can hover motionless by fine-tuning their swim bladder - no fin movement needed!',
+    realExample: 'Goldfish can hover motionless by fine-tuning their swim bladder. Deep-sea fish must be brought up slowly or their swim bladder expands dangerously!',
   },
   {
     id: 'scuba',
-    title: 'Scuba Diving',
+    title: 'Scuba BCDs',
     icon: '🤿',
     subtitle: 'BCD and pressure at depth',
-    description: 'Scuba divers wear a BCD (Buoyancy Control Device) - an inflatable vest. As divers descend, increasing water pressure compresses air in their BCD.',
+    description: 'Scuba divers wear a BCD (Buoyancy Control Device) - an inflatable vest. As divers descend, increasing water pressure compresses air in their BCD, requiring them to add more air to maintain neutral buoyancy.',
     formula: 'P1V1 = P2V2 - At 10m depth, air volume halves!',
-    realExample: 'At 30m depth, a diver needs 4x as much air in their BCD as at the surface to maintain buoyancy.',
+    realExample: 'At 30m depth (4 atm), a diver needs 4x as much air in their BCD as at the surface to maintain the same buoyancy. This is why proper buoyancy control is a critical diving skill.',
   },
   {
-    id: 'density',
-    title: 'Density Columns',
-    icon: '⚗️',
-    subtitle: 'Layered liquids and floating objects',
-    description: 'Objects float at the level where their density matches the surrounding liquid. A density column demonstrates this beautifully.',
-    formula: 'Object floats when: rho_object < rho_liquid, sinks when: rho_object > rho_liquid',
-    realExample: "An egg sinks in fresh water but floats in salt water - the salt increases water density above the egg's.",
+    id: 'balloons',
+    title: 'Hot Air Balloons',
+    icon: '🎈',
+    subtitle: 'Density and atmospheric buoyancy',
+    description: 'Hot air balloons work on the same principle but in air instead of water. Heating the air inside makes it less dense than surrounding cool air, creating buoyancy. The pilot controls altitude by adjusting the burner.',
+    formula: 'Lift = (rho_cold - rho_hot) x V_balloon x g',
+    realExample: 'A typical hot air balloon holds 77,000 cubic feet of air heated to 100C above ambient temperature, generating about 200 lbs of lift per 1000 cubic feet.',
   }
 ];
 
@@ -177,12 +165,12 @@ const quizQuestions = [
     ],
   },
   {
-    question: "If you heat a Cartesian diver setup, what happens?",
+    question: "If you have three divers with different bubble sizes, which sinks first when you squeeze gently?",
     options: [
-      { text: "The diver sinks (air expands)", correct: false },
-      { text: "The diver rises (air expands, more buoyancy)", correct: true },
-      { text: "Nothing changes", correct: false },
-      { text: "The diver spins", correct: false },
+      { text: "The one with the largest bubble", correct: false },
+      { text: "The one with the smallest bubble", correct: true },
+      { text: "They all sink at exactly the same rate", correct: false },
+      { text: "The one in the middle of the bottle", correct: false },
     ],
   },
   {
@@ -200,8 +188,8 @@ const quizQuestions = [
 // MAIN COMPONENT
 // ============================================================================
 
-const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
+  const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -214,14 +202,19 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
 
   // Interactive state for simulation
   const [pressure, setPressure] = useState(1.0);
-  const [temperature, setTemperature] = useState(20);
   const [diverPosition, setDiverPosition] = useState(0.3);
   const [diverVelocity, setDiverVelocity] = useState(0);
   const [showForces, setShowForces] = useState(true);
   const [isSqueezing, setIsSqueezing] = useState(false);
   const [animationTime, setAnimationTime] = useState(0);
 
-  const navigationLockRef = useRef(false);
+  // Twist play state - multiple divers
+  const [diver1Pos, setDiver1Pos] = useState(0.25);
+  const [diver2Pos, setDiver2Pos] = useState(0.3);
+  const [diver3Pos, setDiver3Pos] = useState(0.35);
+  const [twistPressure, setTwistPressure] = useState(1.0);
+  const [isTwistSqueezing, setIsTwistSqueezing] = useState(false);
+
   const lastClickRef = useRef(0);
   const animationRef = useRef<number>();
 
@@ -233,12 +226,22 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Phase sync
+  // Phase sync from props
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
+
+  const emit = useCallback((type: string, details: Record<string, unknown> = {}) => {
+    onGameEvent?.({
+      type,
+      gameType: 'cartesian_diver',
+      gameTitle: 'Cartesian Diver',
+      details: { phase, ...details },
+      timestamp: Date.now()
+    });
+  }, [onGameEvent, phase]);
 
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
@@ -265,39 +268,31 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
     } catch { /* Audio not available */ }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     onPhaseComplete?.(newPhase);
-    onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
+    emit('phase_change', { phase: newPhase });
 
     // Reset simulation for certain phases
-    if (newPhase === 2) {
+    if (newPhase === 'play') {
       setPressure(1.0);
-      setTemperature(20);
       setDiverPosition(0.3);
       setDiverVelocity(0);
-    } else if (newPhase === 5) {
-      setPressure(1.0);
-      setTemperature(20);
-      setDiverPosition(0.5);
-      setDiverVelocity(0);
+    } else if (newPhase === 'twist_play') {
+      setTwistPressure(1.0);
+      setDiver1Pos(0.25);
+      setDiver2Pos(0.3);
+      setDiver3Pos(0.35);
     }
+  }, [playSound, onPhaseComplete, emit]);
 
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onPhaseComplete, onGameEvent]);
-
-  // Calculate bubble size based on pressure and temperature
-  const calculateBubbleSize = useCallback((p: number, t: number) => {
-    const baseSize = 1.0;
-    const baseTemp = 293;
-    const currentTemp = t + 273;
-    return baseSize * (1.0 / p) * (currentTemp / baseTemp);
+  // Calculate bubble size based on pressure
+  const calculateBubbleSize = useCallback((p: number, baseBubble: number = 1.0) => {
+    return baseBubble * (1.0 / p);
   }, []);
 
-  const bubbleSize = calculateBubbleSize(pressure, temperature);
+  const bubbleSize = calculateBubbleSize(pressure);
 
   // Calculate buoyancy
   const calculateNetForce = useCallback((bubbleVol: number) => {
@@ -305,7 +300,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
     return buoyancy;
   }, []);
 
-  // Physics simulation
+  // Physics simulation for main diver
   useEffect(() => {
     const simulate = () => {
       setAnimationTime(t => t + 0.016);
@@ -352,11 +347,45 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
     };
   }, [bubbleSize, calculateNetForce, diverVelocity]);
 
+  // Physics simulation for twist play (3 divers)
   useEffect(() => {
-    if (onGameEvent) {
-      onGameEvent({ type: 'phase_change', data: { phase } });
-    }
-  }, [phase, onGameEvent]);
+    if (phase !== 'twist_play') return;
+
+    const simulate = () => {
+      // Diver 1 - large bubble (1.2 base)
+      const bubble1 = calculateBubbleSize(twistPressure, 1.2);
+      const force1 = (bubble1 - 0.85) * 2.0;
+      setDiver1Pos(pos => {
+        const newPos = pos - force1 * 0.005;
+        return Math.max(0.05, Math.min(0.9, newPos));
+      });
+
+      // Diver 2 - medium bubble (1.0 base)
+      const bubble2 = calculateBubbleSize(twistPressure, 1.0);
+      const force2 = (bubble2 - 0.85) * 2.0;
+      setDiver2Pos(pos => {
+        const newPos = pos - force2 * 0.005;
+        return Math.max(0.05, Math.min(0.9, newPos));
+      });
+
+      // Diver 3 - small bubble (0.9 base)
+      const bubble3 = calculateBubbleSize(twistPressure, 0.9);
+      const force3 = (bubble3 - 0.85) * 2.0;
+      setDiver3Pos(pos => {
+        const newPos = pos - force3 * 0.005;
+        return Math.max(0.05, Math.min(0.9, newPos));
+      });
+
+      animationRef.current = requestAnimationFrame(simulate);
+    };
+
+    animationRef.current = requestAnimationFrame(simulate);
+    return () => {
+      if (animationRef.current) {
+        cancelAnimationFrame(animationRef.current);
+      }
+    };
+  }, [phase, twistPressure, calculateBubbleSize]);
 
   const handlePrediction = useCallback((prediction: string) => {
     const now = Date.now();
@@ -365,7 +394,8 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'C' ? 'success' : 'failure');
-  }, [playSound]);
+    emit('prediction_made', { prediction, correct: prediction === 'C' });
+  }, [playSound, emit]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
     const now = Date.now();
@@ -374,7 +404,8 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'C' ? 'success' : 'failure');
-  }, [playSound]);
+    emit('twist_prediction_made', { prediction, correct: prediction === 'C' });
+  }, [playSound, emit]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
     const now = Date.now();
@@ -385,7 +416,8 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
       newAnswers[questionIndex] = answerIndex;
       return newAnswers;
     });
-  }, []);
+    emit('test_answered', { questionIndex, answerIndex });
+  }, [emit]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
     const now = Date.now();
@@ -393,7 +425,8 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
     lastClickRef.current = now;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
-  }, [playSound]);
+    emit('app_explored', { appIndex, app: realWorldApplications[appIndex].title });
+  }, [playSound, emit]);
 
   const handleSqueezeStart = useCallback(() => {
     setIsSqueezing(true);
@@ -403,6 +436,16 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
   const handleSqueezeEnd = useCallback(() => {
     setIsSqueezing(false);
     setPressure(1.0);
+  }, []);
+
+  const handleTwistSqueezeStart = useCallback(() => {
+    setIsTwistSqueezing(true);
+    setTwistPressure(1.3);
+  }, []);
+
+  const handleTwistSqueezeEnd = useCallback(() => {
+    setIsTwistSqueezing(false);
+    setTwistPressure(1.0);
   }, []);
 
   const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (answer >= 0 && quizQuestions[index].options[answer]?.correct ? 1 : 0), 0);
@@ -530,6 +573,108 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
     );
   };
 
+  // Twist play visualization - 3 divers
+  const renderTwistSimulation = () => {
+    const simWidth = isMobile ? 340 : 450;
+    const simHeight = 420;
+    const bottleWidth = 150;
+    const bottleHeight = 340;
+    const bottleX = (simWidth - bottleWidth) / 2;
+    const bottleY = 40;
+
+    const bubble1Size = calculateBubbleSize(twistPressure, 1.2);
+    const bubble2Size = calculateBubbleSize(twistPressure, 1.0);
+    const bubble3Size = calculateBubbleSize(twistPressure, 0.9);
+
+    return (
+      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-amber-700/30">
+        <svg width={simWidth} height={simHeight} className="mx-auto">
+          <defs>
+            <linearGradient id="waterGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#0369a1" stopOpacity="0.9" />
+            </linearGradient>
+          </defs>
+
+          {/* Bottle */}
+          <rect
+            x={bottleX - (isTwistSqueezing ? 5 : 0)}
+            y={bottleY}
+            width={bottleWidth + (isTwistSqueezing ? 10 : 0)}
+            height={bottleHeight}
+            rx={20}
+            fill="rgba(136, 192, 208, 0.1)"
+            stroke="#88c0d0"
+            strokeWidth={3}
+            style={{ transition: 'all 0.1s ease' }}
+          />
+
+          {/* Water */}
+          <rect
+            x={bottleX + 5 - (isTwistSqueezing ? 4 : 0)}
+            y={bottleY + 10}
+            width={bottleWidth - 10 + (isTwistSqueezing ? 8 : 0)}
+            height={bottleHeight - 20}
+            rx={15}
+            fill="url(#waterGrad2)"
+            style={{ transition: 'all 0.1s ease' }}
+          />
+
+          {/* Diver 1 - Large bubble (green) */}
+          <g transform={`translate(${bottleX + 35}, ${bottleY + 30 + diver1Pos * (bottleHeight - 80)})`}>
+            <rect x={-6} y={-20} width={12} height={40} rx={3} fill="#e5e7eb" stroke="#22c55e" strokeWidth={2} />
+            <ellipse cx={0} cy={-25} rx={8} ry={6} fill="#22c55e" />
+            <ellipse cx={0} cy={-2} rx={4 + bubble1Size * 6} ry={6 + bubble1Size * 8} fill="white" opacity={0.8} />
+            <text x={0} y={35} fill="#22c55e" fontSize={10} textAnchor="middle">Large</text>
+          </g>
+
+          {/* Diver 2 - Medium bubble (blue) */}
+          <g transform={`translate(${bottleX + 75}, ${bottleY + 30 + diver2Pos * (bottleHeight - 80)})`}>
+            <rect x={-6} y={-20} width={12} height={40} rx={3} fill="#e5e7eb" stroke="#3b82f6" strokeWidth={2} />
+            <ellipse cx={0} cy={-25} rx={8} ry={6} fill="#3b82f6" />
+            <ellipse cx={0} cy={-2} rx={4 + bubble2Size * 6} ry={6 + bubble2Size * 8} fill="white" opacity={0.8} />
+            <text x={0} y={35} fill="#3b82f6" fontSize={10} textAnchor="middle">Med</text>
+          </g>
+
+          {/* Diver 3 - Small bubble (red) */}
+          <g transform={`translate(${bottleX + 115}, ${bottleY + 30 + diver3Pos * (bottleHeight - 80)})`}>
+            <rect x={-6} y={-20} width={12} height={40} rx={3} fill="#e5e7eb" stroke="#ef4444" strokeWidth={2} />
+            <ellipse cx={0} cy={-25} rx={8} ry={6} fill="#ef4444" />
+            <ellipse cx={0} cy={-2} rx={4 + bubble3Size * 6} ry={6 + bubble3Size * 8} fill="white" opacity={0.8} />
+            <text x={0} y={35} fill="#ef4444" fontSize={10} textAnchor="middle">Small</text>
+          </g>
+
+          {/* Pressure arrows */}
+          {isTwistSqueezing && (
+            <>
+              <polygon points={`${bottleX - 20},${bottleY + bottleHeight / 2} ${bottleX - 5},${bottleY + bottleHeight / 2 - 10} ${bottleX - 5},${bottleY + bottleHeight / 2 + 10}`} fill="#f472b6" />
+              <polygon points={`${bottleX + bottleWidth + 20},${bottleY + bottleHeight / 2} ${bottleX + bottleWidth + 5},${bottleY + bottleHeight / 2 - 10} ${bottleX + bottleWidth + 5},${bottleY + bottleHeight / 2 + 10}`} fill="#f472b6" />
+            </>
+          )}
+
+          <text x={simWidth / 2} y={simHeight - 10} fill="#94a3b8" fontSize={12} textAnchor="middle">
+            {isTwistSqueezing ? 'Watch which diver sinks first!' : 'Squeeze gently to compare'}
+          </text>
+        </svg>
+
+        <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+          <div className="bg-emerald-900/30 rounded-lg p-2 border border-emerald-700/30">
+            <div className="text-xs text-emerald-400">Large Bubble</div>
+            <div className="text-sm font-bold text-white">{(bubble1Size * 100).toFixed(0)}%</div>
+          </div>
+          <div className="bg-blue-900/30 rounded-lg p-2 border border-blue-700/30">
+            <div className="text-xs text-blue-400">Medium Bubble</div>
+            <div className="text-sm font-bold text-white">{(bubble2Size * 100).toFixed(0)}%</div>
+          </div>
+          <div className="bg-red-900/30 rounded-lg p-2 border border-red-700/30">
+            <div className="text-xs text-red-400">Small Bubble</div>
+            <div className="text-sm font-bold text-white">{(bubble3Size * 100).toFixed(0)}%</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   // ============================================================================
   // PHASE RENDERERS
   // ============================================================================
@@ -555,17 +700,18 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           <div className="text-7xl mb-6">🧪</div>
           <div className="mt-8 space-y-4">
             <p className="text-xl text-white/90 font-medium leading-relaxed">
-              This 17th-century toy reveals the same physics that lets submarines dive and fish hover.
+              Named after Rene Descartes, this 17th-century toy reveals the same physics that lets submarines dive and fish hover effortlessly.
             </p>
             <p className="text-lg text-slate-400 leading-relaxed">
-              Squeeze to sink, release to rise - but why?
+              Inside a sealed bottle: water, a dropper with trapped air, and the secret of buoyancy control.
             </p>
           </div>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
+        style={{ zIndex: 10 }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -594,12 +740,13 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
         {predictions.initial.options.map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
+            style={{ zIndex: 10 }}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
-                ? option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showPredictionFeedback && option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                ? option.correct ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                : showPredictionFeedback && option.correct ? 'bg-emerald-600/40 border-2 border-emerald-400'
                 : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
             }`}
           >
@@ -615,7 +762,8 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           </p>
           <p className="text-slate-300 text-sm">{predictions.initial.explanation}</p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onClick={() => goToPhase('play')}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl"
           >
             Explore the Physics
@@ -639,6 +787,7 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           onMouseLeave={handleSqueezeEnd}
           onTouchStart={handleSqueezeStart}
           onTouchEnd={handleSqueezeEnd}
+          style={{ zIndex: 10 }}
           className={`px-8 py-4 rounded-xl font-bold text-white transition-all ${
             isSqueezing
               ? 'bg-gradient-to-r from-pink-500 to-amber-500 scale-95'
@@ -648,7 +797,8 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           {isSqueezing ? 'Squeezing!' : 'Hold to Squeeze'}
         </button>
         <button
-          onMouseDown={() => setShowForces(!showForces)}
+          onClick={() => setShowForces(!showForces)}
+          style={{ zIndex: 10 }}
           className={`px-4 py-4 rounded-xl font-medium ${showForces ? 'bg-blue-600' : 'bg-slate-700'} text-white`}
         >
           Forces {showForces ? 'ON' : 'OFF'}
@@ -660,7 +810,11 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
         <p className="text-slate-300 text-sm">When pressure increases, the air bubble compresses. Less displaced water means less buoyancy!</p>
       </div>
 
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl">
+      <button
+        onClick={() => goToPhase('review')}
+        style={{ zIndex: 10 }}
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl"
+      >
         Review the Concepts
       </button>
     </div>
@@ -668,32 +822,55 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
 
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">The Physics of Buoyancy</h2>
+      <h2 className="text-2xl font-bold text-white mb-6">How Pressure Affects Buoyancy</h2>
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-6 border border-cyan-700/30">
           <h3 className="text-xl font-bold text-cyan-400 mb-3">Boyle's Law</h3>
           <div className="bg-slate-900/50 rounded-lg p-3 mb-3 text-center">
-            <span className="text-xl font-mono text-cyan-300">P1V1 = P2V2</span>
+            <span className="text-xl font-mono text-cyan-300">P1 x V1 = P2 x V2</span>
           </div>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>Pressure up = Volume down</li>
-            <li>Compressed bubble = less buoyancy</li>
-            <li>Works at constant temperature</li>
+            <li>* Pressure up = Volume down</li>
+            <li>* Compressed bubble = less volume</li>
+            <li>* Works at constant temperature</li>
           </ul>
         </div>
         <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6 border border-emerald-700/30">
           <h3 className="text-xl font-bold text-emerald-400 mb-3">Archimedes' Principle</h3>
           <div className="bg-slate-900/50 rounded-lg p-3 mb-3 text-center">
-            <span className="text-xl font-mono text-emerald-300">F_b = rho * g * V</span>
+            <span className="text-xl font-mono text-emerald-300">F_buoyancy = rho x g x V</span>
           </div>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>Buoyancy = weight of displaced fluid</li>
-            <li>Less volume displaced = less upward force</li>
-            <li>Neutral buoyancy when forces balance</li>
+            <li>* Buoyancy = weight of displaced fluid</li>
+            <li>* Less volume = less buoyant force</li>
+            <li>* Object sinks when weight exceeds buoyancy</li>
           </ul>
         </div>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+
+      <div className="bg-gradient-to-r from-pink-900/30 to-purple-900/30 rounded-2xl p-6 max-w-4xl mt-6 border border-pink-700/30">
+        <h3 className="text-xl font-bold text-pink-400 mb-3">The Cartesian Diver Connection</h3>
+        <div className="grid md:grid-cols-3 gap-4 text-sm">
+          <div className="bg-slate-900/50 rounded-lg p-3">
+            <div className="text-pink-400 font-semibold mb-1">1. Squeeze Bottle</div>
+            <p className="text-slate-300">Pressure increases throughout the water</p>
+          </div>
+          <div className="bg-slate-900/50 rounded-lg p-3">
+            <div className="text-pink-400 font-semibold mb-1">2. Air Compresses</div>
+            <p className="text-slate-300">The bubble shrinks (Boyle's Law)</p>
+          </div>
+          <div className="bg-slate-900/50 rounded-lg p-3">
+            <div className="text-pink-400 font-semibold mb-1">3. Diver Sinks</div>
+            <p className="text-slate-300">Less buoyancy than weight (Archimedes)</p>
+          </div>
+        </div>
+      </div>
+
+      <button
+        onClick={() => goToPhase('twist_predict')}
+        style={{ zIndex: 10 }}
+        className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+      >
         Discover a Surprising Twist
       </button>
     </div>
@@ -709,12 +886,13 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
         {predictions.twist.options.map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
+            style={{ zIndex: 10 }}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
-                ? option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
-                : showTwistFeedback && option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400'
+                ? option.correct ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
+                : showTwistFeedback && option.correct ? 'bg-emerald-600/40 border-2 border-emerald-400'
                 : 'bg-slate-700/50 hover:bg-slate-600/50 border-2 border-transparent'
             }`}
           >
@@ -727,8 +905,12 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl border border-slate-700/50">
           <p className="text-emerald-400 font-semibold mb-2">{twistPrediction === 'C' ? 'Excellent!' : 'Interesting guess!'}</p>
           <p className="text-slate-300 text-sm">{predictions.twist.explanation}</p>
-          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
-            Explore Temperature Effects
+          <button
+            onClick={() => goToPhase('twist_play')}
+            style={{ zIndex: 10 }}
+            className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+          >
+            Test with Multiple Divers
           </button>
         </div>
       )}
@@ -737,33 +919,51 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
 
   const renderTwistPlay = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Temperature & Buoyancy</h2>
-      <p className="text-slate-400 mb-6 text-center">Watch how temperature changes affect the air bubble and buoyancy!</p>
+      <h2 className="text-2xl font-bold text-amber-400 mb-4">Compare Different Divers</h2>
+      <p className="text-slate-400 mb-6 text-center">Three divers with different bubble sizes. Watch which sinks first!</p>
 
-      {renderDiverSimulation()}
+      {renderTwistSimulation()}
 
-      <div className="bg-slate-800/50 rounded-xl p-4 w-full max-w-lg mb-4 border border-slate-700/50">
-        <label className="text-amber-400 text-sm block mb-2">Temperature: {temperature}C</label>
-        <input
-          type="range"
-          min={5}
-          max={35}
-          value={temperature}
-          onChange={(e) => setTemperature(Number(e.target.value))}
-          className="w-full accent-amber-500"
-        />
-        <div className="flex justify-between text-xs text-slate-500 mt-1">
-          <span>Cold</span>
-          <span>Warm</span>
-        </div>
+      <div className="flex gap-3 justify-center my-6">
+        <button
+          onMouseDown={handleTwistSqueezeStart}
+          onMouseUp={handleTwistSqueezeEnd}
+          onMouseLeave={handleTwistSqueezeEnd}
+          onTouchStart={handleTwistSqueezeStart}
+          onTouchEnd={handleTwistSqueezeEnd}
+          style={{ zIndex: 10 }}
+          className={`px-8 py-4 rounded-xl font-bold text-white transition-all ${
+            isTwistSqueezing
+              ? 'bg-gradient-to-r from-pink-500 to-amber-500 scale-95'
+              : 'bg-gradient-to-r from-amber-500 to-orange-500 hover:shadow-lg'
+          }`}
+        >
+          {isTwistSqueezing ? 'Squeezing!' : 'Hold to Squeeze Gently'}
+        </button>
+        <button
+          onClick={() => {
+            setDiver1Pos(0.25);
+            setDiver2Pos(0.3);
+            setDiver3Pos(0.35);
+            setTwistPressure(1.0);
+          }}
+          style={{ zIndex: 10 }}
+          className="px-4 py-4 rounded-xl font-medium bg-slate-700 text-white"
+        >
+          Reset
+        </button>
       </div>
 
       <div className="bg-amber-900/30 rounded-xl p-4 max-w-lg border border-amber-700/30">
-        <h3 className="text-amber-400 font-semibold mb-2">Combined Gas Law: PV/T = constant</h3>
-        <p className="text-slate-300 text-sm">Gases contract much more than liquids when cooled. Cold temperature shrinks the bubble more than the water!</p>
+        <h3 className="text-amber-400 font-semibold mb-2">Key Insight</h3>
+        <p className="text-slate-300 text-sm">The diver with the smallest air bubble has the least buoyancy margin. When pressure increases, it loses its ability to float first!</p>
       </div>
 
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+      <button
+        onClick={() => goToPhase('twist_review')}
+        style={{ zIndex: 10 }}
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl"
+      >
         Review the Discovery
       </button>
     </div>
@@ -771,30 +971,49 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
 
   const renderTwistReview = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">Key Discovery</h2>
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">Air Volume and Sinking Depth</h2>
       <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 max-w-2xl mb-6 border border-amber-700/30">
-        <h3 className="text-xl font-bold text-amber-400 mb-4">Temperature Matters!</h3>
-        <div className="grid md:grid-cols-2 gap-4">
-          <div className="bg-slate-900/50 rounded-lg p-3">
-            <h4 className="text-cyan-400 font-semibold mb-2">Cold Temperature</h4>
+        <h3 className="text-xl font-bold text-amber-400 mb-4">The Trapped Air Relationship</h3>
+        <div className="grid md:grid-cols-3 gap-4">
+          <div className="bg-slate-900/50 rounded-lg p-3 border border-emerald-700/30">
+            <div className="text-emerald-400 font-semibold mb-2">Large Bubble</div>
             <ul className="text-slate-300 text-sm space-y-1">
-              <li>Gas contracts more than liquid</li>
-              <li>Bubble gets smaller</li>
-              <li>Less buoyancy - sinks</li>
+              <li>* More buoyancy reserve</li>
+              <li>* Needs more pressure to sink</li>
+              <li>* Sinks last</li>
             </ul>
           </div>
-          <div className="bg-slate-900/50 rounded-lg p-3">
-            <h4 className="text-pink-400 font-semibold mb-2">Warm Temperature</h4>
+          <div className="bg-slate-900/50 rounded-lg p-3 border border-blue-700/30">
+            <div className="text-blue-400 font-semibold mb-2">Medium Bubble</div>
             <ul className="text-slate-300 text-sm space-y-1">
-              <li>Gas expands more than liquid</li>
-              <li>Bubble gets larger</li>
-              <li>More buoyancy - rises</li>
+              <li>* Moderate reserve</li>
+              <li>* Moderate pressure needed</li>
+              <li>* Sinks second</li>
+            </ul>
+          </div>
+          <div className="bg-slate-900/50 rounded-lg p-3 border border-red-700/30">
+            <div className="text-red-400 font-semibold mb-2">Small Bubble</div>
+            <ul className="text-slate-300 text-sm space-y-1">
+              <li>* Minimal reserve</li>
+              <li>* Little pressure needed</li>
+              <li>* Sinks first</li>
             </ul>
           </div>
         </div>
-        <p className="text-emerald-400 font-medium mt-4">Submarines encounter thermoclines - invisible temperature layers that change buoyancy!</p>
+        <p className="text-emerald-400 font-medium mt-4">Real submarines and fish must maintain enough air volume for emergency buoyancy!</p>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl">
+
+      <div className="bg-slate-800/50 rounded-xl p-4 max-w-2xl border border-slate-700/50">
+        <h3 className="text-cyan-400 font-semibold mb-2">Why This Matters</h3>
+        <p className="text-slate-300 text-sm mb-2">Submarines carry compressed air for emergencies. If they descend too deep and lose too much air, they may not have enough reserve buoyancy to surface!</p>
+        <p className="text-slate-300 text-sm">Fish with damaged swim bladders face the same challenge - they constantly struggle to maintain their depth.</p>
+      </div>
+
+      <button
+        onClick={() => goToPhase('transfer')}
+        style={{ zIndex: 10 }}
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl"
+      >
         Explore Real-World Applications
       </button>
     </div>
@@ -807,7 +1026,8 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
         {realWorldApplications.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+            onClick={() => setActiveAppTab(index)}
+            style={{ zIndex: 10 }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppTab === index ? 'bg-cyan-600 text-white'
               : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
@@ -834,7 +1054,11 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           <p className="text-emerald-400 text-sm">{realWorldApplications[activeAppTab].realExample}</p>
         </div>
         {!completedApps.has(activeAppTab) && (
-          <button onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
+          <button
+            onClick={() => handleAppComplete(activeAppTab)}
+            style={{ zIndex: 10 }}
+            className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium"
+          >
             Mark as Understood
           </button>
         )}
@@ -845,7 +1069,11 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
         <span className="text-slate-400">{completedApps.size}/4</span>
       </div>
       {completedApps.size >= 4 && (
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl">
+        <button
+          onClick={() => goToPhase('test')}
+          style={{ zIndex: 10 }}
+          className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl"
+        >
           Take the Knowledge Test
         </button>
       )}
@@ -864,7 +1092,8 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
+                    style={{ zIndex: 10 }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-cyan-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                   >
                     {option.text}
@@ -874,7 +1103,8 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
             </div>
           ))}
           <button
-            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); playSound('complete'); }}
+            onClick={() => { setShowTestResults(true); playSound('complete'); emit('test_completed', { score: calculateScore() }); }}
+            style={{ zIndex: 10 }}
             disabled={testAnswers.includes(-1)}
             className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-cyan-600 to-blue-600 text-white'}`}
           >
@@ -887,11 +1117,19 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
           <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
           <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? "Excellent! You've mastered buoyancy physics!" : 'Keep studying! Review and try again.'}</p>
           {calculateScore() >= 7 ? (
-            <button onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }} className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
+            <button
+              onClick={() => { goToPhase('mastery'); emit('mastery_achieved', { score: calculateScore() }); }}
+              style={{ zIndex: 10 }}
+              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl"
+            >
               Claim Your Mastery Badge
             </button>
           ) : (
-            <button onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }} className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl">
+            <button
+              onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
+              style={{ zIndex: 10 }}
+              className="px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl"
+            >
               Review & Try Again
             </button>
           )}
@@ -906,32 +1144,52 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
         <div className="text-8xl mb-6">🧪</div>
         <h1 className="text-3xl font-bold text-white mb-4">Buoyancy Master!</h1>
         <p className="text-xl text-slate-300 mb-6">You've mastered the Cartesian Diver and buoyancy physics!</p>
+
+        <div className="bg-slate-800/50 rounded-xl p-4 mb-6 text-left">
+          <h3 className="text-cyan-400 font-semibold mb-3">You Now Understand:</h3>
+          <ul className="text-slate-300 space-y-2">
+            <li>* How pressure affects gas volume (Boyle's Law)</li>
+            <li>* How displaced fluid creates buoyancy (Archimedes)</li>
+            <li>* Why trapped air volume determines sinking behavior</li>
+            <li>* Real-world applications in submarines, fish, and diving</li>
+          </ul>
+        </div>
+
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🚢</div><p className="text-sm text-slate-300">Submarines</p></div>
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🐟</div><p className="text-sm text-slate-300">Fish Bladders</p></div>
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🤿</div><p className="text-sm text-slate-300">Scuba Diving</p></div>
-          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">⚗️</div><p className="text-sm text-slate-300">Density Columns</p></div>
+          <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🎈</div><p className="text-sm text-slate-300">Hot Air Balloons</p></div>
         </div>
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">Explore Again</button>
+
+        <button
+          onClick={() => goToPhase('hook')}
+          style={{ zIndex: 10 }}
+          className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl"
+        >
+          Explore Again
+        </button>
       </div>
     </div>
   );
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
+
+  const phaseIndex = phaseOrder.indexOf(phase);
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
@@ -946,22 +1204,23 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, on
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Cartesian Diver</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phase > p
+                    : phaseIndex > i
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
-                title={phaseLabels[p]}
+                title={p.replace('_', ' ')}
               />
             ))}
           </div>
-          <span className="text-sm font-medium text-cyan-400">{phaseLabels[phase]}</span>
+          <span className="text-sm font-medium text-cyan-400">{phase.replace('_', ' ')}</span>
         </div>
       </div>
 

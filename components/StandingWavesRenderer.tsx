@@ -6,6 +6,10 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // STANDING WAVES - Premium Design System
 // ============================================================================
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -22,47 +26,43 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook',
+  'predict': 'Predict',
+  'play': 'Lab',
+  'review': 'Review',
+  'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab',
+  'twist_review': 'Twist Review',
+  'transfer': 'Transfer',
+  'test': 'Test',
+  'mastery': 'Mastery'
 };
 
 interface StandingWavesRendererProps {
   width?: number;
   height?: number;
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // ============================================================================
 // MAIN COMPONENT
 // ============================================================================
-const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  // Navigation debouncing
-  const lastClickRef = useRef(0);
-
+const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
   // Phase state
-  const [phase, setPhase] = useState<number>(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
-    return 0;
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
   });
 
   // Sync phase with external prop
   useEffect(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase]);
+  }, [gamePhase]);
 
   // Game state
   const [prediction, setPrediction] = useState<string | null>(null);
@@ -94,7 +94,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
   // Track discovered harmonics
   useEffect(() => {
-    if ((phase === 2 || phase === 5) && !discoveredHarmonics.includes(harmonic)) {
+    if ((phase === 'play' || phase === 'twist_play') && !discoveredHarmonics.includes(harmonic)) {
       setDiscoveredHarmonics(prev => [...new Set([...prev, harmonic])].sort((a, b) => a - b));
     }
   }, [harmonic, phase, discoveredHarmonics]);
@@ -130,12 +130,8 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     onGameEvent?.({ type, data });
   }, [onGameEvent]);
 
-  // Navigation with debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    if (!PHASES.includes(newPhase)) return;
-    lastClickRef.current = now;
+  // Navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
     setPhase(newPhase);
     playSound('transition');
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
@@ -520,7 +516,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
   const renderPhase = () => {
     // HOOK
-    if (phase === 0) {
+    if (phase === 'hook') {
       return (
         <div className="flex flex-col items-center justify-center min-h-[80vh] px-6 text-center">
           {/* Floating background elements */}
@@ -570,8 +566,9 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
           </div>
 
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+            onClick={() => goToPhase('predict')}
             className="px-10 py-4 rounded-2xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold text-lg shadow-lg shadow-amber-500/30 hover:shadow-amber-500/50 transition-all"
+            style={{ zIndex: 10 }}
           >
             Start Learning
           </button>
@@ -584,7 +581,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     }
 
     // PREDICT
-    if (phase === 1) {
+    if (phase === 'predict') {
       const options = [
         { id: 'same', text: 'The same single loop, just faster' },
         { id: 'more', text: 'More loops appear at specific frequencies' },
@@ -607,8 +604,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
               {options.map((opt) => (
                 <button
                   key={opt.id}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     setPrediction(opt.id);
                     emitEvent('prediction_made', { value: opt.id });
                   }}
@@ -617,6 +613,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                       ? 'border-amber-500 bg-amber-500/10 text-white'
                       : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
                   }`}
+                  style={{ zIndex: 10 }}
                 >
                   {opt.text}
                 </button>
@@ -625,13 +622,14 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
             <div className="flex justify-end">
               <button
-                onMouseDown={(e) => { e.preventDefault(); if (prediction) goToPhase(2); }}
+                onClick={() => { if (prediction) goToPhase('play'); }}
                 disabled={!prediction}
                 className={`px-8 py-3 rounded-xl font-bold transition-all ${
                   prediction
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white shadow-lg shadow-amber-500/30'
                     : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                 }`}
+                style={{ zIndex: 10 }}
               >
                 Let's Find Out
               </button>
@@ -642,7 +640,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     }
 
     // LAB
-    if (phase === 2) {
+    if (phase === 'play') {
       return (
         <div className="flex flex-col min-h-[80vh]">
           {/* Visualization */}
@@ -680,13 +678,14 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                   ))}
                 </div>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); if (discoveredHarmonics.length >= 3) goToPhase(3); }}
+                  onClick={() => { if (discoveredHarmonics.length >= 3) goToPhase('review'); }}
                   disabled={discoveredHarmonics.length < 3}
                   className={`px-6 py-2 rounded-xl font-bold transition-all ${
                     discoveredHarmonics.length >= 3
                       ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white'
                       : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                   }`}
+                  style={{ zIndex: 10 }}
                 >
                   {discoveredHarmonics.length >= 3 ? 'Continue' : `Discover ${3 - discoveredHarmonics.length} more`}
                 </button>
@@ -698,7 +697,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     }
 
     // REVIEW
-    if (phase === 3) {
+    if (phase === 'review') {
       return (
         <div className="flex flex-col min-h-[80vh] px-6 py-8">
           <div className="max-w-2xl mx-auto w-full">
@@ -735,8 +734,9 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
             <div className="flex justify-end">
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+                onClick={() => goToPhase('twist_predict')}
                 className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-lg shadow-amber-500/30"
+                style={{ zIndex: 10 }}
               >
                 Continue
               </button>
@@ -747,7 +747,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     }
 
     // TWIST PREDICT
-    if (phase === 4) {
+    if (phase === 'twist_predict') {
       const options = [
         { id: 'nothing', text: 'Nothing changes - frequency stays the same' },
         { id: 'higher', text: 'All frequencies increase proportionally' },
@@ -770,8 +770,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
               {options.map((opt) => (
                 <button
                   key={opt.id}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
+                  onClick={() => {
                     setTwistPrediction(opt.id);
                     emitEvent('twist_prediction_made', { value: opt.id });
                   }}
@@ -780,6 +779,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                       ? 'border-violet-500 bg-violet-500/10 text-white'
                       : 'border-slate-700 bg-slate-800/50 text-slate-300 hover:border-slate-600'
                   }`}
+                  style={{ zIndex: 10 }}
                 >
                   {opt.text}
                 </button>
@@ -788,13 +788,14 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
             <div className="flex justify-end">
               <button
-                onMouseDown={(e) => { e.preventDefault(); if (twistPrediction) goToPhase(5); }}
+                onClick={() => { if (twistPrediction) goToPhase('twist_play'); }}
                 disabled={!twistPrediction}
                 className={`px-8 py-3 rounded-xl font-bold transition-all ${
                   twistPrediction
                     ? 'bg-gradient-to-r from-violet-500 to-violet-600 text-white shadow-lg shadow-violet-500/30'
                     : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                 }`}
+                style={{ zIndex: 10 }}
               >
                 Test It
               </button>
@@ -805,7 +806,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     }
 
     // TWIST LAB
-    if (phase === 5) {
+    if (phase === 'twist_play') {
       return (
         <div className="flex flex-col min-h-[80vh]">
           {/* Visualization */}
@@ -848,8 +849,9 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                   <span className="text-lg font-black text-amber-400">{frequency} Hz</span>
                 </div>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+                  onClick={() => goToPhase('twist_review')}
                   className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-lg shadow-amber-500/30"
+                  style={{ zIndex: 10 }}
                 >
                   Continue
                 </button>
@@ -861,7 +863,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     }
 
     // TWIST REVIEW
-    if (phase === 6) {
+    if (phase === 'twist_review') {
       return (
         <div className="flex flex-col min-h-[80vh] px-6 py-8">
           <div className="max-w-xl mx-auto w-full">
@@ -892,8 +894,9 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
             <div className="flex justify-end">
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+                onClick={() => goToPhase('transfer')}
                 className="px-8 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-lg shadow-amber-500/30"
+                style={{ zIndex: 10 }}
               >
                 See Real Applications
               </button>
@@ -904,7 +907,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     }
 
     // TRANSFER
-    if (phase === 7) {
+    if (phase === 'transfer') {
       const app = applications[activeApp];
       const allAppsCompleted = completedApps.size === applications.length;
 
@@ -939,13 +942,11 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
               return (
                 <button
                   key={a.id}
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    const now = Date.now();
-                    if (now - lastClickRef.current < 200 || !canAccess) return;
-                    lastClickRef.current = now;
-                    setActiveApp(idx);
-                    emitEvent('app_explored', { appIndex: idx });
+                  onClick={() => {
+                    if (canAccess) {
+                      setActiveApp(idx);
+                      emitEvent('app_explored', { appIndex: idx });
+                    }
                   }}
                   className={`px-4 py-2 rounded-lg text-sm font-semibold whitespace-nowrap transition-all ${
                     isCurrent
@@ -954,6 +955,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                         ? 'bg-emerald-500/10 text-emerald-400'
                         : 'text-slate-500 opacity-50 cursor-not-allowed'
                   }`}
+                  style={{ zIndex: 10 }}
                 >
                   {isCompleted && !isCurrent ? '✓ ' : ''}{a.title}
                 </button>
@@ -980,14 +982,10 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                 <p className="text-xl font-serif text-white">{app.stat}</p>
               </div>
 
-              {/* Mark as Read Button */}
+              {/* Next Application Button */}
               {!completedApps.has(activeApp) ? (
                 <button
-                  onMouseDown={(e) => {
-                    e.preventDefault();
-                    const now = Date.now();
-                    if (now - lastClickRef.current < 200) return;
-                    lastClickRef.current = now;
+                  onClick={() => {
                     const newCompleted = new Set(completedApps);
                     newCompleted.add(activeApp);
                     setCompletedApps(newCompleted);
@@ -996,9 +994,10 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                       setTimeout(() => setActiveApp(activeApp + 1), 300);
                     }
                   }}
-                  className="w-full py-4 rounded-xl bg-emerald-500/10 border-2 border-emerald-500 text-emerald-400 font-semibold text-lg"
+                  className="w-full py-4 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-semibold text-lg shadow-lg shadow-amber-500/30"
+                  style={{ zIndex: 10 }}
                 >
-                  ✓ Mark "{app.title}" as Read
+                  {activeApp < applications.length - 1 ? 'Next Application →' : '✓ Complete Applications'}
                 </button>
               ) : (
                 <div className="p-4 rounded-xl bg-emerald-500/10 border border-emerald-500/30 text-center">
@@ -1017,8 +1016,9 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                     ✓ All {applications.length} applications read!
                   </div>
                   <button
-                    onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+                    onClick={() => goToPhase('test')}
                     className="w-full py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold shadow-lg shadow-emerald-500/30"
+                    style={{ zIndex: 10 }}
                   >
                     Take the Quiz
                   </button>
@@ -1035,7 +1035,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     }
 
     // TEST
-    if (phase === 8) {
+    if (phase === 'test') {
       const q = questions[testIndex];
       const answered = answers[testIndex] !== null;
 
@@ -1054,8 +1054,9 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                "Keep practicing! Review the material and try again."}
             </p>
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
+              onClick={() => goToPhase('mastery')}
               className="px-10 py-4 rounded-xl bg-gradient-to-r from-emerald-500 to-emerald-600 text-white font-bold text-lg shadow-lg shadow-emerald-500/30"
+              style={{ zIndex: 10 }}
             >
               Complete Lesson
             </button>
@@ -1096,8 +1097,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                 return (
                   <button
                     key={i}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
+                    onClick={() => {
                       if (!answered) {
                         const newAnswers = [...answers];
                         newAnswers[testIndex] = i;
@@ -1117,6 +1117,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                           ? 'border-amber-500 bg-amber-500/10'
                           : 'border-slate-700 bg-slate-800/50'
                     } ${answered ? 'cursor-default' : 'cursor-pointer hover:border-slate-600'}`}
+                    style={{ zIndex: 10 }}
                   >
                     <span className="text-white">{opt.text}</span>
                   </button>
@@ -1144,35 +1145,38 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
           {/* Navigation */}
           <div className="flex justify-between gap-4 pt-4 border-t border-slate-800">
             <button
-              onMouseDown={(e) => { e.preventDefault(); if (testIndex > 0) setTestIndex(testIndex - 1); }}
+              onClick={() => { if (testIndex > 0) setTestIndex(testIndex - 1); }}
               disabled={testIndex === 0}
               className={`px-6 py-3 rounded-xl font-bold transition-all ${
                 testIndex === 0 ? 'bg-slate-800 text-slate-600 cursor-not-allowed' : 'bg-slate-800 text-slate-300 hover:bg-slate-700'
               }`}
+              style={{ zIndex: 10 }}
             >
               ← Previous
             </button>
             {testIndex < 9 ? (
               <button
-                onMouseDown={(e) => { e.preventDefault(); if (answered) setTestIndex(testIndex + 1); }}
+                onClick={() => { if (answered) setTestIndex(testIndex + 1); }}
                 disabled={!answered}
                 className={`px-6 py-3 rounded-xl font-bold transition-all ${
                   answered
                     ? 'bg-gradient-to-r from-amber-500 to-amber-600 text-white'
                     : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                 }`}
+                style={{ zIndex: 10 }}
               >
                 Next Question →
               </button>
             ) : (
               <button
-                onMouseDown={(e) => { e.preventDefault(); if (answered) setShowResult(true); }}
+                onClick={() => { if (answered) setShowResult(true); }}
                 disabled={!answered}
                 className={`px-6 py-3 rounded-xl font-bold transition-all ${
                   answered
                     ? 'bg-gradient-to-r from-emerald-500 to-emerald-600 text-white'
                     : 'bg-slate-800 text-slate-600 cursor-not-allowed'
                 }`}
+                style={{ zIndex: 10 }}
               >
                 See Results →
               </button>
@@ -1183,7 +1187,7 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     }
 
     // MASTERY
-    if (phase === 9) {
+    if (phase === 'mastery') {
       return (
         <div className="relative flex flex-col items-center justify-center min-h-[80vh] px-6 text-center overflow-hidden">
           {/* Confetti */}
@@ -1232,9 +1236,8 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
           <div className="flex gap-4 z-10">
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setPhase(0);
+              onClick={() => {
+                setPhase('hook');
                 setTestIndex(0);
                 setAnswers(Array(10).fill(null));
                 setShowResult(false);
@@ -1243,12 +1246,14 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
                 setCompletedApps(new Set());
               }}
               className="px-6 py-3 rounded-xl bg-slate-800 text-slate-300 font-bold hover:bg-slate-700 transition-all"
+              style={{ zIndex: 10 }}
             >
               Replay Lesson
             </button>
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+              onClick={() => goToPhase('play')}
               className="px-6 py-3 rounded-xl bg-gradient-to-r from-amber-500 to-amber-600 text-white font-bold shadow-lg shadow-amber-500/30"
+              style={{ zIndex: 10 }}
             >
               Free Exploration
             </button>
@@ -1280,18 +1285,19 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Standing Waves</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                style={{ zIndex: 10 }}
               />
             ))}
           </div>

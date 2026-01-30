@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
@@ -22,17 +22,28 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+// String phases
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook',
+  'predict': 'Predict',
+  'play': 'Lab',
+  'review': 'Review',
+  'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab',
+  'twist_review': 'Twist Review',
+  'transfer': 'Transfer',
+  'test': 'Test',
+  'mastery': 'Mastery'
 };
 
 interface GyroscopeStabilityRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // ═══════════════════════════════════════════════════════════════════════════
@@ -192,7 +203,8 @@ function playSound(type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // ═══════════════════════════════════════════════════════════════════════════
 // UI COMPONENTS
 // ═══════════════════════════════════════════════════════════════════════════
-const ProgressIndicator: React.FC<{ phases: number[]; currentPhase: number }> = ({ phases, currentPhase }) => {
+const ProgressIndicator: React.FC<{ phases: Phase[]; currentPhase: Phase }> = ({ phases, currentPhase }) => {
+  const currentIndex = phases.indexOf(currentPhase);
   return (
     <div className="mb-6">
       <div className="flex items-center justify-between mb-2">
@@ -200,9 +212,9 @@ const ProgressIndicator: React.FC<{ phases: number[]; currentPhase: number }> = 
           <div key={phase} className="flex items-center">
             <div
               className={`w-8 h-8 rounded-full flex items-center justify-center text-xs font-bold transition-all duration-300 ${
-                index < currentPhase
+                index < currentIndex
                   ? 'bg-emerald-500 text-white'
-                  : index === currentPhase
+                  : index === currentIndex
                   ? 'bg-emerald-400 text-white ring-4 ring-emerald-400/30'
                   : 'bg-slate-700 text-slate-400'
               }`}
@@ -212,7 +224,7 @@ const ProgressIndicator: React.FC<{ phases: number[]; currentPhase: number }> = 
             {index < phases.length - 1 && (
               <div
                 className={`w-6 h-1 mx-1 rounded ${
-                  index < currentPhase ? 'bg-emerald-500' : 'bg-slate-700'
+                  index < currentIndex ? 'bg-emerald-500' : 'bg-slate-700'
                 }`}
               />
             )}
@@ -228,17 +240,17 @@ const ProgressIndicator: React.FC<{ phases: number[]; currentPhase: number }> = 
 
 const PrimaryButton: React.FC<{
   children: React.ReactNode;
-  onMouseDown: (e: React.MouseEvent) => void;
+  onClick: () => void;
   variant?: 'primary' | 'secondary';
   disabled?: boolean;
-}> = ({ children, onMouseDown, variant = 'primary', disabled = false }) => {
+}> = ({ children, onClick, variant = 'primary', disabled = false }) => {
   return (
     <button
-      onMouseDown={(e) => {
-        e.preventDefault();
-        if (!disabled) onMouseDown(e);
+      onClick={() => {
+        if (!disabled) onClick();
       }}
       disabled={disabled}
+      style={{ zIndex: 10 }}
       className={`px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
         variant === 'primary'
           ? disabled
@@ -735,9 +747,9 @@ const ShipStabilizerGraphic: React.FC = () => {
 // ═══════════════════════════════════════════════════════════════════════════
 // MAIN COMPONENT
 // ═══════════════════════════════════════════════════════════════════════════
-export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, onPhaseComplete }: GyroscopeStabilityRendererProps) {
+export default function GyroscopeStabilityRenderer({ onGameEvent, gamePhase, onPhaseComplete }: GyroscopeStabilityRendererProps) {
   // ─── State ─────────────────────────────────────────────────────────────────
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>((gamePhase as Phase) ?? 'hook');
   const [isMobile, setIsMobile] = useState(false);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -751,10 +763,6 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
   const [spinRate, setSpinRate] = useState(50);
   const [isSpinning, setIsSpinning] = useState(false);
   const [animPhase, setAnimPhase] = useState(0);
-
-  // CRITICAL: Navigation debouncing refs
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
 
   // Animation
   useEffect(() => {
@@ -774,29 +782,23 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
 
   // Phase sync with external control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase !== undefined && gamePhase !== phase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
-  // ─── Navigation (CRITICAL PATTERN) ─────────────────────────────────────────
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
+  // ─── Navigation ─────────────────────────────────────────────────────────────
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     onPhaseComplete?.(newPhase);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
   }, [onPhaseComplete, onGameEvent]);
 
   const nextPhase = useCallback(() => {
-    if (phase < 9) {
-      goToPhase(phase + 1);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
     }
   }, [phase, goToPhase]);
 
@@ -827,7 +829,7 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
   useEffect(() => {
     if (onGameEvent) {
       onGameEvent({
-        type: phase === 9 ? 'mastery_achieved' : 'phase_change',
+        type: phase === 'mastery' ? 'mastery_achieved' : 'phase_change',
         data: { phase, phaseLabel: phaseLabels[phase], prediction, twistPrediction, testAnswers: [...testAnswers], completedApps: [...completedApps] }
       });
     }
@@ -870,7 +872,8 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
 
       {/* Premium CTA Button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); nextPhase(e); }}
+        onClick={() => nextPhase()}
+        style={{ zIndex: 10 }}
         className="group mt-8 px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-lg font-semibold rounded-2xl hover:from-emerald-400 hover:to-teal-400 transition-all duration-300 shadow-lg hover:shadow-emerald-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="flex items-center gap-2">
@@ -906,10 +909,8 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              handlePrediction(option.id);
-            }}
+            onClick={() => handlePrediction(option.id)}
+            style={{ zIndex: 10 }}
             className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
               prediction === option.id
                 ? 'bg-emerald-500/20 border-2 border-emerald-500 text-white'
@@ -922,7 +923,7 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
       </div>
 
       <div className="flex justify-center">
-        <PrimaryButton onMouseDown={nextPhase} disabled={!prediction}>
+        <PrimaryButton onClick={nextPhase} disabled={!prediction}>
           Test Your Prediction →
         </PrimaryButton>
       </div>
@@ -1019,10 +1020,8 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setIsSpinning(!isSpinning);
-            }}
+            onClick={() => setIsSpinning(!isSpinning)}
+            style={{ zIndex: 10 }}
             className={`py-4 rounded-xl font-bold text-lg transition-all ${
               isSpinning
                 ? 'bg-red-500 text-white hover:bg-red-600'
@@ -1057,7 +1056,7 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
         </div>
 
         <div className="flex justify-center">
-          <PrimaryButton onMouseDown={nextPhase}>
+          <PrimaryButton onClick={nextPhase}>
             Understand Why →
           </PrimaryButton>
         </div>
@@ -1108,7 +1107,7 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
       </div>
 
       <div className="flex justify-center">
-        <PrimaryButton onMouseDown={nextPhase}>
+        <PrimaryButton onClick={nextPhase}>
           Explore a Twist →
         </PrimaryButton>
       </div>
@@ -1133,10 +1132,8 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => {
-              e.preventDefault();
-              handleTwistPrediction(option.id);
-            }}
+            onClick={() => handleTwistPrediction(option.id)}
+            style={{ zIndex: 10 }}
             className={`w-full p-4 rounded-xl text-left transition-all duration-200 ${
               twistPrediction === option.id
                 ? 'bg-teal-500/20 border-2 border-teal-500 text-white'
@@ -1149,7 +1146,7 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
       </div>
 
       <div className="flex justify-center">
-        <PrimaryButton onMouseDown={nextPhase} disabled={!twistPrediction}>
+        <PrimaryButton onClick={nextPhase} disabled={!twistPrediction}>
           See What Happens →
         </PrimaryButton>
       </div>
@@ -1254,7 +1251,7 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
         </div>
 
         <div className="flex justify-center">
-          <PrimaryButton onMouseDown={nextPhase}>
+          <PrimaryButton onClick={nextPhase}>
             Learn More →
           </PrimaryButton>
         </div>
@@ -1305,7 +1302,7 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
       </div>
 
       <div className="flex justify-center">
-        <PrimaryButton onMouseDown={nextPhase}>
+        <PrimaryButton onClick={nextPhase}>
           Real-World Applications →
         </PrimaryButton>
       </div>
@@ -1320,6 +1317,14 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
       <ShipStabilizerGraphic key="ship" />
     ];
 
+    const handleNextApplication = () => {
+      // Mark current as completed and move to next
+      handleAppComplete(activeAppTab);
+      if (activeAppTab < TRANSFER_APPS.length - 1) {
+        setActiveAppTab(activeAppTab + 1);
+      }
+    };
+
     return (
       <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
         <h2 className="text-2xl font-bold text-white mb-4 text-center">
@@ -1331,10 +1336,8 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
           {TRANSFER_APPS.map((app, index) => (
             <button
               key={index}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                setActiveAppTab(index);
-              }}
+              onClick={() => setActiveAppTab(index)}
+              style={{ zIndex: 10 }}
               className={`flex items-center gap-2 px-4 py-2 rounded-lg whitespace-nowrap transition-all ${
                 activeAppTab === index
                   ? 'bg-emerald-500 text-white'
@@ -1364,12 +1367,21 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
             {appGraphics[activeAppTab]}
           </div>
 
-          {!completedApps.has(activeAppTab) && (
+          {/* Next Application button */}
+          {activeAppTab < TRANSFER_APPS.length - 1 && (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                handleAppComplete(activeAppTab);
-              }}
+              onClick={handleNextApplication}
+              style={{ zIndex: 10 }}
+              className="w-full py-3 bg-emerald-600 hover:bg-emerald-700 text-white rounded-xl font-semibold transition-all"
+            >
+              Next Application →
+            </button>
+          )}
+
+          {activeAppTab === TRANSFER_APPS.length - 1 && !completedApps.has(activeAppTab) && (
+            <button
+              onClick={() => handleAppComplete(activeAppTab)}
+              style={{ zIndex: 10 }}
               className="w-full py-3 bg-green-600 hover:bg-green-700 text-white rounded-xl font-semibold transition-all"
             >
               Mark as Understood ✓
@@ -1392,7 +1404,7 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
 
         <div className="flex justify-center">
           <PrimaryButton
-            onMouseDown={nextPhase}
+            onClick={nextPhase}
             disabled={completedApps.size < TRANSFER_APPS.length}
           >
             {completedApps.size < TRANSFER_APPS.length
@@ -1452,11 +1464,11 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
 
           <div className="flex justify-center">
             {passed ? (
-              <PrimaryButton onMouseDown={nextPhase}>
+              <PrimaryButton onClick={nextPhase}>
                 Complete Mastery →
               </PrimaryButton>
             ) : (
-              <PrimaryButton onMouseDown={() => {
+              <PrimaryButton onClick={() => {
                 setTestAnswers(Array(10).fill(-1));
                 setShowTestResults(false);
               }}>
@@ -1487,10 +1499,8 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => {
-                      e.preventDefault();
-                      handleTestAnswer(qIndex, oIndex);
-                    }}
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
+                    style={{ zIndex: 10 }}
                     className={`w-full p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? option.correct
@@ -1509,7 +1519,7 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
 
         <div className="flex justify-center">
           <PrimaryButton
-            onMouseDown={() => setShowTestResults(true)}
+            onClick={() => setShowTestResults(true)}
             disabled={!allAnswered}
           >
             {allAnswered ? 'Submit Answers' : `Answer all questions (${testAnswers.filter(a => a !== -1).length}/${TEST_QUESTIONS.length})`}
@@ -1559,19 +1569,21 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
   // ─── Main Render ───────────────────────────────────────────────────────────
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return null;
     }
   };
+
+  const currentIndex = phaseOrder.indexOf(phase);
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] relative overflow-hidden">
@@ -1589,12 +1601,13 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, currentPhase, 
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-medium text-slate-400">Gyroscope Stability</span>
           <div className="flex gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p, index) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p ? 'bg-emerald-400 w-6' : phase > p ? 'bg-emerald-500 w-2' : 'bg-slate-600 w-2'
+                  phase === p ? 'bg-emerald-400 w-6' : currentIndex > index ? 'bg-emerald-500 w-2' : 'bg-slate-600 w-2'
                 }`}
                 title={phaseLabels[p]}
               />

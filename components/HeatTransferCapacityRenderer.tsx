@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // ============================================================================
 // HEAT TRANSFER CAPACITY RENDERER - THERMAL PHYSICS
@@ -23,16 +23,19 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook', 'predict': 'Predict', 'play': 'Lab', 'review': 'Review', 'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab', 'twist_review': 'Twist Review', 'transfer': 'Transfer', 'test': 'Test', 'mastery': 'Mastery'
 };
 
 interface Props {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // ============================================================================
@@ -215,8 +218,8 @@ const quizQuestions = [
 // MAIN COMPONENT
 // ============================================================================
 
-const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
+  const [phase, setPhase] = useState<Phase>((gamePhase as Phase) ?? 'hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -238,9 +241,6 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
   const [substanceTemps, setSubstanceTemps] = useState<Record<string, number>>({ water: 25, oil: 25, aluminum: 25, iron: 25 });
   const [heatingStarted, setHeatingStarted] = useState(false);
 
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
-
   // Mobile detection
   useEffect(() => {
     const checkMobile = () => setIsMobile(window.innerWidth < 768);
@@ -251,14 +251,14 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
 
   // Phase sync
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase !== undefined && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
   // Heat conduction simulation
   useEffect(() => {
-    if (phase === 2 && isHeating) {
+    if (phase === 'play' && isHeating) {
       const interval = setInterval(() => {
         setElapsedTime(t => t + 0.1);
         setBarTemperatures(prev => {
@@ -280,7 +280,7 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
 
   // Heat capacity simulation
   useEffect(() => {
-    if (phase === 5 && heatingStarted) {
+    if (phase === 'twist_play' && heatingStarted) {
       const interval = setInterval(() => {
         setSubstanceTemps(prev => {
           const newTemps = { ...prev };
@@ -324,48 +324,35 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
     } catch { /* Audio not available */ }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     onPhaseComplete?.(newPhase);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
 
-    if (newPhase === 2) {
+    if (newPhase === 'play') {
       setBarTemperatures(Array(20).fill(25));
       setIsHeating(false);
       setElapsedTime(0);
-    } else if (newPhase === 5) {
+    } else if (newPhase === 'twist_play') {
       setSubstanceTemps({ water: 25, oil: 25, aluminum: 25, iron: 25 });
       setHeatingStarted(false);
     }
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onPhaseComplete, onGameEvent]);
 
   const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'A' ? 'success' : 'failure');
   }, [playSound]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'C' ? 'success' : 'failure');
   }, [playSound]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;
@@ -374,9 +361,6 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
   }, []);
 
   const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
   }, [playSound]);
@@ -570,7 +554,8 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
+        style={{ zIndex: 10 }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-orange-500 to-red-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-orange-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -599,8 +584,9 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
         {predictions.initial.options.map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
             disabled={showPredictionFeedback}
+            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
                 ? option.id === 'A' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
@@ -617,7 +603,7 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl border border-slate-700/50">
           <p className="text-emerald-400 font-semibold mb-2">{selectedPrediction === 'A' ? 'Correct!' : 'Not quite!'}</p>
           <p className="text-slate-300 text-sm">{predictions.initial.explanation}</p>
-          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl">
+          <button onClick={() => goToPhase('play')} style={{ zIndex: 10 }} className="mt-4 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl">
             Explore the Physics
           </button>
         </div>
@@ -639,12 +625,13 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
         {Object.entries(materials).map(([key, mat]) => (
           <button
             key={key}
-            onMouseDown={() => {
+            onClick={() => {
               setSelectedMaterial(key as typeof selectedMaterial);
               setBarTemperatures(Array(20).fill(25));
               setIsHeating(false);
               setElapsedTime(0);
             }}
+            style={{ zIndex: 10 }}
             className={`p-2 rounded-lg text-xs font-medium transition-all ${
               selectedMaterial === key
                 ? 'bg-orange-600/30 border-2 border-orange-500 text-orange-400'
@@ -665,7 +652,8 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
       {/* Control buttons */}
       <div className="flex gap-3 mb-6">
         <button
-          onMouseDown={() => setIsHeating(!isHeating)}
+          onClick={() => setIsHeating(!isHeating)}
+          style={{ zIndex: 10 }}
           className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${
             isHeating ? 'bg-red-600' : 'bg-gradient-to-r from-orange-500 to-red-500'
           }`}
@@ -673,14 +661,15 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
           {isHeating ? '⏸ Pause' : '🔥 Start Heating'}
         </button>
         <button
-          onMouseDown={() => { setBarTemperatures(Array(20).fill(25)); setIsHeating(false); setElapsedTime(0); }}
+          onClick={() => { setBarTemperatures(Array(20).fill(25)); setIsHeating(false); setElapsedTime(0); }}
+          style={{ zIndex: 10 }}
           className="px-4 py-3 rounded-xl bg-slate-700 text-white font-medium"
         >
           🔄 Reset
         </button>
       </div>
 
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }} className="px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl">
+      <button onClick={() => goToPhase('review')} style={{ zIndex: 10 }} className="px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl">
         Review the Concepts
       </button>
     </div>
@@ -716,7 +705,7 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
           <p className="text-slate-300 text-sm">Your nerves sense heat FLOW, not temperature. Metal draws heat away faster!</p>
         </div>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
+      <button onClick={() => goToPhase('twist_predict')} style={{ zIndex: 10 }} className="mt-8 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
         Discover Heat Capacity
       </button>
     </div>
@@ -732,8 +721,9 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
         {predictions.twist.options.map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
             disabled={showTwistFeedback}
+            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
                 ? option.id === 'C' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
@@ -750,7 +740,7 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl border border-slate-700/50">
           <p className="text-emerald-400 font-semibold mb-2">{twistPrediction === 'C' ? 'Excellent!' : 'Interesting guess!'}</p>
           <p className="text-slate-300 text-sm">{predictions.twist.explanation}</p>
-          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
+          <button onClick={() => goToPhase('twist_play')} style={{ zIndex: 10 }} className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
             See the Heating Race
           </button>
         </div>
@@ -781,7 +771,8 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
       {/* Control buttons */}
       <div className="flex gap-3 mb-6">
         <button
-          onMouseDown={() => setHeatingStarted(!heatingStarted)}
+          onClick={() => setHeatingStarted(!heatingStarted)}
+          style={{ zIndex: 10 }}
           className={`px-6 py-3 rounded-xl font-bold text-white transition-all ${
             heatingStarted ? 'bg-red-600' : 'bg-gradient-to-r from-blue-500 to-indigo-500'
           }`}
@@ -789,7 +780,8 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
           {heatingStarted ? '⏸ Pause' : '🔥 Start All Burners'}
         </button>
         <button
-          onMouseDown={() => { setSubstanceTemps({ water: 25, oil: 25, aluminum: 25, iron: 25 }); setHeatingStarted(false); }}
+          onClick={() => { setSubstanceTemps({ water: 25, oil: 25, aluminum: 25, iron: 25 }); setHeatingStarted(false); }}
+          style={{ zIndex: 10 }}
           className="px-4 py-3 rounded-xl bg-slate-700 text-white font-medium"
         >
           🔄 Reset
@@ -801,7 +793,7 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
         <p className="text-slate-300 text-sm">Same Q, same m - higher c means smaller DeltaT. That's why water resists temperature change!</p>
       </div>
 
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }} className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
+      <button onClick={() => goToPhase('twist_review')} style={{ zIndex: 10 }} className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
         Review the Discovery
       </button>
     </div>
@@ -836,7 +828,7 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
           <span className="text-orange-400 font-mono">Q/t = -kA(dT/dx)</span>
         </div>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
+      <button onClick={() => goToPhase('transfer')} style={{ zIndex: 10 }} className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
         Explore Real-World Applications
       </button>
     </div>
@@ -849,7 +841,8 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
         {realWorldApplications.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+            onClick={() => setActiveAppTab(index)}
+            style={{ zIndex: 10 }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppTab === index ? 'bg-orange-600 text-white'
               : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
@@ -875,11 +868,27 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
         <div className="bg-emerald-900/30 rounded-lg p-3 border border-emerald-700/30">
           <p className="text-emerald-400 text-sm">{realWorldApplications[activeAppTab].realExample}</p>
         </div>
-        {!completedApps.has(activeAppTab) && (
-          <button onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
-            Mark as Understood
-          </button>
-        )}
+        <div className="flex gap-3 mt-4">
+          {!completedApps.has(activeAppTab) && (
+            <button onClick={() => handleAppComplete(activeAppTab)} style={{ zIndex: 10 }} className="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
+              Mark as Understood
+            </button>
+          )}
+          {activeAppTab < realWorldApplications.length - 1 && (
+            <button
+              onClick={() => {
+                if (!completedApps.has(activeAppTab)) {
+                  handleAppComplete(activeAppTab);
+                }
+                setActiveAppTab(activeAppTab + 1);
+              }}
+              style={{ zIndex: 10 }}
+              className="px-4 py-2 bg-gradient-to-r from-orange-600 to-red-600 hover:from-orange-500 hover:to-red-500 text-white rounded-lg font-medium"
+            >
+              Next Application →
+            </button>
+          )}
+        </div>
       </div>
       <div className="mt-6 flex items-center gap-2">
         <span className="text-slate-400">Progress:</span>
@@ -887,7 +896,7 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
         <span className="text-slate-400">{completedApps.size}/4</span>
       </div>
       {completedApps.size >= 4 && (
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl">
+        <button onClick={() => goToPhase('test')} style={{ zIndex: 10 }} className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl">
           Take the Knowledge Test
         </button>
       )}
@@ -906,7 +915,8 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
+                    style={{ zIndex: 10 }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-orange-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                   >
                     {option.text}
@@ -916,8 +926,9 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
             </div>
           ))}
           <button
-            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); playSound('complete'); }}
+            onClick={() => { setShowTestResults(true); playSound('complete'); }}
             disabled={testAnswers.includes(-1)}
+            style={{ zIndex: 10 }}
             className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-orange-600 to-red-600 text-white'}`}
           >
             Submit Answers
@@ -929,11 +940,11 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
           <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
           <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? "Excellent! You've mastered thermal physics!" : 'Keep studying! Review and try again.'}</p>
           {calculateScore() >= 7 ? (
-            <button onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }} className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
+            <button onClick={() => goToPhase('mastery')} style={{ zIndex: 10 }} className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
               Claim Your Mastery Badge
             </button>
           ) : (
-            <button onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }} className="px-8 py-4 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl">
+            <button onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }} style={{ zIndex: 10 }} className="px-8 py-4 bg-gradient-to-r from-orange-600 to-red-600 text-white font-semibold rounded-xl">
               Review & Try Again
             </button>
           )}
@@ -954,26 +965,28 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🍳</div><p className="text-sm text-slate-300">Cookware</p></div>
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🌊</div><p className="text-sm text-slate-300">Climate</p></div>
         </div>
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">Explore Again</button>
+        <button onClick={() => goToPhase('hook')} style={{ zIndex: 10 }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">Explore Again</button>
       </div>
     </div>
   );
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
+
+  const getPhaseIndex = (p: Phase) => phaseOrder.indexOf(p);
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
@@ -988,14 +1001,15 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, currentPha
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Heat Transfer</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-orange-400 w-6 shadow-lg shadow-orange-400/30'
-                    : phase > p
+                    : getPhaseIndex(phase) > getPhaseIndex(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}

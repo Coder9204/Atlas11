@@ -21,20 +21,29 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Variable',
+  twist_play: 'Observer Effect',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
 };
 
 interface Props {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
-const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
+  const [phase, setPhase] = useState<Phase>((gamePhase as Phase) ?? 'hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -53,7 +62,6 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
   const [experimentCount, setExperimentCount] = useState(0);
   const [initialOmega] = useState(2);
 
-  const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
   const animationRef = useRef<number>();
 
@@ -71,14 +79,14 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
   }, []);
 
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase !== undefined && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
   // Animation
   useEffect(() => {
-    if (isSpinning && (phase === 2 || phase === 5)) {
+    if (isSpinning && (phase === 'play' || phase === 'twist_play')) {
       const animate = () => {
         setAngle(prev => (prev + calculatedOmega * 0.04) % (2 * Math.PI));
         animationRef.current = requestAnimationFrame(animate);
@@ -113,14 +121,11 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
     } catch { /* Audio not available */ }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     onPhaseComplete?.(newPhase);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onPhaseComplete, onGameEvent]);
 
   const handlePrediction = useCallback((prediction: string) => {
@@ -350,7 +355,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
         </div>
       </div>
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-purple-500 to-pink-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -385,7 +390,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
@@ -405,7 +410,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
             ✓ Correct! Angular momentum L = Iω is conserved. When I decreases, ω must increase!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onClick={() => goToPhase('play')}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
           >
             Try the Experiment →
@@ -426,26 +431,26 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
         </div>
         <div className="grid grid-cols-2 gap-3">
           <button
-            onMouseDown={(e) => { e.preventDefault(); setHasWeights(true); }}
+            onClick={() => setHasWeights(true)}
             className={`p-4 rounded-xl font-medium transition-all ${hasWeights ? 'bg-pink-500/30 border-2 border-pink-500' : 'bg-slate-700/50 border-2 border-transparent'} text-white`}
           >
             🏋️ With Weights
           </button>
           <button
-            onMouseDown={(e) => { e.preventDefault(); setHasWeights(false); }}
+            onClick={() => setHasWeights(false)}
             className={`p-4 rounded-xl font-medium transition-all ${!hasWeights ? 'bg-purple-500/30 border-2 border-purple-500' : 'bg-slate-700/50 border-2 border-transparent'} text-white`}
           >
             🙌 Arms Only
           </button>
         </div>
         <button
-          onMouseDown={(e) => { e.preventDefault(); setIsSpinning(!isSpinning); setExperimentCount(c => c + 1); }}
+          onClick={() => { setIsSpinning(!isSpinning); setExperimentCount(c => c + 1); }}
           className={`w-full py-4 rounded-xl font-semibold text-white ${isSpinning ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'}`}
         >
           {isSpinning ? '⏹ Stop Spinning' : '▶ Start Spinning'}
         </button>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl">
+      <button onClick={() => goToPhase('review')} className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl">
         Review the Physics →
       </button>
     </div>
@@ -479,7 +484,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
           </p>
         </div>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+      <button onClick={() => goToPhase('twist_predict')} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
         Try a Challenge →
       </button>
     </div>
@@ -505,7 +510,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
@@ -524,7 +529,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
           <p className="text-emerald-400 font-semibold">
             ✓ Correct! Less mass means smaller change in I, so smaller change in ω!
           </p>
-          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+          <button onClick={() => goToPhase('twist_play')} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
             Compare Both →
           </button>
         </div>
@@ -537,13 +542,13 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
       <h2 className="text-2xl font-bold text-amber-400 mb-4">Compare With/Without Weights</h2>
       <div className="grid grid-cols-2 gap-3 w-full max-w-md mb-4">
         <button
-          onMouseDown={(e) => { e.preventDefault(); setHasWeights(true); }}
+          onClick={() => setHasWeights(true)}
           className={`p-4 rounded-xl font-medium transition-all ${hasWeights ? 'bg-pink-500/30 border-2 border-pink-500' : 'bg-slate-700/50 border-2 border-transparent'} text-white`}
         >
           🏋️ Heavy Weights
         </button>
         <button
-          onMouseDown={(e) => { e.preventDefault(); setHasWeights(false); }}
+          onClick={() => setHasWeights(false)}
           className={`p-4 rounded-xl font-medium transition-all ${!hasWeights ? 'bg-purple-500/30 border-2 border-purple-500' : 'bg-slate-700/50 border-2 border-transparent'} text-white`}
         >
           🙌 Arms Only
@@ -555,12 +560,12 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
         <input type="range" min="0" max="1" step="0.1" value={armExtension} onChange={(e) => setArmExtension(parseFloat(e.target.value))} className="w-full accent-amber-500" />
       </div>
       <button
-        onMouseDown={(e) => { e.preventDefault(); setIsSpinning(!isSpinning); }}
+        onClick={() => setIsSpinning(!isSpinning)}
         className={`w-full max-w-md mt-4 py-4 rounded-xl font-semibold text-white ${isSpinning ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'}`}
       >
         {isSpinning ? '⏹ Stop' : '▶ Spin'}
       </button>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+      <button onClick={() => goToPhase('twist_review')} className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
         See Why →
       </button>
     </div>
@@ -586,7 +591,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
           </div>
         </div>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl">
+      <button onClick={() => goToPhase('transfer')} className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl">
         Real-World Applications →
       </button>
     </div>
@@ -599,7 +604,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
         {applications.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+            onClick={() => setActiveAppTab(index)}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppTab === index ? 'bg-purple-600 text-white'
               : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
@@ -618,7 +623,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
         <p className="text-lg text-slate-300 mb-3">{applications[activeAppTab].description}</p>
         <p className="text-sm text-slate-400">{applications[activeAppTab].details}</p>
         {!completedApps.has(activeAppTab) && (
-          <button onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
+          <button onClick={() => handleAppComplete(activeAppTab)} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
             ✓ Mark as Understood
           </button>
         )}
@@ -629,7 +634,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
         <span className="text-slate-400">{completedApps.size}/4</span>
       </div>
       {completedApps.size >= 4 && (
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl">
+        <button onClick={() => goToPhase('test')} className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl">
           Take the Knowledge Test →
         </button>
       )}
@@ -648,7 +653,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-purple-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                   >
                     {option.text}
@@ -658,7 +663,7 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
             </div>
           ))}
           <button
-            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); }}
+            onClick={() => setShowTestResults(true)}
             disabled={testAnswers.includes(-1)}
             className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-purple-600 to-pink-600 text-white'}`}
           >
@@ -671,11 +676,11 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
           <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
           <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? 'Excellent! You\'ve mastered angular momentum!' : 'Keep studying! Review and try again.'}</p>
           {calculateScore() >= 7 ? (
-            <button onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }} className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
+            <button onClick={() => goToPhase('mastery')} className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
               Claim Your Mastery Badge →
             </button>
           ) : (
-            <button onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }} className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl">
+            <button onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }} className="px-8 py-4 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl">
               Review & Try Again
             </button>
           )}
@@ -696,23 +701,23 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">⛸️</div><p className="text-sm text-slate-300">Figure Skating</p></div>
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">⭐</div><p className="text-sm text-slate-300">Neutron Stars</p></div>
         </div>
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">↺ Explore Again</button>
+        <button onClick={() => goToPhase('hook')} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">↺ Explore Again</button>
       </div>
     </div>
   );
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -730,14 +735,14 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Angular Momentum</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-purple-400 w-6 shadow-lg shadow-purple-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}

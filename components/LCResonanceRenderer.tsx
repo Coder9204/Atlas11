@@ -1448,6 +1448,51 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
           { text: 'Charge stored', correct: false },
           { text: 'Frequency range', correct: false }
         ]
+      },
+      {
+        question: 'The resonant frequency formula f = 1/(2pi*sqrt(LC)) shows that frequency depends on:',
+        options: [
+          { text: 'The sum of L and C', correct: false },
+          { text: 'The square root of the product L times C', correct: true },
+          { text: 'Only the inductance L', correct: false },
+          { text: 'The ratio of L to C', correct: false }
+        ]
+      },
+      {
+        question: 'A higher Q factor in an LC circuit means:',
+        options: [
+          { text: 'Wider bandwidth and less selective tuning', correct: false },
+          { text: 'Narrower bandwidth and more selective tuning', correct: true },
+          { text: 'Higher resonant frequency', correct: false },
+          { text: 'More energy loss per cycle', correct: false }
+        ]
+      },
+      {
+        question: 'In a series LC circuit at resonance, the impedance is:',
+        options: [
+          { text: 'Maximum (very high)', correct: false },
+          { text: 'Minimum (ideally zero)', correct: true },
+          { text: 'Equal to the inductance', correct: false },
+          { text: 'Equal to the capacitance', correct: false }
+        ]
+      },
+      {
+        question: 'What causes damping in a real LC circuit?',
+        options: [
+          { text: 'The magnetic field strength', correct: false },
+          { text: 'Resistance in the circuit dissipating energy', correct: true },
+          { text: 'The capacitor plate size', correct: false },
+          { text: 'The frequency of oscillation', correct: false }
+        ]
+      },
+      {
+        question: 'In a parallel LC circuit at resonance, the impedance is:',
+        options: [
+          { text: 'Maximum (very high)', correct: true },
+          { text: 'Minimum (ideally zero)', correct: false },
+          { text: 'Equal to the resistance', correct: false },
+          { text: 'Unpredictable', correct: false }
+        ]
       }
     ];
 
@@ -1495,7 +1540,9 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
                   color: colors.textPrimary,
                   fontSize: '15px',
                   textAlign: 'left',
-                  cursor: testAnswers[currentQuestion] !== null ? 'default' : 'pointer'
+                  cursor: testAnswers[currentQuestion] !== null ? 'default' : 'pointer',
+                  position: 'relative',
+                  zIndex: 10
                 }}
               >
                 {opt.text}
@@ -1550,7 +1597,7 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
         marginBottom: '24px'
       }}>
         <div style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '8px' }}>Test Score</div>
-        <div style={{ color: colors.success, fontSize: '36px', fontWeight: 700 }}>{testScore}/5</div>
+        <div style={{ color: colors.success, fontSize: '36px', fontWeight: 700 }}>{testScore}/10</div>
       </div>
 
       <Button onClick={() => goToPhase('hook')}>

@@ -6,6 +6,24 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // INCLINED PLANE (GRAVITY COMPONENTS) RENDERER - Premium Design System
 // ============================================================================
 
+// Phase Type Definition
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Lab',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
+};
+
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
@@ -25,20 +43,13 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
-
 interface InclinedPlaneRendererProps {
   width?: number;
   height?: number;
   onComplete?: () => void;
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // ============================================================================
@@ -190,75 +201,65 @@ const WheelchairRampSVG: React.FC = () => (
 
     {/* Angle indicator */}
     <path d="M130 120 A 20 20 0 0 0 138 100" stroke={design.colors.accentPrimary} strokeWidth="2" fill="none" />
-    <text x="115" y="115" fill={design.colors.accentPrimary} fontSize="10" fontWeight="600">4.8\u00b0</text>
+    <text x="115" y="115" fill={design.colors.accentPrimary} fontSize="10" fontWeight="600">4.8°</text>
     <text x="10" y="15" fill={design.colors.textSecondary} fontSize="9">ADA Compliant: 1:12 slope</text>
   </svg>
 );
 
-const SkiSlopeSVG: React.FC = () => (
+const ScrewsWedgesSVG: React.FC = () => (
   <svg width="200" height="140" viewBox="0 0 200 140">
     <defs>
-      <linearGradient id="snowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-        <stop offset="0%" stopColor="#f0f9ff" />
-        <stop offset="100%" stopColor="#bae6fd" />
+      <linearGradient id="metalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#9ca3af" />
+        <stop offset="100%" stopColor="#6b7280" />
       </linearGradient>
-      <linearGradient id="skiSuitGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-        <stop offset="0%" stopColor="#dc2626" />
-        <stop offset="100%" stopColor="#991b1b" />
+      <linearGradient id="woodGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#d97706" />
+        <stop offset="100%" stopColor="#92400e" />
       </linearGradient>
     </defs>
 
-    {/* Sky */}
-    <rect x="0" y="0" width="200" height="140" fill="#0c4a6e" />
+    {/* Background */}
+    <rect x="0" y="0" width="200" height="140" fill="#1a1a2e" />
 
-    {/* Mountain slope */}
-    <polygon points="0,30 200,100 200,140 0,140" fill="url(#snowGrad)" />
-
-    {/* Trees */}
-    <g transform="translate(20, 50)">
-      <polygon points="0,30 8,-5 16,30" fill="#166534" />
-      <rect x="6" y="30" width="4" height="8" fill="#78350f" />
+    {/* Screw on left side */}
+    <g transform="translate(50, 70)">
+      {/* Screw head */}
+      <ellipse cx="0" cy="-35" rx="15" ry="5" fill="#9ca3af" />
+      <rect x="-15" y="-35" width="30" height="8" fill="url(#metalGrad)" />
+      {/* Slot */}
+      <rect x="-8" y="-33" width="16" height="2" fill="#4b5563" />
+      {/* Screw shaft with threads */}
+      <rect x="-4" y="-27" width="8" height="55" fill="url(#metalGrad)" />
+      {/* Thread lines */}
+      {[0, 8, 16, 24, 32, 40, 48].map((y, i) => (
+        <line key={i} x1="-6" y1={-25 + y} x2="6" y2={-22 + y} stroke="#6b7280" strokeWidth="2" />
+      ))}
+      {/* Pointed tip */}
+      <polygon points="-4,28 4,28 0,38" fill="url(#metalGrad)" />
     </g>
-    <g transform="translate(170, 80)">
-      <polygon points="0,25 6,-5 12,25" fill="#166534" />
-      <rect x="4" y="25" width="4" height="6" fill="#78350f" />
-    </g>
+    <text x="50" y="125" textAnchor="middle" fill={design.colors.textSecondary} fontSize="10">Screw</text>
 
-    {/* Ski tracks */}
-    <path d="M40 45 Q100 80 180 115" stroke="#94a3b8" strokeWidth="1" fill="none" />
-    <path d="M45 45 Q105 80 185 115" stroke="#94a3b8" strokeWidth="1" fill="none" />
-
-    {/* Skier */}
-    <g transform="translate(90, 65) rotate(25)">
-      {/* Body */}
-      <ellipse cx="0" cy="0" rx="6" ry="10" fill="url(#skiSuitGrad)" />
-      {/* Head */}
-      <circle cx="0" cy="-14" r="7" fill="#fcd34d" />
-      {/* Helmet */}
-      <path d="M-7 -18 Q0 -24 7 -18" fill="#1f2937" />
-      {/* Goggles */}
-      <rect x="-5" y="-15" width="10" height="3" rx="1" fill="#f97316" />
-      {/* Skis */}
-      <rect x="-20" y="12" width="40" height="3" rx="1" fill="#1f2937" />
-      {/* Poles */}
-      <line x1="-8" y1="-5" x2="-25" y2="15" stroke="#6b7280" strokeWidth="2" />
-      <line x1="8" y1="-5" x2="25" y2="15" stroke="#6b7280" strokeWidth="2" />
+    {/* Wedge/Axe on right side */}
+    <g transform="translate(150, 50)">
+      {/* Wood block */}
+      <rect x="-30" y="20" width="60" height="50" fill="url(#woodGrad)" />
+      {/* Wood grain */}
+      <line x1="-25" y1="30" x2="-25" y2="65" stroke="#78350f" strokeWidth="1" />
+      <line x1="-10" y1="25" x2="-10" y2="68" stroke="#78350f" strokeWidth="1" />
+      <line x1="10" y1="25" x2="10" y2="68" stroke="#78350f" strokeWidth="1" />
+      <line x1="25" y1="30" x2="25" y2="65" stroke="#78350f" strokeWidth="1" />
+      {/* Wedge/axe blade */}
+      <polygon points="0,-20 -8,25 8,25" fill="url(#metalGrad)" stroke="#4b5563" strokeWidth="1" />
+      {/* Crack in wood */}
+      <line x1="0" y1="25" x2="0" y2="70" stroke="#1a1a2e" strokeWidth="3" />
+      <line x1="-2" y1="35" x2="2" y2="40" stroke="#1a1a2e" strokeWidth="1" />
+      <line x1="2" y1="50" x2="-2" y2="55" stroke="#1a1a2e" strokeWidth="1" />
     </g>
+    <text x="150" y="125" textAnchor="middle" fill={design.colors.textSecondary} fontSize="10">Wedge</text>
 
-    {/* Speed lines */}
-    <g opacity="0.5">
-      <line x1="60" y1="55" x2="40" y2="50" stroke="white" strokeWidth="2" strokeLinecap="round" />
-      <line x1="65" y1="60" x2="50" y2="58" stroke="white" strokeWidth="2" strokeLinecap="round" />
-    </g>
-
-    {/* Slope rating */}
-    <g transform="translate(150, 20)">
-      <rect x="0" y="0" width="40" height="20" rx="4" fill="#1f2937" />
-      <polygon points="8,5 14,15 20,5" fill="#1f2937" stroke="black" strokeWidth="2" />
-      <polygon points="22,5 28,15 34,5" fill="#1f2937" stroke="black" strokeWidth="2" />
-      <text x="20" y="13" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">40\u00b0+</text>
-    </g>
-    <text x="10" y="15" fill="#fef3c7" fontSize="9">Black Diamond: Expert Only</text>
+    {/* Labels */}
+    <text x="100" y="15" textAnchor="middle" fill={design.colors.accentPrimary} fontSize="11" fontWeight="600">Inclined Planes in Disguise</text>
   </svg>
 );
 
@@ -324,7 +325,7 @@ const LoadingDockSVG: React.FC = () => (
     <rect x="0" y="120" width="200" height="20" fill="#374151" />
 
     {/* Labels */}
-    <text x="95" y="135" fill={design.colors.accentPrimary} fontSize="9" fontWeight="600">5-10\u00b0 incline</text>
+    <text x="95" y="135" fill={design.colors.accentPrimary} fontSize="9" fontWeight="600">5-10° incline</text>
   </svg>
 );
 
@@ -336,10 +337,10 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
   height = 500,
   onComplete,
   onGameEvent,
-  currentPhase,
+  gamePhase,
   onPhaseComplete
 }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>('hook');
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [angle, setAngle] = useState(30);
@@ -358,8 +359,8 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
   const [activeApp, setActiveApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+  const [testScore, setTestScore] = useState(0);
 
-  const navigationLockRef = useRef(false);
   const animationRef = useRef<number>();
   const startTimeRef = useRef<number>(0);
 
@@ -373,81 +374,81 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
   const netAcceleration = Math.max(0, (gravityParallel - frictionForce) / mass);
 
   const testQuestions = [
-    { question: "Why does a ball roll faster on a steeper ramp?", options: [
-      { text: "Less air resistance", correct: false },
-      { text: "More gravity pulls on it", correct: false },
-      { text: "Larger component of gravity acts along the ramp", correct: true },
-      { text: "The ball weighs more on a steeper ramp", correct: false }
-    ], explanation: "Gravity's magnitude stays constant, but the component along the ramp (mg\u00b7sin\u03b8) increases with steeper angles, causing greater acceleration." },
-    { question: "What happens to the normal force as the ramp gets steeper?", options: [
-      { text: "Increases", correct: false },
-      { text: "Decreases (N = mg\u00b7cos\u03b8)", correct: true },
-      { text: "Stays the same", correct: false },
-      { text: "Becomes zero", correct: false }
-    ], explanation: "Normal force N = mg\u00b7cos(\u03b8). As \u03b8 increases, cos(\u03b8) decreases, so the normal force decreases. At 90\u00b0, it would be zero!" },
-    { question: "If there's no friction, a ball on a 30\u00b0 ramp has acceleration:", options: [
-      { text: "g (9.8 m/s\u00b2)", correct: false },
-      { text: "g\u00b7sin(30\u00b0) = 4.9 m/s\u00b2", correct: true },
-      { text: "g\u00b7cos(30\u00b0) = 8.5 m/s\u00b2", correct: false },
-      { text: "Zero", correct: false }
-    ], explanation: "Without friction, the acceleration is a = g\u00b7sin(\u03b8). For 30\u00b0, sin(30\u00b0) = 0.5, so a = 9.8 \u00d7 0.5 = 4.9 m/s\u00b2." },
-    { question: "Friction on a ramp acts:", options: [
-      { text: "Downward, speeding up the ball", correct: false },
-      { text: "Upward along the ramp, opposing motion", correct: true },
-      { text: "Perpendicular to the ramp", correct: false },
-      { text: "In the direction of gravity", correct: false }
-    ], explanation: "Kinetic friction always opposes motion. For a ball rolling down, friction acts up the ramp, reducing the net acceleration." },
-    { question: "At what angle would a frictionless ball have maximum acceleration?", options: [
-      { text: "0\u00b0 (flat)", correct: false },
-      { text: "45\u00b0", correct: false },
-      { text: "90\u00b0 (vertical drop)", correct: true },
-      { text: "30\u00b0", correct: false }
-    ], explanation: "At 90\u00b0, the entire weight acts downward and sin(90\u00b0) = 1, giving maximum acceleration of g. It's essentially free fall!" },
-    { question: "Why do mountain roads zigzag instead of going straight up?", options: [
-      { text: "For better views", correct: false },
-      { text: "To reduce the effective slope and required force", correct: true },
-      { text: "Roads can't be built straight", correct: false },
-      { text: "For drainage", correct: false }
-    ], explanation: "Zigzag roads reduce the slope angle, decreasing the component of gravity cars must overcome. This allows vehicles to climb with less power." },
-    { question: "A ball on a ramp with friction might not move if:", options: [
-      { text: "The ball is too heavy", correct: false },
-      { text: "Static friction exceeds gravity's parallel component", correct: true },
-      { text: "The ramp is too long", correct: false },
-      { text: "There's no normal force", correct: false }
-    ], explanation: "If static friction (\u03bcs \u00d7 N) is greater than mg\u00b7sin(\u03b8), the ball won't start moving. There's a critical angle below which objects stay put." },
-    { question: "The parallel component of gravity equals:", options: [
-      { text: "mg", correct: false },
-      { text: "mg \u00d7 cos(\u03b8)", correct: false },
-      { text: "mg \u00d7 sin(\u03b8)", correct: true },
-      { text: "mg \u00d7 tan(\u03b8)", correct: false }
-    ], explanation: "Using vector decomposition, the component of gravity along (parallel to) the ramp is F_parallel = mg \u00d7 sin(\u03b8)." },
-    { question: "If you double the mass of a ball on a frictionless ramp:", options: [
-      { text: "It accelerates twice as fast", correct: false },
-      { text: "It accelerates the same (a = g\u00b7sin\u03b8)", correct: true },
-      { text: "It accelerates half as fast", correct: false },
-      { text: "It doesn't move", correct: false }
-    ], explanation: "The acceleration a = g\u00b7sin(\u03b8) doesn't depend on mass! Both gravity force and inertia scale with mass, so they cancel out." },
-    { question: "Skiers crouch down on steep slopes to:", options: [
-      { text: "Look cool", correct: false },
-      { text: "Reduce air resistance and go faster", correct: true },
-      { text: "Increase normal force", correct: false },
-      { text: "Change the slope angle", correct: false }
-    ], explanation: "Crouching reduces air resistance (drag), allowing skiers to reach higher speeds. The slope angle and gravity components stay the same." }
+    { question: "An inclined plane is one of the six classical simple machines. What is its primary purpose?", options: [
+      { text: "To increase the speed of moving objects", correct: false },
+      { text: "To reduce the force needed to lift objects by increasing distance", correct: true },
+      { text: "To generate electricity from gravity", correct: false },
+      { text: "To measure the weight of objects", correct: false }
+    ], explanation: "An inclined plane reduces the force needed to lift an object by spreading the work over a longer distance. The mechanical advantage equals the length divided by the height." },
+    { question: "If a ramp is 10 meters long and 2 meters high, what is its mechanical advantage?", options: [
+      { text: "2", correct: false },
+      { text: "5", correct: true },
+      { text: "10", correct: false },
+      { text: "20", correct: false }
+    ], explanation: "Mechanical advantage = Length / Height = 10m / 2m = 5. This means you only need 1/5 the force to push an object up compared to lifting it straight up." },
+    { question: "What is the formula for the force needed to push an object up a frictionless ramp?", options: [
+      { text: "F = mg", correct: false },
+      { text: "F = mg sin(θ)", correct: true },
+      { text: "F = mg cos(θ)", correct: false },
+      { text: "F = mg tan(θ)", correct: false }
+    ], explanation: "The force needed to push up a frictionless ramp equals mg sin(θ), where θ is the angle. This is the component of gravity acting parallel to the ramp surface." },
+    { question: "How does friction affect the force needed to push an object up a ramp?", options: [
+      { text: "It decreases the required force", correct: false },
+      { text: "It has no effect on the required force", correct: false },
+      { text: "It increases the required force", correct: true },
+      { text: "It only affects objects moving down", correct: false }
+    ], explanation: "Friction always opposes motion. When pushing up, friction acts downward along the ramp, so you need additional force to overcome both gravity's parallel component AND friction." },
+    { question: "The friction force on an inclined plane is calculated as F_f = μN = μmg cos(θ). Why does friction decrease as the angle increases?", options: [
+      { text: "The object weighs less at steeper angles", correct: false },
+      { text: "The normal force decreases as cos(θ) decreases", correct: true },
+      { text: "The coefficient of friction changes with angle", correct: false },
+      { text: "Gravity becomes weaker at steep angles", correct: false }
+    ], explanation: "The normal force N = mg cos(θ). As the angle increases, cos(θ) decreases, reducing the normal force and thus the friction force, even though the same surfaces are in contact." },
+    { question: "Why are wheelchair ramps required to have a maximum slope of 1:12 (about 4.8°)?", options: [
+      { text: "For aesthetic reasons", correct: false },
+      { text: "To minimize the force needed for wheelchair users", correct: true },
+      { text: "Because steeper ramps are more expensive", correct: false },
+      { text: "Due to building material limitations", correct: false }
+    ], explanation: "A gentler slope means less force is needed to push the wheelchair up. At 1:12, the mechanical advantage is 12, making it manageable for wheelchair users to ascend independently." },
+    { question: "A screw is actually an inclined plane wrapped around a cylinder. What advantage does this provide?", options: [
+      { text: "It makes the screw look better", correct: false },
+      { text: "It provides very high mechanical advantage in a compact form", correct: true },
+      { text: "It prevents the screw from rusting", correct: false },
+      { text: "It makes the screw easier to manufacture", correct: false }
+    ], explanation: "The thread of a screw is a long inclined plane wrapped tightly. This creates enormous mechanical advantage - a small rotation force produces a large linear force for driving into wood or holding things together." },
+    { question: "Why do mountain roads use switchbacks (zigzag patterns) instead of going straight up?", options: [
+      { text: "To provide better views for tourists", correct: false },
+      { text: "To reduce the effective slope and required engine force", correct: true },
+      { text: "Because curved roads are safer", correct: false },
+      { text: "To increase the road's drainage", correct: false }
+    ], explanation: "Switchbacks reduce the slope angle, decreasing the force vehicles need to climb. A road with half the slope angle requires much less than half the climbing force due to the sine relationship." },
+    { question: "If you double the angle of a ramp from 15° to 30°, what happens to the force needed to push an object up (ignoring friction)?", options: [
+      { text: "It exactly doubles", correct: false },
+      { text: "It more than doubles", correct: false },
+      { text: "It less than doubles (increases by about 93%)", correct: true },
+      { text: "It stays the same", correct: false }
+    ], explanation: "Force is proportional to sin(θ). sin(30°)/sin(15°) = 0.5/0.259 ≈ 1.93. So the force increases by about 93%, not exactly double, because sine is not a linear function." },
+    { question: "What is the ideal angle for maximum range when launching a projectile (like in ancient siege weapons using inclined planes)?", options: [
+      { text: "30°", correct: false },
+      { text: "45°", correct: true },
+      { text: "60°", correct: false },
+      { text: "90°", correct: false }
+    ], explanation: "For maximum range, 45° is optimal because it provides the best balance between horizontal distance and time in the air. This principle was used in designing ancient catapults and trebuchets." }
   ];
 
   const applications = [
-    { title: "Mountain Roads", description: "Switchback roads reduce effective slope, allowing vehicles to climb mountains with reasonable power. The zigzag path trades distance for reduced gradient.", stats: "Max road grade: ~15% (8.5\u00b0)", SVG: MountainRoadsSVG },
-    { title: "Wheelchair Ramps", description: "ADA requires ramps with max 1:12 slope (4.8\u00b0) for accessibility. This keeps the force needed to push a wheelchair manageable.", stats: "ADA max: 1:12 (4.76\u00b0)", SVG: WheelchairRampSVG },
-    { title: "Ski Slopes", description: "Ski runs are rated by steepness: Green (10-25\u00b0), Blue (25-40\u00b0), Black (40\u00b0+). Steeper means faster acceleration!", stats: "Black diamond: 40\u00b0+ slope", SVG: SkiSlopeSVG },
-    { title: "Loading Docks", description: "Truck ramps use gentle angles so forklifts can safely transport heavy loads. Too steep and the cargo could slide or tip.", stats: "Typical dock: 5-10\u00b0 incline", SVG: LoadingDockSVG }
+    { title: "Wheelchair Ramps", description: "ADA requires ramps with max 1:12 slope (4.8°) for accessibility. This keeps the force needed to push a wheelchair manageable, providing a mechanical advantage of 12.", stats: "ADA max: 1:12 (4.76°)", SVG: WheelchairRampSVG },
+    { title: "Loading Docks", description: "Truck ramps use gentle angles so forklifts can safely transport heavy loads. Too steep and the cargo could slide or tip. The mechanical advantage allows moving thousands of pounds with modest force.", stats: "Typical dock: 5-10° incline", SVG: LoadingDockSVG },
+    { title: "Screws & Wedges", description: "A screw is an inclined plane wrapped around a cylinder, providing enormous mechanical advantage. Wedges (axes, knives) are double inclined planes that convert downward force into splitting force.", stats: "Screw MA: up to 100:1", SVG: ScrewsWedgesSVG },
+    { title: "Mountain Roads", description: "Switchback roads reduce effective slope, allowing vehicles to climb mountains with reasonable power. The zigzag path trades distance for reduced gradient, making steep terrain accessible.", stats: "Max road grade: ~15% (8.5°)", SVG: MountainRoadsSVG }
   ];
 
   // Sync with external phase control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && gamePhase !== phase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase]);
+  }, [gamePhase, phase]);
 
   useEffect(() => {
     return () => { if (animationRef.current) cancelAnimationFrame(animationRef.current); };
@@ -490,28 +491,27 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
     window.dispatchEvent(new CustomEvent('returnToDashboard'));
   }, [emitEvent]);
 
-  // Phase navigation with 400ms debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  // Phase navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     emitEvent('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [emitEvent, phase, playSound, onPhaseComplete]);
 
   const goNext = useCallback(() => {
-    if (phase < PHASES.length - 1) {
-      goToPhase(phase + 1);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
     } else if (onComplete) {
       onComplete();
     }
   }, [phase, goToPhase, onComplete]);
 
   const goBack = useCallback(() => {
-    if (phase > 0) {
-      goToPhase(phase - 1);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
     }
   }, [phase, goToPhase]);
 
@@ -539,7 +539,9 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
       display: 'inline-flex',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: design.spacing.sm
+      gap: design.spacing.sm,
+      position: 'relative' as const,
+      zIndex: 10
     };
 
     const variants: Record<string, React.CSSProperties> = {
@@ -567,13 +569,10 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
 
     return (
       <button
-        onMouseDown={(e) => {
-          if (disabled || navigationLockRef.current) return;
-          e.preventDefault();
-          navigationLockRef.current = true;
-          onClick();
-          setTimeout(() => { navigationLockRef.current = false; }, 400);
+        onClick={() => {
+          if (!disabled) onClick();
         }}
+        disabled={disabled}
         style={{ ...baseStyle, ...variants[variant] }}
       >
         {label}
@@ -635,7 +634,10 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
     setSelectedAnswer(answerIndex);
     setShowExplanation(true);
     const isCorrect = testQuestions[currentQuestion].options[answerIndex]?.correct;
-    if (isCorrect) setCorrectAnswers(prev => prev + 1);
+    if (isCorrect) {
+      setCorrectAnswers(prev => prev + 1);
+      setTestScore(prev => prev + 1);
+    }
     setAnsweredQuestions(prev => new Set([...prev, currentQuestion]));
     emit('interaction', { question: currentQuestion, answer: answerIndex, correct: isCorrect }, 'answer_submit');
   }, [currentQuestion, answeredQuestions, emit, testQuestions]);
@@ -704,7 +706,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
           strokeWidth={2}
         />
         <text x={rampEndX - 60} y={rampEndY - 18} fill={design.colors.accentPrimary} fontSize="15" fontWeight="bold" fontFamily={design.font.sans}>
-          {angle}\u00b0
+          {angle}°
         </text>
 
         {/* Ball */}
@@ -732,7 +734,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
             <g transform={`rotate(${angle})`}>
               <line x1={0} y1={0} x2={gravityParallel * vectorScale} y2={0} stroke={design.colors.parallel} strokeWidth={3} />
               <polygon points={`${gravityParallel * vectorScale + 8},0 ${gravityParallel * vectorScale},-5 ${gravityParallel * vectorScale},5`} fill={design.colors.parallel} />
-              <text x={gravityParallel * vectorScale / 2} y={-14} fill={design.colors.parallel} fontSize="10" fontFamily={design.font.sans} fontWeight="500">mg\u00b7sin\u03b8</text>
+              <text x={gravityParallel * vectorScale / 2} y={-14} fill={design.colors.parallel} fontSize="10" fontFamily={design.font.sans} fontWeight="500">mg·sinθ</text>
 
               {/* Friction */}
               {hasFriction && frictionForce > 0 && (
@@ -753,7 +755,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
           <text x={50} y={42} textAnchor="middle" fill={design.colors.success} fontSize="18" fontWeight="bold" fontFamily={design.font.mono}>
             {netAcceleration.toFixed(2)}
           </text>
-          <text x={50} y={55} textAnchor="middle" fill={design.colors.textTertiary} fontSize="10" fontFamily={design.font.sans}>m/s\u00b2</text>
+          <text x={50} y={55} textAnchor="middle" fill={design.colors.textTertiary} fontSize="10" fontFamily={design.font.sans}>m/s²</text>
           <text x={50} y={72} textAnchor="middle" fill={design.colors.textTertiary} fontSize="9" fontFamily={design.font.sans}>
             v: {ballVelocity.toFixed(1)} m/s
           </text>
@@ -768,7 +770,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
             <circle cx={15} cy={32} r={5} fill={design.colors.normal} />
             <text x={28} y={36} fill={design.colors.textSecondary} fontSize="9" fontFamily={design.font.sans}>Normal (N)</text>
             <circle cx={15} cy={48} r={5} fill={design.colors.parallel} />
-            <text x={28} y={52} fill={design.colors.textSecondary} fontSize="9" fontFamily={design.font.sans}>Parallel (mg\u00b7sin\u03b8)</text>
+            <text x={28} y={52} fill={design.colors.textSecondary} fontSize="9" fontFamily={design.font.sans}>Parallel (mg·sinθ)</text>
           </g>
         )}
       </svg>
@@ -820,7 +822,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
         filter: `drop-shadow(0 8px 24px ${design.colors.accentGlow})`,
         animation: 'float 3s ease-in-out infinite'
       }}>
-        \ud83c\udfa2
+        🎢
       </div>
 
       <h1 style={{
@@ -845,7 +847,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
         maxWidth: 340,
         lineHeight: 1.6
       }}>
-        Roll a ball down ramps of different steepness. How does the angle affect speed?
+        One of humanity's oldest and most powerful simple machines! Discover how ramps multiply your force and make impossible tasks easy.
       </p>
 
       <div style={{
@@ -866,11 +868,11 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
           lineHeight: 1.5,
           margin: 0
         }}>
-          "Steeper ramp = faster acceleration. But by how much?"
+          "Give me a lever long enough and a ramp steep enough, and I shall move the world!"
         </p>
       </div>
 
-      {renderButton("Let's Investigate", () => goToPhase(1), 'primary', { size: 'lg' })}
+      {renderButton("Let's Investigate", () => goToPhase('predict'), 'primary', { size: 'lg' })}
 
       <p style={{
         fontSize: 13,
@@ -879,7 +881,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
         fontFamily: design.font.sans,
         letterSpacing: '0.02em'
       }}>
-        Gravity Components \u2022 Vector Decomposition
+        Mechanical Advantage • Force Components • Work & Energy
       </p>
 
       <style>{`
@@ -900,7 +902,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
       height: '100%',
       background: design.colors.bgPrimary
     }}>
-      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>\ud83e\udd14</div>
+      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>🤔</div>
       <h2 style={{
         fontSize: 24,
         fontWeight: 700,
@@ -915,23 +917,20 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
         fontFamily: design.font.sans,
         textAlign: 'center'
       }}>
-        If you double the ramp angle from 15\u00b0 to 30\u00b0, acceleration will:
+        To push a 100 kg box up a 30° ramp, how much force do you need compared to lifting it straight up?
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, width: '100%', maxWidth: 360 }}>
         {[
-          { id: 'double', label: 'Exactly double (2\u00d7 more)', icon: '2\ufe0f\u20e3' },
-          { id: 'more_than_double', label: 'More than double', icon: '\ud83d\udcc8' },
-          { id: 'less_than_double', label: 'Increase, but less than double', icon: '\ud83d\udcca' }
+          { id: 'same', label: 'The same force (980 N)', icon: '=' },
+          { id: 'half', label: 'About half the force (~500 N)', icon: '½' },
+          { id: 'more', label: 'More force (ramps are harder!)', icon: '↑' }
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
-              if (navigationLockRef.current) return;
-              navigationLockRef.current = true;
+            onClick={() => {
               setPrediction(option.id);
               emit('prediction', { prediction: option.id });
-              setTimeout(() => { navigationLockRef.current = false; }, 400);
             }}
             style={{
               padding: `${design.spacing.md}px ${design.spacing.lg}px`,
@@ -943,10 +942,12 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
               alignItems: 'center',
               gap: design.spacing.md,
               transition: 'all 0.2s ease',
-              boxShadow: prediction === option.id ? design.shadow.glow(design.colors.accentPrimary) : 'none'
+              boxShadow: prediction === option.id ? design.shadow.glow(design.colors.accentPrimary) : 'none',
+              position: 'relative' as const,
+              zIndex: 10
             }}
           >
-            <span style={{ fontSize: 28 }}>{option.icon}</span>
+            <span style={{ fontSize: 28, width: 40, textAlign: 'center' }}>{option.icon}</span>
             <span style={{ fontSize: 15, color: design.colors.textPrimary, fontFamily: design.font.sans, fontWeight: 500, textAlign: 'left' }}>
               {option.label}
             </span>
@@ -956,7 +957,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
 
       {prediction && (
         <div style={{ marginTop: design.spacing.xl }}>
-          {renderButton('Test It!', () => goToPhase(2))}
+          {renderButton('Test It!', () => goToPhase('play'))}
         </div>
       )}
     </div>
@@ -977,7 +978,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
       }}>
         <div style={{ width: '100%', maxWidth: 300 }}>
           <p style={{ fontSize: 13, color: design.colors.textSecondary, marginBottom: design.spacing.sm, fontFamily: design.font.sans }}>
-            Ramp angle: <span style={{ color: design.colors.accentPrimary, fontWeight: 600 }}>{angle}\u00b0</span>
+            Ramp angle: <span style={{ color: design.colors.accentPrimary, fontWeight: 600 }}>{angle}°</span>
           </p>
           <input
             type="range"
@@ -990,8 +991,8 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
             style={{ width: '100%', accentColor: design.colors.accentPrimary }}
           />
           <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: 11, color: design.colors.textTertiary, fontFamily: design.font.sans }}>
-            <span>10\u00b0 (gentle)</span>
-            <span>60\u00b0 (steep)</span>
+            <span>10° (gentle)</span>
+            <span>60° (steep)</span>
           </div>
         </div>
 
@@ -1007,7 +1008,9 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
               color: showVectors ? '#000' : design.colors.textSecondary,
               fontWeight: 600,
               fontSize: 13,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              position: 'relative' as const,
+              zIndex: 10
             }}
           >
             {showVectors ? 'ON' : 'OFF'}
@@ -1020,10 +1023,10 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
         </div>
 
         <p style={{ fontSize: 13, color: design.colors.textTertiary, fontFamily: design.font.sans }}>
-          Experiments: {experimentCount} \u2022 Try different angles!
+          Experiments: {experimentCount} • Try different angles!
         </p>
 
-        {experimentCount >= 3 && renderButton('I see the pattern!', () => goToPhase(3))}
+        {experimentCount >= 3 && renderButton('I see the pattern!', () => goToPhase('review'))}
       </div>
     </div>
   );
@@ -1038,14 +1041,14 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
       background: design.colors.bgPrimary,
       overflowY: 'auto'
     }}>
-      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>\ud83d\udca1</div>
+      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>💡</div>
       <h2 style={{
         fontSize: 24,
         fontWeight: 700,
         color: design.colors.textPrimary,
         marginBottom: design.spacing.md,
         fontFamily: design.font.sans
-      }}>Gravity Components!</h2>
+      }}>The Mechanical Advantage!</h2>
 
       <div style={{
         background: design.colors.bgSecondary,
@@ -1063,7 +1066,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
           textAlign: 'center',
           fontWeight: 700
         }}>
-          a = g \u00d7 sin(\u03b8)
+          F = mg × sin(θ)
         </p>
         <p style={{
           fontSize: 14,
@@ -1073,7 +1076,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
           marginTop: design.spacing.md,
           lineHeight: 1.6
         }}>
-          Acceleration depends on the <em>sine</em> of the angle, not the angle directly!
+          The force to push up a ramp is less than lifting straight up!
         </p>
       </div>
 
@@ -1087,22 +1090,22 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
         marginBottom: design.spacing.md
       }}>
         <p style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans, lineHeight: 1.8, margin: 0 }}>
-          <strong>15\u00b0:</strong> sin(15\u00b0) = 0.26 \u2192 a = 2.5 m/s\u00b2<br/>
-          <strong>30\u00b0:</strong> sin(30\u00b0) = 0.50 \u2192 a = 4.9 m/s\u00b2<br/>
-          <strong>Ratio:</strong> 4.9/2.5 = <span style={{ color: design.colors.success, fontWeight: 600 }}>1.9\u00d7 (not 2\u00d7!)</span>
+          <strong>30° ramp:</strong> sin(30°) = 0.50<br/>
+          Force needed = 980N × 0.5 = <span style={{ color: design.colors.success, fontWeight: 600 }}>490N</span><br/>
+          <strong>Mechanical Advantage:</strong> 2× (half the force!)
         </p>
       </div>
 
       <p style={{
         fontSize: 14,
-        color: prediction === 'less_than_double' ? design.colors.success : design.colors.textSecondary,
+        color: prediction === 'half' ? design.colors.success : design.colors.textSecondary,
         fontFamily: design.font.sans,
         marginBottom: design.spacing.lg
       }}>
-        Your prediction: {prediction === 'less_than_double' ? '\u2705 Correct!' : '\ud83e\udd14 The sine function isn\'t linear!'}
+        Your prediction: {prediction === 'half' ? '✅ Correct!' : '🤔 Ramps actually reduce the force needed!'}
       </p>
 
-      {renderButton('What About Friction?', () => goToPhase(4))}
+      {renderButton('What About Friction?', () => goToPhase('twist_predict'))}
     </div>
   );
 
@@ -1115,14 +1118,14 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
       height: '100%',
       background: design.colors.bgPrimary
     }}>
-      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>\ud83e\uddf1</div>
+      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>🧱</div>
       <h2 style={{
         fontSize: 22,
         fontWeight: 700,
         color: design.colors.textPrimary,
         marginBottom: design.spacing.sm,
         fontFamily: design.font.sans
-      }}>Plot Twist: Rough Surface!</h2>
+      }}>Plot Twist: Friction on Ramps!</h2>
       <p style={{
         fontSize: 15,
         color: design.colors.textSecondary,
@@ -1130,23 +1133,20 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
         fontFamily: design.font.sans,
         textAlign: 'center'
       }}>
-        What if the ramp has friction? How will acceleration change?
+        Real ramps have friction. How does this affect the force needed to push up?
       </p>
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, width: '100%', maxWidth: 360 }}>
         {[
           { id: 'no_effect', label: "No effect - gravity is the same" },
-          { id: 'slower', label: "Slower acceleration - friction opposes motion" },
-          { id: 'faster', label: "Faster - friction helps somehow" }
+          { id: 'more_force', label: "Need MORE force - friction opposes motion" },
+          { id: 'less_force', label: "Need LESS force - friction helps somehow" }
         ].map((option) => (
           <button
             key={option.id}
-            onMouseDown={() => {
-              if (navigationLockRef.current) return;
-              navigationLockRef.current = true;
+            onClick={() => {
               setTwistPrediction(option.id);
               emit('prediction', { twistPrediction: option.id });
-              setTimeout(() => { navigationLockRef.current = false; }, 400);
             }}
             style={{
               padding: `${design.spacing.md}px ${design.spacing.lg}px`,
@@ -1155,7 +1155,9 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
               background: twistPrediction === option.id ? `${design.colors.accentMuted}60` : design.colors.bgSecondary,
               cursor: 'pointer',
               textAlign: 'left',
-              transition: 'all 0.2s ease'
+              transition: 'all 0.2s ease',
+              position: 'relative' as const,
+              zIndex: 10
             }}
           >
             <span style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans }}>{option.label}</span>
@@ -1165,7 +1167,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
 
       {twistPrediction && (
         <div style={{ marginTop: design.spacing.xl }}>
-          {renderButton('Add Friction!', () => { setHasFriction(true); resetExperiment(); goToPhase(5); })}
+          {renderButton('Add Friction!', () => { setHasFriction(true); resetExperiment(); goToPhase('twist_play'); })}
         </div>
       )}
     </div>
@@ -1197,7 +1199,9 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
               color: !hasFriction ? '#fff' : design.colors.textSecondary,
               fontWeight: 600,
               fontSize: 13,
-              cursor: isRolling ? 'not-allowed' : 'pointer'
+              cursor: isRolling ? 'not-allowed' : 'pointer',
+              position: 'relative' as const,
+              zIndex: 10
             }}
           >
             Smooth
@@ -1213,7 +1217,9 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
               color: hasFriction ? '#fff' : design.colors.textSecondary,
               fontWeight: 600,
               fontSize: 13,
-              cursor: isRolling ? 'not-allowed' : 'pointer'
+              cursor: isRolling ? 'not-allowed' : 'pointer',
+              position: 'relative' as const,
+              zIndex: 10
             }}
           >
             Rough
@@ -1222,7 +1228,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
 
         <div style={{ width: '100%', maxWidth: 300 }}>
           <p style={{ fontSize: 13, color: design.colors.textSecondary, marginBottom: design.spacing.sm, fontFamily: design.font.sans }}>
-            Angle: {angle}\u00b0
+            Angle: {angle}°
           </p>
           <input
             type="range"
@@ -1244,7 +1250,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
             borderRadius: design.radius.md,
             minWidth: 70
           }}>
-            <p style={{ fontSize: 10, color: design.colors.textTertiary, fontFamily: design.font.sans, margin: 0 }}>mg\u00b7sin\u03b8</p>
+            <p style={{ fontSize: 10, color: design.colors.textTertiary, fontFamily: design.font.sans, margin: 0 }}>mg·sinθ</p>
             <p style={{ fontSize: 16, fontWeight: 700, color: design.colors.parallel, fontFamily: design.font.mono, margin: 0 }}>{gravityParallel.toFixed(1)}N</p>
           </div>
           {hasFriction && (
@@ -1276,7 +1282,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
           {(isRolling || ballPosition > 0) && renderButton('Reset', resetExperiment, 'secondary')}
         </div>
 
-        {experimentCount >= 5 && renderButton('I understand!', () => goToPhase(6))}
+        {experimentCount >= 5 && renderButton('I understand!', () => goToPhase('twist_review'))}
       </div>
     </div>
   );
@@ -1291,14 +1297,14 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
       background: design.colors.bgPrimary,
       overflowY: 'auto'
     }}>
-      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>\u2694\ufe0f</div>
+      <div style={{ fontSize: 56, marginBottom: design.spacing.md }}>⚔️</div>
       <h2 style={{
         fontSize: 22,
         fontWeight: 700,
         color: design.colors.textPrimary,
         marginBottom: design.spacing.md,
         fontFamily: design.font.sans
-      }}>Forces Compete!</h2>
+      }}>Friction Force on Ramps!</h2>
 
       <div style={{
         background: design.colors.bgSecondary,
@@ -1309,10 +1315,18 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
         width: '100%',
         border: `1px solid ${design.colors.border}`
       }}>
-        <p style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans, textAlign: 'center', lineHeight: 1.8, margin: 0 }}>
-          <span style={{ color: design.colors.parallel, fontWeight: 600 }}>mg\u00b7sin\u03b8</span> pulls down the ramp<br/>
-          <span style={{ color: design.colors.friction, fontWeight: 600 }}>Friction (\u03bc\u00b7N)</span> opposes motion<br/>
-          <span style={{ color: design.colors.success, fontWeight: 600 }}>Net = parallel - friction</span>
+        <p style={{
+          fontSize: 20,
+          color: design.colors.accentPrimary,
+          fontFamily: design.font.mono,
+          textAlign: 'center',
+          fontWeight: 700
+        }}>
+          F_friction = μN = μmg cos(θ)
+        </p>
+        <p style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans, textAlign: 'center', lineHeight: 1.8, marginTop: design.spacing.md }}>
+          <span style={{ color: design.colors.parallel, fontWeight: 600 }}>Push force:</span> mg·sin(θ) + μmg·cos(θ)<br/>
+          Friction adds to the force needed!
         </p>
       </div>
 
@@ -1326,20 +1340,20 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
         width: '100%'
       }}>
         <p style={{ fontSize: 14, color: design.colors.accentSecondary, fontFamily: design.font.sans, textAlign: 'center', lineHeight: 1.6, margin: 0 }}>
-          At shallow angles, friction might even stop the ball from rolling! There's a critical angle where the ball just barely moves.
+          Interesting fact: As angle increases, normal force (and thus friction) DECREASES because N = mg·cos(θ). At 90°, there's no friction at all!
         </p>
       </div>
 
       <p style={{
         fontSize: 14,
-        color: twistPrediction === 'slower' ? design.colors.success : design.colors.textSecondary,
+        color: twistPrediction === 'more_force' ? design.colors.success : design.colors.textSecondary,
         fontFamily: design.font.sans,
         marginBottom: design.spacing.lg
       }}>
-        Your prediction: {twistPrediction === 'slower' ? '\u2705 Correct!' : '\ud83e\udd14 Friction always opposes motion!'}
+        Your prediction: {twistPrediction === 'more_force' ? '✅ Correct!' : '🤔 Friction always opposes motion, requiring more force!'}
       </p>
 
-      {renderButton('See Real Examples', () => goToPhase(7))}
+      {renderButton('See Real Applications', () => goToPhase('transfer'))}
     </div>
   );
 
@@ -1380,11 +1394,8 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
             return (
               <button
                 key={idx}
-                onMouseDown={() => {
-                  if (!isUnlocked || navigationLockRef.current) return;
-                  navigationLockRef.current = true;
-                  setActiveApp(idx);
-                  setTimeout(() => { navigationLockRef.current = false; }, 400);
+                onClick={() => {
+                  if (isUnlocked) setActiveApp(idx);
                 }}
                 style={{
                   flex: 1,
@@ -1399,7 +1410,8 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
                   transition: 'all 0.2s ease',
                   fontFamily: design.font.sans,
                   opacity: isUnlocked ? 1 : 0.5,
-                  position: 'relative'
+                  position: 'relative' as const,
+                  zIndex: 10
                 }}
               >
                 {completedApps.has(idx) && <span style={{ marginRight: 4 }}>✓</span>}
@@ -1464,16 +1476,14 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
               fontFamily: design.font.mono,
               fontWeight: 600
             }}>
-              \ud83d\udcca {app.stats}
+              📊 {app.stats}
             </span>
           </div>
 
           {/* Mark as Read button */}
           {!completedApps.has(activeApp) ? (
             <button
-              onMouseDown={() => {
-                if (navigationLockRef.current) return;
-                navigationLockRef.current = true;
+              onClick={() => {
                 const newCompleted = new Set(completedApps);
                 newCompleted.add(activeApp);
                 setCompletedApps(newCompleted);
@@ -1481,7 +1491,6 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
                 if (activeApp < applications.length - 1) {
                   setTimeout(() => setActiveApp(activeApp + 1), 300);
                 }
-                setTimeout(() => { navigationLockRef.current = false; }, 400);
               }}
               style={{
                 width: '100%',
@@ -1494,7 +1503,9 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
                 fontSize: 14,
                 cursor: 'pointer',
                 fontFamily: design.font.sans,
-                transition: 'all 0.2s ease'
+                transition: 'all 0.2s ease',
+                position: 'relative' as const,
+                zIndex: 10
               }}
             >
               ✓ Mark "{app.title}" as Read
@@ -1516,7 +1527,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
         {/* Quiz button */}
         <div style={{ marginTop: design.spacing.md }}>
           {completedApps.size >= applications.length ? (
-            renderButton('Take the Quiz!', () => goToPhase(8), 'primary', { fullWidth: true })
+            renderButton('Take the Quiz!', () => goToPhase('test'), 'primary', { fullWidth: true })
           ) : (
             <div style={{
               textAlign: 'center',
@@ -1599,11 +1610,8 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
               return (
                 <button
                   key={idx}
-                  onMouseDown={() => {
-                    if (isAnswered || navigationLockRef.current) return;
-                    navigationLockRef.current = true;
-                    handleTestAnswer(idx);
-                    setTimeout(() => { navigationLockRef.current = false; }, 400);
+                  onClick={() => {
+                    if (!isAnswered) handleTestAnswer(idx);
                   }}
                   style={{
                     padding: `${design.spacing.md}px ${design.spacing.md}px`,
@@ -1612,7 +1620,9 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
                     background: bg,
                     cursor: isAnswered ? 'default' : 'pointer',
                     textAlign: 'left',
-                    transition: 'all 0.2s ease'
+                    transition: 'all 0.2s ease',
+                    position: 'relative' as const,
+                    zIndex: 10
                   }}
                 >
                   <span style={{ fontSize: 14, color: design.colors.textPrimary, fontFamily: design.font.sans }}>
@@ -1632,27 +1642,27 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
               padding: design.spacing.md
             }}>
               <p style={{ fontSize: 13, color: design.colors.accentSecondary, fontFamily: design.font.sans, lineHeight: 1.5, margin: 0 }}>
-                \ud83d\udca1 {q.explanation}
+                💡 {q.explanation}
               </p>
             </div>
           )}
         </div>
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: design.spacing.md }}>
-          {renderButton('\u2190 Back', () => {
+          {renderButton('← Back', () => {
             setCurrentQuestion(prev => Math.max(0, prev - 1));
             setSelectedAnswer(null);
             setShowExplanation(answeredQuestions.has(currentQuestion - 1));
           }, 'secondary', { disabled: currentQuestion === 0 })}
 
           {currentQuestion < testQuestions.length - 1 ? (
-            renderButton('Next \u2192', () => {
+            renderButton('Next →', () => {
               setCurrentQuestion(prev => prev + 1);
               setSelectedAnswer(null);
               setShowExplanation(answeredQuestions.has(currentQuestion + 1));
             }, 'secondary')
           ) : answeredQuestions.size === testQuestions.length ? (
-            renderButton('Complete!', () => goToPhase(9))
+            renderButton('Complete!', () => goToPhase('mastery'))
           ) : (
             <span style={{ fontSize: 13, color: design.colors.textTertiary, fontFamily: design.font.sans, alignSelf: 'center' }}>
               Answer all questions
@@ -1668,7 +1678,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
     const passed = correctAnswers >= 7;
 
     const resetGame = () => {
-      setPhase(0);
+      setPhase('hook');
       setExperimentCount(0);
       setCurrentQuestion(0);
       setCorrectAnswers(0);
@@ -1679,6 +1689,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
       setHasFriction(false);
       setActiveApp(0);
       setCompletedApps(new Set());
+      setTestScore(0);
       resetExperiment();
     };
 
@@ -1715,7 +1726,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
                   fontSize: '20px'
                 }}
               >
-                {['\ud83c\udfa2', '\u26f7\ufe0f', '\u2b50', '\u2728', '\ud83c\udfc6'][Math.floor(Math.random() * 5)]}
+                {['🎢', '⛷️', '⭐', '✨', '🏆'][Math.floor(Math.random() * 5)]}
               </div>
             ))}
           </>
@@ -1726,7 +1737,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
           marginBottom: design.spacing.md,
           filter: `drop-shadow(0 8px 24px ${design.colors.accentGlow})`
         }}>
-          {passed ? '\ud83c\udfc6' : '\ud83d\udcda'}
+          {passed ? '🏆' : '📚'}
         </div>
 
         <h2 style={{
@@ -1737,7 +1748,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
           fontFamily: design.font.sans,
           textAlign: 'center'
         }}>
-          {passed ? 'Inclined Plane Master!' : 'Keep Practicing!'}
+          {passed ? 'Congratulations! Inclined Plane Master!' : 'Keep Practicing!'}
         </h2>
 
         <div style={{
@@ -1776,14 +1787,14 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
             marginBottom: design.spacing.md,
             textAlign: 'center'
           }}>
-            {passed ? 'Concepts Mastered:' : 'Key Concepts:'}
+            {passed ? 'Concepts Mastered:' : 'Key Concepts to Review:'}
           </h3>
           <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
             {[
-              'a = g \u00d7 sin(\u03b8)',
-              'Steeper angle \u2192 faster acceleration',
-              'Normal force N = mg \u00d7 cos(\u03b8)',
-              'Friction opposes motion up the ramp'
+              'F = mg × sin(θ) for ramp force',
+              'Mechanical Advantage = Length / Height',
+              'Friction: F_f = μmg cos(θ)',
+              'Real applications: ramps, screws, wedges'
             ].map((item, idx) => (
               <li key={idx} style={{
                 fontSize: 13,
@@ -1794,7 +1805,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
                 alignItems: 'center',
                 gap: design.spacing.sm
               }}>
-                <span style={{ color: design.colors.success }}>{passed ? '\u2713' : '\u25CB'}</span> {item}
+                <span style={{ color: design.colors.success }}>{passed ? '✓' : '○'}</span> {item}
               </li>
             ))}
           </ul>
@@ -1803,13 +1814,21 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
         <div style={{ display: 'flex', flexDirection: 'column', gap: design.spacing.md, width: '100%', maxWidth: 340 }}>
           {passed ? (
             <>
-              {renderButton('\ud83c\udfe0 Return to Dashboard', handleReturnToDashboard, true)}
-              {renderButton('\ud83d\udd2c Review Lesson', resetGame)}
+              {renderButton('🏠 Return to Dashboard', handleReturnToDashboard, 'primary', { fullWidth: true })}
+              {renderButton('🔬 Review Lesson', resetGame, 'secondary', { fullWidth: true })}
             </>
           ) : (
             <>
-              {renderButton('\u21ba Retake Test', () => goToPhase(8), true)}
-              {renderButton('\ud83d\udd2c Review Lesson', resetGame)}
+              {renderButton('↻ Retake Test', () => {
+                setCurrentQuestion(0);
+                setCorrectAnswers(0);
+                setAnsweredQuestions(new Set());
+                setSelectedAnswer(null);
+                setShowExplanation(false);
+                setTestScore(0);
+                goToPhase('test');
+              }, 'primary', { fullWidth: true })}
+              {renderButton('🔬 Review Lesson', resetGame, 'secondary', { fullWidth: true })}
               <button
                 onClick={handleReturnToDashboard}
                 style={{
@@ -1819,7 +1838,9 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
                   fontSize: 14,
                   cursor: 'pointer',
                   textDecoration: 'underline',
-                  marginTop: design.spacing.sm
+                  marginTop: design.spacing.sm,
+                  position: 'relative' as const,
+                  zIndex: 10
                 }}
               >
                 Return to Dashboard
@@ -1834,17 +1855,17 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
   // ============================================================================
   // RENDER
   // ============================================================================
-  const phaseRenderers: Record<number, () => JSX.Element> = {
-    0: renderHook,
-    1: renderPredict,
-    2: renderPlay,
-    3: renderReview,
-    4: renderTwistPredict,
-    5: renderTwistPlay,
-    6: renderTwistReview,
-    7: renderTransfer,
-    8: renderTest,
-    9: renderMastery
+  const phaseRenderers: Record<Phase, () => JSX.Element> = {
+    hook: renderHook,
+    predict: renderPredict,
+    play: renderPlay,
+    review: renderReview,
+    twist_predict: renderTwistPredict,
+    twist_play: renderTwistPlay,
+    twist_review: renderTwistReview,
+    transfer: renderTransfer,
+    test: renderTest,
+    mastery: renderMastery
   };
 
   return (
@@ -1867,7 +1888,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
         display: 'flex',
         gap: design.spacing.xs
       }}>
-        {PHASES.map((p) => (
+        {phaseOrder.map((p) => (
           <div
             key={p}
             style={{
@@ -1876,7 +1897,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
               borderRadius: design.radius.full,
               background: phase === p
                 ? design.colors.accentPrimary
-                : p < phase
+                : phaseOrder.indexOf(p) < phaseOrder.indexOf(phase)
                   ? design.colors.accentSecondary
                   : design.colors.bgElevated,
               boxShadow: phase === p ? design.shadow.glow(design.colors.accentPrimary) : 'none',

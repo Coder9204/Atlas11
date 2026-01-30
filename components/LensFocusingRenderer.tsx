@@ -4,15 +4,34 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ============================================================================
 // LENS FOCUSING RENDERER - FOCAL LENGTH AND IMAGE FORMATION
-// Premium 10-screen educational game following WaveParticleDualityRenderer pattern
+// Premium 10-phase educational game with complete structure
 // ============================================================================
+
+// Phase type definition
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+// Phase order array with ALL 10 phases
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Lab',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
+};
 
 interface LensFocusingRendererProps {
   width?: number;
   height?: number;
   onBack?: () => void;
   metadata?: {
-    currentPhase?: number;
+    gamePhase?: string;
     showPrediction?: boolean;
     showQuiz?: boolean;
   };
@@ -48,13 +67,6 @@ const radius = { sm: 8, md: 12, lg: 16, xl: 24 };
 // ============================================================================
 // GAME CONTENT DATA
 // ============================================================================
-
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
 
 const predictions = {
   initial: {
@@ -93,7 +105,7 @@ const realWorldApplications = [
   },
   {
     id: 'camera',
-    title: '📷 Camera Lenses',
+    title: '📷 Cameras',
     subtitle: 'Focal length controls perspective',
     description: 'Camera focal length determines field of view and magnification. 50mm is "normal" (similar to human vision). 24mm is wide-angle (captures more, stretches edges). 200mm is telephoto (magnifies, compresses depth).',
     formula: 'Magnification = f / (f - d_object) for distant objects',
@@ -110,13 +122,13 @@ const realWorldApplications = [
     interactiveHint: 'In microscopy, shorter focal length = higher magnification = smaller working distance.'
   },
   {
-    id: 'projector',
-    title: '🎥 Projectors',
-    subtitle: 'Making big images from small screens',
-    description: 'Projectors use a lens to create a magnified real image on a distant screen. The small display (LCD/DLP chip) is placed just outside the focal length. Moving the lens closer to the chip increases image size on the screen.',
-    formula: '1/f = 1/d_chip + 1/d_screen, Magnification = d_screen/d_chip',
-    realExample: 'Movie theater projectors can magnify a 1-inch chip to a 50-foot screen - that\'s 600x magnification!',
-    interactiveHint: 'Why projectors need dark rooms: the same light spread over a huge area = dim image.'
+    id: 'telescope',
+    title: '🔭 Telescopes',
+    subtitle: 'Making distant objects appear closer',
+    description: 'Telescopes use a long focal length objective to gather light from distant objects and form a real image, then an eyepiece to magnify that image. Angular magnification = f_objective / f_eyepiece.',
+    formula: 'M = f_objective / f_eyepiece, Resolution ∝ aperture diameter',
+    realExample: 'The Hubble Space Telescope has a 57.6m focal length - that\'s why it can see galaxies billions of light-years away!',
+    interactiveHint: 'A telescope with 1000mm objective and 10mm eyepiece gives 100x magnification.'
   }
 ];
 
@@ -233,12 +245,8 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
   onBack,
   metadata
 }) => {
-  // Core state - using numeric phases
-  const [phase, setPhase] = useState<number>(0);
-
-  // Navigation refs
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
+  // Core state - using Phase type with 'hook' as initial state
+  const [phase, setPhase] = useState<Phase>('hook');
 
   // Sound function
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -269,6 +277,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [score, setScore] = useState(0);
+  const [testScore, setTestScore] = useState(0);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [showQuizFeedback, setShowQuizFeedback] = useState(false);
@@ -286,7 +295,6 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
 
   // Animation ref
   const animationRef = useRef<number>();
-  const isTransitioningRef = useRef(false);
 
   // Mobile detection
   useEffect(() => {
@@ -335,13 +343,8 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
 
   const imageData = calculateImage();
 
-  // Phase navigation with debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    navigationLockRef.current = true;
+  // Phase navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
 
     setPhase(newPhase);
@@ -349,68 +352,54 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
     setShowPredictionFeedback(false);
 
     // Reset simulation for certain phases
-    if (newPhase === 2) { // play
+    if (newPhase === 'play') {
       setFocalLength(80);
       setObjectDistance(160);
       setLensType('converging');
-    } else if (newPhase === 5) { // twist_play
+    } else if (newPhase === 'twist_play') {
       setFocalLength(80);
       setObjectDistance(50); // Inside focal length for magnifying effect
       setLensType('converging');
     }
-
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
   }, [playSound]);
 
   // Prediction handling
   const handlePredictionSelect = useCallback((optionId: string) => {
-    if (showPredictionFeedback || isTransitioningRef.current) return;
+    if (showPredictionFeedback) return;
     setSelectedPrediction(optionId);
   }, [showPredictionFeedback]);
 
   const handlePredictionSubmit = useCallback(() => {
-    if (!selectedPrediction || showPredictionFeedback || isTransitioningRef.current) return;
+    if (!selectedPrediction || showPredictionFeedback) return;
     setShowPredictionFeedback(true);
   }, [selectedPrediction, showPredictionFeedback]);
 
   // Quiz handling
   const handleAnswerSelect = useCallback((index: number) => {
-    if (showQuizFeedback || isTransitioningRef.current) return;
+    if (showQuizFeedback) return;
     setSelectedAnswer(index);
   }, [showQuizFeedback]);
 
   const handleAnswerSubmit = useCallback(() => {
-    if (selectedAnswer === null || showQuizFeedback || isTransitioningRef.current) return;
+    if (selectedAnswer === null || showQuizFeedback) return;
     setShowQuizFeedback(true);
     if (quizQuestions[currentQuestion].options[selectedAnswer]?.correct) {
-      setScore(s => s + 1);
+      setTestScore(s => s + 1);
     }
   }, [selectedAnswer, showQuizFeedback, currentQuestion]);
 
   const handleNextQuestion = useCallback(() => {
-    if (isTransitioningRef.current) return;
-    isTransitioningRef.current = true;
-
     if (currentQuestion < quizQuestions.length - 1) {
       setCurrentQuestion(q => q + 1);
       setSelectedAnswer(null);
       setShowQuizFeedback(false);
     } else {
-      goToPhase(9);
+      goToPhase('mastery');
     }
-
-    setTimeout(() => {
-      isTransitioningRef.current = false;
-    }, 400);
   }, [currentQuestion, goToPhase]);
 
   // Application navigation with sequential unlock
   const handleCompleteApp = useCallback((appId: string) => {
-    if (isTransitioningRef.current) return;
-    isTransitioningRef.current = true;
-
     if (!completedApps.includes(appId)) {
       setCompletedApps(prev => [...prev, appId]);
     }
@@ -418,21 +407,17 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
     if (currentAppIndex < realWorldApplications.length - 1) {
       setCurrentAppIndex(i => i + 1);
     }
-
-    setTimeout(() => {
-      isTransitioningRef.current = false;
-    }, 400);
   }, [completedApps, currentAppIndex]);
 
   const canAccessQuiz = completedApps.length >= realWorldApplications.length;
 
   // ============================================================================
-  // RENDER HELPERS (Functions, not components)
+  // RENDER HELPERS
   // ============================================================================
 
   const renderButton = (
     label: string,
-    onClick: () => void,
+    onClickHandler: () => void,
     variant: 'primary' | 'secondary' | 'success' = 'primary',
     disabled = false
   ) => {
@@ -443,9 +428,9 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
 
     return (
       <button
-        onMouseDown={(e) => {
+        onClick={(e) => {
           e.preventDefault();
-          if (!disabled) onClick();
+          if (!disabled) onClickHandler();
         }}
         disabled={disabled}
         style={{
@@ -459,6 +444,8 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
           cursor: disabled ? 'not-allowed' : 'pointer',
           opacity: disabled ? 0.5 : 1,
           transition: 'all 0.2s ease',
+          zIndex: 10,
+          position: 'relative' as const,
         }}
       >
         {label}
@@ -467,8 +454,8 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
   };
 
   const renderProgressBar = () => {
-    const currentIndex = phases.indexOf(phase);
-    const progress = ((currentIndex + 1) / phases.length) * 100;
+    const currentIndex = phaseOrder.indexOf(phase);
+    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
 
     return (
       <div style={{ marginBottom: spacing.lg }}>
@@ -920,7 +907,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
       justifyContent: 'center',
     }}>
       <button
-        onMouseDown={() => setObjectDistance(focalLength * 2.5)}
+        onClick={() => setObjectDistance(focalLength * 2.5)}
         style={{
           padding: `${spacing.xs}px ${spacing.md}px`,
           background: colors.cardBg,
@@ -929,12 +916,13 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
           color: colors.text,
           fontSize: typography.small.fontSize,
           cursor: 'pointer',
+          zIndex: 10,
         }}
       >
-        d > 2f (small image)
+        d &gt; 2f (small image)
       </button>
       <button
-        onMouseDown={() => setObjectDistance(focalLength * 1.5)}
+        onClick={() => setObjectDistance(focalLength * 1.5)}
         style={{
           padding: `${spacing.xs}px ${spacing.md}px`,
           background: colors.cardBg,
@@ -943,12 +931,13 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
           color: colors.text,
           fontSize: typography.small.fontSize,
           cursor: 'pointer',
+          zIndex: 10,
         }}
       >
-        f < d < 2f (large image)
+        f &lt; d &lt; 2f (large image)
       </button>
       <button
-        onMouseDown={() => setObjectDistance(focalLength * 0.6)}
+        onClick={() => setObjectDistance(focalLength * 0.6)}
         style={{
           padding: `${spacing.xs}px ${spacing.md}px`,
           background: colors.accent,
@@ -957,12 +946,13 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
           color: colors.text,
           fontSize: typography.small.fontSize,
           cursor: 'pointer',
+          zIndex: 10,
         }}
       >
-        d < f (magnifier!)
+        d &lt; f (magnifier!)
       </button>
       <button
-        onMouseDown={() => setShowRays(!showRays)}
+        onClick={() => setShowRays(!showRays)}
         style={{
           padding: `${spacing.xs}px ${spacing.md}px`,
           background: showRays ? colors.primary : colors.cardBg,
@@ -971,12 +961,13 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
           color: colors.text,
           fontSize: typography.small.fontSize,
           cursor: 'pointer',
+          zIndex: 10,
         }}
       >
-        {showRays ? '💡 Rays On' : '💡 Rays Off'}
+        {showRays ? 'Rays On' : 'Rays Off'}
       </button>
       <button
-        onMouseDown={() => setLensType(lensType === 'converging' ? 'diverging' : 'converging')}
+        onClick={() => setLensType(lensType === 'converging' ? 'diverging' : 'converging')}
         style={{
           padding: `${spacing.xs}px ${spacing.md}px`,
           background: lensType === 'diverging' ? colors.secondary : colors.cardBg,
@@ -985,17 +976,19 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
           color: colors.text,
           fontSize: typography.small.fontSize,
           cursor: 'pointer',
+          zIndex: 10,
         }}
       >
-        {lensType === 'converging' ? '🔍 Convex' : '🔎 Concave'}
+        {lensType === 'converging' ? 'Convex' : 'Concave'}
       </button>
     </div>
   );
 
   // ============================================================================
-  // PHASE RENDERERS
+  // PHASE RENDERERS - ALL 10 PHASES
   // ============================================================================
 
+  // PHASE 1: HOOK - Welcome page explaining lens focusing and refraction
   const renderHook = () => (
     <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
       {/* Premium badge */}
@@ -1010,7 +1003,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
       </h1>
 
       <p className="text-lg text-slate-400 max-w-md mb-10">
-        One elegant equation governs where images form
+        Discover how one elegant equation governs where images form through refraction
       </p>
 
       {/* Premium card with graphic */}
@@ -1028,7 +1021,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
               Focus the sun, read tiny text, capture photographs
             </p>
             <p className="text-lg text-slate-400 leading-relaxed">
-              A simple curved piece of glass can do all of this magic!
+              A simple curved piece of glass bends light through refraction, creating images that can be larger, smaller, real, or virtual!
             </p>
             <div className="pt-2">
               <p className="text-base text-cyan-400 font-semibold">
@@ -1041,8 +1034,9 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={(e) => { e.preventDefault(); goToPhase('predict'); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        style={{ zIndex: 10 }}
       >
         <span className="relative z-10 flex items-center gap-3">
           Discover Lens Physics
@@ -1055,28 +1049,29 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
       {/* Feature hints */}
       <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
         <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
+          <span className="text-cyan-400">*</span>
           Focal Length
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
+          <span className="text-cyan-400">*</span>
           Magnification
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
+          <span className="text-cyan-400">*</span>
           Real vs Virtual
         </div>
       </div>
     </div>
   );
 
-  const renderPrediction = (isTwist = false) => {
-    const pred = isTwist ? predictions.twist : predictions.initial;
+  // PHASE 2: PREDICT - Prediction question about convex lens behavior
+  const renderPredict = () => {
+    const pred = predictions.initial;
 
     return (
       <div>
         <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
-          {isTwist ? '🔮 The Magnifying Effect' : '🤔 Make Your Prediction'}
+          Make Your Prediction
         </h2>
         <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
           {pred.question}
@@ -1123,7 +1118,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
               color: selectedPrediction === pred.correct ? colors.success : colors.warning,
               marginBottom: spacing.sm,
             }}>
-              {selectedPrediction === pred.correct ? '✓ Perfect!' : '✗ Let\'s see why!'}
+              {selectedPrediction === pred.correct ? 'Perfect!' : 'Let\'s see why!'}
             </h3>
             <p style={{ color: colors.text, margin: 0 }}>{pred.explanation}</p>
           </div>
@@ -1133,55 +1128,53 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
           {!showPredictionFeedback ? (
             renderButton('Lock In Prediction', handlePredictionSubmit, 'primary', !selectedPrediction)
           ) : (
-            renderButton('See It In Action →', () => goToPhase(isTwist ? 'twist_play' : 'play'))
+            renderButton('See It In Action', () => goToPhase('play'))
           )}
         </div>
       </div>
     );
   };
 
-  const renderPlay = (isTwist = false) => (
+  // PHASE 3: PLAY - Interactive lens simulation with adjustable focal length
+  const renderPlay = () => (
     <div>
       <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
-        {isTwist ? '🔍 Magnifying Glass Lab' : '🔬 Lens Optics Lab'}
+        Lens Optics Lab
       </h2>
       <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
-        {isTwist
-          ? 'Move the object inside the focal length and watch the magic!'
-          : 'Explore how object distance affects where the image forms.'}
+        Explore how object distance affects where the image forms. Adjust the sliders and watch the rays!
       </p>
 
       {renderLensSimulation()}
       {renderControls()}
       {renderQuickButtons()}
 
-      {isTwist && (
-        <div style={{
-          background: `${colors.accent}22`,
-          padding: spacing.lg,
-          borderRadius: radius.lg,
-          marginBottom: spacing.lg,
-        }}>
-          <h3 style={{ color: colors.accent, marginBottom: spacing.sm }}>🔍 Magnifying Glass Physics</h3>
-          <p style={{ color: colors.text, margin: 0 }}>
-            When d {"<"} f, the lens equation gives a <strong>negative</strong> image distance,
-            meaning the image is on the same side as the object - a virtual image! This virtual
-            image is larger and upright, which is why magnifying glasses work. The closer to f,
-            the larger the magnification (but harder to see clearly).
-          </p>
-        </div>
-      )}
+      <div style={{
+        background: `${colors.primary}22`,
+        padding: spacing.lg,
+        borderRadius: radius.lg,
+        marginBottom: spacing.lg,
+      }}>
+        <h3 style={{ color: colors.primary, marginBottom: spacing.sm }}>Key Observations</h3>
+        <ul style={{ color: colors.text, margin: 0, paddingLeft: 20 }}>
+          <li>Object beyond 2f: smaller, inverted real image</li>
+          <li>Object between f and 2f: larger, inverted real image</li>
+          <li>Object at f: rays emerge parallel (image at infinity)</li>
+          <li>Object inside f: larger, upright virtual image</li>
+        </ul>
+      </div>
 
       <div style={{ textAlign: 'center' }}>
-        {renderButton('I Understand This →', () => goToPhase(isTwist ? 'twist_review' : 'review'))}
+        {renderButton('I Understand This', () => goToPhase('review'))}
       </div>
     </div>
   );
 
-  const renderReview = (isTwist = false) => (
+  // PHASE 4: REVIEW - Explain 1/f = 1/do + 1/di and magnification
+  const renderReview = () => (
     <div>
       <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
-        {isTwist ? '🎯 Real vs Virtual Images' : '📚 The Thin Lens Equation'}
+        The Thin Lens Equation
       </h2>
 
       <div style={{
@@ -1190,135 +1183,298 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
         borderRadius: radius.lg,
         marginBottom: spacing.lg,
       }}>
-        {isTwist ? (
-          <>
-            <h3 style={{ color: colors.accent, marginBottom: spacing.md }}>Image Types</h3>
+        <h3 style={{ color: colors.primary, marginBottom: spacing.md }}>The Mathematics</h3>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-              gap: spacing.lg,
-            }}>
-              <div style={{
-                background: colors.background,
-                padding: spacing.md,
-                borderRadius: radius.md,
-              }}>
-                <h4 style={{ color: colors.success, marginBottom: spacing.sm }}>Real Image (d > f)</h4>
-                <ul style={{ color: colors.textSecondary, margin: 0, paddingLeft: 20 }}>
-                  <li>Forms on opposite side of lens</li>
-                  <li>Can be projected on screen</li>
-                  <li>Inverted (upside down)</li>
-                  <li>Positive d_i in equation</li>
-                  <li>Example: Camera, projector</li>
-                </ul>
-              </div>
-              <div style={{
-                background: colors.background,
-                padding: spacing.md,
-                borderRadius: radius.md,
-              }}>
-                <h4 style={{ color: colors.accent, marginBottom: spacing.sm }}>Virtual Image (d {"<"} f)</h4>
-                <ul style={{ color: colors.textSecondary, margin: 0, paddingLeft: 20 }}>
-                  <li>Forms on same side as object</li>
-                  <li>Cannot be projected</li>
-                  <li>Upright and magnified</li>
-                  <li>Negative d_i in equation</li>
-                  <li>Example: Magnifying glass</li>
-                </ul>
-              </div>
-            </div>
+        <div style={{
+          textAlign: 'center',
+          padding: spacing.lg,
+          background: colors.background,
+          borderRadius: radius.md,
+          marginBottom: spacing.lg,
+        }}>
+          <div style={{ fontSize: '28px', color: colors.primary, fontFamily: 'monospace' }}>
+            1/f = 1/d_o + 1/d_i
+          </div>
+          <p style={{ color: colors.textSecondary, margin: `${spacing.sm}px 0 0` }}>
+            f = focal length, d_o = object distance, d_i = image distance
+          </p>
+        </div>
 
-            <div style={{
-              marginTop: spacing.lg,
-              padding: spacing.md,
-              background: colors.background,
-              borderRadius: radius.md,
-              textAlign: 'center',
-            }}>
-              <code style={{ color: colors.primary, fontSize: typography.h3.fontSize }}>
-                M = -d_i/d_o  →  M {">"} 0 (upright), M {"<"} 0 (inverted)
-              </code>
-            </div>
-          </>
-        ) : (
-          <>
-            <h3 style={{ color: colors.primary, marginBottom: spacing.md }}>The Mathematics</h3>
+        <div style={{
+          textAlign: 'center',
+          padding: spacing.md,
+          background: colors.background,
+          borderRadius: radius.md,
+          marginBottom: spacing.lg,
+        }}>
+          <div style={{ fontSize: '24px', color: colors.accent, fontFamily: 'monospace' }}>
+            M = -d_i / d_o = h_i / h_o
+          </div>
+          <p style={{ color: colors.textSecondary, margin: `${spacing.sm}px 0 0` }}>
+            Magnification: positive = upright, negative = inverted
+          </p>
+        </div>
 
-            <div style={{
-              textAlign: 'center',
-              padding: spacing.lg,
-              background: colors.background,
-              borderRadius: radius.md,
-              marginBottom: spacing.lg,
-            }}>
-              <div style={{ fontSize: '28px', color: colors.primary, fontFamily: 'monospace' }}>
-                1/f = 1/d_o + 1/d_i
-              </div>
-              <p style={{ color: colors.textSecondary, margin: `${spacing.sm}px 0 0` }}>
-                f = focal length, d_o = object distance, d_i = image distance
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-              gap: spacing.md,
-            }}>
-              <div style={{
-                background: colors.background,
-                padding: spacing.md,
-                borderRadius: radius.md,
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: '24px', marginBottom: spacing.xs }}>d_o {">"} 2f</div>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
-                  Smaller, inverted<br/>real image
-                </p>
-              </div>
-              <div style={{
-                background: colors.background,
-                padding: spacing.md,
-                borderRadius: radius.md,
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: '24px', marginBottom: spacing.xs }}>f {"<"} d_o {"<"} 2f</div>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
-                  Larger, inverted<br/>real image
-                </p>
-              </div>
-              <div style={{
-                background: colors.background,
-                padding: spacing.md,
-                borderRadius: radius.md,
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: '24px', marginBottom: spacing.xs }}>d_o {"<"} f</div>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
-                  Larger, upright<br/>virtual image
-                </p>
-              </div>
-            </div>
-          </>
-        )}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+          gap: spacing.md,
+        }}>
+          <div style={{
+            background: colors.background,
+            padding: spacing.md,
+            borderRadius: radius.md,
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '24px', marginBottom: spacing.xs }}>d_o &gt; 2f</div>
+            <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
+              Smaller, inverted<br/>real image
+            </p>
+          </div>
+          <div style={{
+            background: colors.background,
+            padding: spacing.md,
+            borderRadius: radius.md,
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '24px', marginBottom: spacing.xs }}>f &lt; d_o &lt; 2f</div>
+            <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
+              Larger, inverted<br/>real image
+            </p>
+          </div>
+          <div style={{
+            background: colors.background,
+            padding: spacing.md,
+            borderRadius: radius.md,
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '24px', marginBottom: spacing.xs }}>d_o &lt; f</div>
+            <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
+              Larger, upright<br/>virtual image
+            </p>
+          </div>
+        </div>
       </div>
 
       <div style={{ textAlign: 'center' }}>
-        {renderButton(
-          isTwist ? 'See Real Applications →' : 'What\'s the Twist? →',
-          () => goToPhase(isTwist ? 'transfer' : 'twist_predict')
-        )}
+        {renderButton('What\'s the Twist?', () => goToPhase('twist_predict'))}
       </div>
     </div>
   );
 
+  // PHASE 5: TWIST_PREDICT - Scenario about diverging (concave) lenses
+  const renderTwistPredict = () => {
+    const pred = predictions.twist;
+
+    return (
+      <div>
+        <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
+          The Magnifying Effect
+        </h2>
+        <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
+          {pred.question}
+        </p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap: spacing.md,
+          marginBottom: spacing.lg,
+        }}>
+          {pred.options.map((opt) => (
+            <div
+              key={opt.id}
+              onClick={() => handlePredictionSelect(opt.id)}
+              style={{
+                padding: spacing.lg,
+                background: selectedPrediction === opt.id
+                  ? `linear-gradient(135deg, ${colors.primary}33, ${colors.secondary}33)`
+                  : colors.cardBg,
+                border: `2px solid ${selectedPrediction === opt.id ? colors.primary : colors.border}`,
+                borderRadius: radius.lg,
+                cursor: showPredictionFeedback ? 'default' : 'pointer',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              <div style={{ fontSize: '32px', marginBottom: spacing.sm }}>{opt.icon}</div>
+              <p style={{ color: colors.text, margin: 0 }}>{opt.text}</p>
+            </div>
+          ))}
+        </div>
+
+        {showPredictionFeedback && (
+          <div style={{
+            padding: spacing.lg,
+            background: selectedPrediction === pred.correct
+              ? `${colors.success}22`
+              : `${colors.warning}22`,
+            border: `1px solid ${selectedPrediction === pred.correct ? colors.success : colors.warning}`,
+            borderRadius: radius.lg,
+            marginBottom: spacing.lg,
+          }}>
+            <h3 style={{
+              color: selectedPrediction === pred.correct ? colors.success : colors.warning,
+              marginBottom: spacing.sm,
+            }}>
+              {selectedPrediction === pred.correct ? 'Excellent!' : 'Interesting guess!'}
+            </h3>
+            <p style={{ color: colors.text, margin: 0 }}>{pred.explanation}</p>
+          </div>
+        )}
+
+        <div style={{ textAlign: 'center' }}>
+          {!showPredictionFeedback ? (
+            renderButton('Lock In Prediction', handlePredictionSubmit, 'primary', !selectedPrediction)
+          ) : (
+            renderButton('Try the Magnifier', () => goToPhase('twist_play'))
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  // PHASE 6: TWIST_PLAY - Interactive comparison of convex vs concave lenses
+  const renderTwistPlay = () => (
+    <div>
+      <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
+        Magnifying Glass Lab
+      </h2>
+      <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
+        Move the object inside the focal length and watch the magic! Compare convex vs concave lenses.
+      </p>
+
+      {renderLensSimulation()}
+      {renderControls()}
+      {renderQuickButtons()}
+
+      <div style={{
+        background: `${colors.accent}22`,
+        padding: spacing.lg,
+        borderRadius: radius.lg,
+        marginBottom: spacing.lg,
+      }}>
+        <h3 style={{ color: colors.accent, marginBottom: spacing.sm }}>Magnifying Glass Physics</h3>
+        <p style={{ color: colors.text, margin: 0 }}>
+          When d {"<"} f, the lens equation gives a <strong>negative</strong> image distance,
+          meaning the image is on the same side as the object - a virtual image! This virtual
+          image is larger and upright, which is why magnifying glasses work. The closer to f,
+          the larger the magnification (but harder to see clearly).
+        </p>
+      </div>
+
+      <div style={{
+        background: `${colors.secondary}22`,
+        padding: spacing.lg,
+        borderRadius: radius.lg,
+        marginBottom: spacing.lg,
+      }}>
+        <h3 style={{ color: colors.secondary, marginBottom: spacing.sm }}>Concave (Diverging) Lenses</h3>
+        <p style={{ color: colors.text, margin: 0 }}>
+          Toggle to "Concave" mode and notice: diverging lenses ALWAYS produce virtual, upright,
+          smaller images regardless of object position. They spread light rays apart rather than
+          focusing them. This is why nearsighted people use concave lenses - to diverge light
+          before it enters the eye.
+        </p>
+      </div>
+
+      <div style={{ textAlign: 'center' }}>
+        {renderButton('I Understand This', () => goToPhase('twist_review'))}
+      </div>
+    </div>
+  );
+
+  // PHASE 7: TWIST_REVIEW - Explain virtual vs real images
+  const renderTwistReview = () => (
+    <div>
+      <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
+        Real vs Virtual Images
+      </h2>
+
+      <div style={{
+        background: colors.cardBg,
+        padding: spacing.xl,
+        borderRadius: radius.lg,
+        marginBottom: spacing.lg,
+      }}>
+        <h3 style={{ color: colors.accent, marginBottom: spacing.md }}>Image Types</h3>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap: spacing.lg,
+        }}>
+          <div style={{
+            background: colors.background,
+            padding: spacing.md,
+            borderRadius: radius.md,
+          }}>
+            <h4 style={{ color: colors.success, marginBottom: spacing.sm }}>Real Image (d &gt; f)</h4>
+            <ul style={{ color: colors.textSecondary, margin: 0, paddingLeft: 20 }}>
+              <li>Forms on opposite side of lens</li>
+              <li>Can be projected on screen</li>
+              <li>Inverted (upside down)</li>
+              <li>Positive d_i in equation</li>
+              <li>Example: Camera, projector</li>
+            </ul>
+          </div>
+          <div style={{
+            background: colors.background,
+            padding: spacing.md,
+            borderRadius: radius.md,
+          }}>
+            <h4 style={{ color: colors.accent, marginBottom: spacing.sm }}>Virtual Image (d &lt; f)</h4>
+            <ul style={{ color: colors.textSecondary, margin: 0, paddingLeft: 20 }}>
+              <li>Forms on same side as object</li>
+              <li>Cannot be projected</li>
+              <li>Upright and magnified</li>
+              <li>Negative d_i in equation</li>
+              <li>Example: Magnifying glass</li>
+            </ul>
+          </div>
+        </div>
+
+        <div style={{
+          marginTop: spacing.lg,
+          padding: spacing.md,
+          background: colors.background,
+          borderRadius: radius.md,
+          textAlign: 'center',
+        }}>
+          <code style={{ color: colors.primary, fontSize: typography.h3.fontSize }}>
+            M = -d_i/d_o  |  M &gt; 0 (upright), M &lt; 0 (inverted)
+          </code>
+        </div>
+
+        <div style={{
+          marginTop: spacing.lg,
+          padding: spacing.md,
+          background: `${colors.warning}22`,
+          borderRadius: radius.md,
+        }}>
+          <h4 style={{ color: colors.warning, marginBottom: spacing.sm }}>Sign Conventions</h4>
+          <ul style={{ color: colors.text, margin: 0, paddingLeft: 20 }}>
+            <li>Converging lens: f &gt; 0 (positive focal length)</li>
+            <li>Diverging lens: f &lt; 0 (negative focal length)</li>
+            <li>Real image: d_i &gt; 0 (forms on opposite side)</li>
+            <li>Virtual image: d_i &lt; 0 (forms on same side)</li>
+          </ul>
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'center' }}>
+        {renderButton('See Real Applications', () => goToPhase('transfer'))}
+      </div>
+    </div>
+  );
+
+  // PHASE 8: TRANSFER - 4 real-world applications
   const renderTransfer = () => {
     const currentApp = realWorldApplications[currentAppIndex];
 
     return (
       <div>
         <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
-          🌍 Lenses in the Real World
+          Lenses in the Real World
         </h2>
 
         {/* App navigation dots */}
@@ -1337,7 +1493,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
               <div
                 key={app.id}
                 onClick={() => {
-                  if (!isLocked && !isTransitioningRef.current) {
+                  if (!isLocked) {
                     setCurrentAppIndex(index);
                   }
                 }}
@@ -1354,9 +1510,10 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
                   opacity: isLocked ? 0.4 : 1,
                   transition: 'all 0.3s ease',
                   fontSize: '16px',
+                  color: colors.text,
                 }}
               >
-                {isLocked ? '🔒' : isCompleted ? '✓' : index + 1}
+                {isLocked ? 'X' : isCompleted ? 'V' : index + 1}
               </div>
             );
           })}
@@ -1401,7 +1558,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
             borderRadius: radius.md,
             marginBottom: spacing.md,
           }}>
-            <div style={{ color: colors.success, marginBottom: 4 }}>💡 Real Example:</div>
+            <div style={{ color: colors.success, marginBottom: 4 }}>Real Example:</div>
             <p style={{ color: colors.text, margin: 0 }}>{currentApp.realExample}</p>
           </div>
 
@@ -1410,25 +1567,25 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
             padding: spacing.md,
             borderRadius: radius.md,
           }}>
-            <div style={{ color: colors.accent, marginBottom: 4 }}>🔬 Try This:</div>
+            <div style={{ color: colors.accent, marginBottom: 4 }}>Try This:</div>
             <p style={{ color: colors.text, margin: 0 }}>{currentApp.interactiveHint}</p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.md }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.md, flexWrap: 'wrap' }}>
           {!completedApps.includes(currentApp.id) ? (
-            renderButton('Got It! ✓', () => handleCompleteApp(currentApp.id), 'success')
+            renderButton('Got It!', () => handleCompleteApp(currentApp.id), 'success')
           ) : currentAppIndex < realWorldApplications.length - 1 ? (
-            renderButton('Next Application →', () => setCurrentAppIndex(i => i + 1))
+            renderButton('Next Application', () => setCurrentAppIndex(i => i + 1))
           ) : null}
 
           {canAccessQuiz && (
-            renderButton('Take the Quiz →', () => {
+            renderButton('Take the Quiz', () => {
               setCurrentQuestion(0);
               setSelectedAnswer(null);
               setShowQuizFeedback(false);
-              setScore(0);
-              goToPhase(8);
+              setTestScore(0);
+              goToPhase('test');
             }, 'success')
           )}
         </div>
@@ -1448,6 +1605,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
     );
   };
 
+  // PHASE 9: TEST - 10 multiple choice questions
   const renderTest = () => {
     const question = quizQuestions[currentQuestion];
 
@@ -1463,7 +1621,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
             Question {currentQuestion + 1} of {quizQuestions.length}
           </span>
           <span style={{ color: colors.success, fontWeight: '600' }}>
-            Score: {score}/{currentQuestion + (showQuizFeedback ? 1 : 0)}
+            Score: {testScore}/{currentQuestion + (showQuizFeedback ? 1 : 0)}
           </span>
         </div>
 
@@ -1513,8 +1671,8 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
                   }}
                 >
                   <span style={{ color: colors.text }}>{option.text}</span>
-                  {showResult && isCorrect && <span style={{ marginLeft: 8 }}>✓</span>}
-                  {showResult && isSelected && !isCorrect && <span style={{ marginLeft: 8 }}>✗</span>}
+                  {showResult && isCorrect && <span style={{ marginLeft: 8, color: colors.success }}>Correct</span>}
+                  {showResult && isSelected && !isCorrect && <span style={{ marginLeft: 8, color: colors.warning }}>X</span>}
                 </div>
               );
             })}
@@ -1537,7 +1695,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
             renderButton('Submit Answer', handleAnswerSubmit, 'primary', selectedAnswer === null)
           ) : (
             renderButton(
-              currentQuestion < quizQuestions.length - 1 ? 'Next Question →' : 'See Results →',
+              currentQuestion < quizQuestions.length - 1 ? 'Next Question' : 'See Results',
               handleNextQuestion
             )
           )}
@@ -1546,17 +1704,18 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
     );
   };
 
+  // PHASE 10: MASTERY - Congratulations page
   const renderMastery = () => {
-    const percentage = Math.round((score / quizQuestions.length) * 100);
+    const percentage = Math.round((testScore / quizQuestions.length) * 100);
     const passed = percentage >= 70;
 
     return (
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: '72px', marginBottom: spacing.lg }}>
-          {passed ? '🏆' : '📚'}
+          {passed ? '***' : '**'}
         </div>
         <h2 style={{ ...typography.h1, color: colors.text, marginBottom: spacing.md }}>
-          {passed ? 'Lens Master!' : 'Keep Learning!'}
+          {passed ? 'Congratulations! Lens Master!' : 'Keep Learning!'}
         </h2>
 
         <div style={{
@@ -1576,7 +1735,7 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
             {percentage}%
           </div>
           <p style={{ color: colors.textSecondary, marginBottom: spacing.md }}>
-            {score} out of {quizQuestions.length} correct
+            {testScore} out of {quizQuestions.length} correct
           </p>
 
           <div style={{
@@ -1603,11 +1762,11 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
           maxWidth: 500,
           margin: '0 auto 24px',
         }}>
-          <h3 style={{ color: colors.text, marginBottom: spacing.sm }}>🧠 Key Takeaways</h3>
+          <h3 style={{ color: colors.text, marginBottom: spacing.sm }}>Key Takeaways</h3>
           <ul style={{ color: colors.textSecondary, textAlign: 'left', margin: 0, paddingLeft: 20 }}>
             <li>Thin lens equation: 1/f = 1/d_o + 1/d_i</li>
             <li>Converging lenses have positive focal length</li>
-            <li>Object inside f → virtual, magnified, upright</li>
+            <li>Object inside f creates virtual, magnified, upright image</li>
             <li>Negative d_i indicates virtual image</li>
             <li>Magnification M = -d_i/d_o</li>
           </ul>
@@ -1618,37 +1777,50 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
             setCurrentQuestion(0);
             setSelectedAnswer(null);
             setShowQuizFeedback(false);
-            setScore(0);
-            goToPhase(8);
+            setTestScore(0);
+            goToPhase('test');
           })}
           {renderButton('Restart Journey', () => {
             setCompletedApps([]);
             setCurrentAppIndex(0);
-            goToPhase(0);
+            setSelectedPrediction(null);
+            setShowPredictionFeedback(false);
+            goToPhase('hook');
           }, 'secondary')}
-          {onBack && renderButton('Back to Menu', onBack, 'secondary')}
+          {onBack && renderButton('Return to Dashboard', onBack, 'secondary')}
         </div>
       </div>
     );
   };
 
   // ============================================================================
-  // MAIN RENDER
+  // MAIN RENDER - Switch statement with ALL 10 phases
   // ============================================================================
 
   const renderPhaseContent = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPrediction(false);
-      case 2: return renderPlay(false);
-      case 3: return renderReview(false);
-      case 4: return renderPrediction(true);
-      case 5: return renderPlay(true);
-      case 6: return renderReview(true);
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
-      default: return renderHook();
+      case 'hook':
+        return renderHook();
+      case 'predict':
+        return renderPredict();
+      case 'play':
+        return renderPlay();
+      case 'review':
+        return renderReview();
+      case 'twist_predict':
+        return renderTwistPredict();
+      case 'twist_play':
+        return renderTwistPlay();
+      case 'twist_review':
+        return renderTwistReview();
+      case 'transfer':
+        return renderTransfer();
+      case 'test':
+        return renderTest();
+      case 'mastery':
+        return renderMastery();
+      default:
+        return renderHook();
     }
   };
 
@@ -1665,18 +1837,19 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Lens Focusing</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                style={{ zIndex: 10 }}
               />
             ))}
           </div>

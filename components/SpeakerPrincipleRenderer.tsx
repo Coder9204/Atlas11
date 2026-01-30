@@ -1370,6 +1370,51 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
           { text: 'More expensive', correct: false },
           { text: 'Louder volume', correct: false }
         ]
+      },
+      {
+        question: 'What is the primary function of the voice coil in a speaker?',
+        options: [
+          { text: 'To amplify the audio signal', correct: false },
+          { text: 'To create a permanent magnetic field', correct: false },
+          { text: 'To carry current and interact with the magnetic field to produce motion', correct: true },
+          { text: 'To filter out unwanted frequencies', correct: false }
+        ]
+      },
+      {
+        question: 'What happens to the Lorentz force when you increase both the current AND the magnetic field strength?',
+        options: [
+          { text: 'Force stays the same', correct: false },
+          { text: 'Force decreases', correct: false },
+          { text: 'Force increases significantly (multiplicative effect)', correct: true },
+          { text: 'Force becomes unpredictable', correct: false }
+        ]
+      },
+      {
+        question: 'Why do subwoofers have larger, heavier cones than tweeters?',
+        options: [
+          { text: 'To look more impressive in home theaters', correct: false },
+          { text: 'To move more air for low-frequency bass sounds', correct: true },
+          { text: 'To handle higher electrical power', correct: false },
+          { text: 'To reduce manufacturing costs', correct: false }
+        ]
+      },
+      {
+        question: 'What is the purpose of a crossover network in a speaker system?',
+        options: [
+          { text: 'To amplify all frequencies equally', correct: false },
+          { text: 'To direct different frequency ranges to the appropriate drivers', correct: true },
+          { text: 'To convert AC to DC current', correct: false },
+          { text: 'To protect the speaker from overheating', correct: false }
+        ]
+      },
+      {
+        question: 'Why is impedance matching important between an amplifier and speaker?',
+        options: [
+          { text: 'To make the speaker louder regardless of quality', correct: false },
+          { text: 'To ensure efficient power transfer and prevent damage', correct: true },
+          { text: 'To change the frequency response of the speaker', correct: false },
+          { text: 'To eliminate the need for a crossover', correct: false }
+        ]
       }
     ];
 
@@ -1421,7 +1466,9 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
                   color: colors.textPrimary,
                   fontSize: '15px',
                   textAlign: 'left',
-                  cursor: testAnswers[currentQuestion] !== null ? 'default' : 'pointer'
+                  cursor: testAnswers[currentQuestion] !== null ? 'default' : 'pointer',
+                  position: 'relative',
+                  zIndex: 10
                 }}
               >
                 {opt.text}
@@ -1476,7 +1523,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
         marginBottom: '24px'
       }}>
         <div style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '8px' }}>Test Score</div>
-        <div style={{ color: colors.success, fontSize: '36px', fontWeight: 700 }}>{testScore}/5</div>
+        <div style={{ color: colors.success, fontSize: '36px', fontWeight: 700 }}>{testScore}/10</div>
       </div>
 
       <Button onClick={() => goToPhase('hook')}>

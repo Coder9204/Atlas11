@@ -2,23 +2,13 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================================================
 // GOLD STANDARD: VENTURI EFFECT RENDERER
-// Physics: Continuity (A₁v₁ = A₂v₂) + Bernoulli (P + ½ρv² = const)
+// Physics: Continuity (A1v1 = A2v2) + Bernoulli (P + 1/2 pv^2 = const)
 // Narrow section = higher velocity = lower pressure
 // ============================================================================
 
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'flow_rate_adjusted'
-  | 'constriction_adjusted'
-  | 'velocity_calculated'
-  | 'pressure_calculated'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 interface TestQuestion {
   scenario: string;
@@ -43,23 +33,24 @@ interface TransferApp {
 }
 
 interface Props {
-  onGameEvent?: (event: { type: GameEventType; data?: Record<string, unknown> }) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  onGameEvent?: (event: { type: string; data?: Record<string, unknown> }) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // Physics constants
-const AIR_DENSITY = 1.2; // kg/m³ at sea level
+const AIR_DENSITY = 1.2; // kg/m^3 at sea level
 const REFERENCE_PRESSURE = 100; // kPa
 
-const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState(0);
+const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
+  const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
   const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
   const [showTestResults, setShowTestResults] = useState(false);
+  const [testScore, setTestScore] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
@@ -71,23 +62,40 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
   const [showVelocity, setShowVelocity] = useState(true);
   const [isFlowing, setIsFlowing] = useState(true);
 
-  const navigationLockRef = useRef(false);
+  // Twist play state - Venturi meter simulation
+  const [meterFlowRate, setMeterFlowRate] = useState(50);
+  const [showMeterReadings, setShowMeterReadings] = useState(true);
+
   const audioContextRef = useRef<AudioContext | null>(null);
 
-  const phaseNames = [
-    'Hook', 'Predict', 'Explore', 'Review',
-    'Twist Predict', 'Twist Demo', 'Twist Review',
-    'Transfer', 'Test', 'Mastery'
-  ];
+  const phaseNames: Record<Phase, string> = {
+    'hook': 'Hook',
+    'predict': 'Predict',
+    'play': 'Explore',
+    'review': 'Review',
+    'twist_predict': 'Twist Predict',
+    'twist_play': 'Twist Demo',
+    'twist_review': 'Twist Review',
+    'transfer': 'Transfer',
+    'test': 'Test',
+    'mastery': 'Mastery'
+  };
 
   // Calculate Venturi properties using physics
   const wideVelocity = flowRate / 100 * 5; // m/s at wide section
-  const areaRatio = 100 / constrictionSize; // A₁/A₂
-  const narrowVelocity = wideVelocity * areaRatio; // Continuity: A₁v₁ = A₂v₂
+  const areaRatio = 100 / constrictionSize; // A1/A2
+  const narrowVelocity = wideVelocity * areaRatio; // Continuity: A1v1 = A2v2
   const widePressure = REFERENCE_PRESSURE; // kPa
-  // Bernoulli: P₁ + ½ρv₁² = P₂ + ½ρv₂²
+  // Bernoulli: P1 + 1/2 pv1^2 = P2 + 1/2 pv2^2
   const pressureDrop = 0.5 * AIR_DENSITY * (narrowVelocity * narrowVelocity - wideVelocity * wideVelocity) / 1000;
   const narrowPressure = Math.max(widePressure - pressureDrop, 10);
+
+  // Venturi meter calculations
+  const meterWideVelocity = meterFlowRate / 100 * 5;
+  const meterNarrowVelocity = meterWideVelocity * 2; // Fixed 2:1 area ratio
+  const meterPressureDrop = 0.5 * AIR_DENSITY * (meterNarrowVelocity * meterNarrowVelocity - meterWideVelocity * meterWideVelocity) / 1000;
+  const meterNarrowPressure = Math.max(REFERENCE_PRESSURE - meterPressureDrop, 10);
+  const calculatedFlowRate = Math.sqrt(2 * meterPressureDrop * 1000 / AIR_DENSITY) / 2 * 100 / 5;
 
   // Responsive check
   useEffect(() => {
@@ -99,10 +107,10 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
 
   // Sync with external phase control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
   // Web Audio API sound system
   const playSound = useCallback((soundType: 'transition' | 'correct' | 'incorrect' | 'complete' | 'flow' | 'whoosh') => {
@@ -180,50 +188,36 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
     }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    if (newPhase < 0 || newPhase > 9) return;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
 
-    if (onPhaseComplete && newPhase > phase) {
-      onPhaseComplete(phase);
+    if (onPhaseComplete) {
+      const currentIndex = phaseOrder.indexOf(phase);
+      const newIndex = phaseOrder.indexOf(newPhase);
+      if (newIndex > currentIndex) {
+        onPhaseComplete(phase);
+      }
     }
 
     setPhase(newPhase);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseName: phaseNames[newPhase] } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [phase, playSound, onPhaseComplete, onGameEvent, phaseNames]);
 
   const handlePrediction = useCallback((prediction: string) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'B' ? 'correct' : 'incorrect');
     onGameEvent?.({ type: 'prediction_made', data: { prediction, correct: prediction === 'B' } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'A' ? 'correct' : 'incorrect');
     onGameEvent?.({ type: 'twist_prediction_made', data: { prediction, correct: prediction === 'A' } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     const newAnswers = [...testAnswers];
     newAnswers[questionIndex] = answerIndex;
     setTestAnswers(newAnswers);
@@ -231,8 +225,6 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
     const isCorrect = testQuestions[questionIndex].options[answerIndex].correct;
     playSound(isCorrect ? 'correct' : 'incorrect');
     onGameEvent?.({ type: 'test_answered', data: { questionIndex, answerIndex, isCorrect } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [testAnswers, playSound, onGameEvent]);
 
   const calculateTestScore = useCallback(() => {
@@ -245,14 +237,9 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
   }, [testAnswers]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
     onGameEvent?.({ type: 'app_explored', data: { appIndex, appTitle: transferApps[appIndex].title } });
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent]);
 
   // 10 scenario-based test questions with explanations
@@ -266,18 +253,18 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
         { text: "Velocity stays the same but pressure increases", correct: false },
         { text: "Flow reverses direction in the narrow section", correct: false }
       ],
-      explanation: "By the continuity equation A₁v₁ = A₂v₂, when area decreases, velocity must increase proportionally to maintain the same volumetric flow rate. This is mass conservation in action."
+      explanation: "By the continuity equation A1v1 = A2v2, when area decreases, velocity must increase proportionally to maintain the same volumetric flow rate. This is mass conservation in action."
     },
     {
       scenario: "A medical device company is developing a new oxygen delivery mask that uses the Venturi principle to precisely mix oxygen with room air.",
-      question: "The continuity equation A₁v₁ = A₂v₂ represents conservation of what quantity?",
+      question: "The continuity equation A1v1 = A2v2 represents conservation of what quantity?",
       options: [
         { text: "Mass (volumetric flow rate for incompressible fluids)", correct: true },
         { text: "Energy in the fluid system", correct: false },
         { text: "Momentum of the flowing fluid", correct: false },
         { text: "Static pressure at all points", correct: false }
       ],
-      explanation: "The continuity equation ensures mass conservation. For incompressible fluids, this means the volumetric flow rate (A×v) must be constant throughout the pipe system."
+      explanation: "The continuity equation ensures mass conservation. For incompressible fluids, this means the volumetric flow rate (A x v) must be constant throughout the pipe system."
     },
     {
       scenario: "A plumber is installing a Venturi meter to measure water flow in a building's main pipe. The meter has wide inlet/outlet sections and a narrow throat in the middle.",
@@ -288,7 +275,7 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
         { text: "At the narrow middle section (throat)", correct: true },
         { text: "Pressure is equal at all locations", correct: false }
       ],
-      explanation: "By Bernoulli's principle (P + ½ρv² = constant), where velocity is highest (narrow throat), pressure must be lowest. The kinetic energy increase comes at the expense of pressure energy."
+      explanation: "By Bernoulli's principle (P + 1/2 pv^2 = constant), where velocity is highest (narrow throat), pressure must be lowest. The kinetic energy increase comes at the expense of pressure energy."
     },
     {
       scenario: "A child playing with a garden hose discovers that covering part of the nozzle with their thumb makes water spray much farther across the yard.",
@@ -299,7 +286,7 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
         { text: "Water becomes lighter and travels farther", correct: false },
         { text: "Air resistance is reduced at the nozzle", correct: false }
       ],
-      explanation: "By continuity (A₁v₁ = A₂v₂), reducing the exit area while maintaining the same flow rate forces the water velocity to increase proportionally. Higher velocity means the water travels farther."
+      explanation: "By continuity (A1v1 = A2v2), reducing the exit area while maintaining the same flow rate forces the water velocity to increase proportionally. Higher velocity means the water travels farther."
     },
     {
       scenario: "A physics teacher demonstrates the Venturi effect by holding two sheets of paper parallel and blowing air between them. Students are surprised by the result.",
@@ -325,14 +312,14 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
     },
     {
       scenario: "A chemical engineer is designing a pipe system where the diameter needs to be reduced by half at a certain point. They need to calculate the new velocity.",
-      question: "If pipe cross-sectional area is halved (A₂ = A₁/2), the fluid velocity at the narrow section...",
+      question: "If pipe cross-sectional area is halved (A2 = A1/2), the fluid velocity at the narrow section...",
       options: [
         { text: "Halves to maintain equilibrium", correct: false },
         { text: "Doubles to conserve mass flow", correct: true },
         { text: "Quadruples due to pressure effects", correct: false },
         { text: "Remains the same throughout", correct: false }
       ],
-      explanation: "From A₁v₁ = A₂v₂, if A₂ = A₁/2, then v₂ = v₁(A₁/A₂) = v₁(A₁/(A₁/2)) = 2v₁. The velocity exactly doubles when area is halved."
+      explanation: "From A1v1 = A2v2, if A2 = A1/2, then v2 = v1(A1/A2) = v1(A1/(A1/2)) = 2v1. The velocity exactly doubles when area is halved."
     },
     {
       scenario: "A fluid dynamics student is studying why airplane wings generate lift and how it relates to fluid flow principles they learned about in pipe systems.",
@@ -421,114 +408,112 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
     {
       icon: (
         <svg viewBox="0 0 100 100" className="w-full h-full">
-          {/* Face outline */}
-          <ellipse cx="50" cy="40" rx="28" ry="32" fill="#ffcc99" />
-          {/* Eyes */}
-          <ellipse cx="40" cy="32" rx="4" ry="5" fill="#333" />
-          <ellipse cx="60" cy="32" rx="4" ry="5" fill="#333" />
-          {/* Venturi mask */}
-          <path d="M20 48 Q35 70 50 75 Q65 70 80 48 L82 55 Q65 82 50 88 Q35 82 18 55 Z" fill="#88ccff" stroke="#4488cc" strokeWidth="2" />
-          {/* Venturi mechanism on side */}
-          <rect x="78" y="48" width="18" height="12" rx="2" fill="#666" stroke="#888" strokeWidth="1" />
-          {/* Oxygen inlet */}
-          <circle cx="95" cy="54" r="4" fill="#00ff00" />
-          {/* Air entrainment arrows */}
-          <path d="M88 42 L85 48" stroke="#00ccff" strokeWidth="2" markerEnd="url(#arrow)">
-            <animate attributeName="stroke-dashoffset" from="0" to="-4" dur="0.5s" repeatCount="indefinite" />
-          </path>
-          <path d="M88 66 L85 60" stroke="#00ccff" strokeWidth="2">
-            <animate attributeName="stroke-dashoffset" from="0" to="-4" dur="0.5s" repeatCount="indefinite" />
-          </path>
-          {/* Mixed flow to mask */}
-          <path d="M80 54 Q70 54 60 60" stroke="#88ffcc" strokeWidth="2" strokeDasharray="4,2">
-            <animate attributeName="stroke-dashoffset" from="0" to="-6" dur="0.3s" repeatCount="indefinite" />
-          </path>
-          {/* Strap */}
-          <path d="M18 55 Q10 40 20 30" stroke="#666" strokeWidth="3" fill="none" />
-          <path d="M82 55 Q90 40 80 30" stroke="#666" strokeWidth="3" fill="none" />
+          {/* Spray bottle body */}
+          <rect x="30" y="40" width="40" height="55" rx="5" fill="#3388ff" />
+          <rect x="35" y="45" width="30" height="45" rx="3" fill="#55aaff" opacity="0.5" />
+          {/* Nozzle assembly */}
+          <rect x="42" y="20" width="16" height="25" fill="#666" />
+          <rect x="38" y="32" width="24" height="10" rx="2" fill="#888" />
+          {/* Spray head */}
+          <ellipse cx="50" cy="18" rx="12" ry="6" fill="#444" />
+          <circle cx="50" cy="15" r="4" fill="#333" />
+          {/* Trigger */}
+          <path d="M58 35 Q70 40 68 50 L58 45 Z" fill="#ff6600" />
+          {/* Spray mist */}
+          <g opacity="0.6">
+            <circle cx="50" cy="8" r="2" fill="#88ccff">
+              <animate attributeName="cy" values="8;-5;8" dur="0.4s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.8;0;0.8" dur="0.4s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="45" cy="5" r="1.5" fill="#88ccff">
+              <animate attributeName="cy" values="5;-8;5" dur="0.5s" repeatCount="indefinite" />
+              <animate attributeName="cx" values="45;40;45" dur="0.5s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="55" cy="5" r="1.5" fill="#88ccff">
+              <animate attributeName="cy" values="5;-8;5" dur="0.5s" repeatCount="indefinite" />
+              <animate attributeName="cx" values="55;60;55" dur="0.5s" repeatCount="indefinite" />
+            </circle>
+          </g>
+          {/* Internal tube */}
+          <line x1="50" y1="40" x2="50" y2="85" stroke="#333" strokeWidth="2" />
         </svg>
       ),
-      title: "Medical Venturi Masks & Oxygen Delivery",
-      short: "Medical Masks",
-      tagline: "Precise Oxygen Therapy Through Physics",
-      description: "Venturi masks deliver precisely controlled oxygen concentrations to patients. Pure oxygen jets through a narrow orifice, creating low pressure that entrains exact amounts of room air. Different colored adaptors provide specific FiO₂ (fraction of inspired oxygen) levels.",
-      connection: "The Venturi jet creates predictable low pressure that draws in ambient air at a fixed ratio. This physics-based mixing ensures accurate oxygen concentrations regardless of the patient's breathing pattern.",
-      howItWorks: "High-pressure oxygen flows through a small jet orifice at high velocity. The resulting low pressure draws room air through calibrated side ports. The ratio of entrained air to oxygen is determined by the orifice size and port area, providing fixed oxygen concentrations from 24% to 60%.",
+      title: "Atomizers & Spray Systems",
+      short: "Atomizers",
+      tagline: "Creating Fine Mists Through Physics",
+      description: "Atomizers use the Venturi effect to break liquids into fine droplets. From perfume sprayers to paint guns, high-velocity air creates low pressure that draws liquid up a tube and shatters it into a mist of tiny particles.",
+      connection: "Fast-moving air across the top of a tube creates a pressure drop (Bernoulli). This suction lifts liquid up the tube. When the liquid meets the high-velocity air stream, it's sheared into fine droplets.",
+      howItWorks: "Squeezing the trigger forces air through a narrow nozzle at high velocity. This creates low pressure at the liquid tube opening, drawing fluid upward. The high-speed air stream then atomizes the liquid into a fine spray of droplets, with size controlled by air velocity.",
       stats: [
-        { value: "24-60%", label: "FiO₂ range" },
-        { value: "4-15", label: "L/min O₂ flow" },
-        { value: "±1-2%", label: "Accuracy" },
-        { value: "40-60", label: "L/min total flow" }
+        { value: "10-100", label: "Micron droplet size" },
+        { value: "1-5", label: "PSI pressure drop" },
+        { value: "90%+", label: "Transfer efficiency" },
+        { value: "0.1-10", label: "ml/min flow rate" }
       ],
       examples: [
-        "COPD patients needing precise low-flow oxygen",
-        "Post-surgical recovery oxygen therapy",
-        "Emergency room acute care",
-        "Respiratory therapy treatments"
+        "Perfume and cologne sprayers",
+        "Medical nebulizers for drug delivery",
+        "HVLP paint spray guns",
+        "Agricultural crop sprayers"
       ],
-      companies: ["Teleflex", "Smiths Medical", "Vyaire", "Fisher & Paykel", "Intersurgical"],
-      futureImpact: "Venturi masks remain the gold standard for precise oxygen delivery in patients where too much oxygen could be harmful (like COPD). Advanced designs incorporate humidity and nebulizer functions while maintaining accurate FiO₂ control.",
+      companies: ["DeVilbiss", "SATA", "Graco", "Wagner", "Philips Respironics"],
+      futureImpact: "Atomizer technology continues advancing in medical inhalers, precision agriculture, and industrial coating. Understanding the Venturi principle helps optimize droplet size for specific applications.",
       color: "from-blue-600 to-cyan-600"
     },
     {
       icon: (
         <svg viewBox="0 0 100 100" className="w-full h-full">
-          {/* Base */}
-          <rect x="30" y="78" width="40" height="18" fill="#555" rx="3" />
-          {/* Gas inlet */}
-          <rect x="40" y="90" width="8" height="8" fill="#444" />
-          <path d="M44 98 L44 105" stroke="#ff9900" strokeWidth="3" />
-          {/* Barrel */}
-          <rect x="40" y="25" width="20" height="53" fill="#777" />
-          {/* Collar/air intake ring */}
-          <rect x="35" y="60" width="30" height="12" fill="#555" rx="2" />
-          {/* Air holes */}
-          <rect x="35" y="63" width="6" height="6" fill="#222" />
-          <rect x="59" y="63" width="6" height="6" fill="#222" />
-          {/* Air flow arrows */}
-          <path d="M25 66 L35 66" stroke="#00ccff" strokeWidth="2" strokeDasharray="4,2">
-            <animate attributeName="stroke-dashoffset" from="0" to="-6" dur="0.3s" repeatCount="indefinite" />
+          {/* Main pipe */}
+          <rect x="5" y="35" width="90" height="30" fill="#555" rx="2" />
+          {/* Venturi constriction */}
+          <path d="M30 35 L40 45 L60 45 L70 35 M30 65 L40 55 L60 55 L70 65" fill="#555" stroke="#666" strokeWidth="2" />
+          {/* Inner flow area */}
+          <rect x="5" y="40" width="25" height="20" fill="#338" />
+          <rect x="40" y="45" width="20" height="10" fill="#55a" />
+          <rect x="70" y="40" width="25" height="20" fill="#338" />
+          {/* Manometer tubes */}
+          <rect x="15" y="10" width="8" height="25" fill="#444" stroke="#555" strokeWidth="1" />
+          <rect x="17" y="15" width="4" height="18" fill="#ff6666" />
+          <rect x="46" y="5" width="8" height="40" fill="#444" stroke="#555" strokeWidth="1" />
+          <rect x="48" y="25" width="4" height="18" fill="#6666ff" />
+          <rect x="77" y="10" width="8" height="25" fill="#444" stroke="#555" strokeWidth="1" />
+          <rect x="79" y="15" width="4" height="18" fill="#ff6666" />
+          {/* Flow arrows */}
+          <path d="M8 50 L25 50 M65 50 L92 50" stroke="#00ccff" strokeWidth="3" strokeDasharray="5,3">
+            <animate attributeName="stroke-dashoffset" from="0" to="-8" dur="0.3s" repeatCount="indefinite" />
           </path>
-          <path d="M75 66 L65 66" stroke="#00ccff" strokeWidth="2" strokeDasharray="4,2">
-            <animate attributeName="stroke-dashoffset" from="0" to="-6" dur="0.3s" repeatCount="indefinite" />
-          </path>
-          {/* Inner tube showing gas flow */}
-          <line x1="50" y1="75" x2="50" y2="30" stroke="#ffcc00" strokeWidth="4" strokeDasharray="5,3">
-            <animate attributeName="stroke-dashoffset" from="0" to="-8" dur="0.2s" repeatCount="indefinite" />
-          </line>
-          {/* Flame */}
-          <ellipse cx="50" cy="15" rx="10" ry="18" fill="#ff6600" opacity="0.9">
-            <animate attributeName="ry" values="18;22;18" dur="0.3s" repeatCount="indefinite" />
-          </ellipse>
-          <ellipse cx="50" cy="17" rx="5" ry="12" fill="#ffff00">
-            <animate attributeName="ry" values="12;15;12" dur="0.3s" repeatCount="indefinite" />
-          </ellipse>
-          <ellipse cx="50" cy="18" rx="2" ry="6" fill="#aaddff">
-            <animate attributeName="ry" values="6;8;6" dur="0.3s" repeatCount="indefinite" />
-          </ellipse>
+          {/* Pressure labels */}
+          <text x="19" y="8" fontSize="8" fill="#ff6666" textAnchor="middle">P1</text>
+          <text x="50" y="3" fontSize="8" fill="#6666ff" textAnchor="middle">P2</text>
+          <text x="81" y="8" fontSize="8" fill="#ff6666" textAnchor="middle">P3</text>
+          {/* Delta P indicator */}
+          <text x="50" y="78" fontSize="10" fill="#00ff00" textAnchor="middle">Delta P = f(Q)</text>
+          {/* Flow rate display */}
+          <rect x="30" y="82" width="40" height="14" fill="#222" rx="2" />
+          <text x="50" y="93" fontSize="9" fill="#00ff00" textAnchor="middle">Q = ?</text>
         </svg>
       ),
-      title: "Bunsen Burners & Laboratory Gas Equipment",
-      short: "Lab Burners",
-      tagline: "Venturi-Powered Combustion Since 1855",
-      description: "The Bunsen burner revolutionized laboratory work by using the Venturi effect for premixed combustion. Gas flowing up the barrel creates low pressure that draws air through adjustable ports, allowing precise control of flame temperature and characteristics.",
-      connection: "Gas velocity through the barrel creates a low-pressure zone at the air intake collar. This Venturi-induced suction draws in primary air for premixing before combustion, resulting in a hotter, cleaner flame.",
-      howItWorks: "Natural gas or propane flows upward through the barrel. At the adjustable collar, the gas velocity creates low pressure that entrains room air. This premixed fuel-air combination burns more completely at the top, producing a hot blue flame. Closing the collar reduces air intake, producing a cooler yellow flame.",
+      title: "Flow Meters & Measurement Systems",
+      short: "Flow Meters",
+      tagline: "Measuring Flow Through Pressure",
+      description: "Venturi flow meters measure fluid flow rate by measuring the pressure difference between wide and narrow sections. This non-invasive measurement technique is used in water systems, gas pipelines, and industrial processes.",
+      connection: "The pressure drop across the Venturi throat is directly related to flow velocity by Bernoulli's equation. By measuring this pressure difference, we can calculate the exact flow rate without inserting any probes into the flow.",
+      howItWorks: "Fluid enters the wide section, accelerates through the throat (low pressure), then decelerates back to the original velocity. Pressure taps at the inlet and throat connect to a differential pressure gauge. The flow rate is proportional to the square root of this pressure difference.",
       stats: [
-        { value: "1500°C", label: "Max flame temp" },
-        { value: "1855", label: "Year invented" },
-        { value: "40-60%", label: "Air entrainment" },
-        { value: "2-5", label: "cm flame height" }
+        { value: "0.5-2%", label: "Accuracy" },
+        { value: "10:1", label: "Turndown ratio" },
+        { value: "0.95-0.99", label: "Discharge coefficient" },
+        { value: "10-30%", label: "Permanent pressure loss" }
       ],
       examples: [
-        "Chemistry laboratory heating and sterilization",
-        "Glass bending and tube working",
-        "Microbiology inoculation loop sterilization",
-        "Industrial torch and burner designs"
+        "Municipal water distribution monitoring",
+        "Natural gas pipeline metering",
+        "HVAC airflow measurement",
+        "Chemical process flow control"
       ],
-      companies: ["Fisher Scientific", "Eisco Labs", "Humboldt", "Kimble", "United Scientific"],
-      futureImpact: "The Bunsen burner principle extends to industrial burners, gas stoves, and furnaces. Understanding Venturi-based air entrainment is essential for designing efficient, clean-burning combustion systems with minimal emissions.",
-      color: "from-yellow-600 to-orange-600"
+      companies: ["Emerson", "ABB", "Siemens", "Endress+Hauser", "Honeywell"],
+      futureImpact: "Smart Venturi meters with digital pressure sensors enable real-time flow monitoring and predictive maintenance. They remain popular for their reliability, low maintenance, and accuracy in harsh conditions.",
+      color: "from-green-600 to-teal-600"
     },
     {
       icon: (
@@ -665,8 +650,8 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
             {isBlowing && (
               <>
                 <text x="200" y="102" fontSize="12" fill="#00ccff" textAnchor="middle" fontWeight="bold">LOW P</text>
-                <text x="200" y={100 - paperGap - 12} fontSize="10" fill="#ff6666" textAnchor="middle">HIGH P ↓</text>
-                <text x="200" y={100 + paperGap + 18} fontSize="10" fill="#ff6666" textAnchor="middle">↑ HIGH P</text>
+                <text x="200" y={100 - paperGap - 12} fontSize="10" fill="#ff6666" textAnchor="middle">HIGH P</text>
+                <text x="200" y={100 + paperGap + 18} fontSize="10" fill="#ff6666" textAnchor="middle">HIGH P</text>
               </>
             )}
 
@@ -680,8 +665,9 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); startBlowing(); }}
+          onClick={() => startBlowing()}
           disabled={isBlowing}
+          style={{ position: 'relative', zIndex: 10 }}
           className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-500 disabled:bg-gray-600 text-white font-bold rounded-xl transition-colors"
         >
           {isBlowing ? 'Blowing...' : 'Blow Between Papers'}
@@ -694,9 +680,148 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
     );
   };
 
+  // Venturi meter simulation component
+  const VenturiMeterSimulation: React.FC = () => {
+    return (
+      <div className="flex flex-col items-center">
+        <p className="text-slate-300 mb-4 text-center max-w-md">
+          Adjust the flow rate and see how the Venturi meter measures it using pressure difference!
+        </p>
+
+        <div className="relative w-full max-w-lg h-64 bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-xl mb-4 overflow-hidden">
+          <svg viewBox="0 0 400 260" className="w-full h-full">
+            {/* Main pipe with Venturi shape */}
+            <path
+              d="M20 80 L100 80 Q140 80 160 95 L240 95 Q260 80 300 80 L380 80 L380 140 L300 140 Q260 140 240 125 L160 125 Q140 140 100 140 L20 140 Z"
+              fill="#3a5a7c"
+              stroke="#5588aa"
+              strokeWidth="3"
+            />
+
+            {/* Flow animation */}
+            {[90, 110].map((y, i) => (
+              <line
+                key={`flow-${i}`}
+                x1="30"
+                y1={y}
+                x2="370"
+                y2={y}
+                stroke="#00ccff"
+                strokeWidth="3"
+                strokeDasharray="10,8"
+              >
+                <animate
+                  attributeName="stroke-dashoffset"
+                  from="0"
+                  to="-18"
+                  dur={`${0.8 / (meterFlowRate / 50)}s`}
+                  repeatCount="indefinite"
+                />
+              </line>
+            ))}
+
+            {/* Faster flow in narrow section */}
+            <line
+              x1="155"
+              y1="110"
+              x2="245"
+              y2="110"
+              stroke="#00ffff"
+              strokeWidth="2"
+              strokeDasharray="6,4"
+            >
+              <animate
+                attributeName="stroke-dashoffset"
+                from="0"
+                to="-10"
+                dur={`${0.4 / (meterFlowRate / 50)}s`}
+                repeatCount="indefinite"
+              />
+            </line>
+
+            {showMeterReadings && (
+              <>
+                {/* Wide section manometer */}
+                <rect x="55" y="25" width="14" height="55" fill="#224466" stroke="#335577" strokeWidth="2" rx="2" />
+                <rect x="57" y={80 - REFERENCE_PRESSURE * 0.45} width="10" height={REFERENCE_PRESSURE * 0.45} fill="#ff6666" rx="1" />
+                <text x="62" y="18" fontSize="11" fill="#ff6666" textAnchor="middle" fontWeight="bold">P1</text>
+                <text x="62" y="160" fontSize="10" fill="#ff6666" textAnchor="middle">{REFERENCE_PRESSURE.toFixed(0)} kPa</text>
+
+                {/* Narrow section manometer */}
+                <rect x="193" y="15" width="14" height="70" fill="#224466" stroke="#335577" strokeWidth="2" rx="2" />
+                <rect x="195" y={85 - Math.max(meterNarrowPressure, 10) * 0.55} width="10" height={Math.max(meterNarrowPressure, 10) * 0.55} fill="#6666ff" rx="1" />
+                <text x="200" y="8" fontSize="11" fill="#6666ff" textAnchor="middle" fontWeight="bold">P2</text>
+                <text x="200" y="160" fontSize="10" fill="#6666ff" textAnchor="middle">{meterNarrowPressure.toFixed(0)} kPa</text>
+
+                {/* Wide section manometer (exit) */}
+                <rect x="331" y="25" width="14" height="55" fill="#224466" stroke="#335577" strokeWidth="2" rx="2" />
+                <rect x="333" y={80 - REFERENCE_PRESSURE * 0.45} width="10" height={REFERENCE_PRESSURE * 0.45} fill="#ff6666" rx="1" />
+                <text x="338" y="18" fontSize="11" fill="#ff6666" textAnchor="middle" fontWeight="bold">P3</text>
+
+                {/* Delta P display */}
+                <rect x="130" y="175" width="140" height="35" fill="#1a1a2e" stroke="#4a4a6a" strokeWidth="2" rx="5" />
+                <text x="200" y="193" fontSize="12" fill="#00ff00" textAnchor="middle" fontWeight="bold">
+                  Delta P = {(REFERENCE_PRESSURE - meterNarrowPressure).toFixed(1)} kPa
+                </text>
+                <text x="200" y="206" fontSize="10" fill="#88ff88" textAnchor="middle">
+                  Calculated Q = {calculatedFlowRate.toFixed(0)}%
+                </text>
+              </>
+            )}
+
+            {/* Section labels */}
+            <text x="62" y="230" fontSize="11" fill="#aaa" textAnchor="middle">Wide</text>
+            <text x="200" y="230" fontSize="11" fill="#aaa" textAnchor="middle">Throat</text>
+            <text x="338" y="230" fontSize="11" fill="#aaa" textAnchor="middle">Wide</text>
+          </svg>
+        </div>
+
+        {/* Flow rate control */}
+        <div className="bg-slate-800 p-4 rounded-xl w-full max-w-md mb-4">
+          <label className="text-slate-300 text-sm block mb-2">Actual Flow Rate: {meterFlowRate}%</label>
+          <input
+            type="range"
+            min="20"
+            max="100"
+            value={meterFlowRate}
+            onChange={(e) => setMeterFlowRate(Number(e.target.value))}
+            className="w-full accent-teal-500"
+          />
+        </div>
+
+        {/* Toggle readings */}
+        <label className="flex items-center gap-2 text-slate-300 text-sm cursor-pointer mb-4">
+          <input
+            type="checkbox"
+            checked={showMeterReadings}
+            onChange={(e) => setShowMeterReadings(e.target.checked)}
+            className="accent-teal-500"
+          />
+          Show Pressure Readings
+        </label>
+
+        {/* Stats */}
+        <div className="grid grid-cols-3 gap-3 w-full max-w-md">
+          <div className="bg-slate-800 p-3 rounded-lg text-center">
+            <div className="text-cyan-400 text-lg font-bold">{meterWideVelocity.toFixed(1)}</div>
+            <div className="text-slate-400 text-xs">v1 (m/s)</div>
+          </div>
+          <div className="bg-slate-800 p-3 rounded-lg text-center">
+            <div className="text-green-400 text-lg font-bold">{meterNarrowVelocity.toFixed(1)}</div>
+            <div className="text-slate-400 text-xs">v2 (m/s)</div>
+          </div>
+          <div className="bg-slate-800 p-3 rounded-lg text-center">
+            <div className="text-yellow-400 text-lg font-bold">{(REFERENCE_PRESSURE - meterNarrowPressure).toFixed(1)}</div>
+            <div className="text-slate-400 text-xs">Delta P (kPa)</div>
+          </div>
+        </div>
+      </div>
+    );
+  };
+
   const renderPhaseContent = () => {
     switch (phase) {
-      case 0: // Hook
+      case 'hook':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center">
             {/* Premium Badge */}
@@ -707,12 +832,12 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
 
             {/* Gradient Title */}
             <h1 className="text-4xl md:text-5xl font-bold mb-3 bg-gradient-to-r from-white via-teal-100 to-green-200 bg-clip-text text-transparent">
-              The Garden Hose Trick
+              The Venturi Effect
             </h1>
 
             {/* Subtitle */}
             <p className="text-slate-400 text-lg mb-8">
-              Why does water shoot farther when you cover the nozzle?
+              Why does water shoot farther when you cover the hose?
             </p>
 
             {/* Premium Card */}
@@ -786,7 +911,8 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
 
             {/* Premium CTA Button */}
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+              onClick={() => goToPhase('predict')}
+              style={{ position: 'relative', zIndex: 10 }}
               className="group px-8 py-4 bg-gradient-to-r from-teal-600 to-green-600 text-white text-lg font-semibold rounded-2xl hover:from-teal-500 hover:to-green-500 transition-all duration-300 shadow-lg hover:shadow-teal-500/25 hover:scale-[1.02] active:scale-[0.98]"
             >
               <span className="flex items-center gap-2">
@@ -804,7 +930,7 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
           </div>
         );
 
-      case 1: // Predict
+      case 'predict':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-teal-400 mb-6">Make Your Prediction</h2>
@@ -820,8 +946,9 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
               ].map(option => (
                 <button
                   key={option.id}
-                  onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+                  onClick={() => handlePrediction(option.id)}
                   disabled={showPredictionFeedback}
+                  style={{ position: 'relative', zIndex: 10 }}
                   className={`p-4 rounded-xl text-left transition-all ${
                     showPredictionFeedback && option.id === 'B'
                       ? 'bg-green-600 text-white ring-2 ring-green-400'
@@ -837,16 +964,17 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
             {showPredictionFeedback && (
               <div className="bg-slate-800 p-5 rounded-xl mb-4 max-w-md">
                 <p className={`font-bold text-lg mb-2 ${selectedPrediction === 'B' ? 'text-green-400' : 'text-teal-400'}`}>
-                  {selectedPrediction === 'B' ? '✓ Correct!' : 'Think about conservation!'}
+                  {selectedPrediction === 'B' ? 'Correct!' : 'Think about conservation!'}
                 </p>
                 <p className="text-slate-300 mb-3">
-                  This is the <span className="text-teal-400 font-bold">continuity equation</span>: A₁v₁ = A₂v₂
+                  This is the <span className="text-teal-400 font-bold">continuity equation</span>: A1v1 = A2v2
                 </p>
                 <p className="text-slate-400 text-sm">
                   Smaller area means higher velocity to maintain the same flow rate. Mass is conserved!
                 </p>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+                  onClick={() => goToPhase('play')}
+                  style={{ position: 'relative', zIndex: 10 }}
                   className="mt-4 px-6 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl transition-colors"
                 >
                   Explore the Venturi Tube
@@ -856,7 +984,7 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
           </div>
         );
 
-      case 2: // Play/Explore
+      case 'play':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-teal-400 mb-4">Venturi Tube Simulator</h2>
@@ -930,17 +1058,17 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
                     {/* Left (wide) pressure */}
                     <rect x="55" y="55" width="14" height="45" fill="#224466" stroke="#335577" strokeWidth="2" rx="2" />
                     <rect x="57" y={100 - widePressure * 0.4} width="10" height={widePressure * 0.4} fill="#ff6666" rx="1" />
-                    <text x="62" y="48" fontSize="11" fill="#ff6666" textAnchor="middle" fontWeight="bold">P₁</text>
+                    <text x="62" y="48" fontSize="11" fill="#ff6666" textAnchor="middle" fontWeight="bold">P1</text>
 
                     {/* Middle (narrow) pressure */}
                     <rect x="193" y="35" width="14" height="55" fill="#224466" stroke="#335577" strokeWidth="2" rx="2" />
                     <rect x="195" y={90 - Math.max(narrowPressure, 10) * 0.45} width="10" height={Math.max(narrowPressure, 10) * 0.45} fill="#6666ff" rx="1" />
-                    <text x="200" y="28" fontSize="11" fill="#6666ff" textAnchor="middle" fontWeight="bold">P₂</text>
+                    <text x="200" y="28" fontSize="11" fill="#6666ff" textAnchor="middle" fontWeight="bold">P2</text>
 
                     {/* Right (wide) pressure */}
                     <rect x="331" y="55" width="14" height="45" fill="#224466" stroke="#335577" strokeWidth="2" rx="2" />
                     <rect x="333" y={100 - widePressure * 0.4} width="10" height={widePressure * 0.4} fill="#ff6666" rx="1" />
-                    <text x="338" y="48" fontSize="11" fill="#ff6666" textAnchor="middle" fontWeight="bold">P₃</text>
+                    <text x="338" y="48" fontSize="11" fill="#ff6666" textAnchor="middle" fontWeight="bold">P3</text>
                   </>
                 )}
 
@@ -950,17 +1078,17 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
                     {/* Left velocity */}
                     <line x1="50" y1="230" x2={50 + wideVelocity * 12} y2="230" stroke="#00ff00" strokeWidth="4" />
                     <polygon points={`${55 + wideVelocity * 12},230 ${45 + wideVelocity * 12},224 ${45 + wideVelocity * 12},236`} fill="#00ff00" />
-                    <text x="60" y="255" fontSize="11" fill="#00ff00" fontWeight="bold">v₁ = {wideVelocity.toFixed(1)} m/s</text>
+                    <text x="60" y="255" fontSize="11" fill="#00ff00" fontWeight="bold">v1 = {wideVelocity.toFixed(1)} m/s</text>
 
                     {/* Middle velocity */}
                     <line x1="165" y1="230" x2={165 + Math.min(narrowVelocity, 18) * 6} y2="230" stroke="#00ffff" strokeWidth="4" />
                     <polygon points={`${170 + Math.min(narrowVelocity, 18) * 6},230 ${160 + Math.min(narrowVelocity, 18) * 6},224 ${160 + Math.min(narrowVelocity, 18) * 6},236`} fill="#00ffff" />
-                    <text x="175" y="255" fontSize="11" fill="#00ffff" fontWeight="bold">v₂ = {narrowVelocity.toFixed(1)} m/s</text>
+                    <text x="175" y="255" fontSize="11" fill="#00ffff" fontWeight="bold">v2 = {narrowVelocity.toFixed(1)} m/s</text>
 
                     {/* Right velocity */}
                     <line x1="305" y1="230" x2={305 + wideVelocity * 12} y2="230" stroke="#00ff00" strokeWidth="4" />
                     <polygon points={`${310 + wideVelocity * 12},230 ${300 + wideVelocity * 12},224 ${300 + wideVelocity * 12},236`} fill="#00ff00" />
-                    <text x="315" y="255" fontSize="11" fill="#00ff00" fontWeight="bold">v₃ = {wideVelocity.toFixed(1)} m/s</text>
+                    <text x="315" y="255" fontSize="11" fill="#00ff00" fontWeight="bold">v3 = {wideVelocity.toFixed(1)} m/s</text>
                   </>
                 )}
 
@@ -1007,19 +1135,19 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
             <div className="grid grid-cols-4 gap-2 w-full max-w-lg mb-4">
               <div className="bg-slate-800 p-3 rounded-lg text-center">
                 <div className="text-green-400 text-xl font-bold">{wideVelocity.toFixed(1)}</div>
-                <div className="text-slate-400 text-xs">v₁ (m/s)</div>
+                <div className="text-slate-400 text-xs">v1 (m/s)</div>
               </div>
               <div className="bg-slate-800 p-3 rounded-lg text-center">
                 <div className="text-cyan-400 text-xl font-bold">{narrowVelocity.toFixed(1)}</div>
-                <div className="text-slate-400 text-xs">v₂ (m/s)</div>
+                <div className="text-slate-400 text-xs">v2 (m/s)</div>
               </div>
               <div className="bg-slate-800 p-3 rounded-lg text-center">
                 <div className="text-red-400 text-xl font-bold">{widePressure.toFixed(0)}</div>
-                <div className="text-slate-400 text-xs">P₁ (kPa)</div>
+                <div className="text-slate-400 text-xs">P1 (kPa)</div>
               </div>
               <div className="bg-slate-800 p-3 rounded-lg text-center">
                 <div className="text-blue-400 text-xl font-bold">{narrowPressure.toFixed(0)}</div>
-                <div className="text-slate-400 text-xs">P₂ (kPa)</div>
+                <div className="text-slate-400 text-xs">P2 (kPa)</div>
               </div>
             </div>
 
@@ -1044,11 +1172,11 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
                 Show Velocity
               </label>
               <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
+                onClick={() => {
                   setIsFlowing(!isFlowing);
                   playSound('flow');
                 }}
+                style={{ position: 'relative', zIndex: 10 }}
                 className={`px-4 py-2 rounded-lg text-sm font-medium ${isFlowing ? 'bg-red-600 hover:bg-red-500' : 'bg-green-600 hover:bg-green-500'} text-white transition-colors`}
               >
                 {isFlowing ? 'Stop Flow' : 'Start Flow'}
@@ -1056,7 +1184,8 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
             </div>
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+              onClick={() => goToPhase('review')}
+              style={{ position: 'relative', zIndex: 10 }}
               className="px-6 py-2 bg-teal-600 hover:bg-teal-500 text-white font-bold rounded-xl transition-colors"
             >
               Review the Physics
@@ -1064,7 +1193,7 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
           </div>
         );
 
-      case 3: // Review
+      case 'review':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-teal-400 mb-6">The Venturi Effect Explained</h2>
@@ -1073,7 +1202,7 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
               <div className="bg-slate-800 p-5 rounded-xl">
                 <h3 className="text-lg font-bold text-green-400 mb-3">Continuity Equation</h3>
                 <div className="bg-slate-900 p-4 rounded-lg text-center mb-3">
-                  <span className="text-teal-400 font-mono text-2xl">A₁v₁ = A₂v₂</span>
+                  <span className="text-teal-400 font-mono text-2xl">A1v1 = A2v2</span>
                 </div>
                 <p className="text-slate-300 text-sm">
                   <span className="text-green-400 font-bold">Mass conservation:</span> If area decreases, velocity must increase to keep the same flow rate (volume/time).
@@ -1083,7 +1212,7 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
               <div className="bg-slate-800 p-5 rounded-xl">
                 <h3 className="text-lg font-bold text-blue-400 mb-3">Bernoulli&apos;s Principle</h3>
                 <div className="bg-slate-900 p-4 rounded-lg text-center mb-3">
-                  <span className="text-cyan-400 font-mono text-2xl">P + ½ρv² = const</span>
+                  <span className="text-cyan-400 font-mono text-2xl">P + 1/2 pv^2 = const</span>
                 </div>
                 <p className="text-slate-300 text-sm">
                   <span className="text-blue-400 font-bold">Energy conservation:</span> Higher velocity means lower pressure. Kinetic energy up = pressure energy down.
@@ -1101,7 +1230,7 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
                     <div className="text-green-400 text-xs">Slow velocity</div>
                     <div className="text-red-400 text-xs">High pressure</div>
                   </div>
-                  <div className="text-3xl text-slate-500">→</div>
+                  <div className="text-3xl text-slate-500">-&gt;</div>
                   <div className="text-center">
                     <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-2">
                       <div className="w-6 h-12 bg-cyan-500/50 rounded-full" />
@@ -1110,7 +1239,7 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
                     <div className="text-cyan-400 text-xs">Fast velocity</div>
                     <div className="text-blue-400 text-xs">Low pressure</div>
                   </div>
-                  <div className="text-3xl text-slate-500">→</div>
+                  <div className="text-3xl text-slate-500">-&gt;</div>
                   <div className="text-center">
                     <div className="w-16 h-16 bg-slate-800 rounded-full flex items-center justify-center mb-2">
                       <div className="w-12 h-12 bg-blue-500/30 rounded-full" />
@@ -1127,7 +1256,8 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
             </div>
 
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+              onClick={() => goToPhase('twist_predict')}
+              style={{ position: 'relative', zIndex: 10 }}
               className="px-8 py-3 bg-gradient-to-r from-purple-600 to-pink-600 hover:from-purple-500 hover:to-pink-500 text-white font-bold rounded-xl transition-all"
             >
               Ready for the Twist?
@@ -1135,29 +1265,30 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
           </div>
         );
 
-      case 4: // Twist Predict
+      case 'twist_predict':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-            <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist: Two Sheets of Paper</h2>
+            <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist: Venturi Flow Meter</h2>
             <div className="bg-slate-800 p-5 rounded-xl mb-6 max-w-lg">
               <p className="text-slate-200 text-center mb-4">
-                You hold two sheets of paper parallel to each other, about an inch apart, and blow <span className="text-cyan-400 font-bold">between</span> them.
+                Engineers need to measure fluid flow rate in a pipe <span className="text-cyan-400 font-bold">without inserting any probes</span> that might obstruct the flow.
               </p>
               <p className="text-xl text-purple-300 text-center font-bold">
-                What happens to the papers?
+                How can a Venturi tube help measure flow rate?
               </p>
             </div>
             <div className="grid grid-cols-1 gap-3 w-full max-w-md mb-6">
               {[
-                { id: 'A', text: 'They move TOGETHER - low pressure between them' },
-                { id: 'B', text: 'They move APART - air pushes them away' },
-                { id: 'C', text: 'They stay still - air goes straight through' },
-                { id: 'D', text: 'Only the front paper moves' }
+                { id: 'A', text: 'Measure pressure difference between wide and narrow sections' },
+                { id: 'B', text: 'Count how many bubbles pass through per second' },
+                { id: 'C', text: 'Measure the temperature change in the fluid' },
+                { id: 'D', text: 'Time how long it takes fluid to travel through' }
               ].map(option => (
                 <button
                   key={option.id}
-                  onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+                  onClick={() => handleTwistPrediction(option.id)}
                   disabled={showTwistFeedback}
+                  style={{ position: 'relative', zIndex: 10 }}
                   className={`p-4 rounded-xl text-left transition-all ${
                     showTwistFeedback && option.id === 'A'
                       ? 'bg-green-600 text-white ring-2 ring-green-400'
@@ -1173,78 +1304,102 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
             {showTwistFeedback && (
               <div className="bg-slate-800 p-5 rounded-xl max-w-md">
                 <p className={`font-bold text-lg mb-2 ${twistPrediction === 'A' ? 'text-green-400' : 'text-purple-400'}`}>
-                  {twistPrediction === 'A' ? '✓ Exactly right!' : 'Counter-intuitive, but true!'}
+                  {twistPrediction === 'A' ? 'Exactly right!' : 'Think about what changes with flow!'}
                 </p>
                 <p className="text-slate-300">
-                  The fast-moving air between the papers creates <span className="text-cyan-400 font-bold">low pressure</span> (Venturi effect).
-                  The higher pressure on the outer sides pushes the papers <span className="text-purple-400 font-bold">together</span>!
+                  The <span className="text-cyan-400 font-bold">pressure difference</span> between wide and narrow sections is directly related to flow velocity by Bernoulli&apos;s equation!
                 </p>
                 <button
-                  onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+                  onClick={() => goToPhase('twist_play')}
+                  style={{ position: 'relative', zIndex: 10 }}
                   className="mt-4 px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-colors"
                 >
-                  See the Demo
+                  Try the Flow Meter
                 </button>
               </div>
             )}
           </div>
         );
 
-      case 5: // Twist Play/Demo
+      case 'twist_play':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-            <h2 className="text-2xl font-bold text-purple-400 mb-4">Papers Pulled Together</h2>
-            <TwistAnimation />
+            <h2 className="text-2xl font-bold text-purple-400 mb-4">Venturi Flow Meter Simulation</h2>
+            <VenturiMeterSimulation />
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+              onClick={() => goToPhase('twist_review')}
+              style={{ position: 'relative', zIndex: 10 }}
               className="mt-6 px-6 py-2 bg-purple-600 hover:bg-purple-500 text-white font-bold rounded-xl transition-colors"
             >
-              Understand Why
+              Understand the Math
             </button>
           </div>
         );
 
-      case 6: // Twist Review
+      case 'twist_review':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-            <h2 className="text-2xl font-bold text-purple-400 mb-6">The Venturi Effect Everywhere</h2>
+            <h2 className="text-2xl font-bold text-purple-400 mb-6">How Venturi Meters Measure Flow</h2>
 
             <div className="bg-gradient-to-r from-purple-900/50 to-pink-900/50 p-6 rounded-xl max-w-lg mb-6">
-              <h3 className="text-lg font-bold text-pink-400 mb-4">Pressure Difference in Action</h3>
+              <h3 className="text-lg font-bold text-pink-400 mb-4">The Flow Rate Equation</h3>
 
               <div className="space-y-3 text-sm">
                 <div className="bg-slate-800/50 p-4 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-3 h-3 rounded-full bg-cyan-400" />
-                    <span className="text-cyan-400 font-bold">Between the papers:</span>
+                    <span className="text-cyan-400 font-bold">Step 1: Measure Pressure Drop</span>
                   </div>
-                  <p className="text-slate-300">Fast-moving air = <span className="text-cyan-400">Low pressure</span></p>
-                </div>
-
-                <div className="bg-slate-800/50 p-4 rounded-lg">
-                  <div className="flex items-center gap-2 mb-2">
-                    <div className="w-3 h-3 rounded-full bg-red-400" />
-                    <span className="text-red-400 font-bold">Outside the papers:</span>
-                  </div>
-                  <p className="text-slate-300">Still air = <span className="text-red-400">Normal (high) pressure</span></p>
+                  <p className="text-slate-300">Delta P = P1 - P2 (pressure difference between sections)</p>
                 </div>
 
                 <div className="bg-slate-800/50 p-4 rounded-lg">
                   <div className="flex items-center gap-2 mb-2">
                     <div className="w-3 h-3 rounded-full bg-green-400" />
-                    <span className="text-green-400 font-bold">Result:</span>
+                    <span className="text-green-400 font-bold">Step 2: Apply Bernoulli</span>
                   </div>
-                  <p className="text-slate-300">Higher outside pressure <span className="text-green-400">pushes papers inward!</span></p>
+                  <p className="text-slate-300">Delta P = 1/2 p (v2^2 - v1^2)</p>
+                </div>
+
+                <div className="bg-slate-800/50 p-4 rounded-lg">
+                  <div className="flex items-center gap-2 mb-2">
+                    <div className="w-3 h-3 rounded-full bg-yellow-400" />
+                    <span className="text-yellow-400 font-bold">Step 3: Calculate Flow</span>
+                  </div>
+                  <p className="text-slate-300">Q = A x v = A x sqrt(2 x Delta P / p)</p>
                 </div>
               </div>
 
               <p className="text-slate-400 text-xs mt-4 text-center">
-                This same principle explains why trains create suction as they pass and why shower curtains blow inward!
+                Flow rate is proportional to the square root of pressure difference!
               </p>
             </div>
 
+            <div className="bg-slate-800 p-4 rounded-xl max-w-lg mb-6">
+              <h4 className="text-teal-400 font-bold mb-3">Key Advantages of Venturi Meters</h4>
+              <ul className="text-slate-300 text-sm space-y-2">
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">-</span>
+                  No moving parts - extremely reliable
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">-</span>
+                  Non-intrusive measurement - no probes in flow
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">-</span>
+                  Low permanent pressure loss (10-30%)
+                </li>
+                <li className="flex items-start gap-2">
+                  <span className="text-green-400">-</span>
+                  Works with liquids and gases
+                </li>
+              </ul>
+            </div>
+
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+              onClick={() => goToPhase('transfer')}
+              style={{ position: 'relative', zIndex: 10 }}
               className="px-8 py-3 bg-gradient-to-r from-green-600 to-teal-600 hover:from-green-500 hover:to-teal-500 text-white font-bold rounded-xl transition-all"
             >
               See Real-World Applications
@@ -1252,7 +1407,7 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
           </div>
         );
 
-      case 7: // Transfer
+      case 'transfer':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-green-400 mb-6">Real-World Applications</h2>
@@ -1261,14 +1416,15 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
               {transferApps.map((app, index) => (
                 <button
                   key={index}
-                  onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+                  onClick={() => setActiveAppTab(index)}
+                  style={{ position: 'relative', zIndex: 10 }}
                   className={`px-4 py-2 rounded-lg font-medium transition-all ${
                     activeAppTab === index
                       ? `bg-gradient-to-r ${app.color} text-white`
                       : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                   }`}
                 >
-                  {completedApps.has(index) && '✓ '}{app.short}
+                  {completedApps.has(index) && '+ '}{app.short}
                 </button>
               ))}
             </div>
@@ -1317,10 +1473,11 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
 
                 {!completedApps.has(activeAppTab) && (
                   <button
-                    onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+                    onClick={() => handleAppComplete(activeAppTab)}
+                    style={{ position: 'relative', zIndex: 10 }}
                     className="w-full py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-lg transition-colors"
                   >
-                    Mark as Understood ✓
+                    Mark as Understood
                   </button>
                 )}
               </div>
@@ -1332,7 +1489,8 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
 
             {completedApps.size >= 3 && (
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+                onClick={() => goToPhase('test')}
+                style={{ position: 'relative', zIndex: 10 }}
                 className="mt-4 px-8 py-3 bg-gradient-to-r from-teal-600 to-green-600 hover:from-teal-500 hover:to-green-500 text-white font-bold rounded-xl transition-all"
               >
                 Take the Knowledge Test
@@ -1341,7 +1499,7 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
           </div>
         );
 
-      case 8: // Test
+      case 'test':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
             <h2 className="text-2xl font-bold text-teal-400 mb-6">Knowledge Test</h2>
@@ -1355,8 +1513,9 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
                     {q.options.map((option, oIndex) => (
                       <button
                         key={oIndex}
-                        onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                        onClick={() => handleTestAnswer(qIndex, oIndex)}
                         disabled={showTestResults}
+                        style={{ position: 'relative', zIndex: 10 }}
                         className={`p-3 rounded-lg text-sm text-left transition-all ${
                           showTestResults && option.correct
                             ? 'bg-green-600 text-white'
@@ -1382,12 +1541,14 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
 
             {!showTestResults && testAnswers.every(a => a !== -1) && (
               <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
+                onClick={() => {
+                  const score = calculateTestScore();
+                  setTestScore(score);
                   setShowTestResults(true);
                   playSound('complete');
-                  onGameEvent?.({ type: 'test_completed', data: { score: calculateTestScore() } });
+                  onGameEvent?.({ type: 'test_completed', data: { score } });
                 }}
+                style={{ position: 'relative', zIndex: 10 }}
                 className="mt-6 px-8 py-3 bg-green-600 hover:bg-green-500 text-white font-bold rounded-xl transition-colors"
               >
                 Submit Answers
@@ -1397,16 +1558,17 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
             {showTestResults && (
               <div className="mt-6 text-center">
                 <p className="text-3xl font-bold text-teal-400 mb-2">
-                  Score: {calculateTestScore()} / 10
+                  Score: {testScore} / 10
                 </p>
-                <p className={`text-lg ${calculateTestScore() >= 7 ? 'text-green-400' : 'text-yellow-400'}`}>
-                  {calculateTestScore() >= 9 ? 'Outstanding! You\'ve mastered the Venturi effect!' :
-                   calculateTestScore() >= 7 ? 'Great job! You understand the key concepts!' :
+                <p className={`text-lg ${testScore >= 7 ? 'text-green-400' : 'text-yellow-400'}`}>
+                  {testScore >= 9 ? 'Outstanding! You\'ve mastered the Venturi effect!' :
+                   testScore >= 7 ? 'Great job! You understand the key concepts!' :
                    'Keep learning! Try reviewing the material and simulations again.'}
                 </p>
-                {calculateTestScore() >= 7 && (
+                {testScore >= 7 && (
                   <button
-                    onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
+                    onClick={() => goToPhase('mastery')}
+                    style={{ position: 'relative', zIndex: 10 }}
                     className="mt-4 px-8 py-3 bg-gradient-to-r from-yellow-500 to-orange-500 hover:from-yellow-400 hover:to-orange-400 text-white font-bold rounded-xl transition-all"
                   >
                     Claim Your Mastery Badge!
@@ -1417,37 +1579,37 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
           </div>
         );
 
-      case 9: // Mastery
+      case 'mastery':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6 text-center">
-            <div className="text-8xl mb-6">💨</div>
+            <div className="text-8xl mb-6">&#128168;</div>
             <h2 className="text-4xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-teal-400 via-cyan-400 to-green-400 mb-4">
               Venturi Effect Master!
             </h2>
             <div className="bg-gradient-to-r from-teal-600/20 to-green-600/20 border-2 border-teal-500/50 p-8 rounded-2xl max-w-md mb-6">
               <p className="text-slate-200 mb-6 text-lg">
-                You&apos;ve mastered the principles of fluid flow and pressure!
+                Congratulations! You&apos;ve mastered the principles of fluid flow and pressure!
               </p>
               <div className="text-left text-slate-300 space-y-3">
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">✓</span>
-                  <span><span className="text-teal-400 font-mono">A₁v₁ = A₂v₂</span> - Continuity (mass conservation)</span>
+                  <span className="text-green-400 text-xl">+</span>
+                  <span><span className="text-teal-400 font-mono">A1v1 = A2v2</span> - Continuity (mass conservation)</span>
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">✓</span>
+                  <span className="text-green-400 text-xl">+</span>
                   <span>Narrow section = faster velocity</span>
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">✓</span>
-                  <span><span className="text-cyan-400 font-mono">P + ½ρv² = const</span> - Bernoulli&apos;s principle</span>
+                  <span className="text-green-400 text-xl">+</span>
+                  <span><span className="text-cyan-400 font-mono">P + 1/2 pv^2 = const</span> - Bernoulli&apos;s principle</span>
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">✓</span>
+                  <span className="text-green-400 text-xl">+</span>
                   <span>Faster velocity = lower pressure</span>
                 </p>
                 <p className="flex items-center gap-3">
-                  <span className="text-green-400 text-xl">✓</span>
-                  <span>Applications: carburetors, aspirators, masks, burners</span>
+                  <span className="text-green-400 text-xl">+</span>
+                  <span>Applications: carburetors, atomizers, flow meters, aspirators</span>
                 </p>
               </div>
             </div>
@@ -1456,13 +1618,15 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
             </p>
             <div className="mt-6 flex gap-4">
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+                onClick={() => goToPhase('hook')}
+                style={{ position: 'relative', zIndex: 10 }}
                 className="px-6 py-2 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
               >
                 Start Over
               </button>
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+                onClick={() => goToPhase('play')}
+                style={{ position: 'relative', zIndex: 10 }}
                 className="px-6 py-2 bg-teal-600 hover:bg-teal-500 text-white font-medium rounded-xl transition-colors"
               >
                 Explore More
@@ -1492,14 +1656,15 @@ const VenturiEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onP
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-medium text-slate-400">Venturi Effect</span>
           <div className="flex gap-1.5">
-            {phaseNames.map((name, i) => (
+            {phaseOrder.map((p, i) => (
               <button
-                key={i}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(i); }}
+                key={p}
+                onClick={() => goToPhase(p)}
+                style={{ position: 'relative', zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === i ? 'bg-teal-400 w-6' : phase > i ? 'bg-teal-500 w-2' : 'bg-slate-600 w-2'
+                  phase === p ? 'bg-teal-400 w-6' : phaseOrder.indexOf(phase) > i ? 'bg-teal-500 w-2' : 'bg-slate-600 w-2'
                 }`}
-                title={name}
+                title={phaseNames[p]}
               />
             ))}
           </div>

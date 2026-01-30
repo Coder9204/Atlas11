@@ -1,5 +1,23 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
+// Phase type for 10-phase learning structure
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Lab',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
+};
+
 // Gold standard types
 type GameEventType =
   | 'phase_change'
@@ -18,21 +36,15 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
-
 interface Props {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
+  setTestScore?: (score: number) => void;
 }
 
-const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete, setTestScore }) => {
+  const [phase, setPhase] = useState<Phase>('hook');
   const [isMobile, setIsMobile] = useState(false);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
@@ -53,7 +65,6 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
   const [ballRotation, setBallRotation] = useState(0);
   const [trajectory, setTrajectory] = useState<{x: number, y: number}[]>([]);
 
-  const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
   const audioContextRef = useRef<AudioContext | null>(null);
 
@@ -67,10 +78,10 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
 
   // Sync with external phase control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
   // Web Audio API sound system
   const playSound = useCallback((soundType: 'click' | 'correct' | 'incorrect' | 'complete' | 'transition' | 'whoosh') => {
@@ -138,14 +149,11 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     onPhaseComplete?.(newPhase);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onPhaseComplete, onGameEvent]);
 
   // Ball flight animation with Magnus effect
@@ -195,7 +203,8 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'B' ? 'correct' : 'incorrect');
-  }, [playSound]);
+    onGameEvent?.({ type: 'prediction_made', data: { prediction, correct: prediction === 'B' } });
+  }, [playSound, onGameEvent]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
     const now = Date.now();
@@ -204,7 +213,8 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'C' ? 'correct' : 'incorrect');
-  }, [playSound]);
+    onGameEvent?.({ type: 'twist_prediction_made', data: { prediction, correct: prediction === 'C' } });
+  }, [playSound, onGameEvent]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
     const now = Date.now();
@@ -215,7 +225,8 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
       newAnswers[questionIndex] = answerIndex;
       return newAnswers;
     });
-  }, []);
+    onGameEvent?.({ type: 'test_answered', data: { questionIndex, answerIndex } });
+  }, [onGameEvent]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
     const now = Date.now();
@@ -223,14 +234,16 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     lastClickRef.current = now;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
-  }, [playSound]);
+    onGameEvent?.({ type: 'app_explored', data: { appIndex } });
+  }, [playSound, onGameEvent]);
 
   const startAnimation = useCallback(() => {
     setBallX(50);
     setBallY(150);
     setTrajectory([]);
     setIsAnimating(true);
-  }, []);
+    onGameEvent?.({ type: 'simulation_started', data: { spinRate, ballSpeed, spinDirection } });
+  }, [onGameEvent, spinRate, ballSpeed, spinDirection]);
 
   const testQuestions = [
     {
@@ -297,7 +310,7 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
       ]
     },
     {
-      question: "The Magnus force equation F = CL × ½ρv²A shows force depends on:",
+      question: "The Magnus force equation F = CL x (1/2)pv^2A shows force depends on:",
       options: [
         { text: "Only ball size", correct: false },
         { text: "Velocity squared", correct: true },
@@ -325,11 +338,11 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     }
   ];
 
-  const calculateScore = () => {
+  const calculateScore = useCallback(() => {
     return testAnswers.reduce((score, answer, index) => {
       return score + (testQuestions[index].options[answer]?.correct ? 1 : 0);
     }, 0);
-  };
+  }, [testAnswers]);
 
   const renderSpinningBall = (size: number = 60, showAirflow: boolean = false) => {
     return (
@@ -351,7 +364,7 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
         {/* Trajectory trail */}
         {trajectory.length > 1 && (
           <path
-            d={`M ${trajectory.map((p, i) => `${p.x} ${p.y}`).join(' L ')}`}
+            d={`M ${trajectory.map((p) => `${p.x} ${p.y}`).join(' L ')}`}
             fill="none"
             stroke="#fbbf24"
             strokeWidth="2"
@@ -415,6 +428,7 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     );
   };
 
+  // PHASE 1: HOOK - Welcome page explaining the Magnus effect
   const renderHook = () => (
     <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 px-6">
       {/* Premium badge */}
@@ -430,27 +444,32 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
 
       {/* Subtitle */}
       <p className="text-slate-400 text-lg md:text-xl text-center mb-8 max-w-lg">
-        How does spinning make a ball curve?
+        How does spinning make a ball curve through the air?
       </p>
 
       {/* Premium card */}
       <div className="w-full max-w-md backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
         {renderSpinningBall(50, false)}
         <p className="text-gray-300 text-center leading-relaxed mt-4 mb-4">
-          A pitcher throws a baseball with heavy spin. Instead of going straight, it curves dramatically!
+          A pitcher throws a baseball with heavy spin. Instead of going straight, it curves dramatically - baffling the batter!
+        </p>
+        <p className="text-slate-400 text-sm text-center mb-4">
+          The Magnus effect explains how spinning objects curve through fluids like air and water. It is the secret behind curveballs, banana kicks, and sliced golf shots.
         </p>
         <button
-          onMouseDown={(e) => { e.preventDefault(); startAnimation(); }}
-          className="w-full px-6 py-3 bg-slate-700/50 hover:bg-slate-600/50 text-white font-medium rounded-xl transition-colors border border-white/10"
+          onClick={() => startAnimation()}
+          style={{ zIndex: 10 }}
+          className="relative w-full px-6 py-3 bg-slate-700/50 hover:bg-slate-600/50 text-white font-medium rounded-xl transition-colors border border-white/10"
         >
-          Throw Curveball
+          Watch a Curveball
         </button>
       </div>
 
       {/* CTA Button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
-        className="group px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 flex items-center gap-2"
+        onClick={() => goToPhase('predict')}
+        style={{ zIndex: 10 }}
+        className="relative group px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 hover:from-red-500 hover:to-orange-500 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-red-500/25 hover:shadow-red-500/40 flex items-center gap-2"
       >
         Discover the Secret
         <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
@@ -465,6 +484,7 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     </div>
   );
 
+  // PHASE 2: PREDICT - Prediction question about spinning ball trajectory
   const renderPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
@@ -503,9 +523,10 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
+            style={{ zIndex: 10 }}
             disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
+            className={`relative p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
                 ? option.id === 'B'
                   ? 'bg-emerald-600/40 border-2 border-emerald-400'
@@ -523,11 +544,12 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
       {showPredictionFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            Correct! The spinning ball creates <span className="text-cyan-400">pressure differences</span> in the surrounding air!
+            {selectedPrediction === 'B' ? 'Correct!' : 'Not quite!'} The spinning ball creates <span className="text-cyan-400">pressure differences</span> in the surrounding air!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
+            onClick={() => goToPhase('play')}
+            style={{ zIndex: 10 }}
+            className="relative mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
           >
             Explore the Physics
           </button>
@@ -536,6 +558,7 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     </div>
   );
 
+  // PHASE 3: PLAY - Interactive simulation with adjustable spin rate and direction
   const renderPlay = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Magnus Effect Lab</h2>
@@ -565,7 +588,10 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
             min="0"
             max="100"
             value={spinRate}
-            onChange={(e) => setSpinRate(Number(e.target.value))}
+            onChange={(e) => {
+              setSpinRate(Number(e.target.value));
+              onGameEvent?.({ type: 'spin_changed', data: { spinRate: Number(e.target.value) } });
+            }}
             className="w-full"
           />
         </div>
@@ -576,7 +602,10 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
             min="20"
             max="100"
             value={ballSpeed}
-            onChange={(e) => setBallSpeed(Number(e.target.value))}
+            onChange={(e) => {
+              setBallSpeed(Number(e.target.value));
+              onGameEvent?.({ type: 'parameter_changed', data: { ballSpeed: Number(e.target.value) } });
+            }}
             className="w-full"
           />
         </div>
@@ -584,8 +613,12 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
           {(['topspin', 'backspin', 'sidespin'] as const).map(type => (
             <button
               key={type}
-              onMouseDown={(e) => { e.preventDefault(); setSpinDirection(type); }}
-              className={`px-4 py-2 rounded-lg font-medium transition-all ${
+              onClick={() => {
+                setSpinDirection(type);
+                onGameEvent?.({ type: 'spin_changed', data: { spinDirection: type } });
+              }}
+              style={{ zIndex: 10 }}
+              className={`relative px-4 py-2 rounded-lg font-medium transition-all ${
                 spinDirection === type ? 'bg-red-600 text-white' : 'bg-slate-600 text-slate-300 hover:bg-slate-500'
               }`}
             >
@@ -595,8 +628,9 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
         </div>
         <div className="md:col-span-2">
           <button
-            onMouseDown={(e) => { e.preventDefault(); startAnimation(); }}
-            className="w-full p-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold transition-colors"
+            onClick={() => startAnimation()}
+            style={{ zIndex: 10 }}
+            className="relative w-full p-4 rounded-xl bg-red-600 hover:bg-red-500 text-white font-semibold transition-colors"
           >
             Throw Ball
           </button>
@@ -622,40 +656,42 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
+        onClick={() => goToPhase('review')}
+        style={{ zIndex: 10 }}
+        className="relative mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
       >
         Review the Concepts
       </button>
     </div>
   );
 
+  // PHASE 4: REVIEW - Explain pressure differential from air velocity differences
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Understanding the Magnus Effect</h2>
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-red-400 mb-3">The Physics</h3>
+          <h3 className="text-xl font-bold text-red-400 mb-3">The Physics of Pressure Differential</h3>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• Spinning ball creates asymmetric airflow</li>
-            <li>• One side: ball surface moves WITH airflow (adds speed)</li>
-            <li>• Other side: ball surface moves AGAINST airflow (subtracts speed)</li>
-            <li>• Fast air = low pressure, slow air = high pressure</li>
-            <li>• Ball pushed from high to low pressure side!</li>
+            <li>- Spinning ball creates asymmetric airflow around it</li>
+            <li>- One side: ball surface moves WITH airflow (adds speed)</li>
+            <li>- Other side: ball surface moves AGAINST airflow (subtracts speed)</li>
+            <li>- Fast air = low pressure, slow air = high pressure</li>
+            <li>- Ball pushed from high to low pressure side!</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6">
           <h3 className="text-xl font-bold text-blue-400 mb-3">The Math</h3>
           <div className="space-y-2 text-slate-300 text-sm">
-            <p className="font-mono bg-slate-800/50 p-2 rounded">F = CL × ½ρv²A</p>
+            <p className="font-mono bg-slate-800/50 p-2 rounded">F = CL x (1/2)pv^2A</p>
             <ul className="mt-2 space-y-1">
-              <li>• F = Magnus force</li>
-              <li>• CL = Lift coefficient (depends on spin)</li>
-              <li>• ρ = Air density</li>
-              <li>• v = Ball velocity</li>
-              <li>• A = Cross-sectional area</li>
+              <li>- F = Magnus force</li>
+              <li>- CL = Lift coefficient (depends on spin)</li>
+              <li>- p = Air density</li>
+              <li>- v = Ball velocity</li>
+              <li>- A = Cross-sectional area</li>
             </ul>
           </div>
         </div>
@@ -683,23 +719,25 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
+        onClick={() => goToPhase('twist_predict')}
+        style={{ zIndex: 10 }}
+        className="relative mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
         Discover a Surprising Twist
       </button>
     </div>
   );
 
+  // PHASE 5: TWIST_PREDICT - Different ball size/sport scenario
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist Challenge</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <p className="text-lg text-slate-300 mb-4">
-          Smooth balls curve predictably with the Magnus effect. But what about a ball spinning VERY fast at VERY high speeds?
+          Different sports use different ball sizes and surfaces. A ping pong ball is tiny and smooth, while a volleyball is large and textured.
         </p>
         <p className="text-lg text-cyan-400 font-medium">
-          At extreme conditions, what happens to the curve?
+          What happens when a smooth ball spins VERY fast at VERY high speeds?
         </p>
       </div>
 
@@ -708,13 +746,14 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
           { id: 'A', text: 'The curve gets even stronger' },
           { id: 'B', text: 'The ball goes perfectly straight' },
           { id: 'C', text: 'The curve can actually REVERSE direction!' },
-          { id: 'D', text: 'The ball explodes from air friction' }
+          { id: 'D', text: 'The ball slows down due to friction' }
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
+            style={{ zIndex: 10 }}
             disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
+            className={`relative p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
                 ? option.id === 'C'
                   ? 'bg-emerald-600/40 border-2 border-emerald-400'
@@ -739,30 +778,32 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
             At extreme spin rates and speeds, the boundary layer behavior changes completely!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
+            onClick={() => goToPhase('twist_play')}
+            style={{ zIndex: 10 }}
+            className="relative mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
           >
-            See How
+            See How It Works
           </button>
         </div>
       )}
     </div>
   );
 
+  // PHASE 6: TWIST_PLAY - Interactive comparison of different sports balls
   const renderTwistPlay = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-4">Reverse Magnus Effect</h2>
+      <h2 className="text-2xl font-bold text-purple-400 mb-4">Comparing Different Sports Balls</h2>
 
       <div className="grid md:grid-cols-2 gap-6 mb-6 max-w-3xl">
         <div className="bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-lg font-semibold text-cyan-400 mb-2 text-center">Normal Magnus</h3>
+          <h3 className="text-lg font-semibold text-cyan-400 mb-2 text-center">Normal Magnus (Baseball)</h3>
           <svg width="180" height="120" className="mx-auto">
             <rect width="180" height="120" fill="#1e3a5f" rx="8" />
             <circle cx="50" cy="60" r="20" fill="#dc2626" />
             <path d="M30,45 A25,25 0 0 1 70,45" fill="none" stroke="#fbbf24" strokeWidth="2" />
             <path d="M70,60 Q120,40 160,60" fill="none" stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrNorm)" />
             <text x="115" y="35" fill="#22c55e" fontSize="10">Curves up</text>
-            <text x="90" y="100" fill="#94a3b8" fontSize="9">Smooth ball, normal speed</text>
+            <text x="90" y="100" fill="#94a3b8" fontSize="9">Stitched ball, normal speed</text>
             <defs>
               <marker id="arrNorm" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
                 <path d="M0,0 L0,6 L7,3 z" fill="#22c55e" />
@@ -772,16 +813,16 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
         </div>
 
         <div className="bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-lg font-semibold text-purple-400 mb-2 text-center">Reverse Magnus</h3>
+          <h3 className="text-lg font-semibold text-purple-400 mb-2 text-center">Reverse Magnus (Volleyball)</h3>
           <svg width="180" height="120" className="mx-auto">
             <rect width="180" height="120" fill="#1e3a5f" rx="8" />
-            <circle cx="50" cy="60" r="20" fill="#dc2626" />
+            <circle cx="50" cy="60" r="20" fill="#fbbf24" />
             {/* Very fast spin indicator */}
             <path d="M30,45 A25,25 0 0 1 70,45" fill="none" stroke="#fbbf24" strokeWidth="3" />
             <path d="M35,50 A20,20 0 0 1 65,50" fill="none" stroke="#fbbf24" strokeWidth="2" />
             <path d="M70,60 Q120,80 160,60" fill="none" stroke="#a855f7" strokeWidth="3" markerEnd="url(#arrRev)" />
             <text x="115" y="90" fill="#a855f7" fontSize="10">Curves DOWN!</text>
-            <text x="90" y="110" fill="#94a3b8" fontSize="9">Extreme spin & speed</text>
+            <text x="90" y="110" fill="#94a3b8" fontSize="9">Smooth ball, extreme spin</text>
             <defs>
               <marker id="arrRev" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
                 <path d="M0,0 L0,6 L7,3 z" fill="#a855f7" />
@@ -792,68 +833,97 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
       </div>
 
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl">
-        <h3 className="text-lg font-bold text-purple-400 mb-3">Why Does It Reverse?</h3>
-        <ul className="space-y-2 text-slate-300 text-sm">
-          <li>• At extreme speeds, the boundary layer transitions from laminar to turbulent</li>
-          <li>• Turbulent flow separates from the ball at different points than laminar flow</li>
-          <li>• This changes which side has higher/lower pressure</li>
-          <li>• The result: the ball curves the OPPOSITE direction!</li>
-          <li>• This is called the "negative Magnus effect" or "reverse Magnus"</li>
-        </ul>
+        <h3 className="text-lg font-bold text-purple-400 mb-3">Why Ball Surface Matters</h3>
+        <div className="grid grid-cols-2 gap-4 text-sm text-slate-300 mb-4">
+          <div className="bg-slate-800/50 rounded-lg p-3">
+            <h4 className="text-cyan-400 font-semibold mb-2">Smooth Balls</h4>
+            <p>Ping pong, volleyball - can experience reverse Magnus at high speeds</p>
+          </div>
+          <div className="bg-slate-800/50 rounded-lg p-3">
+            <h4 className="text-orange-400 font-semibold mb-2">Textured Balls</h4>
+            <p>Golf (dimples), baseball (seams) - enhanced normal Magnus effect</p>
+          </div>
+        </div>
         <p className="text-cyan-400 mt-4 text-sm">
-          This effect has been observed in volleyball serves and some extreme baseball pitches!
+          This is why float serves in volleyball are so unpredictable - the smooth ball can curve unexpectedly!
         </p>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
+        onClick={() => goToPhase('twist_review')}
+        style={{ zIndex: 10 }}
+        className="relative mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
         Review the Discovery
       </button>
     </div>
   );
 
+  // PHASE 7: TWIST_REVIEW - Explain factors affecting Magnus force magnitude
   const renderTwistReview = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-6">Key Discovery</h2>
+      <h2 className="text-2xl font-bold text-purple-400 mb-6">Factors Affecting Magnus Force</h2>
 
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl mb-6">
         <h3 className="text-xl font-bold text-purple-400 mb-4">The Magnus Effect Has Hidden Complexity!</h3>
         <div className="space-y-4 text-slate-300">
           <p>
-            The Magnus effect isn't a simple linear relationship. Depending on:
+            The Magnus effect is not a simple linear relationship. The force magnitude depends on:
           </p>
           <ol className="list-decimal list-inside space-y-2 text-sm">
-            <li>Ball surface texture (smooth vs dimpled vs rough)</li>
-            <li>Spin rate relative to forward velocity</li>
-            <li>Reynolds number (fluid dynamics parameter)</li>
-            <li>Air density and viscosity</li>
+            <li><span className="text-cyan-400 font-semibold">Ball surface texture</span> - smooth vs dimpled vs rough (seams)</li>
+            <li><span className="text-cyan-400 font-semibold">Spin rate</span> - more spin = more curve (usually)</li>
+            <li><span className="text-cyan-400 font-semibold">Forward velocity</span> - faster balls experience more force</li>
+            <li><span className="text-cyan-400 font-semibold">Reynolds number</span> - fluid dynamics parameter combining size, speed, and viscosity</li>
+            <li><span className="text-cyan-400 font-semibold">Air density</span> - altitude and temperature affect air behavior</li>
           </ol>
           <p className="text-emerald-400 font-medium mt-4">
-            The curve can be normal, enhanced, reduced, or even reversed!
+            The curve can be normal, enhanced, reduced, or even reversed depending on these factors!
           </p>
           <p className="text-slate-400 text-sm mt-2">
-            This is why golf balls have dimples - they create a controlled turbulent boundary layer that actually ENHANCES the Magnus effect while reducing overall drag!
+            This is why golf balls have dimples - they create a controlled turbulent boundary layer that ENHANCES the Magnus effect while reducing overall drag!
           </p>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
+        onClick={() => goToPhase('transfer')}
+        style={{ zIndex: 10 }}
+        className="relative mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
       >
         Explore Real-World Applications
       </button>
     </div>
   );
 
+  // PHASE 8: TRANSFER - 4 real-world applications
   const applications = [
     {
-      title: "Baseball Pitching",
-      icon: "⚾",
+      title: "Soccer Free Kicks",
+      icon: "S",
+      description: "The 'banana kick' curves around defensive walls using sidespin.",
+      details: "Players like Roberto Carlos and David Beckham mastered kicks that curve dramatically. The ball can bend over 10 feet from a straight line, going around walls and into the goal. The famous Roberto Carlos free kick in 1997 curved so much that a ball boy ducked thinking it would miss!",
+      animation: (
+        <svg width="200" height="150" className="mx-auto">
+          <rect width="200" height="150" fill="#2d5a27" rx="8" />
+          {/* Goal */}
+          <rect x="160" y="40" width="30" height="70" fill="none" stroke="#ffffff" strokeWidth="2" />
+          {/* Wall of defenders */}
+          <rect x="100" y="50" width="20" height="50" fill="#3b82f6" rx="3" />
+          {/* Ball path - banana curve */}
+          <path d="M30,100 Q80,30 180,75" fill="none" stroke="#ffffff" strokeWidth="3" strokeDasharray="5,5" />
+          <circle cx="30" cy="100" r="6" fill="#ffffff" stroke="#000000" strokeWidth="1" />
+          <circle cx="180" cy="75" r="6" fill="#ffffff" stroke="#000000" strokeWidth="1" />
+          <text x="70" y="20" fill="#fbbf24" fontSize="10">Banana curve!</text>
+          <text x="100" y="140" fill="#94a3b8" fontSize="9">Ball bends around wall</text>
+        </svg>
+      )
+    },
+    {
+      title: "Baseball Curveballs",
+      icon: "B",
       description: "Curveballs, sliders, and cutters all use the Magnus effect to fool batters.",
-      details: "A curveball can drop up to 17 inches from its expected path. Pitchers grip the ball to maximize spin, creating dramatic movement that makes hitting extremely difficult.",
+      details: "A curveball can drop up to 17 inches from its expected path. Pitchers grip the ball to maximize spin using the seams, creating dramatic movement. The 12-6 curveball drops straight down, while sliders curve sideways.",
       animation: (
         <svg width="200" height="150" className="mx-auto">
           <rect width="200" height="150" fill="#2d5a27" rx="8" />
@@ -872,31 +942,10 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
       )
     },
     {
-      title: "Soccer Free Kicks",
-      icon: "⚽",
-      description: "The 'banana kick' curves around defensive walls using sidespin.",
-      details: "Players like Roberto Carlos and David Beckham mastered kicks that curve dramatically. The ball can bend over 10 feet from a straight line, going around walls and into the goal.",
-      animation: (
-        <svg width="200" height="150" className="mx-auto">
-          <rect width="200" height="150" fill="#2d5a27" rx="8" />
-          {/* Goal */}
-          <rect x="160" y="40" width="30" height="70" fill="none" stroke="#ffffff" strokeWidth="2" />
-          {/* Wall of defenders */}
-          <rect x="100" y="50" width="20" height="50" fill="#3b82f6" rx="3" />
-          {/* Ball path - banana curve */}
-          <path d="M30,100 Q80,30 180,75" fill="none" stroke="#ffffff" strokeWidth="3" strokeDasharray="5,5" />
-          <circle cx="30" cy="100" r="6" fill="#ffffff" stroke="#000000" strokeWidth="1" />
-          <circle cx="180" cy="75" r="6" fill="#ffffff" stroke="#000000" strokeWidth="1" />
-          <text x="70" y="20" fill="#fbbf24" fontSize="10">Banana curve!</text>
-          <text x="100" y="140" fill="#94a3b8" fontSize="9">Ball bends around wall</text>
-        </svg>
-      )
-    },
-    {
-      title: "Golf Drives",
-      icon: "⛳",
+      title: "Golf Backspin",
+      icon: "G",
       description: "Backspin keeps the ball airborne longer, dramatically increasing distance.",
-      details: "A well-struck drive has 2,500-3,000 RPM of backspin. The Magnus effect creates lift that keeps the ball in the air 2-3 times longer than a non-spinning ball would fly.",
+      details: "A well-struck drive has 2,500-3,000 RPM of backspin. The Magnus effect creates lift that keeps the ball in the air 2-3 times longer than a non-spinning ball would fly. Dimples enhance this effect while reducing drag!",
       animation: (
         <svg width="200" height="150" className="mx-auto">
           <rect width="200" height="150" fill="#87ceeb" rx="8" />
@@ -918,26 +967,27 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
       )
     },
     {
-      title: "Table Tennis",
-      icon: "🏓",
+      title: "Tennis Topspin",
+      icon: "T",
       description: "Heavy topspin makes the ball dip sharply, keeping aggressive shots on the table.",
-      details: "Professional players generate over 9,000 RPM of spin! The Magnus effect makes the ball curve so sharply that seemingly impossible shots stay in play, and returns become unpredictable.",
+      details: "Professional players generate over 3,000 RPM of topspin! The Magnus effect makes the ball curve downward so sharply that seemingly impossible high shots clear the net and still land in the court. Rafael Nadal's forehand is famous for extreme topspin.",
       animation: (
         <svg width="200" height="150" className="mx-auto">
-          <rect width="200" height="150" fill="#1e3a5f" rx="8" />
-          {/* Table */}
-          <rect x="20" y="80" width="160" height="10" fill="#006400" stroke="#ffffff" strokeWidth="1" />
+          <rect width="200" height="150" fill="#1e5631" rx="8" />
+          {/* Court lines */}
+          <line x1="0" y1="110" x2="200" y2="110" stroke="#ffffff" strokeWidth="2" />
           {/* Net */}
-          <rect x="98" y="60" width="4" height="25" fill="#ffffff" />
+          <rect x="98" y="80" width="4" height="30" fill="#ffffff" />
           {/* Ball with heavy topspin - dips sharply */}
-          <path d="M40,50 Q100,30 160,85" fill="none" stroke="#fbbf24" strokeWidth="3" />
-          <circle cx="40" cy="50" r="5" fill="#ff6600" />
-          <circle cx="160" cy="85" r="5" fill="#ff6600" />
+          <path d="M30,70 Q100,30 170,100" fill="none" stroke="#ccff00" strokeWidth="3" />
+          <circle cx="30" cy="70" r="6" fill="#ccff00" />
+          <circle cx="170" cy="100" r="6" fill="#ccff00" />
           {/* Spin arrow */}
-          <path d="M35,40 A10,10 0 0 1 45,40" fill="none" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#spinArr)" />
+          <path d="M25,60 A10,10 0 0 1 35,60" fill="none" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#spinArrTennis)" />
           <text x="100" y="130" textAnchor="middle" fill="#94a3b8" fontSize="10">Topspin makes ball dip</text>
+          <text x="60" y="50" fill="#fbbf24" fontSize="9">Topspin</text>
           <defs>
-            <marker id="spinArr" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+            <marker id="spinArrTennis" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
               <path d="M0,0 L0,6 L6,3 z" fill="#fbbf24" />
             </marker>
           </defs>
@@ -954,8 +1004,9 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
         {applications.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            onClick={() => setActiveAppTab(index)}
+            style={{ zIndex: 10 }}
+            className={`relative px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppTab === index
                 ? 'bg-red-600 text-white'
                 : completedApps.has(index)
@@ -963,14 +1014,14 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
                 : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
-            {app.icon} {app.title.split(' ')[0]}
+            [{app.icon}] {app.title.split(' ')[0]}
           </button>
         ))}
       </div>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
         <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{applications[activeAppTab].icon}</span>
+          <span className="text-3xl font-bold text-red-400">[{applications[activeAppTab].icon}]</span>
           <h3 className="text-xl font-bold text-white">{applications[activeAppTab].title}</h3>
         </div>
 
@@ -985,8 +1036,9 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
 
         {!completedApps.has(activeAppTab) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
-            className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
+            onClick={() => handleAppComplete(activeAppTab)}
+            style={{ zIndex: 10 }}
+            className="relative mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
           >
             Mark as Understood
           </button>
@@ -1008,8 +1060,9 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
+          onClick={() => goToPhase('test')}
+          style={{ zIndex: 10 }}
+          className="relative mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
         >
           Take the Knowledge Test
         </button>
@@ -1017,6 +1070,7 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     </div>
   );
 
+  // PHASE 9: TEST - 10 multiple choice questions
   const renderTest = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
@@ -1032,8 +1086,9 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
+                    style={{ zIndex: 10 }}
+                    className={`relative p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-red-600 text-white'
                         : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
@@ -1047,9 +1102,15 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
           ))}
 
           <button
-            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); }}
+            onClick={() => {
+              const score = calculateScore();
+              setTestScore?.(score);
+              setShowTestResults(true);
+              onGameEvent?.({ type: 'test_completed', data: { score, total: 10 } });
+            }}
+            style={{ zIndex: 10 }}
             disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
+            className={`relative w-full py-4 rounded-xl font-semibold text-lg transition-all ${
               testAnswers.includes(-1)
                 ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
                 : 'bg-gradient-to-r from-red-600 to-orange-600 text-white hover:from-red-500 hover:to-orange-500'
@@ -1060,29 +1121,34 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
         </div>
       ) : (
         <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
+          <div className="text-6xl mb-4">{calculateScore() >= 7 ? '[*]' : '[?]'}</div>
           <h3 className="text-2xl font-bold text-white mb-2">
             Score: {calculateScore()}/10
           </h3>
           <p className="text-slate-300 mb-6">
             {calculateScore() >= 7
-              ? 'Excellent! You\'ve mastered the Magnus effect!'
+              ? 'Excellent! You have mastered the Magnus effect!'
               : 'Keep studying! Review the concepts and try again.'}
           </p>
 
           {calculateScore() >= 7 ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
-              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+              onClick={() => {
+                goToPhase('mastery');
+                onGameEvent?.({ type: 'mastery_achieved', data: { score: calculateScore() } });
+              }}
+              style={{ zIndex: 10 }}
+              className="relative px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
             >
               Claim Your Mastery Badge
             </button>
           ) : (
             <button
-              onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }}
-              className="px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
+              onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
+              style={{ zIndex: 10 }}
+              className="relative px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
             >
-              Review & Try Again
+              Review and Try Again
             </button>
           )}
         </div>
@@ -1090,38 +1156,44 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
     </div>
   );
 
+  // PHASE 10: MASTERY - Congratulations page
   const renderMastery = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
       <div className="bg-gradient-to-br from-red-900/50 via-orange-900/50 to-yellow-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">⚾</div>
+        <div className="text-8xl mb-6">[M]</div>
         <h1 className="text-3xl font-bold text-white mb-4">Magnus Effect Master!</h1>
         <p className="text-xl text-slate-300 mb-6">
-          You've mastered the physics of spinning balls and curved trajectories!
+          Congratulations! You have mastered the physics of spinning balls and curved trajectories!
         </p>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🌀</div>
+            <div className="text-2xl mb-2">[~]</div>
             <p className="text-sm text-slate-300">Spin Physics</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">💨</div>
+            <div className="text-2xl mb-2">[^]</div>
             <p className="text-sm text-slate-300">Pressure Dynamics</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">⚾</div>
+            <div className="text-2xl mb-2">[o]</div>
             <p className="text-sm text-slate-300">Sports Applications</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🔄</div>
+            <div className="text-2xl mb-2">[<>]</div>
             <p className="text-sm text-slate-300">Reverse Magnus</p>
           </div>
         </div>
 
+        <p className="text-slate-400 mb-6">
+          You now understand why curveballs curve, how banana kicks bend around walls, and why golf balls fly so far. This knowledge applies to any spinning object moving through a fluid!
+        </p>
+
         <div className="flex gap-4 justify-center">
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
+            onClick={() => goToPhase('hook')}
+            style={{ zIndex: 10 }}
+            className="relative px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
           >
             Explore Again
           </button>
@@ -1132,19 +1204,21 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
+
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
@@ -1164,12 +1238,13 @@ const MagnusEffectRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPh
           </div>
           {/* Phase dots */}
           <div className="flex justify-between px-1">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p, index) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  p <= phase
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
+                className={`relative h-2 rounded-full transition-all duration-300 ${
+                  index <= currentPhaseIndex
                     ? 'bg-red-500'
                     : 'bg-slate-700'
                 } ${p === phase ? 'w-6' : 'w-2'}`}

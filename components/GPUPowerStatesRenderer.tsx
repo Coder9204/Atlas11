@@ -50,16 +50,126 @@ const colors = {
 };
 
 const TEST_QUESTIONS = [
-  { text: 'Clock gating turns off transistors that are not being used', correct: true },
-  { text: 'GPU power consumption increases linearly with clock speed', correct: false },
-  { text: 'Voltage scaling reduces power because P = CV²f', correct: true },
-  { text: 'Boost clocks allow GPUs to run faster when power and thermal limits allow', correct: true },
-  { text: 'A GPU will always hit its thermal limit before its power limit', correct: false },
-  { text: 'Dynamic voltage and frequency scaling (DVFS) saves power during light workloads', correct: true },
-  { text: 'Idle GPUs consume zero watts', correct: false },
-  { text: 'Power limit throttling reduces clock speed to stay within TDP', correct: true },
-  { text: 'Silicon quality variation means each chip has different maximum clocks', correct: true },
-  { text: 'GPU boost algorithms balance power, temperature, and reliability', correct: true },
+  // Q1: Core Concept - Clock Gating (Easy) - Correct: A
+  {
+    scenario: "A GPU has millions of transistors, but during a light desktop workload, only 10% of its shader units are actively processing data.",
+    question: "How does the GPU save power for the unused 90% of shader units?",
+    options: [
+      { id: 'gating', label: "Clock gating disables clock signals to unused transistors, eliminating switching power", correct: true },
+      { id: 'remove', label: "The GPU physically disconnects unused transistors from the circuit" },
+      { id: 'slow', label: "Unused transistors run at a slower clock speed automatically" },
+      { id: 'same', label: "All transistors consume the same power regardless of activity" },
+    ],
+    explanation: "Clock gating stops the clock signal to inactive circuits. Since dynamic power only occurs when transistors switch states, no clock means no switching means no power consumption in those regions."
+  },
+  // Q2: Core Concept - Power Formula (Medium) - Correct: C
+  {
+    scenario: "An engineer is trying to reduce GPU power consumption. The power formula is P = CV²f, where C is capacitance, V is voltage, and f is frequency.",
+    question: "Which modification would reduce power consumption the MOST?",
+    options: [
+      { id: 'freq', label: "Halving the clock frequency (f) while keeping voltage the same" },
+      { id: 'cap', label: "Reducing capacitance (C) by 25% through smaller transistors" },
+      { id: 'volt', label: "Reducing voltage (V) by 30% while slightly lowering frequency", correct: true },
+      { id: 'both', label: "Doubling frequency while halving voltage" },
+    ],
+    explanation: "Voltage is squared in the power equation! Reducing voltage by 30% reduces power by about 51% (0.7² = 0.49). This is why voltage scaling is the most effective power-saving technique."
+  },
+  // Q3: Core Concept - DVFS (Medium) - Correct: B
+  {
+    scenario: "Your laptop GPU switches between 400 MHz at 0.7V when browsing the web and 2100 MHz at 1.1V when gaming. This happens automatically without user intervention.",
+    question: "What technology enables this automatic adjustment?",
+    options: [
+      { id: 'manual', label: "Manual power profiles that the operating system switches between" },
+      { id: 'dvfs', label: "Dynamic Voltage and Frequency Scaling (DVFS) that monitors workload in real-time", correct: true },
+      { id: 'fixed', label: "Fixed power states that change only when applications request them" },
+      { id: 'thermal', label: "Thermal throttling that forces lower clocks when the GPU overheats" },
+    ],
+    explanation: "DVFS continuously monitors GPU workload and adjusts both voltage and frequency together. This saves power during light tasks while providing full performance when needed - all automatically."
+  },
+  // Q4: Thermal vs Power Limits (Medium-Hard) - Correct: D
+  {
+    scenario: "Two identical GPUs are tested: GPU A has a high-end water cooling loop, GPU B has a stock air cooler. Both have a 300W TDP limit and 83°C thermal limit.",
+    question: "Under sustained heavy load, which limit will each GPU hit first?",
+    options: [
+      { id: 'both_thermal', label: "Both hit thermal limit first - cooling quality doesn't affect this" },
+      { id: 'both_power', label: "Both hit power limit first - TDP is always the primary constraint" },
+      { id: 'a_thermal', label: "GPU A hits thermal first, GPU B hits power first" },
+      { id: 'a_power', label: "GPU A hits power limit first (stays cool enough), GPU B hits thermal limit first", correct: true },
+    ],
+    explanation: "With excellent cooling, GPU A stays below 83°C even at 300W, so power is the limit. GPU B's weaker cooling causes temperature to rise faster than power draw, hitting thermal limits before reaching full TDP."
+  },
+  // Q5: Idle Power States (Medium) - Correct: A
+  {
+    scenario: "A GPU at idle displays a static desktop. Monitoring software shows it consuming 15W instead of 0W, with clocks at 300 MHz and voltage at 0.75V.",
+    question: "Why doesn't the GPU consume zero watts at idle?",
+    options: [
+      { id: 'leakage', label: "Static leakage current flows through transistors even when not switching, plus display output requires some power", correct: true },
+      { id: 'ready', label: "The GPU keeps all circuits powered on to be ready for instant gaming" },
+      { id: 'error', label: "The monitoring software is incorrect - idle GPUs do consume zero watts" },
+      { id: 'fan', label: "The 15W is entirely consumed by the cooling fans" },
+    ],
+    explanation: "Even at idle, transistors have static leakage current (electrons tunneling through thin insulation). Plus, the display engine, memory interface, and video output circuits must remain active. True zero power is impossible while the system is on."
+  },
+  // Q6: Boost Clocks (Hard) - Correct: C
+  {
+    scenario: "A GPU has a base clock of 1800 MHz and a boost clock of 2400 MHz. During gaming, you notice it actually runs at 2250 MHz sustained.",
+    question: "Why doesn't the GPU maintain its maximum 2400 MHz boost clock?",
+    options: [
+      { id: 'defect', label: "The GPU chip is defective and cannot reach its rated speed" },
+      { id: 'driver', label: "The driver artificially limits boost clocks to extend GPU lifespan" },
+      { id: 'balance', label: "Boost algorithms continuously balance power budget, thermals, and reliability margins", correct: true },
+      { id: 'game', label: "The game doesn't require the full 2400 MHz, so the GPU saves power" },
+    ],
+    explanation: "Boost clocks are opportunistic maximums, not guaranteed speeds. The GPU's firmware constantly evaluates power headroom, temperature trends, and voltage reliability margins. 2250 MHz sustained means the algorithm found the optimal balance point."
+  },
+  // Q7: Thermal Throttling (Medium) - Correct: B
+  {
+    scenario: "During a stress test, your GPU temperature hits 83°C. The clock speed suddenly drops from 2100 MHz to 1650 MHz, and temperature stabilizes at 82°C.",
+    question: "What mechanism caused this behavior?",
+    options: [
+      { id: 'crash', label: "The GPU detected an error and entered a safe mode" },
+      { id: 'throttle', label: "Thermal throttling reduced clocks to prevent exceeding the temperature limit", correct: true },
+      { id: 'power', label: "Power throttling kicked in because 2100 MHz exceeded the TDP" },
+      { id: 'driver', label: "The graphics driver limited performance to prevent damage" },
+    ],
+    explanation: "Thermal throttling is a hardware protection mechanism. When temperature approaches the limit (83°C), the GPU automatically reduces voltage and frequency to lower power dissipation and stabilize temperature."
+  },
+  // Q8: Sleep States and Wake Latency (Hard) - Correct: D
+  {
+    scenario: "A mobile GPU supports multiple power states: D0 (active), D1 (light sleep), D2 (deep sleep), and D3 (off). Wake latency increases from D1 (0.1ms) to D3 (50ms).",
+    question: "Why would a system choose D1 over D3 for a GPU that's been idle for 100ms?",
+    options: [
+      { id: 'same', label: "D1 and D3 consume the same power, so latency is the only factor" },
+      { id: 'never', label: "Systems always choose the deepest sleep state for maximum power savings" },
+      { id: 'damage', label: "Entering D3 too frequently causes physical damage to the GPU" },
+      { id: 'tradeoff', label: "The energy saved by D3 over 100ms doesn't offset the wake energy cost and latency penalty", correct: true },
+    ],
+    explanation: "Deeper sleep states save more power per second but cost energy to enter/exit. For short idle periods, the wake latency penalty and transition energy can exceed the savings. The OS power manager predicts idle duration to choose optimally."
+  },
+  // Q9: Power Efficiency Metrics (Hard) - Correct: A
+  {
+    scenario: "Comparing two GPUs: GPU X delivers 100 FPS at 250W, GPU Y delivers 90 FPS at 180W. A data center is choosing between them for AI training.",
+    question: "Which GPU should the data center choose for 24/7 operation, and why?",
+    options: [
+      { id: 'y_efficient', label: "GPU Y - it has better performance per watt (0.5 vs 0.4 FPS/W), reducing electricity costs", correct: true },
+      { id: 'x_fast', label: "GPU X - faster completion means less total energy used" },
+      { id: 'x_fewer', label: "GPU X - fewer GPUs needed means lower hardware costs" },
+      { id: 'same', label: "Both are equivalent - total work done per dollar is the same" },
+    ],
+    explanation: "For 24/7 operation, performance-per-watt dominates. GPU Y achieves 0.5 FPS/W vs GPU X's 0.4 FPS/W. Over years of operation, electricity costs often exceed hardware costs. Data centers optimize for efficiency, not peak performance."
+  },
+  // Q10: Silicon Quality and Binning (Medium-Hard) - Correct: C
+  {
+    scenario: "Two GPUs of the same model have different maximum stable clocks: Card A reaches 2500 MHz at 1.1V, Card B only reaches 2350 MHz at the same voltage.",
+    question: "What causes this variation between identical GPU models?",
+    options: [
+      { id: 'fake', label: "Card B is a counterfeit with inferior components" },
+      { id: 'worn', label: "Card B was used previously and has degraded over time" },
+      { id: 'silicon', label: "Manufacturing variations in silicon quality create chips with different characteristics", correct: true },
+      { id: 'firmware', label: "Different firmware versions limit Card B's maximum clock" },
+    ],
+    explanation: "The 'silicon lottery' refers to natural variations in chip manufacturing. Microscopic differences in transistor size, doping levels, and defect density mean every chip has slightly different voltage-frequency characteristics. This is why overclock results vary."
+  },
 ];
 
 const TRANSFER_APPLICATIONS = [
@@ -162,7 +272,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [testAnswers, setTestAnswers] = useState<(boolean | null)[]>(new Array(10).fill(null));
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
@@ -253,9 +363,9 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
     { id: 'neither', label: 'Modern GPUs never hit either limit due to advanced cooling' },
   ];
 
-  const handleTestAnswer = (answer: boolean) => {
+  const handleTestAnswer = (answerId: string) => {
     const newAnswers = [...testAnswers];
-    newAnswers[currentTestIndex] = answer;
+    newAnswers[currentTestIndex] = answerId;
     setTestAnswers(newAnswers);
   };
 
@@ -274,11 +384,12 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
   const submitTest = () => {
     let score = 0;
     testAnswers.forEach((answer, i) => {
-      if (answer === TEST_QUESTIONS[i].correct) score++;
+      const correctOption = TEST_QUESTIONS[i].options.find(o => o.correct);
+      if (answer === correctOption?.id) score++;
     });
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+    if (score >= 7 && onCorrectAnswer) onCorrectAnswer(); // 70% threshold (7/10)
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
@@ -1047,29 +1158,32 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
   // TEST PHASE
   if (phase === 'test') {
     if (testSubmitted) {
+      const passed = testScore >= 7; // 70% threshold
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
           {renderProgressBar()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px', paddingTop: '60px' }}>
             <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
+              background: passed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
               margin: '16px',
               padding: '24px',
               borderRadius: '12px',
               textAlign: 'center',
             }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
+              <h2 style={{ color: passed ? colors.success : colors.error, marginBottom: '8px' }}>
+                {testScore === 10 ? 'Perfect!' : testScore >= 8 ? 'Excellent!' : testScore >= 7 ? 'Great Job!' : 'Keep Learning!'}
               </h2>
               <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
               <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You understand GPU power management!' : 'Review the concepts and try again.'}
+                {passed ? 'You understand GPU power management!' : 'Review the concepts and try again.'}
               </p>
             </div>
 
             {TEST_QUESTIONS.map((q, i) => {
               const userAnswer = testAnswers[i];
-              const isCorrect = userAnswer === q.correct;
+              const correctOption = q.options.find(o => o.correct);
+              const userOption = q.options.find(o => o.id === userAnswer);
+              const isCorrect = userAnswer === correctOption?.id;
               return (
                 <div key={i} style={{
                   background: colors.bgCard,
@@ -1078,15 +1192,57 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
                   borderRadius: '12px',
                   borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
                 }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '8px' }}>{i + 1}. {q.text}</p>
-                  <p style={{ color: isCorrect ? colors.success : colors.error, fontSize: '14px' }}>
-                    Your answer: {userAnswer ? 'True' : 'False'} | Correct: {q.correct ? 'True' : 'False'}
+                  <p style={{ color: colors.textPrimary, fontWeight: 'bold', marginBottom: '8px' }}>
+                    {i + 1}. {q.question}
                   </p>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '12px' }}>
+                    {q.scenario}
+                  </p>
+                  <div style={{
+                    padding: '12px',
+                    borderRadius: '8px',
+                    background: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                    marginBottom: '8px',
+                  }}>
+                    <p style={{ color: isCorrect ? colors.success : colors.error, fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>
+                      {isCorrect ? 'Your Answer (Correct!)' : 'Your Answer'}
+                    </p>
+                    <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+                      {userOption?.label || 'No answer selected'}
+                    </p>
+                  </div>
+                  {!isCorrect && (
+                    <div style={{
+                      padding: '12px',
+                      borderRadius: '8px',
+                      background: 'rgba(16, 185, 129, 0.1)',
+                      marginBottom: '8px',
+                    }}>
+                      <p style={{ color: colors.success, fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>
+                        Correct Answer
+                      </p>
+                      <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>
+                        {correctOption?.label}
+                      </p>
+                    </div>
+                  )}
+                  <div style={{
+                    padding: '12px',
+                    borderRadius: '8px',
+                    background: 'rgba(249, 115, 22, 0.1)',
+                  }}>
+                    <p style={{ color: colors.accent, fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>
+                      Explanation
+                    </p>
+                    <p style={{ color: colors.textSecondary, fontSize: '13px', lineHeight: 1.5, margin: 0 }}>
+                      {q.explanation}
+                    </p>
+                  </div>
                 </div>
               );
             })}
           </div>
-          {renderBottomBar(testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
+          {renderBottomBar(passed, passed ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
@@ -1111,55 +1267,85 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
                   onClick={() => setCurrentTestIndex(i)}
                   style={{
                     flex: 1,
-                    height: '4px',
-                    borderRadius: '2px',
+                    height: '6px',
+                    borderRadius: '3px',
                     background: testAnswers[i] !== null ? colors.accent : i === currentTestIndex ? colors.textMuted : 'rgba(255,255,255,0.1)',
                     cursor: 'pointer',
+                    zIndex: 10,
                   }}
                 />
               ))}
             </div>
 
+            {/* Scenario Box */}
             <div style={{
-              background: colors.bgCard,
-              padding: '20px',
+              background: 'rgba(249, 115, 22, 0.1)',
+              padding: '16px',
               borderRadius: '12px',
               marginBottom: '16px',
+              border: `1px solid ${colors.accent}30`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>
-                {currentQ.text}
+              <p style={{ color: colors.accent, fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>
+                Scenario
+              </p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, margin: 0 }}>
+                {currentQ.scenario}
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={() => handleTestAnswer(true)}
-                style={{
-                  ...buttonStyle,
-                  flex: 1,
-                  padding: '16px',
-                  background: testAnswers[currentTestIndex] === true ? 'rgba(16, 185, 129, 0.3)' : 'transparent',
-                  border: testAnswers[currentTestIndex] === true ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.2)',
-                  color: colors.textPrimary,
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                TRUE
-              </button>
-              <button
-                onClick={() => handleTestAnswer(false)}
-                style={{
-                  ...buttonStyle,
-                  flex: 1,
-                  padding: '16px',
-                  background: testAnswers[currentTestIndex] === false ? 'rgba(239, 68, 68, 0.3)' : 'transparent',
-                  border: testAnswers[currentTestIndex] === false ? `2px solid ${colors.error}` : '1px solid rgba(255,255,255,0.2)',
-                  color: colors.textPrimary,
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                FALSE
-              </button>
+            {/* Question */}
+            <p style={{ color: colors.textPrimary, fontSize: '17px', fontWeight: 'bold', marginBottom: '20px', lineHeight: 1.4 }}>
+              {currentQ.question}
+            </p>
+
+            {/* Multiple Choice Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              {currentQ.options.map((opt, i) => (
+                <button
+                  key={opt.id}
+                  onClick={() => handleTestAnswer(opt.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    padding: '16px',
+                    borderRadius: '12px',
+                    textAlign: 'left',
+                    background: testAnswers[currentTestIndex] === opt.id ? 'rgba(249, 115, 22, 0.2)' : colors.bgCard,
+                    border: testAnswers[currentTestIndex] === opt.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.1)',
+                    cursor: 'pointer',
+                    WebkitTapHighlightColor: 'transparent',
+                    zIndex: 10,
+                  }}
+                >
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: testAnswers[currentTestIndex] === opt.id ? colors.accent : 'rgba(255,255,255,0.1)',
+                    flexShrink: 0,
+                  }}>
+                    <span style={{
+                      fontSize: '14px',
+                      fontWeight: 'bold',
+                      color: testAnswers[currentTestIndex] === opt.id ? 'white' : colors.textMuted,
+                    }}>
+                      {String.fromCharCode(65 + i)}
+                    </span>
+                  </div>
+                  <p style={{
+                    fontSize: '14px',
+                    color: testAnswers[currentTestIndex] === opt.id ? colors.textPrimary : colors.textSecondary,
+                    margin: 0,
+                    lineHeight: 1.4,
+                  }}>
+                    {opt.label}
+                  </p>
+                </button>
+              ))}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
@@ -1173,6 +1359,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
                   color: currentTestIndex === 0 ? colors.textMuted : colors.textPrimary,
                   cursor: currentTestIndex === 0 ? 'not-allowed' : 'pointer',
                   WebkitTapHighlightColor: 'transparent',
+                  zIndex: 10,
                 }}
               >
                 Previous
@@ -1185,6 +1372,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
                     background: colors.accent,
                     color: 'white',
                     WebkitTapHighlightColor: 'transparent',
+                    zIndex: 10,
                   }}
                 >
                   Next
@@ -1199,6 +1387,7 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
                     color: 'white',
                     cursor: allAnswered ? 'pointer' : 'not-allowed',
                     WebkitTapHighlightColor: 'transparent',
+                    zIndex: 10,
                   }}
                 >
                   Submit Test

@@ -53,16 +53,126 @@ const phaseLabels: Record<Phase, string> = {
 };
 
 const TEST_QUESTIONS = [
-  { text: 'DRAM stores each bit as charge in a capacitor', correct: true },
-  { text: 'DRAM retains data permanently without power', correct: false },
-  { text: 'Capacitor leakage causes DRAM to lose data over time', correct: true },
-  { text: 'DRAM refresh reads and rewrites each cell periodically', correct: true },
-  { text: 'Faster DRAM chips need less frequent refresh cycles', correct: false },
-  { text: 'Refresh operations consume power and reduce available bandwidth', correct: true },
-  { text: 'Retention time is how long a cell holds its charge', correct: true },
-  { text: 'SRAM needs refresh cycles like DRAM', correct: false },
-  { text: 'Higher temperatures increase leakage and require faster refresh', correct: true },
-  { text: 'Modern DDR5 has improved refresh efficiency over DDR4', correct: true },
+  // Q1: Core Concept - Why DRAM Needs Refresh (Easy)
+  {
+    scenario: "You design a memory chip with billions of tiny capacitors, each storing one bit of data as electric charge.",
+    question: "Why does DRAM require periodic refresh cycles?",
+    options: [
+      { id: 'magnetic', label: "Magnetic fields from nearby components scramble the data" },
+      { id: 'leakage', label: "Capacitors naturally leak charge over time, causing data loss without refresh", correct: true },
+      { id: 'wear', label: "The capacitors physically wear out and need to be recharged" },
+      { id: 'sync', label: "Refresh synchronizes data between different memory banks" },
+    ],
+    explanation: "DRAM capacitors are incredibly small (femtofarads) and charge leaks through junction currents and quantum tunneling. Without refresh every 32-64ms, the charge drops below the threshold needed to distinguish 1 from 0."
+  },
+  // Q2: Core Concept - Capacitor Storage (Easy)
+  {
+    scenario: "A computer engineer is explaining how DRAM stores the binary values 1 and 0 at the hardware level.",
+    question: "How does a single DRAM cell physically represent a binary 1 versus a binary 0?",
+    options: [
+      { id: 'voltage', label: "High voltage on a wire = 1, low voltage = 0" },
+      { id: 'capacitor', label: "Charged capacitor = 1, discharged capacitor = 0", correct: true },
+      { id: 'magnetic', label: "North magnetic pole = 1, south pole = 0" },
+      { id: 'transistor', label: "Transistor on = 1, transistor off = 0" },
+    ],
+    explanation: "Each DRAM cell has one transistor and one capacitor. A charged capacitor (above threshold) reads as 1, while a discharged capacitor (below threshold) reads as 0. The transistor acts as a switch to access the capacitor."
+  },
+  // Q3: Refresh Rate vs Data Integrity (Medium)
+  {
+    scenario: "A server administrator notices occasional memory errors. The DRAM is configured with a 64ms refresh interval, but the data center runs hot at 45C.",
+    question: "What is the relationship between refresh rate and data integrity?",
+    options: [
+      { id: 'faster', label: "Faster refresh rate improves data integrity but consumes more power and bandwidth", correct: true },
+      { id: 'slower', label: "Slower refresh rate improves data integrity by reducing electrical stress" },
+      { id: 'none', label: "Refresh rate has no impact on data integrity, only on speed" },
+      { id: 'random', label: "The relationship is random and depends on manufacturing quality" },
+    ],
+    explanation: "Higher temperatures accelerate charge leakage. If refresh is too slow, capacitors discharge below threshold before the next refresh, causing bit flips. Faster refresh prevents this but steals memory bandwidth and increases power consumption."
+  },
+  // Q4: DRAM vs SRAM Comparison (Medium)
+  {
+    scenario: "A chip designer must choose between DRAM and SRAM for a CPU cache that needs maximum speed with minimal latency.",
+    question: "Why do CPU caches use SRAM instead of DRAM?",
+    options: [
+      { id: 'cheaper', label: "SRAM is cheaper to manufacture than DRAM" },
+      { id: 'norefresh', label: "SRAM uses flip-flops that hold state without refresh, enabling faster access", correct: true },
+      { id: 'smaller', label: "SRAM cells are smaller, allowing more cache on the chip" },
+      { id: 'power', label: "SRAM uses less power than DRAM" },
+    ],
+    explanation: "SRAM uses 6 transistors per cell in a flip-flop configuration that actively maintains its state without refresh. This eliminates refresh overhead and enables sub-nanosecond access. The tradeoff: SRAM cells are 6x larger and more expensive than DRAM."
+  },
+  // Q5: Power Consumption During Refresh (Medium)
+  {
+    scenario: "A mobile phone engineer is optimizing battery life. The phone has 8GB of LPDDR5 RAM that must remain powered during sleep mode.",
+    question: "How does DRAM refresh impact power consumption?",
+    options: [
+      { id: 'negligible', label: "Refresh uses negligible power compared to active memory operations" },
+      { id: 'significant', label: "Refresh can consume 15-20% of total DRAM power, significant in idle/sleep modes", correct: true },
+      { id: 'constant', label: "Refresh power is constant regardless of memory size or temperature" },
+      { id: 'zero', label: "Modern DRAM uses zero power for refresh due to self-sustaining circuits" },
+    ],
+    explanation: "Refresh requires reading and rewriting every row in memory periodically. In idle modes, refresh becomes the dominant power consumer. LPDDR uses techniques like partial array self-refresh to only refresh active sections, extending battery life."
+  },
+  // Q6: Temperature Effects (Medium-Hard)
+  {
+    scenario: "A gaming laptop shows memory errors during intense gaming sessions when internal temperatures reach 85C, but works perfectly at room temperature.",
+    question: "Why does high temperature cause memory errors in DRAM?",
+    options: [
+      { id: 'expansion', label: "Thermal expansion causes physical damage to memory cells" },
+      { id: 'leakage', label: "Higher temperature exponentially increases charge leakage, reducing retention time", correct: true },
+      { id: 'resistance', label: "Heat increases wire resistance, slowing down data transfer" },
+      { id: 'timing', label: "The memory controller runs slower at high temperatures" },
+    ],
+    explanation: "Leakage current follows the Arrhenius equation - it roughly doubles for every 10C increase. At 85C, capacitors may lose charge in 16ms instead of 64ms. If refresh cannot keep up, bits flip. This is why servers use temperature-compensated refresh rates."
+  },
+  // Q7: Burst vs Distributed Refresh (Hard)
+  {
+    scenario: "A memory controller designer must choose between burst refresh (refresh all rows at once) and distributed refresh (spread refreshes evenly over time).",
+    question: "What is the main advantage of distributed refresh over burst refresh?",
+    options: [
+      { id: 'power', label: "Distributed refresh uses less total power" },
+      { id: 'latency', label: "Distributed refresh avoids long pauses, reducing worst-case memory access latency", correct: true },
+      { id: 'simple', label: "Distributed refresh is simpler to implement in hardware" },
+      { id: 'integrity', label: "Distributed refresh provides better data integrity" },
+    ],
+    explanation: "Burst refresh pauses all memory access while refreshing every row (potentially milliseconds). Distributed refresh spreads refreshes across time, so at most one row is being refreshed at any moment. This bounds worst-case latency, critical for real-time systems."
+  },
+  // Q8: DDR5 Improvements (Hard)
+  {
+    scenario: "DDR5 memory introduces same-bank refresh, allowing some banks to be refreshed while others remain accessible for read/write operations.",
+    question: "How does DDR5's same-bank refresh improve over DDR4's all-bank refresh?",
+    options: [
+      { id: 'faster', label: "Individual banks refresh faster than all banks together" },
+      { id: 'bandwidth', label: "Memory bandwidth remains partially available during refresh operations", correct: true },
+      { id: 'power', label: "Same-bank refresh eliminates power consumption during refresh" },
+      { id: 'simpler', label: "Same-bank refresh simplifies the memory controller design" },
+    ],
+    explanation: "DDR4 all-bank refresh blocks the entire memory during refresh. DDR5 same-bank refresh only blocks the bank being refreshed - other banks remain accessible. This can recover 5-10% of effective bandwidth that was previously lost to refresh."
+  },
+  // Q9: Retention Time Concept (Medium)
+  {
+    scenario: "A DRAM specification sheet lists 'retention time: 64ms at 85C' as a key parameter.",
+    question: "What does retention time measure in DRAM specifications?",
+    options: [
+      { id: 'access', label: "The time required to read data from a memory cell" },
+      { id: 'hold', label: "The maximum time a cell can hold its charge above the detection threshold", correct: true },
+      { id: 'write', label: "The time required to write data to a memory cell" },
+      { id: 'cycle', label: "The minimum time between consecutive memory operations" },
+    ],
+    explanation: "Retention time is how long a charged capacitor stays above the threshold voltage needed to read a valid 1. Refresh must occur before retention time expires. Hotter temperatures and faster memory generally have shorter retention times."
+  },
+  // Q10: Real-World Application - ECC Memory (Expert)
+  {
+    scenario: "A data center uses ECC (Error Correcting Code) memory that can detect and correct single-bit errors. The system logs show occasional corrected errors even with proper refresh timing.",
+    question: "Why do single-bit errors still occur in properly refreshed ECC memory?",
+    options: [
+      { id: 'manufacturing', label: "Manufacturing defects cause some cells to fail randomly" },
+      { id: 'cosmic', label: "Cosmic rays and alpha particles can flip bits between refresh cycles", correct: true },
+      { id: 'software', label: "Software bugs in the memory controller cause bit flips" },
+      { id: 'voltage', label: "Power supply fluctuations corrupt data during read operations" },
+    ],
+    explanation: "High-energy cosmic rays and alpha particles from packaging materials can deposit enough charge to flip a bit instantly - no refresh can prevent this. ECC memory adds extra bits to detect and correct these random 'soft errors', which is why servers require ECC for reliability."
+  },
 ];
 
 const TRANSFER_APPLICATIONS = [
@@ -161,7 +271,7 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [testAnswers, setTestAnswers] = useState<(boolean | null)[]>(new Array(10).fill(null));
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
@@ -228,10 +338,17 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     { id: 'none', label: 'Faster memory eliminates refresh entirely with new technology' },
   ];
 
-  const handleTestAnswer = (answer: boolean) => {
+  const handleTestAnswer = (answerId: string) => {
     const newAnswers = [...testAnswers];
-    newAnswers[currentTestIndex] = answer;
+    newAnswers[currentTestIndex] = answerId;
     setTestAnswers(newAnswers);
+  };
+
+  const calculateTestScore = () => {
+    return testAnswers.reduce((score, ans, i) => {
+      const correct = TEST_QUESTIONS[i].options.find(o => o.correct)?.id;
+      return score + (ans === correct ? 1 : 0);
+    }, 0);
   };
 
   const nextTestQuestion = () => {
@@ -247,13 +364,10 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
   };
 
   const submitTest = () => {
-    let score = 0;
-    testAnswers.forEach((answer, i) => {
-      if (answer === TEST_QUESTIONS[i].correct) score++;
-    });
+    const score = calculateTestScore();
     setTestScore(score);
     setTestSubmitted(true);
-    if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
+    if (score >= 7 && onCorrectAnswer) onCorrectAnswer();
     else if (onIncorrectAnswer) onIncorrectAnswer();
   };
 
@@ -1045,122 +1159,378 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
 
   // TEST PHASE
   if (phase === 'test') {
+    const currentQ = TEST_QUESTIONS[currentTestIndex];
+    const totalQuestions = TEST_QUESTIONS.length;
+    const passed = testScore >= 7;
+
     if (testSubmitted) {
       return (
         <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
           {renderProgressBar()}
           <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-            <div style={{
-              background: testScore >= 8 ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-              margin: '16px',
-              padding: '24px',
-              borderRadius: '12px',
-              textAlign: 'center',
-            }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
-                {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
-              </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
-                {testScore >= 8 ? 'You understand DRAM refresh!' : 'Review the concepts and try again.'}
-              </p>
-            </div>
-
-            {TEST_QUESTIONS.map((q, i) => {
-              const userAnswer = testAnswers[i];
-              const isCorrect = userAnswer === q.correct;
-              return (
-                <div key={i} style={{
-                  background: colors.bgCard,
-                  margin: '16px',
-                  padding: '16px',
-                  borderRadius: '12px',
-                  borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
+            <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '672px', margin: '0 auto' }}>
+              {/* Score Summary */}
+              <div style={{ textAlign: 'center', marginBottom: '24px' }}>
+                <div style={{
+                  width: '80px',
+                  height: '80px',
+                  borderRadius: '50%',
+                  margin: '0 auto 12px',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  fontSize: '36px',
+                  background: passed ? `${colors.success}20` : `${colors.warning}20`,
+                  border: `3px solid ${passed ? colors.success : colors.warning}`
                 }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '8px' }}>{i + 1}. {q.text}</p>
-                  <p style={{ color: isCorrect ? colors.success : colors.error, fontSize: '14px' }}>
-                    Your answer: {userAnswer ? 'True' : 'False'} | Correct: {q.correct ? 'True' : 'False'}
-                  </p>
+                  {testScore === totalQuestions ? 'Trophy' : testScore >= 9 ? 'Star' : testScore >= 7 ? 'Check' : 'Book'}
                 </div>
-              );
-            })}
+                <h2 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '4px', color: colors.textPrimary }}>
+                  {testScore}/{totalQuestions} Correct
+                </h2>
+                <p style={{ fontSize: '14px', marginBottom: '16px', color: passed ? colors.success : colors.warning }}>
+                  {testScore === totalQuestions ? "Perfect! You've mastered DRAM refresh!" :
+                   testScore >= 9 ? 'Excellent! You deeply understand memory concepts.' :
+                   testScore >= 7 ? 'Great job! You understand the key concepts.' :
+                   'Keep exploring - memory technology takes time!'}
+                </p>
+
+                <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+                  <button
+                    onClick={() => {
+                      setCurrentTestIndex(0);
+                      setTestAnswers(new Array(10).fill(null));
+                      setTestSubmitted(false);
+                      setTestScore(0);
+                    }}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '12px',
+                      fontWeight: 700,
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: colors.bgCard,
+                      color: colors.textSecondary,
+                      border: `1px solid ${colors.border}`,
+                      cursor: 'pointer',
+                      zIndex: 10,
+                      position: 'relative'
+                    }}
+                  >
+                    Retake Test
+                  </button>
+                  <button
+                    onClick={() => goToPhase('mastery')}
+                    style={{
+                      padding: '10px 20px',
+                      borderRadius: '12px',
+                      fontWeight: 700,
+                      fontSize: '14px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      gap: '8px',
+                      background: passed ? colors.success : colors.warning,
+                      color: 'white',
+                      border: 'none',
+                      cursor: 'pointer',
+                      zIndex: 10,
+                      position: 'relative'
+                    }}
+                  >
+                    {passed ? 'Claim Mastery' : 'Review Lesson'}
+                  </button>
+                </div>
+              </div>
+
+              {/* Question-by-Question Review */}
+              <div style={{ marginBottom: '16px' }}>
+                <p style={{
+                  fontSize: '10px',
+                  fontWeight: 700,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.1em',
+                  marginBottom: '12px',
+                  color: colors.textMuted
+                }}>
+                  Question-by-Question Review
+                </p>
+              </div>
+
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+                {TEST_QUESTIONS.map((q, i) => {
+                  const correctOption = q.options.find(o => o.correct);
+                  const correctId = correctOption?.id;
+                  const userAnswer = testAnswers[i];
+                  const userOption = q.options.find(o => o.id === userAnswer);
+                  const isCorrect = userAnswer === correctId;
+
+                  return (
+                    <div key={i} style={{
+                      borderRadius: '16px',
+                      overflow: 'hidden',
+                      background: colors.bgCard,
+                      border: `2px solid ${isCorrect ? colors.success : colors.error}40`
+                    }}>
+                      <div style={{
+                        padding: '16px',
+                        background: isCorrect ? `${colors.success}15` : `${colors.error}15`
+                      }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                          <div style={{
+                            width: '32px',
+                            height: '32px',
+                            borderRadius: '50%',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            fontSize: '14px',
+                            fontWeight: 700,
+                            background: isCorrect ? colors.success : colors.error,
+                            color: 'white'
+                          }}>
+                            {isCorrect ? 'Y' : 'N'}
+                          </div>
+                          <div style={{ flex: 1 }}>
+                            <p style={{ fontSize: '14px', fontWeight: 700, color: colors.textPrimary, margin: 0 }}>
+                              Question {i + 1}
+                            </p>
+                            <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0 }}>{q.question}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                        <div style={{
+                          padding: '12px',
+                          borderRadius: '12px',
+                          background: isCorrect ? `${colors.success}10` : `${colors.error}10`,
+                          border: `1px solid ${isCorrect ? colors.success : colors.error}30`
+                        }}>
+                          <p style={{
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            marginBottom: '4px',
+                            color: isCorrect ? colors.success : colors.error
+                          }}>
+                            {isCorrect ? 'Your Answer (Correct!)' : 'Your Answer'}
+                          </p>
+                          <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0 }}>
+                            {userOption?.label || 'No answer selected'}
+                          </p>
+                        </div>
+
+                        {!isCorrect && (
+                          <div style={{
+                            padding: '12px',
+                            borderRadius: '12px',
+                            background: `${colors.success}10`,
+                            border: `1px solid ${colors.success}30`
+                          }}>
+                            <p style={{
+                              fontSize: '10px',
+                              fontWeight: 700,
+                              textTransform: 'uppercase',
+                              letterSpacing: '0.1em',
+                              marginBottom: '4px',
+                              color: colors.success
+                            }}>
+                              Correct Answer
+                            </p>
+                            <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0 }}>
+                              {correctOption?.label}
+                            </p>
+                          </div>
+                        )}
+
+                        <div style={{
+                          padding: '12px',
+                          borderRadius: '12px',
+                          background: colors.bgCardLight
+                        }}>
+                          <p style={{
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            marginBottom: '4px',
+                            color: colors.accent
+                          }}>
+                            Why?
+                          </p>
+                          <p style={{ fontSize: '12px', lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                            {q.explanation}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Retake Button at Bottom */}
+              <div style={{
+                marginTop: '24px',
+                padding: '16px',
+                borderRadius: '16px',
+                textAlign: 'center',
+                background: colors.bgCard,
+                border: `1px solid ${colors.border}`
+              }}>
+                <p style={{ fontSize: '14px', marginBottom: '12px', color: colors.textSecondary }}>
+                  {passed ? 'Want to improve your score?' : 'Review the explanations above and try again!'}
+                </p>
+                <button
+                  onClick={() => {
+                    setCurrentTestIndex(0);
+                    setTestAnswers(new Array(10).fill(null));
+                    setTestSubmitted(false);
+                    setTestScore(0);
+                  }}
+                  style={{
+                    padding: '12px 24px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    background: colors.accent,
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    position: 'relative'
+                  }}
+                >
+                  Retake Test
+                </button>
+              </div>
+            </div>
           </div>
-          {renderBottomBar(false, testScore >= 8, testScore >= 8 ? 'Complete Mastery' : 'Review & Retry')}
         </div>
       );
     }
 
-    const currentQ = TEST_QUESTIONS[currentTestIndex];
     const allAnswered = testAnswers.every(a => a !== null);
 
     return (
       <div style={{ minHeight: '100dvh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
         {renderProgressBar()}
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestIndex + 1} / {TEST_QUESTIONS.length}</span>
+          <div style={{ padding: isMobile ? '16px' : '24px', maxWidth: '672px', margin: '0 auto' }}>
+            {/* Header */}
+            <div style={{ marginBottom: '24px' }}>
+              <p style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                marginBottom: '8px',
+                color: colors.warning
+              }}>
+                Step 8 - Knowledge Test
+              </p>
+              <h2 style={{ fontSize: '24px', fontWeight: 900, marginBottom: '16px', color: colors.textPrimary }}>
+                Question {currentTestIndex + 1} of {totalQuestions}
+              </h2>
+
+              {/* Progress Bar */}
+              <div style={{ display: 'flex', gap: '4px' }}>
+                {Array.from({ length: totalQuestions }, (_, i) => (
+                  <div
+                    key={i}
+                    style={{
+                      height: '8px',
+                      flex: 1,
+                      borderRadius: '9999px',
+                      background: i === currentTestIndex ? colors.warning :
+                                  i < currentTestIndex ? colors.success :
+                                  testAnswers[i] !== null ? colors.accent : colors.bgCardLight
+                    }}
+                  />
+                ))}
+              </div>
             </div>
 
-            <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
-              {TEST_QUESTIONS.map((_, i) => (
-                <div
-                  key={i}
-                  onClick={() => setCurrentTestIndex(i)}
-                  style={{
-                    flex: 1,
-                    height: '4px',
-                    borderRadius: '2px',
-                    background: testAnswers[i] !== null ? colors.accent : i === currentTestIndex ? colors.textMuted : 'rgba(255,255,255,0.1)',
-                    cursor: 'pointer',
-                  }}
-                />
-              ))}
-            </div>
-
+            {/* Scenario Box */}
             <div style={{
-              background: colors.bgCard,
               padding: '20px',
-              borderRadius: '12px',
-              marginBottom: '16px',
+              borderRadius: '16px',
+              marginBottom: '24px',
+              background: `${colors.accent}15`,
+              border: `1px solid ${colors.accent}30`
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>
-                {currentQ.text}
+              <p style={{
+                fontSize: '10px',
+                fontWeight: 700,
+                textTransform: 'uppercase',
+                letterSpacing: '0.1em',
+                marginBottom: '8px',
+                color: colors.accent
+              }}>
+                Scenario
+              </p>
+              <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0 }}>
+                {currentQ.scenario}
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={() => handleTestAnswer(true)}
-                style={{
-                  ...buttonStyle,
-                  flex: 1,
-                  padding: '16px',
-                  background: testAnswers[currentTestIndex] === true ? 'rgba(16, 185, 129, 0.3)' : 'transparent',
-                  border: testAnswers[currentTestIndex] === true ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.2)',
-                  color: colors.textPrimary,
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                TRUE
-              </button>
-              <button
-                onClick={() => handleTestAnswer(false)}
-                style={{
-                  ...buttonStyle,
-                  flex: 1,
-                  padding: '16px',
-                  background: testAnswers[currentTestIndex] === false ? 'rgba(239, 68, 68, 0.3)' : 'transparent',
-                  border: testAnswers[currentTestIndex] === false ? `2px solid ${colors.error}` : '1px solid rgba(255,255,255,0.2)',
-                  color: colors.textPrimary,
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                FALSE
-              </button>
+            {/* Question */}
+            <p style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px', color: colors.textPrimary }}>
+              {currentQ.question}
+            </p>
+
+            {/* Answer Options */}
+            <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
+              {currentQ.options.map((opt, i) => (
+                <button
+                  key={opt.id}
+                  onClick={() => handleTestAnswer(opt.id)}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    padding: '20px',
+                    borderRadius: '16px',
+                    textAlign: 'left',
+                    background: testAnswers[currentTestIndex] === opt.id ? `${colors.warning}20` : colors.bgCard,
+                    border: `2px solid ${testAnswers[currentTestIndex] === opt.id ? colors.warning : colors.border}`,
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    position: 'relative'
+                  }}
+                >
+                  <div style={{
+                    width: '32px',
+                    height: '32px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    background: testAnswers[currentTestIndex] === opt.id ? colors.warning : colors.bgCardLight,
+                    flexShrink: 0
+                  }}>
+                    <span style={{
+                      fontSize: '14px',
+                      fontWeight: 700,
+                      color: testAnswers[currentTestIndex] === opt.id ? colors.textPrimary : colors.textMuted
+                    }}>
+                      {String.fromCharCode(65 + i)}
+                    </span>
+                  </div>
+                  <p style={{
+                    fontSize: '14px',
+                    color: testAnswers[currentTestIndex] === opt.id ? colors.textPrimary : colors.textSecondary,
+                    margin: 0
+                  }}>
+                    {opt.label}
+                  </p>
+                </button>
+              ))}
             </div>
 
+            {/* Navigation Buttons */}
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
               <button
                 onClick={prevTestQuestion}
@@ -1171,7 +1541,9 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                   border: `1px solid ${colors.textMuted}`,
                   color: currentTestIndex === 0 ? colors.textMuted : colors.textPrimary,
                   cursor: currentTestIndex === 0 ? 'not-allowed' : 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
+                  opacity: currentTestIndex === 0 ? 0.5 : 1,
+                  zIndex: 10,
+                  position: 'relative'
                 }}
               >
                 Previous
@@ -1179,14 +1551,17 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
               {currentTestIndex < TEST_QUESTIONS.length - 1 ? (
                 <button
                   onClick={nextTestQuestion}
+                  disabled={!testAnswers[currentTestIndex]}
                   style={{
                     ...buttonStyle,
-                    background: colors.accent,
-                    color: 'white',
-                    WebkitTapHighlightColor: 'transparent',
+                    background: testAnswers[currentTestIndex] ? colors.accent : colors.bgCardLight,
+                    color: testAnswers[currentTestIndex] ? 'white' : colors.textMuted,
+                    cursor: testAnswers[currentTestIndex] ? 'pointer' : 'not-allowed',
+                    zIndex: 10,
+                    position: 'relative'
                   }}
                 >
-                  Next
+                  Next Question
                 </button>
               ) : (
                 <button
@@ -1194,10 +1569,11 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
                   disabled={!allAnswered}
                   style={{
                     ...buttonStyle,
-                    background: allAnswered ? colors.success : colors.textMuted,
-                    color: 'white',
+                    background: allAnswered ? colors.success : colors.bgCardLight,
+                    color: allAnswered ? 'white' : colors.textMuted,
                     cursor: allAnswered ? 'pointer' : 'not-allowed',
-                    WebkitTapHighlightColor: 'transparent',
+                    zIndex: 10,
+                    position: 'relative'
                   }}
                 >
                   Submit Test

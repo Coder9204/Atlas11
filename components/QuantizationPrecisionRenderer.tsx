@@ -53,16 +53,126 @@ const PRECISION_SPECS = {
 };
 
 const TEST_QUESTIONS = [
-  { text: 'Quantization reduces model size by using fewer bits per parameter.', correct: true },
-  { text: 'FP32 training is necessary because gradients require high precision.', correct: true },
-  { text: 'INT8 quantization always reduces model accuracy significantly.', correct: false },
-  { text: 'All neural network layers can be quantized equally well.', correct: false },
-  { text: 'Quantization calibration finds the optimal scale for converting values.', correct: true },
-  { text: 'Running inference in INT8 uses 4x less memory than FP32.', correct: true },
-  { text: 'The first and last layers are most sensitive to quantization errors.', correct: true },
-  { text: 'Dynamic quantization happens during training, not inference.', correct: false },
-  { text: 'Mixed precision uses different bit widths for different operations.', correct: true },
-  { text: 'Quantization-aware training produces better quantized models than post-training quantization.', correct: true },
+  // Q1: Core Concept - Quantization Basics (Easy)
+  {
+    scenario: "A machine learning engineer wants to deploy a 7-billion parameter model trained in FP32 to a mobile device with limited memory.",
+    question: "What is the primary benefit of quantizing the model from FP32 to INT8?",
+    options: [
+      { id: 'speed', label: "The model will train faster on the mobile device" },
+      { id: 'memory', label: "The model will use 4x less memory (from 28GB to 7GB)", correct: true },
+      { id: 'accuracy', label: "The model will become more accurate" },
+      { id: 'features', label: "The model will gain new capabilities" },
+    ],
+    explanation: "Quantization from FP32 (32 bits) to INT8 (8 bits) reduces memory by 4x. A 7B parameter model needs 28GB in FP32 but only 7GB in INT8. This is the primary reason quantization enables deployment on memory-constrained devices."
+  },
+  // Q2: FP32 vs FP16 vs INT8 Comparison (Medium)
+  {
+    scenario: "You're comparing different numerical precision formats: FP32 uses 32 bits with 1 sign, 8 exponent, and 23 mantissa bits. FP16 uses 16 bits, and INT8 uses 8 bits for integers.",
+    question: "Why is FP32 typically required during model training but not inference?",
+    options: [
+      { id: 'hardware', label: "Training hardware only supports FP32" },
+      { id: 'gradients', label: "Gradient accumulation over millions of steps needs high precision to avoid drift", correct: true },
+      { id: 'speed', label: "FP32 training is faster than lower precision" },
+      { id: 'memory', label: "Training requires more memory than inference" },
+    ],
+    explanation: "During training, gradients are accumulated over millions of steps. Small errors in low precision compound over time, causing training instability or divergence. Inference only does a single forward pass, so small quantization errors don't accumulate."
+  },
+  // Q3: Quantization Effects on Accuracy (Medium)
+  {
+    scenario: "A research team quantizes their language model from FP32 to INT8 using post-training quantization. They're worried about accuracy degradation.",
+    question: "Which statement about INT8 quantization accuracy is most accurate?",
+    options: [
+      { id: 'always_bad', label: "INT8 always causes significant accuracy loss (>5%)" },
+      { id: 'no_loss', label: "INT8 produces identical outputs to FP32" },
+      { id: 'typically_small', label: "INT8 typically causes minimal accuracy loss (<1%) when properly calibrated", correct: true },
+      { id: 'random', label: "Accuracy loss is random and unpredictable" },
+    ],
+    explanation: "With proper calibration, INT8 quantization typically maintains accuracy within 1% of the original model. Neural networks are surprisingly robust to reduced precision because the weights cluster around common values and small errors average out across millions of parameters."
+  },
+  // Q4: Layer Sensitivity (Medium-Hard)
+  {
+    scenario: "A ML engineer is implementing mixed-precision quantization, where different layers use different bit widths. They need to decide which layers to keep at higher precision.",
+    question: "Which layers are typically MOST sensitive to quantization errors?",
+    options: [
+      { id: 'middle', label: "Middle layers, because they contain the most parameters" },
+      { id: 'first_last', label: "First and last layers, because errors there directly impact input/output quality", correct: true },
+      { id: 'all_same', label: "All layers are equally sensitive" },
+      { id: 'random_layers', label: "Sensitivity is random and varies per model" },
+    ],
+    explanation: "First layers process raw input data, so quantization errors are amplified through the network. Last layers produce final outputs, so errors directly affect predictions. Middle layers have redundancy where errors can average out. This is why mixed-precision keeps first/last layers at FP16 while quantizing middle layers to INT8/INT4."
+  },
+  // Q5: Dynamic Range Considerations (Hard)
+  {
+    scenario: "INT8 can only represent values from -128 to 127, while neural network weights might range from -0.5 to +2.3. Calibration is needed to map weight distributions to the INT8 range.",
+    question: "What is the purpose of calibration data in post-training quantization?",
+    options: [
+      { id: 'training', label: "To retrain the model with quantized weights" },
+      { id: 'scale', label: "To find optimal scale factors that map weight distributions to INT8 range with minimal error", correct: true },
+      { id: 'prune', label: "To identify which weights can be removed" },
+      { id: 'speed', label: "To measure how fast the quantized model runs" },
+    ],
+    explanation: "Calibration runs representative data through the model to observe the actual range of activations. It then computes scale factors that map these ranges to INT8 (-128 to 127) with minimal clipping. Bad calibration leads to either wasted dynamic range or clipped outliers."
+  },
+  // Q6: Mixed Precision Training (Medium)
+  {
+    scenario: "NVIDIA's Tensor Cores can perform matrix operations in FP16 much faster than FP32. Many modern training pipelines use 'mixed precision training' to speed up training.",
+    question: "How does mixed precision training maintain accuracy while using FP16?",
+    options: [
+      { id: 'only_fp16', label: "It uses FP16 everywhere and accepts small accuracy loss" },
+      { id: 'master_weights', label: "It keeps FP32 master weights while computing forward/backward passes in FP16", correct: true },
+      { id: 'int8', label: "It uses INT8 for most operations" },
+      { id: 'no_training', label: "Mixed precision is only for inference, not training" },
+    ],
+    explanation: "Mixed precision training computes forward and backward passes in FP16 for speed, but maintains FP32 'master weights' that accumulate gradients. This gives the speed benefits of FP16 while preserving the precision needed for stable gradient accumulation."
+  },
+  // Q7: Inference Optimization (Medium)
+  {
+    scenario: "Tesla's Full Self-Driving computer needs to process camera feeds in real-time. Every millisecond of latency matters at highway speeds. The FSD chip is optimized for INT8 operations.",
+    question: "Why do inference accelerators like Tesla's FSD chip use INT8 instead of FP32?",
+    options: [
+      { id: 'accuracy', label: "INT8 produces more accurate results than FP32" },
+      { id: 'throughput', label: "INT8 operations are 4x smaller and faster, enabling real-time performance", correct: true },
+      { id: 'training', label: "The models were originally trained in INT8" },
+      { id: 'cost', label: "INT8 chips are cheaper to manufacture" },
+    ],
+    explanation: "INT8 operations use 4x less memory bandwidth and can be executed 2-8x faster on specialized hardware. Tesla's FSD chip achieves 144 TOPS (trillion operations per second) in INT8. This throughput is essential for processing multiple camera feeds at 36 FPS with low latency."
+  },
+  // Q8: Quantization-Aware Training (Hard)
+  {
+    scenario: "There are two main approaches to quantization: Post-Training Quantization (PTQ) applies quantization after training, while Quantization-Aware Training (QAT) simulates quantization during training.",
+    question: "Why does QAT typically produce better quantized models than PTQ?",
+    options: [
+      { id: 'faster', label: "QAT is faster to apply than PTQ" },
+      { id: 'learns', label: "QAT allows the model to learn weight values that are robust to quantization errors", correct: true },
+      { id: 'no_calibration', label: "QAT doesn't require any calibration" },
+      { id: 'same', label: "QAT and PTQ produce identical results" },
+    ],
+    explanation: "During QAT, the model experiences simulated quantization noise during training and learns to compensate. Weights naturally move toward values that quantize well, and the model becomes inherently robust to precision loss. PTQ must work with weights optimized for FP32, which may not quantize optimally."
+  },
+  // Q9: Dynamic vs Static Quantization (Medium)
+  {
+    scenario: "There are two types of quantization: Static quantization uses fixed scale factors determined during calibration, while dynamic quantization computes scale factors at runtime based on actual input values.",
+    question: "When is dynamic quantization typically used instead of static quantization?",
+    options: [
+      { id: 'training', label: "During model training" },
+      { id: 'variable', label: "When activation ranges vary significantly across different inputs", correct: true },
+      { id: 'always', label: "Dynamic is always better than static" },
+      { id: 'hardware', label: "When specialized quantization hardware is unavailable" },
+    ],
+    explanation: "Dynamic quantization calculates scale factors at runtime, adapting to each input's actual range. This is useful when activation ranges vary widely between inputs (like variable-length text). Static quantization is faster but assumes fixed ranges determined during calibration."
+  },
+  // Q10: Extreme Quantization (INT4/NF4) (Hard)
+  {
+    scenario: "Running GPT-4 would require ~1.7TB of memory in FP32. Techniques like GPTQ and QLoRA use 4-bit quantization (INT4/NF4) to fit large models on consumer GPUs.",
+    question: "How do 4-bit quantization techniques like GPTQ achieve less than 1% quality loss despite extreme compression?",
+    options: [
+      { id: 'simple', label: "They simply round weights to the nearest 4-bit value" },
+      { id: 'smart', label: "They use sophisticated algorithms to minimize reconstruction error and preserve important weights", correct: true },
+      { id: 'impossible', label: "4-bit quantization always causes significant quality loss" },
+      { id: 'subset', label: "They only quantize a small subset of the model" },
+    ],
+    explanation: "Techniques like GPTQ use second-order information (Hessian) to quantize weights in an order that minimizes cumulative error. NF4 (Normal Float 4) uses non-uniform quantization levels matched to the typical Gaussian distribution of neural network weights. These smart approaches preserve model quality despite 8x compression."
+  },
 ];
 
 const TRANSFER_APPS = [
@@ -102,7 +212,7 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [testAnswers, setTestAnswers] = useState<(boolean | null)[]>(new Array(10).fill(null));
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
@@ -162,10 +272,6 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   };
 
   useEffect(() => {
-    if (initialPhase) setPhase(initialPhase);
-  }, [initialPhase]);
-
-  useEffect(() => {
     const interval = setInterval(() => {
       setAnimationFrame(f => (f + 1) % 100);
     }, 50);
@@ -184,7 +290,8 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
 
   const calculateTestScore = () => {
     return testAnswers.reduce((score, answer, index) => {
-      if (answer === TEST_QUESTIONS[index].correct) return score + 1;
+      const correctOption = TEST_QUESTIONS[index].options.find(o => o.correct);
+      if (answer === correctOption?.id) return score + 1;
       return score;
     }, 0);
   };
@@ -896,136 +1003,338 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
   );
 
   const renderTest = () => {
+    const totalQuestions = TEST_QUESTIONS.length;
+    const currentQ = TEST_QUESTIONS[currentTestIndex];
+
     if (testSubmitted) {
       const score = calculateTestScore();
       const passed = score >= 7;
 
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, padding: '24px', paddingBottom: '100px', overflowY: 'auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <div style={{ fontSize: '64px', marginBottom: '16px' }}>
-                {passed ? 'Trophy' : 'Book'}
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                margin: '0 auto 12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '36px',
+                background: passed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                border: `3px solid ${passed ? colors.success : colors.warning}`
+              }}>
+                {score === totalQuestions ? 'Trophy' : score >= 9 ? 'Star' : score >= 7 ? 'Check' : 'Book'}
               </div>
-              <h2 style={{ color: passed ? colors.success : colors.warning, fontSize: '28px' }}>
-                {score}/10 Correct
+              <h2 style={{ color: passed ? colors.success : colors.warning, fontSize: '28px', marginBottom: '8px' }}>
+                {score}/{totalQuestions} Correct
               </h2>
-              <p style={{ color: colors.textSecondary }}>
-                {passed ? 'Excellent! You understand quantization and precision.' : 'Review the material and try again.'}
+              <p style={{ color: colors.textSecondary, marginBottom: '16px' }}>
+                {score === totalQuestions ? "Perfect! You've mastered quantization and precision!" :
+                 score >= 9 ? 'Excellent! You deeply understand quantization concepts.' :
+                 score >= 7 ? 'Great job! You understand the key concepts.' :
+                 'Keep exploring - quantization takes time to master!'}
+              </p>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+                <button
+                  onClick={() => {
+                    setTestSubmitted(false);
+                    setTestAnswers(new Array(10).fill(null));
+                    setCurrentTestIndex(0);
+                  }}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '12px',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: colors.bgCard,
+                    color: colors.textSecondary,
+                    border: `1px solid rgba(255,255,255,0.2)`,
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  Retake Test
+                </button>
+                <button
+                  onClick={() => passed ? goNext() : goToPhase('hook')}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '12px',
+                    fontWeight: 'bold',
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: passed ? colors.success : colors.warning,
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  {passed ? 'Claim Mastery' : 'Review Lesson'}
+                </button>
+              </div>
+            </div>
+
+            {/* Question-by-Question Review */}
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ fontSize: '12px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px', color: colors.textMuted }}>
+                Question-by-Question Review
               </p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {TEST_QUESTIONS.map((q, i) => (
-                <div key={i} style={{
-                  padding: '12px',
-                  borderRadius: '8px',
-                  background: testAnswers[i] === q.correct ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                  borderLeft: `3px solid ${testAnswers[i] === q.correct ? colors.success : colors.error}`,
-                }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>{q.text}</p>
-                  <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
-                    Correct answer: {q.correct ? 'True' : 'False'}
-                  </p>
-                </div>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {TEST_QUESTIONS.map((q, i) => {
+                const correctOption = q.options.find(o => o.correct);
+                const correctId = correctOption?.id;
+                const userAnswer = testAnswers[i];
+                const userOption = q.options.find(o => o.id === userAnswer);
+                const isCorrect = userAnswer === correctId;
+
+                return (
+                  <div key={i} style={{
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    background: colors.bgCard,
+                    border: `2px solid ${isCorrect ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}`
+                  }}>
+                    <div style={{
+                      padding: '16px',
+                      background: isCorrect ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '14px',
+                          fontWeight: 'bold',
+                          background: isCorrect ? colors.success : colors.error,
+                          color: 'white'
+                        }}>
+                          {isCorrect ? 'Y' : 'X'}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: '14px', fontWeight: 'bold', color: colors.textPrimary, margin: 0 }}>
+                            Question {i + 1}
+                          </p>
+                          <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0 }}>{q.question}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        background: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        border: `1px solid ${isCorrect ? 'rgba(16, 185, 129, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+                      }}>
+                        <p style={{
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.1em',
+                          marginBottom: '4px',
+                          color: isCorrect ? colors.success : colors.error
+                        }}>
+                          {isCorrect ? 'Your Answer (Correct!)' : 'Your Answer'}
+                        </p>
+                        <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0 }}>
+                          {userOption?.label || 'No answer selected'}
+                        </p>
+                      </div>
+
+                      {!isCorrect && (
+                        <div style={{
+                          padding: '12px',
+                          borderRadius: '12px',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          border: '1px solid rgba(16, 185, 129, 0.3)'
+                        }}>
+                          <p style={{
+                            fontSize: '10px',
+                            fontWeight: 'bold',
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            marginBottom: '4px',
+                            color: colors.success
+                          }}>
+                            Correct Answer
+                          </p>
+                          <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0 }}>
+                            {correctOption?.label}
+                          </p>
+                        </div>
+                      )}
+
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        background: 'rgba(168, 85, 247, 0.1)'
+                      }}>
+                        <p style={{
+                          fontSize: '10px',
+                          fontWeight: 'bold',
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.1em',
+                          marginBottom: '4px',
+                          color: colors.accent
+                        }}>
+                          Why?
+                        </p>
+                        <p style={{ fontSize: '12px', lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                          {q.explanation}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-          {renderBottomBar(passed, passed ? 'Complete Mastery' : 'Review & Retry', () => {
-            if (passed) {
-              goNext();
-            } else {
-              setTestSubmitted(false);
-              setTestAnswers(new Array(10).fill(null));
-              setCurrentTestIndex(0);
-            }
-          })}
         </div>
       );
     }
 
-    const currentQ = TEST_QUESTIONS[currentTestIndex];
-
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
-          <h2 style={{ color: colors.textPrimary, fontSize: '24px', textAlign: 'center', marginBottom: '8px' }}>
-            Knowledge Test
-          </h2>
-          <p style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
-            Question {currentTestIndex + 1} of 10
+        <div style={{ flex: 1, padding: '24px', paddingBottom: '100px', overflowY: 'auto' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <p style={{
+              fontSize: '10px',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              marginBottom: '8px',
+              color: colors.warning
+            }}>
+              Step 9 - Knowledge Test
+            </p>
+            <h2 style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold', marginBottom: '16px' }}>
+              Question {currentTestIndex + 1} of {totalQuestions}
+            </h2>
+
+            {/* Progress bar */}
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {Array.from({ length: totalQuestions }, (_, i) => {
+                const answered = testAnswers[i] !== null;
+                const correctOption = TEST_QUESTIONS[i].options.find(o => o.correct);
+                const isCorrect = answered && testAnswers[i] === correctOption?.id;
+                return (
+                  <div
+                    key={i}
+                    style={{
+                      height: '8px',
+                      flex: 1,
+                      borderRadius: '9999px',
+                      background: i === currentTestIndex ? colors.warning :
+                                  answered ? (isCorrect ? colors.success : colors.error) :
+                                  'rgba(255,255,255,0.1)'
+                    }}
+                  />
+                );
+              })}
+            </div>
+          </div>
+
+          {/* Scenario */}
+          <div style={{
+            padding: '20px',
+            borderRadius: '16px',
+            marginBottom: '24px',
+            background: 'rgba(168, 85, 247, 0.15)',
+            border: '1px solid rgba(168, 85, 247, 0.3)'
+          }}>
+            <p style={{
+              fontSize: '10px',
+              fontWeight: 'bold',
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              marginBottom: '8px',
+              color: colors.accent
+            }}>
+              Scenario
+            </p>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+              {currentQ.scenario}
+            </p>
+          </div>
+
+          {/* Question */}
+          <p style={{
+            fontSize: '18px',
+            fontWeight: 'bold',
+            marginBottom: '24px',
+            color: colors.textPrimary,
+            lineHeight: 1.4
+          }}>
+            {currentQ.question}
           </p>
 
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', justifyContent: 'center' }}>
-            {TEST_QUESTIONS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentTestIndex(i)}
-                style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '4px',
-                  border: 'none',
-                  background: testAnswers[i] !== null
-                    ? (testAnswers[i] === TEST_QUESTIONS[i].correct ? colors.success : colors.error)
-                    : (i === currentTestIndex ? colors.accent : 'rgba(255,255,255,0.1)'),
-                  cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              />
-            ))}
+          {/* Options */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginBottom: '24px' }}>
+            {currentQ.options.map((opt, i) => {
+              const isSelected = testAnswers[currentTestIndex] === opt.id;
+              return (
+                <button
+                  key={opt.id}
+                  onClick={() => {
+                    const newAnswers = [...testAnswers];
+                    newAnswers[currentTestIndex] = opt.id;
+                    setTestAnswers(newAnswers);
+                  }}
+                  style={{
+                    padding: '16px',
+                    borderRadius: '12px',
+                    border: isSelected ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                    background: isSelected ? 'rgba(168, 85, 247, 0.2)' : colors.bgCard,
+                    color: colors.textPrimary,
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '12px',
+                    zIndex: 10,
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  <div style={{
+                    width: '28px',
+                    height: '28px',
+                    borderRadius: '50%',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '14px',
+                    fontWeight: 'bold',
+                    flexShrink: 0,
+                    background: isSelected ? colors.accent : 'rgba(255,255,255,0.1)',
+                    color: isSelected ? 'white' : colors.textSecondary
+                  }}>
+                    {String.fromCharCode(65 + i)}
+                  </div>
+                  <span style={{ fontSize: '14px', lineHeight: 1.5 }}>{opt.label}</span>
+                </button>
+              );
+            })}
           </div>
 
-          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
-            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>{currentQ.text}</p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button
-              onClick={() => {
-                const newAnswers = [...testAnswers];
-                newAnswers[currentTestIndex] = true;
-                setTestAnswers(newAnswers);
-              }}
-              style={{
-                flex: 1,
-                padding: '16px',
-                borderRadius: '12px',
-                border: testAnswers[currentTestIndex] === true ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.2)',
-                background: testAnswers[currentTestIndex] === true ? 'rgba(16, 185, 129, 0.2)' : colors.bgCard,
-                color: colors.textPrimary,
-                fontSize: '18px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              TRUE
-            </button>
-            <button
-              onClick={() => {
-                const newAnswers = [...testAnswers];
-                newAnswers[currentTestIndex] = false;
-                setTestAnswers(newAnswers);
-              }}
-              style={{
-                flex: 1,
-                padding: '16px',
-                borderRadius: '12px',
-                border: testAnswers[currentTestIndex] === false ? `2px solid ${colors.error}` : '1px solid rgba(255,255,255,0.2)',
-                background: testAnswers[currentTestIndex] === false ? 'rgba(239, 68, 68, 0.2)' : colors.bgCard,
-                color: colors.textPrimary,
-                fontSize: '18px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              FALSE
-            </button>
-          </div>
-
-          <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
+          {/* Navigation */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: '12px' }}>
             <button
               onClick={() => setCurrentTestIndex(Math.max(0, currentTestIndex - 1))}
               disabled={currentTestIndex === 0}
@@ -1036,12 +1345,14 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
                 background: 'transparent',
                 color: currentTestIndex === 0 ? colors.textMuted : colors.textPrimary,
                 cursor: currentTestIndex === 0 ? 'not-allowed' : 'pointer',
+                opacity: currentTestIndex === 0 ? 0.5 : 1,
+                zIndex: 10,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
               Previous
             </button>
-            {currentTestIndex < 9 ? (
+            {currentTestIndex < totalQuestions - 1 ? (
               <button
                 onClick={() => setCurrentTestIndex(currentTestIndex + 1)}
                 style={{
@@ -1050,7 +1361,9 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
                   border: 'none',
                   background: colors.accent,
                   color: 'white',
+                  fontWeight: 'bold',
                   cursor: 'pointer',
+                  zIndex: 10,
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1066,11 +1379,14 @@ const QuantizationPrecisionRenderer: React.FC<QuantizationPrecisionRendererProps
                   border: 'none',
                   background: testAnswers.includes(null) ? colors.textMuted : colors.success,
                   color: 'white',
+                  fontWeight: 'bold',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  opacity: testAnswers.includes(null) ? 0.5 : 1,
+                  zIndex: 10,
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
-                Submit
+                Submit Test
               </button>
             )}
           </div>

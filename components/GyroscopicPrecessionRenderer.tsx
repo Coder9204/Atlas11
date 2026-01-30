@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // --- GAME EVENT INTERFACE ---
 export interface GameEvent {
@@ -90,31 +90,29 @@ const design = {
 const { colors, space, radius, shadows } = design;
 
 // --- PHASES ---
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook',
+  'predict': 'Predict',
+  'play': 'Lab',
+  'review': 'Review',
+  'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab',
+  'twist_review': 'Twist Review',
+  'transfer': 'Transfer',
+  'test': 'Test',
+  'mastery': 'Mastery'
 };
 
 // --- MAIN COMPONENT ---
 const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> = ({ onGameEvent, gamePhase }) => {
-  const [phase, setPhase] = useState<number>(() => {
-    const phaseNum = parseInt(gamePhase || '0', 10);
-    if (!isNaN(phaseNum) && PHASES.includes(phaseNum)) return phaseNum;
-    return 0;
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
   });
-  const navigationLock = useRef(false);
-  const tabLock = useRef(false);
-  const buttonLock = useRef(false);
-  const lastClickRef = useRef(0);
 
   // Audio feedback
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -143,9 +141,8 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   }, []);
 
   useEffect(() => {
-    const phaseNum = parseInt(gamePhase || '', 10);
-    if (!isNaN(phaseNum) && PHASES.includes(phaseNum) && phaseNum !== phase) {
-      setPhase(phaseNum);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
   }, [gamePhase, phase]);
 
@@ -159,7 +156,6 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   const [wheelAngle, setWheelAngle] = useState(0);
   const [experimentCount, setExperimentCount] = useState(0);
   const [selectedApp, setSelectedApp] = useState(0);
-  const [completedApps, setCompletedApps] = useState([false, false, false, false]);
   const [testIndex, setTestIndex] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
@@ -191,35 +187,21 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
     return () => clearTimeout(timer);
   }, []);
 
-  // --- SAFE BUTTON HANDLER (prevents double-clicks) ---
-  const handleButtonClick = useCallback((action: () => void, lockRef: React.MutableRefObject<boolean> = buttonLock) => {
-    if (lockRef.current) return;
-    lockRef.current = true;
-    action();
-    setTimeout(() => { lockRef.current = false; }, 400);
-  }, []);
-
   // --- NAVIGATION ---
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    handleButtonClick(() => {
-      if (!PHASES.includes(newPhase)) return;
-      playSound('transition');
-      setPhase(newPhase);
-      emitGameEvent('phase_changed', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
-    }, navigationLock);
-  }, [emitGameEvent, phase, handleButtonClick, playSound]);
+  const goToPhase = useCallback((newPhase: Phase) => {
+    playSound('transition');
+    setPhase(newPhase);
+    emitGameEvent('phase_changed', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
+  }, [emitGameEvent, phase, playSound]);
 
   const goNext = useCallback(() => {
-    const idx = PHASES.indexOf(phase);
-    if (idx < PHASES.length - 1) goToPhase(PHASES[idx + 1]);
+    const idx = phaseOrder.indexOf(phase);
+    if (idx < phaseOrder.length - 1) goToPhase(phaseOrder[idx + 1]);
   }, [phase, goToPhase]);
 
   const goBack = useCallback(() => {
-    const idx = PHASES.indexOf(phase);
-    if (idx > 0) goToPhase(PHASES[idx - 1]);
+    const idx = phaseOrder.indexOf(phase);
+    if (idx > 0) goToPhase(phaseOrder[idx - 1]);
   }, [phase, goToPhase]);
 
   // --- PHYSICS ---
@@ -233,7 +215,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   }, []);
 
   useEffect(() => {
-    if (isSpinning && (phase === 2 || phase === 5)) {
+    if (isSpinning && (phase === 'play' || phase === 'twist_play')) {
       setWheelAngle(prev => (prev + spinSpeed * 3) % 360);
       setPrecessionAngle(prev => (prev + precessionRate * 2) % 360);
     }
@@ -409,14 +391,15 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Gyroscopic Precession</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
@@ -444,7 +427,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
 
   // Bottom navigation
   const renderBottomBar = (canBack: boolean, canNext: boolean, label: string) => {
-    const idx = PHASES.indexOf(phase);
+    const idx = phaseOrder.indexOf(phase);
     return (
       <div style={{
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -453,7 +436,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         borderTop: `1px solid ${colors.border}`,
       }}>
         <button
-          onMouseDown={() => canBack && idx > 0 && handleButtonClick(goBack)}
+          onClick={() => canBack && idx > 0 && goBack()}
           style={{
             padding: `${space.md} ${space.lg}`,
             borderRadius: radius.md,
@@ -464,12 +447,13 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             cursor: canBack && idx > 0 ? 'pointer' : 'not-allowed',
             opacity: canBack && idx > 0 ? 1 : 0.4,
             transition: 'all 0.2s ease',
+            zIndex: 10,
           }}
         >
           ← Back
         </button>
         <button
-          onMouseDown={() => canNext && handleButtonClick(goNext)}
+          onClick={() => canNext && goNext()}
           style={{
             padding: `${space.md} ${space.xl}`,
             borderRadius: radius.md,
@@ -483,6 +467,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             opacity: canNext ? 1 : 0.4,
             boxShadow: canNext ? shadows.glow(colors.primary) : 'none',
             transition: 'all 0.2s ease',
+            zIndex: 10,
           }}
         >
           {label} →
@@ -639,7 +624,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             </div>
 
             <button
-              onMouseDown={() => handleButtonClick(() => { setIsSpinning(!isSpinning); setExperimentCount(c => c + 1); })}
+              onClick={() => { setIsSpinning(!isSpinning); setExperimentCount(c => c + 1); }}
               style={{
                 width: '100%',
                 padding: space.md,
@@ -651,6 +636,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 cursor: 'pointer',
                 boxShadow: isSpinning ? 'none' : shadows.glow(colors.primary),
                 transition: 'all 0.2s ease',
+                zIndex: 10,
               }}
             >
               {isSpinning ? '⏹ Stop & Reset' : '▶ Spin Wheel & Apply Torque'}
@@ -664,7 +650,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   // ===================== PHASE RENDERS =====================
 
   // HOOK - Premium welcome screen
-  if (phase === 0) {
+  if (phase === 'hook') {
     return renderPremiumWrapper(
       <div className="flex flex-col items-center justify-center min-h-[600px] px-6 py-12 text-center">
         {/* Premium badge */}
@@ -701,7 +687,8 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
 
         {/* CTA Button */}
         <button
-          onMouseDown={() => handleButtonClick(goNext)}
+          onClick={() => goNext()}
+          style={{ zIndex: 10 }}
           className="mt-8 px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/25 transition-all"
         >
           Make a Prediction
@@ -711,7 +698,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   }
 
   // PREDICT
-  if (phase === 1) {
+  if (phase === 'predict') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
         <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.lg : space.xl }}>
@@ -750,7 +737,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => handleButtonClick(() => { setPrediction(opt.id); emitGameEvent('prediction_made', { prediction: opt.id }); })}
+                  onClick={() => { setPrediction(opt.id); emitGameEvent('prediction_made', { prediction: opt.id }); }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: space.md,
                     padding: space.md,
@@ -760,6 +747,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                     border: `2px solid ${prediction === opt.id ? colors.primary : colors.border}`,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
+                    zIndex: 10,
                   }}
                 >
                   <div style={{
@@ -783,7 +771,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   }
 
   // PLAY
-  if (phase === 2) {
+  if (phase === 'play') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
         <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.md : space.lg }}>
@@ -813,7 +801,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   }
 
   // REVIEW
-  if (phase === 3) {
+  if (phase === 'review') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
         <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.lg : space.xl }}>
@@ -845,7 +833,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   }
 
   // TWIST_PREDICT
-  if (phase === 4) {
+  if (phase === 'twist_predict') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
         <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.lg : space.xl }}>
@@ -876,7 +864,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               ].map(opt => (
                 <button
                   key={opt.id}
-                  onMouseDown={() => handleButtonClick(() => { setTwistPrediction(opt.id); emitGameEvent('prediction_made', { twistPrediction: opt.id }); })}
+                  onClick={() => { setTwistPrediction(opt.id); emitGameEvent('prediction_made', { twistPrediction: opt.id }); }}
                   style={{
                     display: 'flex', alignItems: 'center', gap: space.md,
                     padding: space.md,
@@ -886,6 +874,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                     border: `2px solid ${twistPrediction === opt.id ? colors.warning : colors.border}`,
                     cursor: 'pointer',
                     transition: 'all 0.2s ease',
+                    zIndex: 10,
                   }}
                 >
                   <div style={{
@@ -908,7 +897,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   }
 
   // TWIST_PLAY
-  if (phase === 5) {
+  if (phase === 'twist_play') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
         <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.md : space.lg }}>
@@ -947,7 +936,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   }
 
   // TWIST_REVIEW
-  if (phase === 6) {
+  if (phase === 'twist_review') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
         <div style={{ flex: 1, overflow: 'auto', padding: isMobile ? space.lg : space.xl }}>
@@ -977,7 +966,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   }
 
   // TRANSFER
-  if (phase === 7) {
+  if (phase === 'transfer') {
     const app = realWorldApps[selectedApp];
     const isLastApp = selectedApp === realWorldApps.length - 1;
 
@@ -1026,7 +1015,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               return (
                 <button
                   key={i}
-                  onMouseDown={() => isViewed && handleButtonClick(() => setSelectedApp(i), tabLock)}
+                  onClick={() => isViewed && setSelectedApp(i)}
                   style={{
                     flex: 1,
                     padding: `${space.sm} ${space.xs}`,
@@ -1038,6 +1027,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                     display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px',
                     transition: 'all 0.2s ease',
                     opacity: isViewed ? 1 : 0.5,
+                    zIndex: 10,
                   }}
                 >
                   <span style={{ fontSize: '20px' }}>{a.icon}</span>
@@ -1121,7 +1111,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
         }}>
           {selectedApp > 0 ? (
             <button
-              onMouseDown={() => handleButtonClick(() => setSelectedApp(selectedApp - 1), tabLock)}
+              onClick={() => setSelectedApp(selectedApp - 1)}
               style={{
                 padding: `${space.md} ${space.lg}`,
                 fontSize: '14px',
@@ -1129,7 +1119,8 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 background: colors.bgTertiary,
                 border: `1px solid ${colors.border}`,
                 borderRadius: radius.md,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                zIndex: 10,
               }}
             >
               ← Previous
@@ -1138,13 +1129,13 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             <div />
           )}
           <button
-            onMouseDown={() => handleButtonClick(() => {
+            onClick={() => {
               if (isLastApp) {
-                goToPhase(8);
+                goToPhase('test');
               } else {
                 setSelectedApp(selectedApp + 1);
               }
-            }, isLastApp ? navigationLock : tabLock)}
+            }}
             style={{
               padding: `${space.md} ${space.xl}`,
               fontSize: '15px',
@@ -1154,7 +1145,8 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               border: 'none',
               borderRadius: radius.md,
               cursor: 'pointer',
-              boxShadow: shadows.sm
+              boxShadow: shadows.sm,
+              zIndex: 10,
             }}
           >
             {isLastApp ? 'Take the Quiz →' : 'Next Application →'}
@@ -1165,9 +1157,9 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   }
 
   // TEST
-  if (phase === 8) {
+  if (phase === 'test') {
     const q = testQuestions[testIndex];
-    const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (testQuestions[i].options[ans]?.correct ? 1 : 0), 0);
+    const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (testQuestions[i].options[ans as number]?.correct ? 1 : 0), 0);
 
     if (testSubmitted) {
       const passed = totalCorrect >= 7;
@@ -1186,7 +1178,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 {passed ? 'You\'ve mastered gyroscopic precession!' : 'Review the concepts and try again.'}
               </p>
               <button
-                onMouseDown={() => handleButtonClick(passed ? goNext : () => goToPhase(3))}
+                onClick={() => passed ? goNext() : goToPhase('review')}
                 style={{
                   padding: `${space.md} ${space.xl}`,
                   borderRadius: radius.md,
@@ -1197,6 +1189,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   color: colors.textPrimary,
                   border: 'none',
                   cursor: 'pointer',
+                  zIndex: 10,
                 }}
               >
                 {passed ? 'Complete! →' : 'Review Material'}
@@ -1219,7 +1212,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   <div key={i} style={{
                     width: '8px', height: '8px', borderRadius: '4px',
                     background: testAnswers[i] !== null
-                      ? (tq.options[testAnswers[i]]?.correct ? colors.success : colors.danger)
+                      ? (tq.options[testAnswers[i] as number]?.correct ? colors.success : colors.danger)
                       : (i === testIndex ? colors.primary : colors.bgTertiary),
                   }} />
                 ))}
@@ -1250,14 +1243,12 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 return (
                   <button
                     key={i}
-                    onMouseDown={() => {
+                    onClick={() => {
                       if (testAnswers[testIndex] === null) {
-                        handleButtonClick(() => {
-                          const newAnswers = [...testAnswers];
-                          newAnswers[testIndex] = i;
-                          setTestAnswers(newAnswers);
-                          emitGameEvent(opt.correct ? 'correct_answer' : 'incorrect_answer', { questionIndex: testIndex });
-                        });
+                        const newAnswers = [...testAnswers];
+                        newAnswers[testIndex] = i;
+                        setTestAnswers(newAnswers);
+                        emitGameEvent(opt.correct ? 'correct_answer' : 'incorrect_answer', { questionIndex: testIndex });
                       }
                     }}
                     style={{
@@ -1272,6 +1263,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                         : (selected ? colors.primary : colors.border)}`,
                       cursor: answered ? 'default' : 'pointer',
                       transition: 'all 0.2s ease',
+                      zIndex: 10,
                     }}
                   >
                     <span style={{
@@ -1305,7 +1297,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
             {/* Navigation */}
             <div style={{ display: 'flex', gap: space.md, justifyContent: 'space-between' }}>
               <button
-                onMouseDown={() => handleButtonClick(() => setTestIndex(Math.max(0, testIndex - 1)))}
+                onClick={() => setTestIndex(Math.max(0, testIndex - 1))}
                 disabled={testIndex === 0}
                 style={{
                   padding: `${space.sm} ${space.lg}`,
@@ -1315,11 +1307,12 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                   border: 'none',
                   cursor: testIndex === 0 ? 'not-allowed' : 'pointer',
                   opacity: testIndex === 0 ? 0.4 : 1,
+                  zIndex: 10,
                 }}
               >← Prev</button>
               {testIndex < 9 ? (
                 <button
-                  onMouseDown={() => handleButtonClick(() => setTestIndex(testIndex + 1))}
+                  onClick={() => setTestIndex(testIndex + 1)}
                   disabled={testAnswers[testIndex] === null}
                   style={{
                     padding: `${space.sm} ${space.lg}`,
@@ -1331,11 +1324,12 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                     border: 'none',
                     cursor: testAnswers[testIndex] === null ? 'not-allowed' : 'pointer',
                     opacity: testAnswers[testIndex] === null ? 0.4 : 1,
+                    zIndex: 10,
                   }}
                 >Next →</button>
               ) : (
                 <button
-                  onMouseDown={() => handleButtonClick(() => { setTestSubmitted(true); emitGameEvent('game_completed', { score: totalCorrect }); })}
+                  onClick={() => { setTestSubmitted(true); emitGameEvent('game_completed', { score: totalCorrect }); }}
                   disabled={testAnswers.includes(null)}
                   style={{
                     padding: `${space.sm} ${space.lg}`,
@@ -1347,6 +1341,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                     border: 'none',
                     cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
                     opacity: testAnswers.includes(null) ? 0.4 : 1,
+                    zIndex: 10,
                   }}
                 >Submit Quiz</button>
               )}
@@ -1358,7 +1353,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
   }
 
   // MASTERY
-  if (phase === 9) {
+  if (phase === 'mastery') {
     return renderPremiumWrapper(
       <div style={{ display: 'flex', flexDirection: 'column', minHeight: '500px' }}>
         <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: space.xl }}>
@@ -1380,7 +1375,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               ))}
             </div>
             <button
-              onMouseDown={() => window.location.reload()}
+              onClick={() => window.location.reload()}
               style={{
                 padding: `${space.md} ${space.xl}`,
                 borderRadius: radius.md,
@@ -1390,6 +1385,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 border: 'none',
                 cursor: 'pointer',
                 boxShadow: shadows.glow(colors.success),
+                zIndex: 10,
               }}
             >
               🔄 Play Again

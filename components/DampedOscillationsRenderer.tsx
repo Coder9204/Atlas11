@@ -5,11 +5,15 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // ============================================================================
 // DAMPED OSCILLATIONS - GOLD STANDARD IMPLEMENTATION
 // Physics: m(d²x/dt²) + c(dx/dt) + kx = 0
-// Damping ratio: ζ = c / (2√(mk))
-// Underdamped (ζ<1): oscillates with decay
-// Critically damped (ζ=1): fastest return without oscillation
-// Overdamped (ζ>1): slow return without oscillation
+// Damping ratio: zeta = c / (2*sqrt(mk))
+// Underdamped (zeta<1): oscillates with decay
+// Critically damped (zeta=1): fastest return without oscillation
+// Overdamped (zeta>1): slow return without oscillation
 // ============================================================================
+
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 type GameEventType =
   | 'phase_change'
@@ -49,17 +53,21 @@ interface TransferApp {
 
 interface Props {
   onGameEvent?: (event: { type: GameEventType; data?: Record<string, unknown> }) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 const DampedOscillationsRenderer: React.FC<Props> = ({
   onGameEvent,
-  currentPhase,
+  gamePhase,
   onPhaseComplete
 }) => {
-  // Phase: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-  const [phase, setPhase] = useState(currentPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  });
   const [isMobile, setIsMobile] = useState(false);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
@@ -71,15 +79,20 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
   const [activeAppTab, setActiveAppTab] = useState(0);
 
   // Animation states
-  const [dampingRatio, setDampingRatio] = useState(0.2); // ζ
+  const [dampingRatio, setDampingRatio] = useState(0.2); // zeta
   const [displacement, setDisplacement] = useState(100); // Initial position
   const [isAnimating, setIsAnimating] = useState(false);
   const [time, setTime] = useState(0);
   const [regime, setRegime] = useState<'under' | 'critical' | 'over'>('under');
 
-  const navigationLockRef = useRef(false);
-  const lastInteractionRef = useRef(0);
   const audioContextRef = useRef<AudioContext | null>(null);
+
+  // Sync with external gamePhase prop
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
 
   // Responsive check
   useEffect(() => {
@@ -168,11 +181,11 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
     const omega_n = 2; // Natural frequency
 
     if (zeta < 1) {
-      // Underdamped: x(t) = A * e^(-ζω_n*t) * cos(ω_d*t + φ)
+      // Underdamped: x(t) = A * e^(-zeta*omega_n*t) * cos(omega_d*t + phi)
       const omega_d = omega_n * Math.sqrt(1 - zeta * zeta);
       return x0 * Math.exp(-zeta * omega_n * t) * Math.cos(omega_d * t);
     } else if (zeta === 1) {
-      // Critically damped: x(t) = (A + Bt) * e^(-ω_n*t)
+      // Critically damped: x(t) = (A + Bt) * e^(-omega_n*t)
       return x0 * (1 + omega_n * t) * Math.exp(-omega_n * t);
     } else {
       // Overdamped: x(t) = A*e^(s1*t) + B*e^(s2*t)
@@ -230,12 +243,7 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
     }
   }, [dampingRatio]);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    if (navigationLockRef.current) return;
-    lastInteractionRef.current = now;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     if (onGameEvent) {
@@ -244,13 +252,9 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
     if (onPhaseComplete) {
       onPhaseComplete(newPhase);
     }
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent, onPhaseComplete]);
 
   const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'B' ? 'correct' : 'incorrect');
@@ -260,9 +264,6 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
   }, [playSound, onGameEvent]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'C' ? 'correct' : 'incorrect');
@@ -272,9 +273,6 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
   }, [playSound, onGameEvent]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;
@@ -286,9 +284,6 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
   }, [onGameEvent]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
     if (onGameEvent) {
@@ -326,7 +321,7 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
       explanation: "Car suspensions are designed to be critically damped (or slightly underdamped for sportier feel). Critical damping returns the car to equilibrium fastest without oscillating, providing comfort and control."
     },
     {
-      scenario: "You pull down on a mass attached to a spring and release it in a system with ζ = 0.3.",
+      scenario: "You pull down on a mass attached to a spring and release it in a system with zeta = 0.3.",
       question: "How will the mass behave after release?",
       options: [
         { text: "Return directly to equilibrium without oscillating", correct: false },
@@ -334,40 +329,40 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
         { text: "Oscillate forever with constant amplitude", correct: false },
         { text: "Move extremely slowly toward equilibrium", correct: false }
       ],
-      explanation: "With ζ = 0.3 (less than 1), the system is underdamped. The mass oscillates back and forth with exponentially decreasing amplitude due to energy loss through damping."
+      explanation: "With zeta = 0.3 (less than 1), the system is underdamped. The mass oscillates back and forth with exponentially decreasing amplitude due to energy loss through damping."
     },
     {
       scenario: "An engineer designs a door closer with a very high damping coefficient.",
-      question: "With ζ = 3, how will the door behave?",
+      question: "With zeta = 3, how will the door behave?",
       options: [
         { text: "Slam shut quickly", correct: false },
         { text: "Oscillate back and forth before closing", correct: false },
         { text: "Close very slowly without oscillating", correct: true },
         { text: "Stay exactly where you leave it", correct: false }
       ],
-      explanation: "With ζ = 3 (overdamped), the door returns to closed position without oscillating, but very slowly. The high damping resists motion, making the closure take much longer than critical damping."
+      explanation: "With zeta = 3 (overdamped), the door returns to closed position without oscillating, but very slowly. The high damping resists motion, making the closure take much longer than critical damping."
     },
     {
       scenario: "A seismometer must stop oscillating quickly after detecting an earthquake.",
       question: "Which damping ratio allows the instrument to settle fastest?",
       options: [
-        { text: "ζ = 0.1 (very underdamped)", correct: false },
-        { text: "ζ = 0.5 (moderately underdamped)", correct: false },
-        { text: "ζ = 1.0 (critically damped)", correct: true },
-        { text: "ζ = 5.0 (heavily overdamped)", correct: false }
+        { text: "zeta = 0.1 (very underdamped)", correct: false },
+        { text: "zeta = 0.5 (moderately underdamped)", correct: false },
+        { text: "zeta = 1.0 (critically damped)", correct: true },
+        { text: "zeta = 5.0 (heavily overdamped)", correct: false }
       ],
-      explanation: "Critical damping (ζ = 1) is the 'sweet spot' that returns to equilibrium in the minimum possible time without any overshoot. Both higher and lower values take longer to settle."
+      explanation: "Critical damping (zeta = 1) is the 'sweet spot' that returns to equilibrium in the minimum possible time without any overshoot. Both higher and lower values take longer to settle."
     },
     {
-      scenario: "In the equation m(d²x/dt²) + c(dx/dt) + kx = 0, you increase the damping coefficient c.",
-      question: "What happens to the damping ratio ζ?",
+      scenario: "In the equation m(d^2x/dt^2) + c(dx/dt) + kx = 0, you increase the damping coefficient c.",
+      question: "What happens to the damping ratio zeta?",
       options: [
         { text: "It decreases", correct: false },
         { text: "It stays the same", correct: false },
         { text: "It increases", correct: true },
         { text: "It becomes negative", correct: false }
       ],
-      explanation: "The damping ratio ζ = c / (2√(mk)). Since c is in the numerator, increasing c directly increases ζ. This means more damping coefficient leads to higher damping ratio."
+      explanation: "The damping ratio zeta = c / (2*sqrt(mk)). Since c is in the numerator, increasing c directly increases zeta. This means more damping coefficient leads to higher damping ratio."
     },
     {
       scenario: "A grandfather clock pendulum swings in air with very light damping.",
@@ -378,7 +373,7 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
         { text: "The spring wears out", correct: false },
         { text: "It runs out of momentum", correct: false }
       ],
-      explanation: "Air resistance acts as light damping (ζ << 1), slowly removing energy each oscillation. The amplitude decreases exponentially until the pendulum stops. The clock mechanism adds energy to compensate."
+      explanation: "Air resistance acts as light damping (zeta << 1), slowly removing energy each oscillation. The amplitude decreases exponentially until the pendulum stops. The clock mechanism adds energy to compensate."
     },
     {
       scenario: "A diving board vibrates after a diver jumps off.",
@@ -389,18 +384,18 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
         { text: "The board is underdamped", correct: true },
         { text: "The board has no damping", correct: false }
       ],
-      explanation: "Multiple oscillations with decreasing amplitude is the signature of an underdamped system (ζ < 1). The board has inherent material damping, but it's not enough to prevent oscillation."
+      explanation: "Multiple oscillations with decreasing amplitude is the signature of an underdamped system (zeta < 1). The board has inherent material damping, but it's not enough to prevent oscillation."
     },
     {
       scenario: "An analog meter needle moves to show a new reading.",
-      question: "Why do quality meters have ζ ≈ 0.7 rather than ζ = 1?",
+      question: "Why do quality meters have zeta approximately 0.7 rather than zeta = 1?",
       options: [
         { text: "To make readings more dramatic", correct: false },
         { text: "One small overshoot helps the eye track the final position", correct: true },
         { text: "Critical damping is too expensive", correct: false },
         { text: "They couldn't achieve critical damping", correct: false }
       ],
-      explanation: "Slightly underdamped response (ζ ≈ 0.7) creates one small overshoot that helps users identify exactly where the needle settles. Pure critical damping can make it hard to see when movement stops."
+      explanation: "Slightly underdamped response (zeta approximately 0.7) creates one small overshoot that helps users identify exactly where the needle settles. Pure critical damping can make it hard to see when movement stops."
     },
     {
       scenario: "You're designing a building's earthquake dampers in a seismic zone.",
@@ -440,15 +435,15 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
           <rect x="50" y="52" width="10" height="8" rx="2" fill="#1e293b"/>
         </svg>
       ),
-      title: "Automotive Suspension Systems",
-      short: "Car Suspension",
+      title: "Car Shock Absorbers",
+      short: "Shock Absorbers",
       tagline: "Turning bumpy roads into smooth rides",
       description: "Every car relies on damped oscillation principles to provide a comfortable, controlled ride over uneven surfaces.",
       connection: "Car shock absorbers are carefully tuned dampers that work with springs to dissipate road vibration energy.",
       howItWorks: "When a wheel hits a bump, the spring compresses storing energy. The shock absorber (damper) converts this energy to heat through fluid friction. The system is designed near critical damping so the car returns to level quickly without bouncing.",
       stats: [
         { value: "~0.7-1.0", label: "Damping ratio range" },
-        { value: "200-400", label: "Damping N·s/m typical" },
+        { value: "200-400", label: "Damping N*s/m typical" },
         { value: "1-2 sec", label: "Settling time target" },
         { value: "85%", label: "Energy absorbed per cycle" }
       ],
@@ -458,9 +453,43 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
         "Air suspension with electronic damping control",
         "Motorcycle mono-shock rear suspension"
       ],
-      companies: ["Bilstein", "KYB", "Monroe", "Öhlins", "Fox Racing Shox"],
+      companies: ["Bilstein", "KYB", "Monroe", "Ohlins", "Fox Racing Shox"],
       futureImpact: "Active and semi-active suspension systems use real-time damping adjustment (magnetorheological fluids) to optimize ride quality and handling for every road condition.",
       color: "from-blue-600 to-indigo-600"
+    },
+    {
+      icon: (
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <rect x="20" y="8" width="24" height="48" rx="2" fill="#64748b"/>
+          <rect x="24" y="12" width="16" height="40" fill="#1e293b"/>
+          <circle cx="32" cy="52" r="3" fill="#f59e0b"/>
+          <path d="M28 20 L36 20 M28 28 L36 28 M28 36 L36 36" stroke="#94a3b8" strokeWidth="2"/>
+          <rect x="8" y="56" width="48" height="4" fill="#374151"/>
+          <path d="M16 56 L16 48 L20 48" stroke="#22c55e" strokeWidth="2"/>
+          <path d="M48 56 L48 48 L44 48" stroke="#22c55e" strokeWidth="2"/>
+        </svg>
+      ),
+      title: "Door Closers",
+      short: "Door Closers",
+      tagline: "Controlled closing without slamming",
+      description: "Hydraulic door closers use damped oscillation to ensure doors close smoothly and quietly every time.",
+      connection: "Door closers are tuned damped oscillators that control the angular velocity of the door as it returns to closed.",
+      howItWorks: "A spring provides the restoring force to close the door. Hydraulic fluid flowing through adjustable valves provides damping. The closing speed can be tuned for different sections of the swing, typically using near-critical damping.",
+      stats: [
+        { value: "~0.8-1.2", label: "Damping ratio" },
+        { value: "3-7 sec", label: "Full close time" },
+        { value: "2 stages", label: "Closing phases" },
+        { value: "1M+", label: "Cycles lifetime" }
+      ],
+      examples: [
+        "Commercial building entry doors",
+        "Fire-rated doors requiring positive latching",
+        "Residential storm doors",
+        "Cabinet soft-close hinges"
+      ],
+      companies: ["DORMA", "LCN", "Norton", "Yale", "Hager"],
+      futureImpact: "Smart door closers with sensors adjust damping based on wind pressure, occupancy, and accessibility needs for optimal performance in all conditions.",
+      color: "from-amber-600 to-orange-600"
     },
     {
       icon: (
@@ -468,14 +497,13 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
           <rect x="4" y="48" width="56" height="12" rx="2" fill="#64748b"/>
           <rect x="8" y="44" width="48" height="4" fill="#94a3b8"/>
           <rect x="4" y="8" width="56" height="36" rx="4" fill="#1e293b" stroke="#64748b" strokeWidth="2"/>
-          <path d="M16 30 L16 20 L24 20 M40 20 L48 20 L48 30 M48 36 L48 38 L40 38 M24 38 L16 38 L16 36" stroke="#f59e0b" strokeWidth="2"/>
-          <circle cx="32" cy="28" r="8" fill="#ef4444" opacity="0.3"/>
-          <circle cx="32" cy="28" r="4" fill="#ef4444"/>
-          <path d="M8 52 L8 56 L12 56" stroke="#22c55e" strokeWidth="2"/>
-          <path d="M56 52 L56 56 L52 56" stroke="#22c55e" strokeWidth="2"/>
+          <path d="M16 30 Q26 20 32 30 Q38 40 48 30" stroke="#ef4444" strokeWidth="2" fill="none"/>
+          <path d="M16 24 L16 36" stroke="#64748b" strokeWidth="1"/>
+          <path d="M48 24 L48 36" stroke="#64748b" strokeWidth="1"/>
+          <text x="32" y="18" textAnchor="middle" fill="#64748b" fontSize="6">SEISMIC</text>
         </svg>
       ),
-      title: "Building Earthquake Dampers",
+      title: "Earthquake Dampers",
       short: "Seismic Dampers",
       tagline: "Protecting skyscrapers from seismic destruction",
       description: "Tall buildings use massive damping systems to absorb earthquake energy and prevent structural damage.",
@@ -495,76 +523,39 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
       ],
       companies: ["Motioneering", "Taylor Devices", "Damptech", "THK", "Maurer SE"],
       futureImpact: "Smart damping systems with AI-controlled actuators will predict earthquake motion and actively adjust damping in real-time, potentially reducing structural stress by over 50%.",
-      color: "from-amber-600 to-orange-600"
+      color: "from-red-600 to-rose-600"
     },
     {
       icon: (
         <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-          <rect x="8" y="4" width="48" height="56" rx="8" fill="#1e293b" stroke="#64748b" strokeWidth="2"/>
-          <rect x="12" y="8" width="40" height="32" rx="4" fill="#0f172a"/>
-          <circle cx="32" cy="50" r="4" fill="#64748b"/>
-          <path d="M20 28 Q26 20 32 28 Q38 36 44 28" stroke="#22c55e" strokeWidth="2" fill="none"/>
-          <path d="M20 24 L20 32" stroke="#64748b" strokeWidth="1"/>
-          <path d="M44 24 L44 32" stroke="#64748b" strokeWidth="1"/>
-          <text x="32" y="18" textAnchor="middle" fill="#64748b" fontSize="6">ACCEL</text>
+          <ellipse cx="32" cy="48" rx="24" ry="8" fill="#1e293b" stroke="#64748b" strokeWidth="2"/>
+          <path d="M8 48 L8 24 Q8 16 16 16 L48 16 Q56 16 56 24 L56 48" stroke="#64748b" strokeWidth="2" fill="none"/>
+          <path d="M20 48 L20 32 M44 48 L44 32" stroke="#f59e0b" strokeWidth="3"/>
+          <ellipse cx="32" cy="32" rx="8" ry="4" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="4"/>
+          <circle cx="32" cy="32" r="2" fill="#22c55e"/>
+          <path d="M24 20 L24 28 M40 20 L40 28" stroke="#94a3b8" strokeWidth="2"/>
         </svg>
       ),
-      title: "Smartphone Accelerometers",
-      short: "MEMS Sensors",
-      tagline: "Sensing motion in microscopic springs",
-      description: "Every smartphone contains tiny damped oscillators that detect motion, orientation, and acceleration.",
-      connection: "MEMS accelerometers use microscopic mass-spring-damper systems to measure acceleration forces.",
-      howItWorks: "A tiny proof mass (micrometers scale) is suspended by silicon springs. When you move the phone, the mass deflects. Capacitive plates measure this displacement. Squeeze-film air damping provides near-critical damping for fast, accurate response.",
+      title: "Musical Instruments",
+      short: "Instruments",
+      tagline: "Controlling vibration for beautiful sound",
+      description: "Musical instruments rely on carefully controlled damping to produce their characteristic tones and sustain.",
+      connection: "String and percussion instruments are vibrating systems where damping determines how long notes sustain and their tonal quality.",
+      howItWorks: "A piano string's damping ratio affects note decay. The damper pedal lifts felt dampers off strings, allowing free vibration. Guitar bodies are designed for optimal damping to balance sustain with clarity. Drum heads use damping rings to control overtones.",
       stats: [
-        { value: "~100 μm", label: "Proof mass size" },
-        { value: "0.5-0.8", label: "Typical damping ratio" },
-        { value: "±16g", label: "Measurement range" },
-        { value: "1-10 kHz", label: "Bandwidth" }
+        { value: "0.001-0.1", label: "String damping ratio" },
+        { value: "2-10 sec", label: "Piano note sustain" },
+        { value: "440 Hz", label: "Concert A frequency" },
+        { value: "~100 dB", label: "Dynamic range" }
       ],
       examples: [
-        "Screen rotation detection in phones",
-        "Step counting in fitness trackers",
-        "Airbag deployment sensors in cars",
-        "Drone stabilization systems"
+        "Piano damper pedal mechanism",
+        "Guitar sustain and tone control",
+        "Drum dampening rings and gels",
+        "Violin chin rest vibration isolation"
       ],
-      companies: ["Bosch Sensortec", "STMicroelectronics", "InvenSense (TDK)", "Analog Devices", "NXP"],
-      futureImpact: "Next-generation MEMS with active damping control will enable sub-millimeter positioning for AR glasses, gesture recognition, and medical implants that detect heartbeat irregularities.",
-      color: "from-emerald-600 to-teal-600"
-    },
-    {
-      icon: (
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-          <ellipse cx="32" cy="32" rx="28" ry="28" fill="#1e293b" stroke="#64748b" strokeWidth="2"/>
-          <circle cx="32" cy="32" r="20" fill="none" stroke="#94a3b8" strokeWidth="1"/>
-          <circle cx="32" cy="32" r="12" fill="none" stroke="#94a3b8" strokeWidth="1"/>
-          <path d="M32 12 L32 20" stroke="#ef4444" strokeWidth="2"/>
-          <path d="M32 44 L32 52" stroke="#94a3b8" strokeWidth="2"/>
-          <path d="M12 32 L20 32" stroke="#94a3b8" strokeWidth="2"/>
-          <path d="M44 32 L52 32" stroke="#94a3b8" strokeWidth="2"/>
-          <circle cx="32" cy="32" r="3" fill="#f59e0b"/>
-          <path d="M32 32 L40 20" stroke="#f59e0b" strokeWidth="2" strokeLinecap="round"/>
-        </svg>
-      ),
-      title: "Precision Instrument Movements",
-      short: "Meter Damping",
-      tagline: "Making needles settle where you need them",
-      description: "Analog meters, scales, and gauges use carefully calibrated damping to display readings quickly and accurately.",
-      connection: "The meter needle is a torsional oscillator. Damping ensures it settles on the correct reading without bouncing.",
-      howItWorks: "Analog meters use either air damping (a vane moving in an enclosed chamber), fluid damping (silicone oil), or eddy current damping (aluminum disk in magnetic field). The damping is tuned to ζ ≈ 0.6-0.8 for optimal response.",
-      stats: [
-        { value: "0.6-0.8", label: "Optimal damping ratio" },
-        { value: "0.5-2 sec", label: "Settling time" },
-        { value: "1-5%", label: "Allowable overshoot" },
-        { value: "Class 0.5", label: "Accuracy class" }
-      ],
-      examples: [
-        "Analog multimeters and ammeters",
-        "Precision laboratory balances",
-        "Pressure gauges in industrial systems",
-        "Speedometers in classic cars"
-      ],
-      companies: ["Simpson Electric", "Mettler Toledo", "WIKA", "Yokogawa", "Fluke"],
-      futureImpact: "While digital displays dominate, high-reliability applications (aircraft, nuclear plants) still use analog meters with advanced damping for their failure-safe operation and electromagnetic immunity.",
+      companies: ["Steinway", "Yamaha", "Gibson", "Zildjian", "Remo"],
+      futureImpact: "Electronic instruments with programmable damping profiles can simulate any acoustic instrument's decay characteristics, enabling new sonic possibilities.",
       color: "from-purple-600 to-pink-600"
     }
   ];
@@ -586,6 +577,19 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
     if (z < 0.95) return 'text-cyan-400';
     if (z > 1.05) return 'text-amber-400';
     return 'text-emerald-400';
+  };
+
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Explore',
+    review: 'Review',
+    twist_predict: 'Twist',
+    twist_play: 'Twist Lab',
+    twist_review: 'Twist Review',
+    transfer: 'Apply',
+    test: 'Test',
+    mastery: 'Mastery'
   };
 
   // ============================================================================
@@ -670,7 +674,8 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
+        style={{ zIndex: 10 }}
         className="group relative px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-cyan-500/25 hover:shadow-cyan-500/40 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-2">
@@ -704,8 +709,9 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
             disabled={showPredictionFeedback}
+            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
                 ? option.id === 'B'
@@ -724,16 +730,17 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
       {showPredictionFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Correct! <span className="text-cyan-400">Damping</span> is the key to stopping oscillations!
+            Correct! <span className="text-cyan-400">Damping</span> is the key to stopping oscillations!
           </p>
           <p className="text-slate-400 text-sm mt-2">
             Dampers convert kinetic energy to heat through friction (in shock absorbers) or fluid resistance.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onClick={() => goToPhase('play')}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all duration-300"
           >
-            Explore the Physics →
+            Explore the Physics
           </button>
         </div>
       )}
@@ -804,14 +811,14 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
                   stroke="#f59e0b" strokeWidth="2" fill="none"/>
           )}
 
-          <text x="345" y="170" textAnchor="middle" fill="#64748b" fontSize="8">Time →</text>
+          <text x="345" y="170" textAnchor="middle" fill="#64748b" fontSize="8">Time</text>
         </svg>
 
         {/* Controls */}
         <div className="flex flex-col gap-4">
           <div>
             <label className="text-slate-400 text-sm block mb-2">
-              Damping Ratio (ζ): <span className={`font-bold ${getRegimeColor(dampingRatio)}`}>
+              Damping Ratio (zeta): <span className={`font-bold ${getRegimeColor(dampingRatio)}`}>
                 {dampingRatio.toFixed(2)} - {getRegimeLabel(dampingRatio)}
               </span>
             </label>
@@ -833,11 +840,12 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
 
           <div className="grid grid-cols-2 gap-4">
             <button
-              onMouseDown={(e) => { e.preventDefault(); startSimulation(); }}
+              onClick={() => startSimulation()}
               disabled={isAnimating}
+              style={{ zIndex: 10 }}
               className="p-4 rounded-xl bg-cyan-600 hover:bg-cyan-500 disabled:bg-slate-600 text-white font-semibold transition-colors"
             >
-              {isAnimating ? 'Oscillating...' : '▶ Release Mass'}
+              {isAnimating ? 'Oscillating...' : 'Release Mass'}
             </button>
             <div className="p-4 rounded-xl bg-slate-700/50 text-center">
               <div className="text-2xl font-bold text-white">{time.toFixed(1)}s</div>
@@ -852,25 +860,26 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
         <h3 className="text-lg font-semibold text-cyan-400 mb-3">The Three Damping Regimes:</h3>
         <div className="grid gap-3 text-sm text-slate-300">
           <div className={`flex items-start gap-3 p-2 rounded-lg ${regime === 'under' ? 'bg-cyan-900/30 border border-cyan-500/50' : ''}`}>
-            <span className="bg-cyan-600 text-white px-2 py-1 rounded text-xs font-bold">ζ &lt; 1</span>
-            <p><strong>Underdamped:</strong> Oscillates with decreasing amplitude. Lower ζ = more oscillations.</p>
+            <span className="bg-cyan-600 text-white px-2 py-1 rounded text-xs font-bold">zeta &lt; 1</span>
+            <p><strong>Underdamped:</strong> Oscillates with decreasing amplitude. Lower zeta = more oscillations.</p>
           </div>
           <div className={`flex items-start gap-3 p-2 rounded-lg ${regime === 'critical' ? 'bg-emerald-900/30 border border-emerald-500/50' : ''}`}>
-            <span className="bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold">ζ = 1</span>
+            <span className="bg-emerald-600 text-white px-2 py-1 rounded text-xs font-bold">zeta = 1</span>
             <p><strong>Critically Damped:</strong> Returns to equilibrium fastest without oscillating. The sweet spot!</p>
           </div>
           <div className={`flex items-start gap-3 p-2 rounded-lg ${regime === 'over' ? 'bg-amber-900/30 border border-amber-500/50' : ''}`}>
-            <span className="bg-amber-600 text-white px-2 py-1 rounded text-xs font-bold">ζ &gt; 1</span>
-            <p><strong>Overdamped:</strong> Returns slowly without oscillating. Higher ζ = slower return.</p>
+            <span className="bg-amber-600 text-white px-2 py-1 rounded text-xs font-bold">zeta &gt; 1</span>
+            <p><strong>Overdamped:</strong> Returns slowly without oscillating. Higher zeta = slower return.</p>
           </div>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        onClick={() => goToPhase('review')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all duration-300"
       >
-        Review the Concepts →
+        Review the Concepts
       </button>
     </div>
   );
@@ -881,38 +890,38 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">📐 The Governing Equation</h3>
+          <h3 className="text-xl font-bold text-cyan-400 mb-3">The Governing Equation</h3>
           <div className="bg-slate-900/50 rounded-lg p-3 mb-3 font-mono text-center">
-            <span className="text-white">m(d²x/dt²) + c(dx/dt) + kx = 0</span>
+            <span className="text-white">m(d^2x/dt^2) + c(dx/dt) + kx = 0</span>
           </div>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• <strong>m</strong> = mass (inertia)</li>
-            <li>• <strong>c</strong> = damping coefficient (resistance)</li>
-            <li>• <strong>k</strong> = spring constant (stiffness)</li>
-            <li>• The damping term c(dx/dt) opposes velocity</li>
+            <li>m = mass (inertia)</li>
+            <li>c = damping coefficient (resistance)</li>
+            <li>k = spring constant (stiffness)</li>
+            <li>The damping term c(dx/dt) opposes velocity</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">⚖️ The Damping Ratio</h3>
+          <h3 className="text-xl font-bold text-emerald-400 mb-3">The Damping Ratio</h3>
           <div className="bg-slate-900/50 rounded-lg p-3 mb-3 font-mono text-center">
-            <span className="text-white">ζ = c / (2√(mk))</span>
+            <span className="text-white">zeta = c / (2*sqrt(mk))</span>
           </div>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• ζ &lt; 1: Underdamped (oscillates)</li>
-            <li>• ζ = 1: Critically damped (fastest return)</li>
-            <li>• ζ &gt; 1: Overdamped (sluggish)</li>
-            <li>• Engineers tune ζ for desired response</li>
+            <li>zeta &lt; 1: Underdamped (oscillates)</li>
+            <li>zeta = 1: Critically damped (fastest return)</li>
+            <li>zeta &gt; 1: Overdamped (sluggish)</li>
+            <li>Engineers tune zeta for desired response</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">🔋 Energy Dissipation</h3>
+          <h3 className="text-xl font-bold text-purple-400 mb-3">Energy Dissipation</h3>
           <div className="text-slate-300 text-sm space-y-2">
-            <p><strong>Without Damping:</strong> Energy oscillates forever between kinetic (½mv²) and potential (½kx²)</p>
+            <p><strong>Without Damping:</strong> Energy oscillates forever between kinetic (1/2 mv^2) and potential (1/2 kx^2)</p>
             <p><strong>With Damping:</strong> Energy is continuously removed by the damping force:</p>
             <div className="bg-slate-900/50 rounded-lg p-3 my-2 font-mono text-center">
-              <span className="text-white">Power dissipated = c × v²</span>
+              <span className="text-white">Power dissipated = c * v^2</span>
             </div>
             <p className="text-cyan-400 mt-3">
               This power becomes heat in shock absorbers, electrical resistance in eddy-current dampers, or sound in acoustic dampers.
@@ -922,10 +931,11 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onClick={() => goToPhase('twist_predict')}
+        style={{ zIndex: 10 }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
-        Discover a Surprising Twist →
+        Discover a Surprising Twist
       </button>
     </div>
   );
@@ -938,7 +948,7 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
           You're designing a precision measuring instrument (like a voltmeter needle). The needle must move to show new readings, then settle quickly.
         </p>
         <p className="text-lg text-cyan-400 font-medium">
-          Why do engineers often choose ζ ≈ 0.7 instead of exactly ζ = 1?
+          Why do engineers often choose zeta approximately 0.7 instead of exactly zeta = 1?
         </p>
       </div>
 
@@ -951,8 +961,9 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
             disabled={showTwistFeedback}
+            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
                 ? option.id === 'C'
@@ -972,16 +983,17 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
       {showTwistFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ The slight overshoot is actually useful!
+            The slight overshoot is actually useful!
           </p>
           <p className="text-slate-400 text-sm mt-2">
-            Human perception benefits from seeing one small overshoot—it helps us identify exactly where the needle settles. This is called "optimal damping" for visual instruments.
+            Human perception benefits from seeing one small overshoot - it helps us identify exactly where the needle settles. This is called "optimal damping" for visual instruments.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onClick={() => goToPhase('twist_play')}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
           >
-            See the Difference →
+            See the Difference
           </button>
         </div>
       )}
@@ -994,7 +1006,7 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
 
       <div className="grid md:grid-cols-2 gap-6 mb-6 max-w-3xl">
         <div className="bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-lg font-semibold text-emerald-400 mb-2 text-center">Critical Damping (ζ = 1)</h3>
+          <h3 className="text-lg font-semibold text-emerald-400 mb-2 text-center">Critical Damping (zeta = 1)</h3>
           <svg width="200" height="150" className="mx-auto">
             {/* Graph background */}
             <rect x="20" y="10" width="160" height="120" fill="#0f172a" rx="5"/>
@@ -1016,7 +1028,7 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
         </div>
 
         <div className="bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-lg font-semibold text-cyan-400 mb-2 text-center">Optimal Damping (ζ ≈ 0.7)</h3>
+          <h3 className="text-lg font-semibold text-cyan-400 mb-2 text-center">Optimal Damping (zeta ~ 0.7)</h3>
           <svg width="200" height="150" className="mx-auto">
             {/* Graph background */}
             <rect x="20" y="10" width="160" height="120" fill="#0f172a" rx="5"/>
@@ -1042,21 +1054,22 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl">
         <h3 className="text-lg font-bold text-purple-400 mb-3">The 4% Overshoot Rule:</h3>
         <ul className="space-y-2 text-slate-300 text-sm">
-          <li>• At ζ ≈ 0.7, overshoot is about 4-5% of the step change</li>
-          <li>• This is small enough not to mislead, but visible enough to help</li>
-          <li>• Rise time is actually faster than critical damping!</li>
-          <li>• Used in control systems, meters, and human-machine interfaces</li>
+          <li>At zeta ~ 0.7, overshoot is about 4-5% of the step change</li>
+          <li>This is small enough not to mislead, but visible enough to help</li>
+          <li>Rise time is actually faster than critical damping!</li>
+          <li>Used in control systems, meters, and human-machine interfaces</li>
         </ul>
         <p className="text-cyan-400 mt-4 text-sm">
-          This demonstrates that "optimal" depends on the application. For machines reading values, ζ = 1 is best. For humans watching needles, ζ ≈ 0.7 is preferred!
+          This demonstrates that "optimal" depends on the application. For machines reading values, zeta = 1 is best. For humans watching needles, zeta ~ 0.7 is preferred!
         </p>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onClick={() => goToPhase('twist_review')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
-        Review This Discovery →
+        Review This Discovery
       </button>
     </div>
   );
@@ -1070,21 +1083,21 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
         <div className="space-y-4 text-slate-300">
           <div className="grid grid-cols-2 gap-4 text-sm">
             <div className="bg-slate-800/50 rounded-lg p-3">
-              <h4 className="text-emerald-400 font-semibold mb-2">Use Critical (ζ = 1):</h4>
+              <h4 className="text-emerald-400 font-semibold mb-2">Use Critical (zeta = 1):</h4>
               <ul className="space-y-1">
-                <li>• Automated control systems</li>
-                <li>• Digital sensor readings</li>
-                <li>• Robotic positioning</li>
-                <li>• Emergency shutoffs</li>
+                <li>Automated control systems</li>
+                <li>Digital sensor readings</li>
+                <li>Robotic positioning</li>
+                <li>Emergency shutoffs</li>
               </ul>
             </div>
             <div className="bg-slate-800/50 rounded-lg p-3">
-              <h4 className="text-cyan-400 font-semibold mb-2">Use Slight Under (ζ ≈ 0.7):</h4>
+              <h4 className="text-cyan-400 font-semibold mb-2">Use Slight Under (zeta ~ 0.7):</h4>
               <ul className="space-y-1">
-                <li>• Analog meter needles</li>
-                <li>• User interface animations</li>
-                <li>• Vehicle suspension feel</li>
-                <li>• Audio speaker response</li>
+                <li>Analog meter needles</li>
+                <li>User interface animations</li>
+                <li>Vehicle suspension feel</li>
+                <li>Audio speaker response</li>
               </ul>
             </div>
           </div>
@@ -1095,10 +1108,11 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onClick={() => goToPhase('transfer')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all duration-300"
       >
-        Explore Real-World Applications →
+        Explore Real-World Applications
       </button>
     </div>
   );
@@ -1111,7 +1125,8 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
         {transferApps.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+            onClick={() => setActiveAppTab(index)}
+            style={{ zIndex: 10 }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppTab === index
                 ? `bg-gradient-to-r ${app.color} text-white`
@@ -1160,7 +1175,7 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
             <h4 className="text-sm font-semibold text-amber-400 mb-2">Examples:</h4>
             <ul className="text-xs text-slate-400 space-y-1">
               {transferApps[activeAppTab].examples.map((ex, i) => (
-                <li key={i}>• {ex}</li>
+                <li key={i}>{ex}</li>
               ))}
             </ul>
           </div>
@@ -1181,10 +1196,11 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
 
         {!completedApps.has(activeAppTab) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+            onClick={() => handleAppComplete(activeAppTab)}
+            style={{ zIndex: 10 }}
             className="mt-4 w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
           >
-            ✓ Mark as Understood
+            Mark as Understood
           </button>
         )}
       </div>
@@ -1204,10 +1220,11 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          onClick={() => goToPhase('test')}
+          style={{ zIndex: 10 }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all duration-300"
         >
-          Take the Knowledge Test →
+          Take the Knowledge Test
         </button>
       )}
     </div>
@@ -1229,7 +1246,8 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
+                    style={{ zIndex: 10 }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-cyan-600 text-white'
@@ -1244,14 +1262,14 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
           ))}
 
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               setShowTestResults(true);
               if (onGameEvent) {
                 onGameEvent({ type: 'test_completed', data: { score: calculateScore() } });
               }
             }}
             disabled={testAnswers.includes(-1)}
+            style={{ zIndex: 10 }}
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
               testAnswers.includes(-1)
                 ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
@@ -1264,7 +1282,7 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
       ) : (
         <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
           <div className="text-center mb-6">
-            <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
+            <div className="text-6xl mb-4">{calculateScore() >= 7 ? '!' : '?'}</div>
             <h3 className="text-2xl font-bold text-white mb-2">
               Score: {calculateScore()}/10
             </h3>
@@ -1282,7 +1300,7 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
               const userCorrect = testAnswers[qIndex] === correctIndex;
               return (
                 <div key={qIndex} className={`p-3 rounded-lg ${userCorrect ? 'bg-emerald-900/30' : 'bg-red-900/30'}`}>
-                  <p className="text-sm text-white font-medium mb-1">Q{qIndex + 1}: {userCorrect ? '✓' : '✗'}</p>
+                  <p className="text-sm text-white font-medium mb-1">Q{qIndex + 1}: {userCorrect ? 'Correct' : 'Incorrect'}</p>
                   <p className="text-xs text-slate-400">{q.explanation}</p>
                 </div>
               );
@@ -1291,23 +1309,24 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
 
           {calculateScore() >= 7 ? (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                goToPhase(9);
+              onClick={() => {
+                goToPhase('mastery');
                 if (onGameEvent) {
                   onGameEvent({ type: 'mastery_achieved', data: { score: calculateScore() } });
                 }
               }}
+              style={{ zIndex: 10 }}
               className="w-full px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
             >
-              Claim Your Mastery Badge →
+              Claim Your Mastery Badge
             </button>
           ) : (
             <button
-              onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }}
+              onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
+              style={{ zIndex: 10 }}
               className="w-full px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white font-semibold rounded-xl hover:from-cyan-500 hover:to-blue-500 transition-all duration-300"
             >
-              Review & Try Again
+              Review and Try Again
             </button>
           )}
         </div>
@@ -1318,7 +1337,7 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
   const renderMastery = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
       <div className="bg-gradient-to-br from-cyan-900/50 via-blue-900/50 to-purple-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">🎛️</div>
+        <div className="text-8xl mb-6">*</div>
         <h1 className="text-3xl font-bold text-white mb-4">Damped Oscillations Master!</h1>
         <p className="text-xl text-slate-300 mb-6">
           You've mastered the physics of damped oscillations and energy dissipation!
@@ -1326,35 +1345,36 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">📉</div>
+            <div className="text-2xl mb-2">~</div>
             <p className="text-sm text-slate-300">Damping Ratio</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">⚡</div>
+            <div className="text-2xl mb-2">E</div>
             <p className="text-sm text-slate-300">Energy Dissipation</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🚗</div>
+            <div className="text-2xl mb-2">S</div>
             <p className="text-sm text-slate-300">Suspension Design</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🏗️</div>
+            <div className="text-2xl mb-2">B</div>
             <p className="text-sm text-slate-300">Seismic Protection</p>
           </div>
         </div>
 
         <div className="bg-slate-800/70 rounded-xl p-4 mb-6">
           <p className="text-cyan-400 text-sm">
-            Key Insight: The damping ratio ζ = c / (2√(mk)) determines whether systems oscillate (ζ&lt;1), settle fast (ζ=1), or move sluggishly (ζ&gt;1).
+            Key Insight: The damping ratio zeta = c / (2*sqrt(mk)) determines whether systems oscillate (zeta &lt; 1), settle fast (zeta = 1), or move sluggishly (zeta &gt; 1).
           </p>
         </div>
 
         <div className="flex gap-4 justify-center">
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+            onClick={() => goToPhase('hook')}
+            style={{ zIndex: 10 }}
             className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
           >
-            ↺ Explore Again
+            Explore Again
           </button>
         </div>
       </div>
@@ -1363,21 +1383,19 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
-
-  const phaseLabels = ['Hook', 'Predict', 'Explore', 'Review', 'Twist', 'Twist Lab', 'Twist Review', 'Apply', 'Test', 'Mastery'];
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
@@ -1392,18 +1410,19 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-medium text-cyan-400">Damped Oscillations</span>
           <div className="flex gap-1.5">
-            {phaseLabels.map((_, i) => (
+            {phaseOrder.map((p, i) => (
               <button
-                key={i}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(i); }}
+                key={p}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === i
+                  phase === p
                     ? 'bg-gradient-to-r from-cyan-400 to-blue-400 w-6 shadow-lg shadow-cyan-500/50'
-                    : phase > i
+                    : phaseOrder.indexOf(phase) > i
                     ? 'bg-emerald-500 w-2'
                     : 'bg-slate-600 w-2 hover:bg-slate-500'
                 }`}
-                title={phaseLabels[i]}
+                title={phaseLabels[p]}
               />
             ))}
           </div>

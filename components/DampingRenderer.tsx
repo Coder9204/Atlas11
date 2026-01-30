@@ -2,6 +2,15 @@
 
 import React, { useState, useRef, useEffect, useCallback } from 'react';
 
+// ============================================================================
+// DAMPING - Premium Design (Apple/Airbnb Quality)
+// 10-Phase Learning Structure
+// ============================================================================
+
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 // Premium Design System - Apple/Airbnb inspired
 const design = {
   colors: {
@@ -52,28 +61,14 @@ const design = {
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
 
 interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+  type: string;
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
-
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
 
 type DampingType = 'underdamped' | 'critical' | 'overdamped';
 
@@ -82,8 +77,8 @@ interface DampingRendererProps {
   height?: number;
   onBack?: () => void;
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // Real-world applications data
@@ -105,41 +100,9 @@ const realWorldApps = [
     color: design.colors.primary
   },
   {
-    icon: '🚪',
-    title: 'Door Closers',
-    tagline: 'Gentle Close Every Time',
-    description: "Hydraulic door closers use damping to close doors smoothly without slamming. They provide enough force to close but dissipate energy to prevent the door from swinging back open or making noise.",
-    connection: "Door closers are tuned for critical or slightly overdamped response. The door returns to closed position efficiently without bouncing back open or slamming shut.",
-    howItWorks: "Oil flows through adjustable valves as a spring forces the door closed. The valve opening controls damping - tighter valves mean slower, more controlled closing. Two stages: closing speed and latching speed.",
-    stats: [
-      { value: '5-7s', label: 'typical close time', icon: '⏱️' },
-      { value: '1M+', label: 'cycle rating', icon: '🔁' },
-      { value: '100+', label: 'lb holding force', icon: '💪' }
-    ],
-    examples: ['Commercial building doors', 'Fire doors', 'Screen doors', 'Cabinet hinges'],
-    companies: ['LCN', 'Norton', 'Dorma', 'Yale'],
-    color: '#8b5cf6'
-  },
-  {
-    icon: '⌚',
-    title: 'Watch Escapements',
-    tagline: 'Precision Through Controlled Loss',
-    description: "Mechanical watches use the balance wheel as an oscillator. The escapement provides tiny impulses to overcome damping from air resistance and friction, maintaining constant amplitude and accurate timekeeping.",
-    connection: "Watch designers minimize damping to reduce energy loss, but some damping is necessary to prevent chaotic motion. The quality factor Q measures how many oscillations occur before amplitude drops to 1/e.",
-    howItWorks: "The balance wheel oscillates at a precise frequency (usually 28,800 beats/hour). The escapement releases energy in tiny pulses to replace what's lost to friction. Higher Q means less energy needed and longer power reserve.",
-    stats: [
-      { value: '200-300', label: 'quality factor Q', icon: '🎚️' },
-      { value: '4 Hz', label: 'typical frequency', icon: '〰️' },
-      { value: '±2s', label: 'daily accuracy', icon: '🎯' }
-    ],
-    examples: ['Swiss lever escapement', 'Detent escapement', 'Cylinder escapement', 'Pin-lever escapement'],
-    companies: ['Rolex', 'Omega', 'Seiko', 'Patek Philippe'],
-    color: '#f59e0b'
-  },
-  {
     icon: '🏢',
-    title: 'Seismic Dampers',
-    tagline: 'Buildings That Survive Earthquakes',
+    title: 'Building Dampers',
+    tagline: 'Earthquake Protection',
     description: "Modern earthquake-resistant buildings use large dampers to absorb seismic energy. These can reduce building motion by 40-70%, protecting both structure and occupants during earthquakes.",
     connection: "Seismic dampers add damping to buildings that would otherwise oscillate dangerously. The damping ratio is increased from the natural 2-5% to 10-30%, dramatically reducing resonant amplification.",
     howItWorks: "Viscous dampers (giant shock absorbers) or friction dampers convert kinetic energy to heat. Tuned mass dampers swing out of phase with building motion. Base isolation allows the ground to move without transferring energy to the structure.",
@@ -150,6 +113,38 @@ const realWorldApps = [
     ],
     examples: ['Taipei 101 tuned mass damper', 'Tokyo Skytree friction dampers', 'SF Salesforce Tower viscous dampers', 'LA City Hall base isolation'],
     companies: ['Taylor Devices', 'Enidine', 'Damptech', 'Maurer'],
+    color: '#8b5cf6'
+  },
+  {
+    icon: '🔊',
+    title: 'Speakers',
+    tagline: 'Controlled Cone Movement',
+    description: "Speaker cones must move quickly to reproduce sound, but also stop quickly to avoid distortion. The suspension system provides carefully tuned damping for accurate audio reproduction.",
+    connection: "Speaker designers balance damping to allow fast transient response while preventing ringing. Too little damping causes muddy bass; too much damping reduces efficiency and dynamics.",
+    howItWorks: "The spider and surround provide mechanical damping. The voice coil in the magnetic field provides electromagnetic damping. The enclosure adds acoustic damping through air resistance and absorbent materials.",
+    stats: [
+      { value: '0.5-0.7', label: 'optimal Qts', icon: '🎯' },
+      { value: '20-20kHz', label: 'frequency range', icon: '〰️' },
+      { value: '<3%', label: 'THD target', icon: '📊' }
+    ],
+    examples: ['Studio monitors', 'Subwoofers', 'Car audio', 'PA systems'],
+    companies: ['JBL', 'Focal', 'KEF', 'Dynaudio'],
+    color: '#f59e0b'
+  },
+  {
+    icon: '⌚',
+    title: 'Watch Movements',
+    tagline: 'Precision Timekeeping',
+    description: "Mechanical watches use the balance wheel as an oscillator. The escapement provides tiny impulses to overcome damping from air resistance and friction, maintaining constant amplitude and accurate timekeeping.",
+    connection: "Watch designers minimize damping to reduce energy loss, but some damping is necessary to prevent chaotic motion. The quality factor Q measures how many oscillations occur before amplitude drops to 1/e.",
+    howItWorks: "The balance wheel oscillates at a precise frequency (usually 28,800 beats/hour). The escapement releases energy in tiny pulses to replace what's lost to friction. Higher Q means less energy needed and longer power reserve.",
+    stats: [
+      { value: '200-300', label: 'quality factor Q', icon: '🎚️' },
+      { value: '4 Hz', label: 'typical frequency', icon: '〰️' },
+      { value: '±2s', label: 'daily accuracy', icon: '🎯' }
+    ],
+    examples: ['Swiss lever escapement', 'Detent escapement', 'Cylinder escapement', 'Pin-lever escapement'],
+    companies: ['Rolex', 'Omega', 'Seiko', 'Patek Philippe'],
     color: '#ec4899'
   }
 ];
@@ -273,17 +268,17 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   height = 600,
   onBack,
   onGameEvent,
-  currentPhase,
+  gamePhase,
   onPhaseComplete
 }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>('hook');
 
   // Sync with external phase control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase]);
+  }, [gamePhase, phase]);
 
   // Web Audio API sound
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -312,26 +307,28 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   }, []);
 
   // Emit events
-  const emitEvent = (type: GameEventType, data?: Record<string, unknown>) => {
+  const emitEvent = useCallback((type: string, details: Record<string, unknown> = {}) => {
     if (onGameEvent) {
-      onGameEvent({ type, data });
+      onGameEvent({
+        type,
+        gameType: 'damping',
+        gameTitle: 'Damped Oscillations',
+        details: { phase, ...details },
+        timestamp: Date.now()
+      });
     }
-  };
+  }, [onGameEvent, phase]);
 
-  // Phase navigation with 400ms debouncing
-  const goToPhase = (newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  // Phase navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     emitEvent('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  };
+  }, [playSound, emitEvent, phase, onPhaseComplete]);
+
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [showResult, setShowResult] = useState(false);
-  const [showTwistResult, setShowTwistResult] = useState(false);
   const [activeApp, setActiveApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(new Array(testQuestions.length).fill(null));
@@ -347,9 +344,6 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   const [amplitudeHistory, setAmplitudeHistory] = useState<{t: number, amp: number}[]>([]);
   const [medium, setMedium] = useState<'air' | 'water' | 'honey'>('air');
 
-  // Button debounce lock
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
   const animationRef = useRef<number | null>(null);
 
   const isMobile = width < 600;
@@ -361,7 +355,6 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
     if (ratio === 1) return 'critical';
     return 'overdamped';
   };
-
 
   // Damping simulation
   useEffect(() => {
@@ -440,6 +433,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
   // Progress bar
   const renderProgressBar = () => {
+    const currentIndex = phaseOrder.indexOf(phase);
     return (
       <div style={{
         display: 'flex',
@@ -449,18 +443,18 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
         background: colors.bgSecondary,
         borderBottom: `1px solid ${colors.border}`
       }}>
-        {PHASES.map((p, idx) => (
+        {phaseOrder.map((p, idx) => (
           <div
             key={p}
             style={{
               flex: 1,
               height: '4px',
               borderRadius: radius.full,
-              background: idx <= phase
+              background: idx <= currentIndex
                 ? `linear-gradient(90deg, ${colors.primary}, ${colors.primaryLight})`
                 : colors.bgTertiary,
               transition: 'all 0.4s ease',
-              boxShadow: idx <= phase ? shadows.glow(colors.primary) : 'none'
+              boxShadow: idx <= currentIndex ? shadows.glow(colors.primary) : 'none'
             }}
           />
         ))}
@@ -471,7 +465,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           fontWeight: 600,
           minWidth: '48px'
         }}>
-          {phase + 1}/{PHASES.length}
+          {currentIndex + 1}/{phaseOrder.length}
         </span>
       </div>
     );
@@ -488,7 +482,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
         justifyContent: 'flex-end'
       }}>
         <button
-          onMouseDown={() => !disabled && onNext()}
+          onClick={() => !disabled && onNext()}
           style={{
             padding: `${space.md} ${space.xl}`,
             fontSize: '15px',
@@ -503,7 +497,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             transition: 'all 0.3s ease',
             opacity: disabled ? 0.5 : 1,
             boxShadow: disabled ? 'none' : shadows.md,
-            letterSpacing: '0.3px'
+            letterSpacing: '0.3px',
+            zIndex: 10,
+            position: 'relative'
           }}
         >
           {nextLabel}
@@ -720,7 +716,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
             {/* Action button */}
             <button
-              onMouseDown={() => isOscillating ? stopOscillation() : startOscillation()}
+              onClick={() => isOscillating ? stopOscillation() : startOscillation()}
               style={{
                 padding: `${space.md} ${space.md}`,
                 fontSize: '14px',
@@ -732,7 +728,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                 border: 'none',
                 borderRadius: radius.sm,
                 cursor: 'pointer',
-                boxShadow: shadows.sm
+                boxShadow: shadows.sm,
+                zIndex: 10,
+                position: 'relative'
               }}
             >
               {isOscillating ? '⏹ Stop' : '▶ Release Mass'}
@@ -894,8 +892,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-pink-500 to-fuchsia-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-pink-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        style={{ zIndex: 10, position: 'relative' }}
       >
         <span className="relative z-10 flex items-center gap-3">
           Explore Damping
@@ -950,7 +949,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           ].map(option => (
             <button
               key={option.id}
-              onMouseDown={() => setPrediction(option.id)}
+              onClick={() => setPrediction(option.id)}
               style={{
                 padding: `${space.lg} ${space.lg}`,
                 fontSize: '15px',
@@ -967,7 +966,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                 alignItems: 'center',
                 gap: space.md,
                 transition: 'all 0.2s ease',
-                boxShadow: prediction === option.id ? shadows.md : 'none'
+                boxShadow: prediction === option.id ? shadows.md : 'none',
+                zIndex: 10,
+                position: 'relative'
               }}
             >
               <span style={{ fontSize: '28px' }}>{option.icon}</span>
@@ -988,7 +989,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           </p>
         </div>
       </div>
-      {renderBottomBar(() => goToPhase(2), 'Test It!', !prediction)}
+      {renderBottomBar(() => goToPhase('play'), 'Test It!', !prediction)}
     </div>
   );
 
@@ -1090,10 +1091,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           </div>
         </div>
       </div>
-      {renderBottomBar(() => {
-        setShowResult(true);
-        goToPhase(3);
-      }, 'See Analysis')}
+      {renderBottomBar(() => goToPhase('review'), 'See Analysis')}
     </div>
   );
 
@@ -1247,7 +1245,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
           {renderKeyTakeaway('Damping is nature\'s way of dissipating energy. The damping ratio ζ determines whether the system oscillates (underdamped), returns fastest (critical), or creeps back slowly (overdamped). Most real systems are slightly underdamped for quick response with acceptable overshoot.')}
         </div>
-        {renderBottomBar(() => goToPhase(4), 'Explore the Twist')}
+        {renderBottomBar(() => goToPhase('twist_predict'), 'Explore the Twist')}
       </div>
     );
   };
@@ -1262,7 +1260,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
     }}>
       {renderProgressBar()}
       <div style={{ flex: 1, padding: isMobile ? space.lg : space.xl, overflowY: 'auto' }}>
-        {renderSectionHeader('🌀', 'The Twist', 'What if we change the medium?')}
+        {renderSectionHeader('🌀', 'The Twist', 'Which damping type is best for car suspension?')}
 
         <div style={{
           padding: space.lg,
@@ -1272,7 +1270,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           marginBottom: space.xl
         }}>
           <p style={{ fontSize: '15px', color: colors.textSecondary, margin: 0, lineHeight: 1.7 }}>
-            You've seen damping in air. What happens if we put the same oscillator in <strong style={{ color: colors.textPrimary }}>water</strong> or even <strong style={{ color: colors.textPrimary }}>honey</strong>?
+            A car hits a pothole. The suspension compresses and needs to return to normal. Engineers must choose: <strong style={{ color: colors.textPrimary }}>underdamped, critically damped, or overdamped?</strong>
           </p>
         </div>
 
@@ -1284,14 +1282,14 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           margin: '0 auto'
         }}>
           {[
-            { id: 'same', label: 'Same behavior - medium doesn\'t matter', icon: '⚖️' },
-            { id: 'faster_decay', label: 'Faster decay but still oscillates', icon: '📉' },
-            { id: 'may_not_oscillate', label: 'May not oscillate at all in thick fluids', icon: '🐢' },
-            { id: 'faster_oscillation', label: 'Oscillates faster in thicker fluids', icon: '⚡' }
+            { id: 'underdamped', label: 'Underdamped - allows oscillation for a softer ride', icon: '〰️' },
+            { id: 'critical', label: 'Critically damped - fastest settling, no bounce', icon: '⚡' },
+            { id: 'overdamped', label: 'Overdamped - very slow, maximum comfort', icon: '🐢' },
+            { id: 'slightly_under', label: 'Slightly underdamped - fast settling with minimal bounce', icon: '🎯' }
           ].map(option => (
             <button
               key={option.id}
-              onMouseDown={() => setTwistPrediction(option.id)}
+              onClick={() => setTwistPrediction(option.id)}
               style={{
                 padding: `${space.lg} ${space.lg}`,
                 fontSize: '15px',
@@ -1308,7 +1306,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                 alignItems: 'center',
                 gap: space.md,
                 transition: 'all 0.2s ease',
-                boxShadow: twistPrediction === option.id ? shadows.md : 'none'
+                boxShadow: twistPrediction === option.id ? shadows.md : 'none',
+                zIndex: 10,
+                position: 'relative'
               }}
             >
               <span style={{ fontSize: '28px' }}>{option.icon}</span>
@@ -1317,7 +1317,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           ))}
         </div>
       </div>
-      {renderBottomBar(() => goToPhase(5), 'Try Different Media', !twistPrediction)}
+      {renderBottomBar(() => goToPhase('twist_play'), 'Try Different Damping', !twistPrediction)}
     </div>
   );
 
@@ -1331,7 +1331,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
     }}>
       {renderProgressBar()}
       <div style={{ flex: 1, padding: isMobile ? space.md : space.lg, overflowY: 'auto' }}>
-        {renderSectionHeader('🔬', 'Medium Experiment', 'Compare oscillation in air, water, and honey')}
+        {renderSectionHeader('🔬', 'Compare Damping Regimes', 'See how different damping affects the suspension behavior')}
 
         {/* Medium selector */}
         <div style={{
@@ -1347,7 +1347,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           ].map(m => (
             <button
               key={m.id}
-              onMouseDown={() => {
+              onClick={() => {
                 setMedium(m.id as 'air' | 'water' | 'honey');
                 stopOscillation();
               }}
@@ -1361,7 +1361,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                   : colors.bgSecondary,
                 border: `2px solid ${medium === m.id ? colors.accent : colors.border}`,
                 borderRadius: radius.md,
-                cursor: 'pointer'
+                cursor: 'pointer',
+                zIndex: 10,
+                position: 'relative'
               }}
             >
               {m.label}
@@ -1432,16 +1434,13 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           </div>
         </div>
       </div>
-      {renderBottomBar(() => {
-        setShowTwistResult(true);
-        goToPhase(6);
-      }, 'See Analysis')}
+      {renderBottomBar(() => goToPhase('twist_review'), 'See Analysis')}
     </div>
   );
 
   // Twist Review phase
   const renderTwistReview = () => {
-    const wasCorrect = twistPrediction === 'may_not_oscillate';
+    const wasCorrect = twistPrediction === 'slightly_under';
 
     return (
       <div style={{
@@ -1469,13 +1468,13 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
               marginTop: space.md,
               fontWeight: 700
             }}>
-              {wasCorrect ? 'Spot on! High viscosity can prevent oscillation!' : 'Viscous fluids can overdamp the system!'}
+              {wasCorrect ? 'Spot on! Slightly underdamped is optimal!' : 'Slightly underdamped is the sweet spot!'}
             </h3>
           </div>
 
-          {renderSectionHeader('📊', 'Viscosity and Damping', 'How fluid properties affect oscillation')}
+          {renderSectionHeader('📊', 'Optimal Damping for Different Applications', 'Why one size doesn\'t fit all')}
 
-          {/* Medium comparison */}
+          {/* Application comparison */}
           <div style={{
             display: 'grid',
             gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
@@ -1483,9 +1482,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             marginBottom: space.xl
           }}>
             {[
-              { medium: 'Air', icon: '💨', viscosity: '~18 μPa·s', behavior: 'Low damping, many oscillations', zeta: '~0.01-0.1', color: colors.textSecondary },
-              { medium: 'Water', icon: '💧', viscosity: '~1000 μPa·s', behavior: 'Moderate damping, few oscillations', zeta: '~0.3-0.7', color: '#3b82f6' },
-              { medium: 'Honey', icon: '🍯', viscosity: '~10⁷ μPa·s', behavior: 'High damping, no oscillation', zeta: '>1', color: colors.warning }
+              { app: 'Car Suspension', icon: '🚗', optimal: 'Slightly Underdamped', ratio: 'ζ ≈ 0.3-0.4', reason: 'Fast settling with comfort', color: colors.primary },
+              { app: 'Door Closer', icon: '🚪', optimal: 'Critical/Overdamped', ratio: 'ζ ≈ 1.0-1.5', reason: 'No bounce back', color: '#8b5cf6' },
+              { app: 'Seismometer', icon: '📊', optimal: 'Critical', ratio: 'ζ = 1.0', reason: 'Fastest response', color: colors.accent }
             ].map((item, idx) => (
               <div key={idx} style={{
                 padding: space.lg,
@@ -1494,23 +1493,23 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                 border: `1px solid ${colors.border}`
               }}>
                 <div style={{ fontSize: '40px', marginBottom: space.md, textAlign: 'center' }}>{item.icon}</div>
-                <div style={{ fontSize: '18px', fontWeight: 700, color: item.color, textAlign: 'center', marginBottom: space.sm }}>
-                  {item.medium}
+                <div style={{ fontSize: '16px', fontWeight: 700, color: item.color, textAlign: 'center', marginBottom: space.sm }}>
+                  {item.app}
+                </div>
+                <div style={{ fontSize: '14px', color: colors.textPrimary, textAlign: 'center', marginBottom: space.xs, fontWeight: 600 }}>
+                  {item.optimal}
                 </div>
                 <div style={{ fontSize: '12px', color: colors.textTertiary, textAlign: 'center', marginBottom: space.sm }}>
-                  η ≈ {item.viscosity}
+                  {item.ratio}
                 </div>
-                <div style={{ fontSize: '13px', color: colors.textSecondary, textAlign: 'center', marginBottom: space.xs }}>
-                  {item.behavior}
-                </div>
-                <div style={{ fontSize: '13px', color: colors.primary, textAlign: 'center', fontWeight: 600 }}>
-                  ζ {item.zeta}
+                <div style={{ fontSize: '13px', color: colors.textSecondary, textAlign: 'center' }}>
+                  {item.reason}
                 </div>
               </div>
             ))}
           </div>
 
-          {/* Formula */}
+          {/* Explanation */}
           <div style={{
             padding: space.lg,
             background: colors.bgSecondary,
@@ -1519,16 +1518,16 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             marginBottom: space.lg
           }}>
             <h4 style={{ fontSize: '15px', color: colors.textPrimary, marginBottom: space.md, fontWeight: 700 }}>
-              📐 The Damping Coefficient
+              🎯 Why Slightly Underdamped for Cars?
             </h4>
             <p style={{ fontSize: '14px', color: colors.textSecondary, lineHeight: 1.7, margin: 0 }}>
-              The damping coefficient <strong style={{ color: colors.primary }}>b</strong> relates to fluid viscosity, object shape, and size. For a sphere in viscous fluid: <strong style={{ color: colors.textPrimary }}>b = 6πηr</strong> (Stokes drag). Higher viscosity → higher b → higher damping ratio ζ.
+              Pure critical damping (ζ = 1) gives the <strong style={{ color: colors.textPrimary }}>mathematically fastest</strong> return to equilibrium. But slightly underdamped (ζ ≈ 0.3-0.4) allows <strong style={{ color: colors.textPrimary }}>one small overshoot</strong> which actually feels more comfortable to passengers and provides better road-following ability. Overdamped suspension would feel "floaty" and slow to respond.
             </p>
           </div>
 
-          {renderKeyTakeaway('The same oscillator can be underdamped, critically damped, or overdamped depending on the surrounding medium. This is why car shock absorbers use oil with specific viscosity - change the oil and you change the ride quality!')}
+          {renderKeyTakeaway('The optimal damping ratio depends on the application. Car suspensions use ζ ≈ 0.3-0.4 (slightly underdamped) for the best balance of comfort and control. Door closers use ζ ≈ 1.0-1.5 to prevent bouncing. Seismometers use exactly ζ = 1.0 for fastest response without overshoot.')}
         </div>
-        {renderBottomBar(() => goToPhase(7), 'See Real Applications')}
+        {renderBottomBar(() => goToPhase('transfer'), 'See Real Applications')}
       </div>
     );
   };
@@ -1591,11 +1590,8 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
               return (
                 <button
                   key={idx}
-                  onMouseDown={() => {
-                    if (!isUnlocked || navigationLockRef.current) return;
-                    navigationLockRef.current = true;
-                    setActiveApp(idx);
-                    setTimeout(() => { navigationLockRef.current = false; }, 300);
+                  onClick={() => {
+                    if (isUnlocked) setActiveApp(idx);
                   }}
                   style={{
                     padding: `${space.md} ${space.lg}`,
@@ -1611,7 +1607,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                     whiteSpace: 'nowrap',
                     transition: 'all 0.2s ease',
                     boxShadow: isCurrent ? shadows.sm : 'none',
-                    opacity: isUnlocked ? 1 : 0.5
+                    opacity: isUnlocked ? 1 : 0.5,
+                    zIndex: 10,
+                    position: 'relative'
                   }}
                 >
                   {isCompleted ? '✓ ' : ''}{a.icon} {a.title}
@@ -1726,7 +1724,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                   fontSize: '12px',
                   color: colors.textSecondary,
                   background: colors.bgSecondary,
-                  borderRadius: radius.xs,
+                  borderRadius: radius.sm,
                   border: `1px solid ${colors.border}`
                 }}>
                   {company}
@@ -1738,16 +1736,13 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             <div style={{ padding: space.lg, borderTop: `1px solid ${colors.border}` }}>
               {!completedApps.has(activeApp) ? (
                 <button
-                  onMouseDown={() => {
-                    if (navigationLockRef.current) return;
-                    navigationLockRef.current = true;
+                  onClick={() => {
                     const newCompleted = new Set(completedApps);
                     newCompleted.add(activeApp);
                     setCompletedApps(newCompleted);
                     if (activeApp < realWorldApps.length - 1) {
                       setTimeout(() => setActiveApp(activeApp + 1), 300);
                     }
-                    setTimeout(() => { navigationLockRef.current = false; }, 400);
                   }}
                   style={{
                     width: '100%',
@@ -1758,7 +1753,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                     background: colors.success,
                     border: 'none',
                     borderRadius: radius.md,
-                    cursor: 'pointer'
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    position: 'relative'
                   }}
                 >
                   ✓ Mark "{app.title}" as Read
@@ -1789,7 +1786,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           alignItems: 'center'
         }}>
           <button
-            onMouseDown={() => goToPhase(6)}
+            onClick={() => goToPhase('twist_review')}
             style={{
               padding: `${space.md} ${space.xl}`,
               fontSize: '14px',
@@ -1797,14 +1794,16 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
               background: 'transparent',
               border: 'none',
               borderRadius: radius.md,
-              cursor: 'pointer'
+              cursor: 'pointer',
+              zIndex: 10,
+              position: 'relative'
             }}
           >
             ← Back
           </button>
           {canTakeQuiz ? (
             <button
-              onMouseDown={() => goToPhase(8)}
+              onClick={() => goToPhase('test')}
               style={{
                 padding: `${space.md} ${space.xxl}`,
                 fontSize: '15px',
@@ -1814,7 +1813,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                 border: 'none',
                 borderRadius: radius.md,
                 cursor: 'pointer',
-                boxShadow: shadows.sm
+                boxShadow: shadows.sm,
+                zIndex: 10,
+                position: 'relative'
               }}
             >
               Take the Quiz →
@@ -1882,7 +1883,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                 {testQuestions.map((_, idx) => (
                   <button
                     key={idx}
-                    onMouseDown={() => setCurrentQuestionIndex(idx)}
+                    onClick={() => setCurrentQuestionIndex(idx)}
                     style={{
                       width: '12px',
                       height: '12px',
@@ -1895,7 +1896,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                           ? colors.success
                           : colors.bgTertiary,
                       transition: 'all 0.2s ease',
-                      boxShadow: idx === currentQuestionIndex ? shadows.glow(colors.primary) : 'none'
+                      boxShadow: idx === currentQuestionIndex ? shadows.glow(colors.primary) : 'none',
+                      zIndex: 10,
+                      position: 'relative'
                     }}
                   />
                 ))}
@@ -1934,7 +1937,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                   return (
                     <button
                       key={idx}
-                      onMouseDown={() => {
+                      onClick={() => {
                         const newAnswers = [...testAnswers];
                         newAnswers[currentQuestionIndex] = idx;
                         setTestAnswers(newAnswers);
@@ -1954,7 +1957,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                         transition: 'all 0.2s ease',
                         display: 'flex',
                         alignItems: 'center',
-                        gap: space.md
+                        gap: space.md,
+                        zIndex: 10,
+                        position: 'relative'
                       }}
                     >
                       <span style={{
@@ -1986,7 +1991,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                 gap: space.md
               }}>
                 <button
-                  onMouseDown={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
+                  onClick={() => setCurrentQuestionIndex(Math.max(0, currentQuestionIndex - 1))}
                   disabled={currentQuestionIndex === 0}
                   style={{
                     padding: `${space.md} ${space.lg}`,
@@ -1997,7 +2002,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                     border: `1px solid ${colors.border}`,
                     borderRadius: radius.sm,
                     cursor: currentQuestionIndex === 0 ? 'not-allowed' : 'pointer',
-                    opacity: currentQuestionIndex === 0 ? 0.5 : 1
+                    opacity: currentQuestionIndex === 0 ? 0.5 : 1,
+                    zIndex: 10,
+                    position: 'relative'
                   }}
                 >
                   ← Previous
@@ -2005,7 +2012,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
                 {currentQuestionIndex < testQuestions.length - 1 ? (
                   <button
-                    onMouseDown={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
+                    onClick={() => setCurrentQuestionIndex(currentQuestionIndex + 1)}
                     style={{
                       padding: `${space.md} ${space.lg}`,
                       fontSize: '14px',
@@ -2014,14 +2021,16 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                       background: colors.bgSecondary,
                       border: `1px solid ${colors.border}`,
                       borderRadius: radius.sm,
-                      cursor: 'pointer'
+                      cursor: 'pointer',
+                      zIndex: 10,
+                      position: 'relative'
                     }}
                   >
                     Next →
                   </button>
                 ) : (
                   <button
-                    onMouseDown={() => setShowTestResults(true)}
+                    onClick={() => setShowTestResults(true)}
                     disabled={answeredCount < testQuestions.length}
                     style={{
                       padding: `${space.md} ${space.xl}`,
@@ -2034,7 +2043,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                       border: 'none',
                       borderRadius: radius.sm,
                       cursor: answeredCount < testQuestions.length ? 'not-allowed' : 'pointer',
-                      boxShadow: answeredCount >= testQuestions.length ? shadows.sm : 'none'
+                      boxShadow: answeredCount >= testQuestions.length ? shadows.sm : 'none',
+                      zIndex: 10,
+                      position: 'relative'
                     }}
                   >
                     Submit ({answeredCount}/{testQuestions.length})
@@ -2049,7 +2060,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
               {(() => {
                 const score = testAnswers.reduce((acc, answer, idx) =>
-                  acc + (testQuestions[idx].options[answer]?.correct ? 1 : 0), 0);
+                  acc + (testQuestions[idx].options[answer as number]?.correct ? 1 : 0), 0);
                 const percentage = Math.round((score / testQuestions.length) * 100);
 
                 return (
@@ -2074,7 +2085,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: space.md }}>
                       {testQuestions.map((q, idx) => {
-                        const isCorrect = q.options[testAnswers[idx]]?.correct;
+                        const isCorrect = q.options[testAnswers[idx] as number]?.correct;
                         return (
                           <div key={idx} style={{
                             padding: space.lg,
@@ -2129,7 +2140,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             </>
           )}
         </div>
-        {showTestResults && renderBottomBar(() => goToPhase(9), 'Complete Module')}
+        {showTestResults && renderBottomBar(() => goToPhase('mastery'), 'Complete Module')}
       </div>
     );
   };
@@ -2137,7 +2148,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   // Mastery phase
   const renderMastery = () => {
     const score = testAnswers.reduce((acc, answer, idx) =>
-      acc + (testQuestions[idx].options[answer]?.correct ? 1 : 0), 0);
+      acc + (testQuestions[idx].options[answer as number]?.correct ? 1 : 0), 0);
 
     return (
       <div style={{
@@ -2169,7 +2180,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             boxShadow: shadows.glow(colors.primary),
             border: `2px solid ${colors.primary}30`
           }}>
-            <span style={{ fontSize: '60px' }}>〰️</span>
+            <span style={{ fontSize: '60px' }}>🏆</span>
           </div>
 
           <h1 style={{
@@ -2179,7 +2190,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             marginBottom: space.md,
             letterSpacing: '-1px'
           }}>
-            Damping Mastered!
+            Congratulations!
           </h1>
           <p style={{
             fontSize: '18px',
@@ -2188,7 +2199,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
             lineHeight: 1.7,
             marginBottom: space.xl
           }}>
-            You now understand how energy dissipation shapes oscillation - from swings to skyscrapers!
+            You've mastered damped oscillations! You now understand how energy dissipation shapes oscillation - from swings to skyscrapers!
           </p>
 
           {/* Achievement cards */}
@@ -2272,12 +2283,7 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
         }}>
           {onBack && (
             <button
-              onMouseDown={() => {
-                if (navigationLockRef.current) return;
-                navigationLockRef.current = true;
-                onBack();
-                setTimeout(() => { navigationLockRef.current = false; }, 400);
-              }}
+              onClick={() => onBack()}
               style={{
                 padding: `${space.md} ${space.xxl}`,
                 fontSize: '16px',
@@ -2287,10 +2293,12 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
                 border: 'none',
                 borderRadius: radius.md,
                 cursor: 'pointer',
-                boxShadow: `${shadows.md}, ${shadows.glow(colors.primary)}`
+                boxShadow: `${shadows.md}, ${shadows.glow(colors.primary)}`,
+                zIndex: 10,
+                position: 'relative'
               }}
             >
-              Back to Topics
+              Return to Dashboard
             </button>
           )}
         </div>
@@ -2301,18 +2309,31 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
   // Main render switch
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
+  };
+
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Lab',
+    review: 'Review',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Lab',
+    twist_review: 'Twist Review',
+    transfer: 'Transfer',
+    test: 'Test',
+    mastery: 'Mastery'
   };
 
   return (
@@ -2328,18 +2349,19 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Damped Oscillations</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-pink-400 w-6 shadow-lg shadow-pink-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                style={{ zIndex: 10, position: 'relative' }}
               />
             ))}
           </div>

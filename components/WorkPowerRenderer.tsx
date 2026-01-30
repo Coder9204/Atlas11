@@ -25,18 +25,29 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+// String-based phases
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Lab',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
 };
 
 interface WorkPowerRendererProps {
   onComplete?: () => void;
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // Premium Design System
@@ -260,9 +271,9 @@ const testQuestions = [
   },
 ];
 
-export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhase, onPhaseComplete }: WorkPowerRendererProps) {
+export default function WorkPowerRenderer({ onComplete, onGameEvent, gamePhase, onPhaseComplete }: WorkPowerRendererProps) {
   // Core state
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>((gamePhase as Phase) ?? 'hook');
   const [prediction, setPrediction] = useState<number | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<number | null>(null);
   const [activeApp, setActiveApp] = useState(0);
@@ -283,10 +294,6 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
   const animationRef = useRef<number | null>(null);
   const startTimeRef = useRef<number>(0);
 
-  // Button debounce lock
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
-
   // Responsive detection
   const [isMobile, setIsMobile] = useState(false);
   useEffect(() => {
@@ -298,10 +305,10 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
 
   // Sync with external phase control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase !== undefined && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase]);
+  }, [gamePhase]);
 
   // Web Audio API sound
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -336,32 +343,27 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
     }
   };
 
-  // Phase navigation with 400ms debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    if (navigationLockRef.current) return;
-
-    lastClickRef.current = now;
-    navigationLockRef.current = true;
+  // Phase navigation - simplified without locks
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     emitEvent('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [phase, playSound, onPhaseComplete]);
 
   const goNext = useCallback(() => {
-    if (phase < PHASES.length - 1) {
-      goToPhase(phase + 1);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
     } else if (onComplete) {
       onComplete();
     }
   }, [phase, goToPhase, onComplete]);
 
   const goBack = useCallback(() => {
-    if (phase > 0) {
-      goToPhase(phase - 1);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
     }
   }, [phase, goToPhase]);
 
@@ -421,7 +423,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
     };
   }, []);
 
-  // Helper function: renderButton with debouncing
+  // Helper function: renderButton - simplified with onClick
   const renderButton = (
     label: string,
     onClick: () => void,
@@ -445,12 +447,10 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
 
     return (
       <button
-        onMouseDown={(e) => {
+        onClick={(e) => {
           e.preventDefault();
-          if (disabled || navigationLockRef.current) return;
-          navigationLockRef.current = true;
+          if (disabled) return;
           onClick();
-          setTimeout(() => { navigationLockRef.current = false; }, 400);
         }}
         disabled={disabled}
         style={{
@@ -461,6 +461,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
           cursor: disabled ? 'not-allowed' : 'pointer',
           transition: 'all 0.2s',
           opacity: disabled ? 0.5 : 1,
+          zIndex: 10,
           ...variants[variant],
           ...sizes[size],
         }}
@@ -659,12 +660,9 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
 
         {/* CTA */}
         <button
-          onMouseDown={(e) => {
+          onClick={(e) => {
             e.preventDefault();
-            if (navigationLockRef.current) return;
-            navigationLockRef.current = true;
-            goToPhase(1);
-            setTimeout(() => { navigationLockRef.current = false; }, 400);
+            goToPhase('predict');
           }}
           style={{
             padding: '16px 48px',
@@ -677,6 +675,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
             cursor: 'pointer',
             fontFamily: typography.fontFamily,
             boxShadow: `0 4px 20px ${colors.brandGlow}`,
+            zIndex: 10,
           }}
         >
           Make a Prediction →
@@ -699,18 +698,19 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Work & Power</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-indigo-400 w-6 shadow-lg shadow-indigo-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                style={{ zIndex: 10 }}
               />
             ))}
           </div>
@@ -725,15 +725,15 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
     </div>
   );
 
-  // Phase 0: Hook
-  if (phase === 0) {
+  // Phase: Hook
+  if (phase === 'hook') {
     return <PremiumWrapper>{renderHook()}</PremiumWrapper>;
   }
 
   // ============================================================================
   // PHASE: PREDICT
   // ============================================================================
-  if (phase === 1) {
+  if (phase === 'predict') {
     const predictions = [
       { id: 0, label: 'About 10 Watts', icon: '💡', description: 'Like a dim LED bulb' },
       { id: 1, label: 'About 100 Watts', icon: '🔆', description: 'Like a bright incandescent bulb' },
@@ -807,6 +807,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
                     textAlign: 'left',
                     transition: 'all 0.2s',
                     fontFamily: typography.fontFamily,
+                    zIndex: 10,
                   }}
                 >
                   <span style={{ fontSize: 28 }}>{p.icon}</span>
@@ -832,7 +833,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
             {/* Navigation */}
             <div style={{ display: 'flex', gap: spacing.md }}>
               {renderButton('← Back', goBack, 'ghost')}
-              {renderButton('Calculate Your Power →', () => goToPhase(2), 'primary', { disabled: prediction === null })}
+              {renderButton('Calculate Your Power →', () => goToPhase('play'), 'primary', { disabled: prediction === null })}
             </div>
           </div>
         </div>
@@ -844,7 +845,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
   // ============================================================================
   // PHASE: PLAY
   // ============================================================================
-  if (phase === 2) {
+  if (phase === 'play') {
     const values = calculateValues();
 
     return (
@@ -995,6 +996,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
                   fontWeight: 600,
                   cursor: isClimbing ? 'default' : 'pointer',
                   fontFamily: typography.fontFamily,
+                  zIndex: 10,
                 }}
               >
                 {isClimbing ? `Climbing... ${(climbProgress * 100).toFixed(0)}%` : '▶ Climb Stairs'}
@@ -1011,6 +1013,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
                   fontWeight: 500,
                   cursor: 'pointer',
                   fontFamily: typography.fontFamily,
+                  zIndex: 10,
                 }}
               >
                 ↺ Reset
@@ -1065,7 +1068,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
   // ============================================================================
   // PHASE: REVIEW
   // ============================================================================
-  if (phase === 3) {
+  if (phase === 'review') {
     const correctAnswer = 2; // ~420W is closest to 500W
     const userWasClose = prediction === 2 || prediction === 1;
 
@@ -1229,7 +1232,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
   // ============================================================================
   // PHASE: TWIST PREDICT
   // ============================================================================
-  if (phase === 4) {
+  if (phase === 'twist_predict') {
     const twistOptions = [
       { id: 0, label: 'Twice the power', icon: '⚡', description: 'Double the weight = double the power' },
       { id: 1, label: 'Same power', icon: '⚖️', description: 'Power doesn\'t depend on weight' },
@@ -1300,6 +1303,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
                     textAlign: 'left',
                     transition: 'all 0.2s',
                     fontFamily: typography.fontFamily,
+                    zIndex: 10,
                   }}
                 >
                   <span style={{ fontSize: 28 }}>{opt.icon}</span>
@@ -1337,7 +1341,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
   // ============================================================================
   // PHASE: TWIST PLAY
   // ============================================================================
-  if (phase === 5) {
+  if (phase === 'twist_play') {
     const [backpackWeight, setBackpackWeight] = useState(0);
     const totalMass = personMass + backpackWeight;
     const basePower = (70 * 10 * 3) / 5; // Base case: 70kg, 3m, 5s
@@ -1526,7 +1530,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
   // ============================================================================
   // PHASE: TWIST REVIEW
   // ============================================================================
-  if (phase === 6) {
+  if (phase === 'twist_review') {
     const userWasRight = twistPrediction === 0;
 
     return (
@@ -1667,7 +1671,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
   // ============================================================================
   // PHASE: TRANSFER (Real World Applications)
   // ============================================================================
-  if (phase === 7) {
+  if (phase === 'transfer') {
     const app = applications[activeApp];
     const allRead = completedApps.size >= applications.length;
 
@@ -1724,11 +1728,9 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
             return (
               <button
                 key={a.id}
-                onMouseDown={() => {
-                  if (navigationLockRef.current || !isUnlocked) return;
-                  navigationLockRef.current = true;
+                onClick={() => {
+                  if (!isUnlocked) return;
                   setActiveApp(i);
-                  setTimeout(() => { navigationLockRef.current = false; }, 300);
                 }}
                 style={{
                   padding: '10px 16px',
@@ -1743,6 +1745,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
                   whiteSpace: 'nowrap',
                   fontFamily: typography.fontFamily,
                   transition: 'all 0.2s',
+                  zIndex: 10,
                 }}
               >
                 {isCompleted ? '✓' : a.icon} {a.title}
@@ -1823,20 +1826,17 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
               ))}
             </div>
 
-            {/* Mark as Read Button */}
+            {/* Next Application Button */}
             <div style={{ marginBottom: spacing.lg }}>
               {!completedApps.has(activeApp) ? (
                 <button
-                  onMouseDown={() => {
-                    if (navigationLockRef.current) return;
-                    navigationLockRef.current = true;
+                  onClick={() => {
                     const newCompleted = new Set(completedApps);
                     newCompleted.add(activeApp);
                     setCompletedApps(newCompleted);
                     if (activeApp < applications.length - 1) {
                       setTimeout(() => setActiveApp(activeApp + 1), 300);
                     }
-                    setTimeout(() => { navigationLockRef.current = false; }, 400);
                   }}
                   style={{
                     width: '100%',
@@ -1849,9 +1849,10 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
                     fontWeight: 600,
                     cursor: 'pointer',
                     fontFamily: typography.fontFamily,
+                    zIndex: 10,
                   }}
                 >
-                  ✓ Mark "{app.title}" as Read
+                  {activeApp < applications.length - 1 ? `Next Application →` : `✓ Complete "${app.title}"`}
                 </button>
               ) : (
                 <div style={{
@@ -1880,7 +1881,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
           background: colors.bgElevated,
         }}>
           {renderButton('← Back', goBack, 'ghost')}
-          {renderButton('Take the Quiz →', () => goToPhase(8), 'primary', { disabled: !allRead })}
+          {renderButton('Take the Quiz →', () => goToPhase('test'), 'primary', { disabled: !allRead })}
         </div>
       </div>
       </PremiumWrapper>
@@ -1890,7 +1891,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
   // ============================================================================
   // PHASE: TEST
   // ============================================================================
-  if (phase === 8) {
+  if (phase === 'test') {
     const q = testQuestions[testIndex];
     const totalCorrect = testAnswers.reduce((sum, ans, i) => sum + (ans !== null && testQuestions[i].options[ans]?.correct ? 1 : 0), 0);
 
@@ -1911,7 +1912,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
               <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.xl }}>
                 {passed ? 'You\'ve mastered work and power!' : 'Review the concepts and try again.'}
               </p>
-              {renderButton(passed ? 'Complete! →' : 'Review Material', () => passed ? goNext() : goToPhase(3), passed ? 'success' : 'primary', { size: 'lg' })}
+              {renderButton(passed ? 'Complete! →' : 'Review Material', () => passed ? goNext() : goToPhase('review'), passed ? 'success' : 'primary', { size: 'lg' })}
             </div>
           </div>
         </div>
@@ -1976,6 +1977,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
                       cursor: showResult ? 'default' : 'pointer',
                       transition: 'all 0.2s',
                       fontFamily: typography.fontFamily,
+                      zIndex: 10,
                     }}
                   >
                     <span style={{
@@ -2028,7 +2030,7 @@ export default function WorkPowerRenderer({ onComplete, onGameEvent, currentPhas
   // ============================================================================
   // PHASE: MASTERY
   // ============================================================================
-  if (phase === 9) {
+  if (phase === 'mastery') {
     return (
       <PremiumWrapper>
       <div style={{

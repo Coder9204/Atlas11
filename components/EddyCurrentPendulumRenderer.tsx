@@ -276,6 +276,8 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
         opacity: disabled ? 0.5 : 1,
         transition: 'all 0.2s',
         touchAction: 'manipulation',
+        position: 'relative',
+        zIndex: 10,
         ...style
       }}
     >
@@ -1331,6 +1333,51 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
           { text: 'Car disc brakes', correct: true },
           { text: 'Exercise bikes', correct: false }
         ]
+      },
+      {
+        question: 'What happens to the kinetic energy when eddy current braking slows an object?',
+        options: [
+          { text: 'It disappears completely', correct: false },
+          { text: 'It is converted to heat in the conductor', correct: true },
+          { text: 'It is stored as magnetic energy', correct: false },
+          { text: 'It transfers to the magnets', correct: false }
+        ]
+      },
+      {
+        question: 'Why does eddy current braking force increase with speed?',
+        options: [
+          { text: 'The magnets get stronger at higher speeds', correct: false },
+          { text: 'Faster motion induces stronger eddy currents', correct: true },
+          { text: 'Air resistance increases with speed', correct: false },
+          { text: 'The conductor becomes more magnetic', correct: false }
+        ]
+      },
+      {
+        question: 'Copper produces stronger eddy currents than aluminum because:',
+        options: [
+          { text: 'Copper is heavier', correct: false },
+          { text: 'Copper has higher electrical conductivity', correct: true },
+          { text: 'Copper is more magnetic', correct: false },
+          { text: 'Copper is shinier', correct: false }
+        ]
+      },
+      {
+        question: 'Compared to friction brakes, eddy current brakes:',
+        options: [
+          { text: 'Wear out faster due to contact', correct: false },
+          { text: 'Have no wear because there is no physical contact', correct: true },
+          { text: 'Are less reliable at high speeds', correct: false },
+          { text: 'Require more maintenance', correct: false }
+        ]
+      },
+      {
+        question: 'Why are transformer cores made of laminated sheets instead of solid metal?',
+        options: [
+          { text: 'Laminated sheets are cheaper to manufacture', correct: false },
+          { text: 'Laminations reduce eddy current losses and wasted heat', correct: true },
+          { text: 'Solid metal is too heavy for transformers', correct: false },
+          { text: 'Laminated sheets conduct electricity better', correct: false }
+        ]
       }
     ];
 
@@ -1378,7 +1425,9 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
                   color: colors.textPrimary,
                   fontSize: '15px',
                   textAlign: 'left',
-                  cursor: testAnswers[currentQuestion] !== null ? 'default' : 'pointer'
+                  cursor: testAnswers[currentQuestion] !== null ? 'default' : 'pointer',
+                  position: 'relative',
+                  zIndex: 10
                 }}
               >
                 {opt.text}
@@ -1433,7 +1482,7 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
         marginBottom: '24px'
       }}>
         <div style={{ color: colors.textMuted, fontSize: '14px', marginBottom: '8px' }}>Test Score</div>
-        <div style={{ color: colors.success, fontSize: '36px', fontWeight: 700 }}>{testScore}/5</div>
+        <div style={{ color: colors.success, fontSize: '36px', fontWeight: 700 }}>{testScore}/10</div>
       </div>
 
       <Button onClick={() => goToPhase('hook')}>

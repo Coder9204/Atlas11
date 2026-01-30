@@ -7,54 +7,28 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 // ============================================================================
 // Teaches Newton's First Law: Objects at rest stay at rest, objects in motion
 // stay in motion, unless acted upon by an external force.
-// Classic demo: Coin-Card-Cup trick
 // ============================================================================
 
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'twist_prediction_made'
-  | 'app_explored'
-  | 'test_answered'
-  | 'test_completed'
-  | 'mastery_achieved';
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+  type: string;
+  gameType: string;
+  gameTitle: string;
+  details: Record<string, unknown>;
+  timestamp: number;
 }
-
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
-};
 
 interface InertiaRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
 }
 
-export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComplete }: InertiaRendererProps) {
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
-
+export default function InertiaRenderer({ onGameEvent, gamePhase }: InertiaRendererProps) {
   // Core State
-  const [phase, setPhase] = useState<number>(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
-    return 0;
-  });
+  const [phase, setPhase] = useState<Phase>('hook');
   const [isMobile, setIsMobile] = useState(false);
 
   // Hook phase
@@ -63,27 +37,27 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
   // Predict phase
   const [prediction, setPrediction] = useState<string | null>(null);
 
-  // Play phase - Coin-Card-Cup simulation
-  const [flickSpeed, setFlickSpeed] = useState<'slow' | 'fast'>('fast');
-  const [hasFlicked, setHasFlicked] = useState(false);
-  const [cardX, setCardX] = useState(0);
-  const [coinY, setCoinY] = useState(0);
-  const [coinFell, setCoinFell] = useState(false);
-  const [coinMissed, setCoinMissed] = useState(false);
+  // Play phase - Objects with different masses
+  const [selectedMass, setSelectedMass] = useState<'light' | 'heavy'>('light');
+  const [hasAppliedForce, setHasAppliedForce] = useState(false);
+  const [objectPosition, setObjectPosition] = useState(50);
+  const [isMoving, setIsMoving] = useState(false);
   const animationRef = useRef<number | null>(null);
 
   // Review phase
   const [reviewStep, setReviewStep] = useState(0);
 
-  // Twist predict
+  // Twist predict - Seatbelts scenario
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
 
-  // Twist play - Tablecloth trick
-  const [clothX, setClothX] = useState(0);
-  const [dishesStayed, setDishesStayed] = useState(true);
-  const [twistFlicked, setTwistFlicked] = useState(false);
-  const [twistSpeed, setTwistSpeed] = useState<'slow' | 'fast'>('fast');
-  const twistRef = useRef<number | null>(null);
+  // Twist play - Car/passenger simulation
+  const [carSpeed, setCarSpeed] = useState(0);
+  const [carPosition, setCarPosition] = useState(50);
+  const [passengerPosition, setPassengerPosition] = useState(0);
+  const [hasCrashed, setHasCrashed] = useState(false);
+  const [seatbeltOn, setSeatbeltOn] = useState(false);
+  const [showCrashResult, setShowCrashResult] = useState(false);
+  const carAnimationRef = useRef<number | null>(null);
 
   // Twist review
   const [twistReviewStep, setTwistReviewStep] = useState(0);
@@ -102,67 +76,77 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
         { text: "It floats upward", correct: false },
         { text: "It shrinks", correct: false }
       ],
-      explanation: "Newton's First Law (Law of Inertia) states that an object at rest stays at rest unless acted upon by an external force. No force = no change in motion."
+      explanation: "Newton's First Law (Law of Inertia) states that an object at rest stays at rest unless acted upon by an external force."
     },
     {
-      question: "In the coin-card-cup trick, why does the coin fall straight down into the cup?",
+      question: "What is inertia?",
       options: [
-        { text: "The coin is magnetic", correct: false },
-        { text: "The coin has inertia and resists horizontal motion", correct: true },
-        { text: "Gravity is stronger on coins", correct: false },
-        { text: "The cup pulls the coin", correct: false }
+        { text: "A type of energy", correct: false },
+        { text: "Resistance to change in motion", correct: true },
+        { text: "A force that pushes objects", correct: false },
+        { text: "The speed of an object", correct: false }
       ],
-      explanation: "The coin has inertia - it resists changes to its state of motion. When the card is flicked away quickly, the coin 'wants' to stay still, so it drops straight down."
+      explanation: "Inertia is the tendency of an object to resist changes in its state of motion. More mass = more inertia."
     },
     {
-      question: "Why does a fast flick work better than a slow push for the coin trick?",
+      question: "A heavy object has more inertia than a light object. This means:",
       options: [
-        { text: "Fast is more fun", correct: false },
-        { text: "Less time for friction to act on the coin", correct: true },
-        { text: "The coin likes speed", correct: false },
-        { text: "Gravity works faster", correct: false }
+        { text: "It's harder to start or stop the heavy object", correct: true },
+        { text: "The heavy object moves faster", correct: false },
+        { text: "The heavy object floats better", correct: false },
+        { text: "The light object is stronger", correct: false }
       ],
-      explanation: "A fast flick minimizes the time friction has to transfer horizontal motion to the coin. The quicker the card leaves, the less force is transferred to the coin."
+      explanation: "More mass means more inertia, which means more resistance to changes in motion - harder to speed up, slow down, or change direction."
     },
     {
-      question: "When a bus suddenly stops, passengers lurch forward. This is because:",
+      question: "When a bus suddenly stops, passengers lurch forward because:",
       options: [
         { text: "The bus pushes them forward", correct: false },
-        { text: "Their bodies have inertia and continue moving", correct: true },
-        { text: "Gravity changed direction", correct: false },
-        { text: "The seats push them", correct: false }
+        { text: "Their bodies continue moving due to inertia", correct: true },
+        { text: "Gravity changes direction", correct: false },
+        { text: "The air pushes them", correct: false }
       ],
-      explanation: "Passengers' bodies were moving with the bus. When the bus stops, their bodies continue moving forward due to inertia until a force (seatbelt, seat, friction) stops them."
+      explanation: "The passengers' bodies were moving with the bus. When the bus stops, their bodies continue moving forward due to inertia."
     },
     {
-      question: "A tablecloth can be pulled from under dishes if pulled:",
+      question: "Why do seatbelts save lives in car crashes?",
       options: [
-        { text: "Slowly and carefully", correct: false },
-        { text: "Quickly and sharply", correct: true },
-        { text: "Upward at an angle", correct: false },
-        { text: "While dishes are wet", correct: false }
+        { text: "They make the car stronger", correct: false },
+        { text: "They provide the force to stop your body's inertia", correct: true },
+        { text: "They slow down the crash", correct: false },
+        { text: "They make you lighter", correct: false }
       ],
-      explanation: "Quick motion minimizes the time friction acts on the dishes. The dishes' inertia keeps them in place if the tablecloth is pulled fast enough."
+      explanation: "In a crash, the car stops but your body keeps moving due to inertia. Seatbelts provide the external force to safely stop your body."
     },
     {
-      question: "Why do cars have seatbelts?",
+      question: "An object in motion will stay in motion unless:",
       options: [
-        { text: "To look cool", correct: false },
-        { text: "To stop inertia from throwing passengers forward in a crash", correct: true },
-        { text: "To keep seats clean", correct: false },
-        { text: "Legal requirement only", correct: false }
+        { text: "It gets tired", correct: false },
+        { text: "An external force acts on it", correct: true },
+        { text: "It runs out of energy", correct: false },
+        { text: "Gravity pulls it down", correct: false }
       ],
-      explanation: "In a crash, the car stops but passengers continue moving forward due to inertia. Seatbelts provide the external force needed to stop the passenger safely."
+      explanation: "Newton's First Law states that objects in motion stay in motion in a straight line unless acted upon by an external force."
     },
     {
-      question: "A hockey puck on ice keeps sliding because:",
+      question: "In space (no friction or air resistance), a thrown ball will:",
       options: [
-        { text: "Ice is magical", correct: false },
-        { text: "Very little friction = little force to change its motion", correct: true },
-        { text: "The puck is afraid to stop", correct: false },
-        { text: "Cold temperatures speed things up", correct: false }
+        { text: "Stop after a few seconds", correct: false },
+        { text: "Keep moving forever at constant speed", correct: true },
+        { text: "Speed up over time", correct: false },
+        { text: "Fall to the ground", correct: false }
       ],
-      explanation: "Ice has very low friction. With almost no external force acting on the puck, it continues moving in a straight line - demonstrating Newton's First Law perfectly."
+      explanation: "With no external forces (no friction, no air resistance), the ball's inertia keeps it moving forever at constant velocity."
+    },
+    {
+      question: "The tablecloth trick works because:",
+      options: [
+        { text: "The dishes are glued down", correct: false },
+        { text: "The dishes' inertia keeps them in place during the quick pull", correct: true },
+        { text: "Magic holds the dishes", correct: false },
+        { text: "The tablecloth is slippery", correct: false }
+      ],
+      explanation: "When pulled quickly, friction doesn't have time to transfer motion to the dishes. Their inertia keeps them nearly stationary."
     },
     {
       question: "If you're in a car making a sharp right turn, you feel pushed to the left. This is because:",
@@ -170,29 +154,19 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
         { text: "The door pushes you", correct: false },
         { text: "Your body's inertia resists the change in direction", correct: true },
         { text: "Gravity shifts", correct: false },
-        { text: "Wind from outside", correct: false }
+        { text: "The air moves you", correct: false }
       ],
-      explanation: "Your body has inertia and 'wants' to continue in a straight line. The car turns right, but your body initially continues straight, making you feel 'pushed' left."
+      explanation: "Your body 'wants' to continue in a straight line (inertia). The car turns right, but your body initially continues straight."
     },
     {
-      question: "The coin-card trick works best when the card is:",
+      question: "Newton's First Law is also called the Law of:",
       options: [
-        { text: "Heavy and rough", correct: false },
-        { text: "Light and smooth", correct: true },
-        { text: "Wet", correct: false },
-        { text: "Made of metal", correct: false }
+        { text: "Gravity", correct: false },
+        { text: "Motion", correct: false },
+        { text: "Inertia", correct: true },
+        { text: "Energy", correct: false }
       ],
-      explanation: "A smooth card has less friction with the coin. A light card requires less force to accelerate quickly. Both factors help the coin stay in place."
-    },
-    {
-      question: "An astronaut in space throws a ball. What happens to it?",
-      options: [
-        { text: "It stops immediately", correct: false },
-        { text: "It returns to the astronaut", correct: false },
-        { text: "It keeps moving forever (in the same direction)", correct: true },
-        { text: "It falls to Earth", correct: false }
-      ],
-      explanation: "In space, there's no air resistance or friction. With no external force to slow it down, the ball continues moving in a straight line forever - pure inertia!"
+      explanation: "Newton's First Law is called the Law of Inertia because it describes how objects resist changes to their state of motion."
     }
   ]);
   const [currentQuestion, setCurrentQuestion] = useState(0);
@@ -211,12 +185,12 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
 
   // Sync with external phase
   useEffect(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase) && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
-  // Sound effect with typed categories
+  // Sound effect
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
     if (typeof window === 'undefined') return;
     try {
@@ -243,137 +217,117 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
   }, []);
 
   // Event emitter
-  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
-    onGameEvent?.({ type, data });
-  }, [onGameEvent]);
+  const emitEvent = useCallback((type: string, details: Record<string, unknown> = {}) => {
+    onGameEvent?.({
+      type,
+      gameType: 'inertia',
+      gameTitle: 'Inertia',
+      details: { phase, ...details },
+      timestamp: Date.now()
+    });
+  }, [onGameEvent, phase]);
 
-  // Debounced navigation
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    if (!PHASES.includes(newPhase)) return;
-    navigationLockRef.current = true;
+  // Navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
     setPhase(newPhase);
     playSound('transition');
-    emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
-    onPhaseComplete?.(newPhase);
-    // Reset state for play phases
-    if (newPhase === 2) {
-      setCardX(0);
-      setCoinY(0);
-      setHasFlicked(false);
-      setCoinFell(false);
-      setCoinMissed(false);
-    }
-    if (newPhase === 5) {
-      setClothX(0);
-      setTwistFlicked(false);
-      setDishesStayed(true);
-    }
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [phase, playSound, emitEvent, onPhaseComplete]);
+    emitEvent('phase_change', { from: phase, to: newPhase });
 
-  // Coin-Card animation
-  const flickCard = useCallback(() => {
-    if (hasFlicked) return;
-    setHasFlicked(true);
+    // Reset state for play phases
+    if (newPhase === 'play') {
+      setObjectPosition(50);
+      setHasAppliedForce(false);
+      setIsMoving(false);
+    }
+    if (newPhase === 'twist_play') {
+      setCarSpeed(0);
+      setCarPosition(50);
+      setPassengerPosition(0);
+      setHasCrashed(false);
+      setShowCrashResult(false);
+    }
+  }, [phase, playSound, emitEvent]);
+
+  // Apply force animation for play phase
+  const applyForce = useCallback(() => {
+    if (hasAppliedForce) return;
+    setHasAppliedForce(true);
+    setIsMoving(true);
     playSound('click');
 
-    const cardSpeed = flickSpeed === 'fast' ? 30 : 3;
-    const startTime = Date.now();
+    const acceleration = selectedMass === 'light' ? 2 : 0.5;
+    let position = 50;
+    let velocity = 0;
 
     const animate = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
+      velocity += acceleration;
+      position += velocity;
+      setObjectPosition(position);
 
-      // Card moves to the right
-      const newCardX = Math.min(elapsed * cardSpeed * 50, 300);
-      setCardX(newCardX);
-
-      // After card is gone, coin falls
-      if (newCardX > 100) {
-        if (flickSpeed === 'fast') {
-          // Fast flick - coin falls straight down
-          const fallTime = elapsed - (100 / (cardSpeed * 50));
-          const newCoinY = Math.min(fallTime * 300, 80);
-          setCoinY(newCoinY);
-          if (newCoinY >= 80) {
-            setCoinFell(true);
-            playSound('success');
-          }
-        } else {
-          // Slow flick - coin moves with card and misses
-          const fallTime = elapsed - (100 / (cardSpeed * 50));
-          const newCoinY = Math.min(fallTime * 300, 80);
-          setCoinY(newCoinY);
-          if (newCoinY >= 80) {
-            setCoinMissed(true);
-            playSound('failure');
-          }
-        }
-      }
-
-      if (newCardX < 300) {
+      if (position < 350) {
         animationRef.current = requestAnimationFrame(animate);
+      } else {
+        setIsMoving(false);
+        playSound('success');
       }
     };
 
     animationRef.current = requestAnimationFrame(animate);
-  }, [hasFlicked, flickSpeed, playSound]);
+  }, [hasAppliedForce, selectedMass, playSound]);
 
-  // Tablecloth animation
-  const pullCloth = useCallback(() => {
-    if (twistFlicked) return;
-    setTwistFlicked(true);
+  // Car crash simulation
+  const startDriving = useCallback(() => {
+    if (carSpeed > 0) return;
+    setCarSpeed(60);
     playSound('click');
 
-    const clothSpeed = twistSpeed === 'fast' ? 40 : 4;
-    const startTime = Date.now();
-
+    let pos = 50;
     const animate = () => {
-      const elapsed = (Date.now() - startTime) / 1000;
-      const newClothX = Math.min(elapsed * clothSpeed * 50, 400);
-      setClothX(newClothX);
+      pos += 3;
+      setCarPosition(pos);
 
-      if (twistSpeed === 'slow' && newClothX > 50) {
-        setDishesStayed(false);
-      }
+      if (pos >= 250) {
+        // Crash!
+        setHasCrashed(true);
+        setCarSpeed(0);
 
-      if (newClothX >= 400) {
-        if (twistSpeed === 'fast') {
-          playSound('success');
+        if (!seatbeltOn) {
+          // Passenger continues moving due to inertia
+          let passengerPos = 0;
+          const passengerAnimate = () => {
+            passengerPos += 8;
+            setPassengerPosition(passengerPos);
+            if (passengerPos < 60) {
+              requestAnimationFrame(passengerAnimate);
+            } else {
+              playSound('failure');
+              setShowCrashResult(true);
+            }
+          };
+          requestAnimationFrame(passengerAnimate);
         } else {
-          playSound('failure');
+          playSound('success');
+          setShowCrashResult(true);
         }
+        return;
       }
 
-      if (newClothX < 400) {
-        twistRef.current = requestAnimationFrame(animate);
-      }
+      carAnimationRef.current = requestAnimationFrame(animate);
     };
 
-    twistRef.current = requestAnimationFrame(animate);
-  }, [twistFlicked, twistSpeed, playSound]);
+    carAnimationRef.current = requestAnimationFrame(animate);
+  }, [carSpeed, seatbeltOn, playSound]);
 
   // Cleanup
   useEffect(() => {
     return () => {
       if (animationRef.current) cancelAnimationFrame(animationRef.current);
-      if (twistRef.current) cancelAnimationFrame(twistRef.current);
+      if (carAnimationRef.current) cancelAnimationFrame(carAnimationRef.current);
     };
   }, []);
 
-  // Calculate score helper
-  const calculateScore = (): number => {
-    return testScore;
-  };
-
   // Handle test answer
   const handleTestAnswer = useCallback((answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     if (showExplanation) return;
 
     setSelectedAnswer(answerIndex);
@@ -390,28 +344,28 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
   // Applications for transfer phase
   const applications = [
     {
-      title: "Car Safety Systems",
+      title: "Seatbelts",
       icon: "\uD83D\uDE97",
-      description: "Seatbelts and airbags are designed to counteract inertia. In a crash, your body continues moving forward while the car stops. Seatbelts provide the force to slow you down gradually, preventing injury.",
-      fact: "Modern seatbelts have 'pretensioners' that tighten in milliseconds during a crash, reducing the distance your body travels before being restrained!",
+      description: "Seatbelts are designed to counteract inertia. In a crash, your body continues moving forward while the car stops. The seatbelt provides the external force needed to slow you down safely, preventing you from hitting the dashboard or windshield.",
+      fact: "Wearing a seatbelt reduces the risk of fatal injury by 45% for front-seat passengers!",
     },
     {
-      title: "Roller Coasters",
-      icon: "\uD83C\uDFA2",
-      description: "That feeling of being 'pushed back' during acceleration or 'thrown forward' during braking is your inertia at work! Coaster designers use inertia to create thrilling sensations while keeping riders safe.",
-      fact: "The fastest roller coaster accelerates from 0-150 mph in under 5 seconds - passengers feel 1.7G of force due to their inertia!",
+      title: "Tablecloth Trick",
+      icon: "\uD83C\uDFA9",
+      description: "Magicians pull tablecloths from under dishes using inertia! When pulled quickly, friction doesn't have enough time to transfer motion to the dishes. The dishes' inertia keeps them in place while the cloth slides away.",
+      fact: "The key is speed - professional magicians can remove a tablecloth in under 0.1 seconds!",
     },
     {
       title: "Space Travel",
       icon: "\uD83D\uDE80",
-      description: "In space, there's almost no friction. Once a spacecraft reaches its velocity, it keeps moving without using fuel - pure inertia! This is how we can send probes to distant planets using minimal fuel.",
-      fact: "The Voyager 1 probe, launched in 1977, is still traveling at 38,000 mph due to inertia - it hasn't used its engines in decades!",
+      description: "In the vacuum of space, there's no air resistance or friction. Once a spacecraft reaches its velocity, it continues moving without using fuel - pure inertia! This is how we send probes to distant planets efficiently.",
+      fact: "Voyager 1, launched in 1977, is still traveling at 38,000 mph due to inertia - no engines needed!",
     },
     {
-      title: "Sports Physics",
+      title: "Sports",
       icon: "\u26BD",
-      description: "Athletes use inertia constantly! A baseball pitcher's follow-through, a golfer's swing, a football player's tackle - all rely on understanding how objects (and bodies) resist changes in motion.",
-      fact: "A professional pitcher's arm decelerates from 7,000 deg/second to 0 in just 0.05 seconds - requiring massive force to overcome the arm's inertia!",
+      description: "Athletes use inertia constantly! A bowling ball's mass gives it more inertia, making it harder to stop. Sprinters need more force to start moving than to maintain speed. Hockey pucks glide on low-friction ice due to inertia.",
+      fact: "A professional baseball thrown at 100 mph has enough inertia to travel 400+ feet if hit correctly!",
     },
   ];
 
@@ -420,19 +374,19 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
   const renderHook = () => {
     const hookContent = [
       {
-        title: "The Magic Coin Trick",
-        content: "There's a classic magic trick: Place a coin on a card on top of a cup. Flick the card away, and the coin drops perfectly into the cup! How is this possible?",
-        visual: "\uD83E\uDE99",
-      },
-      {
-        title: "The Sudden Stop",
-        content: "Have you ever lurched forward when a car suddenly brakes? Or felt pushed back when it accelerates? Your body seems to have a mind of its own!",
-        visual: "\uD83D\uDE97",
-      },
-      {
-        title: "Newton's First Secret",
-        content: "Isaac Newton discovered why these things happen. He called it INERTIA - the tendency of objects to resist changes in their motion. Today you'll master this principle!",
+        title: "Newton's First Law of Motion",
+        content: "Have you ever wondered why you lurch forward when a car suddenly stops? Or why it's harder to push a heavy shopping cart than an empty one?",
         visual: "\u2696\uFE0F",
+      },
+      {
+        title: "Objects Resist Change",
+        content: "Isaac Newton discovered something amazing: Objects 'want' to keep doing what they're doing. If they're still, they want to stay still. If they're moving, they want to keep moving!",
+        visual: "\uD83D\uDCA1",
+      },
+      {
+        title: "This is Called INERTIA",
+        content: "Inertia is the resistance of any object to any change in its motion. The more mass an object has, the more inertia it has - and the harder it is to change its motion.",
+        visual: "\uD83C\uDFCB\uFE0F",
       },
     ];
 
@@ -464,13 +418,8 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
           {hookContent.map((_, i) => (
             <button
               key={i}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const now = Date.now();
-                if (now - lastClickRef.current < 200) return;
-                lastClickRef.current = now;
-                setHookStep(i);
-              }}
+              onClick={() => setHookStep(i)}
+              style={{ zIndex: 10 }}
               className={`h-2 rounded-full transition-all duration-300 ${
                 i === hookStep ? 'w-8 bg-amber-400' : 'w-2 bg-slate-700 hover:bg-slate-600'
               }`}
@@ -480,17 +429,14 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
 
         {/* CTA Button */}
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             if (hookStep < hookContent.length - 1) {
-              const now = Date.now();
-              if (now - lastClickRef.current < 200) return;
-              lastClickRef.current = now;
               setHookStep(h => h + 1);
             } else {
-              goToPhase(1);
+              goToPhase('predict');
             }
           }}
+          style={{ zIndex: 10 }}
           className="group relative px-10 py-5 bg-gradient-to-r from-amber-500 to-orange-500 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-amber-500/25 hover:scale-[1.02] active:scale-[0.98]"
         >
           <span className="relative z-10 flex items-center gap-3">
@@ -522,30 +468,27 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
 
   const renderPredict = () => {
     const predictions = [
-      { id: 'coin_falls', label: 'The coin will drop straight down into the cup', icon: '\u2B07\uFE0F' },
-      { id: 'coin_flies', label: 'The coin will fly away with the card', icon: '\u27A1\uFE0F' },
-      { id: 'coin_stays', label: 'The coin will hover in the air momentarily', icon: '\uD83E\uDE99' },
-      { id: 'coin_spins', label: 'The coin will spin and land randomly', icon: '\uD83C\uDF00' },
+      { id: 'heavy_harder', label: 'The heavy object will be harder to move', icon: '\uD83C\uDFCB\uFE0F' },
+      { id: 'same_speed', label: 'Both objects will move at the same speed', icon: '\u2194\uFE0F' },
+      { id: 'light_slower', label: 'The light object will be slower', icon: '\uD83E\uDEB6' },
+      { id: 'no_difference', label: 'There will be no difference', icon: '\u2753' },
     ];
 
     return (
       <div className="flex flex-col items-center px-6 py-8">
         <h2 className="text-2xl md:text-3xl font-bold text-white mb-2">Make Your Prediction</h2>
-        <p className="text-slate-400 mb-8">When you flick the card away quickly, what happens to the coin?</p>
+        <p className="text-slate-400 mb-8">If you push a light object and a heavy object with the same force, what happens?</p>
 
         <div className="flex flex-col gap-3 w-full max-w-md mb-8">
           {predictions.map((pred) => (
             <button
               key={pred.id}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const now = Date.now();
-                if (now - lastClickRef.current < 200) return;
-                lastClickRef.current = now;
+              onClick={() => {
                 setPrediction(pred.id);
-                playSound(pred.id === 'coin_falls' ? 'success' : 'click');
+                playSound(pred.id === 'heavy_harder' ? 'success' : 'click');
                 emitEvent('prediction_made', { prediction: pred.id });
               }}
+              style={{ zIndex: 10 }}
               className={`p-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-4 ${
                 prediction === pred.id
                   ? 'border-amber-500 bg-amber-500/20'
@@ -560,7 +503,8 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
 
         {prediction && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onClick={() => goToPhase('play')}
+            style={{ zIndex: 10 }}
             className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all"
           >
             Test My Prediction {'\u2192'}
@@ -572,60 +516,58 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
 
   const renderPlay = () => (
     <div className="flex flex-col items-center px-6 py-8">
-      <h2 className="text-2xl font-bold text-white mb-2">Coin-Card-Cup Experiment</h2>
-      <p className="text-slate-400 mb-6">Flick the card and watch what happens to the coin!</p>
+      <h2 className="text-2xl font-bold text-white mb-2">Inertia Experiment</h2>
+      <p className="text-slate-400 mb-6">Apply the same force to objects with different masses and observe!</p>
 
       {/* Simulation */}
       <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 border border-slate-700/50">
-        <svg width="300" height="220" className="mx-auto">
+        <svg width="400" height="200" className="mx-auto">
           {/* Background */}
-          <rect width="300" height="220" fill="#1e293b" rx="12" />
+          <rect width="400" height="200" fill="#1e293b" rx="12" />
 
-          {/* Table */}
-          <rect x="0" y="180" width="300" height="40" fill="#8B4513" />
+          {/* Ground */}
+          <rect x="0" y="160" width="400" height="40" fill="#374151" />
+          <line x1="0" y1="160" x2="400" y2="160" stroke="#4b5563" strokeWidth="2" />
 
-          {/* Cup */}
-          <g transform="translate(130, 105)">
-            <path d="M0 0 L10 75 L50 75 L60 0 Z" fill="#6366f1" opacity={0.9} />
-            <ellipse cx="30" cy="0" rx="30" ry="8" fill="#6366f1" />
-            <ellipse cx="30" cy="75" rx="20" ry="6" fill="#4f46e5" />
-            <ellipse cx="30" cy="5" rx="22" ry="5" fill="#312e81" opacity={0.6} />
+          {/* Object */}
+          <g transform={`translate(${objectPosition}, 100)`}>
+            {selectedMass === 'light' ? (
+              // Light object - small circle
+              <>
+                <circle cx="20" cy="40" r="20" fill="#60a5fa" />
+                <text x="20" y="45" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">1kg</text>
+              </>
+            ) : (
+              // Heavy object - large rectangle
+              <>
+                <rect x="0" y="10" width="60" height="50" fill="#f97316" rx="4" />
+                <text x="30" y="40" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">10kg</text>
+              </>
+            )}
           </g>
 
-          {/* Card (moving) */}
-          {!coinFell && !coinMissed && (
-            <g transform={`translate(${100 + cardX}, 70)`}>
-              <rect x="0" y="0" width="80" height="10" fill="#ef4444" rx="2" />
+          {/* Force arrow */}
+          {!hasAppliedForce && (
+            <g transform="translate(20, 120)">
+              <line x1="0" y1="0" x2="30" y2="0" stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowhead)" />
+              <defs>
+                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
+                </marker>
+              </defs>
+              <text x="15" y="-10" textAnchor="middle" fill="#22c55e" fontSize="12">Force</text>
             </g>
           )}
 
-          {/* Coin */}
-          <g transform={`translate(${flickSpeed === 'slow' && hasFlicked && cardX > 50 ? 145 + cardX * 0.3 : 145}, ${60 + coinY})`}>
-            <ellipse cx="15" cy="0" rx="15" ry="4" fill="#b45309" />
-            <ellipse cx="15" cy="-3" rx="15" ry="4" fill="#fcd34d" />
-            <text x="15" y="0" textAnchor="middle" fill="#b45309" fontSize="10" fontWeight="bold">$</text>
-          </g>
+          {/* Labels */}
+          <text x="200" y="25" textAnchor="middle" fill="#94a3b8" fontSize="14">
+            {isMoving ? 'Accelerating...' : hasAppliedForce ? 'Stopped!' : 'Ready to push'}
+          </text>
 
-          {/* Result messages */}
-          {coinFell && (
-            <g>
-              <text x="150" y="25" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">SUCCESS!</text>
-              <text x="150" y="45" textAnchor="middle" fill="#94a3b8" fontSize="12">Coin dropped into cup!</text>
-            </g>
-          )}
-          {coinMissed && (
-            <g>
-              <text x="150" y="25" textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="bold">MISSED!</text>
-              <text x="150" y="45" textAnchor="middle" fill="#94a3b8" fontSize="12">Card dragged the coin!</text>
-            </g>
-          )}
-
-          {/* Finger indicator */}
-          {!hasFlicked && (
-            <g transform="translate(90, 60)">
-              <text fontSize="20">{'\uD83D\uDC46'}</text>
-              <text x="-10" y="45" fill="#64748b" fontSize="10">Flick here!</text>
-            </g>
+          {hasAppliedForce && !isMoving && (
+            <text x="200" y="45" textAnchor="middle" fill="#fbbf24" fontSize="12">
+              {selectedMass === 'light' ? 'Light object: Fast acceleration!' : 'Heavy object: Slow acceleration (more inertia)!'}
+            </text>
           )}
         </svg>
       </div>
@@ -633,49 +575,48 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
       {/* Controls */}
       <div className="w-full max-w-sm">
         <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
-          <h4 className="text-white font-medium mb-3">Flick Speed</h4>
+          <h4 className="text-white font-medium mb-3">Select Object Mass</h4>
           <div className="flex gap-2">
-            {(['fast', 'slow'] as const).map(speed => (
+            {(['light', 'heavy'] as const).map(mass => (
               <button
-                key={speed}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  if (!hasFlicked) setFlickSpeed(speed);
+                key={mass}
+                onClick={() => {
+                  if (!hasAppliedForce) setSelectedMass(mass);
                 }}
+                style={{ zIndex: 10 }}
                 className={`flex-1 py-3 rounded-lg font-medium transition-all ${
-                  flickSpeed === speed
+                  selectedMass === mass
                     ? 'bg-amber-500 text-white'
                     : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                 }`}
               >
-                {speed === 'fast' ? '\u26A1 Fast Flick' : '\uD83D\uDC22 Slow Push'}
+                {mass === 'light' ? '\uD83D\uDFE6 Light (1kg)' : '\uD83D\uDFE7 Heavy (10kg)'}
               </button>
             ))}
           </div>
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); if (!hasFlicked) flickCard(); }}
-          disabled={hasFlicked && !coinFell && !coinMissed}
+          onClick={() => { if (!hasAppliedForce) applyForce(); }}
+          disabled={hasAppliedForce && isMoving}
+          style={{ zIndex: 10 }}
           className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-            hasFlicked
+            hasAppliedForce
               ? 'bg-slate-700 text-slate-400'
               : 'bg-gradient-to-r from-amber-500 to-orange-500 text-white hover:shadow-lg hover:shadow-amber-500/25'
           }`}
         >
-          {hasFlicked ? '\u2713 Flicked!' : '\uD83D\uDC46 Flick the Card!'}
+          {hasAppliedForce ? '\u2713 Force Applied!' : '\uD83D\uDC49 Apply Force!'}
         </button>
 
-        {(coinFell || coinMissed) && (
+        {hasAppliedForce && !isMoving && (
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setCardX(0);
-              setCoinY(0);
-              setHasFlicked(false);
-              setCoinFell(false);
-              setCoinMissed(false);
+            onClick={() => {
+              setObjectPosition(50);
+              setHasAppliedForce(false);
+              setIsMoving(false);
             }}
+            style={{ zIndex: 10 }}
             className="w-full mt-3 py-3 bg-slate-700 text-slate-300 rounded-lg font-medium hover:bg-slate-600"
           >
             {'\uD83D\uDD04'} Try Again
@@ -683,34 +624,35 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
         )}
 
         <div className="mt-4 p-3 bg-amber-500/10 border border-amber-500/30 rounded-xl">
-          <p className="text-amber-400 text-sm">{'\uD83D\uDCA1'} Try both speeds to see the difference! Fast flick = inertia wins!</p>
+          <p className="text-amber-400 text-sm">{'\uD83D\uDCA1'} Try both masses to see how inertia affects acceleration!</p>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        onClick={() => goToPhase('review')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
       >
-        See Results {'\u2192'}
+        Understand Results {'\u2192'}
       </button>
     </div>
   );
 
   const renderReview = () => {
-    const wasCorrect = prediction === 'coin_falls';
+    const wasCorrect = prediction === 'heavy_harder';
     const reviewContent = [
       {
-        title: "Newton's First Law of Motion",
-        content: `${wasCorrect ? "You predicted correctly! " : ""}The coin drops straight down because of INERTIA.\n\nNewton's First Law states: An object at rest stays at rest, and an object in motion stays in motion, unless acted upon by an external force.`,
+        title: "What is Inertia?",
+        content: `${wasCorrect ? "You predicted correctly! " : ""}Inertia is the resistance of any object to a change in its state of motion.\n\nThis includes:\n- Objects at rest resisting being moved\n- Objects in motion resisting being stopped\n- Objects resisting changes in direction`,
         highlight: wasCorrect,
       },
       {
-        title: "Why the Fast Flick Works",
-        content: "When you flick the card FAST:\n\n- The card leaves before friction can accelerate the coin\n- The coin's inertia keeps it in place\n- Gravity then pulls it straight down into the cup\n\nWhen you push SLOWLY, friction has time to drag the coin along!",
+        title: "Mass and Inertia",
+        content: "The more mass an object has, the more inertia it has.\n\n- Heavy objects are harder to start moving\n- Heavy objects are harder to stop\n- Heavy objects are harder to change direction\n\nThis is why pushing a car is harder than pushing a bicycle!",
       },
       {
-        title: "The Coin 'Wants' to Stay Still",
-        content: "Inertia is the resistance to change.\n\n- The coin was at rest\n- It 'wants' to stay at rest\n- The fast-moving card doesn't give friction enough time\n- So the coin stays still horizontally and falls vertically!",
+        title: "F = ma Explains It",
+        content: "Newton's Second Law (F = ma) shows us why:\n\nFor the same Force:\n- Light object (small m) = Large acceleration\n- Heavy object (large m) = Small acceleration\n\nMore inertia means less response to the same force!",
       },
     ];
 
@@ -724,7 +666,7 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
 
           {reviewContent[reviewStep].highlight && (
             <div className="mt-4 p-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl">
-              <p className="text-emerald-400">{'\u2713'} Great prediction! You correctly anticipated the coin would fall straight down.</p>
+              <p className="text-emerald-400">{'\u2713'} Great prediction! You correctly understood that heavier objects are harder to move.</p>
             </div>
           )}
         </div>
@@ -734,13 +676,8 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
           {reviewContent.map((_, i) => (
             <button
               key={i}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const now = Date.now();
-                if (now - lastClickRef.current < 200) return;
-                lastClickRef.current = now;
-                setReviewStep(i);
-              }}
+              onClick={() => setReviewStep(i)}
+              style={{ zIndex: 10 }}
               className={`h-2 rounded-full transition-all duration-300 ${
                 i === reviewStep ? 'w-8 bg-amber-400' : 'w-2 bg-slate-700 hover:bg-slate-600'
               }`}
@@ -749,20 +686,17 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
         </div>
 
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             if (reviewStep < reviewContent.length - 1) {
-              const now = Date.now();
-              if (now - lastClickRef.current < 200) return;
-              lastClickRef.current = now;
               setReviewStep(r => r + 1);
             } else {
-              goToPhase(4);
+              goToPhase('twist_predict');
             }
           }}
+          style={{ zIndex: 10 }}
           className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
         >
-          {reviewStep < reviewContent.length - 1 ? 'Continue \u2192' : 'New Experiment \u2192'}
+          {reviewStep < reviewContent.length - 1 ? 'Continue \u2192' : 'Try a New Scenario \u2192'}
         </button>
       </div>
     );
@@ -770,31 +704,28 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
 
   const renderTwistPredict = () => {
     const predictions = [
-      { id: 'dishes_stay', label: 'The dishes will stay in place (inertia!)', icon: '\uD83C\uDF7D\uFE0F' },
-      { id: 'dishes_fly', label: 'The dishes will fly off the table', icon: '\uD83D\uDCA8' },
-      { id: 'dishes_crash', label: 'Everything will crash to the floor', icon: '\uD83D\uDCA5' },
-      { id: 'cloth_tears', label: 'The tablecloth will tear', icon: '\uD83D\uDCDC' },
+      { id: 'seatbelt_stops', label: 'The seatbelt will stop the passenger safely', icon: '\u2705' },
+      { id: 'passenger_flies', label: 'Without seatbelt, the passenger keeps moving forward', icon: '\uD83D\uDCA8' },
+      { id: 'both_stop', label: 'Both car and passenger stop at the same time', icon: '\uD83D\uDED1' },
+      { id: 'nothing_happens', label: 'Nothing happens to the passenger', icon: '\u2753' },
     ];
 
     return (
       <div className="flex flex-col items-center px-6 py-8">
-        <div className="text-5xl mb-4">{'\uD83C\uDFAA'}</div>
-        <h2 className="text-2xl md:text-3xl font-bold text-indigo-400 mb-2">The Twist: Tablecloth Trick</h2>
-        <p className="text-slate-400 mb-8">If you quickly pull a tablecloth from under dishes, what happens?</p>
+        <div className="text-5xl mb-4">{'\uD83D\uDE97'}</div>
+        <h2 className="text-2xl md:text-3xl font-bold text-indigo-400 mb-2">The Twist: Sudden Stop</h2>
+        <p className="text-slate-400 mb-8 text-center max-w-md">A car is moving fast and suddenly crashes into a wall. What happens to the passenger inside?</p>
 
         <div className="flex flex-col gap-3 w-full max-w-md mb-8">
           {predictions.map((pred) => (
             <button
               key={pred.id}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const now = Date.now();
-                if (now - lastClickRef.current < 200) return;
-                lastClickRef.current = now;
+              onClick={() => {
                 setTwistPrediction(pred.id);
-                playSound(pred.id === 'dishes_stay' ? 'success' : 'click');
+                playSound((pred.id === 'seatbelt_stops' || pred.id === 'passenger_flies') ? 'success' : 'click');
                 emitEvent('twist_prediction_made', { twistPrediction: pred.id });
               }}
+              style={{ zIndex: 10 }}
               className={`p-4 rounded-xl border-2 transition-all duration-300 flex items-center gap-4 ${
                 twistPrediction === pred.id
                   ? 'border-indigo-500 bg-indigo-500/20'
@@ -809,7 +740,8 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
 
         {twistPrediction && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onClick={() => goToPhase('twist_play')}
+            style={{ zIndex: 10 }}
             className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 transition-all"
           >
             Test It {'\u2192'}
@@ -821,69 +753,65 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
 
   const renderTwistPlay = () => (
     <div className="flex flex-col items-center px-6 py-8">
-      <h2 className="text-2xl font-bold text-indigo-400 mb-2">Tablecloth Trick</h2>
-      <p className="text-slate-400 mb-6">Pull the tablecloth and see what happens to the dishes!</p>
+      <h2 className="text-2xl font-bold text-indigo-400 mb-2">Car Crash Simulation</h2>
+      <p className="text-slate-400 mb-6">See how inertia affects passengers during a sudden stop!</p>
 
       {/* Simulation */}
       <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 border border-slate-700/50">
-        <svg width="350" height="200" className="mx-auto">
+        <svg width="400" height="180" className="mx-auto">
           {/* Background */}
-          <rect width="350" height="200" fill="#1e293b" rx="12" />
+          <rect width="400" height="180" fill="#1e293b" rx="12" />
 
-          {/* Table */}
-          <rect x="20" y="135" width="310" height="20" fill="#8B4513" />
-          <rect x="30" y="155" width="20" height="45" fill="#654321" />
-          <rect x="280" y="155" width="20" height="45" fill="#654321" />
+          {/* Road */}
+          <rect x="0" y="130" width="400" height="50" fill="#374151" />
+          <line x1="0" y1="155" x2="400" y2="155" stroke="#fbbf24" strokeWidth="2" strokeDasharray="20,10" />
 
-          {/* Tablecloth */}
-          <g transform={`translate(${-clothX}, 0)`}>
-            <rect x="20" y="125" width="310" height="15" fill="#dc2626" rx="2" />
-            <rect x="0" y="125" width="25" height="15" fill="#b91c1c" rx="2" />
-            <path d="M20 140 L20 165 Q25 175 30 165 L30 140" fill="#dc2626" />
-          </g>
+          {/* Wall */}
+          <rect x="320" y="70" width="20" height="60" fill="#dc2626" />
+          <rect x="325" y="75" width="10" height="50" fill="#b91c1c" />
 
-          {/* Dishes - move if slow pull */}
-          <g transform={`translate(${!dishesStayed ? clothX * 0.7 : 0}, ${!dishesStayed ? 15 : 0})`}>
-            {/* Plate 1 */}
-            <ellipse cx="80" cy="115" rx="28" ry="7" fill="#f5f5f5" />
-            <ellipse cx="80" cy="113" rx="23" ry="5" fill="#e5e5e5" />
+          {/* Car */}
+          <g transform={`translate(${carPosition}, 85)`}>
+            {/* Car body */}
+            <rect x="0" y="20" width="70" height="25" fill="#3b82f6" rx="4" />
+            <rect x="10" y="5" width="40" height="20" fill="#60a5fa" rx="3" />
 
-            {/* Glass */}
-            <rect x="140" y="85" width="18" height="32" fill="rgba(200,200,255,0.5)" rx="3" />
-            <ellipse cx="149" cy="85" rx="9" ry="4" fill="rgba(200,200,255,0.6)" />
+            {/* Windows */}
+            <rect x="15" y="8" width="12" height="14" fill="#1e3a5a" rx="2" />
+            <rect x="33" y="8" width="12" height="14" fill="#1e3a5a" rx="2" />
 
-            {/* Plate 2 */}
-            <ellipse cx="220" cy="115" rx="28" ry="7" fill="#f5f5f5" />
-            <ellipse cx="220" cy="113" rx="23" ry="5" fill="#e5e5e5" />
+            {/* Wheels */}
+            <circle cx="15" cy="47" r="7" fill="#1f2937" />
+            <circle cx="55" cy="47" r="7" fill="#1f2937" />
 
-            {/* Candle */}
-            <rect x="270" y="90" width="7" height="27" fill="#fff7ed" />
-            <ellipse cx="273" cy="90" rx="4" ry="2" fill="#fcd34d" />
-            {dishesStayed && <ellipse cx="273" cy="85" rx="3" ry="5" fill="#f97316" opacity={0.9} />}
-          </g>
-
-          {/* Result messages */}
-          {twistFlicked && clothX > 350 && (
-            <g>
-              {dishesStayed ? (
-                <>
-                  <text x="175" y="35" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">INERTIA WINS!</text>
-                  <text x="175" y="55" textAnchor="middle" fill="#94a3b8" fontSize="12">Dishes stayed in place!</text>
-                </>
-              ) : (
-                <>
-                  <text x="175" y="35" textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="bold">TOO SLOW!</text>
-                  <text x="175" y="55" textAnchor="middle" fill="#94a3b8" fontSize="12">Friction dragged the dishes!</text>
-                </>
+            {/* Passenger */}
+            <g transform={`translate(${passengerPosition}, 0)`}>
+              <circle cx="38" cy="15" r="6" fill="#fcd34d" />
+              {seatbeltOn && !hasCrashed && (
+                <line x1="30" y1="10" x2="45" y2="25" stroke="#ef4444" strokeWidth="2" />
               )}
             </g>
-          )}
+          </g>
 
-          {/* Pull indicator */}
-          {!twistFlicked && (
-            <g transform="translate(10, 130)">
-              <text fontSize="16">{'\uD83D\uDC48'}</text>
-              <text x="25" y="5" fill="#64748b" fontSize="10">Pull!</text>
+          {/* Speed indicator */}
+          <text x="20" y="30" fill="#94a3b8" fontSize="12">
+            Speed: {carSpeed} mph
+          </text>
+
+          {/* Seatbelt indicator */}
+          <g transform="translate(300, 15)">
+            <rect x="0" y="0" width="80" height="24" fill={seatbeltOn ? '#16a34a' : '#dc2626'} rx="4" />
+            <text x="40" y="16" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
+              {seatbeltOn ? 'BELT ON' : 'NO BELT'}
+            </text>
+          </g>
+
+          {/* Result message */}
+          {showCrashResult && (
+            <g>
+              <text x="200" y="70" textAnchor="middle" fill={seatbeltOn ? '#22c55e' : '#ef4444'} fontSize="14" fontWeight="bold">
+                {seatbeltOn ? 'SAFE! Seatbelt stopped passenger!' : 'DANGER! Passenger kept moving!'}
+              </text>
             </g>
           )}
         </svg>
@@ -892,56 +820,70 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
       {/* Controls */}
       <div className="w-full max-w-sm">
         <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
-          <h4 className="text-white font-medium mb-3">Pull Speed</h4>
+          <h4 className="text-white font-medium mb-3">Seatbelt</h4>
           <div className="flex gap-2">
-            {(['fast', 'slow'] as const).map(speed => (
-              <button
-                key={speed}
-                onMouseDown={(e) => {
-                  e.preventDefault();
-                  if (!twistFlicked) setTwistSpeed(speed);
-                }}
-                className={`flex-1 py-3 rounded-lg font-medium transition-all ${
-                  twistSpeed === speed
-                    ? 'bg-indigo-500 text-white'
-                    : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
-                }`}
-              >
-                {speed === 'fast' ? '\u26A1 Quick Pull' : '\uD83D\uDC22 Slow Pull'}
-              </button>
-            ))}
+            <button
+              onClick={() => { if (!hasCrashed) setSeatbeltOn(true); }}
+              style={{ zIndex: 10 }}
+              className={`flex-1 py-3 rounded-lg font-medium transition-all ${
+                seatbeltOn
+                  ? 'bg-emerald-500 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
+            >
+              {'\u2705'} Belt On
+            </button>
+            <button
+              onClick={() => { if (!hasCrashed) setSeatbeltOn(false); }}
+              style={{ zIndex: 10 }}
+              className={`flex-1 py-3 rounded-lg font-medium transition-all ${
+                !seatbeltOn
+                  ? 'bg-red-500 text-white'
+                  : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
+              }`}
+            >
+              {'\u274C'} No Belt
+            </button>
           </div>
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); if (!twistFlicked) pullCloth(); }}
-          disabled={twistFlicked && clothX < 400}
+          onClick={() => { if (!hasCrashed) startDriving(); }}
+          disabled={hasCrashed}
+          style={{ zIndex: 10 }}
           className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
-            twistFlicked
+            hasCrashed
               ? 'bg-slate-700 text-slate-400'
               : 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white hover:shadow-lg hover:shadow-indigo-500/25'
           }`}
         >
-          {twistFlicked ? '\u2713 Pulled!' : '\uD83D\uDC48 Pull Tablecloth!'}
+          {hasCrashed ? '\u2713 Crashed!' : '\uD83D\uDE97 Start Driving'}
         </button>
 
-        {twistFlicked && clothX > 350 && (
+        {showCrashResult && (
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              setClothX(0);
-              setTwistFlicked(false);
-              setDishesStayed(true);
+            onClick={() => {
+              setCarSpeed(0);
+              setCarPosition(50);
+              setPassengerPosition(0);
+              setHasCrashed(false);
+              setShowCrashResult(false);
             }}
+            style={{ zIndex: 10 }}
             className="w-full mt-3 py-3 bg-slate-700 text-slate-300 rounded-lg font-medium hover:bg-slate-600"
           >
             {'\uD83D\uDD04'} Try Again
           </button>
         )}
+
+        <div className="mt-4 p-3 bg-indigo-500/10 border border-indigo-500/30 rounded-xl">
+          <p className="text-indigo-400 text-sm">{'\uD83D\uDCA1'} Try with and without seatbelt to see the difference!</p>
+        </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onClick={() => goToPhase('twist_review')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl"
       >
         Understand Results {'\u2192'}
@@ -950,36 +892,28 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
   );
 
   const renderTwistReview = () => {
-    const wasCorrect = twistPrediction === 'dishes_stay';
     const twistReviewContent = [
       {
-        title: "Same Principle, Bigger Scale",
-        content: `${wasCorrect ? "You predicted correctly! " : ""}The tablecloth trick works exactly like the coin trick!\n\nThe dishes have inertia - they resist changes to their motion. If you pull FAST enough, friction doesn't have time to accelerate them.`,
-        highlight: wasCorrect,
+        title: "Why Seatbelts Save Lives",
+        content: "When a car suddenly stops (crash), the car's motion stops immediately. But YOUR body has inertia - it 'wants' to keep moving forward at the same speed!\n\nWithout a seatbelt, you continue forward and hit the dashboard, steering wheel, or windshield.",
       },
       {
-        title: "Speed is the Key",
-        content: "The faster you pull, the less time friction has to act.\n\nFriction force x Time = Impulse (change in momentum)\n\nShort time = Small impulse = Dishes barely move!",
+        title: "The Seatbelt's Job",
+        content: "A seatbelt provides the EXTERNAL FORCE needed to stop your body's motion.\n\nNewton's First Law: An object in motion stays in motion UNLESS acted upon by an external force.\n\nThe seatbelt is that external force - it stops your inertia safely!",
       },
       {
-        title: "Mass Helps Too",
-        content: "Heavier objects have MORE inertia.\n\nThat's why professional magicians use heavy plates and silverware - they resist motion changes even more!\n\nF = ma means More mass = less acceleration for same force",
+        title: "The Numbers Are Clear",
+        content: "At 30 mph, an unbelted passenger hits the dashboard with the same force as falling from a 3-story building!\n\nSeatbelts:\n- Reduce fatal injuries by 45%\n- Reduce serious injuries by 50%\n- Have saved over 300,000 lives since 1975",
       },
     ];
 
     return (
       <div className="flex flex-col items-center px-6 py-8">
-        <h2 className="text-2xl md:text-3xl font-bold text-indigo-400 mb-6">The Physics Behind the Magic</h2>
+        <h2 className="text-2xl md:text-3xl font-bold text-indigo-400 mb-6">The Physics of Safety</h2>
 
         <div className="bg-slate-800/50 rounded-2xl p-6 max-w-lg w-full border border-slate-700/50 mb-6">
           <h3 className="text-xl font-bold text-indigo-400 mb-4">{twistReviewContent[twistReviewStep].title}</h3>
           <p className="text-slate-300 whitespace-pre-line leading-relaxed">{twistReviewContent[twistReviewStep].content}</p>
-
-          {twistReviewContent[twistReviewStep].highlight && (
-            <div className="mt-4 p-3 bg-emerald-500/20 border border-emerald-500/30 rounded-xl">
-              <p className="text-emerald-400">{'\u2713'} Excellent! You correctly applied inertia to the tablecloth scenario.</p>
-            </div>
-          )}
         </div>
 
         {/* Step indicators */}
@@ -987,13 +921,8 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
           {twistReviewContent.map((_, i) => (
             <button
               key={i}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const now = Date.now();
-                if (now - lastClickRef.current < 200) return;
-                lastClickRef.current = now;
-                setTwistReviewStep(i);
-              }}
+              onClick={() => setTwistReviewStep(i)}
+              style={{ zIndex: 10 }}
               className={`h-2 rounded-full transition-all duration-300 ${
                 i === twistReviewStep ? 'w-8 bg-indigo-400' : 'w-2 bg-slate-700 hover:bg-slate-600'
               }`}
@@ -1002,17 +931,14 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
         </div>
 
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             if (twistReviewStep < twistReviewContent.length - 1) {
-              const now = Date.now();
-              if (now - lastClickRef.current < 200) return;
-              lastClickRef.current = now;
               setTwistReviewStep(t => t + 1);
             } else {
-              goToPhase(7);
+              goToPhase('transfer');
             }
           }}
+          style={{ zIndex: 10 }}
           className="px-8 py-4 bg-gradient-to-r from-indigo-500 to-purple-500 text-white font-semibold rounded-xl"
         >
           {twistReviewStep < twistReviewContent.length - 1 ? 'Continue \u2192' : 'Real-World Examples \u2192'}
@@ -1036,13 +962,8 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
           {applications.map((app, index) => (
             <button
               key={index}
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const now = Date.now();
-                if (now - lastClickRef.current < 200) return;
-                lastClickRef.current = now;
-                setActiveApp(index);
-              }}
+              onClick={() => setActiveApp(index)}
+              style={{ zIndex: 10 }}
               className={`px-4 py-2 rounded-full font-medium text-sm transition-all ${
                 activeApp === index
                   ? 'bg-amber-500 text-white'
@@ -1072,11 +993,7 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
 
           {!completedApps.has(activeApp) && (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                const now = Date.now();
-                if (now - lastClickRef.current < 200) return;
-                lastClickRef.current = now;
+              onClick={() => {
                 const newCompleted = new Set(completedApps);
                 newCompleted.add(activeApp);
                 setCompletedApps(newCompleted);
@@ -1086,6 +1003,7 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
                   setTimeout(() => setActiveApp(activeApp + 1), 300);
                 }
               }}
+              style={{ zIndex: 10 }}
               className="w-full mt-4 py-3 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
             >
               {'\u2713'} Mark as Read
@@ -1105,7 +1023,8 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
 
         {allAppsCompleted ? (
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+            onClick={() => goToPhase('test')}
+            style={{ zIndex: 10 }}
             className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
           >
             Take the Quiz {'\u2192'}
@@ -1141,19 +1060,19 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
           </p>
 
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               if (passed) {
-                goToPhase(9);
+                goToPhase('mastery');
               } else {
                 setTestComplete(false);
                 setCurrentQuestion(0);
                 setTestScore(0);
                 setSelectedAnswer(null);
                 setShowExplanation(false);
-                goToPhase(3);
+                goToPhase('review');
               }
             }}
+            style={{ zIndex: 10 }}
             className={`px-8 py-4 font-semibold rounded-xl ${
               passed
                 ? 'bg-gradient-to-r from-emerald-500 to-teal-500 text-white'
@@ -1206,8 +1125,9 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
               return (
                 <button
                   key={index}
-                  onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(index); }}
+                  onClick={() => handleTestAnswer(index)}
                   disabled={showExplanation}
+                  style={{ zIndex: 10 }}
                   className={`p-4 rounded-xl border-2 text-left transition-all ${bgClass}`}
                 >
                   <span className={`text-sm ${textClass}`}>{option.text}</span>
@@ -1234,11 +1154,7 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
 
         {showExplanation && (
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
-              const now = Date.now();
-              if (now - lastClickRef.current < 200) return;
-              lastClickRef.current = now;
+            onClick={() => {
               if (currentQuestion < testQuestions.length - 1) {
                 setCurrentQuestion(c => c + 1);
                 setSelectedAnswer(null);
@@ -1247,6 +1163,7 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
                 setTestComplete(true);
               }
             }}
+            style={{ zIndex: 10 }}
             className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
           >
             {currentQuestion < testQuestions.length - 1 ? 'Next Question \u2192' : 'See Results \u2192'}
@@ -1289,7 +1206,8 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
           <span className="text-6xl">{'\uD83C\uDFC6'}</span>
         </div>
 
-        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Inertia Master!</h1>
+        <h1 className="text-3xl md:text-4xl font-bold text-white mb-2">Congratulations!</h1>
+        <h2 className="text-xl text-amber-400 mb-4">Inertia Master</h2>
 
         <p className="text-xl text-slate-400 mb-8">
           Final Score: <span className="text-emerald-400 font-bold">{testScore}/{testQuestions.length}</span> ({percentage}%)
@@ -1299,9 +1217,9 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
         <div className="grid grid-cols-2 gap-4 max-w-md w-full mb-8">
           {[
             { icon: '\u2696\uFE0F', label: 'Objects Resist Change' },
-            { icon: '\u26A1', label: 'Speed Beats Friction' },
-            { icon: '\uD83E\uDE99', label: 'Coin Trick Mastered' },
-            { icon: '\uD83D\uDE97', label: 'Inertia in Motion' },
+            { icon: '\uD83C\uDFCB\uFE0F', label: 'More Mass = More Inertia' },
+            { icon: '\uD83D\uDE97', label: 'Seatbelts Save Lives' },
+            { icon: '\uD83D\uDE80', label: 'Motion Continues Forever' },
           ].map((item, i) => (
             <div key={i} className="bg-slate-800/50 rounded-xl p-4 border border-slate-700/50">
               <div className="text-3xl mb-2">{item.icon}</div>
@@ -1310,25 +1228,28 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
           ))}
         </div>
 
+        <p className="text-slate-500 text-sm mb-6 max-w-md">
+          You now understand Newton's First Law of Motion - the Law of Inertia. Objects at rest stay at rest, and objects in motion stay in motion, unless acted upon by an external force!
+        </p>
+
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             // Reset all state for replay
-            setPhase(0);
+            setPhase('hook');
             setHookStep(0);
             setPrediction(null);
-            setFlickSpeed('fast');
-            setHasFlicked(false);
-            setCardX(0);
-            setCoinY(0);
-            setCoinFell(false);
-            setCoinMissed(false);
+            setSelectedMass('light');
+            setHasAppliedForce(false);
+            setObjectPosition(50);
+            setIsMoving(false);
             setReviewStep(0);
             setTwistPrediction(null);
-            setClothX(0);
-            setDishesStayed(true);
-            setTwistFlicked(false);
-            setTwistSpeed('fast');
+            setCarSpeed(0);
+            setCarPosition(50);
+            setPassengerPosition(0);
+            setHasCrashed(false);
+            setSeatbeltOn(false);
+            setShowCrashResult(false);
             setTwistReviewStep(0);
             setActiveApp(0);
             setCompletedApps(new Set());
@@ -1338,6 +1259,7 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
             setTestScore(0);
             setTestComplete(false);
           }}
+          style={{ zIndex: 10 }}
           className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-semibold rounded-xl"
         >
           Complete Lesson {'\u2713'}
@@ -1349,18 +1271,31 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
   // ==================== MAIN RENDER ====================
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
+  };
+
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Lab',
+    review: 'Review',
+    twist_predict: 'Twist Predict',
+    twist_play: 'Twist Lab',
+    twist_review: 'Twist Review',
+    transfer: 'Transfer',
+    test: 'Test',
+    mastery: 'Mastery'
   };
 
   return (
@@ -1376,14 +1311,15 @@ export default function InertiaRenderer({ onGameEvent, currentPhase, onPhaseComp
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Inertia</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-amber-400 w-6 shadow-lg shadow-amber-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}

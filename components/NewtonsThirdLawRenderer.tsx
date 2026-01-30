@@ -25,18 +25,21 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook',
+  'predict': 'Predict',
+  'play': 'Lab',
+  'review': 'Review',
+  'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab',
+  'twist_review': 'Twist Review',
+  'transfer': 'Transfer',
+  'test': 'Test',
+  'mastery': 'Mastery'
 };
 
 interface AirParticle {
@@ -50,18 +53,15 @@ interface AirParticle {
 
 interface NewtonsThirdLawRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: Phase) => void;
 }
 
-export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onPhaseComplete }: NewtonsThirdLawRendererProps) {
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
-
+export default function NewtonsThirdLawRenderer({ onGameEvent, gamePhase, onPhaseComplete }: NewtonsThirdLawRendererProps) {
   // Core State
-  const [phase, setPhase] = useState<number>(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
-    return 0;
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
   });
   const [isMobile, setIsMobile] = useState(false);
 
@@ -220,10 +220,10 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
 
   // Sync with external phase
   useEffect(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase) && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase !== undefined && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
   // Sound effect
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -256,39 +256,33 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
     onGameEvent?.({ type, data });
   }, [onGameEvent]);
 
-  // Debounced navigation
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    if (navigationLockRef.current) return;
-    if (!PHASES.includes(newPhase)) return;
-    navigationLockRef.current = true;
+  // Simplified navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (!phaseOrder.includes(newPhase)) return;
     playSound('transition');
     setPhase(newPhase);
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);
     // Reset state for play phases
-    if (newPhase === 2) {
+    if (newPhase === 'play') {
       setBalloonX(80);
       setIsLaunched(false);
       setAirRemaining(100);
       setAirParticles([]);
       setMaxDistance(0);
     }
-    if (newPhase === 5) {
+    if (newPhase === 'twist_play') {
       setSmallBalloonX(80);
       setLargeBalloonX(80);
       setTwistLaunched(false);
       setSmallAir(100);
       setLargeAir(100);
     }
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [phase, playSound, emitEvent, onPhaseComplete]);
 
   // Balloon animation
   useEffect(() => {
-    if (phase === 2 && isLaunched && airRemaining > 0) {
+    if (phase === 'play' && isLaunched && airRemaining > 0) {
       const animate = () => {
         setAirRemaining(prev => {
           const newAir = prev - (balloonSize / 30);
@@ -335,7 +329,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
 
   // Twist animation - comparing balloon sizes
   useEffect(() => {
-    if (phase === 5 && twistLaunched) {
+    if (phase === 'twist_play' && twistLaunched) {
       const animate = () => {
         setSmallAir(prev => Math.max(0, prev - 3));
         setSmallBalloonX(prev => {
@@ -439,24 +433,25 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
           {hookContent.map((_, i) => (
             <button
               key={i}
-              onMouseDown={(e) => { e.preventDefault(); setHookStep(i); }}
+              onClick={() => setHookStep(i)}
               className={`h-2 rounded-full transition-all duration-300 ${
                 i === hookStep ? 'w-6 bg-red-500' : 'w-2 bg-slate-700 hover:bg-slate-600'
               }`}
+              style={{ zIndex: 10 }}
             />
           ))}
         </div>
 
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             if (hookStep < hookContent.length - 1) {
               setHookStep(h => h + 1);
             } else {
-              goToPhase(1);
+              goToPhase('predict');
             }
           }}
           className="group relative px-10 py-5 bg-gradient-to-r from-red-500 to-orange-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-red-500/25 hover:scale-[1.02] active:scale-[0.98]"
+          style={{ zIndex: 10 }}
         >
           <span className="relative z-10 flex items-center gap-3">
             {hookStep < hookContent.length - 1 ? 'Continue' : 'Make a Prediction'}
@@ -486,12 +481,13 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
           {predictions.map((pred) => (
             <button
               key={pred.id}
-              onMouseDown={(e) => { e.preventDefault(); setPrediction(pred.id); }}
+              onClick={() => setPrediction(pred.id)}
               className={`p-5 rounded-xl text-left transition-all duration-300 flex items-center gap-4 ${
                 prediction === pred.id
                   ? 'bg-red-500/20 border-2 border-red-500'
                   : 'bg-slate-800/50 border-2 border-transparent hover:bg-slate-700/50'
               }`}
+              style={{ zIndex: 10 }}
             >
               <span className="text-2xl">{pred.icon}</span>
               <span className="text-slate-200">{pred.label}</span>
@@ -500,13 +496,14 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); if (prediction) goToPhase(2); }}
+          onClick={() => { if (prediction) goToPhase('play'); }}
           disabled={!prediction}
           className={`px-8 py-4 rounded-xl font-semibold transition-all ${
             prediction
               ? 'bg-gradient-to-r from-red-500 to-orange-600 text-white hover:shadow-lg hover:shadow-red-500/25'
               : 'bg-slate-700 text-slate-500 cursor-not-allowed'
           }`}
+          style={{ zIndex: 10 }}
         >
           Test My Prediction →
         </button>
@@ -591,27 +588,28 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
 
         <div className="flex gap-4 mb-6">
           <button
-            onMouseDown={(e) => { e.preventDefault(); if (!isLaunched) setIsLaunched(true); }}
+            onClick={() => { if (!isLaunched) setIsLaunched(true); }}
             disabled={isLaunched}
             className={`px-6 py-3 rounded-xl font-semibold ${
               isLaunched
                 ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
                 : 'bg-gradient-to-r from-red-500 to-orange-600 text-white hover:shadow-lg hover:shadow-red-500/25'
             }`}
+            style={{ zIndex: 10 }}
           >
             {isLaunched ? '🎈 Launched!' : '🚀 Launch Balloon!'}
           </button>
 
           {isLaunched && (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
+              onClick={() => {
                 setBalloonX(80);
                 setIsLaunched(false);
                 setAirRemaining(100);
                 setAirParticles([]);
               }}
               className="px-4 py-3 rounded-xl border border-slate-600 text-slate-400 hover:bg-slate-700"
+              style={{ zIndex: 10 }}
             >
               🔄 Reset
             </button>
@@ -619,8 +617,9 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+          onClick={() => goToPhase('review')}
           className="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-600 text-white font-semibold rounded-xl"
+          style={{ zIndex: 10 }}
         >
           See Results →
         </button>
@@ -665,25 +664,26 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
             {reviewContent.map((_, i) => (
               <button
                 key={i}
-                onMouseDown={(e) => { e.preventDefault(); setReviewStep(i); }}
+                onClick={() => setReviewStep(i)}
                 className={`h-2 rounded-full transition-all ${
                   i === reviewStep ? 'w-6 bg-red-500' : 'w-2 bg-slate-600'
                 }`}
+                style={{ zIndex: 10 }}
               />
             ))}
           </div>
         </div>
 
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             if (reviewStep < reviewContent.length - 1) {
               setReviewStep(r => r + 1);
             } else {
-              goToPhase(4);
+              goToPhase('twist_predict');
             }
           }}
           className="px-6 py-3 bg-gradient-to-r from-red-500 to-orange-600 text-white font-semibold rounded-xl"
+          style={{ zIndex: 10 }}
         >
           {reviewStep < reviewContent.length - 1 ? 'Continue →' : 'New Variable →'}
         </button>
@@ -708,12 +708,13 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
           {predictions.map((pred) => (
             <button
               key={pred.id}
-              onMouseDown={(e) => { e.preventDefault(); setTwistPrediction(pred.id); }}
+              onClick={() => setTwistPrediction(pred.id)}
               className={`p-5 rounded-xl text-left transition-all duration-300 flex items-center gap-4 ${
                 twistPrediction === pred.id
                   ? 'bg-amber-500/20 border-2 border-amber-500'
                   : 'bg-slate-800/50 border-2 border-transparent hover:bg-slate-700/50'
               }`}
+              style={{ zIndex: 10 }}
             >
               <span className="text-2xl">{pred.icon}</span>
               <span className="text-slate-200">{pred.label}</span>
@@ -722,13 +723,14 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); if (twistPrediction) goToPhase(5); }}
+          onClick={() => { if (twistPrediction) goToPhase('twist_play'); }}
           disabled={!twistPrediction}
           className={`px-8 py-4 rounded-xl font-semibold transition-all ${
             twistPrediction
               ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-lg hover:shadow-amber-500/25'
               : 'bg-slate-700 text-slate-500 cursor-not-allowed'
           }`}
+          style={{ zIndex: 10 }}
         >
           Test It →
         </button>
@@ -786,13 +788,14 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
 
         <div className="flex justify-center items-center">
           <button
-            onMouseDown={(e) => { e.preventDefault(); if (!twistLaunched) setTwistLaunched(true); }}
+            onClick={() => { if (!twistLaunched) setTwistLaunched(true); }}
             disabled={twistLaunched}
             className={`px-6 py-3 rounded-xl font-semibold ${
               twistLaunched
                 ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
                 : 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-lg hover:shadow-amber-500/25'
             }`}
+            style={{ zIndex: 10 }}
           >
             {twistLaunched ? '🏁 Racing!' : '🚀 Start Race!'}
           </button>
@@ -814,8 +817,9 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
       )}
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onClick={() => goToPhase('twist_review')}
         className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
+        style={{ zIndex: 10 }}
       >
         Understand Results →
       </button>
@@ -859,25 +863,26 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
             {twistReviewContent.map((_, i) => (
               <button
                 key={i}
-                onMouseDown={(e) => { e.preventDefault(); setTwistReviewStep(i); }}
+                onClick={() => setTwistReviewStep(i)}
                 className={`h-2 rounded-full transition-all ${
                   i === twistReviewStep ? 'w-6 bg-amber-500' : 'w-2 bg-slate-600'
                 }`}
+                style={{ zIndex: 10 }}
               />
             ))}
           </div>
         </div>
 
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             if (twistReviewStep < twistReviewContent.length - 1) {
               setTwistReviewStep(t => t + 1);
             } else {
-              goToPhase(7);
+              goToPhase('transfer');
             }
           }}
           className="px-6 py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl"
+          style={{ zIndex: 10 }}
         >
           {twistReviewStep < twistReviewContent.length - 1 ? 'Continue →' : 'Real-World Examples →'}
         </button>
@@ -894,7 +899,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
         {applications.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveApp(index); }}
+            onClick={() => setActiveApp(index)}
             className={`px-4 py-2 rounded-full font-medium transition-all ${
               activeApp === index
                 ? 'bg-red-600 text-white'
@@ -902,6 +907,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
                   ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
                   : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
+            style={{ zIndex: 10 }}
           >
             {completedApps.has(index) && '✓ '}{app.icon}
           </button>
@@ -921,22 +927,27 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
           <p className="text-slate-300 text-sm">{applications[activeApp].fact}</p>
         </div>
 
-        {!completedApps.has(activeApp) && (
+        {!completedApps.has(activeApp) ? (
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               const newCompleted = new Set(completedApps);
               newCompleted.add(activeApp);
               setCompletedApps(newCompleted);
-              if (activeApp < applications.length - 1) {
-                setActiveApp(activeApp + 1);
-              }
             }}
             className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-600 text-white font-semibold rounded-xl"
+            style={{ zIndex: 10 }}
           >
             ✓ Mark as Read
           </button>
-        )}
+        ) : activeApp < applications.length - 1 ? (
+          <button
+            onClick={() => setActiveApp(activeApp + 1)}
+            className="w-full py-3 bg-gradient-to-r from-red-500 to-orange-600 text-white font-semibold rounded-xl"
+            style={{ zIndex: 10 }}
+          >
+            Next Application →
+          </button>
+        ) : null}
       </div>
 
       <div className="mt-6 flex items-center gap-2">
@@ -951,8 +962,9 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
 
       {completedApps.size === applications.length && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          onClick={() => goToPhase('test')}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl"
+          style={{ zIndex: 10 }}
         >
           Take the Quiz →
         </button>
@@ -977,15 +989,14 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
           <p className="text-slate-400 mb-8">{passed ? "You've mastered Newton's Third Law!" : 'Review the material and try again.'}</p>
 
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               if (passed) {
-                goToPhase(9);
+                goToPhase('mastery');
               } else {
                 setTestComplete(false);
                 setCurrentQuestion(0);
                 setTestScore(0);
-                goToPhase(3);
+                goToPhase('review');
               }
             }}
             className={`px-8 py-4 font-semibold rounded-xl ${
@@ -993,6 +1004,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
                 ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white'
                 : 'bg-gradient-to-r from-red-500 to-orange-600 text-white'
             }`}
+            style={{ zIndex: 10 }}
           >
             {passed ? 'Continue to Mastery →' : 'Review Material'}
           </button>
@@ -1034,8 +1046,9 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
               return (
                 <button
                   key={index}
-                  onMouseDown={(e) => { e.preventDefault(); if (!showExplanation) setSelectedAnswer(index); }}
+                  onClick={() => { if (!showExplanation) setSelectedAnswer(index); }}
                   className={className}
+                  style={{ zIndex: 10 }}
                 >
                   <span className="text-slate-200">{option.text}</span>
                   {showResult && isCorrect && <span className="ml-2">✓</span>}
@@ -1056,8 +1069,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
         </div>
 
         <button
-          onMouseDown={(e) => {
-            e.preventDefault();
+          onClick={() => {
             if (showExplanation) {
               if (currentQuestion < testQuestions.length - 1) {
                 setCurrentQuestion(c => c + 1);
@@ -1079,6 +1091,7 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
               ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
               : 'bg-gradient-to-r from-red-500 to-orange-600 text-white hover:shadow-lg hover:shadow-red-500/25'
           }`}
+          style={{ zIndex: 10 }}
         >
           {showExplanation ? (currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results →') : 'Check Answer'}
         </button>
@@ -1135,8 +1148,9 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+          onClick={() => goToPhase('hook')}
           className="px-8 py-4 bg-gradient-to-r from-emerald-500 to-teal-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-emerald-500/25"
+          style={{ zIndex: 10 }}
         >
           Explore Again ↺
         </button>
@@ -1146,16 +1160,16 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -1173,18 +1187,19 @@ export default function NewtonsThirdLawRenderer({ onGameEvent, currentPhase, onP
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Newton's Third Law</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-red-500 w-6 shadow-lg shadow-red-500/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                style={{ zIndex: 10 }}
               />
             ))}
           </div>

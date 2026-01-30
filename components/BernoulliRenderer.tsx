@@ -4,8 +4,25 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ============================================================================
 // BERNOULLI RENDERER - LIFT & FLUID DYNAMICS
-// Premium 10-screen educational game with premium design
+// Premium 10-phase educational game with premium design
 // ============================================================================
+
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Lab',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
+};
 
 type GameEventType =
   | 'phase_change'
@@ -23,15 +40,9 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
-
 interface Props {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
+  gamePhase?: string;
   onPhaseComplete?: (phase: number) => void;
   onBack?: () => void;
 }
@@ -201,8 +212,8 @@ const quizQuestions = [
 // MAIN COMPONENT
 // ============================================================================
 
-const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete, onBack }) => {
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete, onBack }) => {
+  const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -222,8 +233,6 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
   const [ballSpin, setBallSpin] = useState(1500);
   const [animationTime, setAnimationTime] = useState(0);
 
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
   const animationRef = useRef<number>();
 
   // Mobile detection
@@ -234,12 +243,12 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Phase sync
+  // Phase sync from props
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
   // Animation loop
   useEffect(() => {
@@ -278,25 +287,22 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
     } catch { /* Audio not available */ }
   }, []);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
-    onPhaseComplete?.(newPhase);
+    const phaseIndex = phaseOrder.indexOf(newPhase);
+    onPhaseComplete?.(phaseIndex);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseLabel: phaseLabels[newPhase] } });
 
-    if (newPhase === 2) {
+    if (newPhase === 'play') {
       setAirSpeed(50);
       setAngleOfAttack(5);
       setSimulationMode('wing');
-    } else if (newPhase === 5) {
+    } else if (newPhase === 'twist_play') {
       setAirSpeed(50);
       setBallSpin(1500);
       setSimulationMode('ball');
     }
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onPhaseComplete, onGameEvent]);
 
   // Calculate lift based on airspeed and angle of attack
@@ -316,27 +322,18 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
   const magnusForce = calculateMagnusForce(airSpeed, ballSpin);
 
   const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'B' ? 'success' : 'failure');
   }, [playSound]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'A' ? 'success' : 'failure');
   }, [playSound]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;
@@ -345,9 +342,6 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
   }, []);
 
   const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
   }, [playSound]);
@@ -539,7 +533,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
       </h1>
 
       <p className="text-lg text-slate-400 max-w-md mb-10">
-        A 500-ton airplane floats through the air. How is this possible?
+        Discover Bernoulli's Principle - the secret behind flight, curveballs, and everyday phenomena. Learn how faster-moving fluids create lower pressure.
       </p>
 
       <div className="relative bg-gradient-to-br from-slate-800/80 to-slate-900/80 rounded-3xl p-8 max-w-xl w-full border border-slate-700/50 shadow-2xl shadow-black/20">
@@ -550,17 +544,18 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
             <span className="text-xl font-mono text-blue-300">P + (1/2)rho*v^2 = constant</span>
           </div>
           <p className="text-xl text-white/90 font-medium leading-relaxed">
-            Daniel Bernoulli discovered the answer 300 years ago: faster fluid = lower pressure.
+            Daniel Bernoulli discovered the answer 300 years ago: faster fluid = lower pressure. A 500-ton airplane floats through the air using this principle!
           </p>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
+        style={{ zIndex: 10 }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-blue-500 to-indigo-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-blue-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
-          Discover Lift
+          Start Learning
           <svg className="w-5 h-5 transition-transform group-hover:translate-x-1" fill="none" viewBox="0 0 24 24" stroke="currentColor">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
           </svg>
@@ -578,6 +573,29 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
   const renderPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
+
+      {/* Static simulation preview */}
+      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-slate-700/50 mb-6 opacity-75">
+        <svg width={320} height={150} className="mx-auto">
+          <defs>
+            <linearGradient id="predictSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="100%" stopColor="#0a1628" />
+            </linearGradient>
+          </defs>
+          <rect width={320} height={150} fill="url(#predictSkyGrad)" />
+          <g transform="translate(160, 75)">
+            <path
+              d={`M -60 0 Q -30 -18 0 -22 Q 30 -18 60 0 Q 30 5 0 7 Q -30 5 -60 0`}
+              fill="#e5e7eb"
+              stroke="#9ca3af"
+              strokeWidth={2}
+            />
+          </g>
+          <text x={160} y={130} fill="#94a3b8" fontSize={11} textAnchor="middle">Wing cross-section</text>
+        </svg>
+      </div>
+
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6 border border-slate-700/50">
         <p className="text-lg text-slate-300 mb-4">{predictions.initial.question}</p>
       </div>
@@ -585,8 +603,9 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
         {predictions.initial.options.map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
             disabled={showPredictionFeedback}
+            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
                 ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
@@ -603,7 +622,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl border border-slate-700/50">
           <p className="text-emerald-400 font-semibold mb-2">{selectedPrediction === 'B' ? 'Correct!' : 'Not quite!'}</p>
           <p className="text-slate-300 text-sm">{predictions.initial.explanation}</p>
-          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
+          <button onClick={() => goToPhase('play')} style={{ zIndex: 10 }} className="mt-4 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
             Explore the Physics
           </button>
         </div>
@@ -614,7 +633,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
   const renderPlay = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Bernoulli Lab</h2>
-      <p className="text-slate-400 mb-6 text-center max-w-lg">See how airspeed and wing angle affect lift and pressure.</p>
+      <p className="text-slate-400 mb-6 text-center max-w-lg">Adjust the sliders to see how airspeed, wing angle, and pipe width affect pressure and lift.</p>
 
       <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-slate-700/50 mb-6">
         {simulationMode === 'wing' ? renderWingSimulation() : renderBallSimulation()}
@@ -623,15 +642,15 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
       {/* Data panel */}
       <div className="grid grid-cols-3 gap-3 mb-6 w-full max-w-lg">
         <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-          <div className="text-xs text-blue-400">Airspeed</div>
+          <div className="text-xs text-blue-400">Flow Rate</div>
           <div className="text-lg font-bold text-white">{airSpeed} m/s</div>
         </div>
         <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-          <div className="text-xs text-emerald-400">{simulationMode === 'wing' ? 'Lift' : 'Magnus Force'}</div>
+          <div className="text-xs text-emerald-400">{simulationMode === 'wing' ? 'Lift Force' : 'Magnus Force'}</div>
           <div className="text-lg font-bold text-white">{simulationMode === 'wing' ? `${lift.toFixed(0)}%` : `${magnusForce.toFixed(1)} N`}</div>
         </div>
         <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-          <div className="text-xs text-amber-400">{simulationMode === 'wing' ? 'Angle' : 'Spin'}</div>
+          <div className="text-xs text-amber-400">{simulationMode === 'wing' ? 'Pipe Width' : 'Spin'}</div>
           <div className="text-lg font-bold text-white">{simulationMode === 'wing' ? `${angleOfAttack}deg` : `${ballSpin} RPM`}</div>
         </div>
       </div>
@@ -639,12 +658,12 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
       {/* Controls */}
       <div className="grid md:grid-cols-2 gap-4 w-full max-w-lg mb-6">
         <div className="bg-slate-800/50 rounded-xl p-4 border border-blue-500/30">
-          <label className="text-blue-400 text-sm block mb-2">Air Speed: {airSpeed} m/s</label>
+          <label className="text-blue-400 text-sm block mb-2">Flow Rate: {airSpeed} m/s</label>
           <input type="range" min={10} max={100} value={airSpeed} onChange={(e) => setAirSpeed(Number(e.target.value))} className="w-full accent-blue-500" />
         </div>
         {simulationMode === 'wing' ? (
           <div className="bg-slate-800/50 rounded-xl p-4 border border-amber-500/30">
-            <label className="text-amber-400 text-sm block mb-2">Angle: {angleOfAttack}deg {angleOfAttack > 12 && <span className="text-pink-400">Near stall!</span>}</label>
+            <label className="text-amber-400 text-sm block mb-2">Wing Angle: {angleOfAttack}deg {angleOfAttack > 12 && <span className="text-pink-400">Near stall!</span>}</label>
             <input type="range" min={0} max={20} value={angleOfAttack} onChange={(e) => setAngleOfAttack(Number(e.target.value))} className="w-full accent-amber-500" />
           </div>
         ) : (
@@ -657,21 +676,26 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
 
       {/* Quick buttons */}
       <div className="flex flex-wrap gap-2 mb-6 justify-center">
-        <button onMouseDown={() => setShowStreamlines(!showStreamlines)} className={`px-4 py-2 rounded-lg text-sm font-medium ${showStreamlines ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+        <button onClick={() => setShowStreamlines(!showStreamlines)} style={{ zIndex: 10 }} className={`px-4 py-2 rounded-lg text-sm font-medium ${showStreamlines ? 'bg-blue-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
           Flow {showStreamlines ? 'ON' : 'OFF'}
         </button>
-        <button onMouseDown={() => setShowPressure(!showPressure)} className={`px-4 py-2 rounded-lg text-sm font-medium ${showPressure ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+        <button onClick={() => setShowPressure(!showPressure)} style={{ zIndex: 10 }} className={`px-4 py-2 rounded-lg text-sm font-medium ${showPressure ? 'bg-indigo-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
           Pressure {showPressure ? 'ON' : 'OFF'}
         </button>
-        <button onMouseDown={() => setSimulationMode('wing')} className={`px-4 py-2 rounded-lg text-sm font-medium ${simulationMode === 'wing' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+        <button onClick={() => setSimulationMode('wing')} style={{ zIndex: 10 }} className={`px-4 py-2 rounded-lg text-sm font-medium ${simulationMode === 'wing' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
           Wing
         </button>
-        <button onMouseDown={() => setSimulationMode('ball')} className={`px-4 py-2 rounded-lg text-sm font-medium ${simulationMode === 'ball' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
+        <button onClick={() => setSimulationMode('ball')} style={{ zIndex: 10 }} className={`px-4 py-2 rounded-lg text-sm font-medium ${simulationMode === 'ball' ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'}`}>
           Ball
         </button>
       </div>
 
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }} className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
+      <div className="bg-blue-900/30 rounded-xl p-4 max-w-lg border border-blue-700/30 mb-6">
+        <h3 className="text-blue-400 font-semibold mb-2">Key Insight</h3>
+        <p className="text-slate-300 text-sm">Watch how faster flow creates lower pressure above the wing. The pressure difference pushes the wing UP - that's lift!</p>
+      </div>
+
+      <button onClick={() => goToPhase('review')} style={{ zIndex: 10 }} className="px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
         Review the Concepts
       </button>
     </div>
@@ -679,7 +703,16 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
 
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-white mb-6">Bernoulli's Principle</h2>
+      <h2 className="text-2xl font-bold text-white mb-6">Understanding Bernoulli's Principle</h2>
+
+      <div className="bg-gradient-to-br from-emerald-900/40 to-teal-900/40 rounded-2xl p-6 max-w-2xl mb-6 border border-emerald-700/30">
+        <h3 className="text-xl font-bold text-emerald-400 mb-4">The Key Result</h3>
+        <div className="bg-slate-900/50 rounded-xl p-4 mb-4 text-center">
+          <span className="text-2xl font-mono text-emerald-300">Faster Flow = Lower Pressure</span>
+        </div>
+        <p className="text-slate-300">When fluid speeds up (like air over a wing), its pressure drops. This is because energy is conserved - kinetic energy increases, so pressure energy must decrease.</p>
+      </div>
+
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-blue-900/50 to-indigo-900/50 rounded-2xl p-6 border border-blue-700/30">
           <h3 className="text-xl font-bold text-blue-400 mb-3">The Bernoulli Equation</h3>
@@ -687,13 +720,14 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
             <span className="text-xl font-mono text-blue-300">P + (1/2)rho*v^2 + rho*g*h = const</span>
           </div>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>Pressure + Kinetic + Potential = constant</li>
-            <li>Speed up = Pressure down</li>
-            <li>Energy is conserved along streamline</li>
+            <li>P = Pressure energy</li>
+            <li>(1/2)rho*v^2 = Kinetic energy</li>
+            <li>rho*g*h = Potential energy</li>
+            <li>Total energy is conserved along streamline</li>
           </ul>
         </div>
         <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6 border border-emerald-700/30">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">Wing Lift</h3>
+          <h3 className="text-xl font-bold text-emerald-400 mb-3">Wing Lift Explained</h3>
           <div className="grid grid-cols-3 gap-2 mb-3">
             <div className="bg-slate-900/50 rounded-lg p-2 text-center">
               <div className="text-2xl">💨</div>
@@ -708,10 +742,10 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
               <div className="text-xs text-slate-400">Delta P = Lift</div>
             </div>
           </div>
-          <p className="text-slate-300 text-sm">Curved top = fast air = low pressure. Pressure difference creates upward force!</p>
+          <p className="text-slate-300 text-sm">Curved top = fast air = low pressure. Flat bottom = slow air = high pressure. The difference pushes the wing up!</p>
         </div>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+      <button onClick={() => goToPhase('twist_predict')} style={{ zIndex: 10 }} className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
         Discover the Magnus Effect
       </button>
     </div>
@@ -719,7 +753,18 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
 
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Curveball Challenge</h2>
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">New Scenario: The Curveball Challenge</h2>
+
+      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-amber-700/30 mb-6 opacity-75">
+        <svg width={280} height={120} className="mx-auto">
+          <rect width={280} height={120} fill="#064e3b" rx={8} />
+          <circle cx={140} cy={60} r={20} fill="#f5f5f4" stroke="#a3a3a3" strokeWidth={2} />
+          <path d="M 125 52 Q 135 42, 143 47 Q 151 52, 161 47" fill="none" stroke="#dc2626" strokeWidth={2} />
+          <path d="M 125 68 Q 135 78, 143 73 Q 151 68, 161 73" fill="none" stroke="#dc2626" strokeWidth={2} />
+          <text x={140} y={105} fill="#94a3b8" fontSize={11} textAnchor="middle">Spinning baseball</text>
+        </svg>
+      </div>
+
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6 border border-amber-700/30">
         <p className="text-lg text-slate-300 mb-4">{predictions.twist.question}</p>
       </div>
@@ -727,8 +772,9 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
         {predictions.twist.options.map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
             disabled={showTwistFeedback}
+            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
                 ? option.id === 'A' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
@@ -745,7 +791,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl border border-slate-700/50">
           <p className="text-emerald-400 font-semibold mb-2">{twistPrediction === 'A' ? 'Excellent!' : 'Interesting guess!'}</p>
           <p className="text-slate-300 text-sm">{predictions.twist.explanation}</p>
-          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+          <button onClick={() => goToPhase('twist_play')} style={{ zIndex: 10 }} className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
             See the Magnus Effect
           </button>
         </div>
@@ -756,7 +802,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
   const renderTwistPlay = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-amber-400 mb-4">Magnus Effect Lab</h2>
-      <p className="text-slate-400 mb-6 text-center">Watch how spin creates pressure differences that curve the ball!</p>
+      <p className="text-slate-400 mb-6 text-center">Adjust the angle of attack and spin to see how airflow creates lift on different shapes!</p>
 
       <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-slate-700/50 mb-6">
         {renderBallSimulation()}
@@ -768,7 +814,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
           <input type="range" min={10} max={100} value={airSpeed} onChange={(e) => setAirSpeed(Number(e.target.value))} className="w-full accent-blue-500" />
         </div>
         <div className="bg-slate-800/50 rounded-xl p-4 border border-pink-500/30">
-          <label className="text-pink-400 text-sm block mb-2">Ball Spin: {ballSpin} RPM</label>
+          <label className="text-pink-400 text-sm block mb-2">Ball Spin (Angle of Attack): {ballSpin} RPM</label>
           <input type="range" min={-2500} max={2500} value={ballSpin} onChange={(e) => setBallSpin(Number(e.target.value))} className="w-full accent-pink-500" />
           <div className="flex justify-between text-xs text-slate-500 mt-1">
             <span>Backspin</span>
@@ -779,10 +825,10 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
 
       <div className="bg-pink-900/30 rounded-xl p-4 max-w-lg border border-pink-700/30 mb-6">
         <h3 className="text-pink-400 font-semibold mb-2">The Magnus Effect</h3>
-        <p className="text-slate-300 text-sm">Spin drags air faster on one side (lower pressure) and slower on the other. The ball is pushed from high to low pressure - creating curves that seem to defy physics!</p>
+        <p className="text-slate-300 text-sm">Spin drags air faster on one side (lower pressure) and slower on the other. The ball is pushed from high to low pressure - creating curves that seem to defy physics! This same principle applies to airplane wings at different angles.</p>
       </div>
 
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }} className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
+      <button onClick={() => goToPhase('twist_review')} style={{ zIndex: 10 }} className="px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl">
         Review the Discovery
       </button>
     </div>
@@ -790,12 +836,12 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
 
   const renderTwistReview = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">Magnus Effect Explained</h2>
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">Magnus Effect & Lift Explained</h2>
       <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 max-w-2xl mb-6 border border-amber-700/30">
-        <h3 className="text-xl font-bold text-amber-400 mb-4">Spin Creates Pressure Differences</h3>
+        <h3 className="text-xl font-bold text-amber-400 mb-4">How Bernoulli Creates Lift</h3>
         <div className="grid md:grid-cols-2 gap-4">
           <div className="bg-slate-900/50 rounded-lg p-3">
-            <h4 className="text-blue-400 font-semibold mb-2">Topspin</h4>
+            <h4 className="text-blue-400 font-semibold mb-2">Topspin (Ball)</h4>
             <ul className="text-slate-300 text-sm space-y-1">
               <li>Top moves with airflow (faster)</li>
               <li>Bottom moves against (slower)</li>
@@ -803,7 +849,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
             </ul>
           </div>
           <div className="bg-slate-900/50 rounded-lg p-3">
-            <h4 className="text-amber-400 font-semibold mb-2">Backspin</h4>
+            <h4 className="text-amber-400 font-semibold mb-2">Backspin (Ball)</h4>
             <ul className="text-slate-300 text-sm space-y-1">
               <li>Bottom moves with airflow (faster)</li>
               <li>Top moves against (slower)</li>
@@ -811,11 +857,15 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
             </ul>
           </div>
         </div>
+        <div className="bg-slate-900/50 rounded-lg p-3 mt-4">
+          <h4 className="text-emerald-400 font-semibold mb-2">Airplane Wings</h4>
+          <p className="text-slate-300 text-sm">Wings use the same principle! The curved top creates faster airflow (low pressure) while the flat bottom has slower airflow (high pressure). The pressure difference creates lift!</p>
+        </div>
         <div className="bg-slate-900/50 rounded-lg p-3 mt-4 text-center">
           <span className="text-pink-400 font-mono">F_Magnus proportional to omega x v</span>
         </div>
       </div>
-      <button onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
+      <button onClick={() => goToPhase('transfer')} style={{ zIndex: 10 }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
         Explore Real-World Applications
       </button>
     </div>
@@ -824,11 +874,14 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
   const renderTransfer = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Bernoulli Everywhere</h2>
+      <p className="text-slate-400 mb-6 text-center max-w-lg">Explore 4 real-world applications of Bernoulli's Principle</p>
+
       <div className="flex gap-2 mb-6 flex-wrap justify-center">
         {realWorldApplications.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+            onClick={() => setActiveAppTab(index)}
+            style={{ zIndex: 10 }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppTab === index ? 'bg-blue-600 text-white'
               : completedApps.has(index) ? 'bg-emerald-600/30 text-emerald-400 border border-emerald-500'
@@ -854,9 +907,21 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
         <div className="bg-emerald-900/30 rounded-lg p-3 border border-emerald-700/30">
           <p className="text-emerald-400 text-sm">{realWorldApplications[activeAppTab].realExample}</p>
         </div>
-        {!completedApps.has(activeAppTab) && (
-          <button onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
+        {!completedApps.has(activeAppTab) ? (
+          <button onClick={() => handleAppComplete(activeAppTab)} style={{ zIndex: 10 }} className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium">
             Mark as Understood
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              if (activeAppTab < realWorldApplications.length - 1) {
+                setActiveAppTab(activeAppTab + 1);
+              }
+            }}
+            style={{ zIndex: 10 }}
+            className="mt-4 px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg font-medium"
+          >
+            Next Application
           </button>
         )}
       </div>
@@ -866,7 +931,7 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
         <span className="text-slate-400">{completedApps.size}/4</span>
       </div>
       {completedApps.size >= 4 && (
-        <button onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
+        <button onClick={() => goToPhase('test')} style={{ zIndex: 10 }} className="mt-6 px-6 py-3 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
           Take the Knowledge Test
         </button>
       )}
@@ -876,6 +941,8 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
   const renderTest = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
+      <p className="text-slate-400 mb-6 text-center">Answer all 10 questions to test your understanding of Bernoulli's Principle</p>
+
       {!showTestResults ? (
         <div className="space-y-6 max-w-2xl w-full max-h-[60vh] overflow-y-auto">
           {quizQuestions.map((q, qIndex) => (
@@ -885,7 +952,8 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
+                    style={{ zIndex: 10 }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${testAnswers[qIndex] === oIndex ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'}`}
                   >
                     {option.text}
@@ -895,8 +963,9 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
             </div>
           ))}
           <button
-            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); playSound('complete'); }}
+            onClick={() => { setShowTestResults(true); playSound('complete'); }}
             disabled={testAnswers.includes(-1)}
+            style={{ zIndex: 10 }}
             className={`w-full py-4 rounded-xl font-semibold text-lg ${testAnswers.includes(-1) ? 'bg-slate-700 text-slate-500 cursor-not-allowed' : 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white'}`}
           >
             Submit Answers
@@ -908,11 +977,11 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
           <h3 className="text-2xl font-bold text-white mb-2">Score: {calculateScore()}/10</h3>
           <p className="text-slate-300 mb-6">{calculateScore() >= 7 ? "Excellent! You've mastered fluid dynamics!" : 'Keep studying! Review and try again.'}</p>
           {calculateScore() >= 7 ? (
-            <button onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }} className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
+            <button onClick={() => goToPhase('mastery')} style={{ zIndex: 10 }} className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl">
               Claim Your Mastery Badge
             </button>
           ) : (
-            <button onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }} className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
+            <button onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }} style={{ zIndex: 10 }} className="px-8 py-4 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-semibold rounded-xl">
               Review & Try Again
             </button>
           )}
@@ -925,7 +994,8 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
       <div className="bg-gradient-to-br from-blue-900/50 via-indigo-900/50 to-purple-900/50 rounded-3xl p-8 max-w-2xl border border-blue-700/30">
         <div className="text-8xl mb-6">✈️</div>
-        <h1 className="text-3xl font-bold text-white mb-4">Fluid Dynamics Master!</h1>
+        <h1 className="text-3xl font-bold text-white mb-4">Congratulations!</h1>
+        <h2 className="text-2xl font-bold text-emerald-400 mb-4">Fluid Dynamics Master!</h2>
         <p className="text-xl text-slate-300 mb-6">You've mastered Bernoulli's Principle and the Magnus Effect!</p>
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">✈️</div><p className="text-sm text-slate-300">Airplane Lift</p></div>
@@ -933,9 +1003,12 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">💨</div><p className="text-sm text-slate-300">Venturi Effect</p></div>
           <div className="bg-slate-800/50 rounded-xl p-4"><div className="text-2xl mb-2">🚿</div><p className="text-sm text-slate-300">Shower Curtain</p></div>
         </div>
+        <div className="bg-emerald-900/30 rounded-xl p-4 border border-emerald-700/30 mb-6">
+          <p className="text-emerald-400">You now understand how pressure differences in moving fluids create forces that power flight, curve balls, and drive everyday phenomena!</p>
+        </div>
         <div className="flex gap-3 justify-center">
-          <button onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">Explore Again</button>
-          {onBack && <button onMouseDown={(e) => { e.preventDefault(); onBack(); }} className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl">Back to Menu</button>}
+          <button onClick={() => goToPhase('hook')} style={{ zIndex: 10 }} className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl">Explore Again</button>
+          {onBack && <button onClick={() => onBack()} style={{ zIndex: 10 }} className="px-6 py-3 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl">Return to Dashboard</button>}
         </div>
       </div>
     </div>
@@ -943,16 +1016,16 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -970,14 +1043,15 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhase
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Bernoulli's Principle</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-blue-400 w-6 shadow-lg shadow-blue-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}

@@ -10,6 +10,11 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // countless molecular collisions with container walls
 // ============================================================================
 
+// Phase type and order
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 // Comprehensive event types for analytics
 type GameEventType =
   | 'phase_change'
@@ -77,8 +82,8 @@ interface Molecule {
 
 interface KineticTheoryGasesRendererProps {
   onEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // Boltzmann constant
@@ -86,16 +91,17 @@ const k_B = 1.38e-23; // J/K
 
 export default function KineticTheoryGasesRenderer({
   onEvent,
-  currentPhase: externalPhase,
+  gamePhase: externalPhase,
   onPhaseComplete
 }: KineticTheoryGasesRendererProps) {
   // Core state
-  const [phase, setPhase] = useState(externalPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>((externalPhase as Phase) ?? 'hook');
   const [showExplanation, setShowExplanation] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedApp, setSelectedApp] = useState<number | null>(null);
+  const [currentAppIndex, setCurrentAppIndex] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
   // Simulation state
@@ -114,8 +120,15 @@ export default function KineticTheoryGasesRenderer({
   const animationRef = useRef<number | null>(null);
   const lastTimeRef = useRef<number>(0);
   const collisionCountRef = useRef(0);
-  const navTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
+
+  // Helper to get phase index
+  const getPhaseIndex = useCallback((p: Phase) => phaseOrder.indexOf(p), []);
+
+  // Helper to check if simulation should run
+  const shouldRunSimulation = useCallback((p: Phase) => {
+    return ['predict', 'play', 'review', 'twist_predict', 'twist_play'].includes(p);
+  }, []);
 
   // Initialize audio context
   useEffect(() => {
@@ -172,8 +185,8 @@ export default function KineticTheoryGasesRenderer({
 
   // Sync with external phase
   useEffect(() => {
-    if (externalPhase !== undefined) {
-      setPhase(externalPhase);
+    if (externalPhase !== undefined && phaseOrder.includes(externalPhase as Phase)) {
+      setPhase(externalPhase as Phase);
     }
   }, [externalPhase]);
 
@@ -279,7 +292,7 @@ export default function KineticTheoryGasesRenderer({
 
   // Animation loop
   useEffect(() => {
-    if (!simulationRunning || phase < 1 || phase > 5) return;
+    if (!simulationRunning || !shouldRunSimulation(phase)) return;
 
     const animate = (time: number) => {
       const deltaTime = lastTimeRef.current ? (time - lastTimeRef.current) / 1000 : 0.016;
@@ -300,14 +313,14 @@ export default function KineticTheoryGasesRenderer({
         cancelAnimationFrame(animationRef.current);
       }
     };
-  }, [simulationRunning, phase, initializeMolecules, updateMolecules]);
+  }, [simulationRunning, phase, initializeMolecules, updateMolecules, shouldRunSimulation]);
 
   // Reinitialize on parameter changes
   useEffect(() => {
-    if (phase >= 1 && phase <= 5) {
+    if (shouldRunSimulation(phase)) {
       initializeMolecules();
     }
-  }, [temperature, volume, particleCount, phase, initializeMolecules]);
+  }, [temperature, volume, particleCount, phase, initializeMolecules, shouldRunSimulation]);
 
   // Event logging
   const logEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
@@ -315,18 +328,11 @@ export default function KineticTheoryGasesRenderer({
     onEvent?.(event);
   }, [onEvent]);
 
-  // Navigation with debouncing
-  const handleNext = useCallback(() => {
-    if (navTimeoutRef.current) return;
-
-    navTimeoutRef.current = setTimeout(() => {
-      navTimeoutRef.current = null;
-    }, 400);
-
+  // Go to specific phase
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
-    const nextPhase = phase + 1;
-    setPhase(nextPhase);
-    logEvent('phase_change', { from: phase, to: nextPhase });
+    setPhase(newPhase);
+    logEvent('phase_change', { from: phase, to: newPhase });
     onPhaseComplete?.(phase);
     setShowExplanation(false);
     setSelectedAnswer(null);
@@ -334,18 +340,20 @@ export default function KineticTheoryGasesRenderer({
     setPredictionCorrect(null);
   }, [phase, playSound, logEvent, onPhaseComplete]);
 
+  // Navigation
+  const handleNext = useCallback(() => {
+    const currentIndex = getPhaseIndex(phase);
+    if (currentIndex < phaseOrder.length - 1) {
+      goToPhase(phaseOrder[currentIndex + 1]);
+    }
+  }, [phase, getPhaseIndex, goToPhase]);
+
   const handleBack = useCallback(() => {
-    if (navTimeoutRef.current || phase <= 0) return;
-
-    navTimeoutRef.current = setTimeout(() => {
-      navTimeoutRef.current = null;
-    }, 400);
-
-    playSound('transition');
-    setPhase(phase - 1);
-    setShowExplanation(false);
-    setSelectedAnswer(null);
-  }, [phase, playSound]);
+    const currentIndex = getPhaseIndex(phase);
+    if (currentIndex > 0) {
+      goToPhase(phaseOrder[currentIndex - 1]);
+    }
+  }, [phase, getPhaseIndex, goToPhase]);
 
   // Handle prediction
   const makePrediction = useCallback((prediction: string) => {
@@ -622,7 +630,7 @@ export default function KineticTheoryGasesRenderer({
   // Render phase content
   const renderPhase = () => {
     switch(phase) {
-      case 0: // Hook/Introduction
+      case 'hook': // Hook/Introduction
         return (
           <div className="flex flex-col items-center justify-center min-h-[80vh] py-8">
             {/* Premium badge */}
@@ -694,7 +702,8 @@ export default function KineticTheoryGasesRenderer({
 
             {/* CTA Button */}
             <button
-              onMouseDown={handleNext}
+              onClick={handleNext}
+              style={{ zIndex: 10 }}
               className="group px-8 py-4 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 flex items-center gap-2"
             >
               Start Exploration
@@ -710,7 +719,7 @@ export default function KineticTheoryGasesRenderer({
           </div>
         );
 
-      case 1: // Prediction
+      case 'predict': // Prediction
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-blue-400">Make Your Prediction</h2>
@@ -759,8 +768,9 @@ export default function KineticTheoryGasesRenderer({
               ].map(option => (
                 <button
                   key={option.id}
-                  onMouseDown={() => makePrediction(option.id)}
+                  onClick={() => makePrediction(option.id)}
                   disabled={userPrediction !== null}
+                  style={{ zIndex: 10 }}
                   className={`p-4 rounded-lg text-left transition-all ${
                     userPrediction === option.id
                       ? 'bg-blue-500/30 border-2 border-blue-500'
@@ -784,7 +794,7 @@ export default function KineticTheoryGasesRenderer({
           </div>
         );
 
-      case 2: // Observation/Experiment
+      case 'play': // Observation/Experiment
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-green-400">Observe: Molecular Motion</h2>
@@ -889,7 +899,8 @@ export default function KineticTheoryGasesRenderer({
             </div>
 
             <button
-              onMouseDown={() => setShowDistribution(!showDistribution)}
+              onClick={() => setShowDistribution(!showDistribution)}
+              style={{ zIndex: 10 }}
               className="w-full p-3 bg-purple-500/20 border border-purple-500/30 rounded-lg text-purple-300 hover:bg-purple-500/30"
             >
               {showDistribution ? 'Hide' : 'Show'} Maxwell-Boltzmann Distribution
@@ -952,7 +963,7 @@ export default function KineticTheoryGasesRenderer({
           </div>
         );
 
-      case 3: // Explanation
+      case 'review': // Explanation
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-yellow-400">The Physics Revealed</h2>
@@ -1036,7 +1047,7 @@ export default function KineticTheoryGasesRenderer({
           </div>
         );
 
-      case 4: // Interactive Exploration
+      case 'twist_predict': // Interactive Exploration
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-cyan-400">Explore: Gas Properties</h2>
@@ -1159,7 +1170,7 @@ export default function KineticTheoryGasesRenderer({
           </div>
         );
 
-      case 5: // Advanced Exploration
+      case 'twist_play': // Advanced Exploration
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-purple-400">Advanced: Molecular Distributions</h2>
@@ -1269,9 +1280,7 @@ export default function KineticTheoryGasesRenderer({
           </div>
         );
 
-      case 6: // Quiz
-      case 7:
-      case 8:
+      case 'twist_review': // Quiz phases combined
         const question = testQuestions[currentQuestion];
 
         return (
@@ -1295,8 +1304,9 @@ export default function KineticTheoryGasesRenderer({
                 {question.options.map((option, index) => (
                   <button
                     key={index}
-                    onMouseDown={() => handleAnswer(index)}
+                    onClick={() => handleAnswer(index)}
                     disabled={selectedAnswer !== null}
+                    style={{ zIndex: 10 }}
                     className={`w-full p-4 rounded-lg text-left transition-all ${
                       selectedAnswer === null
                         ? 'bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600'
@@ -1324,7 +1334,8 @@ export default function KineticTheoryGasesRenderer({
 
             {showExplanation && (
               <button
-                onMouseDown={nextQuestion}
+                onClick={nextQuestion}
+                style={{ zIndex: 10 }}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
               >
                 {currentQuestion < testQuestions.length - 1 ? 'Next Question' : 'Continue to Applications'}
@@ -1333,109 +1344,190 @@ export default function KineticTheoryGasesRenderer({
           </div>
         );
 
-      case 9: // Applications
+      case 'transfer': // Applications
+        const currentApp = applications[currentAppIndex];
+
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-purple-400">Real-World Applications</h2>
 
-            <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
-              {applications.map((app, index) => (
-                <button
-                  key={index}
-                  onMouseDown={() => {
-                    setSelectedApp(selectedApp === index ? null : index);
-                    logEvent('application_viewed', { app: app.title });
-                    playSound('click');
-                  }}
-                  className={`p-4 rounded-xl text-center transition-all ${
-                    selectedApp === index
-                      ? 'bg-gray-700 ring-2 ring-purple-500'
-                      : 'bg-gray-800/50 hover:bg-gray-700/50'
-                  }`}
-                >
-                  <div className="text-3xl mb-2">{app.icon}</div>
-                  <p className="text-sm font-medium">{app.title}</p>
-                  <p className="text-xs text-gray-400 mt-1">{app.short}</p>
-                </button>
-              ))}
+            <div className="flex justify-between items-center mb-4">
+              <span className="text-sm text-gray-400">
+                Application {currentAppIndex + 1} of {applications.length}
+              </span>
+              <div className="flex gap-2">
+                {applications.map((_, idx) => (
+                  <div
+                    key={idx}
+                    className={`w-2 h-2 rounded-full ${idx === currentAppIndex ? 'bg-purple-500' : 'bg-gray-600'}`}
+                  />
+                ))}
+              </div>
             </div>
 
-            {selectedApp !== null && (
-              <div
-                className="rounded-xl p-6"
-                style={{
-                  backgroundColor: `${applications[selectedApp].color}15`,
-                  borderColor: `${applications[selectedApp].color}40`,
-                  borderWidth: '1px'
-                }}
-              >
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="text-4xl">{applications[selectedApp].icon}</div>
-                  <div>
-                    <h3 className="text-xl font-bold" style={{ color: applications[selectedApp].color }}>
-                      {applications[selectedApp].title}
-                    </h3>
-                    <p className="text-sm text-gray-400 italic">{applications[selectedApp].tagline}</p>
-                  </div>
-                </div>
-
-                <p className="text-gray-300 mb-4">{applications[selectedApp].description}</p>
-
-                <div className="bg-gray-900/50 rounded-lg p-4 mb-4">
-                  <h4 className="text-sm font-medium text-orange-400 mb-2">Physics Connection:</h4>
-                  <p className="text-sm text-gray-300">{applications[selectedApp].connection}</p>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-blue-400 mb-2">How It Works:</h4>
-                    <ul className="text-sm text-gray-300 space-y-1">
-                      {applications[selectedApp].howItWorks.map((item, i) => (
-                        <li key={i}>• {item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-green-400 mb-2">Key Stats:</h4>
-                    <ul className="text-sm text-gray-300 space-y-1">
-                      {applications[selectedApp].stats.map((stat, i) => (
-                        <li key={i}>• {stat}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-purple-400 mb-2">Examples:</h4>
-                    <ul className="text-sm text-gray-300 space-y-1">
-                      {applications[selectedApp].examples.map((ex, i) => (
-                        <li key={i}>• {ex}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-cyan-400 mb-2">Industry Leaders:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {applications[selectedApp].companies.map((company, i) => (
-                        <span key={i} className="px-2 py-1 bg-gray-800 rounded text-xs text-gray-300">
-                          {company}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-900/50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-yellow-400 mb-2">Future Impact:</h4>
-                  <p className="text-sm text-gray-300">{applications[selectedApp].futureImpact}</p>
+            <div
+              className="rounded-xl p-6"
+              style={{
+                backgroundColor: `${currentApp.color}15`,
+                borderColor: `${currentApp.color}40`,
+                borderWidth: '1px'
+              }}
+            >
+              <div className="flex items-start gap-4 mb-4">
+                <div className="text-4xl">{currentApp.icon}</div>
+                <div>
+                  <h3 className="text-xl font-bold" style={{ color: currentApp.color }}>
+                    {currentApp.title}
+                  </h3>
+                  <p className="text-sm text-gray-400 italic">{currentApp.tagline}</p>
                 </div>
               </div>
+
+              <p className="text-gray-300 mb-4">{currentApp.description}</p>
+
+              <div className="bg-gray-900/50 rounded-lg p-4 mb-4">
+                <h4 className="text-sm font-medium text-orange-400 mb-2">Physics Connection:</h4>
+                <p className="text-sm text-gray-300">{currentApp.connection}</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <h4 className="text-sm font-medium text-blue-400 mb-2">How It Works:</h4>
+                  <ul className="text-sm text-gray-300 space-y-1">
+                    {currentApp.howItWorks.map((item, i) => (
+                      <li key={i}>• {item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-green-400 mb-2">Key Stats:</h4>
+                  <ul className="text-sm text-gray-300 space-y-1">
+                    {currentApp.stats.map((stat, i) => (
+                      <li key={i}>• {stat}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <h4 className="text-sm font-medium text-purple-400 mb-2">Examples:</h4>
+                  <ul className="text-sm text-gray-300 space-y-1">
+                    {currentApp.examples.map((ex, i) => (
+                      <li key={i}>• {ex}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-cyan-400 mb-2">Industry Leaders:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {currentApp.companies.map((company, i) => (
+                      <span key={i} className="px-2 py-1 bg-gray-800 rounded text-xs text-gray-300">
+                        {company}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-900/50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-yellow-400 mb-2">Future Impact:</h4>
+                <p className="text-sm text-gray-300">{currentApp.futureImpact}</p>
+              </div>
+            </div>
+
+            {currentAppIndex < applications.length - 1 ? (
+              <button
+                onClick={() => {
+                  setCurrentAppIndex(currentAppIndex + 1);
+                  logEvent('application_viewed', { app: applications[currentAppIndex + 1].title });
+                  playSound('click');
+                }}
+                style={{ zIndex: 10 }}
+                className="w-full py-3 bg-purple-600 hover:bg-purple-700 rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+              >
+                Next Application
+                <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
+                </svg>
+              </button>
+            ) : (
+              <button
+                onClick={handleNext}
+                style={{ zIndex: 10 }}
+                className="w-full py-3 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 rounded-lg font-medium transition-colors"
+              >
+                Continue to Test
+              </button>
             )}
           </div>
         );
 
-      case 10: // Summary
+      case 'test': // Test phase - additional quiz questions
+        const testQuestion = testQuestions[currentQuestion];
+
+        return (
+          <div className="space-y-6">
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-bold text-green-400">Final Test</h2>
+              <div className="text-sm text-gray-400">
+                Question {currentQuestion + 1} of {testQuestions.length} | Score: {score}
+              </div>
+            </div>
+
+            <div className="bg-gray-800/50 rounded-xl p-6">
+              <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4 mb-4">
+                <p className="text-blue-300 text-sm font-medium mb-1">Scenario:</p>
+                <p className="text-gray-200">{testQuestion.scenario}</p>
+              </div>
+
+              <h3 className="text-lg font-medium text-white mb-4">{testQuestion.question}</h3>
+
+              <div className="space-y-3">
+                {testQuestion.options.map((option, index) => (
+                  <button
+                    key={index}
+                    onClick={() => handleAnswer(index)}
+                    disabled={selectedAnswer !== null}
+                    style={{ zIndex: 10 }}
+                    className={`w-full p-4 rounded-lg text-left transition-all ${
+                      selectedAnswer === null
+                        ? 'bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600'
+                        : selectedAnswer === index
+                        ? option.correct
+                          ? 'bg-green-500/30 border-2 border-green-500'
+                          : 'bg-red-500/30 border-2 border-red-500'
+                        : option.correct && showExplanation
+                        ? 'bg-green-500/20 border border-green-500/50'
+                        : 'bg-gray-800/50 border border-gray-700 opacity-50'
+                    }`}
+                  >
+                    <span className="font-medium">{String.fromCharCode(65 + index)}.</span> {option.text}
+                  </button>
+                ))}
+              </div>
+
+              {showExplanation && (
+                <div className="mt-6 p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
+                  <h4 className="text-yellow-400 font-medium mb-2">Explanation:</h4>
+                  <p className="text-gray-300">{testQuestion.explanation}</p>
+                </div>
+              )}
+            </div>
+
+            {showExplanation && (
+              <button
+                onClick={nextQuestion}
+                style={{ zIndex: 10 }}
+                className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
+              >
+                {currentQuestion < testQuestions.length - 1 ? 'Next Question' : 'View Results'}
+              </button>
+            )}
+          </div>
+        );
+
+      case 'mastery': // Summary
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-yellow-400">Mastery Complete!</h2>
@@ -1496,6 +1588,8 @@ export default function KineticTheoryGasesRenderer({
     }
   };
 
+  const currentPhaseIndex = getPhaseIndex(phase);
+
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white p-4 md:p-8 relative overflow-hidden">
       {/* Ambient background gradients */}
@@ -1510,24 +1604,24 @@ export default function KineticTheoryGasesRenderer({
         <div className="mb-6 backdrop-blur-xl bg-white/5 rounded-2xl p-4 border border-white/10">
           <div className="flex justify-between text-sm text-gray-400 mb-3">
             <span className="font-medium">Kinetic Theory of Gases</span>
-            <span>Phase {phase + 1} of 11</span>
+            <span>Phase {currentPhaseIndex + 1} of {phaseOrder.length}</span>
           </div>
           <div className="h-2 bg-gray-800 rounded-full overflow-hidden">
             <div
               className="h-full bg-gradient-to-r from-orange-500 to-amber-500 transition-all duration-500"
-              style={{ width: `${((phase + 1) / 11) * 100}%` }}
+              style={{ width: `${((currentPhaseIndex + 1) / phaseOrder.length) * 100}%` }}
             />
           </div>
           {/* Phase dots */}
           <div className="flex justify-between mt-3 px-1">
-            {[...Array(11)].map((_, i) => (
+            {phaseOrder.map((_, i) => (
               <div
                 key={i}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  i <= phase
+                  i <= currentPhaseIndex
                     ? 'bg-orange-500'
                     : 'bg-gray-700'
-                } ${i === phase ? 'w-6' : 'w-2'}`}
+                } ${i === currentPhaseIndex ? 'w-6' : 'w-2'}`}
               />
             ))}
           </div>
@@ -1541,10 +1635,11 @@ export default function KineticTheoryGasesRenderer({
         {/* Navigation */}
         <div className="flex justify-between mt-6">
           <button
-            onMouseDown={handleBack}
-            disabled={phase === 0}
+            onClick={handleBack}
+            disabled={phase === 'hook'}
+            style={{ zIndex: 10 }}
             className={`px-6 py-2 rounded-lg font-medium transition-all ${
-              phase === 0
+              phase === 'hook'
                 ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
                 : 'bg-gray-800/50 hover:bg-gray-700/50 text-white border border-white/10'
             }`}
@@ -1552,17 +1647,18 @@ export default function KineticTheoryGasesRenderer({
             Back
           </button>
 
-          {phase < 10 && !((phase >= 6 && phase <= 8) && !showExplanation) && phase !== 0 && (
+          {phase !== 'mastery' && phase !== 'hook' && !(['twist_review', 'test'].includes(phase) && !showExplanation) && phase !== 'transfer' && (
             <button
-              onMouseDown={handleNext}
-              disabled={phase === 1 && !userPrediction}
+              onClick={handleNext}
+              disabled={phase === 'predict' && !userPrediction}
+              style={{ zIndex: 10 }}
               className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                (phase === 1 && !userPrediction)
+                (phase === 'predict' && !userPrediction)
                   ? 'bg-gray-800/50 text-gray-600 cursor-not-allowed'
                   : 'bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white shadow-lg shadow-orange-500/25'
               }`}
             >
-              {phase === 1 ? 'Run Experiment' : 'Continue'}
+              {phase === 'predict' ? 'Run Experiment' : 'Continue'}
             </button>
           )}
         </div>

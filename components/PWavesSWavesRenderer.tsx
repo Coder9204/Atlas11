@@ -7,6 +7,23 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 // Gold Standard: Sequential transfer navigation with completedApps tracking
 // ============================================================================
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+   hook: 'Hook',
+   predict: 'Predict',
+   play: 'Lab',
+   review: 'Review',
+   twist_predict: 'Twist Predict',
+   twist_play: 'Twist Lab',
+   twist_review: 'Twist Review',
+   transfer: 'Transfer',
+   test: 'Test',
+   mastery: 'Mastery'
+};
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -23,24 +40,10 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
-};
-
 interface PWavesSWavesRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // Premium Design System
@@ -82,14 +85,11 @@ const design = {
    font: { sans: '-apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif' }
 };
 
-const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-   const navigationLockRef = useRef(false);
-   const lastClickRef = useRef(0);
-
+const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
    // Core state
-   const [phase, setPhase] = useState<number>(() => {
-      if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
-      return 0;
+   const [phase, setPhase] = useState<Phase>(() => {
+      if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
+      return 'hook';
    });
    const [prediction, setPrediction] = useState<string | null>(null);
    const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -126,10 +126,10 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
 
    // Sync with external phase
    useEffect(() => {
-      if (currentPhase !== undefined && PHASES.includes(currentPhase) && currentPhase !== phase) {
-         setPhase(currentPhase);
+      if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+         setPhase(gamePhase as Phase);
       }
-   }, [currentPhase, phase]);
+   }, [gamePhase, phase]);
 
    // Animation loop
    useEffect(() => {
@@ -184,29 +184,23 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
       onGameEvent?.({ type, data });
    }, [onGameEvent]);
 
-   // Debounced navigation with 200ms debounce
-   const goToPhase = useCallback((newPhase: number) => {
-      const now = Date.now();
-      if (now - lastClickRef.current < 200) return;
-      lastClickRef.current = now;
-      if (navigationLockRef.current) return;
-      if (!PHASES.includes(newPhase)) return;
-      navigationLockRef.current = true;
+   // Simplified navigation
+   const goToPhase = useCallback((newPhase: Phase) => {
+      if (!phaseOrder.includes(newPhase)) return;
       setPhase(newPhase);
       playSound('transition');
       emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
       onPhaseComplete?.(newPhase);
-      setTimeout(() => { navigationLockRef.current = false; }, 400);
    }, [phase, playSound, emitEvent, onPhaseComplete]);
 
    const goNext = useCallback(() => {
-      const currentIndex = PHASES.indexOf(phase);
-      if (currentIndex < PHASES.length - 1) goToPhase(PHASES[currentIndex + 1]);
+      const currentIndex = phaseOrder.indexOf(phase);
+      if (currentIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentIndex + 1]);
    }, [phase, goToPhase]);
 
    const goBack = useCallback(() => {
-      const currentIndex = PHASES.indexOf(phase);
-      if (currentIndex > 0) goToPhase(PHASES[currentIndex - 1]);
+      const currentIndex = phaseOrder.indexOf(phase);
+      if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]);
    }, [phase, goToPhase]);
 
    // Send wave
@@ -401,6 +395,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
          opacity: disabled ? 0.5 : 1,
          transition: 'all 0.2s ease',
          width: fullWidth ? '100%' : 'auto',
+         zIndex: 10,
       };
 
       const variants = {
@@ -422,12 +417,10 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
 
       return (
          <button
-            onMouseDown={(e) => {
+            onClick={(e) => {
                e.preventDefault();
-               if (!disabled && !navigationLockRef.current) {
-                  navigationLockRef.current = true;
+               if (!disabled) {
                   onClick();
-                  setTimeout(() => { navigationLockRef.current = false; }, 400);
                }
             }}
             style={{ ...baseStyle, ...variants[variant] }}
@@ -438,7 +431,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    };
 
    const renderProgressBar = () => {
-      const currentIdx = PHASES.indexOf(phase);
+      const currentIdx = phaseOrder.indexOf(phase);
       return (
          <div style={{
             display: 'flex',
@@ -449,7 +442,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
             borderBottom: `1px solid ${design.colors.border}`,
             background: design.colors.bgSecondary,
          }}>
-            {PHASES.map((_, i) => (
+            {phaseOrder.map((_, i) => (
                <div
                   key={i}
                   style={{
@@ -468,7 +461,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
       );
    };
 
-   const renderBottomNav = (backPhase: number | null, nextPhase: number | null, nextText: string = 'Continue →', nextDisabled: boolean = false) => (
+   const renderBottomNav = (backPhase: Phase | null, nextPhase: Phase | null, nextText: string = 'Continue →', nextDisabled: boolean = false) => (
       <div style={{
          padding: '20px 24px',
          borderTop: `1px solid ${design.colors.border}`,
@@ -641,7 +634,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    // ============ PHASE RENDERS ============
 
    // HOOK PHASE
-   if (phase === 0) {
+   if (phase === 'hook') {
       return (
          <div style={{
             display: 'flex',
@@ -767,7 +760,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                }}>
                   <span style={{ fontSize: '14px', color: design.colors.textSecondary }}>AI Coach</span>
                   <button
-                     onMouseDown={() => setGuidedMode(!guidedMode)}
+                     onClick={() => setGuidedMode(!guidedMode)}
                      style={{
                         width: '48px',
                         height: '26px',
@@ -777,6 +770,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                         background: guidedMode ? design.colors.success : design.colors.bgElevated,
                         position: 'relative',
                         transition: 'background 0.2s',
+                        zIndex: 10,
                      }}
                   >
                      <div style={{
@@ -800,7 +794,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   </span>
                </div>
 
-               {renderButton('Begin Exploration →', () => goToPhase(1))}
+               {renderButton('Begin Exploration →', () => goToPhase('predict'))}
 
                <p style={{
                   fontSize: '13px',
@@ -815,7 +809,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    }
 
    // PREDICT PHASE
-   if (phase === 1) {
+   if (phase === 'predict') {
       const options = [
          { id: 'p_only', label: 'Only P-waves (compression)', desc: 'Push-pull compression works everywhere', icon: '← →' },
          { id: 's_only', label: 'Only S-waves (shear)', desc: 'Side-to-side shearing works everywhere', icon: '↑ ↓' },
@@ -866,7 +860,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   {options.map(opt => (
                      <button
                         key={opt.id}
-                        onMouseDown={() => {
+                        onClick={() => {
                            setPrediction(opt.id);
                            emitEvent('prediction_made', { prediction: opt.id });
                         }}
@@ -881,6 +875,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            textAlign: 'left',
                            cursor: 'pointer',
                            transition: 'all 0.2s',
+                           zIndex: 10,
                         }}
                      >
                         <div style={{
@@ -912,13 +907,13 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   ))}
                </div>
             </div>
-            {renderBottomNav(0, 2, 'Test Your Prediction →', !prediction)}
+            {renderBottomNav('hook', 'play', 'Test Your Prediction →', !prediction)}
          </div>
       );
    }
 
    // PLAY PHASE
-   if (phase === 2) {
+   if (phase === 'play') {
       return (
          <div style={{
             display: 'flex',
@@ -959,7 +954,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   </p>
                   <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
                      <button
-                        onMouseDown={() => setWaveType('p')}
+                        onClick={() => setWaveType('p')}
                         style={{
                            flex: 1,
                            padding: '16px',
@@ -968,6 +963,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            background: waveType === 'p' ? `${design.colors.pWave}20` : design.colors.bgTertiary,
                            cursor: 'pointer',
                            transition: 'all 0.2s',
+                           zIndex: 10,
                         }}
                      >
                         <div style={{ fontSize: '24px', marginBottom: '4px' }}>← →</div>
@@ -981,7 +977,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                         <div style={{ fontSize: '11px', color: design.colors.textTertiary }}>Compression</div>
                      </button>
                      <button
-                        onMouseDown={() => setWaveType('s')}
+                        onClick={() => setWaveType('s')}
                         style={{
                            flex: 1,
                            padding: '16px',
@@ -990,6 +986,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            background: waveType === 's' ? `${design.colors.sWave}20` : design.colors.bgTertiary,
                            cursor: 'pointer',
                            transition: 'all 0.2s',
+                           zIndex: 10,
                         }}
                      >
                         <div style={{ fontSize: '24px', marginBottom: '4px' }}>↑ ↓</div>
@@ -1027,13 +1024,13 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   )}
                </div>
             </div>
-            {renderBottomNav(1, 3, 'See What You Learned →', !hasExperimented)}
+            {renderBottomNav('predict', 'review', 'See What You Learned →', !hasExperimented)}
          </div>
       );
    }
 
    // REVIEW PHASE
-   if (phase === 3) {
+   if (phase === 'review') {
       const concepts = [
          {
             icon: '← →',
@@ -1163,13 +1160,13 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   </p>
                </div>
             </div>
-            {renderBottomNav(2, 4, 'The Liquid Puzzle →')}
+            {renderBottomNav('play', 'twist_predict', 'The Liquid Puzzle →')}
          </div>
       );
    }
 
    // TWIST_PREDICT PHASE
-   if (phase === 4) {
+   if (phase === 'twist_predict') {
       const options = [
          { id: 'travels', label: 'Travels normally', desc: 'Waves work the same way in all materials', icon: '✓' },
          { id: 'slows', label: 'Slows down but continues', desc: 'Liquids just resist motion more than solids', icon: '🐌' },
@@ -1227,7 +1224,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   {options.map(opt => (
                      <button
                         key={opt.id}
-                        onMouseDown={() => {
+                        onClick={() => {
                            setTwistPrediction(opt.id);
                            emitEvent('twist_prediction_made', { prediction: opt.id });
                         }}
@@ -1242,6 +1239,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            textAlign: 'left',
                            cursor: 'pointer',
                            transition: 'all 0.2s',
+                           zIndex: 10,
                         }}
                      >
                         <div style={{
@@ -1272,13 +1270,13 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   ))}
                </div>
             </div>
-            {renderBottomNav(3, 5, 'Test in Liquid →', !twistPrediction)}
+            {renderBottomNav('review', 'twist_play', 'Test in Liquid →', !twistPrediction)}
          </div>
       );
    }
 
    // TWIST_PLAY PHASE
-   if (phase === 5) {
+   if (phase === 'twist_play') {
       return (
          <div style={{
             display: 'flex',
@@ -1320,7 +1318,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   </p>
                   <div style={{ display: 'flex', gap: '12px', marginBottom: '12px' }}>
                      <button
-                        onMouseDown={() => setMedium('solid')}
+                        onClick={() => setMedium('solid')}
                         style={{
                            flex: 1,
                            padding: '14px',
@@ -1331,12 +1329,13 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            fontWeight: 600,
                            fontSize: '14px',
                            cursor: 'pointer',
+                           zIndex: 10,
                         }}
                      >
                         🪨 Solid Rock
                      </button>
                      <button
-                        onMouseDown={() => setMedium('liquid')}
+                        onClick={() => setMedium('liquid')}
                         style={{
                            flex: 1,
                            padding: '14px',
@@ -1347,6 +1346,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            fontWeight: 600,
                            fontSize: '14px',
                            cursor: 'pointer',
+                           zIndex: 10,
                         }}
                      >
                         💧 Liquid
@@ -1366,7 +1366,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   </p>
                   <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
                      <button
-                        onMouseDown={() => setWaveType('p')}
+                        onClick={() => setWaveType('p')}
                         style={{
                            flex: 1,
                            padding: '12px',
@@ -1377,12 +1377,13 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            fontWeight: 600,
                            fontSize: '14px',
                            cursor: 'pointer',
+                           zIndex: 10,
                         }}
                      >
                         ← → P-Wave
                      </button>
                      <button
-                        onMouseDown={() => setWaveType('s')}
+                        onClick={() => setWaveType('s')}
                         style={{
                            flex: 1,
                            padding: '12px',
@@ -1393,6 +1394,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            fontWeight: 600,
                            fontSize: '14px',
                            cursor: 'pointer',
+                           zIndex: 10,
                         }}
                      >
                         ↑ ↓ S-Wave
@@ -1437,13 +1439,13 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   )}
                </div>
             </div>
-            {renderBottomNav(4, 6, 'Understand Why →', !hasSentSWaveInLiquid)}
+            {renderBottomNav('twist_predict', 'twist_review', 'Understand Why →', !hasSentSWaveInLiquid)}
          </div>
       );
    }
 
    // TWIST_REVIEW PHASE
-   if (phase === 6) {
+   if (phase === 'twist_review') {
       return (
          <div style={{
             display: 'flex',
@@ -1582,13 +1584,13 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   </div>
                </div>
             </div>
-            {renderBottomNav(5, 7, 'Real-World Applications →')}
+            {renderBottomNav('twist_play', 'transfer', 'Real-World Applications →')}
          </div>
       );
    }
 
    // TRANSFER PHASE - GOLD STANDARD with completedApps tracking
-   if (phase === 7) {
+   if (phase === 'transfer') {
       const app = applications[activeApp];
       const allAppsCompleted = completedApps.size >= applications.length;
 
@@ -1614,7 +1616,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   {applications.map((a, i) => (
                      <button
                         key={i}
-                        onMouseDown={() => setActiveApp(i)}
+                        onClick={() => setActiveApp(i)}
                         style={{
                            display: 'flex',
                            alignItems: 'center',
@@ -1629,6 +1631,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            cursor: 'pointer',
                            whiteSpace: 'nowrap',
                            transition: 'all 0.2s',
+                           zIndex: 10,
                         }}
                      >
                         <span>{a.icon}</span>
@@ -1752,17 +1755,47 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                      </div>
                   </div>
 
-                  {/* Mark as read button - GOLD STANDARD sequential navigation */}
-                  {!completedApps.has(activeApp) && (
+                  {/* Next Application button - advances through 4 real world applications */}
+                  {activeApp < applications.length - 1 && (
                      <button
-                        onMouseDown={() => {
+                        onClick={() => {
                            const newCompleted = new Set(completedApps);
                            newCompleted.add(activeApp);
                            setCompletedApps(newCompleted);
-                           // Auto-advance to next unread app
-                           if (activeApp < applications.length - 1) {
-                              setActiveApp(activeApp + 1);
-                           }
+                           setActiveApp(activeApp + 1);
+                           emitEvent('app_explored', { appIndex: activeApp, appTitle: app.title });
+                        }}
+                        style={{
+                           display: 'flex',
+                           alignItems: 'center',
+                           justifyContent: 'center',
+                           gap: '8px',
+                           width: '100%',
+                           marginTop: '20px',
+                           padding: '14px',
+                           borderRadius: design.radius.md,
+                           border: 'none',
+                           background: `linear-gradient(135deg, ${design.colors.primary} 0%, ${design.colors.primaryHover} 100%)`,
+                           color: 'white',
+                           fontSize: '14px',
+                           fontWeight: 600,
+                           cursor: 'pointer',
+                           boxShadow: design.shadow.md,
+                           zIndex: 10,
+                        }}
+                     >
+                        Next Application →
+                     </button>
+                  )}
+
+                  {/* Mark last app as complete */}
+                  {activeApp === applications.length - 1 && !completedApps.has(activeApp) && (
+                     <button
+                        onClick={() => {
+                           const newCompleted = new Set(completedApps);
+                           newCompleted.add(activeApp);
+                           setCompletedApps(newCompleted);
+                           emitEvent('app_explored', { appIndex: activeApp, appTitle: app.title });
                         }}
                         style={{
                            display: 'flex',
@@ -1779,9 +1812,10 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                            fontSize: '14px',
                            fontWeight: 600,
                            cursor: 'pointer',
+                           zIndex: 10,
                         }}
                      >
-                        ✓ Mark "{app.title}" as Read
+                        ✓ Complete All Applications
                      </button>
                   )}
 
@@ -1805,13 +1839,13 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                   </div>
                </div>
             </div>
-            {renderBottomNav(6, 8, 'Take the Quiz →', !allAppsCompleted)}
+            {renderBottomNav('twist_review', 'test', 'Take the Quiz →', !allAppsCompleted)}
          </div>
       );
    }
 
    // TEST PHASE
-   if (phase === 8) {
+   if (phase === 'test') {
       const q = testQuestions[testIndex];
       const isLast = testIndex === testQuestions.length - 1;
 
@@ -1890,7 +1924,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                      return (
                         <button
                            key={i}
-                           onMouseDown={() => {
+                           onClick={() => {
                               if (selectedAnswer !== null) return;
                               setSelectedAnswer(i);
                               setShowExplanation(true);
@@ -1908,6 +1942,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                               textAlign: 'left',
                               cursor: selectedAnswer === null ? 'pointer' : 'default',
                               transition: 'all 0.2s',
+                              zIndex: 10,
                            }}
                         >
                            <div style={{
@@ -1972,7 +2007,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                      () => {
                         if (isLast) {
                            emitEvent('test_completed', { score: testScore, maxScore: testQuestions.length });
-                           goToPhase(9);
+                           goToPhase('mastery');
                         } else {
                            setTestIndex(i => i + 1);
                            setSelectedAnswer(null);
@@ -1990,7 +2025,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
    }
 
    // MASTERY PHASE
-   if (phase === 9) {
+   if (phase === 'mastery') {
       const percentage = Math.round((testScore / testQuestions.length) * 100);
       const isPassing = percentage >= 70;
 
@@ -2109,7 +2144,7 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
                      setTestScore(0);
                      setSelectedAnswer(null);
                      setShowExplanation(false);
-                     goToPhase(8);
+                     goToPhase('test');
                   }, 'secondary')}
                   {renderButton(
                      isPassing ? 'Complete Lesson ✓' : 'Complete Anyway',

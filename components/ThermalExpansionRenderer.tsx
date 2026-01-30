@@ -10,6 +10,10 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // pushing each other apart - essential for engineering bridges, rails, etc.
 // ============================================================================
 
+// Phase type and order
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 // Comprehensive event types for analytics
 type GameEventType =
   | 'phase_change'
@@ -70,23 +74,24 @@ interface Material {
 
 interface ThermalExpansionRendererProps {
   onEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 export default function ThermalExpansionRenderer({
   onEvent,
-  currentPhase: externalPhase,
+  gamePhase: externalPhase,
   onPhaseComplete
 }: ThermalExpansionRendererProps) {
   // Core state
-  const [phase, setPhase] = useState(externalPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>(externalPhase as Phase ?? 'hook');
   const [showExplanation, setShowExplanation] = useState(false);
   const [selectedAnswer, setSelectedAnswer] = useState<number | null>(null);
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [score, setScore] = useState(0);
   const [selectedApp, setSelectedApp] = useState<number | null>(null);
   const [isMobile, setIsMobile] = useState(false);
+  const [transferAppIndex, setTransferAppIndex] = useState(0);
 
   // Simulation state
   const [temperature, setTemperature] = useState(20); // Celsius
@@ -98,7 +103,6 @@ export default function ThermalExpansionRenderer({
   const [animationPhase, setAnimationPhase] = useState(0);
 
   // Refs
-  const navTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const audioContextRef = useRef<AudioContext | null>(null);
   const animationRef = useRef<number | null>(null);
 
@@ -167,8 +171,8 @@ export default function ThermalExpansionRenderer({
 
   // Sync with external phase
   useEffect(() => {
-    if (externalPhase !== undefined) {
-      setPhase(externalPhase);
+    if (externalPhase !== undefined && phaseOrder.includes(externalPhase as Phase)) {
+      setPhase(externalPhase as Phase);
     }
   }, [externalPhase]);
 
@@ -212,36 +216,52 @@ export default function ThermalExpansionRenderer({
     onEvent?.(event);
   }, [onEvent]);
 
-  // Navigation with debouncing
+  // Helper to get next phase
+  const getNextPhase = useCallback((currentPhase: Phase): Phase | null => {
+    const currentIndex = phaseOrder.indexOf(currentPhase);
+    if (currentIndex < phaseOrder.length - 1) {
+      return phaseOrder[currentIndex + 1];
+    }
+    return null;
+  }, []);
+
+  // Helper to get previous phase
+  const getPreviousPhase = useCallback((currentPhase: Phase): Phase | null => {
+    const currentIndex = phaseOrder.indexOf(currentPhase);
+    if (currentIndex > 0) {
+      return phaseOrder[currentIndex - 1];
+    }
+    return null;
+  }, []);
+
+  // Simple goToPhase function
+  const goToPhase = useCallback((newPhase: Phase) => {
+    setPhase(newPhase);
+  }, []);
+
+  // Navigation
   const handleNext = useCallback(() => {
-    if (navTimeoutRef.current) return;
-
-    navTimeoutRef.current = setTimeout(() => {
-      navTimeoutRef.current = null;
-    }, 400);
-
     playSound('transition');
-    const nextPhase = phase + 1;
-    setPhase(nextPhase);
-    logEvent('phase_change', { from: phase, to: nextPhase });
-    onPhaseComplete?.(phase);
-    setShowExplanation(false);
-    setSelectedAnswer(null);
-    setUserPrediction(null);
-  }, [phase, playSound, logEvent, onPhaseComplete]);
+    const nextPhase = getNextPhase(phase);
+    if (nextPhase) {
+      logEvent('phase_change', { from: phase, to: nextPhase });
+      onPhaseComplete?.(phase);
+      setPhase(nextPhase);
+      setShowExplanation(false);
+      setSelectedAnswer(null);
+      setUserPrediction(null);
+    }
+  }, [phase, playSound, logEvent, onPhaseComplete, getNextPhase]);
 
   const handleBack = useCallback(() => {
-    if (navTimeoutRef.current || phase <= 0) return;
-
-    navTimeoutRef.current = setTimeout(() => {
-      navTimeoutRef.current = null;
-    }, 400);
-
-    playSound('click');
-    setPhase(phase - 1);
-    setShowExplanation(false);
-    setSelectedAnswer(null);
-  }, [phase, playSound]);
+    const prevPhase = getPreviousPhase(phase);
+    if (prevPhase) {
+      playSound('click');
+      setPhase(prevPhase);
+      setShowExplanation(false);
+      setSelectedAnswer(null);
+    }
+  }, [phase, playSound, getPreviousPhase]);
 
   // Handle prediction
   const makePrediction = useCallback((prediction: string) => {
@@ -522,7 +542,7 @@ export default function ThermalExpansionRenderer({
     const finalLength = initialLength + expansion;
 
     switch(phase) {
-      case 0: // Hook/Introduction
+      case 'hook': // Hook/Introduction
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-orange-400">The Hidden Movement</h2>
@@ -585,7 +605,7 @@ export default function ThermalExpansionRenderer({
           </div>
         );
 
-      case 1: // Prediction
+      case 'predict': // Prediction
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-blue-400">Make Your Prediction</h2>
@@ -634,8 +654,9 @@ export default function ThermalExpansionRenderer({
               ].map(option => (
                 <button
                   key={option.id}
-                  onMouseDown={() => makePrediction(option.id)}
+                  onClick={() => makePrediction(option.id)}
                   disabled={userPrediction !== null}
+                  style={{ zIndex: 10 }}
                   className={`p-4 rounded-lg text-left transition-all ${
                     userPrediction === option.id
                       ? 'bg-blue-500/30 border-2 border-blue-500'
@@ -667,7 +688,7 @@ export default function ThermalExpansionRenderer({
           </div>
         );
 
-      case 2: // Observation/Experiment
+      case 'play': // Observation/Experiment
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-green-400">Observe: Thermal Expansion</h2>
@@ -787,7 +808,8 @@ export default function ThermalExpansionRenderer({
             </div>
 
             <button
-              onMouseDown={() => setShowAtomicView(!showAtomicView)}
+              onClick={() => setShowAtomicView(!showAtomicView)}
+              style={{ zIndex: 10 }}
               className="w-full p-3 bg-purple-500/20 border border-purple-500/30 rounded-lg text-purple-300 hover:bg-purple-500/30"
             >
               {showAtomicView ? 'Hide' : 'Show'} Atomic View
@@ -856,7 +878,7 @@ export default function ThermalExpansionRenderer({
           </div>
         );
 
-      case 3: // Explanation
+      case 'review': // Explanation
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-yellow-400">The Physics Revealed</h2>
@@ -945,7 +967,7 @@ export default function ThermalExpansionRenderer({
           </div>
         );
 
-      case 4: // Interactive Exploration
+      case 'twist_predict': // Interactive Exploration
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-cyan-400">Explore: Expansion Joints</h2>
@@ -1069,7 +1091,7 @@ export default function ThermalExpansionRenderer({
           </div>
         );
 
-      case 5: // Advanced: Water Anomaly
+      case 'twist_play': // Advanced: Water Anomaly
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-purple-400">Advanced: Water's Anomaly</h2>
@@ -1158,9 +1180,8 @@ export default function ThermalExpansionRenderer({
           </div>
         );
 
-      case 6: // Quiz
-      case 7:
-      case 8:
+      case 'twist_review': // Quiz phase 1
+      case 'transfer': // Quiz phase 2
         const question = testQuestions[currentQuestion];
 
         return (
@@ -1184,8 +1205,9 @@ export default function ThermalExpansionRenderer({
                 {question.options.map((option, index) => (
                   <button
                     key={index}
-                    onMouseDown={() => handleAnswer(index)}
+                    onClick={() => handleAnswer(index)}
                     disabled={selectedAnswer !== null}
+                    style={{ zIndex: 10 }}
                     className={`w-full p-4 rounded-lg text-left transition-all ${
                       selectedAnswer === null
                         ? 'bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600'
@@ -1213,7 +1235,8 @@ export default function ThermalExpansionRenderer({
 
             {showExplanation && (
               <button
-                onMouseDown={nextQuestion}
+                onClick={nextQuestion}
+                style={{ zIndex: 10 }}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
               >
                 {currentQuestion < testQuestions.length - 1 ? 'Next Question' : 'Continue to Applications'}
@@ -1222,7 +1245,8 @@ export default function ThermalExpansionRenderer({
           </div>
         );
 
-      case 9: // Applications
+      case 'test': // Applications
+        const currentApp = applications[transferAppIndex];
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-purple-400">Real-World Applications</h2>
@@ -1231,13 +1255,15 @@ export default function ThermalExpansionRenderer({
               {applications.map((app, index) => (
                 <button
                   key={index}
-                  onMouseDown={() => {
-                    setSelectedApp(selectedApp === index ? null : index);
+                  onClick={() => {
+                    setTransferAppIndex(index);
+                    setSelectedApp(index);
                     logEvent('application_viewed', { app: app.title });
                     playSound('click');
                   }}
+                  style={{ zIndex: 10 }}
                   className={`p-4 rounded-xl text-center transition-all ${
-                    selectedApp === index
+                    transferAppIndex === index
                       ? 'bg-gray-700 ring-2 ring-purple-500'
                       : 'bg-gray-800/50 hover:bg-gray-700/50'
                   }`}
@@ -1249,82 +1275,93 @@ export default function ThermalExpansionRenderer({
               ))}
             </div>
 
-            {selectedApp !== null && (
-              <div
-                className="rounded-xl p-6"
-                style={{
-                  backgroundColor: `${applications[selectedApp].color}15`,
-                  borderColor: `${applications[selectedApp].color}40`,
-                  borderWidth: '1px'
-                }}
-              >
-                <div className="flex items-start gap-4 mb-4">
-                  <div className="text-4xl">{applications[selectedApp].icon}</div>
-                  <div>
-                    <h3 className="text-xl font-bold" style={{ color: applications[selectedApp].color }}>
-                      {applications[selectedApp].title}
-                    </h3>
-                    <p className="text-sm text-gray-400 italic">{applications[selectedApp].tagline}</p>
-                  </div>
-                </div>
-
-                <p className="text-gray-300 mb-4">{applications[selectedApp].description}</p>
-
-                <div className="bg-gray-900/50 rounded-lg p-4 mb-4">
-                  <h4 className="text-sm font-medium text-orange-400 mb-2">Physics Connection:</h4>
-                  <p className="text-sm text-gray-300">{applications[selectedApp].connection}</p>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-blue-400 mb-2">How It Works:</h4>
-                    <ul className="text-sm text-gray-300 space-y-1">
-                      {applications[selectedApp].howItWorks.map((item, i) => (
-                        <li key={i}>• {item}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-green-400 mb-2">Key Stats:</h4>
-                    <ul className="text-sm text-gray-300 space-y-1">
-                      {applications[selectedApp].stats.map((stat, i) => (
-                        <li key={i}>• {stat}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-
-                <div className="grid md:grid-cols-2 gap-4 mb-4">
-                  <div>
-                    <h4 className="text-sm font-medium text-purple-400 mb-2">Examples:</h4>
-                    <ul className="text-sm text-gray-300 space-y-1">
-                      {applications[selectedApp].examples.map((ex, i) => (
-                        <li key={i}>• {ex}</li>
-                      ))}
-                    </ul>
-                  </div>
-                  <div>
-                    <h4 className="text-sm font-medium text-cyan-400 mb-2">Industry Leaders:</h4>
-                    <div className="flex flex-wrap gap-2">
-                      {applications[selectedApp].companies.map((company, i) => (
-                        <span key={i} className="px-2 py-1 bg-gray-800 rounded text-xs text-gray-300">
-                          {company}
-                        </span>
-                      ))}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-gray-900/50 rounded-lg p-4">
-                  <h4 className="text-sm font-medium text-yellow-400 mb-2">Future Impact:</h4>
-                  <p className="text-sm text-gray-300">{applications[selectedApp].futureImpact}</p>
+            <div
+              className="rounded-xl p-6"
+              style={{
+                backgroundColor: `${currentApp.color}15`,
+                borderColor: `${currentApp.color}40`,
+                borderWidth: '1px'
+              }}
+            >
+              <div className="flex items-start gap-4 mb-4">
+                <div className="text-4xl">{currentApp.icon}</div>
+                <div>
+                  <h3 className="text-xl font-bold" style={{ color: currentApp.color }}>
+                    {currentApp.title}
+                  </h3>
+                  <p className="text-sm text-gray-400 italic">{currentApp.tagline}</p>
                 </div>
               </div>
+
+              <p className="text-gray-300 mb-4">{currentApp.description}</p>
+
+              <div className="bg-gray-900/50 rounded-lg p-4 mb-4">
+                <h4 className="text-sm font-medium text-orange-400 mb-2">Physics Connection:</h4>
+                <p className="text-sm text-gray-300">{currentApp.connection}</p>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <h4 className="text-sm font-medium text-blue-400 mb-2">How It Works:</h4>
+                  <ul className="text-sm text-gray-300 space-y-1">
+                    {currentApp.howItWorks.map((item, i) => (
+                      <li key={i}>• {item}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-green-400 mb-2">Key Stats:</h4>
+                  <ul className="text-sm text-gray-300 space-y-1">
+                    {currentApp.stats.map((stat, i) => (
+                      <li key={i}>• {stat}</li>
+                    ))}
+                  </ul>
+                </div>
+              </div>
+
+              <div className="grid md:grid-cols-2 gap-4 mb-4">
+                <div>
+                  <h4 className="text-sm font-medium text-purple-400 mb-2">Examples:</h4>
+                  <ul className="text-sm text-gray-300 space-y-1">
+                    {currentApp.examples.map((ex, i) => (
+                      <li key={i}>• {ex}</li>
+                    ))}
+                  </ul>
+                </div>
+                <div>
+                  <h4 className="text-sm font-medium text-cyan-400 mb-2">Industry Leaders:</h4>
+                  <div className="flex flex-wrap gap-2">
+                    {currentApp.companies.map((company, i) => (
+                      <span key={i} className="px-2 py-1 bg-gray-800 rounded text-xs text-gray-300">
+                        {company}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+
+              <div className="bg-gray-900/50 rounded-lg p-4">
+                <h4 className="text-sm font-medium text-yellow-400 mb-2">Future Impact:</h4>
+                <p className="text-sm text-gray-300">{currentApp.futureImpact}</p>
+              </div>
+            </div>
+
+            {transferAppIndex < applications.length - 1 && (
+              <button
+                onClick={() => {
+                  setTransferAppIndex(transferAppIndex + 1);
+                  playSound('click');
+                }}
+                style={{ zIndex: 10 }}
+                className="w-full py-3 bg-gradient-to-r from-purple-500 to-blue-600 hover:from-purple-400 hover:to-blue-500 rounded-lg font-medium transition-all"
+              >
+                Next Application →
+              </button>
             )}
           </div>
         );
 
-      case 10: // Summary
+      case 'mastery': // Summary
         return (
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-yellow-400">Mastery Complete!</h2>
@@ -1385,6 +1422,9 @@ export default function ThermalExpansionRenderer({
     }
   };
 
+  // Get phase index for progress display
+  const phaseIndex = phaseOrder.indexOf(phase);
+
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
       {/* Premium background gradient */}
@@ -1398,13 +1438,13 @@ export default function ThermalExpansionRenderer({
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Thermal Expansion</span>
           <div className="flex items-center gap-1.5">
-            {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10].map((p, i) => (
+            {phaseOrder.map((p, i) => (
               <div
                 key={p}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-orange-400 w-6 shadow-lg shadow-orange-400/30'
-                    : phase > p
+                    : phaseIndex > i
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2'
                 }`}
@@ -1412,7 +1452,7 @@ export default function ThermalExpansionRenderer({
             ))}
           </div>
           <span className="text-sm font-medium text-orange-400">
-            Phase {phase + 1}
+            Phase {phaseIndex + 1}
           </span>
         </div>
       </div>
@@ -1427,10 +1467,11 @@ export default function ThermalExpansionRenderer({
           {/* Navigation */}
           <div className="flex justify-between mt-6">
             <button
-              onMouseDown={handleBack}
-              disabled={phase === 0}
+              onClick={handleBack}
+              disabled={phase === 'hook'}
+              style={{ zIndex: 10 }}
               className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                phase === 0
+                phase === 'hook'
                   ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
                   : 'bg-slate-700 hover:bg-slate-600 text-white'
               }`}
@@ -1438,17 +1479,18 @@ export default function ThermalExpansionRenderer({
               Back
             </button>
 
-            {phase < 10 && !((phase >= 6 && phase <= 8) && !showExplanation) && (
+            {phase !== 'mastery' && !((phase === 'twist_review' || phase === 'transfer') && !showExplanation) && (
               <button
-                onMouseDown={handleNext}
-                disabled={phase === 1 && !userPrediction}
+                onClick={handleNext}
+                disabled={phase === 'predict' && !userPrediction}
+                style={{ zIndex: 10 }}
                 className={`px-6 py-2 rounded-lg font-medium transition-all ${
-                  (phase === 1 && !userPrediction)
+                  (phase === 'predict' && !userPrediction)
                     ? 'bg-slate-800 text-slate-500 cursor-not-allowed'
                     : 'bg-gradient-to-r from-orange-500 to-red-600 hover:from-orange-400 hover:to-red-500 text-white shadow-lg shadow-orange-500/25'
                 }`}
               >
-                {phase === 1 ? 'See Calculation' : 'Continue'}
+                {phase === 'predict' ? 'See Calculation' : 'Continue'}
               </button>
             )}
           </div>

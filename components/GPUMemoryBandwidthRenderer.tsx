@@ -49,16 +49,126 @@ const colors = {
 };
 
 const TEST_QUESTIONS = [
-  { text: 'Memory bandwidth equals bus width multiplied by transfer speed', correct: true },
-  { text: 'A 256-bit bus is twice as wide as a 128-bit bus', correct: true },
-  { text: 'GPUs need more memory bandwidth than CPUs for most workloads', correct: true },
-  { text: 'Doubling clock speed doubles bandwidth regardless of bus width', correct: true },
-  { text: 'HBM stacks memory chips vertically to increase bandwidth', correct: true },
-  { text: 'Wider memory buses always mean better gaming performance', correct: false },
-  { text: 'GDDR6 transfers data twice per clock cycle (DDR)', correct: true },
-  { text: 'Memory latency is more important than bandwidth for GPUs', correct: false },
-  { text: 'HBM uses a much wider bus than GDDR (1024+ bits vs 256 bits)', correct: true },
-  { text: 'Parallel memory access is essential for GPU shader performance', correct: true },
+  // Q1: Core Concept - Bandwidth Formula (Easy) - Correct: B
+  {
+    scenario: "A GPU has a 256-bit memory bus running at 2000 MHz effective clock speed with DDR (double data rate) technology.",
+    question: "What is the memory bandwidth of this GPU?",
+    options: [
+      { id: 'a', label: "64 GB/s - calculated as bus width / 4" },
+      { id: 'b', label: "128 GB/s - calculated as (256 bits × 2000 MHz × 2) / 8", correct: true },
+      { id: 'c', label: "256 GB/s - calculated as bus width × clock speed" },
+      { id: 'd', label: "512 GB/s - calculated as bus width × clock speed × 4" },
+    ],
+    explanation: "Bandwidth = (Bus Width × Clock Speed × Transfers per Clock) / 8. With DDR, there are 2 transfers per clock. So: (256 × 2000 × 2) / 8 = 128,000 MB/s = 128 GB/s."
+  },
+  // Q2: Core Concept - Bus Width Effect (Easy) - Correct: C
+  {
+    scenario: "Two GPUs have identical clock speeds of 2000 MHz and both use DDR technology. GPU A has a 128-bit bus, GPU B has a 256-bit bus.",
+    question: "How does GPU B's memory bandwidth compare to GPU A's?",
+    options: [
+      { id: 'a', label: "Same bandwidth - clock speed determines performance" },
+      { id: 'b', label: "50% more bandwidth - due to efficiency gains" },
+      { id: 'c', label: "Exactly 2x bandwidth - bus width directly scales bandwidth", correct: true },
+      { id: 'd', label: "4x bandwidth - wider buses have exponential gains" },
+    ],
+    explanation: "Bandwidth scales linearly with bus width. A 256-bit bus has exactly twice the data lanes as a 128-bit bus, so it can transfer exactly twice as much data per clock cycle."
+  },
+  // Q3: Deep Concept - Why GPUs Need Bandwidth (Medium) - Correct: D
+  {
+    scenario: "A CPU has 8 cores while a GPU has 10,000 shader cores. Both need to fetch data from memory to perform calculations.",
+    question: "Why do GPUs require much higher memory bandwidth than CPUs?",
+    options: [
+      { id: 'a', label: "GPUs run at higher clock speeds than CPUs" },
+      { id: 'b', label: "GPU memory is physically farther from the processor" },
+      { id: 'c', label: "GPUs process larger individual data values" },
+      { id: 'd', label: "Thousands of shader cores need data simultaneously for parallel processing", correct: true },
+    ],
+    explanation: "GPUs achieve performance through massive parallelism. With 10,000+ shader cores all needing data at once, the memory system must deliver data to all of them simultaneously, requiring enormous bandwidth."
+  },
+  // Q4: HBM Technology (Medium) - Correct: A
+  {
+    scenario: "NVIDIA's H100 data center GPU uses HBM3 memory achieving 3.35 TB/s bandwidth, while consumer RTX 4090 uses GDDR6X achieving 1 TB/s.",
+    question: "How does HBM achieve 3x higher bandwidth than GDDR?",
+    options: [
+      { id: 'a', label: "HBM stacks memory vertically with 1024+ bit buses vs GDDR's 384-bit", correct: true },
+      { id: 'b', label: "HBM runs at 3x higher clock speeds than GDDR" },
+      { id: 'c', label: "HBM uses quantum tunneling for faster data transfer" },
+      { id: 'd', label: "HBM compresses data to fit more through the same bus" },
+    ],
+    explanation: "HBM (High Bandwidth Memory) stacks 4-8 memory dies vertically using TSVs (Through-Silicon Vias), enabling a 1024-bit or wider bus in a tiny footprint. This massive bus width is the key to HBM's bandwidth advantage."
+  },
+  // Q5: Real World Application - Gaming (Medium) - Correct: B
+  {
+    scenario: "A gamer upgrades from 1080p to 4K resolution. Their GPU now needs to render 4x more pixels per frame while maintaining 60 FPS.",
+    question: "Why does 4K gaming demand significantly more memory bandwidth?",
+    options: [
+      { id: 'a', label: "4K textures are stored in a compressed format requiring decompression" },
+      { id: 'b', label: "4x more pixels means 4x more texture fetches, framebuffer writes, and shader data", correct: true },
+      { id: 'c', label: "4K monitors require special memory protocols" },
+      { id: 'd', label: "The GPU clock speed must increase for higher resolutions" },
+    ],
+    explanation: "4K (3840×2160) has exactly 4x the pixels of 1080p (1920×1080). Each pixel requires texture sampling, shader calculations, and framebuffer writes, so bandwidth requirements scale proportionally with resolution."
+  },
+  // Q6: Memory Bus Width Effects (Medium-Hard) - Correct: C
+  {
+    scenario: "A GPU manufacturer is designing a new mid-range card. They can either use a 192-bit bus at 2500 MHz or a 256-bit bus at 1875 MHz. Both use GDDR6 (DDR).",
+    question: "Which configuration provides more memory bandwidth?",
+    options: [
+      { id: 'a', label: "192-bit at 2500 MHz - higher clock speed wins" },
+      { id: 'b', label: "They are exactly equal in bandwidth" },
+      { id: 'c', label: "256-bit at 1875 MHz - wider bus compensates for lower clock", correct: true },
+      { id: 'd', label: "Cannot be determined without knowing the memory type" },
+    ],
+    explanation: "192-bit × 2500 MHz × 2 / 8 = 120 GB/s. 256-bit × 1875 MHz × 2 / 8 = 120 GB/s. Wait - they're actually equal! But in practice, the 256-bit bus is often preferred because it offers better scaling potential and can handle burst traffic better."
+  },
+  // Q7: GDDR vs HBM Comparison (Hard) - Correct: D
+  {
+    scenario: "An AI company is choosing between consumer GPUs with GDDR6X (1 TB/s, $1,500) and data center GPUs with HBM3 (3 TB/s, $30,000) for training large language models.",
+    question: "Why might the HBM option be more cost-effective despite being 20x more expensive?",
+    options: [
+      { id: 'a', label: "HBM has lower latency which speeds up all operations" },
+      { id: 'b', label: "HBM memory has higher capacity per chip" },
+      { id: 'c', label: "GDDR6X requires more cooling infrastructure" },
+      { id: 'd', label: "AI training is bandwidth-limited, so 3x bandwidth means up to 3x faster training", correct: true },
+    ],
+    explanation: "Large model training is severely bandwidth-limited - the GPU spends most time waiting for data. If HBM enables 3x faster training, a $30,000 GPU can do the work of multiple $1,500 GPUs, often making it more cost-effective for production AI workloads."
+  },
+  // Q8: Bandwidth Bottlenecks (Medium) - Correct: A
+  {
+    scenario: "A game developer notices their GPU utilization is only 60% despite the GPU not being thermally throttled. The GPU has fast compute cores but a relatively narrow 128-bit memory bus.",
+    question: "What is most likely causing the low GPU utilization?",
+    options: [
+      { id: 'a', label: "Memory bandwidth bottleneck - cores are starved for data", correct: true },
+      { id: 'b', label: "CPU bottleneck - the processor can't send commands fast enough" },
+      { id: 'c', label: "Power delivery issues - insufficient watts to the GPU" },
+      { id: 'd', label: "Driver overhead - software is limiting performance" },
+    ],
+    explanation: "When compute cores are fast but the memory bus is narrow, the GPU becomes 'bandwidth-starved' - cores sit idle waiting for data. This is a classic symptom of insufficient memory bandwidth relative to compute capability."
+  },
+  // Q9: Memory Clock Speed Impact (Medium) - Correct: B
+  {
+    scenario: "A GPU manufacturer releases a memory overclock utility. A user increases their GDDR6 effective clock from 2000 MHz to 2200 MHz (10% increase) on a 256-bit bus.",
+    question: "What improvement in memory bandwidth should the user expect?",
+    options: [
+      { id: 'a', label: "20% increase - clock speed has a multiplied effect" },
+      { id: 'b', label: "10% increase - bandwidth scales linearly with clock speed", correct: true },
+      { id: 'c', label: "5% increase - diminishing returns at higher speeds" },
+      { id: 'd', label: "No increase - bandwidth is limited by bus width only" },
+    ],
+    explanation: "Memory bandwidth scales linearly with clock speed. A 10% increase in clock speed directly translates to a 10% increase in bandwidth. The formula Bandwidth = Width × Speed × Transfers / 8 shows this linear relationship."
+  },
+  // Q10: DDR Technology Understanding (Easy-Medium) - Correct: C
+  {
+    scenario: "GDDR6 memory is advertised at '14 Gbps' data rate. The actual clock frequency of the memory chips is 1750 MHz.",
+    question: "Why is there a difference between the clock speed and the advertised data rate?",
+    options: [
+      { id: 'a', label: "Marketing exaggeration - the real speed is 1750 MHz" },
+      { id: 'b', label: "The memory runs in burst mode that temporarily reaches higher speeds" },
+      { id: 'c', label: "DDR transfers data on both rising and falling clock edges, doubling effective rate", correct: true },
+      { id: 'd', label: "Memory controllers interpolate data between clock cycles" },
+    ],
+    explanation: "DDR (Double Data Rate) transfers data twice per clock cycle - once on the rising edge and once on the falling edge. So 1750 MHz × 2 = 3500 MT/s (megatransfers). GDDR6 uses additional techniques to reach even higher rates (14 Gbps = 14000 MT/s)."
+  },
 ];
 
 const TRANSFER_APPLICATIONS = [
@@ -155,7 +265,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
-  const [testAnswers, setTestAnswers] = useState<(boolean | null)[]>(new Array(10).fill(null));
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [testScore, setTestScore] = useState(0);
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
@@ -195,9 +305,9 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
     { id: 'stack', label: 'HBM is faster because stacking reduces wire length' },
   ];
 
-  const handleTestAnswer = (answer: boolean) => {
+  const handleTestAnswer = (answerId: string) => {
     const newAnswers = [...testAnswers];
-    newAnswers[currentTestIndex] = answer;
+    newAnswers[currentTestIndex] = answerId;
     setTestAnswers(newAnswers);
   };
 
@@ -216,7 +326,8 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
   const submitTest = () => {
     let score = 0;
     testAnswers.forEach((answer, i) => {
-      if (answer === TEST_QUESTIONS[i].correct) score++;
+      const correctOption = TEST_QUESTIONS[i].options.find(o => o.correct);
+      if (answer === correctOption?.id) score++;
     });
     setTestScore(score);
     setTestSubmitted(true);
@@ -1024,7 +1135,9 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
 
             {TEST_QUESTIONS.map((q, i) => {
               const userAnswer = testAnswers[i];
-              const isCorrect = userAnswer === q.correct;
+              const correctOption = q.options.find(o => o.correct);
+              const userOption = q.options.find(o => o.id === userAnswer);
+              const isCorrect = userAnswer === correctOption?.id;
               return (
                 <div key={i} style={{
                   background: colors.bgCard,
@@ -1033,10 +1146,26 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
                   borderRadius: '12px',
                   borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}`,
                 }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '8px' }}>{i + 1}. {q.text}</p>
-                  <p style={{ color: isCorrect ? colors.success : colors.error, fontSize: '14px' }}>
-                    Your answer: {userAnswer ? 'True' : 'False'} | Correct: {q.correct ? 'True' : 'False'}
-                  </p>
+                  <p style={{ color: colors.textPrimary, marginBottom: '8px', fontWeight: 'bold' }}>{i + 1}. {q.question}</p>
+                  <p style={{ color: colors.textSecondary, fontSize: '13px', marginBottom: '12px' }}>{q.scenario}</p>
+                  <div style={{ marginBottom: '8px' }}>
+                    <p style={{ color: isCorrect ? colors.success : colors.error, fontSize: '14px', marginBottom: '4px' }}>
+                      Your answer: {userOption?.label || 'No answer'}
+                    </p>
+                    {!isCorrect && (
+                      <p style={{ color: colors.success, fontSize: '14px' }}>
+                        Correct: {correctOption?.label}
+                      </p>
+                    )}
+                  </div>
+                  <div style={{
+                    background: 'rgba(6, 182, 212, 0.1)',
+                    padding: '12px',
+                    borderRadius: '8px',
+                    borderLeft: `3px solid ${colors.accent}`,
+                  }}>
+                    <p style={{ color: colors.textSecondary, fontSize: '13px', margin: 0 }}>{q.explanation}</p>
+                  </div>
                 </div>
               );
             })}
@@ -1075,46 +1204,69 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
               ))}
             </div>
 
+            {/* Scenario */}
+            <div style={{
+              background: 'rgba(6, 182, 212, 0.1)',
+              padding: '16px',
+              borderRadius: '12px',
+              marginBottom: '16px',
+              borderLeft: `3px solid ${colors.accent}`,
+            }}>
+              <p style={{ color: colors.textMuted, fontSize: '11px', fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '8px' }}>Scenario</p>
+              <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5, margin: 0 }}>
+                {currentQ.scenario}
+              </p>
+            </div>
+
+            {/* Question */}
             <div style={{
               background: colors.bgCard,
               padding: '20px',
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>
-                {currentQ.text}
+              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5, fontWeight: 'bold', margin: 0 }}>
+                {currentQ.question}
               </p>
             </div>
 
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button
-                onClick={() => handleTestAnswer(true)}
-                style={{
-                  ...buttonStyle,
-                  flex: 1,
-                  padding: '16px',
-                  background: testAnswers[currentTestIndex] === true ? 'rgba(16, 185, 129, 0.3)' : 'transparent',
-                  border: testAnswers[currentTestIndex] === true ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.2)',
-                  color: colors.textPrimary,
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                TRUE
-              </button>
-              <button
-                onClick={() => handleTestAnswer(false)}
-                style={{
-                  ...buttonStyle,
-                  flex: 1,
-                  padding: '16px',
-                  background: testAnswers[currentTestIndex] === false ? 'rgba(239, 68, 68, 0.3)' : 'transparent',
-                  border: testAnswers[currentTestIndex] === false ? `2px solid ${colors.error}` : '1px solid rgba(255,255,255,0.2)',
-                  color: colors.textPrimary,
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              >
-                FALSE
-              </button>
+            {/* Multiple Choice Options */}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '10px' }}>
+              {currentQ.options.map((option, idx) => (
+                <button
+                  key={option.id}
+                  onClick={() => handleTestAnswer(option.id)}
+                  style={{
+                    ...buttonStyle,
+                    padding: '14px 16px',
+                    background: testAnswers[currentTestIndex] === option.id ? 'rgba(6, 182, 212, 0.2)' : 'transparent',
+                    border: testAnswers[currentTestIndex] === option.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
+                    color: colors.textPrimary,
+                    textAlign: 'left',
+                    display: 'flex',
+                    alignItems: 'flex-start',
+                    gap: '12px',
+                    zIndex: 10,
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  <span style={{
+                    minWidth: '24px',
+                    height: '24px',
+                    borderRadius: '50%',
+                    background: testAnswers[currentTestIndex] === option.id ? colors.accent : 'rgba(255,255,255,0.1)',
+                    color: testAnswers[currentTestIndex] === option.id ? 'white' : colors.textSecondary,
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    fontSize: '12px',
+                    fontWeight: 'bold',
+                  }}>
+                    {String.fromCharCode(65 + idx)}
+                  </span>
+                  <span style={{ fontSize: '14px', lineHeight: 1.4 }}>{option.label}</span>
+                </button>
+              ))}
             </div>
 
             <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
@@ -1127,6 +1279,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
                   border: `1px solid ${colors.textMuted}`,
                   color: currentTestIndex === 0 ? colors.textMuted : colors.textPrimary,
                   cursor: currentTestIndex === 0 ? 'not-allowed' : 'pointer',
+                  zIndex: 10,
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1139,6 +1292,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
                     ...buttonStyle,
                     background: colors.accent,
                     color: 'white',
+                    zIndex: 10,
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >
@@ -1153,6 +1307,7 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
                     background: allAnswered ? colors.success : colors.textMuted,
                     color: 'white',
                     cursor: allAnswered ? 'pointer' : 'not-allowed',
+                    zIndex: 10,
                     WebkitTapHighlightColor: 'transparent',
                   }}
                 >

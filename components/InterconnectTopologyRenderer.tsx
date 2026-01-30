@@ -54,16 +54,126 @@ const TOPOLOGY_SPECS = {
 };
 
 const TEST_QUESTIONS = [
-  { text: 'Ring all-reduce is bandwidth-optimal for gradient synchronization.', correct: true },
-  { text: 'Network topology has no impact on training speed at scale.', correct: false },
-  { text: 'A fat-tree topology provides multiple paths between any two nodes.', correct: true },
-  { text: 'Tree topologies have lower latency than ring topologies for large N.', correct: true },
-  { text: 'Full mesh topology scales well to thousands of GPUs.', correct: false },
-  { text: 'All-reduce operations combine data from all workers into a single result.', correct: true },
-  { text: 'NVSwitch enables all-to-all GPU communication at full bandwidth.', correct: true },
-  { text: 'Communication time is negligible compared to computation time.', correct: false },
-  { text: 'Hierarchical all-reduce uses different topologies at different scales.', correct: true },
-  { text: 'InfiniBand is commonly used for high-speed interconnects in data centers.', correct: true },
+  // Q1: Core Concept - Ring Topology (Easy)
+  {
+    scenario: "You're designing a distributed training system for 8 GPUs. Each GPU needs to share its gradient data with all other GPUs.",
+    question: "Why is a ring topology considered bandwidth-optimal for all-reduce operations?",
+    options: [
+      { id: 'direct', label: "Each GPU sends directly to all others simultaneously" },
+      { id: 'optimal', label: "Each GPU sends/receives exactly (N-1)/N of data, utilizing all links", correct: true },
+      { id: 'central', label: "A central switch handles all the routing efficiently" },
+      { id: 'fast', label: "Ring connections are physically faster than other types" },
+    ],
+    explanation: "In ring all-reduce, data flows around the ring in chunks. Each GPU sends one chunk while receiving another, perfectly utilizing all available bandwidth. No single bottleneck node exists."
+  },
+  // Q2: Core Concept - Network Impact (Easy-Medium)
+  {
+    scenario: "A research team notices their 1000-GPU training job is only 40% efficient compared to a single GPU baseline.",
+    question: "What is the most likely cause of this efficiency loss?",
+    options: [
+      { id: 'power', label: "Power supply limitations across the data center" },
+      { id: 'comm', label: "Communication overhead from gradient synchronization dominates compute time", correct: true },
+      { id: 'memory', label: "GPUs are running out of memory" },
+      { id: 'cooling', label: "Thermal throttling from heat buildup" },
+    ],
+    explanation: "At scale, network topology becomes critical. Poor topology choices lead to communication bottlenecks where GPUs spend more time waiting for gradients than computing. The network IS the computer at scale."
+  },
+  // Q3: Fat Tree Topology (Medium)
+  {
+    scenario: "NVIDIA's DGX SuperPOD uses a fat-tree topology with InfiniBand switches to connect hundreds of GPUs.",
+    question: "What key advantage does a fat-tree topology provide over a simple tree?",
+    options: [
+      { id: 'simple', label: "Simpler wiring and fewer switches needed" },
+      { id: 'paths', label: "Multiple redundant paths prevent bandwidth bottlenecks at higher levels", correct: true },
+      { id: 'latency', label: "Lower latency due to shorter cable lengths" },
+      { id: 'cheap', label: "Lower cost per connection" },
+    ],
+    explanation: "Fat-tree topologies have 'fatter' (more) links toward the root, providing multiple paths between any two nodes. This eliminates the bandwidth bottleneck that occurs at the root of simple trees."
+  },
+  // Q4: Latency Comparison (Medium)
+  {
+    scenario: "You need to synchronize gradients across 1024 GPUs. You're comparing ring vs tree topologies for latency.",
+    question: "Which topology has lower latency for this operation, and why?",
+    options: [
+      { id: 'ring', label: "Ring - data flows continuously without waiting" },
+      { id: 'tree', label: "Tree - O(log N) steps vs O(N) for ring", correct: true },
+      { id: 'same', label: "Both have the same latency at this scale" },
+      { id: 'mesh', label: "Neither - you need full mesh for low latency" },
+    ],
+    explanation: "Tree reduction completes in O(log N) = ~10 steps for 1024 nodes, while ring needs O(N) = 1023 steps. However, ring has better bandwidth utilization, so the choice depends on message size and network characteristics."
+  },
+  // Q5: Scalability (Medium-Hard)
+  {
+    scenario: "Your startup wants to build a 10,000-GPU cluster for training large language models.",
+    question: "Why is full mesh topology impractical at this scale?",
+    options: [
+      { id: 'speed', label: "Full mesh connections are too slow" },
+      { id: 'links', label: "Requires N(N-1)/2 ≈ 50 million physical links", correct: true },
+      { id: 'protocol', label: "Network protocols don't support mesh topologies" },
+      { id: 'latency', label: "Mesh has higher latency than other topologies" },
+    ],
+    explanation: "Full mesh needs N(N-1)/2 links - for 10,000 GPUs, that's ~50 million connections! This is physically and economically impossible. Real systems use hierarchical approaches instead."
+  },
+  // Q6: All-Reduce Operations (Medium)
+  {
+    scenario: "During distributed training, each GPU computes gradients locally. These must be combined before updating model weights.",
+    question: "What does an all-reduce operation accomplish?",
+    options: [
+      { id: 'broadcast', label: "Sends data from one GPU to all others" },
+      { id: 'reduce', label: "Combines data from all GPUs and distributes the result to all", correct: true },
+      { id: 'gather', label: "Collects data from all GPUs to a single master" },
+      { id: 'scatter', label: "Divides data from one GPU across all others" },
+    ],
+    explanation: "All-reduce = reduce + broadcast in one operation. It sums (or averages) gradients from all GPUs and ensures every GPU receives the final result. This is the fundamental operation for synchronous distributed training."
+  },
+  // Q7: NVLink/NVSwitch (Medium)
+  {
+    scenario: "NVIDIA's DGX H100 system uses NVSwitch to connect 8 H100 GPUs within a single node.",
+    question: "What capability does NVSwitch provide?",
+    options: [
+      { id: 'nvswitch', label: "All-to-all GPU communication at full bandwidth simultaneously", correct: true },
+      { id: 'pcie', label: "Standard PCIe connections with software routing" },
+      { id: 'serial', label: "High-speed serial communication one pair at a time" },
+      { id: 'cpu', label: "GPU-to-CPU communication bypassing system memory" },
+    ],
+    explanation: "NVSwitch enables any GPU to communicate with any other GPU at full NVLink bandwidth (900 GB/s on H100) simultaneously. It's essentially a full mesh within the node, enabling optimal intra-node communication."
+  },
+  // Q8: Communication vs Computation (Hard)
+  {
+    scenario: "A model has 175 billion parameters (700 GB in fp32). Training batch takes 100ms of compute per GPU across 1000 GPUs.",
+    question: "At 100 Gb/s network bandwidth per GPU, approximately how long does gradient synchronization take?",
+    options: [
+      { id: 'negligible', label: "~1ms - negligible compared to compute" },
+      { id: 'significant', label: "~56 seconds - communication dominates", correct: true },
+      { id: 'equal', label: "~100ms - roughly equal to compute" },
+      { id: 'faster', label: "Faster than compute due to pipelining" },
+    ],
+    explanation: "700 GB at 100 Gb/s = 56 seconds for a naive all-reduce! This is why gradient compression, pipelining, and topology optimization are critical. Without them, GPUs would spend 99%+ of time waiting."
+  },
+  // Q9: Hierarchical All-Reduce (Hard)
+  {
+    scenario: "Modern training systems like Megatron-LM use hierarchical all-reduce: ring within nodes, tree across nodes.",
+    question: "Why use different topologies at different scales?",
+    options: [
+      { id: 'simple', label: "Simpler to implement than a single unified topology" },
+      { id: 'match', label: "Matches algorithm to physical network characteristics at each level", correct: true },
+      { id: 'backup', label: "Provides redundancy if one topology fails" },
+      { id: 'legacy', label: "Legacy compatibility with older hardware" },
+    ],
+    explanation: "Intra-node (NVLink: 900 GB/s) vs inter-node (InfiniBand: 400 Gb/s) have 18x bandwidth difference! Ring maximizes bandwidth within nodes; tree minimizes latency across nodes. Hierarchical approaches get the best of both."
+  },
+  // Q10: Bandwidth Aggregation (Hard)
+  {
+    scenario: "You're comparing two network designs: (A) Single 400 Gb/s link per node, (B) Four 100 Gb/s links per node with adaptive routing.",
+    question: "Which design likely achieves better effective bandwidth for all-reduce operations?",
+    options: [
+      { id: 'single', label: "Design A - single fast link has lower latency" },
+      { id: 'multiple', label: "Design B - multiple paths enable bandwidth aggregation and fault tolerance", correct: true },
+      { id: 'same', label: "Same bandwidth, so same performance" },
+      { id: 'depends', label: "Depends entirely on the switch hardware" },
+    ],
+    explanation: "Multiple links with adaptive routing can aggregate bandwidth AND provide fault tolerance. If one link fails or is congested, traffic reroutes. This is why fat-tree topologies use multiple paths - they aggregate bandwidth at each level."
+  },
 ];
 
 const TRANSFER_APPS = [
@@ -103,7 +213,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [testAnswers, setTestAnswers] = useState<(boolean | null)[]>(new Array(10).fill(null));
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
@@ -187,7 +297,8 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
 
   const calculateTestScore = () => {
     return testAnswers.reduce((score, answer, index) => {
-      if (answer === TEST_QUESTIONS[index].correct) return score + 1;
+      const correctOption = TEST_QUESTIONS[index].options.find(o => o.correct);
+      if (answer === correctOption?.id) return score + 1;
       return score;
     }, 0);
   };
@@ -953,50 +1064,155 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
   );
 
   const renderTest = () => {
+    const totalQuestions = TEST_QUESTIONS.length;
+
     if (testSubmitted) {
       const score = calculateTestScore();
       const passed = score >= 7;
 
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, padding: '24px', paddingBottom: '100px', overflowY: 'auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <div style={{ fontSize: '64px', marginBottom: '16px' }}>
-                {passed ? 'Trophy' : 'Book'}
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                margin: '0 auto 12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '36px',
+                background: passed ? `${colors.success}20` : `${colors.warning}20`,
+                border: `3px solid ${passed ? colors.success : colors.warning}`
+              }}>
+                {score === totalQuestions ? 'Trophy' : score >= 9 ? 'Star' : score >= 7 ? 'Check' : 'Book'}
               </div>
-              <h2 style={{ color: passed ? colors.success : colors.warning, fontSize: '28px' }}>
-                {score}/10 Correct
+              <h2 style={{ color: passed ? colors.success : colors.warning, fontSize: '28px', marginBottom: '8px' }}>
+                {score}/{totalQuestions} Correct
               </h2>
-              <p style={{ color: colors.textSecondary }}>
-                {passed ? 'Excellent! You understand interconnect topology.' : 'Review the material and try again.'}
+              <p style={{ color: colors.textSecondary, marginBottom: '16px' }}>
+                {score === totalQuestions ? "Perfect! You've mastered interconnect topology!" :
+                 score >= 9 ? 'Excellent! You deeply understand network concepts.' :
+                 score >= 7 ? 'Great job! You understand the key concepts.' :
+                 'Keep exploring - network topology takes time!'}
               </p>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+                <button
+                  onClick={() => { setCurrentTestIndex(0); setTestAnswers(new Array(10).fill(null)); setTestSubmitted(false); }}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    background: colors.bgCard,
+                    color: colors.textSecondary,
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  Retake Test
+                </button>
+                <button
+                  onClick={() => goToPhase('mastery')}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    background: passed ? colors.success : colors.warning,
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    WebkitTapHighlightColor: 'transparent',
+                  }}
+                >
+                  {passed ? 'Claim Mastery' : 'Review Lesson'}
+                </button>
+              </div>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {TEST_QUESTIONS.map((q, i) => (
-                <div key={i} style={{
-                  padding: '12px',
-                  borderRadius: '8px',
-                  background: testAnswers[i] === q.correct ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                  borderLeft: `3px solid ${testAnswers[i] === q.correct ? colors.success : colors.error}`,
-                }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>{q.text}</p>
-                  <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
-                    Correct answer: {q.correct ? 'True' : 'False'}
-                  </p>
-                </div>
-              ))}
+            <p style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px', color: colors.textMuted }}>
+              Question-by-Question Review
+            </p>
+
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {TEST_QUESTIONS.map((q, i) => {
+                const correctOption = q.options.find(o => o.correct);
+                const correctId = correctOption?.id;
+                const userAnswer = testAnswers[i];
+                const userOption = q.options.find(o => o.id === userAnswer);
+                const isCorrect = userAnswer === correctId;
+
+                return (
+                  <div key={i} style={{
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    background: colors.bgCard,
+                    border: `2px solid ${isCorrect ? colors.success : colors.error}40`
+                  }}>
+                    <div style={{ padding: '16px', background: isCorrect ? `${colors.success}15` : `${colors.error}15` }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          background: isCorrect ? colors.success : colors.error,
+                          color: 'white'
+                        }}>
+                          {isCorrect ? 'Y' : 'X'}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: '14px', fontWeight: 700, color: colors.textPrimary, margin: 0 }}>Question {i + 1}</p>
+                          <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0 }}>{q.question}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        background: isCorrect ? `${colors.success}10` : `${colors.error}10`,
+                        border: `1px solid ${isCorrect ? colors.success : colors.error}30`
+                      }}>
+                        <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px', color: isCorrect ? colors.success : colors.error }}>
+                          {isCorrect ? 'Your Answer (Correct!)' : 'Your Answer'}
+                        </p>
+                        <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0 }}>{userOption?.label || 'No answer selected'}</p>
+                      </div>
+
+                      {!isCorrect && (
+                        <div style={{
+                          padding: '12px',
+                          borderRadius: '12px',
+                          background: `${colors.success}10`,
+                          border: `1px solid ${colors.success}30`
+                        }}>
+                          <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px', color: colors.success }}>Correct Answer</p>
+                          <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0 }}>{correctOption?.label}</p>
+                        </div>
+                      )}
+
+                      <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(0,0,0,0.2)' }}>
+                        <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '4px', color: colors.accent }}>Why?</p>
+                        <p style={{ fontSize: '12px', lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>{q.explanation}</p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
-          {renderBottomBar(passed, passed ? 'Complete Mastery' : 'Review & Retry', () => {
-            if (passed) {
-              goNext();
-            } else {
-              setTestSubmitted(false);
-              setTestAnswers(new Array(10).fill(null));
-              setCurrentTestIndex(0);
-            }
-          })}
         </div>
       );
     }
@@ -1005,83 +1221,88 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
 
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
-          <h2 style={{ color: colors.textPrimary, fontSize: '24px', textAlign: 'center', marginBottom: '8px' }}>
-            Knowledge Test
-          </h2>
-          <p style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
-            Question {currentTestIndex + 1} of 10
+        <div style={{ flex: 1, padding: '24px', paddingBottom: '100px', overflowY: 'auto' }}>
+          <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', color: colors.warning }}>
+            Step 9 - Knowledge Test
           </p>
+          <h2 style={{ color: colors.textPrimary, fontSize: '24px', marginBottom: '16px' }}>
+            Question {currentTestIndex + 1} of {totalQuestions}
+          </h2>
 
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', justifyContent: 'center' }}>
-            {TEST_QUESTIONS.map((_, i) => (
-              <button
-                key={i}
-                onClick={() => setCurrentTestIndex(i)}
-                style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '4px',
-                  border: 'none',
-                  background: testAnswers[i] !== null
-                    ? (testAnswers[i] === TEST_QUESTIONS[i].correct ? colors.success : colors.error)
-                    : (i === currentTestIndex ? colors.accent : 'rgba(255,255,255,0.1)'),
-                  cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
-                }}
-              />
+          {/* Progress bar */}
+          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
+            {Array.from({ length: totalQuestions }, (_, i) => (
+              <div key={i} style={{
+                height: '8px',
+                flex: 1,
+                borderRadius: '9999px',
+                background: i === currentTestIndex ? colors.warning : i < currentTestIndex ? colors.success : 'rgba(255,255,255,0.1)'
+              }} />
             ))}
           </div>
 
-          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
-            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>{currentQ.text}</p>
+          {/* Scenario */}
+          <div style={{
+            padding: '20px',
+            borderRadius: '16px',
+            marginBottom: '24px',
+            background: `${colors.accent}15`,
+            border: `1px solid ${colors.accent}30`
+          }}>
+            <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', color: colors.accent }}>Scenario</p>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0 }}>{currentQ.scenario}</p>
           </div>
 
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button
-              onClick={() => {
-                const newAnswers = [...testAnswers];
-                newAnswers[currentTestIndex] = true;
-                setTestAnswers(newAnswers);
-              }}
-              style={{
-                flex: 1,
-                padding: '16px',
-                borderRadius: '12px',
-                border: testAnswers[currentTestIndex] === true ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.2)',
-                background: testAnswers[currentTestIndex] === true ? 'rgba(16, 185, 129, 0.2)' : colors.bgCard,
-                color: colors.textPrimary,
-                fontSize: '18px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              TRUE
-            </button>
-            <button
-              onClick={() => {
-                const newAnswers = [...testAnswers];
-                newAnswers[currentTestIndex] = false;
-                setTestAnswers(newAnswers);
-              }}
-              style={{
-                flex: 1,
-                padding: '16px',
-                borderRadius: '12px',
-                border: testAnswers[currentTestIndex] === false ? `2px solid ${colors.error}` : '1px solid rgba(255,255,255,0.2)',
-                background: testAnswers[currentTestIndex] === false ? 'rgba(239, 68, 68, 0.2)' : colors.bgCard,
-                color: colors.textPrimary,
-                fontSize: '18px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              FALSE
-            </button>
+          {/* Question */}
+          <p style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px', color: colors.textPrimary }}>{currentQ.question}</p>
+
+          {/* Options */}
+          <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
+            {currentQ.options.map((opt, i) => (
+              <button
+                key={opt.id}
+                onClick={() => {
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentTestIndex] = opt.id;
+                  setTestAnswers(newAnswers);
+                }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  textAlign: 'left',
+                  background: testAnswers[currentTestIndex] === opt.id ? `${colors.warning}20` : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentTestIndex] === opt.id ? colors.warning : 'rgba(255,255,255,0.1)'}`,
+                  cursor: 'pointer',
+                  zIndex: 10,
+                  WebkitTapHighlightColor: 'transparent',
+                }}
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: testAnswers[currentTestIndex] === opt.id ? colors.warning : 'rgba(255,255,255,0.1)'
+                }}>
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    color: testAnswers[currentTestIndex] === opt.id ? colors.textPrimary : colors.textMuted
+                  }}>
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                </div>
+                <p style={{ fontSize: '14px', color: testAnswers[currentTestIndex] === opt.id ? colors.textPrimary : colors.textSecondary, margin: 0 }}>{opt.label}</p>
+              </button>
+            ))}
           </div>
 
+          {/* Navigation */}
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
             <button
               onClick={() => setCurrentTestIndex(Math.max(0, currentTestIndex - 1))}
@@ -1093,12 +1314,13 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                 background: 'transparent',
                 color: currentTestIndex === 0 ? colors.textMuted : colors.textPrimary,
                 cursor: currentTestIndex === 0 ? 'not-allowed' : 'pointer',
+                zIndex: 10,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
               Previous
             </button>
-            {currentTestIndex < 9 ? (
+            {currentTestIndex < totalQuestions - 1 ? (
               <button
                 onClick={() => setCurrentTestIndex(currentTestIndex + 1)}
                 style={{
@@ -1108,6 +1330,7 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                   background: colors.accent,
                   color: 'white',
                   cursor: 'pointer',
+                  zIndex: 10,
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
@@ -1124,10 +1347,11 @@ const InterconnectTopologyRenderer: React.FC<InterconnectTopologyRendererProps> 
                   background: testAnswers.includes(null) ? colors.textMuted : colors.success,
                   color: 'white',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
+                  zIndex: 10,
                   WebkitTapHighlightColor: 'transparent',
                 }}
               >
-                Submit
+                Submit Test
               </button>
             )}
           </div>

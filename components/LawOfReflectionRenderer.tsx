@@ -4,18 +4,18 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 
 // ============================================================================
 // LAW OF REFLECTION RENDERER - MIRROR GEOMETRY
-// Premium 10-screen educational game following WaveParticleDualityRenderer pattern
+// Premium 10-phase educational game with complete structure
 // ============================================================================
+
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 interface LawOfReflectionRendererProps {
   width?: number;
   height?: number;
   onBack?: () => void;
-  metadata?: {
-    currentPhase?: number;
-    showPrediction?: boolean;
-    showQuiz?: boolean;
-  };
+  gamePhase?: string;
 }
 
 // Premium Design System
@@ -49,42 +49,48 @@ const radius = { sm: 8, md: 12, lg: 16, xl: 24 };
 // GAME CONTENT DATA
 // ============================================================================
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Lab',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
 };
 
 const predictions = {
   initial: {
-    question: "You shine a flashlight at a flat mirror at a 30° angle from the vertical (normal line). At what angle will the light bounce off?",
+    question: "You shine a flashlight at a flat mirror at a 30 degree angle from the vertical (normal line). At what angle will the light bounce off?",
     options: [
-      { id: 'a', text: '30° on the same side as the flashlight', icon: '↖️' },
-      { id: 'b', text: '30° on the opposite side from the flashlight', icon: '↗️' },
-      { id: 'c', text: '60° from the mirror surface', icon: '➡️' },
-      { id: 'd', text: 'Depends on the type of mirror material', icon: '🪞' },
+      { id: 'a', text: '30 degrees on the same side as the flashlight', icon: '1' },
+      { id: 'b', text: '30 degrees on the opposite side from the flashlight', icon: '2' },
+      { id: 'c', text: '60 degrees from the mirror surface', icon: '3' },
+      { id: 'd', text: 'Depends on the type of mirror material', icon: '4' },
     ],
     correct: 'b',
     explanation: "The Law of Reflection: angle of incidence = angle of reflection. Light bounces at exactly the same angle on the other side of the normal. This is why you can see yourself in a mirror - each ray follows this simple rule!"
   },
   twist: {
-    question: "You place two mirrors at a 90° angle to each other (like a corner). If you shine light at one mirror, what happens to the outgoing beam?",
+    question: "You place two mirrors at a 90 degree angle to each other (like a corner). If you shine light at one mirror, what happens to the outgoing beam?",
     options: [
-      { id: 'a', text: 'It gets stuck bouncing between the mirrors forever', icon: '🔄' },
-      { id: 'b', text: 'It comes back parallel to the original direction', icon: '⬅️' },
-      { id: 'c', text: 'It scatters in all directions', icon: '💥' },
-      { id: 'd', text: 'It passes through the corner', icon: '➡️' },
+      { id: 'a', text: 'It gets stuck bouncing between the mirrors forever', icon: '1' },
+      { id: 'b', text: 'It comes back parallel to the original direction', icon: '2' },
+      { id: 'c', text: 'It scatters in all directions', icon: '3' },
+      { id: 'd', text: 'It passes through the corner', icon: '4' },
     ],
     correct: 'b',
-    explanation: "A corner reflector sends light back exactly where it came from! Two 90° reflections rotate the beam by 180°. This is why corner reflectors are on road signs, bicycles, and were even placed on the Moon by Apollo astronauts!"
+    explanation: "A corner reflector sends light back exactly where it came from! Two 90 degree reflections rotate the beam by 180 degrees. This is why corner reflectors are on road signs, bicycles, and were even placed on the Moon by Apollo astronauts!"
   }
 };
 
 const realWorldApplications = [
   {
     id: 'mirrors',
-    title: '🪞 Bathroom Mirrors',
+    title: 'Bathroom Mirrors',
     subtitle: 'Why you see yourself',
     description: 'Flat mirrors create virtual images that appear to be behind the mirror. Every light ray from your face reflects according to the law, and your brain traces them back to where they seem to originate - creating your reflection at the same distance behind as you are in front.',
     formula: 'Object distance = Image distance (for flat mirrors)',
@@ -93,30 +99,30 @@ const realWorldApplications = [
   },
   {
     id: 'periscopes',
-    title: '🔭 Periscopes',
+    title: 'Periscopes',
     subtitle: 'Seeing around corners',
-    description: 'Submarines and tanks use two 45° mirrors to redirect light. Each mirror turns the light 90°, allowing you to see above water or over walls while staying hidden below.',
-    formula: '45° + 45° = 90° turn × 2 = light redirected by 180°',
+    description: 'Submarines and tanks use two 45 degree mirrors to redirect light. Each mirror turns the light 90 degrees, allowing you to see above water or over walls while staying hidden below.',
+    formula: '45 degrees + 45 degrees = 90 degree turn x 2 = light redirected by 180 degrees',
     realExample: 'Submarine periscopes can be 30+ feet tall, using precision mirrors to see the surface from deep underwater.',
-    interactiveHint: 'Make a simple periscope with two small mirrors at 45° in a cardboard tube!'
-  },
-  {
-    id: 'retroreflectors',
-    title: '🚗 Road Safety Reflectors',
-    subtitle: 'Returning light to its source',
-    description: 'Corner cube reflectors (three mirrors at 90°) send light back exactly where it came from, regardless of entry angle. This is why road signs, bike reflectors, and cat\'s eyes glow so brightly in headlights.',
-    formula: '3 × 90° reflections = Light returns to source',
-    realExample: 'Apollo astronauts left corner reflectors on the Moon - we still bounce lasers off them to measure Earth-Moon distance!',
-    interactiveHint: 'Shine a flashlight at a bike reflector from any angle - it always reflects back to your eyes.'
+    interactiveHint: 'Make a simple periscope with two small mirrors at 45 degrees in a cardboard tube!'
   },
   {
     id: 'kaleidoscopes',
-    title: '🔮 Kaleidoscopes',
+    title: 'Kaleidoscopes',
     subtitle: 'Infinite reflections',
-    description: 'Multiple mirrors at specific angles create stunning patterns through repeated reflections. Two mirrors at 60° create 5 reflections, at 45° create 7 reflections. The pattern depends on the angle between mirrors.',
-    formula: 'Number of images = (360°/angle) - 1',
-    realExample: 'A kaleidoscope with mirrors at 60° creates hexagonal patterns with 5 mirror images.',
+    description: 'Multiple mirrors at specific angles create stunning patterns through repeated reflections. Two mirrors at 60 degrees create 5 reflections, at 45 degrees create 7 reflections. The pattern depends on the angle between mirrors.',
+    formula: 'Number of images = (360 degrees/angle) - 1',
+    realExample: 'A kaleidoscope with mirrors at 60 degrees creates hexagonal patterns with 5 mirror images.',
     interactiveHint: 'Stand between two parallel mirrors - you\'ll see infinite copies of yourself!'
+  },
+  {
+    id: 'solar',
+    title: 'Solar Concentrators',
+    subtitle: 'Harnessing sunlight',
+    description: 'Solar power plants use arrays of mirrors (heliostats) to reflect sunlight onto a central tower. Each mirror is precisely angled so that incident sunlight reflects to the focal point, concentrating energy to generate electricity.',
+    formula: 'All reflected rays converge at focal point',
+    realExample: 'The Ivanpah Solar Plant uses 173,500 heliostats to generate 392 MW of electricity.',
+    interactiveHint: 'A magnifying glass focuses light by bending it; solar concentrators do the same with reflection!'
   }
 ];
 
@@ -142,14 +148,14 @@ const quizQuestions = [
     explanation: "Both angles are measured from the normal - an imaginary line perpendicular to the mirror surface at the point where light hits."
   },
   {
-    question: "If light hits a mirror at 0° to the normal, at what angle does it reflect?",
+    question: "If light hits a mirror at 0 degrees to the normal, at what angle does it reflect?",
     options: [
-      { text: "90°", correct: false },
-      { text: "45°", correct: false },
-      { text: "180°", correct: false },
-      { text: "0°", correct: true }
+      { text: "90 degrees", correct: false },
+      { text: "45 degrees", correct: false },
+      { text: "180 degrees", correct: false },
+      { text: "0 degrees", correct: true }
     ],
-    explanation: "If light comes straight in (0° to normal), it bounces straight back (0° on the other side). This is called normal incidence."
+    explanation: "If light comes straight in (0 degrees to normal), it bounces straight back (0 degrees on the other side). This is called normal incidence."
   },
   {
     question: "Why does a flat mirror create a 'virtual' image?",
@@ -172,14 +178,14 @@ const quizQuestions = [
     explanation: "For a flat mirror, the virtual image appears exactly as far behind the mirror as the object is in front. This is why your reflection seems to be inside the mirror."
   },
   {
-    question: "Two mirrors are placed at 90° to form a corner. Light enters at 30° to one mirror. What angle does it exit?",
+    question: "Two mirrors are placed at 90 degrees to form a corner. Light enters at 30 degrees to one mirror. What angle does it exit?",
     options: [
-      { text: "30° in the same direction", correct: false },
-      { text: "30° but going back the way it came", correct: true },
-      { text: "60°", correct: false },
-      { text: "90°", correct: false }
+      { text: "30 degrees in the same direction", correct: false },
+      { text: "30 degrees but going back the way it came", correct: true },
+      { text: "60 degrees", correct: false },
+      { text: "90 degrees", correct: false }
     ],
-    explanation: "A corner reflector (90° angle) always sends light back parallel to its incoming direction. After two reflections, the exit angle equals the entry angle but in the opposite direction."
+    explanation: "A corner reflector (90 degree angle) always sends light back parallel to its incoming direction. After two reflections, the exit angle equals the entry angle but in the opposite direction."
   },
   {
     question: "Why are corner cube reflectors used on road signs?",
@@ -189,7 +195,7 @@ const quizQuestions = [
       { text: "They reflect light back to the source regardless of entry angle", correct: true },
       { text: "They absorb less light", correct: false }
     ],
-    explanation: "Corner cubes (three 90° mirrors) are retroreflectors - they send light back exactly where it came from. Car headlights reflect straight back to the driver's eyes."
+    explanation: "Corner cubes (three 90 degree mirrors) are retroreflectors - they send light back exactly where it came from. Car headlights reflect straight back to the driver's eyes."
   },
   {
     question: "If you place two parallel mirrors facing each other, how many images do you see?",
@@ -204,22 +210,22 @@ const quizQuestions = [
   {
     question: "A periscope uses two mirrors at what angle?",
     options: [
-      { text: "30°", correct: false },
-      { text: "45°", correct: true },
-      { text: "60°", correct: false },
-      { text: "90°", correct: false }
+      { text: "30 degrees", correct: false },
+      { text: "45 degrees", correct: true },
+      { text: "60 degrees", correct: false },
+      { text: "90 degrees", correct: false }
     ],
-    explanation: "Periscope mirrors are at 45° to the vertical. Light hits at 45° and reflects at 45°, turning 90°. Two such mirrors redirect light by 180°, allowing you to see around corners."
+    explanation: "Periscope mirrors are at 45 degrees to the vertical. Light hits at 45 degrees and reflects at 45 degrees, turning 90 degrees. Two such mirrors redirect light by 180 degrees, allowing you to see around corners."
   },
   {
-    question: "If mirrors are at 60° angle, how many images will you see between them?",
+    question: "If mirrors are at 60 degree angle, how many images will you see between them?",
     options: [
       { text: "3", correct: false },
       { text: "4", correct: false },
       { text: "5", correct: true },
       { text: "6", correct: false }
     ],
-    explanation: "The formula is: Number of images = (360°/angle) - 1. For 60°: (360/60) - 1 = 6 - 1 = 5 images. This is the principle behind kaleidoscopes."
+    explanation: "The formula is: Number of images = (360 degrees/angle) - 1. For 60 degrees: (360/60) - 1 = 6 - 1 = 5 images. This is the principle behind kaleidoscopes."
   }
 ];
 
@@ -231,14 +237,10 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   width = 800,
   height = 600,
   onBack,
-  metadata
+  gamePhase
 }) => {
-  // Core state - using numeric phases
-  const [phase, setPhase] = useState<number>(0);
-
-  // Navigation refs
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
+  // Core state - using string phases
+  const [phase, setPhase] = useState<Phase>('hook');
 
   // Sound function
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -281,8 +283,6 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   const [showNormal, setShowNormal] = useState(true);
   const [showAngles, setShowAngles] = useState(true);
   const [showVirtualImage, setShowVirtualImage] = useState(false);
-  const [mirrorAngle, setMirrorAngle] = useState(90); // For corner reflector
-  const [objectPosition, setObjectPosition] = useState({ x: 150, y: 100 });
   const [animationTime, setAnimationTime] = useState(0);
 
   // Animation ref
@@ -311,32 +311,20 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
     };
   }, []);
 
-  // Phase navigation with debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    navigationLockRef.current = true;
+  // Phase navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
-
     setPhase(newPhase);
     setSelectedPrediction(null);
     setShowPredictionFeedback(false);
 
     // Reset simulation for certain phases
-    if (newPhase === 2) { // play
+    if (newPhase === 'play') {
       setIncidentAngle(45);
       setShowVirtualImage(false);
-      setMirrorAngle(90);
-    } else if (newPhase === 5) { // twist_play
+    } else if (newPhase === 'twist_play') {
       setIncidentAngle(30);
-      setMirrorAngle(90);
     }
-
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
   }, [playSound]);
 
   // Prediction handling
@@ -373,7 +361,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
       setSelectedAnswer(null);
       setShowQuizFeedback(false);
     } else {
-      goToPhase(9);
+      goToPhase('mastery');
     }
 
     setTimeout(() => {
@@ -402,7 +390,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
   const canAccessQuiz = completedApps.length >= realWorldApplications.length;
 
   // ============================================================================
-  // RENDER HELPERS (Functions, not components)
+  // RENDER HELPERS
   // ============================================================================
 
   const renderButton = (
@@ -418,7 +406,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
 
     return (
       <button
-        onMouseDown={(e) => {
+        onClick={(e) => {
           e.preventDefault();
           if (!disabled) onClick();
         }}
@@ -434,44 +422,12 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           cursor: disabled ? 'not-allowed' : 'pointer',
           opacity: disabled ? 0.5 : 1,
           transition: 'all 0.2s ease',
+          zIndex: 10,
+          position: 'relative' as const,
         }}
       >
         {label}
       </button>
-    );
-  };
-
-  const renderProgressBar = () => {
-    const currentIndex = phases.indexOf(phase);
-    const progress = ((currentIndex + 1) / phases.length) * 100;
-
-    return (
-      <div style={{ marginBottom: spacing.lg }}>
-        <div style={{
-          display: 'flex',
-          justifyContent: 'space-between',
-          marginBottom: spacing.xs,
-          fontSize: typography.small.fontSize,
-          color: colors.textSecondary,
-        }}>
-          <span>Progress</span>
-          <span>{Math.round(progress)}%</span>
-        </div>
-        <div style={{
-          height: 8,
-          background: colors.border,
-          borderRadius: radius.sm,
-          overflow: 'hidden',
-        }}>
-          <div style={{
-            height: '100%',
-            width: `${progress}%`,
-            background: `linear-gradient(90deg, ${colors.primary}, ${colors.secondary})`,
-            borderRadius: radius.sm,
-            transition: 'width 0.5s ease',
-          }} />
-        </div>
-      </div>
     );
   };
 
@@ -500,9 +456,6 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
       x: centerX + Math.sin(reflectedRad) * rayLength,
       y: mirrorY - Math.cos(reflectedRad) * rayLength
     };
-
-    // Virtual image position (for object)
-    const virtualY = mirrorY + (mirrorY - objectPosition.y);
 
     return (
       <div style={{
@@ -579,7 +532,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
                 fill={colors.warning}
                 fontSize={12}
               >
-                θᵢ = {incidentAngle}°
+                Oi = {incidentAngle} deg
               </text>
 
               {/* Reflected angle arc */}
@@ -595,7 +548,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
                 fill={colors.success}
                 fontSize={12}
               >
-                θᵣ = {incidentAngle}°
+                Or = {incidentAngle} deg
               </text>
             </>
           )}
@@ -723,7 +676,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             color: colors.primary,
             fontFamily: 'monospace',
           }}>
-            θᵢ = θᵣ
+            Oi = Or
           </div>
           <div style={{
             display: 'flex',
@@ -733,11 +686,11 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           }}>
             <div>
               <span style={{ color: colors.warning }}>Incident: </span>
-              <span style={{ color: colors.text, fontWeight: '600' }}>{incidentAngle}°</span>
+              <span style={{ color: colors.text, fontWeight: '600' }}>{incidentAngle} deg</span>
             </div>
             <div>
               <span style={{ color: colors.success }}>Reflected: </span>
-              <span style={{ color: colors.text, fontWeight: '600' }}>{incidentAngle}°</span>
+              <span style={{ color: colors.text, fontWeight: '600' }}>{incidentAngle} deg</span>
             </div>
           </div>
         </div>
@@ -751,25 +704,15 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
     const cornerX = simWidth / 2;
     const cornerY = simHeight / 2 + 40;
 
-    // Convert mirror angle to radians
-    const mirror2Rad = (180 - mirrorAngle) * Math.PI / 180;
-
-    // Calculate ray path through corner reflector
-    const incidentRad = incidentAngle * Math.PI / 180;
-
     // First hit on horizontal mirror
     const rayStart = { x: cornerX - 120, y: cornerY - 80 };
     const hit1 = { x: cornerX - 40, y: cornerY };
-
-    // First reflection (off horizontal mirror)
-    const reflected1Angle = incidentAngle;
-    const reflected1Rad = reflected1Angle * Math.PI / 180;
 
     // Second hit on vertical mirror
     const hit2Y = cornerY - 60;
     const hit2X = cornerX;
 
-    // After two 90° reflections, light returns parallel to original
+    // After two 90 degree reflections, light returns parallel to original
     const finalEnd = {
       x: cornerX - 120,
       y: hit2Y
@@ -799,8 +742,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
 
           {/* Vertical mirror */}
           <rect x={cornerX - 3} y={cornerY - 100} width={6} height={100}
-                fill="url(#mirrorGrad2)"
-                transform={`rotate(${180 - mirrorAngle}, ${cornerX}, ${cornerY})`} />
+                fill="url(#mirrorGrad2)" />
 
           {/* Corner point */}
           <circle cx={cornerX} cy={cornerY} r={5} fill={colors.accent} />
@@ -897,16 +839,16 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           {showAngles && (
             <>
               <text x={hit1.x - 30} y={cornerY - 55} fill={colors.warning} fontSize={11}>
-                {incidentAngle}°
+                {incidentAngle} deg
               </text>
               <text x={hit1.x + 5} y={cornerY - 55} fill={colors.secondary} fontSize={11}>
-                {incidentAngle}°
+                {incidentAngle} deg
               </text>
               <text x={cornerX - 45} y={hit2Y - 10} fill={colors.secondary} fontSize={11}>
-                {90 - incidentAngle}°
+                {90 - incidentAngle} deg
               </text>
               <text x={cornerX - 45} y={hit2Y + 20} fill={colors.success} fontSize={11}>
-                {90 - incidentAngle}°
+                {90 - incidentAngle} deg
               </text>
             </>
           )}
@@ -919,7 +861,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             Out (parallel!)
           </text>
           <text x={cornerX + 10} y={cornerY + 20} fill={colors.accent} fontSize={11}>
-            90° corner
+            90 deg corner
           </text>
         </svg>
 
@@ -935,9 +877,9 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             Retroreflection!
           </div>
           <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
-            After two 90° reflections, light returns <strong>parallel</strong> to its original direction.
+            After two 90 degree reflections, light returns <strong>parallel</strong> to its original direction.
             <br/>
-            Entry angle = {incidentAngle}° → Exit angle = {incidentAngle}° (opposite direction)
+            Entry angle = {incidentAngle} deg - Exit angle = {incidentAngle} deg (opposite direction)
           </p>
         </div>
       </div>
@@ -963,7 +905,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           display: 'block',
           marginBottom: 8
         }}>
-          Incident Angle: {incidentAngle}°
+          Incident Angle: {incidentAngle} deg
         </label>
         <input
           type="range"
@@ -983,7 +925,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
         justifyContent: 'center',
       }}>
         <button
-          onMouseDown={() => setShowNormal(!showNormal)}
+          onClick={() => setShowNormal(!showNormal)}
           style={{
             padding: `${spacing.xs}px ${spacing.md}px`,
             background: showNormal ? colors.primary : colors.cardBg,
@@ -992,12 +934,14 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             color: colors.text,
             fontSize: typography.small.fontSize,
             cursor: 'pointer',
+            zIndex: 10,
+            position: 'relative' as const,
           }}
         >
           Normal Line
         </button>
         <button
-          onMouseDown={() => setShowAngles(!showAngles)}
+          onClick={() => setShowAngles(!showAngles)}
           style={{
             padding: `${spacing.xs}px ${spacing.md}px`,
             background: showAngles ? colors.secondary : colors.cardBg,
@@ -1006,13 +950,15 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             color: colors.text,
             fontSize: typography.small.fontSize,
             cursor: 'pointer',
+            zIndex: 10,
+            position: 'relative' as const,
           }}
         >
           Angle Labels
         </button>
         {phase === 'play' && (
           <button
-            onMouseDown={() => setShowVirtualImage(!showVirtualImage)}
+            onClick={() => setShowVirtualImage(!showVirtualImage)}
             style={{
               padding: `${spacing.xs}px ${spacing.md}px`,
               background: showVirtualImage ? colors.accent : colors.cardBg,
@@ -1021,6 +967,8 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
               color: colors.text,
               fontSize: typography.small.fontSize,
               cursor: 'pointer',
+              zIndex: 10,
+              position: 'relative' as const,
             }}
           >
             Virtual Image
@@ -1041,7 +989,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
       {[15, 30, 45, 60, 75].map(angle => (
         <button
           key={angle}
-          onMouseDown={() => setIncidentAngle(angle)}
+          onClick={() => setIncidentAngle(angle)}
           style={{
             padding: `${spacing.xs}px ${spacing.md}px`,
             background: incidentAngle === angle ? colors.primary : colors.cardBg,
@@ -1050,9 +998,11 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             color: colors.text,
             fontSize: typography.small.fontSize,
             cursor: 'pointer',
+            zIndex: 10,
+            position: 'relative' as const,
           }}
         >
-          {angle}°
+          {angle} deg
         </button>
       ))}
     </div>
@@ -1085,7 +1035,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
         <div className="absolute inset-0 bg-gradient-to-br from-blue-500/5 via-transparent to-purple-500/5 rounded-3xl" />
 
         <div className="relative">
-          <div className="text-6xl mb-6">📐 = 📐</div>
+          <div className="text-6xl mb-6">Angle In = Angle Out</div>
 
           <div className="mt-8 space-y-4">
             <p className="text-xl text-white/90 font-medium leading-relaxed">
@@ -1105,8 +1055,9 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        style={{ zIndex: 10, position: 'relative' }}
       >
         <span className="relative z-10 flex items-center gap-3">
           Discover the Law
@@ -1119,28 +1070,28 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
       {/* Feature hints */}
       <div className="mt-12 flex items-center gap-8 text-sm text-slate-500">
         <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
+          <span className="text-cyan-400">*</span>
           Periscopes
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
+          <span className="text-cyan-400">*</span>
           Retroreflectors
         </div>
         <div className="flex items-center gap-2">
-          <span className="text-cyan-400">✦</span>
+          <span className="text-cyan-400">*</span>
           Lunar Ranging
         </div>
       </div>
     </div>
   );
 
-  const renderPrediction = (isTwist = false) => {
-    const pred = isTwist ? predictions.twist : predictions.initial;
+  const renderPredict = () => {
+    const pred = predictions.initial;
 
     return (
       <div>
         <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
-          {isTwist ? '🔮 Corner Magic' : '🤔 Make Your Prediction'}
+          Make Your Prediction
         </h2>
         <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
           {pred.question}
@@ -1187,7 +1138,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
               color: selectedPrediction === pred.correct ? colors.success : colors.warning,
               marginBottom: spacing.sm,
             }}>
-              {selectedPrediction === pred.correct ? '✓ Perfect!' : '✗ Let\'s explore this!'}
+              {selectedPrediction === pred.correct ? 'Perfect!' : 'Let\'s explore this!'}
             </h3>
             <p style={{ color: colors.text, margin: 0 }}>{pred.explanation}</p>
           </div>
@@ -1197,55 +1148,36 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           {!showPredictionFeedback ? (
             renderButton('Lock In Prediction', handlePredictionSubmit, 'primary', !selectedPrediction)
           ) : (
-            renderButton('See It In Action →', () => goToPhase(isTwist ? 'twist_play' : 'play'))
+            renderButton('See It In Action', () => goToPhase('play'))
           )}
         </div>
       </div>
     );
   };
 
-  const renderPlay = (isTwist = false) => (
+  const renderPlay = () => (
     <div>
       <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
-        {isTwist ? '📐 Corner Reflector Lab' : '🪞 Reflection Playground'}
+        Reflection Playground
       </h2>
       <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
-        {isTwist
-          ? 'Watch how two 90° mirrors send light back the way it came!'
-          : 'Change the angle and watch how incidence always equals reflection.'}
+        Change the angle and watch how incidence always equals reflection.
       </p>
 
-      {isTwist ? renderCornerReflector() : renderReflectionSimulation()}
+      {renderReflectionSimulation()}
       {renderControls()}
-      {!isTwist && renderQuickButtons()}
-
-      {isTwist && (
-        <div style={{
-          background: `${colors.accent}22`,
-          padding: spacing.lg,
-          borderRadius: radius.lg,
-          marginBottom: spacing.lg,
-        }}>
-          <h3 style={{ color: colors.accent, marginBottom: spacing.sm }}>🌙 Apollo Connection</h3>
-          <p style={{ color: colors.text, margin: 0 }}>
-            Astronauts left corner cube reflectors on the Moon. We bounce lasers off them to
-            measure Earth-Moon distance to within centimeters! The laser returns to Earth after
-            traveling 770,000 km - only possible because corner reflectors send light back exactly
-            where it came from.
-          </p>
-        </div>
-      )}
+      {renderQuickButtons()}
 
       <div style={{ textAlign: 'center' }}>
-        {renderButton('I Understand This →', () => goToPhase(isTwist ? 'twist_review' : 'review'))}
+        {renderButton('I Understand This', () => goToPhase('review'))}
       </div>
     </div>
   );
 
-  const renderReview = (isTwist = false) => (
+  const renderReview = () => (
     <div>
       <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
-        {isTwist ? '🎯 Retroreflector Geometry' : '📚 The Law of Reflection'}
+        The Law of Reflection
       </h2>
 
       <div style={{
@@ -1254,127 +1186,240 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
         borderRadius: radius.lg,
         marginBottom: spacing.lg,
       }}>
-        {isTwist ? (
-          <>
-            <h3 style={{ color: colors.accent, marginBottom: spacing.md }}>Why 90° Corners Work Magic</h3>
+        <h3 style={{ color: colors.primary, marginBottom: spacing.md }}>The Fundamental Law</h3>
 
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
-              gap: spacing.lg,
-            }}>
-              <div style={{
-                background: colors.background,
-                padding: spacing.md,
-                borderRadius: radius.md,
-              }}>
-                <h4 style={{ color: colors.warning, marginBottom: spacing.sm }}>2D Corner (2 mirrors)</h4>
-                <p style={{ color: colors.textSecondary, margin: 0 }}>
-                  Light enters at angle θ<br/>
-                  First reflection: θ<br/>
-                  Second reflection: (90° - θ)<br/>
-                  <strong style={{ color: colors.success }}>Returns parallel to entry!</strong>
-                </p>
-              </div>
-              <div style={{
-                background: colors.background,
-                padding: spacing.md,
-                borderRadius: radius.md,
-              }}>
-                <h4 style={{ color: colors.secondary, marginBottom: spacing.sm }}>3D Corner Cube (3 mirrors)</h4>
-                <p style={{ color: colors.textSecondary, margin: 0 }}>
-                  Works in all 3 dimensions<br/>
-                  Light returns to source<br/>
-                  Regardless of entry angle<br/>
-                  <strong style={{ color: colors.success }}>True retroreflection!</strong>
-                </p>
-              </div>
-            </div>
+        <div style={{
+          textAlign: 'center',
+          padding: spacing.lg,
+          background: colors.background,
+          borderRadius: radius.md,
+          marginBottom: spacing.lg,
+        }}>
+          <div style={{ fontSize: '32px', color: colors.primary, fontFamily: 'monospace' }}>
+            Oi = Or
+          </div>
+          <p style={{ color: colors.textSecondary, margin: `${spacing.sm}px 0 0` }}>
+            Angle of incidence = Angle of reflection
+          </p>
+        </div>
 
-            <div style={{
-              marginTop: spacing.lg,
-              padding: spacing.md,
-              background: colors.background,
-              borderRadius: radius.md,
-              textAlign: 'center',
-            }}>
-              <p style={{ color: colors.text, margin: 0 }}>
-                <span style={{ fontSize: '24px' }}>🚗</span> This is why bike reflectors and road signs
-                are visible from any angle - <strong style={{ color: colors.accent }}>they reflect light
-                straight back to your headlights!</strong>
-              </p>
-            </div>
-          </>
-        ) : (
-          <>
-            <h3 style={{ color: colors.primary, marginBottom: spacing.md }}>The Fundamental Law</h3>
-
-            <div style={{
-              textAlign: 'center',
-              padding: spacing.lg,
-              background: colors.background,
-              borderRadius: radius.md,
-              marginBottom: spacing.lg,
-            }}>
-              <div style={{ fontSize: '32px', color: colors.primary, fontFamily: 'monospace' }}>
-                θᵢ = θᵣ
-              </div>
-              <p style={{ color: colors.textSecondary, margin: `${spacing.sm}px 0 0` }}>
-                Angle of incidence = Angle of reflection
-              </p>
-            </div>
-
-            <div style={{
-              display: 'grid',
-              gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
-              gap: spacing.md,
-            }}>
-              <div style={{
-                background: colors.background,
-                padding: spacing.md,
-                borderRadius: radius.md,
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: '32px', marginBottom: spacing.xs }}>📏</div>
-                <div style={{ color: colors.text, fontWeight: '600' }}>Measured from Normal</div>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
-                  Not from the mirror surface!
-                </p>
-              </div>
-              <div style={{
-                background: colors.background,
-                padding: spacing.md,
-                borderRadius: radius.md,
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: '32px', marginBottom: spacing.xs }}>🔄</div>
-                <div style={{ color: colors.text, fontWeight: '600' }}>Same Plane</div>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
-                  Incident, reflected, and normal all in one plane
-                </p>
-              </div>
-              <div style={{
-                background: colors.background,
-                padding: spacing.md,
-                borderRadius: radius.md,
-                textAlign: 'center',
-              }}>
-                <div style={{ fontSize: '32px', marginBottom: spacing.xs }}>👻</div>
-                <div style={{ color: colors.text, fontWeight: '600' }}>Virtual Images</div>
-                <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
-                  Appear behind the mirror (not really there!)
-                </p>
-              </div>
-            </div>
-          </>
-        )}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)',
+          gap: spacing.md,
+        }}>
+          <div style={{
+            background: colors.background,
+            padding: spacing.md,
+            borderRadius: radius.md,
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: spacing.xs }}>RULER</div>
+            <div style={{ color: colors.text, fontWeight: '600' }}>Measured from Normal</div>
+            <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
+              Not from the mirror surface!
+            </p>
+          </div>
+          <div style={{
+            background: colors.background,
+            padding: spacing.md,
+            borderRadius: radius.md,
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: spacing.xs }}>ROTATE</div>
+            <div style={{ color: colors.text, fontWeight: '600' }}>Same Plane</div>
+            <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
+              Incident, reflected, and normal all in one plane
+            </p>
+          </div>
+          <div style={{
+            background: colors.background,
+            padding: spacing.md,
+            borderRadius: radius.md,
+            textAlign: 'center',
+          }}>
+            <div style={{ fontSize: '32px', marginBottom: spacing.xs }}>GHOST</div>
+            <div style={{ color: colors.text, fontWeight: '600' }}>Virtual Images</div>
+            <p style={{ color: colors.textSecondary, margin: 0, fontSize: typography.small.fontSize }}>
+              Appear behind the mirror (not really there!)
+            </p>
+          </div>
+        </div>
       </div>
 
       <div style={{ textAlign: 'center' }}>
-        {renderButton(
-          isTwist ? 'See Real Applications →' : 'What\'s the Twist? →',
-          () => goToPhase(isTwist ? 'transfer' : 'twist_predict')
+        {renderButton('What\'s the Twist?', () => goToPhase('twist_predict'))}
+      </div>
+    </div>
+  );
+
+  const renderTwistPredict = () => {
+    const pred = predictions.twist;
+
+    return (
+      <div>
+        <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
+          Corner Magic
+        </h2>
+        <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
+          {pred.question}
+        </p>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap: spacing.md,
+          marginBottom: spacing.lg,
+        }}>
+          {pred.options.map((opt) => (
+            <div
+              key={opt.id}
+              onClick={() => handlePredictionSelect(opt.id)}
+              style={{
+                padding: spacing.lg,
+                background: selectedPrediction === opt.id
+                  ? `linear-gradient(135deg, ${colors.primary}33, ${colors.secondary}33)`
+                  : colors.cardBg,
+                border: `2px solid ${selectedPrediction === opt.id ? colors.primary : colors.border}`,
+                borderRadius: radius.lg,
+                cursor: showPredictionFeedback ? 'default' : 'pointer',
+                transition: 'all 0.3s ease',
+              }}
+            >
+              <div style={{ fontSize: '32px', marginBottom: spacing.sm }}>{opt.icon}</div>
+              <p style={{ color: colors.text, margin: 0 }}>{opt.text}</p>
+            </div>
+          ))}
+        </div>
+
+        {showPredictionFeedback && (
+          <div style={{
+            padding: spacing.lg,
+            background: selectedPrediction === pred.correct
+              ? `${colors.success}22`
+              : `${colors.warning}22`,
+            border: `1px solid ${selectedPrediction === pred.correct ? colors.success : colors.warning}`,
+            borderRadius: radius.lg,
+            marginBottom: spacing.lg,
+          }}>
+            <h3 style={{
+              color: selectedPrediction === pred.correct ? colors.success : colors.warning,
+              marginBottom: spacing.sm,
+            }}>
+              {selectedPrediction === pred.correct ? 'Perfect!' : 'Let\'s explore this!'}
+            </h3>
+            <p style={{ color: colors.text, margin: 0 }}>{pred.explanation}</p>
+          </div>
         )}
+
+        <div style={{ textAlign: 'center' }}>
+          {!showPredictionFeedback ? (
+            renderButton('Lock In Prediction', handlePredictionSubmit, 'primary', !selectedPrediction)
+          ) : (
+            renderButton('See It In Action', () => goToPhase('twist_play'))
+          )}
+        </div>
+      </div>
+    );
+  };
+
+  const renderTwistPlay = () => (
+    <div>
+      <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
+        Corner Reflector Lab
+      </h2>
+      <p style={{ ...typography.body, color: colors.textSecondary, marginBottom: spacing.lg, textAlign: 'center' }}>
+        Watch how two 90 degree mirrors send light back the way it came!
+      </p>
+
+      {renderCornerReflector()}
+      {renderControls()}
+
+      <div style={{
+        background: `${colors.accent}22`,
+        padding: spacing.lg,
+        borderRadius: radius.lg,
+        marginBottom: spacing.lg,
+      }}>
+        <h3 style={{ color: colors.accent, marginBottom: spacing.sm }}>Apollo Connection</h3>
+        <p style={{ color: colors.text, margin: 0 }}>
+          Astronauts left corner cube reflectors on the Moon. We bounce lasers off them to
+          measure Earth-Moon distance to within centimeters! The laser returns to Earth after
+          traveling 770,000 km - only possible because corner reflectors send light back exactly
+          where it came from.
+        </p>
+      </div>
+
+      <div style={{ textAlign: 'center' }}>
+        {renderButton('I Understand This', () => goToPhase('twist_review'))}
+      </div>
+    </div>
+  );
+
+  const renderTwistReview = () => (
+    <div>
+      <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.lg, textAlign: 'center' }}>
+        Retroreflector Geometry
+      </h2>
+
+      <div style={{
+        background: colors.cardBg,
+        padding: spacing.xl,
+        borderRadius: radius.lg,
+        marginBottom: spacing.lg,
+      }}>
+        <h3 style={{ color: colors.accent, marginBottom: spacing.md }}>Why 90 Degree Corners Work Magic</h3>
+
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
+          gap: spacing.lg,
+        }}>
+          <div style={{
+            background: colors.background,
+            padding: spacing.md,
+            borderRadius: radius.md,
+          }}>
+            <h4 style={{ color: colors.warning, marginBottom: spacing.sm }}>2D Corner (2 mirrors)</h4>
+            <p style={{ color: colors.textSecondary, margin: 0 }}>
+              Light enters at angle O<br/>
+              First reflection: O<br/>
+              Second reflection: (90 deg - O)<br/>
+              <strong style={{ color: colors.success }}>Returns parallel to entry!</strong>
+            </p>
+          </div>
+          <div style={{
+            background: colors.background,
+            padding: spacing.md,
+            borderRadius: radius.md,
+          }}>
+            <h4 style={{ color: colors.secondary, marginBottom: spacing.sm }}>3D Corner Cube (3 mirrors)</h4>
+            <p style={{ color: colors.textSecondary, margin: 0 }}>
+              Works in all 3 dimensions<br/>
+              Light returns to source<br/>
+              Regardless of entry angle<br/>
+              <strong style={{ color: colors.success }}>True retroreflection!</strong>
+            </p>
+          </div>
+        </div>
+
+        <div style={{
+          marginTop: spacing.lg,
+          padding: spacing.md,
+          background: colors.background,
+          borderRadius: radius.md,
+          textAlign: 'center',
+        }}>
+          <p style={{ color: colors.text, margin: 0 }}>
+            <span style={{ fontSize: '24px' }}>CAR</span> This is why bike reflectors and road signs
+            are visible from any angle - <strong style={{ color: colors.accent }}>they reflect light
+            straight back to your headlights!</strong>
+          </p>
+        </div>
+      </div>
+
+      <div style={{ textAlign: 'center' }}>
+        {renderButton('See Real Applications', () => goToPhase('transfer'))}
       </div>
     </div>
   );
@@ -1385,7 +1430,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
     return (
       <div>
         <h2 style={{ ...typography.h2, color: colors.text, marginBottom: spacing.md, textAlign: 'center' }}>
-          🌍 Reflection in the Real World
+          Reflection in the Real World
         </h2>
 
         {/* App navigation dots */}
@@ -1421,9 +1466,10 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
                   opacity: isLocked ? 0.4 : 1,
                   transition: 'all 0.3s ease',
                   fontSize: '16px',
+                  color: colors.text,
                 }}
               >
-                {isLocked ? '🔒' : isCompleted ? '✓' : index + 1}
+                {isLocked ? 'X' : isCompleted ? 'OK' : index + 1}
               </div>
             );
           })}
@@ -1436,11 +1482,8 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           padding: spacing.xl,
           marginBottom: spacing.lg,
         }}>
-          <div style={{ fontSize: '48px', marginBottom: spacing.md, textAlign: 'center' }}>
-            {currentApp.title.split(' ')[0]}
-          </div>
           <h3 style={{ ...typography.h3, color: colors.primary, marginBottom: spacing.xs, textAlign: 'center' }}>
-            {currentApp.title.substring(currentApp.title.indexOf(' ') + 1)}
+            {currentApp.title}
           </h3>
           <p style={{ color: colors.secondary, textAlign: 'center', marginBottom: spacing.lg }}>
             {currentApp.subtitle}
@@ -1468,7 +1511,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             borderRadius: radius.md,
             marginBottom: spacing.md,
           }}>
-            <div style={{ color: colors.success, marginBottom: 4 }}>💡 Real Example:</div>
+            <div style={{ color: colors.success, marginBottom: 4 }}>Real Example:</div>
             <p style={{ color: colors.text, margin: 0 }}>{currentApp.realExample}</p>
           </div>
 
@@ -1477,25 +1520,25 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             padding: spacing.md,
             borderRadius: radius.md,
           }}>
-            <div style={{ color: colors.accent, marginBottom: 4 }}>🔬 Try This:</div>
+            <div style={{ color: colors.accent, marginBottom: 4 }}>Try This:</div>
             <p style={{ color: colors.text, margin: 0 }}>{currentApp.interactiveHint}</p>
           </div>
         </div>
 
-        <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.md }}>
+        <div style={{ display: 'flex', justifyContent: 'center', gap: spacing.md, flexWrap: 'wrap' }}>
           {!completedApps.includes(currentApp.id) ? (
-            renderButton('Got It! ✓', () => handleCompleteApp(currentApp.id), 'success')
+            renderButton('Got It!', () => handleCompleteApp(currentApp.id), 'success')
           ) : currentAppIndex < realWorldApplications.length - 1 ? (
-            renderButton('Next Application →', () => setCurrentAppIndex(i => i + 1))
+            renderButton('Next Application', () => setCurrentAppIndex(i => i + 1))
           ) : null}
 
           {canAccessQuiz && (
-            renderButton('Take the Quiz →', () => {
+            renderButton('Take the Quiz', () => {
               setCurrentQuestion(0);
               setSelectedAnswer(null);
               setShowQuizFeedback(false);
               setScore(0);
-              goToPhase(8);
+              goToPhase('test');
             }, 'success')
           )}
         </div>
@@ -1580,8 +1623,8 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
                   }}
                 >
                   <span style={{ color: colors.text }}>{option.text}</span>
-                  {showResult && isCorrect && <span style={{ marginLeft: 8 }}>✓</span>}
-                  {showResult && isSelected && !isCorrect && <span style={{ marginLeft: 8 }}>✗</span>}
+                  {showResult && isCorrect && <span style={{ marginLeft: 8 }}>OK</span>}
+                  {showResult && isSelected && !isCorrect && <span style={{ marginLeft: 8 }}>X</span>}
                 </div>
               );
             })}
@@ -1604,7 +1647,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             renderButton('Submit Answer', handleAnswerSubmit, 'primary', selectedAnswer === null)
           ) : (
             renderButton(
-              currentQuestion < quizQuestions.length - 1 ? 'Next Question →' : 'See Results →',
+              currentQuestion < quizQuestions.length - 1 ? 'Next Question' : 'See Results',
               handleNextQuestion
             )
           )}
@@ -1620,7 +1663,7 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
     return (
       <div style={{ textAlign: 'center' }}>
         <div style={{ fontSize: '72px', marginBottom: spacing.lg }}>
-          {passed ? '🏆' : '📚'}
+          {passed ? 'TROPHY' : 'BOOK'}
         </div>
         <h2 style={{ ...typography.h1, color: colors.text, marginBottom: spacing.md }}>
           {passed ? 'Reflection Master!' : 'Keep Reflecting!'}
@@ -1670,9 +1713,9 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
           maxWidth: 500,
           margin: '0 auto 24px',
         }}>
-          <h3 style={{ color: colors.text, marginBottom: spacing.sm }}>🧠 Key Takeaways</h3>
+          <h3 style={{ color: colors.text, marginBottom: spacing.sm }}>Key Takeaways</h3>
           <ul style={{ color: colors.textSecondary, textAlign: 'left', margin: 0, paddingLeft: 20 }}>
-            <li>Law of Reflection: θᵢ = θᵣ (angles from normal)</li>
+            <li>Law of Reflection: Oi = Or (angles from normal)</li>
             <li>Flat mirrors create virtual images</li>
             <li>Image distance = object distance for flat mirrors</li>
             <li>Corner reflectors return light to its source</li>
@@ -1686,12 +1729,12 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
             setSelectedAnswer(null);
             setShowQuizFeedback(false);
             setScore(0);
-            goToPhase(8);
+            goToPhase('test');
           })}
           {renderButton('Restart Journey', () => {
             setCompletedApps([]);
             setCurrentAppIndex(0);
-            goToPhase(0);
+            goToPhase('hook');
           }, 'secondary')}
           {onBack && renderButton('Back to Menu', onBack, 'secondary')}
         </div>
@@ -1705,19 +1748,21 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
 
   const renderPhaseContent = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPrediction(false);
-      case 2: return renderPlay(false);
-      case 3: return renderReview(false);
-      case 4: return renderPrediction(true);
-      case 5: return renderPlay(true);
-      case 6: return renderReview(true);
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
+
+  const currentIdx = phaseOrder.indexOf(phase);
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
@@ -1732,18 +1777,19 @@ const LawOfReflectionRenderer: React.FC<LawOfReflectionRendererProps> = ({
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Law of Reflection</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phase > p
+                    : currentIdx > i
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                style={{ zIndex: 10, position: 'relative' }}
               />
             ))}
           </div>

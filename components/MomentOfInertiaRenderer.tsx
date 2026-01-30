@@ -1,7 +1,27 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
-// Phase is now numeric 0-9 for consistency with gold standard
-// 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+// ============================================================================
+// MOMENT OF INERTIA RENDERER - 10-PHASE STRUCTURE
+// Covers rotational inertia, I = mr², and conservation of angular momentum
+// ============================================================================
+
+// Phase type - string-based for clarity
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Introduction',
+  predict: 'Predict',
+  play: 'Experiment',
+  review: 'Understanding',
+  twist_predict: 'New Scenario',
+  twist_play: 'Spin Simulation',
+  twist_review: 'Deep Insight',
+  transfer: 'Real World',
+  test: 'Knowledge Test',
+  mastery: 'Mastery'
+};
 
 type GameEventType =
   | 'phase_change'
@@ -26,33 +46,19 @@ interface GameEvent {
 
 interface Props {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
-const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  // Phase constants
-  const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-  const phaseLabels: Record<number, string> = {
-    0: 'Hook',
-    1: 'Predict',
-    2: 'Lab',
-    3: 'Review',
-    4: 'Twist',
-    5: 'Demo',
-    6: 'Discovery',
-    7: 'Apply',
-    8: 'Test',
-    9: 'Mastery'
-  };
-
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
+  const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [showTwistFeedback, setShowTwistFeedback] = useState(false);
   const [testAnswers, setTestAnswers] = useState<number[]>(Array(10).fill(-1));
   const [showTestResults, setShowTestResults] = useState(false);
+  const [testScore, setTestScore] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
   const [activeAppTab, setActiveAppTab] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
@@ -64,7 +70,6 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
   const [isSpinning, setIsSpinning] = useState(true);
   const [initialL, setInitialL] = useState(15); // constant angular momentum
 
-  const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
 
   // Responsive design
@@ -109,27 +114,24 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
 
   // Sync with external phase control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
-  const goToPhase = useCallback((newPhase: number) => {
+  const goToPhase = useCallback((newPhase: Phase) => {
     const now = Date.now();
-    if (now - lastClickRef.current < 400) return;
-    if (navigationLockRef.current) return;
+    if (now - lastClickRef.current < 300) return;
     lastClickRef.current = now;
-    navigationLockRef.current = true;
     playSound('transition');
     setPhase(newPhase);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseName: phaseLabels[newPhase] } });
     onPhaseComplete?.(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, [playSound, onGameEvent, onPhaseComplete, phaseLabels]);
+  }, [playSound, onGameEvent, onPhaseComplete]);
 
   // Calculate effective angular velocity based on arm position
-  // L = I * ω is constant, so ω = L / I
-  // When arms are tucked (extension=0), I is smaller, so ω is larger
+  // L = I * omega is constant, so omega = L / I
+  // When arms are tucked (extension=0), I is smaller, so omega is larger
   const calculateOmega = useCallback((extension: number) => {
     // I = I_body + m*r^2 for arms
     // Simplified: I scales from 1 (tucked) to 3 (extended)
@@ -225,8 +227,8 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
       question: "Angular momentum L is calculated as:",
       options: [
         { text: "L = mv", correct: false },
-        { text: "L = Iω", correct: true },
-        { text: "L = ½Iω²", correct: false },
+        { text: "L = I times omega", correct: true },
+        { text: "L = half I omega squared", correct: false },
         { text: "L = mgh", correct: false }
       ]
     },
@@ -276,7 +278,7 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
       ]
     },
     {
-      question: "The equation I = mr² shows that moment of inertia depends on distance:",
+      question: "The equation I = mr squared shows that moment of inertia depends on distance:",
       options: [
         { text: "Linearly", correct: false },
         { text: "Quadratically (squared)", correct: true },
@@ -381,6 +383,9 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
     );
   };
 
+  // ============================================================================
+  // PHASE: HOOK - Welcome page explaining moment of inertia
+  // ============================================================================
   const renderHook = () => (
     <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 px-6">
       {/* Premium badge */}
@@ -391,12 +396,12 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
 
       {/* Gradient title */}
       <h1 className="text-4xl md:text-5xl font-bold text-center mb-3 bg-gradient-to-r from-pink-400 via-purple-400 to-indigo-400 bg-clip-text text-transparent">
-        The Spinning Skater Mystery
+        Moment of Inertia
       </h1>
 
       {/* Subtitle */}
       <p className="text-slate-400 text-lg md:text-xl text-center mb-8 max-w-lg">
-        How does moving arms change spin speed?
+        Discover how mass distribution affects rotation
       </p>
 
       {/* Premium card */}
@@ -404,17 +409,23 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
         <div className="flex justify-center">
           {renderSkater(0.3, rotation, 180)}
         </div>
-        <p className="text-gray-300 text-center leading-relaxed mt-4">
-          Watch an ice skater begin a slow spin, then suddenly pull in their arms and spin incredibly fast!
-        </p>
+        <div className="mt-4 space-y-3 text-gray-300 text-center">
+          <p className="leading-relaxed">
+            <strong className="text-pink-400">Moment of inertia</strong> (also called rotational inertia) is how much an object resists changes to its rotation.
+          </p>
+          <p className="text-sm text-slate-400">
+            It depends not just on mass, but on how that mass is distributed relative to the axis of rotation.
+          </p>
+        </div>
       </div>
 
       {/* CTA Button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
+        style={{ zIndex: 10 }}
         className="group px-8 py-4 bg-gradient-to-r from-pink-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 rounded-xl font-semibold text-lg transition-all duration-300 shadow-lg shadow-pink-500/25 hover:shadow-pink-500/40 flex items-center gap-2"
       >
-        Discover the Secret
+        Make a Prediction
         <svg className="w-5 h-5 group-hover:translate-x-1 transition-transform" fill="none" viewBox="0 0 24 24" stroke="currentColor">
           <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M13 7l5 5m0 0l-5 5m5-5H6" />
         </svg>
@@ -422,34 +433,54 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
 
       {/* Hint text */}
       <p className="text-slate-500 text-sm mt-6">
-        Learn about conservation of angular momentum
+        Learn why ice skaters spin faster with tucked arms
       </p>
     </div>
   );
 
+  // ============================================================================
+  // PHASE: PREDICT - Prediction about which shape rolls down a ramp faster
+  // ============================================================================
   const renderPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <p className="text-lg text-slate-300 mb-4">
-          A spinning skater pulls their arms in close to their body. What happens to their spin speed?
+          A <span className="text-pink-400 font-semibold">solid disk</span> and a <span className="text-cyan-400 font-semibold">ring</span> (hoop) have the same mass and radius. They roll down a ramp from the same height.
         </p>
-        <div className="flex justify-center gap-4">
-          {renderSkater(1, 0, 120)}
-          <div className="flex items-center text-2xl text-cyan-400">→</div>
-          {renderSkater(0, 0, 120)}
+        <div className="flex justify-center gap-8 my-6">
+          {/* Solid disk */}
+          <div className="text-center">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="35" fill="#ec4899" opacity="0.8" stroke="#be185d" strokeWidth="2" />
+              <circle cx="40" cy="40" r="5" fill="#be185d" />
+            </svg>
+            <p className="text-sm text-pink-400 mt-2">Solid Disk</p>
+          </div>
+          {/* Ring */}
+          <div className="text-center">
+            <svg width="80" height="80" viewBox="0 0 80 80">
+              <circle cx="40" cy="40" r="35" fill="none" stroke="#22d3ee" strokeWidth="8" />
+              <circle cx="40" cy="40" r="5" fill="#06b6d4" />
+            </svg>
+            <p className="text-sm text-cyan-400 mt-2">Ring (Hoop)</p>
+          </div>
         </div>
+        <p className="text-lg text-cyan-400 font-medium">
+          Which one reaches the bottom first?
+        </p>
       </div>
       <div className="grid gap-3 w-full max-w-xl">
         {[
-          { id: 'A', text: 'Spin speed stays the same' },
-          { id: 'B', text: 'Spin speed increases significantly' },
-          { id: 'C', text: 'Spin speed decreases' },
-          { id: 'D', text: 'The skater stops spinning' }
+          { id: 'A', text: 'The ring reaches the bottom first' },
+          { id: 'B', text: 'The solid disk reaches the bottom first' },
+          { id: 'C', text: 'They reach the bottom at the same time' },
+          { id: 'D', text: 'It depends on the mass' }
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
+            style={{ zIndex: 10 }}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
@@ -469,26 +500,49 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
       {showPredictionFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Correct! This happens because of <span className="text-cyan-400">conservation of angular momentum</span>!
+            The solid disk wins! It has a <span className="text-pink-400">lower moment of inertia</span> relative to its mass.
+          </p>
+          <p className="text-slate-400 text-sm mt-2">
+            More of its energy goes into linear motion rather than rotation.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onClick={() => goToPhase('play')}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-xl hover:from-pink-500 hover:to-purple-500 transition-all duration-300"
           >
-            Explore the Physics →
+            Explore the Physics
           </button>
         </div>
       )}
     </div>
   );
 
+  // ============================================================================
+  // PHASE: PLAY - Interactive simulation with different shapes
+  // ============================================================================
   const renderPlay = () => {
     const momentOfInertia = 1 + 2 * armExtension;
     const currentOmega = calculateOmega(armExtension);
 
     return (
       <div className="flex flex-col items-center p-6">
-        <h2 className="text-2xl font-bold text-white mb-4">Interactive Spin Lab</h2>
+        <h2 className="text-2xl font-bold text-white mb-4">Shape Comparison Lab</h2>
+
+        {/* Shape formulas */}
+        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 max-w-3xl w-full">
+          {[
+            { name: 'Solid Disk', formula: 'I = (1/2)MR^2', color: 'pink' },
+            { name: 'Ring (Hoop)', formula: 'I = MR^2', color: 'cyan' },
+            { name: 'Solid Sphere', formula: 'I = (2/5)MR^2', color: 'emerald' },
+            { name: 'Hollow Sphere', formula: 'I = (2/3)MR^2', color: 'amber' }
+          ].map((shape, idx) => (
+            <div key={idx} className={`bg-slate-800/50 rounded-xl p-3 border border-${shape.color}-500/30`}>
+              <p className={`text-${shape.color}-400 font-semibold text-sm`}>{shape.name}</p>
+              <p className="text-slate-300 text-xs mt-1 font-mono">{shape.formula}</p>
+            </div>
+          ))}
+        </div>
+
         <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
           {renderSkater(armExtension, rotation, 220)}
         </div>
@@ -506,8 +560,8 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
               className="w-full accent-pink-500"
             />
             <div className="flex justify-between text-xs text-slate-400 mt-1">
-              <span>Tucked</span>
-              <span>Extended</span>
+              <span>Tucked (Low I)</span>
+              <span>Extended (High I)</span>
             </div>
           </div>
 
@@ -533,114 +587,129 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
             </div>
             <div>
               <div className="text-2xl font-bold text-cyan-400">{currentOmega.toFixed(2)}</div>
-              <div className="text-sm text-slate-300">Angular Velocity (ω)</div>
+              <div className="text-sm text-slate-300">Angular Velocity (omega)</div>
             </div>
             <div>
               <div className="text-2xl font-bold text-emerald-400">{initialL.toFixed(0)}</div>
-              <div className="text-sm text-slate-300">L = Iω (constant!)</div>
+              <div className="text-sm text-slate-300">L = I times omega (constant!)</div>
             </div>
           </div>
         </div>
 
         <div className="flex gap-4 mb-6">
           <button
-            onMouseDown={(e) => { e.preventDefault(); setIsSpinning(!isSpinning); }}
+            onClick={() => setIsSpinning(!isSpinning)}
+            style={{ zIndex: 10 }}
             className={`px-4 py-2 rounded-lg font-medium transition-colors ${
               isSpinning ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'
             } text-white`}
           >
-            {isSpinning ? '⏸ Pause' : '▶ Play'}
+            {isSpinning ? 'Pause' : 'Play'}
           </button>
         </div>
 
         <div className="bg-slate-800/70 rounded-xl p-4 max-w-2xl">
           <h3 className="text-lg font-semibold text-cyan-400 mb-2">Key Insight:</h3>
           <p className="text-slate-300 text-sm">
-            <span className="text-pink-400 font-semibold">L = Iω</span> is constant. When you decrease <span className="text-pink-400">I</span> by pulling in arms, <span className="text-cyan-400">ω</span> must increase to keep L the same!
+            <span className="text-pink-400 font-semibold">L = I times omega</span> is constant. When you decrease <span className="text-pink-400">I</span> by pulling in arms, <span className="text-cyan-400">omega</span> must increase to keep L the same!
           </p>
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+          onClick={() => goToPhase('review')}
+          style={{ zIndex: 10 }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-xl hover:from-pink-500 hover:to-purple-500 transition-all duration-300"
         >
-          Review the Concepts →
+          Review the Concepts
         </button>
       </div>
     );
   };
 
+  // ============================================================================
+  // PHASE: REVIEW - Explain I = mr^2 and formulas for different shapes
+  // ============================================================================
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Understanding Moment of Inertia</h2>
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-pink-900/50 to-purple-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-pink-400 mb-3">⚖️ Moment of Inertia</h3>
+          <h3 className="text-xl font-bold text-pink-400 mb-3">The Formula: I = mr^2</h3>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• Resistance to changes in rotation (rotational "mass")</li>
-            <li>• For a point mass: <span className="text-cyan-400 font-mono">I = mr²</span></li>
-            <li>• Depends on mass AND distance from axis</li>
-            <li>• Distance is squared—doubling r quadruples I!</li>
-            <li>• Objects with mass far from axis have larger I</li>
+            <li>For a point mass: <span className="text-cyan-400 font-mono">I = mr^2</span></li>
+            <li><strong>m</strong> = mass of the object</li>
+            <li><strong>r</strong> = distance from the rotation axis</li>
+            <li>Distance is <span className="text-pink-400">squared</span> - doubling r quadruples I!</li>
+            <li>Mass far from the axis contributes more to I</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">🔄 Angular Momentum</h3>
+          <h3 className="text-xl font-bold text-cyan-400 mb-3">Common Shapes</h3>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• <span className="text-pink-400 font-mono">L = Iω</span> (moment of inertia × angular velocity)</li>
-            <li>• Conserved when no external torque acts</li>
-            <li>• When I decreases, ω must increase</li>
-            <li>• When I increases, ω must decrease</li>
-            <li>• This is why skaters speed up with tucked arms!</li>
+            <li>Solid disk/cylinder: <span className="text-pink-400 font-mono">I = (1/2)MR^2</span></li>
+            <li>Ring/hoop: <span className="text-pink-400 font-mono">I = MR^2</span></li>
+            <li>Solid sphere: <span className="text-pink-400 font-mono">I = (2/5)MR^2</span></li>
+            <li>Hollow sphere: <span className="text-pink-400 font-mono">I = (2/3)MR^2</span></li>
+            <li>The ring has the highest I for same mass and radius!</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">🧮 The Math</h3>
+          <h3 className="text-xl font-bold text-emerald-400 mb-3">Why It Matters for Rolling</h3>
           <div className="text-slate-300 text-sm space-y-2">
-            <p><strong>Initial State:</strong> L₁ = I₁ω₁ (arms extended)</p>
-            <p><strong>Final State:</strong> L₂ = I₂ω₂ (arms tucked)</p>
-            <p><strong>Conservation:</strong> L₁ = L₂, so I₁ω₁ = I₂ω₂</p>
+            <p>When an object rolls down a ramp, its potential energy converts to:</p>
+            <p><strong>1. Translational KE:</strong> (1/2)mv^2 (moving forward)</p>
+            <p><strong>2. Rotational KE:</strong> (1/2)I omega^2 (spinning)</p>
             <p className="text-cyan-400 mt-3">
-              If I₂ = I₁/3 (arms tucked), then ω₂ = 3ω₁ — the skater spins 3x faster!
+              Objects with lower I (like solid disks) put more energy into translation and roll faster!
             </p>
           </div>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onClick={() => goToPhase('twist_predict')}
+        style={{ zIndex: 10 }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
       >
-        Discover a Surprising Twist →
+        Discover a Surprising Twist
       </button>
     </div>
   );
 
+  // ============================================================================
+  // PHASE: TWIST_PREDICT - Scenario about figure skater spinning
+  // ============================================================================
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">🌟 The Twist Challenge</h2>
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">The Figure Skater Challenge</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <p className="text-lg text-slate-300 mb-4">
-          A spinning skater is holding two heavy weights at arm's length. While spinning, they let go of the weights, which fly away.
+          A figure skater is spinning with arms extended. They then pull their arms in close to their body.
         </p>
+        <div className="flex justify-center gap-4 my-4">
+          {renderSkater(1, 0, 120)}
+          <div className="flex items-center text-2xl text-cyan-400">then</div>
+          {renderSkater(0, 0, 120)}
+        </div>
         <p className="text-lg text-cyan-400 font-medium">
-          What happens to the skater's spin speed immediately after releasing the weights?
+          What happens to their spin speed?
         </p>
       </div>
 
       <div className="grid gap-3 w-full max-w-xl">
         {[
-          { id: 'A', text: 'The skater\'s spin speed stays the same' },
-          { id: 'B', text: 'The skater speeds up (like tucking arms)' },
-          { id: 'C', text: 'The skater slows down' },
-          { id: 'D', text: 'The skater stops spinning completely' }
+          { id: 'A', text: 'Spin speed increases significantly' },
+          { id: 'B', text: 'Spin speed stays the same' },
+          { id: 'C', text: 'Spin speed decreases' },
+          { id: 'D', text: 'The skater stops spinning' }
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
+            style={{ zIndex: 10 }}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
@@ -661,240 +730,179 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
       {showTwistFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Surprising! The spin speed stays the same!
+            Correct! The spin speed increases dramatically!
           </p>
           <p className="text-slate-400 text-sm mt-2">
-            The weights carry away their share of angular momentum when released. The skater keeps only their own L.
+            This is due to <span className="text-cyan-400 font-semibold">conservation of angular momentum</span>. When I decreases, omega must increase!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onClick={() => goToPhase('twist_play')}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
           >
-            See Why →
+            See It In Action
           </button>
         </div>
       )}
     </div>
   );
 
+  // ============================================================================
+  // PHASE: TWIST_PLAY - Interactive simulation showing arms in/out effect
+  // ============================================================================
   const renderTwistPlay = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-4">Releasing vs. Pulling In</h2>
+      <h2 className="text-2xl font-bold text-amber-400 mb-4">Arms In vs Arms Out</h2>
+
+      <div className="bg-slate-800/50 rounded-2xl p-6 mb-6 max-w-2xl w-full">
+        <div className="flex justify-center">
+          {renderSkater(armExtension, rotation, 220)}
+        </div>
+
+        <div className="mt-4">
+          <label className="text-slate-300 text-sm block mb-2">
+            Arm Position: <span className="text-pink-400 font-semibold">{armExtension < 0.3 ? 'Tucked In' : armExtension > 0.7 ? 'Extended Out' : 'Partial'}</span>
+          </label>
+          <input
+            type="range"
+            min="0"
+            max="1"
+            step="0.05"
+            value={armExtension}
+            onChange={(e) => setArmExtension(parseFloat(e.target.value))}
+            className="w-full accent-amber-500"
+          />
+        </div>
+
+        <div className="grid grid-cols-2 gap-4 mt-4">
+          <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+            <div className="text-2xl font-bold text-pink-400">{(1 + 2 * armExtension).toFixed(2)}</div>
+            <div className="text-xs text-slate-400">Moment of Inertia (I)</div>
+          </div>
+          <div className="bg-slate-700/50 rounded-lg p-3 text-center">
+            <div className="text-2xl font-bold text-cyan-400">{angularVelocity.toFixed(2)}</div>
+            <div className="text-xs text-slate-400">Angular Velocity (omega)</div>
+          </div>
+        </div>
+      </div>
 
       <div className="grid md:grid-cols-2 gap-6 mb-6 max-w-3xl">
         <div className="bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-lg font-semibold text-pink-400 mb-2 text-center">Pull Arms In</h3>
-          <svg width="180" height="150" className="mx-auto">
-            {/* Skater gets faster */}
-            <circle cx="90" cy="75" r="30" fill="url(#dressGradient)" />
-            <circle cx="90" cy="45" r="12" fill="#fcd9b6" />
-            {/* Spin arrows */}
-            <path d="M130,75 A40,40 0 0 1 90,115" fill="none" stroke="#10b981" strokeWidth="3" markerEnd="url(#arrowGreen2)" />
-            <text x="140" y="80" fill="#10b981" fontSize="14" fontWeight="bold">ω↑</text>
-            <text x="90" y="140" textAnchor="middle" fill="#94a3b8" fontSize="11">Mass stays with skater</text>
-          </svg>
-          <p className="text-sm text-slate-300 mt-2 text-center">
-            L stays constant → ω increases
-          </p>
+          <h3 className="text-lg font-semibold text-pink-400 mb-2 text-center">Arms Extended</h3>
+          <ul className="text-sm text-slate-300 space-y-1">
+            <li>Mass far from axis</li>
+            <li>High moment of inertia</li>
+            <li>Slow spin speed</li>
+          </ul>
         </div>
 
         <div className="bg-slate-800/50 rounded-2xl p-4">
-          <h3 className="text-lg font-semibold text-amber-400 mb-2 text-center">Release Weights</h3>
-          <svg width="180" height="150" className="mx-auto">
-            {/* Skater same speed */}
-            <circle cx="90" cy="75" r="30" fill="url(#dressGradient)" />
-            <circle cx="90" cy="45" r="12" fill="#fcd9b6" />
-            {/* Flying weights */}
-            <circle cx="40" cy="60" r="8" fill="#64748b" />
-            <circle cx="140" cy="90" r="8" fill="#64748b" />
-            <path d="M48,58 L30,50" stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrowRed2)" />
-            <path d="M132,92 L150,100" stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrowRed2)" />
-            {/* Spin arrow same size */}
-            <path d="M130,75 A40,40 0 0 1 90,115" fill="none" stroke="#f59e0b" strokeWidth="3" markerEnd="url(#arrowOrange2)" />
-            <text x="140" y="80" fill="#f59e0b" fontSize="14" fontWeight="bold">ω=</text>
-            <text x="90" y="140" textAnchor="middle" fill="#94a3b8" fontSize="11">Weights take L with them</text>
-          </svg>
-          <p className="text-sm text-slate-300 mt-2 text-center">
-            L splits between skater & weights
-          </p>
+          <h3 className="text-lg font-semibold text-amber-400 mb-2 text-center">Arms Tucked</h3>
+          <ul className="text-sm text-slate-300 space-y-1">
+            <li>Mass close to axis</li>
+            <li>Low moment of inertia</li>
+            <li>Fast spin speed!</li>
+          </ul>
         </div>
-        <defs>
-          <marker id="arrowGreen2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#10b981" />
-          </marker>
-          <marker id="arrowOrange2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#f59e0b" />
-          </marker>
-          <marker id="arrowRed2" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#ef4444" />
-          </marker>
-        </defs>
       </div>
 
-      <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 max-w-2xl">
-        <h3 className="text-lg font-bold text-amber-400 mb-3">The Key Difference:</h3>
-        <div className="space-y-3 text-slate-300 text-sm">
-          <p>
-            <span className="text-pink-400 font-semibold">Pulling in arms:</span> The mass stays part of the system. Total L is conserved within the skater, so ω must increase.
-          </p>
-          <p>
-            <span className="text-amber-400 font-semibold">Releasing weights:</span> The weights carry away angular momentum L = Iω. The skater keeps their remaining L, so ω doesn't change!
-          </p>
-        </div>
+      <div className="flex gap-4 mb-4">
+        <button
+          onClick={() => setIsSpinning(!isSpinning)}
+          style={{ zIndex: 10 }}
+          className={`px-4 py-2 rounded-lg font-medium transition-colors ${
+            isSpinning ? 'bg-red-600 hover:bg-red-500' : 'bg-emerald-600 hover:bg-emerald-500'
+          } text-white`}
+        >
+          {isSpinning ? 'Pause Spin' : 'Resume Spin'}
+        </button>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onClick={() => goToPhase('twist_review')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-amber-600 to-orange-600 text-white font-semibold rounded-xl hover:from-amber-500 hover:to-orange-500 transition-all duration-300"
       >
-        Review the Discovery →
+        Review the Discovery
       </button>
     </div>
   );
 
+  // ============================================================================
+  // PHASE: TWIST_REVIEW - Explain conservation of angular momentum and how I affects omega
+  // ============================================================================
   const renderTwistReview = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-amber-400 mb-6">🌟 Key Discovery</h2>
+      <h2 className="text-2xl font-bold text-amber-400 mb-6">Conservation of Angular Momentum</h2>
 
       <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-2xl p-6 max-w-2xl mb-6">
-        <h3 className="text-xl font-bold text-amber-400 mb-4">System Boundaries Matter!</h3>
+        <h3 className="text-xl font-bold text-amber-400 mb-4">The Key Equation: L = I times omega</h3>
         <div className="space-y-4 text-slate-300">
           <p>
-            Angular momentum is conserved for the <span className="text-cyan-400 font-semibold">entire system</span>. When you define what's in your system, that determines what happens:
+            <strong className="text-pink-400">L (Angular Momentum)</strong> is conserved when no external torque acts on a system.
           </p>
-          <ul className="space-y-2 text-sm">
-            <li>• <span className="text-pink-400">Closed system</span> (arms pulled in): All L stays with skater → ω increases</li>
-            <li>• <span className="text-amber-400">Open system</span> (weights released): L is shared → each part keeps its own L</li>
+          <p>
+            Since L = I times omega must stay constant:
+          </p>
+          <ul className="space-y-2 text-sm ml-4">
+            <li>When <span className="text-pink-400">I decreases</span> (arms pulled in), <span className="text-cyan-400">omega must increase</span></li>
+            <li>When <span className="text-pink-400">I increases</span> (arms extended), <span className="text-cyan-400">omega must decrease</span></li>
           </ul>
-          <p className="text-emerald-400 font-medium mt-4">
-            This principle explains why rockets work in space—they "release" exhaust which carries momentum away!
-          </p>
+          <div className="bg-slate-800/50 rounded-lg p-4 mt-4">
+            <p className="text-center font-mono">
+              I<sub>1</sub> times omega<sub>1</sub> = I<sub>2</sub> times omega<sub>2</sub>
+            </p>
+            <p className="text-center text-sm text-slate-400 mt-2">
+              If I drops by half, omega doubles!
+            </p>
+          </div>
         </div>
       </div>
 
+      <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
+        <h3 className="text-lg font-bold text-emerald-400 mb-3">Real Example: Figure Skating</h3>
+        <p className="text-slate-300 text-sm">
+          A figure skater can go from 2 rotations per second (arms out) to over 6 rotations per second (arms tucked) - a 3x increase! Some elite skaters achieve over 300 RPM in their spins.
+        </p>
+      </div>
+
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onClick={() => goToPhase('transfer')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-xl hover:from-pink-500 hover:to-purple-500 transition-all duration-300"
       >
-        Explore Real-World Applications →
+        Explore Real-World Applications
       </button>
     </div>
   );
 
+  // ============================================================================
+  // PHASE: TRANSFER - 4 real-world applications
+  // ============================================================================
   const applications = [
     {
       title: "Figure Skating",
-      icon: "⛸️",
+      icon: "Figure Skating",
       description: "Skaters control spin speed by adjusting body position. Tucked positions enable spins over 300 RPM!",
-      details: "The scratch spin starts with arms extended, building angular momentum. As the skater pulls into a tight position, their moment of inertia can decrease by a factor of 3-4, tripling their spin rate.",
-      animation: (
-        <svg width="200" height="150" className="mx-auto">
-          {/* Ice */}
-          <ellipse cx="100" cy="140" rx="80" ry="10" fill="#a5f3fc" opacity="0.3" />
-          {/* Three stages of spin */}
-          <g transform="translate(30, 70)">
-            <circle cx="0" cy="0" r="15" fill="#ec4899" />
-            <line x1="-25" y1="0" x2="25" y2="0" stroke="#fcd9b6" strokeWidth="4" />
-            <text x="0" y="35" textAnchor="middle" fill="#94a3b8" fontSize="9">Slow</text>
-          </g>
-          <text x="68" y="75" fill="#64748b" fontSize="20">→</text>
-          <g transform="translate(100, 70)">
-            <circle cx="0" cy="0" r="15" fill="#ec4899" />
-            <line x1="-15" y1="0" x2="15" y2="0" stroke="#fcd9b6" strokeWidth="4" />
-            <text x="0" y="35" textAnchor="middle" fill="#94a3b8" fontSize="9">Medium</text>
-          </g>
-          <text x="138" y="75" fill="#64748b" fontSize="20">→</text>
-          <g transform="translate(170, 70)">
-            <circle cx="0" cy="0" r="15" fill="#ec4899" />
-            <circle cx="0" cy="0" r="3" fill="#fcd9b6" />
-            <text x="0" y="35" textAnchor="middle" fill="#94a3b8" fontSize="9">Fast!</text>
-          </g>
-        </svg>
-      )
+      details: "The scratch spin starts with arms extended, building angular momentum. As the skater pulls into a tight position, their moment of inertia can decrease by a factor of 3-4, tripling their spin rate."
     },
     {
-      title: "Platform Diving",
-      icon: "🏊",
+      title: "Flywheels",
+      icon: "Flywheels",
+      description: "Heavy rotating wheels store kinetic energy efficiently using their high moment of inertia.",
+      details: "Modern flywheel energy storage systems can store megawatts of power. The key is using materials that allow high rotation speeds while maximizing moment of inertia for energy storage."
+    },
+    {
+      title: "Baseball Bats",
+      icon: "Baseball Bats",
+      description: "The distribution of mass along a bat affects how easily it can be swung.",
+      details: "End-loaded bats have more mass toward the tip (higher I), generating more power but being harder to control. Balanced bats have mass distributed evenly, allowing faster swings with better control."
+    },
+    {
+      title: "Diving",
+      icon: "Diving",
       description: "Divers use tuck and pike positions to control rotation speed during complex maneuvers.",
-      details: "A diver in layout position (body straight) rotates slowly. Pulling into a tight tuck reduces I by about 3.5x, allowing rapid somersaults. They then extend to slow rotation for a clean entry.",
-      animation: (
-        <svg width="200" height="150" className="mx-auto">
-          {/* Platform */}
-          <rect x="10" y="20" width="40" height="8" fill="#64748b" />
-          {/* Water */}
-          <rect x="0" y="130" width="200" height="20" fill="#3b82f6" opacity="0.5" />
-          {/* Diver stages */}
-          <g transform="translate(35, 50)">
-            <ellipse cx="0" cy="0" rx="5" ry="12" fill="#fcd9b6" />
-          </g>
-          <g transform="translate(80, 65) rotate(45)">
-            <circle cx="0" cy="0" r="10" fill="#fcd9b6" />
-          </g>
-          <g transform="translate(125, 90) rotate(90)">
-            <circle cx="0" cy="0" r="10" fill="#fcd9b6" />
-          </g>
-          <g transform="translate(165, 110)">
-            <ellipse cx="0" cy="0" rx="5" ry="12" fill="#fcd9b6" />
-          </g>
-          {/* Rotation arrows */}
-          <path d="M70,50 Q90,40 100,60" fill="none" stroke="#10b981" strokeWidth="2" markerEnd="url(#arrowGreen)" />
-        </svg>
-      )
-    },
-    {
-      title: "Neutron Stars",
-      icon: "⭐",
-      description: "When a massive star collapses, conservation of angular momentum causes extreme spin-up.",
-      details: "A star like our Sun rotates once per month. When its core collapses to a neutron star (radius shrinks by 50,000x), the spin rate can reach 700+ rotations per second!",
-      animation: (
-        <svg width="200" height="150" className="mx-auto">
-          {/* Star background */}
-          {[1,2,3,4,5,6,7,8].map(i => (
-            <circle key={i} cx={15 + (i * 23)} cy={10 + (i % 4) * 15} r="1" fill="white" opacity="0.5" />
-          ))}
-          {/* Before - large star */}
-          <g transform="translate(50, 75)">
-            <circle cx="0" cy="0" r="35" fill="#fbbf24" opacity="0.8" />
-            <path d="M40,0 A40,40 0 0 1 0,40" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 2" />
-            <text x="0" y="55" textAnchor="middle" fill="#94a3b8" fontSize="9">Slow spin</text>
-          </g>
-          {/* Arrow */}
-          <text x="100" y="80" fill="#64748b" fontSize="20">→</text>
-          {/* After - neutron star */}
-          <g transform="translate(150, 75)">
-            <circle cx="0" cy="0" r="10" fill="#60a5fa" />
-            <ellipse cx="0" cy="0" rx="25" ry="6" fill="none" stroke="#3b82f6" strokeWidth="2" />
-            {[0,1,2,3].map(i => (
-              <circle key={i} cx={Math.cos(i * Math.PI/2 + rotation * 0.1) * 20} cy={Math.sin(i * Math.PI/2 + rotation * 0.1) * 5} r="2" fill="#93c5fd" />
-            ))}
-            <text x="0" y="40" textAnchor="middle" fill="#94a3b8" fontSize="9">700 Hz!</text>
-          </g>
-        </svg>
-      )
-    },
-    {
-      title: "Gyroscope Stabilization",
-      icon: "🔧",
-      description: "Heavy flywheels in ships and spacecraft use their large moment of inertia for stability.",
-      details: "Control Moment Gyroscopes use massive spinning wheels. Because of their large angular momentum, they strongly resist any change in orientation, keeping satellites precisely pointed.",
-      animation: (
-        <svg width="200" height="150" className="mx-auto">
-          {/* Satellite body */}
-          <rect x="60" y="50" width="80" height="50" rx="5" fill="#64748b" />
-          {/* Solar panels */}
-          <rect x="10" y="60" width="45" height="30" fill="#3b82f6" />
-          <rect x="145" y="60" width="45" height="30" fill="#3b82f6" />
-          {/* Gyroscope wheel inside */}
-          <g transform={`translate(100, 75) rotate(${rotation * 2})`}>
-            <ellipse cx="0" cy="0" rx="20" ry="8" fill="#f59e0b" stroke="#d97706" strokeWidth="2" />
-            <line x1="-20" y1="0" x2="20" y2="0" stroke="#d97706" strokeWidth="2" />
-          </g>
-          {/* L vector */}
-          <line x1="100" y1="55" x2="100" y2="25" stroke="#10b981" strokeWidth="3" markerEnd="url(#arrowGreen)" />
-          <text x="108" y="35" fill="#10b981" fontSize="12" fontWeight="bold">L</text>
-          <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">Large I → stable orientation</text>
-        </svg>
-      )
+      details: "A diver in layout position rotates slowly. Pulling into a tight tuck reduces I by about 3.5x, allowing rapid somersaults. They then extend to slow rotation for a clean entry."
     }
   ];
 
@@ -906,7 +914,8 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
         {applications.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+            onClick={() => setActiveAppTab(index)}
+            style={{ zIndex: 10 }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppTab === index
                 ? 'bg-pink-600 text-white'
@@ -915,18 +924,15 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
                 : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
-            {app.icon} {app.title.split(' ')[0]}
+            {app.title}
           </button>
         ))}
       </div>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
         <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{applications[activeAppTab].icon}</span>
           <h3 className="text-xl font-bold text-white">{applications[activeAppTab].title}</h3>
         </div>
-
-        {applications[activeAppTab].animation}
 
         <p className="text-lg text-slate-300 mt-4 mb-3">
           {applications[activeAppTab].description}
@@ -937,10 +943,11 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
 
         {!completedApps.has(activeAppTab) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+            onClick={() => handleAppComplete(activeAppTab)}
+            style={{ zIndex: 10 }}
             className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
           >
-            ✓ Mark as Understood
+            Mark as Understood
           </button>
         )}
       </div>
@@ -960,15 +967,19 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          onClick={() => goToPhase('test')}
+          style={{ zIndex: 10 }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-xl hover:from-pink-500 hover:to-purple-500 transition-all duration-300"
         >
-          Take the Knowledge Test →
+          Take the Knowledge Test
         </button>
       )}
     </div>
   );
 
+  // ============================================================================
+  // PHASE: TEST - 10 multiple choice questions
+  // ============================================================================
   const renderTest = () => (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Knowledge Assessment</h2>
@@ -984,7 +995,8 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
+                    style={{ zIndex: 10 }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-pink-600 text-white'
@@ -999,7 +1011,12 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
           ))}
 
           <button
-            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); }}
+            onClick={() => {
+              const score = calculateScore();
+              setTestScore(score);
+              setShowTestResults(true);
+            }}
+            style={{ zIndex: 10 }}
             disabled={testAnswers.includes(-1)}
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
               testAnswers.includes(-1)
@@ -1012,29 +1029,31 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
         </div>
       ) : (
         <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
+          <div className="text-6xl mb-4">{testScore >= 7 ? 'Excellent!' : 'Keep Learning!'}</div>
           <h3 className="text-2xl font-bold text-white mb-2">
-            Score: {calculateScore()}/10
+            Score: {testScore}/10
           </h3>
           <p className="text-slate-300 mb-6">
-            {calculateScore() >= 7
-              ? 'Excellent! You\'ve mastered moment of inertia and angular momentum!'
+            {testScore >= 7
+              ? 'Excellent! You have mastered moment of inertia and angular momentum!'
               : 'Keep studying! Review the concepts and try again.'}
           </p>
 
-          {calculateScore() >= 7 ? (
+          {testScore >= 7 ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
+              onClick={() => goToPhase('mastery')}
+              style={{ zIndex: 10 }}
               className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
             >
-              Claim Your Mastery Badge →
+              Claim Your Mastery Badge
             </button>
           ) : (
             <button
-              onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }}
+              onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
+              style={{ zIndex: 10 }}
               className="px-8 py-4 bg-gradient-to-r from-pink-600 to-purple-600 text-white font-semibold rounded-xl hover:from-pink-500 hover:to-purple-500 transition-all duration-300"
             >
-              Review & Try Again
+              Review and Try Again
             </button>
           )}
         </div>
@@ -1042,61 +1061,70 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
     </div>
   );
 
+  // ============================================================================
+  // PHASE: MASTERY - Congratulations page
+  // ============================================================================
   const renderMastery = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
       <div className="bg-gradient-to-br from-pink-900/50 via-purple-900/50 to-indigo-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">⛸️</div>
+        <div className="text-8xl mb-6">Congratulations!</div>
         <h1 className="text-3xl font-bold text-white mb-4">Rotational Dynamics Master!</h1>
         <p className="text-xl text-slate-300 mb-6">
-          You've mastered moment of inertia and angular momentum conservation!
+          You have mastered moment of inertia and angular momentum conservation!
         </p>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">⚖️</div>
+            <div className="text-2xl mb-2">I = mr^2</div>
             <p className="text-sm text-slate-300">Moment of Inertia</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🔄</div>
+            <div className="text-2xl mb-2">L = I times omega</div>
             <p className="text-sm text-slate-300">Angular Momentum</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">💫</div>
-            <p className="text-sm text-slate-300">Conservation Laws</p>
+            <div className="text-2xl mb-2">Conservation</div>
+            <p className="text-sm text-slate-300">L stays constant</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🌟</div>
-            <p className="text-sm text-slate-300">Stellar Spin-Up</p>
+            <div className="text-2xl mb-2">Applications</div>
+            <p className="text-sm text-slate-300">Skating, Diving, Flywheels</p>
           </div>
         </div>
 
         <div className="flex gap-4 justify-center">
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+            onClick={() => goToPhase('hook')}
+            style={{ zIndex: 10 }}
             className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
           >
-            ↺ Explore Again
+            Explore Again
           </button>
         </div>
       </div>
     </div>
   );
 
+  // ============================================================================
+  // RENDER PHASE SWITCH
+  // ============================================================================
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
+
+  const phaseIndex = phaseOrder.indexOf(phase);
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
@@ -1116,12 +1144,13 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, o
           </div>
           {/* Phase dots */}
           <div className="flex justify-between px-1">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p, idx) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  p <= phase
+                  idx <= phaseIndex
                     ? 'bg-pink-500'
                     : 'bg-slate-700'
                 } ${p === phase ? 'w-6' : 'w-2'}`}

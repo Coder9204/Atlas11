@@ -4,6 +4,23 @@ import React, { useState, useEffect, useCallback, useRef, useMemo } from 'react'
 // ═══════════════════════════════════════════════════════════════════════════
 // TYPES & INTERFACES
 // ═══════════════════════════════════════════════════════════════════════════
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Lab',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
+};
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -20,33 +37,25 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
-};
-
 interface WaveInterferenceRendererProps {
   onComplete?: () => void;
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 // --- MAIN COMPONENT ---
-const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onComplete, onGameEvent, currentPhase, onPhaseComplete }) => {
+const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onComplete, onGameEvent, gamePhase, onPhaseComplete }) => {
   // --- PHASE MANAGEMENT ---
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
-  const navigationLockRef = useRef(false);
+  const [phase, setPhase] = useState<Phase>('hook');
   const lastClickRef = useRef(0);
 
   // Sync with external phase control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
   // Web Audio API sound
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -88,6 +97,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
   const [testIndex, setTestIndex] = useState(0);
   const [testAnswers, setTestAnswers] = useState<(number | null)[]>(Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
+  const [filmThickness, setFilmThickness] = useState(300);
 
   // Canvas dimensions
   const canvasWidth = 500;
@@ -135,23 +145,19 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
   }, [onGameEvent]);
 
   // --- NAVIGATION ---
-  const goToPhase = useCallback((newPhase: number) => {
+  const goToPhase = useCallback((newPhase: Phase) => {
     const now = Date.now();
     if (now - lastClickRef.current < 200) return;
-    if (navigationLockRef.current) return;
 
     lastClickRef.current = now;
-    navigationLockRef.current = true;
     playSound('transition');
     setPhase(newPhase);
     emitEvent('phase_change', { from: phase, to: newPhase });
     if (onPhaseComplete) onPhaseComplete(newPhase);
 
-    if (newPhase === 2 || newPhase === 5) {
+    if (newPhase === 'play' || newPhase === 'twist_play') {
       setProbePos({ x: 250, y: 200 });
     }
-
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [emitEvent, phase, playSound, onPhaseComplete]);
 
   // --- MILESTONE TRACKING ---
@@ -291,28 +297,28 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
       formula: 'Anti-noise phase = Original + \u03bb/2',
     },
     {
+      id: 'coating',
+      title: 'Anti-reflective Coatings',
+      icon: '\ud83d\udc53',
+      description: 'How camera lenses and glasses reduce glare.',
+      physics: 'A thin coating creates two reflections: from the top and bottom surfaces. When coating thickness = \u03bb/4, reflected waves are exactly out of phase and cancel.',
+      formula: 't = \u03bb/(4n)',
+    },
+    {
+      id: 'holography',
+      title: 'Holography',
+      icon: '\ud83c\udf1f',
+      description: 'Creating 3D images using interference patterns.',
+      physics: 'A reference beam interferes with light reflected from an object. The interference pattern encodes 3D information. When illuminated, it recreates the original wavefront.',
+      formula: 'I = |E_ref + E_obj|^2',
+    },
+    {
       id: 'radio',
-      title: 'Radio Astronomy',
+      title: 'Radio Antennas',
       icon: '\ud83d\udce1',
-      description: 'How telescope arrays achieve incredible resolution.',
-      physics: 'Multiple radio telescopes act as sources in reverse. By combining signals with known path differences, astronomers achieve resolution equivalent to a telescope spanning kilometers.',
-      formula: 'Resolution \u221d \u03bb / baseline',
-    },
-    {
-      id: 'thin_film',
-      title: 'Thin Film Colors',
-      icon: '\ud83c\udf08',
-      description: 'Why soap bubbles and oil slicks show rainbows.',
-      physics: 'Light reflects from both surfaces of a thin film. The path difference (2 \u00d7 thickness) causes different wavelengths to interfere constructively or destructively.',
-      formula: '2t = (m + \u00bd)\u03bb',
-    },
-    {
-      id: 'wifi',
-      title: 'WiFi Dead Zones',
-      icon: '\ud83d\udcf1',
-      description: 'Why signal strength varies around your home.',
-      physics: 'WiFi signals reflect off walls, creating multiple paths. Where these paths differ by half-wavelengths, destructive interference creates weak signal zones.',
-      formula: 'Dead zone: \u0394d = (n + \u00bd)\u03bb',
+      description: 'How antenna arrays create directional beams.',
+      physics: 'Multiple antennas emit signals with controlled phase differences. Constructive interference creates strong beams in desired directions, while destructive interference reduces signals elsewhere.',
+      formula: '\u03b8_max = arcsin(m\u03bb/d)',
     },
   ], []);
 
@@ -455,6 +461,81 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
     );
   };
 
+  // --- THIN FILM VISUALIZER ---
+  const renderThinFilmVisualizer = () => {
+    // Wavelengths for visible light (relative scale)
+    const redWL = 700;
+    const greenWL = 550;
+    const blueWL = 450;
+
+    // Calculate interference for each color based on film thickness
+    const getIntensity = (thickness: number, wavelength: number) => {
+      const pathDiff = 2 * thickness;
+      const phaseShift = (pathDiff / wavelength) * 2 * Math.PI + Math.PI; // +PI for phase change at reflection
+      return Math.pow(Math.cos(phaseShift / 2), 2);
+    };
+
+    const redI = getIntensity(filmThickness, redWL);
+    const greenI = getIntensity(filmThickness, greenWL);
+    const blueI = getIntensity(filmThickness, blueWL);
+
+    const resultColor = `rgb(${Math.round(redI * 255)}, ${Math.round(greenI * 255)}, ${Math.round(blueI * 255)})`;
+
+    return (
+      <svg viewBox="0 0 500 350" className="w-full h-full">
+        <defs>
+          <linearGradient id="filmBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0a1628" />
+            <stop offset="100%" stopColor="#0f1d32" />
+          </linearGradient>
+          <linearGradient id="soapFilm" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor={resultColor} stopOpacity="0.8" />
+            <stop offset="50%" stopColor={resultColor} stopOpacity="0.9" />
+            <stop offset="100%" stopColor={resultColor} stopOpacity="0.8" />
+          </linearGradient>
+        </defs>
+
+        {/* Background */}
+        <rect width="500" height="350" fill="url(#filmBg)" />
+
+        {/* Soap bubble */}
+        <ellipse cx="250" cy="175" rx="120" ry="100" fill="url(#soapFilm)" stroke="#64748b" strokeWidth="1" />
+        <ellipse cx="250" cy="175" rx="118" ry="98" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+
+        {/* Incoming light ray */}
+        <line x1="100" y1="50" x2="180" y2="120" stroke="#f59e0b" strokeWidth="3" />
+        <polygon points="175,115 185,120 180,130" fill="#f59e0b" />
+        <text x="90" y="45" fill="#f59e0b" fontSize="12" fontWeight="bold">White Light</text>
+
+        {/* Top reflection */}
+        <line x1="180" y1="120" x2="100" y2="150" stroke="#ef4444" strokeWidth="2" strokeDasharray="5,5" />
+        <text x="70" y="165" fill="#ef4444" fontSize="10">Reflection 1</text>
+
+        {/* Bottom reflection */}
+        <line x1="180" y1="120" x2="200" y2="180" stroke="#22c55e" strokeWidth="2" opacity="0.5" />
+        <line x1="200" y1="180" x2="120" y2="210" stroke="#22c55e" strokeWidth="2" strokeDasharray="5,5" />
+        <text x="70" y="225" fill="#22c55e" fontSize="10">Reflection 2</text>
+
+        {/* Film thickness indicator */}
+        <line x1="380" y1="125" x2="380" y2="225" stroke="#5eead4" strokeWidth="2" />
+        <line x1="370" y1="125" x2="390" y2="125" stroke="#5eead4" strokeWidth="2" />
+        <line x1="370" y1="225" x2="390" y2="225" stroke="#5eead4" strokeWidth="2" />
+        <text x="395" y="180" fill="#5eead4" fontSize="12" fontWeight="bold">t = {filmThickness} nm</text>
+
+        {/* Color result panel */}
+        <rect x="320" y="260" width="160" height="70" rx="8" fill="#1e293b" opacity="0.95" />
+        <text x="330" y="280" fill="#64748b" fontSize="10" fontWeight="bold">RESULTING COLOR</text>
+        <rect x="330" y="290" width="140" height="30" rx="4" fill={resultColor} />
+
+        {/* Path difference info */}
+        <rect x="20" y="260" width="180" height="70" rx="8" fill="#1e293b" opacity="0.95" />
+        <text x="30" y="280" fill="#64748b" fontSize="10" fontWeight="bold">PATH DIFFERENCE</text>
+        <text x="30" y="305" fill="#e2e8f0" fontSize="14" fontWeight="bold">2t = {2 * filmThickness} nm</text>
+        <text x="30" y="320" fill="#5eead4" fontSize="10">+ phase shift at reflection</text>
+      </svg>
+    );
+  };
+
   // --- APPLICATION SVG GRAPHICS ---
   const renderAppGraphic = (appId: string) => {
     switch (appId) {
@@ -487,117 +568,93 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
           </svg>
         );
 
+      case 'coating':
+        return (
+          <svg viewBox="0 0 200 120" className="w-full h-[120px]">
+            {/* Lens */}
+            <ellipse cx="100" cy="60" rx="60" ry="40" fill="#1e3a5f" stroke="#3b82f6" strokeWidth="2" />
+
+            {/* Coating layer */}
+            <ellipse cx="100" cy="60" rx="62" ry="42" fill="none" stroke="#8b5cf6" strokeWidth="3" opacity="0.7" />
+
+            {/* Incoming light */}
+            <line x1="40" y1="20" x2="70" y2="45" stroke="#f59e0b" strokeWidth="2" />
+            <polygon points="68,42 75,45 70,52" fill="#f59e0b" />
+
+            {/* Reflection 1 (from coating) */}
+            <line x1="70" y1="45" x2="40" y2="60" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="3,3" opacity="0.6" />
+
+            {/* Reflection 2 (from glass, cancelled) */}
+            <line x1="72" y1="48" x2="42" y2="65" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="3,3" opacity="0.6" />
+
+            {/* Transmitted light */}
+            <line x1="70" y1="45" x2="130" y2="75" stroke="#22c55e" strokeWidth="2" />
+            <polygon points="128,72 135,77 127,80" fill="#22c55e" />
+
+            <text x="30" y="80" fill="#ef4444" fontSize="8">Reflections cancel</text>
+            <text x="100" y="115" textAnchor="middle" fill="#64748b" fontSize="9">Coating thickness = \u03bb/4</text>
+          </svg>
+        );
+
+      case 'holography':
+        return (
+          <svg viewBox="0 0 200 120" className="w-full h-[120px]">
+            {/* Laser source */}
+            <rect x="10" y="45" width="25" height="20" rx="3" fill="#ef4444" />
+            <text x="22" y="58" textAnchor="middle" fill="white" fontSize="8">LASER</text>
+
+            {/* Reference beam */}
+            <line x1="35" y1="55" x2="150" y2="55" stroke="#ef4444" strokeWidth="2" />
+
+            {/* Object */}
+            <path d="M80,80 L95,70 L110,80 L95,90 Z" fill="#22c55e" stroke="#22c55e" strokeWidth="2" />
+            <text x="95" y="105" textAnchor="middle" fill="#22c55e" fontSize="8">Object</text>
+
+            {/* Object beam (scattered) */}
+            <line x1="95" y1="75" x2="150" y2="55" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="4,2" />
+
+            {/* Holographic plate */}
+            <rect x="150" y="30" width="5" height="50" fill="#64748b" />
+
+            {/* Interference pattern */}
+            {Array.from({ length: 10 }).map((_, i) => (
+              <line key={i} x1="155" y1={32 + i * 5} x2="160" y2={32 + i * 5} stroke="#8b5cf6" strokeWidth="1" />
+            ))}
+
+            {/* 3D reconstruction */}
+            <path d="M175,55 L185,50 L195,55 L185,60 Z" fill="none" stroke="#22c55e" strokeWidth="1" strokeDasharray="2,2" />
+
+            <text x="100" y="115" textAnchor="middle" fill="#64748b" fontSize="9">Reference + Object \u2192 3D Pattern</text>
+          </svg>
+        );
+
       case 'radio':
         return (
           <svg viewBox="0 0 200 120" className="w-full h-[120px]">
-            {/* Radio telescopes */}
-            <g transform="translate(30, 50)">
-              <ellipse cx="0" cy="0" rx="20" ry="8" fill="#374151" />
-              <rect x="-3" y="0" width="6" height="30" fill="#4b5563" />
-              <rect x="-10" y="30" width="20" height="5" rx="2" fill="#374151" />
-            </g>
-
-            <g transform="translate(100, 50)">
-              <ellipse cx="0" cy="0" rx="20" ry="8" fill="#374151" />
-              <rect x="-3" y="0" width="6" height="30" fill="#4b5563" />
-              <rect x="-10" y="30" width="20" height="5" rx="2" fill="#374151" />
-            </g>
-
-            <g transform="translate(170, 50)">
-              <ellipse cx="0" cy="0" rx="20" ry="8" fill="#374151" />
-              <rect x="-3" y="0" width="6" height="30" fill="#4b5563" />
-              <rect x="-10" y="30" width="20" height="5" rx="2" fill="#374151" />
-            </g>
-
-            {/* Radio waves from star */}
-            <circle cx="100" cy="10" r="5" fill="#f59e0b">
-              <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />
-            </circle>
-
-            {[0, 1, 2].map(i => (
-              <circle key={i} cx="100" cy="10" r={15 + i * 15} fill="none" stroke="#14b8a6" strokeWidth="1" opacity={0.5 - i * 0.15}>
-                <animate attributeName="r" values={`${15 + i * 15};${25 + i * 15};${15 + i * 15}`} dur="2s" repeatCount="indefinite" />
-              </circle>
+            {/* Antenna array */}
+            {[40, 80, 120, 160].map((x, i) => (
+              <g key={i}>
+                <line x1={x} y1="90" x2={x} y2="60" stroke="#374151" strokeWidth="3" />
+                <circle cx={x} cy="55" r="5" fill="#14b8a6" />
+              </g>
             ))}
 
-            {/* Baseline indicator */}
-            <line x1="30" y1="95" x2="170" y2="95" stroke="#5eead4" strokeWidth="2" />
-            <text x="100" y="110" textAnchor="middle" fill="#64748b" fontSize="9">Baseline = Virtual Dish Size</text>
-          </svg>
-        );
+            {/* Constructive beam (main lobe) */}
+            <path d="M100,55 Q100,20 100,10" fill="none" stroke="#22c55e" strokeWidth="3" opacity="0.8" />
+            <path d="M80,55 Q90,25 100,10" fill="none" stroke="#22c55e" strokeWidth="2" opacity="0.5" />
+            <path d="M120,55 Q110,25 100,10" fill="none" stroke="#22c55e" strokeWidth="2" opacity="0.5" />
 
-      case 'thin_film':
-        return (
-          <svg viewBox="0 0 200 120" className="w-full h-[120px]">
-            <defs>
-              <linearGradient id="filmGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-                <stop offset="0%" stopColor="#ef4444" />
-                <stop offset="25%" stopColor="#f59e0b" />
-                <stop offset="50%" stopColor="#22c55e" />
-                <stop offset="75%" stopColor="#3b82f6" />
-                <stop offset="100%" stopColor="#8b5cf6" />
-              </linearGradient>
-            </defs>
+            {/* Side lobes (weaker) */}
+            <path d="M40,55 Q30,35 20,30" fill="none" stroke="#ef4444" strokeWidth="1" opacity="0.4" />
+            <path d="M160,55 Q170,35 180,30" fill="none" stroke="#ef4444" strokeWidth="1" opacity="0.4" />
 
-            {/* Soap bubble */}
-            <ellipse cx="100" cy="60" rx="70" ry="50" fill="url(#filmGrad)" opacity="0.4" />
-            <ellipse cx="100" cy="60" rx="70" ry="50" fill="none" stroke="#64748b" strokeWidth="1" />
+            {/* Phase indicators */}
+            <text x="40" y="105" textAnchor="middle" fill="#64748b" fontSize="8">0\u00b0</text>
+            <text x="80" y="105" textAnchor="middle" fill="#64748b" fontSize="8">90\u00b0</text>
+            <text x="120" y="105" textAnchor="middle" fill="#64748b" fontSize="8">180\u00b0</text>
+            <text x="160" y="105" textAnchor="middle" fill="#64748b" fontSize="8">270\u00b0</text>
 
-            {/* Light ray incoming */}
-            <line x1="50" y1="10" x2="80" y2="35" stroke="#f59e0b" strokeWidth="2" />
-            <polygon points="78,33 84,32 80,38" fill="#f59e0b" />
-
-            {/* Reflected rays */}
-            <line x1="80" y1="35" x2="50" y2="50" stroke="#ef4444" strokeWidth="1.5" strokeDasharray="4,2" />
-            <line x1="80" y1="40" x2="45" y2="60" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="4,2" />
-
-            {/* Film layers */}
-            <path d="M70,30 Q100,25 130,32" fill="none" stroke="#5eead4" strokeWidth="1" />
-            <path d="M70,38 Q100,33 130,40" fill="none" stroke="#64748b" strokeWidth="1" />
-
-            <text x="150" y="30" fill="#64748b" fontSize="8">Top surface</text>
-            <text x="150" y="45" fill="#64748b" fontSize="8">Bottom surface</text>
-
-            <text x="100" y="115" textAnchor="middle" fill="#64748b" fontSize="9">Thickness \u2192 Path Difference \u2192 Color</text>
-          </svg>
-        );
-
-      case 'wifi':
-        return (
-          <svg viewBox="0 0 200 120" className="w-full h-[120px]">
-            {/* Room walls */}
-            <rect x="20" y="20" width="160" height="80" fill="none" stroke="#374151" strokeWidth="3" />
-
-            {/* Router */}
-            <rect x="30" y="50" width="20" height="15" rx="2" fill="#14b8a6" />
-            <line x1="35" y1="45" x2="35" y2="50" stroke="#14b8a6" strokeWidth="2" />
-            <line x1="45" y1="45" x2="45" y2="50" stroke="#14b8a6" strokeWidth="2" />
-
-            {/* Direct wave */}
-            <path d="M50,57 Q100,57 150,57" fill="none" stroke="#14b8a6" strokeWidth="2" opacity="0.7">
-              <animate attributeName="stroke-dashoffset" values="0;20" dur="1s" repeatCount="indefinite" />
-            </path>
-
-            {/* Reflected wave */}
-            <path d="M50,57 L100,20 L150,57" fill="none" stroke="#2dd4bf" strokeWidth="2" opacity="0.7" strokeDasharray="5,5">
-              <animate attributeName="stroke-dashoffset" values="0;20" dur="1s" repeatCount="indefinite" />
-            </path>
-
-            {/* Phone with signal */}
-            <rect x="145" y="52" width="15" height="25" rx="2" fill="#1f2937" stroke="#374151" strokeWidth="1" />
-
-            {/* Signal strength indicator */}
-            <g transform="translate(150, 45)">
-              <rect x="0" y="6" width="3" height="4" fill="#22c55e" />
-              <rect x="4" y="3" width="3" height="7" fill="#22c55e" />
-              <rect x="8" y="0" width="3" height="10" fill="#22c55e" opacity="0.3" />
-            </g>
-
-            {/* Dead zone indicator */}
-            <circle cx="110" cy="75" r="12" fill="#ef4444" opacity="0.3" />
-            <text x="110" y="79" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="bold">\u2717</text>
-
-            <text x="100" y="115" textAnchor="middle" fill="#64748b" fontSize="9">Multipath \u2192 Dead Zones</text>
+            <text x="100" y="115" textAnchor="middle" fill="#64748b" fontSize="9">Phase Control \u2192 Beam Steering</text>
           </svg>
         );
 
@@ -621,7 +678,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
       </h1>
 
       <p className="text-lg text-slate-400 max-w-md mb-10">
-        Why do some spots get <span className="text-emerald-400 font-semibold">LOUD</span> while others go <span className="text-red-400 font-semibold">SILENT</span>?
+        When waves meet, amazing things happen. Learn how two waves can create <span className="text-emerald-400 font-semibold">LOUDER</span> sounds or <span className="text-red-400 font-semibold">COMPLETE SILENCE</span>!
       </p>
 
       {/* Premium card with animation */}
@@ -634,7 +691,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
           </div>
 
           <p className="text-xl text-white/90 font-medium leading-relaxed mb-4">
-            Discover how waves add up or cancel out based on their paths!
+            Discover why soap bubbles shimmer with colors, how noise-canceling headphones work, and the physics behind holograms!
           </p>
 
           <div className="grid grid-cols-4 gap-3 mt-6">
@@ -642,7 +699,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
               { icon: '\u2795', label: 'Constructive' },
               { icon: '\u2796', label: 'Destructive' },
               { icon: '\ud83d\udccf', label: 'Path Diff' },
-              { icon: '\ud83c\udf0a', label: 'Wavelength' },
+              { icon: '\ud83c\udf08', label: 'Colors' },
             ].map((item, i) => (
               <div key={i} className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50">
                 <div className="text-2xl mb-1">{item.icon}</div>
@@ -655,7 +712,8 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
+        style={{ position: 'relative', zIndex: 10 }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-teal-500 to-cyan-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-teal-500/25 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-3">
@@ -666,17 +724,17 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
         </span>
       </button>
 
-      <p className="mt-8 text-sm text-slate-500">~6 minutes \u2022 Interactive simulation \u2022 10 mastery questions</p>
+      <p className="mt-8 text-sm text-slate-500">~8 minutes | Interactive simulation | 10 mastery questions</p>
     </div>
   );
 
   // --- RENDER PREDICT PHASE ---
   const renderPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <p className="text-xs font-bold text-teal-400 tracking-widest mb-2">STEP 1 \u2022 MAKE YOUR PREDICTION</p>
-      <h2 className="text-2xl font-bold text-white mb-2">Where Will Sound Be Loudest?</h2>
+      <p className="text-xs font-bold text-teal-400 tracking-widest mb-2">STEP 1 | MAKE YOUR PREDICTION</p>
+      <h2 className="text-2xl font-bold text-white mb-2">What Happens When Two Waves Meet?</h2>
       <p className="text-slate-400 mb-8 max-w-md text-center">
-        Two speakers play the same tone. As you walk around, what determines whether you hear LOUD sound or near SILENCE?
+        Two speakers play the same tone. As you move around the room, what determines whether you hear LOUD sound or near SILENCE?
       </p>
 
       <div className="flex flex-col gap-3 w-full max-w-xl mb-6">
@@ -687,13 +745,11 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
         ].map(opt => (
           <button
             key={opt.id}
-            onMouseDown={() => {
-              const now = Date.now();
-              if (now - lastClickRef.current < 200) return;
-              lastClickRef.current = now;
+            onClick={() => {
               setPrediction(opt.id);
               emitEvent('prediction_made', { prediction: opt.id, label: opt.label });
             }}
+            style={{ position: 'relative', zIndex: 10 }}
             className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-300 ${
               prediction === opt.id
                 ? 'bg-teal-500/20 border-2 border-teal-400'
@@ -715,8 +771,9 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); if (prediction) goToPhase(2); }}
+        onClick={() => prediction && goToPhase('play')}
         disabled={!prediction}
+        style={{ position: 'relative', zIndex: 10 }}
         className={`mt-8 px-8 py-4 rounded-xl font-semibold transition-all ${
           prediction
             ? 'bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:shadow-lg hover:shadow-teal-500/25'
@@ -731,8 +788,8 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
   // --- RENDER PLAY PHASE ---
   const renderPlay = () => (
     <div className="flex flex-col items-center p-4">
-      <p className="text-xs font-bold text-teal-400 tracking-widest mb-2">STEP 2 \u2022 EXPLORE THE PATTERN</p>
-      <h2 className="text-xl font-bold text-white mb-4">Interactive Interference</h2>
+      <p className="text-xs font-bold text-teal-400 tracking-widest mb-2">STEP 2 | EXPLORE THE PATTERN</p>
+      <h2 className="text-xl font-bold text-white mb-4">Interactive Two-Source Interference</h2>
 
       <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl border border-slate-700/50">
         <div className="aspect-[500/350] w-full">
@@ -760,8 +817,9 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); if (hasFoundConstructive && hasFoundDestructive) goToPhase(3); }}
+        onClick={() => (hasFoundConstructive && hasFoundDestructive) && goToPhase('review')}
         disabled={!(hasFoundConstructive && hasFoundDestructive)}
+        style={{ position: 'relative', zIndex: 10 }}
         className={`px-8 py-4 rounded-xl font-semibold transition-all ${
           hasFoundConstructive && hasFoundDestructive
             ? 'bg-gradient-to-r from-teal-500 to-cyan-600 text-white hover:shadow-lg hover:shadow-teal-500/25'
@@ -776,7 +834,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
   // --- RENDER REVIEW PHASE ---
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
-      <p className="text-xs font-bold text-emerald-400 tracking-widest mb-2">STEP 3 \u2022 UNDERSTANDING THE PHYSICS</p>
+      <p className="text-xs font-bold text-emerald-400 tracking-widest mb-2">STEP 3 | UNDERSTANDING THE PHYSICS</p>
       <h2 className="text-2xl font-bold text-white mb-2">The Key is Path Difference!</h2>
       <p className="text-slate-400 mb-8 max-w-lg text-center">
         Whether waves add up or cancel depends on how their PATH LENGTHS compare to the WAVELENGTH.
@@ -785,12 +843,12 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
       <div className={`grid ${isMobile ? 'grid-cols-1' : 'grid-cols-2'} gap-4 max-w-2xl w-full mb-8`}>
         <div className="p-6 rounded-2xl bg-emerald-500/10 border border-emerald-500/30">
           <div className="w-12 h-12 rounded-xl bg-emerald-500/20 flex items-center justify-center text-2xl mb-3">\u2795</div>
-          <p className="font-bold text-emerald-400 mb-2">Constructive</p>
-          <p className="text-sm text-slate-400">Path diff = 0, 1\u03bb, 2\u03bb, 3\u03bb...<br/>Peaks align with peaks \u2192 Maximum!</p>
+          <p className="font-bold text-emerald-400 mb-2">Constructive Interference</p>
+          <p className="text-sm text-slate-400">Path diff = 0, 1\u03bb, 2\u03bb, 3\u03bb...<br/>Peaks align with peaks \u2192 Maximum amplitude!</p>
         </div>
         <div className="p-6 rounded-2xl bg-red-500/10 border border-red-500/30">
           <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center text-2xl mb-3">\u2796</div>
-          <p className="font-bold text-red-400 mb-2">Destructive</p>
+          <p className="font-bold text-red-400 mb-2">Destructive Interference</p>
           <p className="text-sm text-slate-400">Path diff = 0.5\u03bb, 1.5\u03bb, 2.5\u03bb...<br/>Peak meets trough \u2192 Cancellation!</p>
         </div>
       </div>
@@ -803,13 +861,15 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
         <p className="text-2xl font-bold text-white">
           <span className="text-red-400">Destructive:</span> \u0394d = (n+\u00bd)\u03bb
         </p>
+        <p className="text-sm text-slate-500 mt-4">where n = 0, 1, 2, 3... and \u03bb = wavelength</p>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onClick={() => goToPhase('twist_predict')}
+        style={{ position: 'relative', zIndex: 10 }}
         className="mt-8 px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all"
       >
-        Explore Wavelength \u2192
+        See a New Application \u2192
       </button>
     </div>
   );
@@ -817,27 +877,25 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
   // --- RENDER TWIST_PREDICT PHASE ---
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <p className="text-xs font-bold text-amber-400 tracking-widest mb-2">STEP 4 \u2022 NEW VARIABLE</p>
-      <h2 className="text-2xl font-bold text-white mb-2">What if We Change Wavelength?</h2>
+      <p className="text-xs font-bold text-amber-400 tracking-widest mb-2">STEP 4 | THIN FILM INTERFERENCE</p>
+      <h2 className="text-2xl font-bold text-white mb-2">Why Do Soap Bubbles Show Colors?</h2>
       <p className="text-slate-400 mb-8 max-w-md text-center">
-        If we decrease the wavelength (shorter waves), how does the interference pattern change?
+        Soap bubbles display beautiful rainbow patterns. What causes these colors to appear?
       </p>
 
       <div className="flex flex-col gap-3 w-full max-w-xl mb-6">
         {[
-          { id: 'spread', label: 'Pattern spreads out', desc: 'Fringes get farther apart', icon: '\u2194\ufe0f' },
-          { id: 'compress', label: 'Pattern compresses', desc: 'Fringes get closer together', icon: '\u2195\ufe0f' },
-          { id: 'same', label: 'Pattern stays the same', desc: "Wavelength doesn't matter", icon: '\u27a1\ufe0f' },
+          { id: 'dye', label: 'Soap contains colored dyes', desc: 'The soap itself is colorful', icon: '\ud83c\udfa8' },
+          { id: 'interference', label: 'Light waves interfere in the thin film', desc: 'Reflections from front and back surfaces', icon: '\ud83c\udf0a' },
+          { id: 'refraction', label: 'Light bends through the bubble', desc: 'Like a prism splitting light', icon: '\ud83d\udd2e' },
         ].map(opt => (
           <button
             key={opt.id}
-            onMouseDown={() => {
-              const now = Date.now();
-              if (now - lastClickRef.current < 200) return;
-              lastClickRef.current = now;
+            onClick={() => {
               setTwistPrediction(opt.id);
               emitEvent('twist_prediction_made', { prediction: opt.id });
             }}
+            style={{ position: 'relative', zIndex: 10 }}
             className={`flex items-center gap-4 p-4 rounded-xl text-left transition-all duration-300 ${
               twistPrediction === opt.id
                 ? 'bg-amber-500/20 border-2 border-amber-400'
@@ -853,16 +911,22 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
         ))}
       </div>
 
+      <div className="bg-slate-800/50 rounded-xl p-4 max-w-xl border border-slate-700/50">
+        <p className="text-xs font-bold text-cyan-400 mb-1">\ud83d\udca1 HINT</p>
+        <p className="text-sm text-slate-400">Think about where light reflects when it hits a soap bubble. What happens when those reflections meet?</p>
+      </div>
+
       <button
-        onMouseDown={(e) => { e.preventDefault(); if (twistPrediction) goToPhase(5); }}
+        onClick={() => twistPrediction && goToPhase('twist_play')}
         disabled={!twistPrediction}
+        style={{ position: 'relative', zIndex: 10 }}
         className={`mt-4 px-8 py-4 rounded-xl font-semibold transition-all ${
           twistPrediction
             ? 'bg-gradient-to-r from-amber-500 to-orange-600 text-white hover:shadow-lg hover:shadow-amber-500/25'
             : 'bg-slate-700 text-slate-500 cursor-not-allowed'
         }`}
       >
-        Test Your Prediction \u2192
+        Explore Thin Films \u2192
       </button>
     </div>
   );
@@ -870,38 +934,44 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
   // --- RENDER TWIST_PLAY PHASE ---
   const renderTwistPlay = () => (
     <div className="flex flex-col items-center p-4">
-      <p className="text-xs font-bold text-amber-400 tracking-widest mb-2">STEP 5 \u2022 WAVELENGTH EXPERIMENT</p>
-      <h2 className="text-xl font-bold text-white mb-4">Adjust the Wavelength</h2>
+      <p className="text-xs font-bold text-amber-400 tracking-widest mb-2">STEP 5 | INTERACTIVE THIN FILM</p>
+      <h2 className="text-xl font-bold text-white mb-4">Adjust Film Thickness</h2>
 
       <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-2xl border border-slate-700/50">
         <div className="aspect-[500/350] w-full">
-          {renderInterferenceVisualizer(true)}
+          {renderThinFilmVisualizer()}
         </div>
       </div>
 
       <div className="w-full max-w-md mb-6">
-        <p className="text-sm font-semibold text-teal-400 mb-2">
-          Wavelength: <span className="text-white">{wavelength} px</span>
+        <p className="text-sm font-semibold text-amber-400 mb-2">
+          Film Thickness: <span className="text-white">{filmThickness} nm</span>
         </p>
         <input
           type="range"
-          min="20"
-          max="80"
-          value={wavelength}
-          onChange={(e) => setWavelength(parseInt(e.target.value))}
-          className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-700 accent-teal-500"
+          min="100"
+          max="700"
+          value={filmThickness}
+          onChange={(e) => setFilmThickness(parseInt(e.target.value))}
+          className="w-full h-2 rounded-lg appearance-none cursor-pointer bg-slate-700 accent-amber-500"
         />
         <div className="flex justify-between mt-2">
-          <span className="text-xs text-slate-500">20 px (short)</span>
-          <span className="text-xs text-slate-500">80 px (long)</span>
+          <span className="text-xs text-slate-500">100 nm (thin)</span>
+          <span className="text-xs text-slate-500">700 nm (thick)</span>
         </div>
       </div>
 
+      <div className="bg-slate-800/50 rounded-xl p-4 max-w-md border border-slate-700/50 mb-6">
+        <p className="text-xs font-bold text-cyan-400 mb-1">\ud83d\udd2c OBSERVE</p>
+        <p className="text-sm text-slate-400">Watch how the resulting color changes as you adjust the thickness. Different thicknesses cause different wavelengths to interfere constructively!</p>
+      </div>
+
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onClick={() => goToPhase('twist_review')}
+        style={{ position: 'relative', zIndex: 10 }}
         className="px-8 py-4 bg-gradient-to-r from-amber-500 to-orange-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-amber-500/25 transition-all"
       >
-        See the Pattern \u2192
+        Understand the Physics \u2192
       </button>
     </div>
   );
@@ -909,33 +979,46 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
   // --- RENDER TWIST_REVIEW PHASE ---
   const renderTwistReview = () => (
     <div className="flex flex-col items-center p-6">
-      <p className="text-xs font-bold text-cyan-400 tracking-widest mb-2">STEP 6 \u2022 COMPLETE UNDERSTANDING</p>
-      <h2 className="text-2xl font-bold text-white mb-2">Wavelength Controls the Pattern!</h2>
+      <p className="text-xs font-bold text-cyan-400 tracking-widest mb-2">STEP 6 | THE SCIENCE OF SOAP BUBBLES</p>
+      <h2 className="text-2xl font-bold text-white mb-2">Why Soap Bubbles Show Rainbow Colors</h2>
       <p className="text-slate-400 mb-8 max-w-lg text-center">
-        {twistPrediction === 'compress'
-          ? '\u2705 Correct! Shorter wavelength = more fringes in the same space.'
-          : 'Shorter wavelength means more closely-spaced interference fringes!'}
+        {twistPrediction === 'interference'
+          ? '\u2705 Correct! Thin film interference creates the beautiful colors.'
+          : 'The colors come from thin film interference, not dyes or simple refraction!'}
       </p>
 
-      <div className="bg-gradient-to-br from-teal-500/10 to-amber-500/10 rounded-2xl p-8 max-w-lg w-full text-center border border-teal-500/20 mb-8">
-        <p className="text-xs font-bold text-cyan-400 tracking-widest mb-4">FRINGE SPACING</p>
-        <p className="text-3xl font-bold text-white font-serif">
-          \u0394y = <span className="text-teal-400">\u03bb</span>L / d
-        </p>
-        <p className="text-sm text-slate-400 mt-4">
-          Fringe spacing (\u0394y) is proportional to wavelength (\u03bb)
-        </p>
+      <div className="bg-gradient-to-br from-amber-500/10 to-purple-500/10 rounded-2xl p-8 max-w-lg w-full border border-amber-500/20 mb-8">
+        <p className="text-xs font-bold text-amber-400 tracking-widest mb-4">HOW IT WORKS</p>
+        <div className="space-y-4 text-left">
+          <div className="flex gap-3">
+            <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 font-bold shrink-0">1</div>
+            <p className="text-sm text-slate-300">Light hits the <span className="text-white font-semibold">front surface</span> of the soap film and reflects.</p>
+          </div>
+          <div className="flex gap-3">
+            <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 font-bold shrink-0">2</div>
+            <p className="text-sm text-slate-300">Light also passes through and reflects from the <span className="text-white font-semibold">back surface</span>.</p>
+          </div>
+          <div className="flex gap-3">
+            <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 font-bold shrink-0">3</div>
+            <p className="text-sm text-slate-300">These two reflections travel different distances, creating a <span className="text-white font-semibold">path difference = 2t</span>.</p>
+          </div>
+          <div className="flex gap-3">
+            <div className="w-8 h-8 rounded-full bg-amber-500/20 flex items-center justify-center text-amber-400 font-bold shrink-0">4</div>
+            <p className="text-sm text-slate-300">Different wavelengths (colors) interfere differently based on the film thickness!</p>
+          </div>
+        </div>
       </div>
 
       <div className="bg-slate-800/50 rounded-xl p-4 max-w-lg border border-slate-700/50">
         <p className="text-xs font-bold text-emerald-400 mb-1">\ud83c\udf93 KEY INSIGHT</p>
         <p className="text-sm text-slate-400">
-          The interference pattern depends on the RATIO of path difference to wavelength. Same path difference but shorter \u03bb = more fringes!
+          As the bubble's thickness varies, different colors get enhanced or cancelled. That's why you see swirling rainbow patterns that change as the bubble moves!
         </p>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onClick={() => goToPhase('transfer')}
+        style={{ position: 'relative', zIndex: 10 }}
         className="mt-8 px-8 py-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-teal-500/25 transition-all"
       >
         Real-World Applications \u2192
@@ -949,7 +1032,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
 
     return (
       <div className="flex flex-col p-4">
-        <p className="text-xs font-bold text-blue-400 tracking-widest mb-2">STEP 7 \u2022 REAL-WORLD APPLICATIONS</p>
+        <p className="text-xs font-bold text-blue-400 tracking-widest mb-2">STEP 7 | REAL-WORLD APPLICATIONS</p>
         <h2 className={`${isMobile ? 'text-lg' : 'text-2xl'} font-bold text-white mb-4`}>Interference in Action</h2>
 
         {/* Tab buttons */}
@@ -959,13 +1042,8 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
             return (
               <button
                 key={a.id}
-                onMouseDown={() => {
-                  if (!isUnlocked) return;
-                  const now = Date.now();
-                  if (now - lastClickRef.current < 200) return;
-                  lastClickRef.current = now;
-                  setActiveApp(i);
-                }}
+                onClick={() => isUnlocked && setActiveApp(i)}
+                style={{ position: 'relative', zIndex: 10 }}
                 className={`flex items-center gap-2 px-4 py-2 rounded-lg font-semibold text-sm whitespace-nowrap transition-all ${
                   activeApp === i
                     ? 'bg-gradient-to-r from-teal-500 to-cyan-600 text-white'
@@ -1012,10 +1090,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
           {/* Mark as Read button */}
           {!completedApps.has(activeApp) ? (
             <button
-              onMouseDown={() => {
-                const now = Date.now();
-                if (now - lastClickRef.current < 200) return;
-                lastClickRef.current = now;
+              onClick={() => {
                 const newCompleted = new Set(completedApps);
                 newCompleted.add(activeApp);
                 setCompletedApps(newCompleted);
@@ -1024,6 +1099,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
                   setTimeout(() => setActiveApp(activeApp + 1), 300);
                 }
               }}
+              style={{ position: 'relative', zIndex: 10 }}
               className="w-full py-3 rounded-xl bg-emerald-500/20 border border-emerald-500 text-emerald-400 font-semibold hover:bg-emerald-500/30 transition-all"
             >
               \u2713 Mark "{app.title}" as Read
@@ -1039,7 +1115,8 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
         <div className="mt-4 text-center">
           {completedApps.size >= applications.length ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+              onClick={() => goToPhase('test')}
+              style={{ position: 'relative', zIndex: 10 }}
               className="px-8 py-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white font-semibold rounded-xl hover:shadow-lg hover:shadow-teal-500/25 transition-all"
             >
               Take the Test \u2192
@@ -1082,16 +1159,16 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
           </p>
 
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               if (passed) {
-                goToPhase(9);
+                goToPhase('mastery');
               } else {
                 setTestSubmitted(false);
                 setTestIndex(0);
                 setTestAnswers(Array(testQuestions.length).fill(null));
               }
             }}
+            style={{ position: 'relative', zIndex: 10 }}
             className="px-8 py-4 bg-gradient-to-r from-teal-500 to-cyan-600 text-white font-semibold rounded-xl"
           >
             {passed ? 'Complete Lesson' : 'Try Again'}
@@ -1134,14 +1211,12 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
           {q.options.map((opt, i) => (
             <button
               key={i}
-              onMouseDown={() => {
-                const now = Date.now();
-                if (now - lastClickRef.current < 200) return;
-                lastClickRef.current = now;
+              onClick={() => {
                 const newAnswers = [...testAnswers];
                 newAnswers[testIndex] = i;
                 setTestAnswers(newAnswers);
               }}
+              style={{ position: 'relative', zIndex: 10 }}
               className={`p-4 rounded-xl text-left transition-all ${
                 selected === i
                   ? 'bg-teal-500/20 border-2 border-teal-400'
@@ -1156,8 +1231,9 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
         {/* Navigation */}
         <div className="flex justify-between">
           <button
-            onMouseDown={(e) => { e.preventDefault(); if (testIndex > 0) setTestIndex(testIndex - 1); }}
+            onClick={() => testIndex > 0 && setTestIndex(testIndex - 1)}
             disabled={testIndex === 0}
+            style={{ position: 'relative', zIndex: 10 }}
             className={`px-6 py-3 rounded-xl font-semibold ${
               testIndex === 0 ? 'bg-slate-800 text-slate-600' : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
@@ -1167,8 +1243,9 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
 
           {testIndex < testQuestions.length - 1 ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); if (selected !== null) setTestIndex(testIndex + 1); }}
+              onClick={() => selected !== null && setTestIndex(testIndex + 1)}
               disabled={selected === null}
+              style={{ position: 'relative', zIndex: 10 }}
               className={`px-6 py-3 rounded-xl font-semibold ${
                 selected === null
                   ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
@@ -1179,8 +1256,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
             </button>
           ) : (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
+              onClick={() => {
                 if (testAnswers.every(a => a !== null)) {
                   setTestSubmitted(true);
                   emitEvent('test_answered', {
@@ -1190,6 +1266,7 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
                 }
               }}
               disabled={!testAnswers.every(a => a !== null)}
+              style={{ position: 'relative', zIndex: 10 }}
               className={`px-6 py-3 rounded-xl font-semibold ${
                 !testAnswers.every(a => a !== null)
                   ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
@@ -1228,15 +1305,16 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
         </div>
 
         <h1 className="text-4xl font-bold mb-4 bg-gradient-to-r from-white via-teal-100 to-cyan-200 bg-clip-text text-transparent">
-          Interference Master!
+          Congratulations!
         </h1>
+        <h2 className="text-2xl font-bold text-teal-400 mb-4">Wave Interference Master</h2>
 
         <p className="text-lg text-slate-400 max-w-md mb-8">
-          You've mastered how waves combine! From noise cancellation to radio astronomy, you now understand constructive and destructive interference.
+          You've mastered how waves combine! From noise cancellation to holography, you now understand the beautiful physics of constructive and destructive interference.
         </p>
 
         <div className="flex flex-wrap gap-3 justify-center mb-8">
-          {['Path Difference', 'Constructive', 'Destructive', 'Wavelength Effect'].map((item, i) => (
+          {['Path Difference', 'Constructive', 'Destructive', 'Thin Film', 'Applications'].map((item, i) => (
             <div key={i} className="px-4 py-2 rounded-full bg-slate-800 text-sm font-medium text-slate-300">
               \u2713 {item}
             </div>
@@ -1244,10 +1322,14 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); emitEvent('mastery_achieved', { game: 'wave_interference' }); }}
+          onClick={() => {
+            emitEvent('mastery_achieved', { game: 'wave_interference' });
+            if (onComplete) onComplete();
+          }}
+          style={{ position: 'relative', zIndex: 10 }}
           className="px-10 py-5 bg-gradient-to-r from-teal-500 to-cyan-600 text-white text-lg font-semibold rounded-2xl hover:shadow-lg hover:shadow-teal-500/25 transition-all"
         >
-          Complete Lesson \ud83c\udf89
+          Complete Lesson
         </button>
       </div>
     </div>
@@ -1256,16 +1338,16 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
   // --- RENDER PHASE ---
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
@@ -1283,14 +1365,15 @@ const WaveInterferenceRenderer: React.FC<WaveInterferenceRendererProps> = ({ onC
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Wave Interference</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
+                style={{ position: 'relative', zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-teal-400 w-6 shadow-lg shadow-teal-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}

@@ -9,6 +9,10 @@ import React, { useState, useEffect, useRef, useCallback } from 'react';
 // Distance = (Speed of Sound × Time) / 2
 // ============================================================================
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -25,18 +29,17 @@ interface GameEvent {
   data?: Record<string, unknown>;
 }
 
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
+const phaseLabels: Record<Phase, string> = {
+  hook: 'Hook',
+  predict: 'Predict',
+  play: 'Lab',
+  review: 'Review',
+  twist_predict: 'Twist Predict',
+  twist_play: 'Twist Lab',
+  twist_review: 'Twist Review',
+  transfer: 'Transfer',
+  test: 'Test',
+  mastery: 'Mastery'
 };
 
 // Premium Design System
@@ -91,18 +94,15 @@ interface SoundWave {
 
 interface EchoTimeOfFlightRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
-export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, onPhaseComplete }: EchoTimeOfFlightRendererProps) {
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
-
+export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPhaseComplete }: EchoTimeOfFlightRendererProps) {
   // Core State
-  const [phase, setPhase] = useState<number>(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
-    return 0;
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
   });
   const [isMobile, setIsMobile] = useState(false);
 
@@ -261,10 +261,10 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
 
   // Sync with external phase
   useEffect(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase) && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
   // Sound effect
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -297,44 +297,41 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
     onGameEvent?.({ type, data });
   }, [onGameEvent]);
 
-  // Debounced navigation
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    if (!PHASES.includes(newPhase)) return;
-    navigationLockRef.current = true;
+  // Simple navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (!phaseOrder.includes(newPhase)) return;
     setPhase(newPhase);
     playSound('transition');
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);
     // Reset state for play phases
-    if (newPhase === 2) {
+    if (newPhase === 'play') {
       setSoundWaves([]);
       setHasSentSound(false);
       setEchoReceived(false);
       setElapsedTime(0);
       setTotalTime(null);
     }
-    if (newPhase === 5) {
+    if (newPhase === 'twist_play') {
       setTwistWaves([]);
       setTwistSent(false);
       setTwistTime(null);
     }
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [phase, playSound, emitEvent, onPhaseComplete]);
 
   const goNext = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex < PHASES.length - 1) goToPhase(PHASES[currentIndex + 1]);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentIndex + 1]);
   }, [phase, goToPhase]);
 
   const goBack = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex > 0) goToPhase(PHASES[currentIndex - 1]);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]);
   }, [phase, goToPhase]);
 
   // Echo animation
   useEffect(() => {
-    if (phase === 2 && hasSentSound && !echoReceived) {
+    if (phase === 'play' && hasSentSound && !echoReceived) {
       const startTime = Date.now();
       const totalDistance = wallDistance * 2;
       const expectedTime = totalDistance / SPEED_OF_SOUND;
@@ -376,7 +373,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
 
   // Twist animation - Different media
   useEffect(() => {
-    if (phase === 5 && twistSent && twistTime === null) {
+    if (phase === 'twist_play' && twistSent && twistTime === null) {
       const speed = medium === 'air' ? 343 : 1480; // m/s
       const distance = 100; // meters
       const startTime = Date.now();
@@ -438,6 +435,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
       transition: 'all 0.3s ease',
       fontFamily: premiumDesign.typography.fontFamily,
       opacity: disabled ? 0.5 : 1,
+      zIndex: 10,
     };
 
     const variants = {
@@ -461,7 +459,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
     return (
       <button
         style={{ ...baseStyle, ...variants[variant] }}
-        onMouseDown={(e) => {
+        onClick={(e) => {
           e.preventDefault();
           if (!disabled) onClick();
         }}
@@ -473,8 +471,8 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
   }
 
   function renderProgressBar() {
-    const currentIndex = PHASES.indexOf(phase);
-    const progress = ((currentIndex + 1) / PHASES.length) * 100;
+    const currentIndex = phaseOrder.indexOf(phase);
+    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
 
     return (
       <div style={{ marginBottom: premiumDesign.spacing.lg }}>
@@ -485,7 +483,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
           fontSize: '12px',
           color: premiumDesign.colors.text.muted,
         }}>
-          <span>Phase {currentIndex + 1} of {PHASES.length}</span>
+          <span>Phase {currentIndex + 1} of {phaseOrder.length}</span>
           <span>{phase.replace('_', ' ').toUpperCase()}</span>
         </div>
         <div style={{
@@ -571,8 +569,9 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
 
         {/* Premium CTA button */}
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+          onClick={(e) => { e.preventDefault(); goToPhase('predict'); }}
           className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-teal-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
+          style={{ zIndex: 10 }}
         >
           <span className="relative z-10 flex items-center gap-3">
             Explore Echoes
@@ -649,10 +648,11 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
-                safeNavigate(() => setPrediction(pred.id));
+                setPrediction(pred.id);
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: premiumDesign.spacing.md }}>
@@ -669,7 +669,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(0) },
+          { text: '← Back', onClick: () => goToPhase('hook') },
           {
             text: 'Test My Prediction →',
             onClick: goNext,
@@ -851,8 +851,9 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                 fontSize: '16px',
                 fontWeight: 600,
                 cursor: hasSentSound ? 'not-allowed' : 'pointer',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 if (!hasSentSound) {
                   setHasSentSound(true);
@@ -873,8 +874,9 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                   background: 'transparent',
                   color: premiumDesign.colors.text.secondary,
                   cursor: 'pointer',
+                  zIndex: 10,
                 }}
-                onMouseDown={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
                   setHasSentSound(false);
                   setEchoReceived(false);
@@ -907,7 +909,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(1) },
+          { text: '← Back', onClick: () => goToPhase('predict') },
           { text: 'See Results →', onClick: goNext }
         )}
       </div>
@@ -1004,10 +1006,11 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                     : premiumDesign.colors.background.tertiary,
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
+                  zIndex: 10,
                 }}
-                onMouseDown={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
-                  safeNavigate(() => setReviewStep(i));
+                  setReviewStep(i);
                 }}
               />
             ))}
@@ -1015,12 +1018,12 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(2) },
+          { text: '← Back', onClick: () => goToPhase('play') },
           {
             text: reviewStep < reviewContent.length - 1 ? 'Continue →' : 'New Variable →',
             onClick: () => {
               if (reviewStep < reviewContent.length - 1) {
-                safeNavigate(() => setReviewStep(r => r + 1));
+                setReviewStep(r => r + 1);
               } else {
                 goNext();
               }
@@ -1079,10 +1082,11 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
-                safeNavigate(() => setTwistPrediction(pred.id));
+                setTwistPrediction(pred.id);
               }}
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: premiumDesign.spacing.md }}>
@@ -1096,7 +1100,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(3) },
+          { text: '← Back', onClick: () => goToPhase('review') },
           {
             text: 'Test It →',
             onClick: goNext,
@@ -1146,8 +1150,9 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                 color: premiumDesign.colors.text.primary,
                 fontSize: '16px',
                 cursor: 'pointer',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 setMedium(m);
                 setTwistSent(false);
@@ -1222,8 +1227,9 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                 fontSize: '16px',
                 fontWeight: 600,
                 cursor: twistSent ? 'not-allowed' : 'pointer',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 if (!twistSent) setTwistSent(true);
               }}
@@ -1240,8 +1246,9 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                   background: 'transparent',
                   color: premiumDesign.colors.text.secondary,
                   cursor: 'pointer',
+                  zIndex: 10,
                 }}
-                onMouseDown={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
                   setTwistSent(false);
                   setTwistTime(null);
@@ -1288,7 +1295,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
         )}
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(4) },
+          { text: '← Back', onClick: () => goToPhase('twist_predict') },
           { text: 'Understand Results →', onClick: goNext }
         )}
       </div>
@@ -1385,10 +1392,11 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                     : premiumDesign.colors.background.tertiary,
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
+                  zIndex: 10,
                 }}
-                onMouseDown={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
-                  safeNavigate(() => setTwistReviewStep(i));
+                  setTwistReviewStep(i);
                 }}
               />
             ))}
@@ -1396,12 +1404,12 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(5) },
+          { text: '← Back', onClick: () => goToPhase('twist_play') },
           {
             text: twistReviewStep < twistReviewContent.length - 1 ? 'Continue →' : 'Real-World Examples →',
             onClick: () => {
               if (twistReviewStep < twistReviewContent.length - 1) {
-                safeNavigate(() => setTwistReviewStep(t => t + 1));
+                setTwistReviewStep(t => t + 1);
               } else {
                 goNext();
               }
@@ -1480,10 +1488,11 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                 cursor: 'pointer',
                 fontSize: '14px',
                 transition: 'all 0.3s ease',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
-                safeNavigate(() => setActiveApp(index));
+                setActiveApp(index);
               }}
             >
               {completedApps.has(index) && '✓ '}{app.title.split(' ')[0]}
@@ -1544,20 +1553,44 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                 fontSize: '16px',
                 fontWeight: 600,
                 cursor: 'pointer',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
-                safeNavigate(() => {
-                  const newCompleted = new Set(completedApps);
-                  newCompleted.add(activeApp);
-                  setCompletedApps(newCompleted);
-                  if (activeApp < applications.length - 1) {
-                    setActiveApp(activeApp + 1);
-                  }
-                });
+                const newCompleted = new Set(completedApps);
+                newCompleted.add(activeApp);
+                setCompletedApps(newCompleted);
+                if (activeApp < applications.length - 1) {
+                  setActiveApp(activeApp + 1);
+                }
               }}
             >
               ✓ Mark as Read
+            </button>
+          )}
+
+          {completedApps.has(activeApp) && activeApp < applications.length - 1 && (
+            <button
+              style={{
+                display: 'block',
+                width: '100%',
+                marginTop: premiumDesign.spacing.lg,
+                padding: premiumDesign.spacing.md,
+                borderRadius: premiumDesign.radius.md,
+                border: 'none',
+                background: premiumDesign.colors.gradient.secondary,
+                color: 'white',
+                fontSize: '16px',
+                fontWeight: 600,
+                cursor: 'pointer',
+                zIndex: 10,
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                setActiveApp(activeApp + 1);
+              }}
+            >
+              Next Application →
             </button>
           )}
         </div>
@@ -1571,7 +1604,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(6) },
+          { text: '← Back', onClick: () => goToPhase('twist_review') },
           {
             text: completedApps.size === applications.length ? 'Take the Quiz →' : `Explore ${applications.length - completedApps.size} More →`,
             onClick: goNext,
@@ -1644,7 +1677,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                   setTestComplete(false);
                   setCurrentQuestion(0);
                   setTestScore(0);
-                  goToPhase(3);
+                  goToPhase('review');
                 }
               },
               passed ? 'success' : 'primary'
@@ -1721,8 +1754,9 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
                     cursor: showExplanation ? 'default' : 'pointer',
                     textAlign: 'left',
                     transition: 'all 0.3s ease',
+                    zIndex: 10,
                   }}
-                  onMouseDown={(e) => {
+                  onClick={(e) => {
                     e.preventDefault();
                     if (!showExplanation) {
                       setSelectedAnswer(index);
@@ -1904,7 +1938,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
         {renderButton(
           'Complete Lesson ✓',
           () => {
-            if (onNext) onNext();
+            emitEvent('mastery_achieved', { testScore, percentage });
           },
           'success'
         )}
@@ -1927,18 +1961,19 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Echo & Time of Flight</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                style={{ zIndex: 10 }}
               />
             ))}
           </div>
@@ -1948,16 +1983,16 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, currentPhase, on
 
       {/* Main content */}
       <div className="relative pt-16 pb-12 max-w-4xl mx-auto px-4">
-        {phase === 0 && renderHookPhase()}
-        {phase === 1 && renderPredictPhase()}
-        {phase === 2 && renderPlayPhase()}
-        {phase === 3 && renderReviewPhase()}
-        {phase === 4 && renderTwistPredictPhase()}
-        {phase === 5 && renderTwistPlayPhase()}
-        {phase === 6 && renderTwistReviewPhase()}
-        {phase === 7 && renderTransferPhase()}
-        {phase === 8 && renderTestPhase()}
-        {phase === 9 && renderMasteryPhase()}
+        {phase === 'hook' && renderHookPhase()}
+        {phase === 'predict' && renderPredictPhase()}
+        {phase === 'play' && renderPlayPhase()}
+        {phase === 'review' && renderReviewPhase()}
+        {phase === 'twist_predict' && renderTwistPredictPhase()}
+        {phase === 'twist_play' && renderTwistPlayPhase()}
+        {phase === 'twist_review' && renderTwistReviewPhase()}
+        {phase === 'transfer' && renderTransferPhase()}
+        {phase === 'test' && renderTestPhase()}
+        {phase === 'mastery' && renderMasteryPhase()}
       </div>
     </div>
   );

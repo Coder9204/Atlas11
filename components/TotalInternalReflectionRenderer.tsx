@@ -10,11 +10,12 @@ import React, { useState, useRef, useEffect, useCallback } from 'react';
 // light can be trapped and guided through curved paths.
 // =============================================================================
 
-// Numeric phases: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook', 1: 'Predict', 2: 'Lab', 3: 'Review', 4: 'Twist Predict',
-  5: 'Twist Lab', 6: 'Twist Review', 7: 'Transfer', 8: 'Test', 9: 'Mastery'
+// String phases
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook', 'predict': 'Predict', 'play': 'Lab', 'review': 'Review', 'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab', 'twist_review': 'Twist Review', 'transfer': 'Transfer', 'test': 'Test', 'mastery': 'Mastery'
 };
 
 // Premium Design System
@@ -126,6 +127,10 @@ interface Application {
   description: string;
   icon: string;
   details: string[];
+}
+
+interface TotalInternalReflectionRendererProps {
+  gamePhase?: string;
 }
 
 // =============================================================================
@@ -311,9 +316,9 @@ const applications: Application[] = [
 // =============================================================================
 // MAIN COMPONENT
 // =============================================================================
-export default function TotalInternalReflectionRenderer() {
-  // State management - using numeric phases
-  const [phase, setPhase] = useState<number>(0);
+export default function TotalInternalReflectionRenderer(_props: TotalInternalReflectionRendererProps) {
+  // State management - using string phases
+  const [phase, setPhase] = useState<Phase>('hook');
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
   const [selectedApp, setSelectedApp] = useState(0);
@@ -331,10 +336,6 @@ export default function TotalInternalReflectionRenderer() {
   const [showLightPath, setShowLightPath] = useState(true);
   const [animationFrame, setAnimationFrame] = useState(0);
 
-  // Navigation debouncing
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
-  const navigationTimeoutRef = useRef<NodeJS.Timeout | null>(null);
   const animationRef = useRef<number | null>(null);
 
   // Sound function
@@ -385,15 +386,6 @@ export default function TotalInternalReflectionRenderer() {
     };
   }, []);
 
-  // Cleanup timeout on unmount
-  useEffect(() => {
-    return () => {
-      if (navigationTimeoutRef.current) {
-        clearTimeout(navigationTimeoutRef.current);
-      }
-    };
-  }, []);
-
   // =============================================================================
   // PHYSICS CALCULATIONS
   // =============================================================================
@@ -410,22 +402,9 @@ export default function TotalInternalReflectionRenderer() {
   // =============================================================================
   // NAVIGATION HANDLERS
   // =============================================================================
-  const goToPhase = useCallback((newPhase: number) => {
-    if (navigationLockRef.current) return;
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
-
-    if (navigationTimeoutRef.current) {
-      clearTimeout(navigationTimeoutRef.current);
-    }
-
-    navigationTimeoutRef.current = setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
   }, [playSound]);
 
   const handleCompleteApp = useCallback(() => {
@@ -457,7 +436,7 @@ export default function TotalInternalReflectionRenderer() {
       setSelectedAnswer(null);
       setShowResult(false);
     } else {
-      goToPhase(9);
+      goToPhase('mastery');
     }
   }, [currentQuestion, goToPhase]);
 
@@ -482,17 +461,6 @@ export default function TotalInternalReflectionRenderer() {
       size?: 'sm' | 'md' | 'lg';
       fullWidth?: boolean;
     }) => {
-      const buttonRef = useRef(false);
-
-      const handleClick = () => {
-        if (buttonRef.current || disabled) return;
-        buttonRef.current = true;
-        onClick();
-        setTimeout(() => {
-          buttonRef.current = false;
-        }, 400);
-      };
-
       const baseStyles: React.CSSProperties = {
         display: 'inline-flex',
         alignItems: 'center',
@@ -506,6 +474,8 @@ export default function TotalInternalReflectionRenderer() {
         border: 'none',
         opacity: disabled ? 0.5 : 1,
         width: fullWidth ? '100%' : 'auto',
+        zIndex: 10,
+        position: 'relative',
         ...(size === 'sm' && {
           padding: `${defined.spacing.sm} ${defined.spacing.md}`,
           fontSize: defined.typography.sizes.sm,
@@ -544,7 +514,7 @@ export default function TotalInternalReflectionRenderer() {
 
       return (
         <button
-          onMouseDown={handleClick}
+          onClick={onClick}
           disabled={disabled}
           style={{ ...baseStyles, ...variantStyles[variant] }}
         >
@@ -1160,6 +1130,7 @@ export default function TotalInternalReflectionRenderer() {
                   fontFamily: defined.typography.fontFamily,
                   fontSize: defined.typography.sizes.xs,
                   transition: 'all 0.2s ease',
+                  zIndex: 10,
                 }}
               >
                 <div>{mat.name}</div>
@@ -1198,6 +1169,7 @@ export default function TotalInternalReflectionRenderer() {
                 : defined.colors.background.tertiary,
               position: 'relative',
               transition: 'background 0.3s ease',
+              zIndex: 10,
             }}
           >
             <div
@@ -1324,8 +1296,9 @@ export default function TotalInternalReflectionRenderer() {
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-cyan-500 to-blue-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        style={{ zIndex: 10 }}
       >
         <span className="relative z-10 flex items-center gap-3">
           Discover the Secret
@@ -1426,6 +1399,7 @@ export default function TotalInternalReflectionRenderer() {
               cursor: 'pointer',
               fontFamily: defined.typography.fontFamily,
               transition: 'all 0.2s ease',
+              zIndex: 10,
             }}
           >
             {option.text}
@@ -1435,7 +1409,7 @@ export default function TotalInternalReflectionRenderer() {
 
       {Button({
         children: 'Test My Prediction →',
-        onClick: () => goToPhase(2),
+        onClick: () => goToPhase('play'),
         disabled: !prediction,
         size: 'lg',
       })}
@@ -1492,7 +1466,7 @@ export default function TotalInternalReflectionRenderer() {
 
       {Button({
         children: isTIR ? 'I Trapped the Light! → Review' : 'Increase angle to trap light first',
-        onClick: () => goToPhase(3),
+        onClick: () => goToPhase('review'),
         disabled: !isTIR,
         size: 'lg',
       })}
@@ -1672,7 +1646,7 @@ export default function TotalInternalReflectionRenderer() {
 
       {Button({
         children: 'Try Fiber Optics →',
-        onClick: () => goToPhase(4),
+        onClick: () => goToPhase('twist_predict'),
         size: 'lg',
       })}
     </div>
@@ -1761,6 +1735,7 @@ export default function TotalInternalReflectionRenderer() {
               cursor: 'pointer',
               fontFamily: defined.typography.fontFamily,
               transition: 'all 0.2s ease',
+              zIndex: 10,
             }}
           >
             {option.text}
@@ -1773,7 +1748,7 @@ export default function TotalInternalReflectionRenderer() {
         onClick: () => {
           setMaterial('diamond');
           setIncidentAngle(30);
-          goToPhase(5);
+          goToPhase('twist_play');
         },
         disabled: !twistPrediction,
         size: 'lg',
@@ -1844,7 +1819,7 @@ export default function TotalInternalReflectionRenderer() {
 
       {Button({
         children: 'See Why This Matters →',
-        onClick: () => goToPhase(6),
+        onClick: () => goToPhase('twist_review'),
         size: 'lg',
       })}
     </div>
@@ -2050,7 +2025,7 @@ export default function TotalInternalReflectionRenderer() {
 
       {Button({
         children: 'See Real-World Applications →',
-        onClick: () => goToPhase(7),
+        onClick: () => goToPhase('transfer'),
         size: 'lg',
       })}
     </div>
@@ -2146,6 +2121,7 @@ export default function TotalInternalReflectionRenderer() {
                   display: 'flex',
                   alignItems: 'center',
                   gap: defined.spacing.xs,
+                  zIndex: 10,
                 }}
               >
                 <span>{isLocked ? '🔒' : app.icon}</span>
@@ -2230,43 +2206,31 @@ export default function TotalInternalReflectionRenderer() {
         <div
           style={{
             display: 'flex',
-            justifyContent: 'space-between',
+            justifyContent: 'center',
             alignItems: 'center',
             gap: defined.spacing.md,
           }}
         >
-          {Button({
-            children: '← Previous',
-            onClick: () => setSelectedApp(Math.max(0, selectedApp - 1)),
-            variant: 'secondary',
-            disabled: selectedApp === 0,
-          })}
-
-          {!completedApps[selectedApp] ? (
-            Button({
-              children:
-                selectedApp < applications.length - 1
-                  ? 'Next Application →'
-                  : 'Complete Applications',
-              onClick: handleCompleteApp,
-              variant: 'primary',
-            })
-          ) : selectedApp < applications.length - 1 ? (
+          {selectedApp < applications.length - 1 ? (
             Button({
               children: 'Next Application →',
-              onClick: () => setSelectedApp(selectedApp + 1),
-              variant: 'secondary',
+              onClick: () => {
+                handleCompleteApp();
+              },
+              variant: 'primary',
             })
           ) : allAppsCompleted ? (
             Button({
               children: 'Take the Quiz →',
-              onClick: () => goToPhase(8),
+              onClick: () => goToPhase('test'),
               variant: 'success',
             })
           ) : (
-            <div style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.sm }}>
-              Complete all applications to take the quiz
-            </div>
+            Button({
+              children: 'Complete Application',
+              onClick: handleCompleteApp,
+              variant: 'primary',
+            })
           )}
         </div>
       </div>
@@ -2353,6 +2317,7 @@ export default function TotalInternalReflectionRenderer() {
                   cursor: showResult ? 'default' : 'pointer',
                   fontFamily: defined.typography.fontFamily,
                   transition: 'all 0.2s ease',
+                  zIndex: 10,
                 }}
               >
                 {option.text}
@@ -2553,7 +2518,7 @@ export default function TotalInternalReflectionRenderer() {
           {Button({
             children: 'Start Over',
             onClick: () => {
-              setPhase(0);
+              setPhase('hook');
               setPrediction(null);
               setTwistPrediction(null);
               setCurrentQuestion(0);
@@ -2575,6 +2540,8 @@ export default function TotalInternalReflectionRenderer() {
   // =============================================================================
   // RENDER
   // =============================================================================
+  const currentPhaseIndex = phaseOrder.indexOf(phase);
+
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
       {/* Premium background gradient */}
@@ -2588,18 +2555,19 @@ export default function TotalInternalReflectionRenderer() {
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Total Internal Reflection</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={() => goToPhase(p)}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phase > p
+                    : currentPhaseIndex > i
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                style={{ zIndex: 10 }}
               />
             ))}
           </div>
@@ -2610,16 +2578,16 @@ export default function TotalInternalReflectionRenderer() {
       {/* Main content */}
       <div className="relative pt-16 pb-12" style={{ fontFamily: defined.typography.fontFamily }}>
         <div className="max-w-4xl mx-auto px-4">
-          {phase === 0 && renderHook()}
-          {phase === 1 && renderPredict()}
-          {phase === 2 && renderPlay()}
-          {phase === 3 && renderReview()}
-          {phase === 4 && renderTwistPredict()}
-          {phase === 5 && renderTwistPlay()}
-          {phase === 6 && renderTwistReview()}
-          {phase === 7 && renderTransfer()}
-          {phase === 8 && renderTest()}
-          {phase === 9 && renderMastery()}
+          {phase === 'hook' && renderHook()}
+          {phase === 'predict' && renderPredict()}
+          {phase === 'play' && renderPlay()}
+          {phase === 'review' && renderReview()}
+          {phase === 'twist_predict' && renderTwistPredict()}
+          {phase === 'twist_play' && renderTwistPlay()}
+          {phase === 'twist_review' && renderTwistReview()}
+          {phase === 'transfer' && renderTransfer()}
+          {phase === 'test' && renderTest()}
+          {phase === 'mastery' && renderMastery()}
         </div>
       </div>
     </div>

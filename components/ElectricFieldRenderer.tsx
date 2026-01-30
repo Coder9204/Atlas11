@@ -3,35 +3,47 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 // ============================================================
-// ELECTRIC FIELD RENDERER - GOLD STANDARD
+// ELECTRIC FIELD RENDERER - SPEC-COMPLIANT IMPLEMENTATION
 // The fundamental concept of force per unit charge
 // E = F/q and E = kq/r² for point charges
 // ============================================================
 
-type GameEventType =
-  | 'phase_change'
-  | 'prediction_made'
-  | 'simulation_started'
-  | 'parameter_changed'
-  | 'discovery_made'
-  | 'transfer_app_viewed'
-  | 'transfer_app_completed'
-  | 'test_answered'
-  | 'test_completed'
-  | 'field_calculated'
-  | 'charge_placed'
-  | 'test_charge_moved'
-  | 'field_lines_toggled';
+// Phase type - 10 phases per spec
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
 
-interface GameEvent {
-  type: GameEventType;
-  data?: Record<string, unknown>;
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+// GameEvent interface
+export interface GameEvent {
+  eventType: 'screen_change' | 'prediction_made' | 'answer_submitted' | 'slider_changed' |
+             'button_clicked' | 'game_started' | 'game_completed' | 'hint_requested' |
+             'correct_answer' | 'incorrect_answer' | 'phase_changed' | 'value_changed' |
+             'selection_made' | 'timer_expired' | 'achievement_unlocked' | 'struggle_detected' |
+             'coach_prompt' | 'guide_paused' | 'guide_resumed' | 'question_changed' | 'app_completed' | 'app_changed';
+  gameType: string;
+  gameTitle: string;
+  details: {
+    phase?: string;
+    phaseLabel?: string;
+    currentScreen?: number;
+    totalScreens?: number;
+    screenDescription?: string;
+    prediction?: string;
+    predictionLabel?: string;
+    answer?: string;
+    isCorrect?: boolean;
+    score?: number;
+    maxScore?: number;
+    message?: string;
+    coachMessage?: string;
+    [key: string]: unknown;
+  };
+  timestamp: number;
 }
 
 interface Props {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
 }
 
 interface TestQuestion {
@@ -60,18 +72,83 @@ interface SourceCharge {
   id: number;
   x: number;
   y: number;
-  q: number; // charge in microcoulombs
+  q: number;
 }
 
 // Coulomb's constant
 const k = 8.99e9; // N·m²/C²
 
-const ElectricFieldRenderer: React.FC<Props> = ({
-  onGameEvent,
-  currentPhase = 0,
-  onPhaseComplete
-}) => {
-  const [phase, setPhase] = useState(currentPhase);
+// Sound utility
+const playSound = (type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioContext = new (window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
+    const oscillator = audioContext.createOscillator();
+    const gainNode = audioContext.createGain();
+    oscillator.connect(gainNode);
+    gainNode.connect(audioContext.destination);
+    const sounds = {
+      click: { freq: 600, duration: 0.1, type: 'sine' as OscillatorType },
+      success: { freq: 800, duration: 0.2, type: 'sine' as OscillatorType },
+      failure: { freq: 300, duration: 0.3, type: 'sine' as OscillatorType },
+      transition: { freq: 500, duration: 0.15, type: 'sine' as OscillatorType },
+      complete: { freq: 900, duration: 0.4, type: 'sine' as OscillatorType }
+    };
+    const sound = sounds[type];
+    oscillator.type = sound.type;
+    oscillator.frequency.setValueAtTime(sound.freq, audioContext.currentTime);
+    gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + sound.duration);
+    oscillator.start(audioContext.currentTime);
+    oscillator.stop(audioContext.currentTime + sound.duration);
+  } catch {
+    // Audio not available
+  }
+};
+
+const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
+  // Phase labels and descriptions
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Introduction',
+    predict: 'Predict',
+    play: 'Experiment',
+    review: 'Understanding',
+    twist_predict: 'Dipole Challenge',
+    twist_play: 'Dipole Simulation',
+    twist_review: 'Dipole Insight',
+    transfer: 'Real World',
+    test: 'Knowledge Test',
+    mastery: 'Mastery'
+  };
+
+  const screenDescriptions: Record<Phase, string> = {
+    hook: 'INTRO SCREEN: Title "Electric Fields", animated field line visualization, Start button.',
+    predict: 'PREDICTION SCREEN: User predicts field direction around a point charge.',
+    play: 'EXPERIMENT SCREEN: Interactive simulation with point charges, field lines, and vectors.',
+    review: 'REVIEW SCREEN: Explains E = kQ/r², field superposition, field line rules.',
+    twist_predict: 'TWIST PREDICTION: What happens to the field between two opposite charges (dipole)?',
+    twist_play: 'DIPOLE EXPERIMENT: Interactive dipole field visualization with test charge.',
+    twist_review: 'DIPOLE REVIEW: Explains dipole fields and field cancellation.',
+    transfer: 'REAL WORLD APPLICATIONS: Capacitors, Lightning Rods, Electrostatic Precipitators, Touchscreens.',
+    test: 'KNOWLEDGE TEST: 10 scenario-based questions about electric fields.',
+    mastery: 'COMPLETION SCREEN: Summary of electric field concepts mastered.'
+  };
+
+  const coachMessages: Record<Phase, string> = {
+    hook: "Welcome! Electric fields surround every charge, invisible but powerful.",
+    predict: "Think about what direction a positive test charge would move...",
+    play: "Drag the test charge around to explore how the field changes!",
+    review: "The field E = kQ/r² follows an inverse-square law, just like gravity!",
+    twist_predict: "Here's a twist - what happens between opposite charges?",
+    twist_play: "Notice how the field lines connect the positive to the negative charge!",
+    twist_review: "Dipoles create beautiful field patterns - from atoms to antennas!",
+    transfer: "Electric fields power amazing technology all around us!",
+    test: "Test your understanding with these challenging scenarios!",
+    mastery: "Congratulations! You've mastered electric fields!"
+  };
+
+  // State
+  const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -93,9 +170,8 @@ const ElectricFieldRenderer: React.FC<Props> = ({
   const [selectedConfig, setSelectedConfig] = useState<'single' | 'dipole' | 'parallel'>('single');
   const [isDraggingTestCharge, setIsDraggingTestCharge] = useState(false);
 
-  const navigationLockRef = useRef(false);
-  const lastInteractionRef = useRef(0);
-  const audioContextRef = useRef<AudioContext | null>(null);
+  const lastClickRef = useRef(0);
+  const hasEmittedStart = useRef(false);
   const svgRef = useRef<SVGSVGElement>(null);
 
   // Responsive detection
@@ -146,101 +222,67 @@ const ElectricFieldRenderer: React.FC<Props> = ({
     }
   }, [selectedConfig]);
 
-  const playSound = useCallback((soundType: 'click' | 'correct' | 'incorrect' | 'complete' | 'transition' | 'zap') => {
-    try {
-      if (!audioContextRef.current) {
-        audioContextRef.current = new (window.AudioContext || (window as typeof window & { webkitAudioContext: typeof AudioContext }).webkitAudioContext)();
-      }
-      const ctx = audioContextRef.current;
-      const oscillator = ctx.createOscillator();
-      const gainNode = ctx.createGain();
+  // Emit game event
+  const emitGameEvent = useCallback((
+    eventType: GameEvent['eventType'],
+    details: Partial<GameEvent['details']> = {}
+  ) => {
+    if (!onGameEvent) return;
+    const phaseIndex = phaseOrder.indexOf(phase);
+    onGameEvent({
+      eventType,
+      gameType: 'electric_field',
+      gameTitle: 'Electric Fields',
+      details: {
+        phase,
+        phaseLabel: phaseLabels[phase],
+        currentScreen: phaseIndex + 1,
+        totalScreens: 10,
+        screenDescription: screenDescriptions[phase],
+        coachMessage: coachMessages[phase],
+        ...details
+      },
+      timestamp: Date.now()
+    });
+  }, [onGameEvent, phase, phaseLabels, screenDescriptions, coachMessages]);
 
-      oscillator.connect(gainNode);
-      gainNode.connect(ctx.destination);
-
-      switch (soundType) {
-        case 'click':
-          oscillator.frequency.value = 600;
-          gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.1);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.1);
-          break;
-        case 'correct':
-          oscillator.frequency.value = 523;
-          gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-          oscillator.start(ctx.currentTime);
-          oscillator.frequency.setValueAtTime(659, ctx.currentTime + 0.1);
-          oscillator.frequency.setValueAtTime(784, ctx.currentTime + 0.2);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.3);
-          oscillator.stop(ctx.currentTime + 0.3);
-          break;
-        case 'incorrect':
-          oscillator.frequency.value = 200;
-          oscillator.type = 'sawtooth';
-          gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.3);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.3);
-          break;
-        case 'complete':
-          oscillator.frequency.value = 440;
-          gainNode.gain.setValueAtTime(0.1, ctx.currentTime);
-          oscillator.start(ctx.currentTime);
-          oscillator.frequency.setValueAtTime(554, ctx.currentTime + 0.15);
-          oscillator.frequency.setValueAtTime(659, ctx.currentTime + 0.3);
-          oscillator.frequency.setValueAtTime(880, ctx.currentTime + 0.45);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.6);
-          oscillator.stop(ctx.currentTime + 0.6);
-          break;
-        case 'transition':
-          oscillator.frequency.value = 400;
-          oscillator.type = 'sine';
-          gainNode.gain.setValueAtTime(0.08, ctx.currentTime);
-          oscillator.frequency.setValueAtTime(600, ctx.currentTime + 0.1);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.15);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.15);
-          break;
-        case 'zap':
-          oscillator.frequency.value = 2000;
-          oscillator.type = 'square';
-          gainNode.gain.setValueAtTime(0.08, ctx.currentTime);
-          oscillator.frequency.setValueAtTime(500, ctx.currentTime + 0.05);
-          gainNode.gain.setValueAtTime(0.01, ctx.currentTime + 0.15);
-          oscillator.start(ctx.currentTime);
-          oscillator.stop(ctx.currentTime + 0.15);
-          break;
-      }
-    } catch {
-      // Audio not available
+  // Emit game_started on mount
+  useEffect(() => {
+    if (!hasEmittedStart.current) {
+      hasEmittedStart.current = true;
+      emitGameEvent('game_started', {
+        message: 'Starting Electric Fields exploration'
+      });
     }
-  }, []);
+  }, [emitGameEvent]);
 
-  const emitEvent = useCallback((type: GameEventType, data?: Record<string, unknown>) => {
-    onGameEvent?.({ type, data });
-  }, [onGameEvent]);
+  // Reset test state when entering test phase
+  useEffect(() => {
+    if (phase === 'test') {
+      setTestAnswers(Array(10).fill(-1));
+      setShowTestResults(false);
+    }
+  }, [phase]);
 
-  const goToPhase = useCallback((newPhase: number) => {
+  // Navigation
+  const goToPhase = useCallback((p: Phase) => {
     const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    if (navigationLockRef.current) return;
+    if (now - lastClickRef.current < 200) return;
 
-    lastInteractionRef.current = now;
-    navigationLockRef.current = true;
-
+    lastClickRef.current = now;
     playSound('transition');
-    setPhase(newPhase);
-    emitEvent('phase_change', { from: phase, to: newPhase });
+    setPhase(p);
 
-    if (newPhase > phase) {
-      onPhaseComplete?.(phase);
-    }
-
-    setTimeout(() => {
-      navigationLockRef.current = false;
-    }, 400);
-  }, [phase, playSound, emitEvent, onPhaseComplete]);
+    const phaseIndex = phaseOrder.indexOf(p);
+    emitGameEvent('phase_changed', {
+      phase: p,
+      phaseLabel: phaseLabels[p],
+      currentScreen: phaseIndex + 1,
+      totalScreens: 10,
+      screenDescription: screenDescriptions[p],
+      coachMessage: coachMessages[p]
+    });
+  }, [emitGameEvent, phaseLabels, screenDescriptions, coachMessages]);
 
   // Calculate electric field at a point
   const calculateField = useCallback((x: number, y: number): { Ex: number; Ey: number; E: number } => {
@@ -250,11 +292,10 @@ const ElectricFieldRenderer: React.FC<Props> = ({
       const dx = x - charge.x;
       const dy = y - charge.y;
       const r = Math.sqrt(dx * dx + dy * dy);
-      if (r < 10) return; // Avoid singularity
+      if (r < 10) return;
 
-      // E = kq/r² in the direction away from positive charges
       const q_C = charge.q * 1e-6;
-      const r_m = r * 0.001; // pixels to meters (1px = 1mm)
+      const r_m = r * 0.001;
       const E_mag = k * Math.abs(q_C) / (r_m * r_m);
       const direction = charge.q > 0 ? 1 : -1;
 
@@ -268,34 +309,34 @@ const ElectricFieldRenderer: React.FC<Props> = ({
 
   const handlePrediction = useCallback((prediction: string) => {
     const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
+    if (now - lastClickRef.current < 400) return;
+    lastClickRef.current = now;
 
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
 
     const isCorrect = prediction === 'C';
-    playSound(isCorrect ? 'correct' : 'incorrect');
-    emitEvent('prediction_made', { prediction, correct: isCorrect });
-  }, [playSound, emitEvent]);
+    playSound(isCorrect ? 'success' : 'failure');
+    emitGameEvent('prediction_made', { prediction, isCorrect });
+  }, [emitGameEvent]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
     const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
+    if (now - lastClickRef.current < 400) return;
+    lastClickRef.current = now;
 
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
 
     const isCorrect = prediction === 'B';
-    playSound(isCorrect ? 'correct' : 'incorrect');
-    emitEvent('prediction_made', { prediction, correct: isCorrect, twist: true });
-  }, [playSound, emitEvent]);
+    playSound(isCorrect ? 'success' : 'failure');
+    emitGameEvent('prediction_made', { prediction, isCorrect });
+  }, [emitGameEvent]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
     const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
+    if (now - lastClickRef.current < 400) return;
+    lastClickRef.current = now;
 
     playSound('click');
     setTestAnswers(prev => {
@@ -303,18 +344,18 @@ const ElectricFieldRenderer: React.FC<Props> = ({
       newAnswers[questionIndex] = answerIndex;
       return newAnswers;
     });
-    emitEvent('test_answered', { questionIndex, answerIndex });
-  }, [playSound, emitEvent]);
+    emitGameEvent('answer_submitted', { question: questionIndex, answer: answerIndex });
+  }, [emitGameEvent]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
     const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
+    if (now - lastClickRef.current < 400) return;
+    lastClickRef.current = now;
 
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
-    emitEvent('transfer_app_completed', { appIndex });
-  }, [playSound, emitEvent]);
+    emitGameEvent('app_completed', { appIndex });
+  }, [emitGameEvent]);
 
   // Handle test charge dragging
   const handleMouseMove = useCallback((e: React.MouseEvent<SVGSVGElement>) => {
@@ -342,7 +383,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         { text: "Perpendicular to the line between charges", correct: false },
         { text: "The field has no direction", correct: false }
       ],
-      explanation: "Electric field direction is defined as the direction a positive test charge would be pushed. Since like charges repel, the field points away from positive charges. E = F/q, and when q is positive and F points away, E points away."
+      explanation: "Electric field direction is defined as the direction a positive test charge would be pushed. Since like charges repel, the field points away from positive charges."
     },
     {
       scenario: "An electron (negative charge) is placed in a uniform electric field pointing to the right with magnitude 1000 N/C.",
@@ -353,7 +394,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         { text: "The electron won't move", correct: false },
         { text: "Perpendicular to E", correct: false }
       ],
-      explanation: "The force on a charge in an electric field is F = qE. For a negative charge (electron), the force is opposite to the field direction. Since E points right, the force (and acceleration) on the electron points left."
+      explanation: "The force on a charge in an electric field is F = qE. For a negative charge (electron), the force is opposite to the field direction."
     },
     {
       scenario: "A physics student observes electric field lines around two equal positive charges placed side by side.",
@@ -364,7 +405,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         { text: "They form closed loops around each charge", correct: false },
         { text: "The field is strongest between the charges", correct: false }
       ],
-      explanation: "Like charges repel, so their fields push against each other between them. Field lines curve away from both charges, creating a point of zero field exactly midway between them where the two fields cancel. This is called a saddle point or null point."
+      explanation: "Like charges repel, so their fields push against each other. Field lines curve away from both charges, creating a point of zero field exactly midway between them."
     },
     {
       scenario: "Inside a hollow conducting sphere that has been given a positive charge, a student wants to measure the electric field.",
@@ -375,7 +416,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         { text: "Zero everywhere inside", correct: true },
         { text: "It varies depending on position", correct: false }
       ],
-      explanation: "Inside a conductor in electrostatic equilibrium, the electric field is always zero. Free charges in the conductor redistribute until they completely cancel any internal field. This is the basis for electrostatic shielding (Faraday cage)."
+      explanation: "Inside a conductor in electrostatic equilibrium, the electric field is always zero. This is the basis for electrostatic shielding (Faraday cage)."
     },
     {
       scenario: "Two parallel plates are charged, with the top plate positive (+) and bottom plate negative (-). The separation is 5 mm and the voltage difference is 1000 V.",
@@ -386,10 +427,10 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         { text: "200,000 N/C (or 200 kV/m)", correct: true },
         { text: "1,000,000 N/C", correct: false }
       ],
-      explanation: "For a uniform field between parallel plates, E = V/d. Here E = 1000 V / 0.005 m = 200,000 V/m = 200,000 N/C. The field is uniform between the plates and points from + to - (top to bottom)."
+      explanation: "For a uniform field between parallel plates, E = V/d. Here E = 1000 V / 0.005 m = 200,000 V/m = 200,000 N/C."
     },
     {
-      scenario: "A charge of +2 μC creates an electric field. At a distance of 3 m from this charge, you measure the field strength.",
+      scenario: "A charge of +2 uC creates an electric field. At a distance of 3 m from this charge, you measure the field strength.",
       question: "What is the approximate electric field magnitude at this point?",
       options: [
         { text: "2000 N/C", correct: true },
@@ -397,18 +438,18 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         { text: "18,000 N/C", correct: false },
         { text: "600 N/C", correct: false }
       ],
-      explanation: "E = kq/r² = (8.99×10⁹)(2×10⁻⁶)/(3)² = (8.99×10⁹)(2×10⁻⁶)/9 ≈ 2000 N/C. The field points radially outward from the positive charge at every point."
+      explanation: "E = kq/r^2 = (8.99x10^9)(2x10^-6)/(3)^2 = 2000 N/C. The field points radially outward from the positive charge."
     },
     {
       scenario: "An electric dipole consists of a +Q and -Q charge separated by a small distance. You observe the field far away from the dipole.",
       question: "How does the field strength vary with distance r from a dipole?",
       options: [
         { text: "It falls off as 1/r (linear)", correct: false },
-        { text: "It falls off as 1/r² (inverse square)", correct: false },
-        { text: "It falls off as 1/r³ (inverse cube)", correct: true },
+        { text: "It falls off as 1/r^2 (inverse square)", correct: false },
+        { text: "It falls off as 1/r^3 (inverse cube)", correct: true },
         { text: "It remains constant with distance", correct: false }
       ],
-      explanation: "Unlike a single charge (1/r²), a dipole's field falls off as 1/r³. This is because the fields from the + and - charges largely cancel at large distances. The dipole field is weaker and decays faster than a monopole field."
+      explanation: "Unlike a single charge (1/r^2), a dipole's field falls off as 1/r^3. This is because the fields from the + and - charges largely cancel at large distances."
     },
     {
       scenario: "Electric field lines are drawn around a negative point charge.",
@@ -419,7 +460,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         { text: "They form circles around the charge", correct: false },
         { text: "There are no field lines around negative charges", correct: false }
       ],
-      explanation: "Electric field lines always point in the direction a positive test charge would move. A positive test charge would be attracted to (move toward) a negative charge, so field lines point inward toward negative charges and outward from positive charges."
+      explanation: "Electric field lines always point in the direction a positive test charge would move. A positive test charge would be attracted to a negative charge, so field lines point inward."
     },
     {
       scenario: "A proton and an electron are placed in the same uniform electric field of 500 N/C.",
@@ -427,10 +468,10 @@ const ElectricFieldRenderer: React.FC<Props> = ({
       options: [
         { text: "Same magnitude, same direction", correct: false },
         { text: "Same magnitude, opposite directions", correct: false },
-        { text: "Different magnitudes, opposite directions (electron accelerates ~1836× faster)", correct: true },
+        { text: "Different magnitudes, opposite directions (electron accelerates ~1836x faster)", correct: true },
         { text: "Different magnitudes, same direction", correct: false }
       ],
-      explanation: "Force F = qE is the same magnitude for both (same |q|). But a = F/m, and the electron's mass is ~1836 times smaller than the proton's. So the electron accelerates ~1836 times faster. They accelerate in opposite directions because their charges have opposite signs."
+      explanation: "Force F = qE is the same magnitude for both (same |q|). But a = F/m, and the electron's mass is ~1836 times smaller than the proton's. They accelerate in opposite directions because their charges have opposite signs."
     },
     {
       scenario: "In a cathode ray tube, electrons are accelerated through a potential difference of 10,000 V and then deflected by electric fields between parallel plates.",
@@ -441,107 +482,107 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         { text: "Magnetic fields don't work on moving charges", correct: false },
         { text: "Electric fields are cheaper to produce", correct: false }
       ],
-      explanation: "Electric fields exert precise, controllable forces on charged particles (F = qE). By varying the voltage on deflection plates, the electron beam can be steered to any point on the screen. This principle is also used in oscilloscopes, mass spectrometers, and particle accelerators."
+      explanation: "Electric fields exert precise, controllable forces on charged particles (F = qE). By varying the voltage on deflection plates, the electron beam can be steered to any point on the screen."
     }
   ];
 
   // Transfer applications
   const transferApps: TransferApp[] = [
     {
-      icon: "⚛️",
-      title: "Particle Accelerators",
-      short: "Accelerator Physics",
-      tagline: "Accelerating particles to near light speed",
-      description: "Electric fields accelerate charged particles to incredible energies, enabling discoveries in fundamental physics.",
-      connection: "Particles gain kinetic energy by moving through electric potential differences. Work W = qΔV converts to kinetic energy, allowing particles to reach relativistic speeds.",
-      howItWorks: "Linear accelerators (linacs) use a series of drift tubes with alternating electric fields. Particles are accelerated in the gaps between tubes. Circular accelerators like synchrotrons use electric fields for acceleration and magnetic fields for steering.",
+      icon: "🔋",
+      title: "Capacitors",
+      short: "Energy Storage",
+      tagline: "Storing energy in electric fields",
+      description: "Capacitors store electrical energy by maintaining an electric field between two conductive plates separated by an insulator.",
+      connection: "The uniform electric field E = V/d between plates stores energy. Energy density is proportional to E^2.",
+      howItWorks: "When voltage is applied, charges accumulate on the plates creating a field. The field stores energy as U = (1/2)CV^2. Dielectrics increase capacity by reducing the effective field.",
       stats: [
-        "LHC: 6.5 TeV per beam",
-        "Particles reach 99.9999991% speed of light",
-        "Electric fields up to 50 MV/m",
-        "SLAC linac: 3.2 km long"
+        "Supercapacitors: >10,000 F",
+        "Discharge in milliseconds",
+        "Energy density: 5-10 Wh/kg",
+        "Millions of charge cycles"
       ],
       examples: [
-        "Large Hadron Collider (CERN)",
-        "SLAC National Accelerator Laboratory",
-        "Fermilab particle physics",
-        "Medical proton therapy accelerators"
+        "Camera flash units",
+        "Electric vehicle regenerative braking",
+        "Power grid stabilization",
+        "Defibrillators"
       ],
-      companies: ["CERN", "Fermilab", "SLAC", "DESY"],
-      futureImpact: "Plasma wakefield accelerators use intense laser pulses to create electric fields 1000× stronger than conventional accelerators, potentially shrinking kilometer-scale machines to tabletop size.",
-      color: "from-purple-700 to-indigo-900"
+      companies: ["Maxwell Technologies", "Panasonic", "Samsung SDI", "Nichicon"],
+      futureImpact: "Graphene supercapacitors may achieve battery-level energy density with capacitor-level power density, revolutionizing electric vehicles.",
+      color: "from-amber-700 to-orange-900"
     },
     {
-      icon: "🛡️",
-      title: "Electrostatic Shielding",
-      short: "Faraday Cages",
-      tagline: "Protection through field cancellation",
-      description: "The principle that E = 0 inside conductors protects sensitive electronics and people from external electric fields and electromagnetic interference.",
-      connection: "Free charges in conductors redistribute to cancel internal fields. This means external electric fields cannot penetrate a conducting enclosure—the famous Faraday cage effect.",
-      howItWorks: "A conducting enclosure (mesh or solid) allows charges to redistribute on its surface in response to external fields. The redistributed charges create an opposing field that exactly cancels the external field inside. The interior remains field-free.",
+      icon: "⚡",
+      title: "Lightning Rods",
+      short: "Storm Protection",
+      tagline: "Guiding nature's electric fury",
+      description: "Lightning rods use the principle of charge concentration at sharp points to safely direct lightning strikes to ground.",
+      connection: "Electric field strength is highest at pointed conductors. The rod creates a preferred path for the lightning discharge.",
+      howItWorks: "The sharp point concentrates the electric field, ionizing nearby air and creating a conductive channel. When lightning strikes, current flows safely through the rod to ground.",
       stats: [
-        "Can block millions of volts",
-        "Protects against lightning strikes",
-        "60+ dB electromagnetic shielding",
-        "Mesh openings < 1/10 wavelength"
+        "Lightning: 300 million volts",
+        "Current: up to 200,000 A",
+        "Temperature: 30,000 K",
+        "Duration: 0.0002 seconds"
       ],
       examples: [
-        "Aircraft fuselage (lightning protection)",
-        "MRI room RF shielding",
-        "Microwave oven enclosure",
-        "EMP protection for electronics"
+        "Skyscrapers and tall buildings",
+        "Church steeples",
+        "Power transmission towers",
+        "Aircraft static dischargers"
       ],
-      companies: ["Boeing", "Holland Shielding", "Spira Manufacturing", "Leader Tech"],
-      futureImpact: "Advanced metamaterial shields may provide frequency-selective protection, allowing certain signals through while blocking harmful interference—smart shielding for the IoT age.",
+      companies: ["Lightning Protection Institute", "ERICO", "Alltec", "Harger"],
+      futureImpact: "Laser-triggered lightning could enable controlled atmospheric discharge for renewable energy harvesting.",
+      color: "from-yellow-700 to-amber-900"
+    },
+    {
+      icon: "🏭",
+      title: "Electrostatic Precipitators",
+      short: "Clean Air",
+      tagline: "Removing pollution with electric fields",
+      description: "Industrial smokestacks use strong electric fields to remove 99%+ of particulate pollution from exhaust gases.",
+      connection: "Particles are charged by corona discharge, then experience force F = qE driving them to collection plates.",
+      howItWorks: "High-voltage corona wires ionize gas molecules, which attach to passing particles. The charged particles then drift toward grounded plates in the strong electric field.",
+      stats: [
+        "Removes 99.9% of particles",
+        "Captures particles down to 0.01 um",
+        "Operates at 450C+",
+        "Voltage: 20-100 kV"
+      ],
+      examples: [
+        "Coal power plants",
+        "Cement kilns",
+        "Steel mills",
+        "Waste incinerators"
+      ],
+      companies: ["GE Power", "Mitsubishi", "Babcock & Wilcox", "FLSmidth"],
+      futureImpact: "Wet electrostatic precipitators may capture fine particulates and mercury from industrial emissions.",
       color: "from-slate-600 to-slate-800"
     },
     {
-      icon: "📺",
-      title: "Electron Beam Steering",
-      short: "CRT & Beam Physics",
-      tagline: "Precise control of charged particles",
-      description: "Electric fields steer electron beams with micrometer precision, from classic CRT displays to modern electron microscopes.",
-      connection: "A charged particle in an electric field experiences force F = qE. By controlling E with voltage on deflection plates, particle trajectories can be precisely steered.",
-      howItWorks: "Parallel plate electrodes create uniform electric fields. As electrons pass between plates, they experience constant transverse acceleration, curving their path. The deflection angle depends on field strength, plate length, and electron energy.",
+      icon: "📱",
+      title: "Touchscreens",
+      short: "Capacitive Touch",
+      tagline: "Sensing fingers through electric fields",
+      description: "Modern touchscreens detect finger touches by measuring changes in the electric field pattern on the screen surface.",
+      connection: "Your finger acts as a conductor, distorting the local electric field and changing capacitance at that location.",
+      howItWorks: "A grid of transparent electrodes creates an electric field pattern. When your finger approaches, it couples capacitively to the electrodes, changing the field distribution. The controller triangulates touch position.",
       stats: [
-        "Deflection accuracy: <1 μm",
-        "Scanning rates: MHz",
-        "Electron microscope resolution: 0.05 nm",
-        "Oscilloscope bandwidth: GHz"
+        "Response time: <10 ms",
+        "Resolution: 0.1 mm",
+        "Multi-touch: 10+ points",
+        "Works through glass"
       ],
       examples: [
-        "Electron microscopes",
-        "Oscilloscope CRTs",
-        "Mass spectrometers",
-        "Electron beam lithography"
+        "Smartphones and tablets",
+        "ATM machines",
+        "Interactive kiosks",
+        "Car infotainment systems"
       ],
-      companies: ["JEOL", "Thermo Fisher", "Zeiss", "Tektronix"],
-      futureImpact: "Ultrafast electron diffraction using femtosecond electron pulses, steered by precisely timed electric fields, will enable 'molecular movies' showing chemical reactions in real-time.",
-      color: "from-cyan-700 to-blue-900"
-    },
-    {
-      icon: "🧬",
-      title: "Electrophoresis",
-      short: "Molecular Separation",
-      tagline: "Sorting molecules by charge and size",
-      description: "Electric fields drive charged biomolecules through gels, separating DNA, RNA, and proteins by size and charge for analysis.",
-      connection: "Charged molecules in solution experience force F = qE. Different molecules have different charge-to-friction ratios, causing them to migrate at different speeds through the gel.",
-      howItWorks: "A gel matrix (agarose or polyacrylamide) acts as a molecular sieve. When voltage is applied, negatively charged DNA moves toward the positive electrode. Smaller fragments move faster through the gel pores, creating size-based separation.",
-      stats: [
-        "DNA separation: 10 bp to 50 kbp",
-        "Typical voltage: 5-10 V/cm",
-        "Run times: 30 min to hours",
-        "Resolution: single base pair"
-      ],
-      examples: [
-        "DNA fingerprinting forensics",
-        "PCR product analysis",
-        "Protein western blots",
-        "Clinical hemoglobin analysis"
-      ],
-      companies: ["Bio-Rad", "Thermo Fisher", "Agilent", "QIAGEN"],
-      futureImpact: "Nanopore sequencing uses electric fields to drive DNA through protein pores. As each base passes, it briefly blocks ion current differently, enabling real-time sequencing without amplification.",
-      color: "from-green-700 to-emerald-900"
+      companies: ["Apple", "Samsung", "Synaptics", "Cypress"],
+      futureImpact: "Force-sensitive and hover-detection touchscreens will enable new gesture-based interfaces.",
+      color: "from-blue-700 to-indigo-900"
     }
   ];
 
@@ -577,13 +618,12 @@ const ElectricFieldRenderer: React.FC<Props> = ({
           points.push({ x, y });
 
           const { Ex, Ey, E } = calculateField(x, y);
-          if (E < 1e6) break; // Stop if field is too weak
+          if (E < 1e6) break;
 
           const stepSize = 4;
           x += direction * (Ex / E) * stepSize;
           y += direction * (Ey / E) * stepSize;
 
-          // Check if reached another charge
           const nearCharge = sourceCharges.find(c =>
             c.id !== charge.id &&
             Math.sqrt((x - c.x) ** 2 + (y - c.y) ** 2) < 15
@@ -625,7 +665,6 @@ const ElectricFieldRenderer: React.FC<Props> = ({
 
     for (let x = gridSize; x < 500; x += gridSize) {
       for (let y = gridSize; y < 400; y += gridSize) {
-        // Skip if too close to a charge
         const tooClose = sourceCharges.some(c =>
           Math.sqrt((x - c.x) ** 2 + (y - c.y) ** 2) < 25
         );
@@ -739,7 +778,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({
 
           {/* Equation */}
           <text x="250" y="260" textAnchor="middle" fill="#94a3b8" fontSize="20">
-            E = F/q = kQ/r²
+            E = F/q = kQ/r^2
           </text>
         </svg>
 
@@ -756,7 +795,8 @@ const ElectricFieldRenderer: React.FC<Props> = ({
 
       {/* Premium CTA Button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
+        style={{ zIndex: 10 }}
         className="group mt-8 px-8 py-4 bg-gradient-to-r from-cyan-600 to-blue-600 text-white text-lg font-semibold rounded-2xl hover:from-cyan-500 hover:to-blue-500 transition-all duration-300 shadow-lg hover:shadow-cyan-500/25 hover:scale-[1.02] flex items-center gap-2"
       >
         Explore Electric Fields
@@ -785,7 +825,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({
 
           {/* Negative source charge */}
           <circle cx="100" cy="75" r="30" fill="#3b82f6" stroke="#93c5fd" strokeWidth="2" />
-          <text x="100" y="85" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">−</text>
+          <text x="100" y="85" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">-</text>
           <text x="100" y="125" textAnchor="middle" fill="#93c5fd" fontSize="12">Source: -Q</text>
 
           {/* Test charge */}
@@ -794,7 +834,12 @@ const ElectricFieldRenderer: React.FC<Props> = ({
           <text x="280" y="125" textAnchor="middle" fill="#4ade80" fontSize="12">Test: +q</text>
 
           {/* Force arrow pointing left */}
-          <path d="M250,75 L180,75" stroke="#4ade80" strokeWidth="3" markerEnd="url(#arrowGreen)" />
+          <defs>
+            <marker id="arrowGreenPredict" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#4ade80" />
+            </marker>
+          </defs>
+          <path d="M250,75 L180,75" stroke="#4ade80" strokeWidth="3" markerEnd="url(#arrowGreenPredict)" />
           <text x="215" y="65" textAnchor="middle" fill="#4ade80" fontSize="12">F</text>
 
           {/* Question mark for field direction */}
@@ -814,8 +859,9 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
             disabled={showPredictionFeedback}
+            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
                 ? option.id === 'C'
@@ -835,17 +881,18 @@ const ElectricFieldRenderer: React.FC<Props> = ({
       {showPredictionFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Correct! Electric field points toward negative charges!
+            Correct! Electric field points toward negative charges!
           </p>
           <p className="text-slate-400 text-sm mt-2">
             E is defined as the direction a <em>positive</em> test charge would be pushed.
-            Since positive charges are attracted to negative charges, E points toward −Q.
+            Since positive charges are attracted to negative charges, E points toward -Q.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onClick={() => goToPhase('play')}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-semibold rounded-xl hover:from-yellow-500 hover:to-orange-500 transition-all duration-300"
           >
-            Explore the Field Lab →
+            Explore the Field Lab
           </button>
         </div>
       )}
@@ -922,7 +969,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({
                   fontSize="24"
                   fontWeight="bold"
                 >
-                  {charge.q > 0 ? '+' : '−'}
+                  {charge.q > 0 ? '+' : '-'}
                 </text>
               </g>
             ))}
@@ -976,16 +1023,17 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         {/* Configuration selector */}
         <div className="flex gap-2 mb-4 flex-wrap justify-center">
           {[
-            { key: 'single', label: 'Single Charge', icon: '⊕' },
-            { key: 'dipole', label: 'Dipole', icon: '⊕⊖' },
-            { key: 'parallel', label: 'Parallel Plates', icon: '∥' }
+            { key: 'single', label: 'Single Charge', icon: '+' },
+            { key: 'dipole', label: 'Dipole', icon: '+-' },
+            { key: 'parallel', label: 'Parallel Plates', icon: '||' }
           ].map(config => (
             <button
               key={config.key}
-              onMouseDown={() => {
+              onClick={() => {
                 setSelectedConfig(config.key as typeof selectedConfig);
-                emitEvent('parameter_changed', { config: config.key });
+                emitGameEvent('value_changed', { config: config.key });
               }}
+              style={{ zIndex: 10 }}
               className={`px-4 py-2 rounded-lg font-medium transition-all ${
                 selectedConfig === config.key
                   ? 'bg-yellow-600 text-white'
@@ -1000,20 +1048,22 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         {/* Display toggles */}
         <div className="grid grid-cols-2 gap-4 w-full max-w-2xl mb-4">
           <button
-            onMouseDown={() => setShowFieldLines(!showFieldLines)}
+            onClick={() => setShowFieldLines(!showFieldLines)}
+            style={{ zIndex: 10 }}
             className={`p-3 rounded-xl transition-colors ${
               showFieldLines ? 'bg-red-600' : 'bg-slate-700'
             } text-white font-medium`}
           >
-            {showFieldLines ? '📍 Field Lines: ON' : '📍 Field Lines: OFF'}
+            {showFieldLines ? 'Field Lines: ON' : 'Field Lines: OFF'}
           </button>
           <button
-            onMouseDown={() => setShowFieldVectors(!showFieldVectors)}
+            onClick={() => setShowFieldVectors(!showFieldVectors)}
+            style={{ zIndex: 10 }}
             className={`p-3 rounded-xl transition-colors ${
               showFieldVectors ? 'bg-green-600' : 'bg-slate-700'
             } text-white font-medium`}
           >
-            {showFieldVectors ? '➡️ Vectors: ON' : '➡️ Vectors: OFF'}
+            {showFieldVectors ? 'Vectors: ON' : 'Vectors: OFF'}
           </button>
         </div>
 
@@ -1029,7 +1079,7 @@ const ElectricFieldRenderer: React.FC<Props> = ({
             <div>
               <p className="text-slate-400 text-sm">Field Direction:</p>
               <p className="text-xl font-bold text-cyan-400">
-                {E > 1e6 ? angle.toFixed(0) + '°' : 'N/A'}
+                {E > 1e6 ? angle.toFixed(0) + ' deg' : 'N/A'}
               </p>
             </div>
             <div className="col-span-2 md:col-span-1">
@@ -1040,15 +1090,16 @@ const ElectricFieldRenderer: React.FC<Props> = ({
             </div>
           </div>
           <p className="text-slate-500 text-sm mt-2">
-            E = kQ/r² for point charges | E = V/d for parallel plates
+            E = kQ/r^2 for point charges | E = V/d for parallel plates
           </p>
         </div>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+          onClick={() => goToPhase('review')}
+          style={{ zIndex: 10 }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-semibold rounded-xl hover:from-yellow-500 hover:to-orange-500 transition-all duration-300"
         >
-          Review Key Concepts →
+          Review Key Concepts
         </button>
       </div>
     );
@@ -1060,127 +1111,117 @@ const ElectricFieldRenderer: React.FC<Props> = ({
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-yellow-900/50 to-orange-900/30 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-yellow-400 mb-3">📐 Field Definition</h3>
+          <h3 className="text-xl font-bold text-yellow-400 mb-3">Field Definition</h3>
           <div className="space-y-3 text-slate-300 text-sm">
             <p className="text-lg text-center font-mono bg-slate-900/50 rounded-lg p-3">
               E = F/q (N/C or V/m)
             </p>
             <ul className="space-y-2">
-              <li>• Force per unit positive test charge</li>
-              <li>• Vector quantity (magnitude + direction)</li>
-              <li>• Exists at every point in space</li>
-              <li>• Independent of whether test charge is present</li>
+              <li>- Force per unit positive test charge</li>
+              <li>- Vector quantity (magnitude + direction)</li>
+              <li>- Exists at every point in space</li>
+              <li>- Independent of whether test charge is present</li>
             </ul>
           </div>
         </div>
 
         <div className="bg-gradient-to-br from-red-900/50 to-red-800/30 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-red-400 mb-3">⊕ Point Charge Field</h3>
+          <h3 className="text-xl font-bold text-red-400 mb-3">Point Charge Field</h3>
           <div className="space-y-3 text-slate-300 text-sm">
             <p className="text-center font-mono bg-slate-900/50 rounded-lg p-3">
-              E = kQ/r²
+              E = kQ/r^2
             </p>
             <ul className="space-y-2">
-              <li>• Radial field (outward from + or inward to −)</li>
-              <li>• Inverse square law (like gravity)</li>
-              <li>• k = 8.99 × 10⁹ N·m²/C²</li>
-              <li>• Superposition: E_total = E₁ + E₂ + ...</li>
+              <li>- Radial field (outward from + or inward to -)</li>
+              <li>- Inverse square law (like gravity)</li>
+              <li>- k = 8.99 x 10^9 N m^2/C^2</li>
+              <li>- Superposition: E_total = E1 + E2 + ...</li>
             </ul>
           </div>
         </div>
 
         <div className="bg-gradient-to-br from-blue-900/50 to-blue-800/30 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-blue-400 mb-3">📍 Field Line Rules</h3>
+          <h3 className="text-xl font-bold text-blue-400 mb-3">Field Line Rules</h3>
           <div className="space-y-3 text-slate-300 text-sm">
             <ul className="space-y-2">
-              <li>• Start on positive charges, end on negative</li>
-              <li>• Never cross (field has unique direction at each point)</li>
-              <li>• Denser lines = stronger field</li>
-              <li>• Tangent to line = field direction at that point</li>
-              <li>• Perpendicular to conductor surfaces</li>
+              <li>- Start on positive charges, end on negative</li>
+              <li>- Never cross (field has unique direction at each point)</li>
+              <li>- Denser lines = stronger field</li>
+              <li>- Tangent to line = field direction at that point</li>
+              <li>- Perpendicular to conductor surfaces</li>
             </ul>
           </div>
         </div>
 
         <div className="bg-gradient-to-br from-cyan-900/50 to-cyan-800/30 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">∥ Uniform Field</h3>
+          <h3 className="text-xl font-bold text-cyan-400 mb-3">Uniform Field</h3>
           <div className="space-y-3 text-slate-300 text-sm">
             <p className="text-center font-mono bg-slate-900/50 rounded-lg p-3">
               E = V/d (parallel plates)
             </p>
             <ul className="space-y-2">
-              <li>• Constant magnitude and direction</li>
-              <li>• Between large parallel plates</li>
-              <li>• Field lines are parallel and equally spaced</li>
-              <li>• Used in capacitors, deflection systems</li>
+              <li>- Constant magnitude and direction</li>
+              <li>- Between large parallel plates</li>
+              <li>- Field lines are parallel and equally spaced</li>
+              <li>- Used in capacitors, deflection systems</li>
             </ul>
           </div>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onClick={() => goToPhase('twist_predict')}
+        style={{ zIndex: 10 }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
-        Discover a Surprising Twist →
+        Discover a Surprising Twist
       </button>
     </div>
   );
 
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-6">🌟 The Twist Challenge</h2>
+      <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist Challenge</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <svg viewBox="0 0 400 200" className="w-full max-w-md mx-auto mb-4">
           <rect x="0" y="0" width="400" height="200" fill="#1e293b" rx="8" />
 
-          {/* Hollow sphere (conductor) */}
-          <circle cx="200" cy="100" r="70" fill="none" stroke="#94a3b8" strokeWidth="4" />
-          <circle cx="200" cy="100" r="65" fill="#1e293b" />
+          {/* Dipole charges */}
+          <circle cx="130" cy="100" r="25" fill="#ef4444" stroke="#fca5a5" strokeWidth="2" />
+          <text x="130" y="110" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">+</text>
 
-          {/* Charges on surface */}
-          {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => {
-            const rad = angle * Math.PI / 180;
-            return (
-              <circle
-                key={angle}
-                cx={200 + Math.cos(rad) * 67}
-                cy={100 + Math.sin(rad) * 67}
-                r="6"
-                fill="#ef4444"
-              />
-            );
-          })}
+          <circle cx="270" cy="100" r="25" fill="#3b82f6" stroke="#93c5fd" strokeWidth="2" />
+          <text x="270" y="110" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">-</text>
 
-          {/* Question mark inside */}
-          <text x="200" y="110" textAnchor="middle" fill="#22c55e" fontSize="36">E = ?</text>
+          {/* Question mark in between */}
+          <text x="200" y="110" textAnchor="middle" fill="#fbbf24" fontSize="36">?</text>
 
-          {/* Label */}
-          <text x="200" y="190" textAnchor="middle" fill="#94a3b8" fontSize="12">
-            Charged conducting hollow sphere
-          </text>
+          {/* Labels */}
+          <text x="130" y="150" textAnchor="middle" fill="#fca5a5" fontSize="12">+Q</text>
+          <text x="270" y="150" textAnchor="middle" fill="#93c5fd" fontSize="12">-Q</text>
+          <text x="200" y="180" textAnchor="middle" fill="#94a3b8" fontSize="12">Electric Dipole</text>
         </svg>
 
         <p className="text-lg text-slate-300 mb-4">
-          A hollow conducting sphere is given a positive charge.
-          The charges distribute on the outer surface.
+          A positive charge (+Q) and negative charge (-Q) of equal magnitude are separated by a small distance, forming an electric dipole.
         </p>
         <p className="text-lg text-cyan-400 font-medium">
-          What is the electric field inside the hollow conductor?
+          What happens to the electric field exactly at the midpoint between the two charges?
         </p>
       </div>
 
       <div className="grid gap-3 w-full max-w-xl">
         {[
-          { id: 'A', text: 'Very strong, pointing toward the center' },
-          { id: 'B', text: 'Zero everywhere inside', correct: true },
-          { id: 'C', text: 'The same as outside the sphere' },
-          { id: 'D', text: 'Depends on where you measure inside' }
+          { id: 'A', text: 'The field is zero because the charges cancel out' },
+          { id: 'B', text: 'The field points from positive to negative (strongest here)' },
+          { id: 'C', text: 'The field points from negative to positive' },
+          { id: 'D', text: 'The field is perpendicular to the line between charges' }
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
             disabled={showTwistFeedback}
+            style={{ zIndex: 10 }}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
                 ? option.id === 'B'
@@ -1200,17 +1241,19 @@ const ElectricFieldRenderer: React.FC<Props> = ({
       {showTwistFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Correct! The field inside a conductor is always zero!
+            Correct! The fields add up, they don't cancel!
           </p>
           <p className="text-slate-400 text-sm mt-2">
-            This counterintuitive result is the basis for electrostatic shielding.
-            It's how Faraday cages protect electronics and people from electric fields!
+            Both charges create fields pointing from + to - at the midpoint.
+            The fields are in the SAME direction, so they reinforce each other!
+            The midpoint has a strong field, not zero.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onClick={() => goToPhase('twist_play')}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
           >
-            See Why E = 0 Inside →
+            See the Dipole Field
           </button>
         </div>
       )}
@@ -1219,126 +1262,108 @@ const ElectricFieldRenderer: React.FC<Props> = ({
 
   const renderTwistPlay = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-4">Electrostatic Shielding</h2>
+      <h2 className="text-2xl font-bold text-purple-400 mb-4">Dipole Field Visualization</h2>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <svg viewBox="0 0 500 300" className="w-full">
           <rect x="0" y="0" width="500" height="300" fill="#0f172a" rx="12" />
 
-          {/* Conductor outline */}
-          <circle cx="250" cy="150" r="100" fill="none" stroke="#94a3b8" strokeWidth="6" />
-          <circle cx="250" cy="150" r="90" fill="#1e293b" />
-
-          {/* Surface charges */}
-          {[...Array(16)].map((_, i) => {
-            const angle = (i * 22.5) * Math.PI / 180;
-            const pulseOffset = Math.sin(animationTime * 2 + i) * 3;
+          {/* Dipole field lines */}
+          {[0, 1, 2, 3, 4, 5].map(i => {
+            const yOffset = (i - 2.5) * 30;
+            const amplitude = 40 + Math.abs(i - 2.5) * 20;
             return (
-              <circle
-                key={`charge-${i}`}
-                cx={250 + Math.cos(angle) * (95 + pulseOffset)}
-                cy={150 + Math.sin(angle) * (95 + pulseOffset)}
-                r="8"
-                fill="#ef4444"
+              <path
+                key={`dipole-line-${i}`}
+                d={`M 150 ${150 + yOffset}
+                    Q 250 ${150 + yOffset - amplitude * Math.sign(yOffset || 1)} 350 ${150 + yOffset}`}
+                fill="none"
+                stroke="#ef4444"
+                strokeWidth="2"
+                opacity="0.6"
               />
             );
           })}
 
-          {/* External field arrows (being blocked) */}
-          {[-40, 0, 40].map(yOffset => (
-            <g key={`ext-${yOffset}`}>
-              <line
-                x1="50"
-                y1={150 + yOffset}
-                x2="140"
-                y2={150 + yOffset}
-                stroke="#fbbf24"
-                strokeWidth="3"
-                markerEnd="url(#arrowYellow)"
-                opacity="0.7"
-              />
-              <line
-                x1="360"
-                y1={150 + yOffset}
-                x2="450"
-                y2={150 + yOffset}
-                stroke="#fbbf24"
-                strokeWidth="3"
-                markerEnd="url(#arrowYellow)"
-                opacity="0.7"
-              />
+          {/* Field arrows along middle line */}
+          {[180, 220, 260, 300].map(x => (
+            <g key={`arrow-${x}`}>
+              <line x1={x} y1="150" x2={x + 20} y2="150" stroke="#22c55e" strokeWidth="3" />
+              <polygon points={`${x + 25},150 ${x + 18},145 ${x + 18},155`} fill="#22c55e" />
             </g>
           ))}
 
-          {/* E = 0 inside */}
-          <text x="250" y="145" textAnchor="middle" fill="#22c55e" fontSize="28" fontWeight="bold">
-            E = 0
-          </text>
-          <text x="250" y="170" textAnchor="middle" fill="#22c55e" fontSize="14">
-            everywhere inside
-          </text>
+          {/* Positive charge */}
+          <circle cx="150" cy="150" r="25" fill="#ef4444" stroke="#fca5a5" strokeWidth="3">
+            <animate attributeName="r" values="23;27;23" dur="2s" repeatCount="indefinite" />
+          </circle>
+          <text x="150" y="158" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">+</text>
+
+          {/* Negative charge */}
+          <circle cx="350" cy="150" r="25" fill="#3b82f6" stroke="#93c5fd" strokeWidth="3">
+            <animate attributeName="r" values="23;27;23" dur="2s" repeatCount="indefinite" />
+          </circle>
+          <text x="350" y="158" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">-</text>
 
           {/* Labels */}
-          <text x="95" y="280" textAnchor="middle" fill="#fbbf24" fontSize="12">External Field</text>
-          <text x="250" y="280" textAnchor="middle" fill="#94a3b8" fontSize="12">Conductor</text>
-          <text x="405" y="280" textAnchor="middle" fill="#fbbf24" fontSize="12">External Field</text>
-
-          <defs>
-            <marker id="arrowYellow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-              <path d="M0,0 L8,4 L0,8 Z" fill="#fbbf24" />
-            </marker>
-          </defs>
+          <text x="250" y="40" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">
+            Field points from + to -
+          </text>
+          <text x="250" y="280" textAnchor="middle" fill="#94a3b8" fontSize="12">
+            Fields from both charges reinforce at the midpoint
+          </text>
         </svg>
 
         <div className="mt-4 space-y-3 text-slate-300">
           <div className="flex items-start gap-3">
             <div className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">1</div>
-            <p>When an external field is applied, free electrons in the conductor start to move</p>
+            <p>The + charge creates a field pointing AWAY from itself (toward the right)</p>
           </div>
           <div className="flex items-start gap-3">
-            <div className="bg-yellow-600 text-white px-2 py-1 rounded text-xs font-bold">2</div>
-            <p>Electrons redistribute until they create a field that exactly cancels the external field inside</p>
+            <div className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">2</div>
+            <p>The - charge creates a field pointing TOWARD itself (also toward the right)</p>
           </div>
           <div className="flex items-start gap-3">
             <div className="bg-green-600 text-white px-2 py-1 rounded text-xs font-bold">3</div>
-            <p>At equilibrium: E = 0 inside, all excess charge on surface</p>
+            <p>Both fields point in the SAME direction between the charges!</p>
           </div>
           <div className="flex items-start gap-3">
             <div className="bg-purple-600 text-white px-2 py-1 rounded text-xs font-bold">4</div>
-            <p>This happens nearly instantaneously (speed of light in metal)!</p>
+            <p>The total field is DOUBLED, not cancelled - superposition at work!</p>
           </div>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onClick={() => goToPhase('twist_review')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
-        Review the Discovery →
+        Review the Discovery
       </button>
     </div>
   );
 
   const renderTwistReview = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-6">🌟 Key Discovery: Faraday Cage</h2>
+      <h2 className="text-2xl font-bold text-purple-400 mb-6">Key Discovery: Dipole Fields</h2>
 
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl mb-6">
-        <h3 className="text-xl font-bold text-purple-400 mb-4">Inside Conductors: E = 0 Always!</h3>
+        <h3 className="text-xl font-bold text-purple-400 mb-4">The Superposition Principle</h3>
         <div className="space-y-4 text-slate-300">
           <p>
-            This remarkable property has profound implications:
+            Electric fields from multiple charges simply ADD as vectors. This leads to some surprising results:
           </p>
           <ul className="list-disc list-inside space-y-2 text-sm">
-            <li>Any conductor shields its interior from external electric fields</li>
-            <li>Doesn't need to be solid—a mesh works if holes are small enough</li>
-            <li>Lightning strikes on airplanes leave passengers unharmed</li>
-            <li>Sensitive electronics are protected in metal enclosures</li>
+            <li>Between opposite charges (dipole): fields REINFORCE</li>
+            <li>Between like charges: fields CANCEL at the midpoint</li>
+            <li>Dipole fields fall off as 1/r^3, faster than single charges</li>
+            <li>Many molecules are dipoles (like water H2O)!</li>
           </ul>
           <div className="bg-slate-900/50 rounded-xl p-4 mt-4">
             <p className="text-cyan-400 font-medium">
-              "You could have millions of volts on the outside of a Faraday cage,
-              and feel absolutely nothing inside—pure physics magic!"
+              "Dipoles are everywhere - from water molecules to radio antennas.
+              Understanding them unlocks chemistry and telecommunications!"
             </p>
           </div>
         </div>
@@ -1346,24 +1371,25 @@ const ElectricFieldRenderer: React.FC<Props> = ({
 
       <div className="grid md:grid-cols-3 gap-4 max-w-3xl mb-6">
         <div className="bg-slate-800/50 rounded-xl p-4 text-center">
-          <div className="text-3xl mb-2">✈️</div>
-          <p className="text-sm text-slate-300">Aircraft Lightning Protection</p>
+          <div className="text-3xl mb-2">H2O</div>
+          <p className="text-sm text-slate-300">Water Molecule (polar)</p>
         </div>
         <div className="bg-slate-800/50 rounded-xl p-4 text-center">
-          <div className="text-3xl mb-2">🔬</div>
-          <p className="text-sm text-slate-300">MRI Room Shielding</p>
+          <div className="text-3xl mb-2">||</div>
+          <p className="text-sm text-slate-300">Dipole Antenna</p>
         </div>
         <div className="bg-slate-800/50 rounded-xl p-4 text-center">
-          <div className="text-3xl mb-2">📱</div>
-          <p className="text-sm text-slate-300">EMP Protection</p>
+          <div className="text-3xl mb-2">+-</div>
+          <p className="text-sm text-slate-300">Polar Bonds</p>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onClick={() => goToPhase('transfer')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-semibold rounded-xl hover:from-yellow-500 hover:to-orange-500 transition-all duration-300"
       >
-        Explore Real-World Applications →
+        Explore Real-World Applications
       </button>
     </div>
   );
@@ -1376,11 +1402,11 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         {transferApps.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               setActiveAppIndex(index);
-              emitEvent('transfer_app_viewed', { appIndex: index, appTitle: app.title });
+              emitGameEvent('app_changed', { appIndex: index, appTitle: app.title });
             }}
+            style={{ zIndex: 10 }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppIndex === index
                 ? 'bg-yellow-600 text-white'
@@ -1406,37 +1432,37 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         <p className="text-slate-200 mb-4">{transferApps[activeAppIndex].description}</p>
 
         <div className="bg-black/20 rounded-xl p-4 mb-4">
-          <h4 className="text-cyan-400 font-semibold mb-2">🔗 Physics Connection</h4>
+          <h4 className="text-cyan-400 font-semibold mb-2">Physics Connection</h4>
           <p className="text-slate-300 text-sm">{transferApps[activeAppIndex].connection}</p>
         </div>
 
         <div className="bg-black/20 rounded-xl p-4 mb-4">
-          <h4 className="text-yellow-400 font-semibold mb-2">⚙️ How It Works</h4>
+          <h4 className="text-yellow-400 font-semibold mb-2">How It Works</h4>
           <p className="text-slate-300 text-sm">{transferApps[activeAppIndex].howItWorks}</p>
         </div>
 
         <div className="grid md:grid-cols-2 gap-4 mb-4">
           <div className="bg-black/20 rounded-xl p-4">
-            <h4 className="text-green-400 font-semibold mb-2">📊 Key Stats</h4>
+            <h4 className="text-green-400 font-semibold mb-2">Key Stats</h4>
             <ul className="text-slate-300 text-sm space-y-1">
               {transferApps[activeAppIndex].stats.map((stat, i) => (
-                <li key={i}>• {stat}</li>
+                <li key={i}>- {stat}</li>
               ))}
             </ul>
           </div>
 
           <div className="bg-black/20 rounded-xl p-4">
-            <h4 className="text-orange-400 font-semibold mb-2">💡 Examples</h4>
+            <h4 className="text-orange-400 font-semibold mb-2">Examples</h4>
             <ul className="text-slate-300 text-sm space-y-1">
               {transferApps[activeAppIndex].examples.map((ex, i) => (
-                <li key={i}>• {ex}</li>
+                <li key={i}>- {ex}</li>
               ))}
             </ul>
           </div>
         </div>
 
         <div className="bg-black/20 rounded-xl p-4 mb-4">
-          <h4 className="text-purple-400 font-semibold mb-2">🚀 Future Impact</h4>
+          <h4 className="text-purple-400 font-semibold mb-2">Future Impact</h4>
           <p className="text-slate-300 text-sm">{transferApps[activeAppIndex].futureImpact}</p>
         </div>
 
@@ -1450,10 +1476,11 @@ const ElectricFieldRenderer: React.FC<Props> = ({
 
         {!completedApps.has(activeAppIndex) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppIndex); }}
+            onClick={() => handleAppComplete(activeAppIndex)}
+            style={{ zIndex: 10 }}
             className="w-full py-3 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl font-semibold transition-colors"
           >
-            ✓ Mark as Understood
+            Mark as Understood
           </button>
         )}
       </div>
@@ -1473,10 +1500,11 @@ const ElectricFieldRenderer: React.FC<Props> = ({
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          onClick={() => goToPhase('test')}
+          style={{ zIndex: 10 }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-semibold rounded-xl hover:from-yellow-500 hover:to-orange-500 transition-all duration-300"
         >
-          Take the Knowledge Test →
+          Take the Knowledge Test
         </button>
       )}
     </div>
@@ -1500,7 +1528,8 @@ const ElectricFieldRenderer: React.FC<Props> = ({
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
+                    style={{ zIndex: 10 }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-yellow-600 text-white'
@@ -1515,12 +1544,12 @@ const ElectricFieldRenderer: React.FC<Props> = ({
           ))}
 
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               setShowTestResults(true);
-              emitEvent('test_completed', { score: calculateTestScore() });
+              emitGameEvent('game_completed', { score: calculateTestScore(), maxScore: 10 });
             }}
             disabled={testAnswers.includes(-1)}
+            style={{ zIndex: 10 }}
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
               testAnswers.includes(-1)
                 ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
@@ -1533,34 +1562,35 @@ const ElectricFieldRenderer: React.FC<Props> = ({
       ) : (
         <div className="max-w-2xl w-full">
           <div className="bg-slate-800/50 rounded-2xl p-6 text-center mb-6">
-            <div className="text-6xl mb-4">{calculateTestScore() >= 7 ? '⚡' : '📚'}</div>
+            <div className="text-6xl mb-4">{calculateTestScore() >= 7 ? 'E' : '?'}</div>
             <h3 className="text-2xl font-bold text-white mb-2">
               Score: {calculateTestScore()}/10
             </h3>
             <p className="text-slate-300 mb-6">
               {calculateTestScore() >= 7
-                ? 'Excellent! You\'ve mastered Electric Fields!'
+                ? "Excellent! You've mastered Electric Fields!"
                 : 'Keep studying! Review the concepts and try again.'}
             </p>
 
             {calculateTestScore() >= 7 ? (
               <button
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
+                onClick={() => goToPhase('mastery')}
+                style={{ zIndex: 10 }}
                 className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
               >
-                Claim Your Mastery Badge →
+                Claim Your Mastery Badge
               </button>
             ) : (
               <button
-                onMouseDown={(e) => {
-                  e.preventDefault();
+                onClick={() => {
                   setShowTestResults(false);
                   setTestAnswers(Array(10).fill(-1));
-                  goToPhase(3);
+                  goToPhase('review');
                 }}
+                style={{ zIndex: 10 }}
                 className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white font-semibold rounded-xl hover:from-yellow-500 hover:to-orange-500 transition-all duration-300"
               >
-                Review & Try Again
+                Review and Try Again
               </button>
             )}
           </div>
@@ -1600,46 +1630,47 @@ const ElectricFieldRenderer: React.FC<Props> = ({
   const renderMastery = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
       <div className="bg-gradient-to-br from-yellow-900/50 via-orange-900/50 to-red-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">⚡</div>
+        <div className="text-8xl mb-6">E</div>
         <h1 className="text-3xl font-bold text-white mb-4">Electric Field Master!</h1>
         <p className="text-xl text-slate-300 mb-6">
-          You've mastered the fundamental concept of electric fields!
+          You have mastered the fundamental concept of electric fields!
         </p>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6">
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">📐</div>
+            <div className="text-2xl mb-2">F/q</div>
             <p className="text-sm text-slate-300">E = F/q</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">📍</div>
+            <div className="text-2xl mb-2">---</div>
             <p className="text-sm text-slate-300">Field Lines</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🛡️</div>
-            <p className="text-sm text-slate-300">Faraday Cage</p>
+            <div className="text-2xl mb-2">+-</div>
+            <p className="text-sm text-slate-300">Dipole Fields</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">⚛️</div>
+            <div className="text-2xl mb-2">App</div>
             <p className="text-sm text-slate-300">Applications</p>
           </div>
         </div>
 
         <div className="bg-slate-900/50 rounded-xl p-4 mb-6">
           <p className="text-yellow-400 font-mono text-lg">
-            E = kQ/r² | E = V/d
+            E = kQ/r^2 | E = V/d
           </p>
           <p className="text-slate-400 text-sm mt-2">
-            Field direction: toward − charges, away from + charges
+            Field direction: toward - charges, away from + charges
           </p>
         </div>
 
         <div className="flex gap-4 justify-center">
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+            onClick={() => goToPhase('hook')}
+            style={{ zIndex: 10 }}
             className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
           >
-            ↺ Explore Again
+            Explore Again
           </button>
         </div>
       </div>
@@ -1648,21 +1679,21 @@ const ElectricFieldRenderer: React.FC<Props> = ({
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
 
-  const phaseLabels = [
+  const phaseDisplayLabels = [
     'Hook', 'Predict', 'Explore', 'Review',
     'Twist Predict', 'Twist Explore', 'Twist Review',
     'Apply', 'Test', 'Mastery'
@@ -1684,18 +1715,19 @@ const ElectricFieldRenderer: React.FC<Props> = ({
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
           <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-slate-400`}>Electric Fields</span>
           <div className="flex gap-1.5 items-center">
-            {phaseLabels.map((_, i) => (
+            {phaseOrder.map((p, i) => (
               <button
                 key={i}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(i); }}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === i ? 'bg-cyan-500 w-6' : phase > i ? 'bg-cyan-500 w-2' : 'bg-slate-600 w-2'
+                  phase === p ? 'bg-cyan-500 w-6' : phaseOrder.indexOf(phase) > i ? 'bg-cyan-500 w-2' : 'bg-slate-600 w-2'
                 }`}
-                title={phaseLabels[i]}
+                title={phaseDisplayLabels[i]}
               />
             ))}
           </div>
-          <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-slate-500`}>{phaseLabels[phase]}</span>
+          <span className={`${isMobile ? 'text-xs' : 'text-sm'} text-slate-500`}>{phaseDisplayLabels[phaseOrder.indexOf(phase)]}</span>
         </div>
       </div>
 

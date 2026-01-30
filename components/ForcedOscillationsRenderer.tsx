@@ -10,6 +10,10 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 // Amplitude: A = F₀ / √[(k - mω²)² + (cω)²]
 // ============================================================================
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -48,17 +52,21 @@ interface TransferApp {
 
 interface Props {
   onGameEvent?: (event: { type: GameEventType; data?: Record<string, unknown> }) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
 const ForcedOscillationsRenderer: React.FC<Props> = ({
   onGameEvent,
-  currentPhase,
+  gamePhase,
   onPhaseComplete
 }) => {
-  // Phase: 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
-  const [phase, setPhase] = useState(currentPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      return gamePhase as Phase;
+    }
+    return 'hook';
+  });
   const [isMobile, setIsMobile] = useState(false);
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
@@ -79,10 +87,15 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
   const [amplitude, setAmplitude] = useState(0);
   const [isAtResonance, setIsAtResonance] = useState(false);
 
-  const navigationLockRef = useRef(false);
-  const lastInteractionRef = useRef(0);
   const audioContextRef = useRef<AudioContext | null>(null);
   const animationRef = useRef<number | null>(null);
+
+  // Sync with external gamePhase prop
+  useEffect(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
+    }
+  }, [gamePhase]);
 
   // Responsive check
   useEffect(() => {
@@ -221,12 +234,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
     };
   }, [isAnimating, drivingFrequency, naturalFrequency, damping, calculateAmplitude, playSound, isAtResonance]);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    if (navigationLockRef.current) return;
-    lastInteractionRef.current = now;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     if (onGameEvent) {
@@ -235,13 +243,9 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
     if (onPhaseComplete) {
       onPhaseComplete(newPhase);
     }
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent, onPhaseComplete]);
 
   const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'C' ? 'correct' : 'incorrect');
@@ -251,9 +255,6 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
   }, [playSound, onGameEvent]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'B' ? 'correct' : 'incorrect');
@@ -263,9 +264,6 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
   }, [playSound, onGameEvent]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;
@@ -277,9 +275,6 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
   }, [onGameEvent]);
 
   const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastInteractionRef.current < 400) return;
-    lastInteractionRef.current = now;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
     if (onGameEvent) {
@@ -434,27 +429,61 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           <circle cx="32" cy="28" r="2" fill="#ef4444"/>
         </svg>
       ),
-      title: "Radio & Wireless Communication",
-      short: "Radio Tuning",
-      tagline: "Selecting signals from the electromagnetic spectrum",
-      description: "Every radio, WiFi device, and cell phone uses resonant circuits to select specific frequencies from the sea of electromagnetic waves.",
-      connection: "LC (inductor-capacitor) circuits have a natural resonant frequency. By adjusting component values, you tune the circuit to resonate with your desired signal frequency.",
-      howItWorks: "The circuit acts as a bandpass filter. Only signals at the resonant frequency create large oscillating currents (resonance), which are then amplified. Off-frequency signals produce minimal response and are rejected.",
+      title: "Bridges",
+      short: "Bridges",
+      tagline: "Engineering structures to avoid catastrophic resonance",
+      description: "Modern bridge design carefully considers natural frequencies to prevent resonance disasters like the Tacoma Narrows collapse.",
+      connection: "Bridges have natural vibration frequencies. When wind vortices, traffic, or pedestrians create forces at these frequencies, dangerous resonance can occur.",
+      howItWorks: "Engineers calculate bridge natural frequencies and design structures to avoid matching common excitation frequencies. Dampers and aerodynamic shaping help dissipate resonant energy.",
       stats: [
-        { value: "kHz-GHz", label: "Frequency range" },
-        { value: "Q>100", label: "Quality factor" },
-        { value: "<1 kHz", label: "Bandwidth selectivity" },
-        { value: "10⁻¹² W", label: "Detection sensitivity" }
+        { value: "0.1-2 Hz", label: "Typical bridge frequencies" },
+        { value: "40 mph", label: "Tacoma wind speed" },
+        { value: "~0.2 Hz", label: "Critical frequency" },
+        { value: "1000+ tons", label: "Bridge dampers" }
       ],
       examples: [
-        "AM/FM radio receivers",
-        "WiFi routers selecting channels",
-        "Cell phones switching bands",
-        "GPS receivers tracking satellites"
+        "Tacoma Narrows Bridge collapse (1940)",
+        "Millennium Bridge wobble (2000)",
+        "Tuned mass dampers on suspension bridges",
+        "Aerodynamic deck designs"
       ],
-      companies: ["Qualcomm", "Broadcom", "Skyworks", "Texas Instruments", "Analog Devices"],
-      futureImpact: "Software-defined radios and reconfigurable resonant circuits will enable single devices to operate across all wireless standards, adapting in real-time to available spectrum.",
+      companies: ["Arup", "AECOM", "WSP", "Mott MacDonald", "Thornton Tomasetti"],
+      futureImpact: "Smart bridges with embedded sensors will detect and actively counteract resonance in real-time, making structures safer and more resilient.",
       color: "from-blue-600 to-indigo-600"
+    },
+    {
+      icon: (
+        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
+          <rect x="20" y="8" width="24" height="48" rx="2" fill="#1e293b" stroke="#f59e0b" strokeWidth="2"/>
+          <path d="M28 56 L36 56" stroke="#f59e0b" strokeWidth="3"/>
+          <circle cx="32" cy="20" r="4" fill="#f59e0b"/>
+          <path d="M32 24 L32 36" stroke="#f59e0b" strokeWidth="2"/>
+          <path d="M24 36 Q32 44, 40 36" stroke="#f59e0b" strokeWidth="2" fill="none"/>
+          <path d="M24 36 Q32 28, 40 36" stroke="#f59e0b" strokeWidth="2" fill="none"/>
+          <ellipse cx="32" cy="36" rx="12" ry="6" fill="#f59e0b" opacity="0.2"/>
+        </svg>
+      ),
+      title: "Tuning Forks",
+      short: "Tuning Forks",
+      tagline: "Precise frequency standards through resonance",
+      description: "Tuning forks produce pure tones because they resonate at a single, precise natural frequency determined by their dimensions.",
+      connection: "When struck, a tuning fork vibrates at its natural frequency. The prong shape ensures only one mode resonates strongly, producing a pure tone.",
+      howItWorks: "The fork's mass and stiffness determine its natural frequency (f = √(k/m)). When struck, energy excites this mode, and the fork resonates, producing sound waves at that frequency.",
+      stats: [
+        { value: "440 Hz", label: "Standard A4 pitch" },
+        { value: "99.99%", label: "Frequency purity" },
+        { value: "Q > 1000", label: "Quality factor" },
+        { value: "30+ sec", label: "Sustain time" }
+      ],
+      examples: [
+        "Musical instrument tuning",
+        "Quartz crystal oscillators in watches",
+        "Medical diagnostic tools",
+        "Frequency calibration standards"
+      ],
+      companies: ["Wittner", "John Walker & Co", "Ragg", "Peterson Tuners", "Seiko"],
+      futureImpact: "Nano-scale resonators based on the same principles enable ultra-precise sensors for medical diagnostics and environmental monitoring.",
+      color: "from-amber-600 to-orange-600"
     },
     {
       icon: (
@@ -470,9 +499,9 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           <path d="M16 16 L16 20 M32 14 L32 20 M48 16 L48 20" stroke="#64748b" strokeWidth="1"/>
         </svg>
       ),
-      title: "Medical MRI Imaging",
+      title: "MRI Machines",
       short: "MRI Machines",
-      tagline: "Nuclear magnetic resonance reveals your body's secrets",
+      tagline: "Nuclear magnetic resonance reveals body's secrets",
       description: "MRI machines use nuclear magnetic resonance of hydrogen atoms to create detailed images of soft tissue without radiation.",
       connection: "Hydrogen nuclei (protons) in magnetic fields precess at the Larmor frequency. RF pulses at this exact resonant frequency cause energy absorption that's detectable.",
       howItWorks: "Strong magnets align hydrogen nuclei. RF coils transmit pulses at the resonant frequency, causing nuclei to absorb energy and 'flip.' As they relax back, they emit RF signals. Different tissues relax at different rates, creating contrast.",
@@ -490,7 +519,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       ],
       companies: ["Siemens Healthineers", "GE Healthcare", "Philips", "Canon Medical", "Hitachi"],
       futureImpact: "Higher field strengths (7T+) and AI-enhanced reconstruction will enable faster scans with finer detail, potentially replacing many CT and X-ray procedures.",
-      color: "from-amber-600 to-orange-600"
+      color: "from-purple-600 to-pink-600"
     },
     {
       icon: (
@@ -507,7 +536,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         </svg>
       ),
       title: "Musical Instruments",
-      short: "Music Resonance",
+      short: "Musical Instruments",
       tagline: "Making strings and air columns sing",
       description: "Every acoustic instrument relies on resonance to amplify vibrations and create rich, sustained tones.",
       connection: "Strings, air columns, and instrument bodies have natural frequencies. When vibrations match these frequencies, resonance amplifies the sound dramatically.",
@@ -522,48 +551,11 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         "Violin bodies shaped for optimal resonance",
         "Piano soundboards coupling string vibrations",
         "Wind instrument bore design",
-        "Tuning forks for precise pitch reference"
+        "Organ pipes tuned by length"
       ],
       companies: ["Steinway & Sons", "Yamaha", "Stradivarius (historical)", "Gibson", "Martin Guitar"],
       futureImpact: "Computational acoustics and 3D printing enable instruments optimized for specific resonance properties, creating new sounds impossible with traditional manufacturing.",
-      color: "from-purple-600 to-pink-600"
-    },
-    {
-      icon: (
-        <svg width="64" height="64" viewBox="0 0 64 64" fill="none">
-          <rect x="8" y="32" width="48" height="24" rx="4" fill="#64748b"/>
-          <rect x="12" y="36" width="40" height="16" rx="2" fill="#1e293b"/>
-          <path d="M16 8 Q32 16, 48 8" stroke="#ef4444" strokeWidth="3"/>
-          <path d="M16 16 Q32 24, 48 16" stroke="#f59e0b" strokeWidth="3"/>
-          <path d="M16 24 Q32 32, 48 24" stroke="#22c55e" strokeWidth="3"/>
-          <rect x="4" y="52" width="8" height="8" rx="1" fill="#1e293b"/>
-          <rect x="52" y="52" width="8" height="8" rx="1" fill="#1e293b"/>
-          <circle cx="24" cy="44" r="3" fill="#3b82f6"/>
-          <circle cx="32" cy="44" r="3" fill="#22c55e"/>
-          <circle cx="40" cy="44" r="3" fill="#ef4444"/>
-        </svg>
-      ),
-      title: "Earthquake Engineering",
-      short: "Seismic Design",
-      tagline: "Designing buildings to survive ground shaking",
-      description: "Structures must be designed to avoid resonating with earthquake frequencies, which could cause catastrophic amplification.",
-      connection: "Buildings have natural frequencies based on their height and stiffness. If earthquake ground motion matches these frequencies, resonance causes dangerous amplification.",
-      howItWorks: "Engineers calculate a building's natural frequency and ensure it differs from likely earthquake frequencies. Tuned mass dampers (like in Taipei 101) can absorb resonant energy. Base isolation shifts the resonant frequency below earthquake ranges.",
-      stats: [
-        { value: "0.1-10 Hz", label: "Earthquake frequency range" },
-        { value: "T ≈ N/10 s", label: "Building period (N = stories)" },
-        { value: "2-10×", label: "Resonance amplification" },
-        { value: "730 tons", label: "Taipei 101 TMD mass" }
-      ],
-      examples: [
-        "Taipei 101's tuned mass damper",
-        "Base-isolated buildings in Japan",
-        "Soft-story retrofit requirements",
-        "Bridge seismic isolation bearings"
-      ],
-      companies: ["AECOM", "Arup", "Thornton Tomasetti", "Taylor Devices", "Dynamic Isolation Systems"],
-      futureImpact: "Smart structures with active damping and real-time frequency adjustment will dynamically modify their resonant properties during earthquakes for optimal protection.",
-      color: "from-red-600 to-rose-600"
+      color: "from-emerald-600 to-teal-600"
     }
   ];
 
@@ -669,7 +661,8 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
 
       {/* Premium CTA Button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
+        style={{ zIndex: 10 }}
         className="group mt-8 px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white text-lg font-semibold rounded-2xl hover:from-red-500 hover:to-orange-500 transition-all duration-300 shadow-lg hover:shadow-red-500/25 hover:scale-[1.02] flex items-center gap-2"
       >
         Discover Resonance
@@ -690,7 +683,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <p className="text-lg text-slate-300 mb-4">
-          You push a child on a swing. You can push at any rhythm you choose—fast, slow, or matching the swing's natural back-and-forth motion.
+          You push a child on a swing. You can push at any rhythm you choose--fast, slow, or matching the swing's natural back-and-forth motion.
         </p>
         <p className="text-lg text-cyan-400 font-medium">
           Which pushing rhythm makes the swing go highest?
@@ -705,7 +698,8 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
+            style={{ zIndex: 10 }}
             disabled={showPredictionFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
@@ -725,16 +719,17 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       {showPredictionFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Correct! This is <span className="text-red-400">RESONANCE</span>—maximum response when driving frequency matches natural frequency!
+            Correct! This is <span className="text-red-400">RESONANCE</span>--maximum response when driving frequency matches natural frequency!
           </p>
           <p className="text-slate-400 text-sm mt-2">
             Each push adds energy at exactly the right moment, building up amplitude dramatically.
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
+            onClick={() => goToPhase('play')}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
           >
-            Explore Resonance →
+            Explore Resonance
           </button>
         </div>
       )}
@@ -826,14 +821,14 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           />
           <circle cx={30 + drivingFrequency * 40} cy={150 - Math.min(amplitude * 15, 90)} r="4" fill="#ef4444"/>
 
-          <text x="70" y="165" textAnchor="middle" fill="#64748b" fontSize="8">ω/ω₀ →</text>
+          <text x="70" y="165" textAnchor="middle" fill="#64748b" fontSize="8">omega/omega_0</text>
         </svg>
 
         {/* Controls */}
         <div className="flex flex-col gap-4">
           <div>
             <label className="text-slate-400 text-sm block mb-2">
-              Driving Frequency (ω/ω₀): <span className={`font-bold ${getFrequencyColor(drivingFrequency)}`}>
+              Driving Frequency (omega/omega_0): <span className={`font-bold ${getFrequencyColor(drivingFrequency)}`}>
                 {drivingFrequency.toFixed(2)} - {getFrequencyLabel(drivingFrequency)}
               </span>
             </label>
@@ -847,26 +842,27 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
               className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer"
             />
             <div className="flex justify-between text-xs text-slate-500 mt-1">
-              <span>Low ω</span>
-              <span>ω = ω₀ (Resonance)</span>
-              <span>High ω</span>
+              <span>Low omega</span>
+              <span>omega = omega_0 (Resonance)</span>
+              <span>High omega</span>
             </div>
           </div>
 
           <div className="grid grid-cols-2 gap-4">
             <button
-              onMouseDown={(e) => { e.preventDefault(); isAnimating ? stopSimulation() : startSimulation(); }}
+              onClick={() => isAnimating ? stopSimulation() : startSimulation()}
+              style={{ zIndex: 10 }}
               className={`p-4 rounded-xl font-semibold transition-colors ${
                 isAnimating
                   ? 'bg-red-600 hover:bg-red-500 text-white'
                   : 'bg-emerald-600 hover:bg-emerald-500 text-white'
               }`}
             >
-              {isAnimating ? '⏹ Stop' : '▶ Start Driving'}
+              {isAnimating ? 'Stop' : 'Start Driving'}
             </button>
             <div className="p-4 rounded-xl bg-slate-700/50 text-center">
               <div className={`text-2xl font-bold ${isAtResonance ? 'text-red-400' : 'text-white'}`}>
-                {amplitude.toFixed(1)}×
+                {amplitude.toFixed(1)}x
               </div>
               <div className="text-sm text-slate-400">Amplitude</div>
             </div>
@@ -879,25 +875,26 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         <h3 className="text-lg font-semibold text-red-400 mb-3">Resonance Physics:</h3>
         <div className="grid gap-3 text-sm text-slate-300">
           <div className={`flex items-start gap-3 p-2 rounded-lg ${drivingFrequency < 0.85 ? 'bg-blue-900/30 border border-blue-500/50' : ''}`}>
-            <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">ω &lt; ω₀</span>
+            <span className="bg-blue-600 text-white px-2 py-1 rounded text-xs font-bold">omega &lt; omega_0</span>
             <p><strong>Below resonance:</strong> Mass follows driving force in phase. Low amplitude.</p>
           </div>
           <div className={`flex items-start gap-3 p-2 rounded-lg ${Math.abs(drivingFrequency - 1.0) < 0.15 ? 'bg-red-900/30 border border-red-500/50' : ''}`}>
-            <span className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">ω ≈ ω₀</span>
+            <span className="bg-red-600 text-white px-2 py-1 rounded text-xs font-bold">omega ~ omega_0</span>
             <p><strong>At resonance:</strong> Maximum energy transfer! Amplitude peaks dramatically.</p>
           </div>
           <div className={`flex items-start gap-3 p-2 rounded-lg ${drivingFrequency > 1.15 ? 'bg-amber-900/30 border border-amber-500/50' : ''}`}>
-            <span className="bg-amber-600 text-white px-2 py-1 rounded text-xs font-bold">ω &gt; ω₀</span>
+            <span className="bg-amber-600 text-white px-2 py-1 rounded text-xs font-bold">omega &gt; omega_0</span>
             <p><strong>Above resonance:</strong> Mass moves opposite to driving force. Amplitude drops.</p>
           </div>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
+        onClick={() => goToPhase('review')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
       >
-        Review the Concepts →
+        Review the Concepts
       </button>
     </div>
   );
@@ -908,51 +905,52 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-red-900/50 to-orange-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-red-400 mb-3">📐 The Equation of Motion</h3>
+          <h3 className="text-xl font-bold text-red-400 mb-3">The Equation of Motion</h3>
           <div className="bg-slate-900/50 rounded-lg p-3 mb-3 font-mono text-center text-sm">
-            <span className="text-white">m(d²x/dt²) + c(dx/dt) + kx = F₀cos(ωt)</span>
+            <span className="text-white">m(d^2x/dt^2) + c(dx/dt) + kx = F_0*cos(omega*t)</span>
           </div>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• <strong>Left side:</strong> The oscillator (mass, damping, spring)</li>
-            <li>• <strong>Right side:</strong> External driving force at frequency ω</li>
-            <li>• Natural frequency: <strong>ω₀ = √(k/m)</strong></li>
-            <li>• System eventually oscillates at ω (driving frequency)</li>
+            <li>Left side: The oscillator (mass, damping, spring)</li>
+            <li>Right side: External driving force at frequency omega</li>
+            <li>Natural frequency: <strong>omega_0 = sqrt(k/m)</strong></li>
+            <li>System eventually oscillates at omega (driving frequency)</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-purple-900/50 to-pink-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-purple-400 mb-3">📈 Amplitude Response</h3>
+          <h3 className="text-xl font-bold text-purple-400 mb-3">Amplitude Response</h3>
           <div className="bg-slate-900/50 rounded-lg p-3 mb-3 font-mono text-center text-sm">
-            <span className="text-white">A = F₀ / √[(k-mω²)² + (cω)²]</span>
+            <span className="text-white">A = F_0 / sqrt[(k-m*omega^2)^2 + (c*omega)^2]</span>
           </div>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• Peak amplitude when ω ≈ ω₀ (denominator minimized)</li>
-            <li>• Higher damping (c) reduces peak and broadens it</li>
-            <li>• Lower damping = sharper, taller resonance peak</li>
-            <li>• At resonance: A_max ≈ F₀/(cω₀)</li>
+            <li>Peak amplitude when omega ~ omega_0 (denominator minimized)</li>
+            <li>Higher damping (c) reduces peak and broadens it</li>
+            <li>Lower damping = sharper, taller resonance peak</li>
+            <li>At resonance: A_max ~ F_0/(c*omega_0)</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">⚡ Why Resonance is Powerful</h3>
+          <h3 className="text-xl font-bold text-emerald-400 mb-3">Why Resonance is Powerful</h3>
           <div className="text-slate-300 text-sm space-y-2">
             <p><strong>Energy accumulation:</strong> At resonance, each driving cycle adds energy at exactly the right moment (in phase with velocity).</p>
-            <p><strong>Quality Factor Q:</strong> Measures how sharp the resonance is. Q = ω₀/(2ζω₀) = 1/(2ζ)</p>
+            <p><strong>Quality Factor Q:</strong> Measures how sharp the resonance is. Q = omega_0/(2*zeta*omega_0) = 1/(2*zeta)</p>
             <div className="bg-slate-900/50 rounded-lg p-3 my-2 font-mono text-center">
               <span className="text-white">Higher Q = Sharper resonance = More selective</span>
             </div>
             <p className="text-red-400 mt-3">
-              This is why a singer must hit exactly the right note—glass has high Q, so only one precise frequency causes resonance!
+              This is why a singer must hit exactly the right note--glass has high Q, so only one precise frequency causes resonance!
             </p>
           </div>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
+        onClick={() => goToPhase('twist_predict')}
+        style={{ zIndex: 10 }}
         className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
-        Discover a Surprising Twist →
+        Discover a Surprising Twist
       </button>
     </div>
   );
@@ -962,7 +960,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist Challenge</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <p className="text-lg text-slate-300 mb-4">
-          The Tacoma Narrows Bridge collapsed spectacularly in 1940, twisting and oscillating in moderate winds (about 40 mph)—not even a storm!
+          The Tacoma Narrows Bridge collapsed spectacularly in 1940, twisting and oscillating in moderate winds (about 40 mph)--not even a storm!
         </p>
         <p className="text-lg text-cyan-400 font-medium">
           The wind was steady, not gusting. How did steady wind cause oscillations?
@@ -978,7 +976,8 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
+            style={{ zIndex: 10 }}
             disabled={showTwistFeedback}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showTwistFeedback && twistPrediction === option.id
@@ -999,16 +998,17 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       {showTwistFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Correct! Vortex shedding turned steady wind into a periodic driving force!
+            Correct! Vortex shedding turned steady wind into a periodic driving force!
           </p>
           <p className="text-slate-400 text-sm mt-2">
-            When wind flows past an object, it creates alternating vortices (like a flag waving). This periodic force matched the bridge's natural frequency—catastrophic resonance!
+            When wind flows past an object, it creates alternating vortices (like a flag waving). This periodic force matched the bridge's natural frequency--catastrophic resonance!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
+            onClick={() => goToPhase('twist_play')}
+            style={{ zIndex: 10 }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
           >
-            See How It Happens →
+            See How It Happens
           </button>
         </div>
       )}
@@ -1074,7 +1074,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
 
             {/* Labels */}
             <text x="100" y="25" textAnchor="middle" fill="#f59e0b" fontSize="8">Amplitude grows!</text>
-            <text x="100" y="110" textAnchor="middle" fill="#94a3b8" fontSize="10">Time →</text>
+            <text x="100" y="110" textAnchor="middle" fill="#94a3b8" fontSize="10">Time</text>
           </svg>
         </div>
       </div>
@@ -1082,24 +1082,25 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl">
         <h3 className="text-lg font-bold text-purple-400 mb-3">The Strouhal Number:</h3>
         <div className="bg-slate-900/50 rounded-lg p-3 mb-3 font-mono text-center">
-          <span className="text-white">f = St × V / D</span>
+          <span className="text-white">f = St * V / D</span>
         </div>
         <ul className="space-y-2 text-slate-300 text-sm">
-          <li>• <strong>f</strong> = vortex shedding frequency</li>
-          <li>• <strong>St ≈ 0.2</strong> for cylinders (Strouhal number)</li>
-          <li>• <strong>V</strong> = wind velocity</li>
-          <li>• <strong>D</strong> = characteristic dimension (bridge deck width)</li>
+          <li><strong>f</strong> = vortex shedding frequency</li>
+          <li><strong>St ~ 0.2</strong> for cylinders (Strouhal number)</li>
+          <li><strong>V</strong> = wind velocity</li>
+          <li><strong>D</strong> = characteristic dimension (bridge deck width)</li>
         </ul>
         <p className="text-red-400 mt-4 text-sm">
-          At Tacoma Narrows, 40 mph wind created vortices at ~0.2 Hz—matching the bridge's torsional natural frequency exactly!
+          At Tacoma Narrows, 40 mph wind created vortices at ~0.2 Hz--matching the bridge's torsional natural frequency exactly!
         </p>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
+        onClick={() => goToPhase('twist_review')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
       >
-        Review This Discovery →
+        Review This Discovery
       </button>
     </div>
   );
@@ -1118,21 +1119,33 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
             <div className="bg-slate-800/50 rounded-lg p-3">
               <h4 className="text-red-400 font-semibold mb-2">Hidden Periodic Forces:</h4>
               <ul className="space-y-1">
-                <li>• Vortex shedding from wind</li>
-                <li>• Rotating machinery imbalance</li>
-                <li>• Synchronized walking/marching</li>
-                <li>• Electrical grid frequency (50/60 Hz)</li>
+                <li>Vortex shedding from wind</li>
+                <li>Rotating machinery imbalance</li>
+                <li>Synchronized walking/marching</li>
+                <li>Electrical grid frequency (50/60 Hz)</li>
               </ul>
             </div>
             <div className="bg-slate-800/50 rounded-lg p-3">
               <h4 className="text-emerald-400 font-semibold mb-2">Prevention Methods:</h4>
               <ul className="space-y-1">
-                <li>• Add damping to reduce peak</li>
-                <li>• Detune natural frequency</li>
-                <li>• Break up vortex patterns</li>
-                <li>• Active vibration control</li>
+                <li>Add damping to reduce peak</li>
+                <li>Detune natural frequency</li>
+                <li>Break up vortex patterns</li>
+                <li>Active vibration control</li>
               </ul>
             </div>
+          </div>
+          <div className="bg-slate-900/50 rounded-lg p-4 mt-4">
+            <h4 className="text-amber-400 font-semibold mb-2">The Q Factor (Quality Factor):</h4>
+            <p className="text-sm mb-2">Q measures how "sharp" the resonance peak is:</p>
+            <div className="font-mono text-center bg-slate-800/50 rounded p-2 mb-2">
+              Q = omega_0 / (damping bandwidth)
+            </div>
+            <ul className="text-sm space-y-1">
+              <li><strong>High Q (1000+):</strong> Very sharp peak, dangerous for bridges/glass</li>
+              <li><strong>Low Q (10-100):</strong> Broad peak, safer but less selective</li>
+              <li><strong>Tacoma Narrows:</strong> High Q made small periodic forces catastrophic</li>
+            </ul>
           </div>
           <p className="text-emerald-400 font-medium mt-4 text-center">
             Engineers must always ask: "What periodic forces might my system encounter?"
@@ -1141,10 +1154,11 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
+        onClick={() => goToPhase('transfer')}
+        style={{ zIndex: 10 }}
         className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
       >
-        Explore Real-World Applications →
+        Explore Real-World Applications
       </button>
     </div>
   );
@@ -1157,7 +1171,8 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         {transferApps.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
+            onClick={() => setActiveAppTab(index)}
+            style={{ zIndex: 10 }}
             className={`px-4 py-2 rounded-lg font-medium transition-all ${
               activeAppTab === index
                 ? `bg-gradient-to-r ${app.color} text-white`
@@ -1206,7 +1221,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
             <h4 className="text-sm font-semibold text-amber-400 mb-2">Examples:</h4>
             <ul className="text-xs text-slate-400 space-y-1">
               {transferApps[activeAppTab].examples.map((ex, i) => (
-                <li key={i}>• {ex}</li>
+                <li key={i}>{ex}</li>
               ))}
             </ul>
           </div>
@@ -1227,10 +1242,11 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
 
         {!completedApps.has(activeAppTab) && (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
+            onClick={() => handleAppComplete(activeAppTab)}
+            style={{ zIndex: 10 }}
             className="mt-4 w-full px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
           >
-            ✓ Mark as Understood
+            Mark as Understood
           </button>
         )}
       </div>
@@ -1250,10 +1266,11 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
+          onClick={() => goToPhase('test')}
+          style={{ zIndex: 10 }}
           className="mt-6 px-6 py-3 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
         >
-          Take the Knowledge Test →
+          Take the Knowledge Test
         </button>
       )}
     </div>
@@ -1275,7 +1292,8 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
+                    style={{ zIndex: 10 }}
                     className={`p-3 rounded-lg text-left text-sm transition-all ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-red-600 text-white'
@@ -1290,13 +1308,13 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           ))}
 
           <button
-            onMouseDown={(e) => {
-              e.preventDefault();
+            onClick={() => {
               setShowTestResults(true);
               if (onGameEvent) {
                 onGameEvent({ type: 'test_completed', data: { score: calculateScore() } });
               }
             }}
+            style={{ zIndex: 10 }}
             disabled={testAnswers.includes(-1)}
             className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
               testAnswers.includes(-1)
@@ -1328,7 +1346,7 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
               const userCorrect = testAnswers[qIndex] === correctIndex;
               return (
                 <div key={qIndex} className={`p-3 rounded-lg ${userCorrect ? 'bg-emerald-900/30' : 'bg-red-900/30'}`}>
-                  <p className="text-sm text-white font-medium mb-1">Q{qIndex + 1}: {userCorrect ? '✓' : '✗'}</p>
+                  <p className="text-sm text-white font-medium mb-1">Q{qIndex + 1}: {userCorrect ? 'Correct' : 'Incorrect'}</p>
                   <p className="text-xs text-slate-400">{q.explanation}</p>
                 </div>
               );
@@ -1337,20 +1355,21 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
 
           {calculateScore() >= 7 ? (
             <button
-              onMouseDown={(e) => {
-                e.preventDefault();
-                goToPhase(9);
+              onClick={() => {
+                goToPhase('mastery');
                 if (onGameEvent) {
                   onGameEvent({ type: 'mastery_achieved', data: { score: calculateScore() } });
                 }
               }}
+              style={{ zIndex: 10 }}
               className="w-full px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
             >
-              Claim Your Mastery Badge →
+              Claim Your Mastery Badge
             </button>
           ) : (
             <button
-              onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }}
+              onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
+              style={{ zIndex: 10 }}
               className="w-full px-8 py-4 bg-gradient-to-r from-red-600 to-orange-600 text-white font-semibold rounded-xl hover:from-red-500 hover:to-orange-500 transition-all duration-300"
             >
               Review & Try Again
@@ -1372,8 +1391,12 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">📻</div>
-            <p className="text-sm text-slate-300">Radio Tuning</p>
+            <div className="text-2xl mb-2">🌉</div>
+            <p className="text-sm text-slate-300">Bridge Engineering</p>
+          </div>
+          <div className="bg-slate-800/50 rounded-xl p-4">
+            <div className="text-2xl mb-2">🎵</div>
+            <p className="text-sm text-slate-300">Tuning Forks</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
             <div className="text-2xl mb-2">🏥</div>
@@ -1382,10 +1405,6 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
           <div className="bg-slate-800/50 rounded-xl p-4">
             <div className="text-2xl mb-2">🎸</div>
             <p className="text-sm text-slate-300">Musical Instruments</p>
-          </div>
-          <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🌉</div>
-            <p className="text-sm text-slate-300">Structural Safety</p>
           </div>
         </div>
 
@@ -1397,10 +1416,11 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
 
         <div className="flex gap-4 justify-center">
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
+            onClick={() => goToPhase('hook')}
+            style={{ zIndex: 10 }}
             className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
           >
-            ↺ Explore Again
+            Explore Again
           </button>
         </div>
       </div>
@@ -1409,21 +1429,32 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
 
-  const phaseLabels = ['Hook', 'Predict', 'Explore', 'Review', 'Twist', 'Twist Lab', 'Twist Review', 'Apply', 'Test', 'Mastery'];
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Explore',
+    review: 'Review',
+    twist_predict: 'Twist',
+    twist_play: 'Twist Lab',
+    twist_review: 'Twist Review',
+    transfer: 'Apply',
+    test: 'Test',
+    mastery: 'Mastery'
+  };
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
@@ -1441,14 +1472,15 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
           <span className={`${isMobile ? 'text-xs' : 'text-sm'} font-medium text-slate-400`}>Forced Oscillations & Resonance</span>
           <div className="flex gap-1.5 items-center">
-            {phaseLabels.map((_, i) => (
+            {phaseOrder.map((p) => (
               <button
-                key={i}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(i); }}
+                key={p}
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
                 className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === i ? 'bg-red-500 w-6' : phase > i ? 'bg-red-500 w-2' : 'bg-slate-600 w-2'
+                  phase === p ? 'bg-red-500 w-6' : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p) ? 'bg-red-500 w-2' : 'bg-slate-600 w-2'
                 }`}
-                title={phaseLabels[i]}
+                title={phaseLabels[p]}
               />
             ))}
           </div>

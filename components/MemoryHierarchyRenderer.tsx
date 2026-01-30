@@ -55,16 +55,126 @@ const MEMORY_SPECS = {
 };
 
 const TEST_QUESTIONS = [
-  { text: 'L1 cache is faster but smaller than L2 cache.', correct: true },
-  { text: 'AI models easily fit in cache during inference.', correct: false },
-  { text: 'Cache misses cause the CPU/GPU to wait for slower memory.', correct: true },
-  { text: 'Main memory (RAM) is about 100x slower than L1 cache.', correct: true },
-  { text: 'Modern CPUs have more cache than RAM.', correct: false },
-  { text: 'Temporal locality means recently accessed data is likely to be accessed again.', correct: true },
-  { text: 'Spatial locality means nearby memory addresses are often accessed together.', correct: true },
-  { text: 'GPU memory bandwidth is typically lower than CPU memory bandwidth.', correct: false },
-  { text: 'Prefetching loads data into cache before it is needed.', correct: true },
-  { text: 'A cache hit is faster than a cache miss.', correct: true },
+  // Q1: Core Concept - Cache Hierarchy (Easy)
+  {
+    scenario: "A modern CPU has multiple levels of cache: L1 (64KB), L2 (512KB), and L3 (32MB). Each level has different speed and size characteristics.",
+    question: "Why is L1 cache faster than L2 cache?",
+    options: [
+      { id: 'closer', label: "L1 is physically closer to the CPU core and uses faster SRAM", correct: true },
+      { id: 'bigger', label: "L1 is larger and can store more data" },
+      { id: 'newer', label: "L1 uses newer technology than L2" },
+      { id: 'dedicated', label: "L1 is only used by the operating system" },
+    ],
+    explanation: "L1 cache is fastest because it's physically closest to the CPU core (minimizing signal travel time) and uses the fastest (most expensive) SRAM. The trade-off is size - you can't have fast AND big memory due to physics constraints."
+  },
+  // Q2: Cache Hit/Miss Concepts (Medium)
+  {
+    scenario: "A program running on your computer requests data from memory. The CPU first checks L1 cache, then L2, then L3, and finally main RAM.",
+    question: "What happens when the requested data is NOT found in any cache level?",
+    options: [
+      { id: 'error', label: "The program crashes with a memory error" },
+      { id: 'wait', label: "The CPU stalls for ~100 cycles while fetching from RAM - this is a cache miss", correct: true },
+      { id: 'skip', label: "The CPU skips that data and continues execution" },
+      { id: 'swap', label: "The data is automatically moved to the fastest cache" },
+    ],
+    explanation: "A cache miss forces the CPU to fetch data from slower memory. RAM access takes ~100 CPU cycles compared to 1 cycle for L1. During this time, the CPU pipeline stalls, wasting computational potential. This is why cache hit rates are crucial for performance!"
+  },
+  // Q3: Temporal Locality (Medium)
+  {
+    scenario: "You're running a loop that processes the same variable 1000 times: for(i=0; i<1000; i++) { sum += value; }",
+    question: "Why does this code benefit from temporal locality?",
+    options: [
+      { id: 'parallel', label: "The loop runs in parallel across multiple cores" },
+      { id: 'reuse', label: "The variable 'value' stays in cache after first access and is reused", correct: true },
+      { id: 'prefetch', label: "The CPU prefetches all 1000 iterations at once" },
+      { id: 'compile', label: "The compiler optimizes away the loop entirely" },
+    ],
+    explanation: "Temporal locality means recently accessed data is likely to be accessed again soon. After the first access, 'value' is loaded into L1 cache and remains there for all 999 subsequent accesses - each taking only 1 cycle instead of 100!"
+  },
+  // Q4: Spatial Locality (Medium)
+  {
+    scenario: "A program iterates through an array sequentially: for(i=0; i<1000; i++) { process(array[i]); }. Cache lines are 64 bytes, and each array element is 8 bytes.",
+    question: "How does spatial locality improve this code's performance?",
+    options: [
+      { id: 'predict', label: "The CPU predicts which elements will be accessed" },
+      { id: 'cacheline', label: "Loading array[0] brings array[1-7] into cache for free via the cache line", correct: true },
+      { id: 'compress', label: "The array is compressed to fit more data in cache" },
+      { id: 'virtual', label: "Virtual memory maps the array to faster storage" },
+    ],
+    explanation: "Spatial locality means nearby memory addresses are often accessed together. When array[0] is loaded, the entire 64-byte cache line (8 elements) is fetched. The next 7 accesses are instant cache hits! This is why sequential array access is much faster than random access."
+  },
+  // Q5: Cache Levels Comparison (Medium-Hard)
+  {
+    scenario: "You're optimizing a database query. The working set (frequently accessed data) is 20MB. Your CPU has: L1=64KB, L2=512KB, L3=32MB, RAM=64GB.",
+    question: "Which memory level will primarily serve this workload, and what's the performance implication?",
+    options: [
+      { id: 'l1', label: "L1 cache - fastest possible performance" },
+      { id: 'l2', label: "L2 cache - good performance with 4-cycle latency" },
+      { id: 'l3', label: "L3 cache - the 20MB fits in 32MB L3 with ~12 cycle latency", correct: true },
+      { id: 'ram', label: "RAM - cache is too small for database workloads" },
+    ],
+    explanation: "The 20MB working set exceeds L1 (64KB) and L2 (512KB) but fits in L3 (32MB). L3 access at ~12 cycles is still 8x faster than RAM at ~100 cycles. Sizing your working set to fit in cache is a key optimization strategy!"
+  },
+  // Q6: Memory Latency Hierarchy (Hard)
+  {
+    scenario: "An AI inference server processes requests using a 7B parameter model (28GB). The server has an H100 GPU with 80GB HBM3 memory at 3.35 TB/s bandwidth.",
+    question: "Why is this workload called 'memory-bound' rather than 'compute-bound'?",
+    options: [
+      { id: 'weights', label: "Each token requires reading ALL 28GB of weights, but weights are used only once - GPU waits for memory", correct: true },
+      { id: 'slow', label: "The GPU is too slow to process the model" },
+      { id: 'batch', label: "The batch size is too small for efficient computation" },
+      { id: 'precision', label: "FP16 precision limits computational accuracy" },
+    ],
+    explanation: "LLM inference has terrible arithmetic intensity - each weight is loaded from memory, used for ONE multiply-add, then discarded. The GPU spends 90% of time waiting for memory transfers! This is why memory bandwidth (3.35 TB/s) matters more than TFLOPS for LLM inference."
+  },
+  // Q7: Virtual Memory Concepts (Medium)
+  {
+    scenario: "Your laptop has 16GB RAM but you're running applications that need 24GB total. The system uses an NVMe SSD for virtual memory (swap).",
+    question: "What is the performance impact when the system swaps data between RAM and SSD?",
+    options: [
+      { id: 'seamless', label: "No impact - modern SSDs are as fast as RAM" },
+      { id: 'thousand', label: "Severe slowdown - SSD access is ~1000x slower than RAM", correct: true },
+      { id: 'double', label: "Minor impact - only 2x slower than RAM" },
+      { id: 'crash', label: "The system crashes when RAM is exceeded" },
+    ],
+    explanation: "Even fast NVMe SSDs have ~100,000 cycle latency vs RAM's ~100 cycles - that's 1000x slower! When swapping occurs, the CPU stalls waiting for SSD I/O. This is why adding RAM is often the best upgrade for systems that frequently swap."
+  },
+  // Q8: Prefetching (Medium)
+  {
+    scenario: "A CPU's hardware prefetcher detects that your code is accessing array elements sequentially: array[0], array[1], array[2], etc.",
+    question: "What does the prefetcher do to optimize this access pattern?",
+    options: [
+      { id: 'parallel', label: "It parallelizes the array processing across cores" },
+      { id: 'load', label: "It loads array[3], array[4], etc. into cache BEFORE they're requested", correct: true },
+      { id: 'compress', label: "It compresses the array to reduce memory usage" },
+      { id: 'reorder', label: "It reorders array elements for faster access" },
+    ],
+    explanation: "Hardware prefetching predicts future memory accesses and loads data into cache before it's needed. For sequential patterns, the prefetcher stays ahead of the program, hiding memory latency. Random access patterns defeat prefetching - the CPU can't predict what's needed next."
+  },
+  // Q9: GPU Memory Architecture (Hard)
+  {
+    scenario: "NVIDIA's H100 uses HBM3 (High Bandwidth Memory) with 3.35 TB/s bandwidth, while consumer GPUs use GDDR6X with ~1 TB/s bandwidth.",
+    question: "Why does the H100 use expensive HBM3 instead of cheaper GDDR6X?",
+    options: [
+      { id: 'capacity', label: "HBM3 has larger capacity than GDDR6X" },
+      { id: 'power', label: "HBM3 uses less power than GDDR6X" },
+      { id: 'bandwidth', label: "AI workloads are memory-bound - 3x bandwidth directly improves inference speed", correct: true },
+      { id: 'latency', label: "HBM3 has lower latency than GDDR6X" },
+    ],
+    explanation: "For memory-bound AI workloads, memory bandwidth directly determines performance. HBM3's 3.35 TB/s vs GDDR6X's 1 TB/s means ~3x faster inference for large models. The cost premium is justified because the GPU would otherwise sit idle waiting for data."
+  },
+  // Q10: Synthesis - Memory Hierarchy Trade-offs (Expert)
+  {
+    scenario: "A computer architect is designing a new processor. They must choose between: (A) 128KB L1 cache with 2-cycle latency, or (B) 64KB L1 cache with 1-cycle latency.",
+    question: "Why might they choose the smaller, faster option (B)?",
+    options: [
+      { id: 'cost', label: "Smaller cache is cheaper to manufacture" },
+      { id: 'physics', label: "Larger cache = longer signal paths = higher latency; the speed benefit often outweighs size", correct: true },
+      { id: 'power', label: "Smaller cache uses less power" },
+      { id: 'simple', label: "Smaller cache is simpler to design" },
+    ],
+    explanation: "This is the fundamental physics trade-off! A larger cache requires longer wires for signals to travel, increasing latency. For L1, speed is critical - every instruction accesses L1. A 1-cycle L1 hit rate of 90% beats a 2-cycle hit rate of 95% in most workloads. Size is compensated by L2/L3."
+  }
 ];
 
 const TRANSFER_APPS = [
@@ -104,7 +214,7 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
   const [phase, setPhase] = useState<Phase>(getInitialPhase);
   const [prediction, setPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
-  const [testAnswers, setTestAnswers] = useState<(boolean | null)[]>(new Array(10).fill(null));
+  const [testAnswers, setTestAnswers] = useState<(string | null)[]>(new Array(10).fill(null));
   const [testSubmitted, setTestSubmitted] = useState(false);
   const [transferCompleted, setTransferCompleted] = useState<Set<number>>(new Set());
   const [currentTestIndex, setCurrentTestIndex] = useState(0);
@@ -214,7 +324,8 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
 
   const calculateTestScore = () => {
     return testAnswers.reduce((score, answer, index) => {
-      if (answer === TEST_QUESTIONS[index].correct) return score + 1;
+      const correctOption = TEST_QUESTIONS[index].options.find(o => o.correct);
+      if (answer === correctOption?.id) return score + 1;
       return score;
     }, 0);
   };
@@ -924,50 +1035,231 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
   );
 
   const renderTest = () => {
+    const totalQuestions = TEST_QUESTIONS.length;
+
     if (testSubmitted) {
       const score = calculateTestScore();
       const passed = score >= 7;
 
       return (
         <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-          <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
+          <div style={{ flex: 1, padding: '24px', paddingBottom: '100px', overflowY: 'auto' }}>
             <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-              <div style={{ fontSize: '64px', marginBottom: '16px' }}>
-                {passed ? 'Trophy' : 'Book'}
+              <div style={{
+                width: '80px',
+                height: '80px',
+                borderRadius: '50%',
+                margin: '0 auto 12px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '36px',
+                background: passed ? 'rgba(16, 185, 129, 0.2)' : 'rgba(245, 158, 11, 0.2)',
+                border: `3px solid ${passed ? colors.success : colors.warning}`
+              }}>
+                {score === totalQuestions ? 'Trophy' : score >= 9 ? 'Star' : score >= 7 ? 'Check' : 'Book'}
               </div>
-              <h2 style={{ color: passed ? colors.success : colors.warning, fontSize: '28px' }}>
-                {score}/10 Correct
+              <h2 style={{ color: passed ? colors.success : colors.warning, fontSize: '28px', marginBottom: '8px' }}>
+                {score}/{totalQuestions} Correct
               </h2>
-              <p style={{ color: colors.textSecondary }}>
-                {passed ? 'Excellent! You understand memory hierarchy.' : 'Review the material and try again.'}
+              <p style={{ color: colors.textSecondary, marginBottom: '16px' }}>
+                {score === totalQuestions ? "Perfect! You've mastered memory hierarchy!" :
+                 score >= 9 ? 'Excellent! You deeply understand memory concepts.' :
+                 score >= 7 ? 'Great job! You understand the key concepts.' :
+                 'Keep exploring - memory hierarchy takes practice!'}
+              </p>
+
+              <div style={{ display: 'flex', gap: '12px', justifyContent: 'center', marginBottom: '24px' }}>
+                <button
+                  onClick={() => {
+                    setCurrentTestIndex(0);
+                    setTestAnswers(new Array(10).fill(null));
+                    setTestSubmitted(false);
+                  }}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: colors.bgCard,
+                    color: colors.textSecondary,
+                    border: '1px solid rgba(255,255,255,0.2)',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    position: 'relative',
+                  }}
+                >
+                  Retake Test
+                </button>
+                <button
+                  onClick={() => goNext()}
+                  style={{
+                    padding: '10px 20px',
+                    borderRadius: '12px',
+                    fontWeight: 700,
+                    fontSize: '14px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px',
+                    background: passed ? colors.success : colors.warning,
+                    color: 'white',
+                    border: 'none',
+                    cursor: 'pointer',
+                    zIndex: 10,
+                    position: 'relative',
+                  }}
+                >
+                  {passed ? 'Claim Mastery' : 'Review Lesson'}
+                </button>
+              </div>
+            </div>
+
+            <div style={{ marginBottom: '16px' }}>
+              <p style={{ fontSize: '12px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '12px', color: colors.textMuted }}>
+                Question-by-Question Review
               </p>
             </div>
 
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              {TEST_QUESTIONS.map((q, i) => (
-                <div key={i} style={{
-                  padding: '12px',
-                  borderRadius: '8px',
-                  background: testAnswers[i] === q.correct ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)',
-                  borderLeft: `3px solid ${testAnswers[i] === q.correct ? colors.success : colors.error}`,
-                }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '14px', margin: 0 }}>{q.text}</p>
-                  <p style={{ color: colors.textMuted, fontSize: '12px', marginTop: '4px' }}>
-                    Correct answer: {q.correct ? 'True' : 'False'}
-                  </p>
-                </div>
-              ))}
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              {TEST_QUESTIONS.map((q, i) => {
+                const correctOption = q.options.find(o => o.correct);
+                const correctId = correctOption?.id;
+                const userAnswer = testAnswers[i];
+                const userOption = q.options.find(o => o.id === userAnswer);
+                const isCorrect = userAnswer === correctId;
+
+                return (
+                  <div key={i} style={{
+                    borderRadius: '16px',
+                    overflow: 'hidden',
+                    background: colors.bgCard,
+                    border: `2px solid ${isCorrect ? colors.success : colors.error}40`
+                  }}>
+                    <div style={{
+                      padding: '16px',
+                      background: isCorrect ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'
+                    }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+                        <div style={{
+                          width: '32px',
+                          height: '32px',
+                          borderRadius: '50%',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          fontSize: '14px',
+                          fontWeight: 700,
+                          background: isCorrect ? colors.success : colors.error,
+                          color: 'white'
+                        }}>
+                          {isCorrect ? 'Y' : 'X'}
+                        </div>
+                        <div style={{ flex: 1 }}>
+                          <p style={{ fontSize: '14px', fontWeight: 700, color: colors.textPrimary, margin: 0 }}>Question {i + 1}</p>
+                          <p style={{ fontSize: '12px', color: colors.textMuted, margin: 0 }}>{q.question}</p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                      <div style={{
+                        padding: '12px',
+                        borderRadius: '12px',
+                        background: isCorrect ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                        border: `1px solid ${isCorrect ? colors.success : colors.error}30`
+                      }}>
+                        <p style={{
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.1em',
+                          marginBottom: '4px',
+                          color: isCorrect ? colors.success : colors.error
+                        }}>
+                          {isCorrect ? 'Your Answer (Correct!)' : 'Your Answer'}
+                        </p>
+                        <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0 }}>
+                          {userOption?.label || 'No answer selected'}
+                        </p>
+                      </div>
+
+                      {!isCorrect && (
+                        <div style={{
+                          padding: '12px',
+                          borderRadius: '12px',
+                          background: 'rgba(16, 185, 129, 0.1)',
+                          border: `1px solid ${colors.success}30`
+                        }}>
+                          <p style={{
+                            fontSize: '10px',
+                            fontWeight: 700,
+                            textTransform: 'uppercase',
+                            letterSpacing: '0.1em',
+                            marginBottom: '4px',
+                            color: colors.success
+                          }}>Correct Answer</p>
+                          <p style={{ fontSize: '14px', color: colors.textPrimary, margin: 0 }}>
+                            {correctOption?.label}
+                          </p>
+                        </div>
+                      )}
+
+                      <div style={{ padding: '12px', borderRadius: '12px', background: 'rgba(249, 115, 22, 0.1)' }}>
+                        <p style={{
+                          fontSize: '10px',
+                          fontWeight: 700,
+                          textTransform: 'uppercase',
+                          letterSpacing: '0.1em',
+                          marginBottom: '4px',
+                          color: colors.accent
+                        }}>Why?</p>
+                        <p style={{ fontSize: '12px', lineHeight: 1.5, color: colors.textSecondary, margin: 0 }}>
+                          {q.explanation}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            <div style={{
+              marginTop: '24px',
+              padding: '16px',
+              borderRadius: '16px',
+              textAlign: 'center',
+              background: colors.bgCard,
+              border: '1px solid rgba(255,255,255,0.1)'
+            }}>
+              <p style={{ fontSize: '14px', marginBottom: '12px', color: colors.textSecondary }}>
+                {passed ? 'Want to improve your score?' : 'Review the explanations above and try again!'}
+              </p>
+              <button
+                onClick={() => {
+                  setCurrentTestIndex(0);
+                  setTestAnswers(new Array(10).fill(null));
+                  setTestSubmitted(false);
+                }}
+                style={{
+                  padding: '12px 24px',
+                  borderRadius: '12px',
+                  fontWeight: 700,
+                  fontSize: '14px',
+                  background: colors.accent,
+                  color: 'white',
+                  border: 'none',
+                  cursor: 'pointer',
+                  zIndex: 10,
+                  position: 'relative',
+                }}
+              >
+                Retake Test
+              </button>
             </div>
           </div>
-          {renderBottomBar(passed, passed ? 'Complete Mastery' : 'Review & Retry', () => {
-            if (passed) {
-              goNext();
-            } else {
-              setTestSubmitted(false);
-              setTestAnswers(new Array(10).fill(null));
-              setCurrentTestIndex(0);
-            }
-          })}
         </div>
       );
     }
@@ -976,81 +1268,100 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
 
     return (
       <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', background: colors.bgPrimary }}>
-        <div style={{ flex: 1, padding: '24px', paddingBottom: '100px' }}>
-          <h2 style={{ color: colors.textPrimary, fontSize: '24px', textAlign: 'center', marginBottom: '8px' }}>
-            Knowledge Test
-          </h2>
-          <p style={{ color: colors.textMuted, textAlign: 'center', marginBottom: '24px' }}>
-            Question {currentTestIndex + 1} of 10
+        <div style={{ flex: 1, padding: '24px', paddingBottom: '100px', overflowY: 'auto' }}>
+          <div style={{ marginBottom: '24px' }}>
+            <p style={{ fontSize: '10px', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.1em', marginBottom: '8px', color: colors.warning }}>
+              Step 9 - Knowledge Test
+            </p>
+            <h2 style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 900, marginBottom: '16px' }}>
+              Question {currentTestIndex + 1} of {totalQuestions}
+            </h2>
+            <div style={{ display: 'flex', gap: '4px' }}>
+              {Array.from({ length: totalQuestions }, (_, i) => (
+                <div
+                  key={i}
+                  style={{
+                    height: '8px',
+                    flex: 1,
+                    borderRadius: '9999px',
+                    background: i === currentTestIndex ? colors.warning : i < currentTestIndex ? colors.success : 'rgba(255,255,255,0.1)'
+                  }}
+                />
+              ))}
+            </div>
+          </div>
+
+          <div style={{
+            padding: '20px',
+            borderRadius: '16px',
+            marginBottom: '24px',
+            background: 'rgba(249, 115, 22, 0.15)',
+            border: `1px solid ${colors.accent}30`
+          }}>
+            <p style={{
+              fontSize: '10px',
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.1em',
+              marginBottom: '8px',
+              color: colors.accent
+            }}>Scenario</p>
+            <p style={{ fontSize: '14px', color: colors.textSecondary, margin: 0 }}>{currentQ.scenario}</p>
+          </div>
+
+          <p style={{ fontSize: '18px', fontWeight: 700, marginBottom: '24px', color: colors.textPrimary }}>
+            {currentQ.question}
           </p>
 
-          <div style={{ display: 'flex', gap: '4px', marginBottom: '24px', justifyContent: 'center' }}>
-            {TEST_QUESTIONS.map((_, i) => (
+          <div style={{ display: 'grid', gap: '12px', marginBottom: '24px' }}>
+            {currentQ.options.map((opt, i) => (
               <button
-                key={i}
-                onClick={() => setCurrentTestIndex(i)}
-                style={{
-                  width: '24px',
-                  height: '24px',
-                  borderRadius: '4px',
-                  border: 'none',
-                  background: testAnswers[i] !== null
-                    ? (testAnswers[i] === TEST_QUESTIONS[i].correct ? colors.success : colors.error)
-                    : (i === currentTestIndex ? colors.accent : 'rgba(255,255,255,0.1)'),
-                  cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
+                key={opt.id}
+                onClick={() => {
+                  const newAnswers = [...testAnswers];
+                  newAnswers[currentTestIndex] = opt.id;
+                  setTestAnswers(newAnswers);
                 }}
-              />
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: '16px',
+                  padding: '20px',
+                  borderRadius: '16px',
+                  textAlign: 'left',
+                  background: testAnswers[currentTestIndex] === opt.id ? 'rgba(245, 158, 11, 0.2)' : colors.bgCard,
+                  border: `2px solid ${testAnswers[currentTestIndex] === opt.id ? colors.warning : 'rgba(255,255,255,0.1)'}`,
+                  cursor: 'pointer',
+                  zIndex: 10,
+                  position: 'relative',
+                }}
+              >
+                <div style={{
+                  width: '32px',
+                  height: '32px',
+                  borderRadius: '50%',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  background: testAnswers[currentTestIndex] === opt.id ? colors.warning : 'rgba(255,255,255,0.1)'
+                }}>
+                  <span style={{
+                    fontSize: '14px',
+                    fontWeight: 700,
+                    color: testAnswers[currentTestIndex] === opt.id ? colors.textPrimary : colors.textMuted
+                  }}>
+                    {String.fromCharCode(65 + i)}
+                  </span>
+                </div>
+                <p style={{
+                  fontSize: '14px',
+                  color: testAnswers[currentTestIndex] === opt.id ? colors.textPrimary : colors.textSecondary,
+                  margin: 0
+                }}>
+                  {opt.label}
+                </p>
+              </button>
             ))}
-          </div>
-
-          <div style={{ background: colors.bgCard, borderRadius: '12px', padding: '20px', marginBottom: '24px' }}>
-            <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>{currentQ.text}</p>
-          </div>
-
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button
-              onClick={() => {
-                const newAnswers = [...testAnswers];
-                newAnswers[currentTestIndex] = true;
-                setTestAnswers(newAnswers);
-              }}
-              style={{
-                flex: 1,
-                padding: '16px',
-                borderRadius: '12px',
-                border: testAnswers[currentTestIndex] === true ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.2)',
-                background: testAnswers[currentTestIndex] === true ? 'rgba(16, 185, 129, 0.2)' : colors.bgCard,
-                color: colors.textPrimary,
-                fontSize: '18px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              TRUE
-            </button>
-            <button
-              onClick={() => {
-                const newAnswers = [...testAnswers];
-                newAnswers[currentTestIndex] = false;
-                setTestAnswers(newAnswers);
-              }}
-              style={{
-                flex: 1,
-                padding: '16px',
-                borderRadius: '12px',
-                border: testAnswers[currentTestIndex] === false ? `2px solid ${colors.error}` : '1px solid rgba(255,255,255,0.2)',
-                background: testAnswers[currentTestIndex] === false ? 'rgba(239, 68, 68, 0.2)' : colors.bgCard,
-                color: colors.textPrimary,
-                fontSize: '18px',
-                fontWeight: 'bold',
-                cursor: 'pointer',
-                WebkitTapHighlightColor: 'transparent',
-              }}
-            >
-              FALSE
-            </button>
           </div>
 
           <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '24px' }}>
@@ -1059,30 +1370,34 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
               disabled={currentTestIndex === 0}
               style={{
                 padding: '12px 24px',
-                borderRadius: '8px',
+                borderRadius: '12px',
                 border: '1px solid rgba(255,255,255,0.2)',
                 background: 'transparent',
                 color: currentTestIndex === 0 ? colors.textMuted : colors.textPrimary,
                 cursor: currentTestIndex === 0 ? 'not-allowed' : 'pointer',
-                WebkitTapHighlightColor: 'transparent',
+                fontWeight: 600,
+                zIndex: 10,
+                position: 'relative',
               }}
             >
               Previous
             </button>
-            {currentTestIndex < 9 ? (
+            {currentTestIndex < totalQuestions - 1 ? (
               <button
                 onClick={() => setCurrentTestIndex(currentTestIndex + 1)}
                 style={{
                   padding: '12px 24px',
-                  borderRadius: '8px',
+                  borderRadius: '12px',
                   border: 'none',
                   background: colors.accent,
                   color: 'white',
                   cursor: 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
+                  fontWeight: 700,
+                  zIndex: 10,
+                  position: 'relative',
                 }}
               >
-                Next
+                Question {currentTestIndex + 2}
               </button>
             ) : (
               <button
@@ -1090,15 +1405,17 @@ const MemoryHierarchyRenderer: React.FC<MemoryHierarchyRendererProps> = ({
                 disabled={testAnswers.includes(null)}
                 style={{
                   padding: '12px 24px',
-                  borderRadius: '8px',
+                  borderRadius: '12px',
                   border: 'none',
                   background: testAnswers.includes(null) ? colors.textMuted : colors.success,
                   color: 'white',
                   cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer',
-                  WebkitTapHighlightColor: 'transparent',
+                  fontWeight: 700,
+                  zIndex: 10,
+                  position: 'relative',
                 }}
               >
-                Submit
+                Submit Test
               </button>
             )}
           </div>

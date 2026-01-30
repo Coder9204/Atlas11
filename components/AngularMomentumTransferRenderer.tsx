@@ -1,7 +1,9 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
-// Phase is now numeric 0-9 for consistency with gold standard
-// 0=hook, 1=predict, 2=play, 3=review, 4=twist_predict, 5=twist_play, 6=twist_review, 7=transfer, 8=test, 9=mastery
+// Phase type for 10-phase learning structure
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
 
 type GameEventType =
   | 'phase_change'
@@ -26,27 +28,25 @@ interface GameEvent {
 
 interface Props {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
-const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, currentPhase, onPhaseComplete }) => {
-  // Phase constants
-  const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-  const phaseLabels: Record<number, string> = {
-    0: 'Hook',
-    1: 'Predict',
-    2: 'Lab',
-    3: 'Review',
-    4: 'Twist',
-    5: 'Demo',
-    6: 'Discovery',
-    7: 'Apply',
-    8: 'Test',
-    9: 'Mastery'
+const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseComplete }) => {
+  const phaseLabels: Record<Phase, string> = {
+    hook: 'Hook',
+    predict: 'Predict',
+    play: 'Lab',
+    review: 'Review',
+    twist_predict: 'Twist',
+    twist_play: 'Demo',
+    twist_review: 'Discovery',
+    transfer: 'Apply',
+    test: 'Test',
+    mastery: 'Mastery'
   };
 
-  const [phase, setPhase] = useState<number>(currentPhase ?? 0);
+  const [phase, setPhase] = useState<Phase>('hook');
   const [showPredictionFeedback, setShowPredictionFeedback] = useState(false);
   const [selectedPrediction, setSelectedPrediction] = useState<string | null>(null);
   const [twistPrediction, setTwistPrediction] = useState<string | null>(null);
@@ -64,9 +64,6 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
   const [backLegsExtended, setBackLegsExtended] = useState(true);
   const [isAnimating, setIsAnimating] = useState(false);
   const [showPhaseLabelsState, setShowPhaseLabelsState] = useState(true);
-
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
 
   // Responsive design
   useEffect(() => {
@@ -110,22 +107,16 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
 
   // Sync with external phase control
   useEffect(() => {
-    if (currentPhase !== undefined && currentPhase !== phase) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase, phase]);
+  }, [gamePhase, phase]);
 
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 400) return;
-    if (navigationLockRef.current) return;
-    lastClickRef.current = now;
-    navigationLockRef.current = true;
+  const goToPhase = useCallback((newPhase: Phase) => {
     playSound('transition');
     setPhase(newPhase);
     onGameEvent?.({ type: 'phase_change', data: { phase: newPhase, phaseName: phaseLabels[newPhase] } });
     onPhaseComplete?.(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [playSound, onGameEvent, onPhaseComplete, phaseLabels]);
 
   // Cat righting animation
@@ -174,27 +165,18 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
   }, [phase, onGameEvent]);
 
   const handlePrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setSelectedPrediction(prediction);
     setShowPredictionFeedback(true);
     playSound(prediction === 'C' ? 'success' : 'failure');
   }, [playSound]);
 
   const handleTwistPrediction = useCallback((prediction: string) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setTwistPrediction(prediction);
     setShowTwistFeedback(true);
     playSound(prediction === 'B' ? 'success' : 'failure');
   }, [playSound]);
 
   const handleTestAnswer = useCallback((questionIndex: number, answerIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setTestAnswers(prev => {
       const newAnswers = [...prev];
       newAnswers[questionIndex] = answerIndex;
@@ -203,9 +185,6 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
   }, []);
 
   const handleAppComplete = useCallback((appIndex: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
     setCompletedApps(prev => new Set([...prev, appIndex]));
     playSound('complete');
   }, [playSound]);
@@ -436,8 +415,9 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
         </p>
 
         <button
-          onMouseDown={(e) => { e.preventDefault(); startAnimation(); }}
-          className="px-6 py-3 bg-slate-700/80 hover:bg-slate-600/80 text-white font-medium rounded-xl transition-all duration-300 border border-slate-600/50 hover:border-orange-500/30"
+          onClick={() => startAnimation()}
+          style={{ zIndex: 10 }}
+          className="px-6 py-3 bg-slate-700/80 hover:bg-slate-600/80 text-white font-medium rounded-xl transition-all duration-300 border border-slate-600/50 hover:border-orange-500/30 relative"
         >
           Watch Cat Fall
         </button>
@@ -445,7 +425,8 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
 
       {/* Premium CTA button */}
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(1); }}
+        onClick={() => goToPhase('predict')}
+        style={{ zIndex: 10 }}
         className="group relative px-8 py-4 bg-gradient-to-r from-orange-600 to-amber-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 shadow-lg shadow-orange-500/25 hover:shadow-orange-500/40 hover:scale-[1.02] active:scale-[0.98]"
       >
         <span className="relative z-10 flex items-center gap-2">
@@ -481,9 +462,10 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handlePrediction(option.id); }}
+            onClick={() => handlePrediction(option.id)}
             disabled={showPredictionFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
+            style={{ zIndex: 10 }}
+            className={`p-4 rounded-xl text-left transition-all duration-300 relative ${
               showPredictionFeedback && selectedPrediction === option.id
                 ? option.id === 'C'
                   ? 'bg-emerald-600/40 border-2 border-emerald-400'
@@ -501,13 +483,14 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
       {showPredictionFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Correct! Cats use <span className="text-cyan-400">angular momentum transfer</span> between body parts!
+            Correct! Cats use <span className="text-cyan-400">angular momentum transfer</span> between body parts!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(2); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl hover:from-orange-500 hover:to-amber-500 transition-all duration-300"
+            onClick={() => goToPhase('play')}
+            style={{ zIndex: 10 }}
+            className="mt-4 px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl hover:from-orange-500 hover:to-amber-500 transition-all duration-300 relative"
           >
-            Explore the Physics →
+            Explore the Physics
           </button>
         </div>
       )}
@@ -518,10 +501,10 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Cat Righting Lab</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
-        {renderCat(catRotation, frontLegsExtended, backLegsExtended, 250, showPhaseLabels)}
+        {renderCat(catRotation, frontLegsExtended, backLegsExtended, 250, showPhaseLabelsState)}
         <div className="mt-4 flex justify-center gap-4">
           <div className="text-center">
-            <div className="text-2xl font-bold text-orange-400">{Math.round(180 - catRotation)}°</div>
+            <div className="text-2xl font-bold text-orange-400">{Math.round(180 - catRotation)}deg</div>
             <div className="text-sm text-slate-400">Rotation Completed</div>
           </div>
           <div className="text-center">
@@ -533,18 +516,20 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4 w-full max-w-2xl mb-6">
         <button
-          onMouseDown={(e) => { e.preventDefault(); startAnimation(); }}
-          className="p-4 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-semibold transition-colors"
+          onClick={() => startAnimation()}
+          style={{ zIndex: 10 }}
+          className="p-4 rounded-xl bg-orange-600 hover:bg-orange-500 text-white font-semibold transition-colors relative"
         >
-          🐱 Start Cat Drop
+          Start Cat Drop
         </button>
         <button
-          onMouseDown={(e) => { e.preventDefault(); setShowPhaseLabels(!showPhaseLabels); }}
-          className={`p-4 rounded-xl transition-colors ${
-            showPhaseLabels ? 'bg-cyan-600 hover:bg-cyan-500' : 'bg-slate-600 hover:bg-slate-500'
+          onClick={() => setShowPhaseLabelsState(!showPhaseLabelsState)}
+          style={{ zIndex: 10 }}
+          className={`p-4 rounded-xl transition-colors relative ${
+            showPhaseLabelsState ? 'bg-cyan-600 hover:bg-cyan-500' : 'bg-slate-600 hover:bg-slate-500'
           } text-white font-semibold`}
         >
-          {showPhaseLabels ? '🏷️ Labels: ON' : '🏷️ Labels: OFF'}
+          {showPhaseLabelsState ? 'Labels: ON' : 'Labels: OFF'}
         </button>
       </div>
 
@@ -557,16 +542,17 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
           </div>
           <div className="flex items-start gap-3">
             <div className="bg-amber-600 text-white px-2 py-1 rounded text-xs font-bold">Phase 2</div>
-            <p>Swap! Front legs extend, back legs tuck. Now back half "catches up" with more rotation. Cat is now upright!</p>
+            <p>Swap! Front legs extend, back legs tuck. Now back half catches up with more rotation. Cat is now upright!</p>
           </div>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(3); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl hover:from-orange-500 hover:to-amber-500 transition-all duration-300"
+        onClick={() => goToPhase('review')}
+        style={{ zIndex: 10 }}
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl hover:from-orange-500 hover:to-amber-500 transition-all duration-300 relative"
       >
-        Review the Concepts →
+        Review the Concepts
       </button>
     </div>
   );
@@ -577,52 +563,53 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
 
       <div className="grid md:grid-cols-2 gap-6 max-w-4xl">
         <div className="bg-gradient-to-br from-orange-900/50 to-amber-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-orange-400 mb-3">🔄 The Core Principle</h3>
+          <h3 className="text-xl font-bold text-orange-400 mb-3">The Core Principle</h3>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• Total angular momentum (L) must stay constant (zero in this case)</li>
-            <li>• L = I × ω (moment of inertia × angular velocity)</li>
-            <li>• If one part has small I, it rotates fast</li>
-            <li>• If another part has large I, it rotates slow</li>
-            <li>• By alternating which part is compact, net rotation accumulates!</li>
+            <li>Total angular momentum (L) must stay constant (zero in this case)</li>
+            <li>L = I x omega (moment of inertia x angular velocity)</li>
+            <li>If one part has small I, it rotates fast</li>
+            <li>If another part has large I, it rotates slow</li>
+            <li>By alternating which part is compact, net rotation accumulates!</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-cyan-900/50 to-blue-900/50 rounded-2xl p-6">
-          <h3 className="text-xl font-bold text-cyan-400 mb-3">🐱 Cat's Flexible Spine</h3>
+          <h3 className="text-xl font-bold text-cyan-400 mb-3">Cat's Flexible Spine</h3>
           <ul className="space-y-2 text-slate-300 text-sm">
-            <li>• Cats have an extremely flexible spine</li>
-            <li>• They can rotate front and back halves almost independently</li>
-            <li>• 30+ vertebrae give remarkable twist ability</li>
-            <li>• No collarbone allows front legs to move freely</li>
-            <li>• Reflexes complete in under 0.3 seconds!</li>
+            <li>Cats have an extremely flexible spine</li>
+            <li>They can rotate front and back halves almost independently</li>
+            <li>30+ vertebrae give remarkable twist ability</li>
+            <li>No collarbone allows front legs to move freely</li>
+            <li>Reflexes complete in under 0.3 seconds!</li>
           </ul>
         </div>
 
         <div className="bg-gradient-to-br from-emerald-900/50 to-teal-900/50 rounded-2xl p-6 md:col-span-2">
-          <h3 className="text-xl font-bold text-emerald-400 mb-3">🧮 The Math</h3>
+          <h3 className="text-xl font-bold text-emerald-400 mb-3">The Math</h3>
           <div className="text-slate-300 text-sm space-y-2">
             <p><strong>Conservation:</strong> L_front + L_back = 0 (always)</p>
-            <p><strong>When front is tucked:</strong> I_front is small, so ω_front can be large while I_back × ω_back balances it</p>
-            <p><strong>Net effect:</strong> Front rotates 90° while back only counter-rotates 30°</p>
+            <p><strong>When front is tucked:</strong> I_front is small, so omega_front can be large while I_back x omega_back balances it</p>
+            <p><strong>Net effect:</strong> Front rotates 90 degrees while back only counter-rotates 30 degrees</p>
             <p className="text-cyan-400 mt-3">
-              Then swap configurations—back catches up while front barely moves. Total: 180° rotation with zero angular momentum!
+              Then swap configurations - back catches up while front barely moves. Total: 180 degree rotation with zero angular momentum!
             </p>
           </div>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(4); }}
-        className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
+        onClick={() => goToPhase('twist_predict')}
+        style={{ zIndex: 10 }}
+        className="mt-8 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300 relative"
       >
-        Discover a Surprising Twist →
+        Discover a Surprising Twist
       </button>
     </div>
   );
 
   const renderTwistPredict = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-6">🌟 The Twist Challenge</h2>
+      <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist Challenge</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <p className="text-lg text-slate-300 mb-4">
           Imagine an astronaut floating in the middle of a space station, not touching anything. They're facing the wrong direction for their task.
@@ -641,9 +628,10 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
         ].map(option => (
           <button
             key={option.id}
-            onMouseDown={(e) => { e.preventDefault(); handleTwistPrediction(option.id); }}
+            onClick={() => handleTwistPrediction(option.id)}
             disabled={showTwistFeedback}
-            className={`p-4 rounded-xl text-left transition-all duration-300 ${
+            style={{ zIndex: 10 }}
+            className={`p-4 rounded-xl text-left transition-all duration-300 relative ${
               showTwistFeedback && twistPrediction === option.id
                 ? option.id === 'B'
                   ? 'bg-emerald-600/40 border-2 border-emerald-400'
@@ -662,16 +650,17 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
       {showTwistFeedback && (
         <div className="mt-6 p-4 bg-slate-800/70 rounded-xl max-w-xl">
           <p className="text-emerald-400 font-semibold">
-            ✓ Yes! Astronauts can self-rotate using the exact same physics!
+            Yes! Astronauts can self-rotate using the exact same physics!
           </p>
           <p className="text-slate-400 text-sm mt-2">
             It's slower and less elegant than a cat, but the principle is identical. Astronauts are trained in these maneuvers!
           </p>
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(5); }}
-            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
+            onClick={() => goToPhase('twist_play')}
+            style={{ zIndex: 10 }}
+            className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300 relative"
           >
-            See How →
+            See How
           </button>
         </div>
       )}
@@ -727,10 +716,10 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl">
         <h3 className="text-lg font-bold text-purple-400 mb-3">Astronaut Techniques:</h3>
         <ul className="space-y-2 text-slate-300 text-sm">
-          <li>• <strong>Arm circles:</strong> Extend one arm, circle it while keeping the other tucked</li>
-          <li>• <strong>Bicycle legs:</strong> "Pedal" legs in asymmetric patterns</li>
-          <li>• <strong>Hula motion:</strong> Rotate hips while keeping shoulders fixed</li>
-          <li>• <strong>Combination:</strong> Use all limbs in coordinated asymmetric patterns</li>
+          <li><strong>Arm circles:</strong> Extend one arm, circle it while keeping the other tucked</li>
+          <li><strong>Bicycle legs:</strong> Pedal legs in asymmetric patterns</li>
+          <li><strong>Hula motion:</strong> Rotate hips while keeping shoulders fixed</li>
+          <li><strong>Combination:</strong> Use all limbs in coordinated asymmetric patterns</li>
         </ul>
         <p className="text-cyan-400 mt-4 text-sm">
           It's slower than a cat (humans are less flexible), but the physics is identical!
@@ -738,17 +727,18 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(6); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300"
+        onClick={() => goToPhase('twist_review')}
+        style={{ zIndex: 10 }}
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl hover:from-purple-500 hover:to-pink-500 transition-all duration-300 relative"
       >
-        Review the Discovery →
+        Review the Discovery
       </button>
     </div>
   );
 
   const renderTwistReview = () => (
     <div className="flex flex-col items-center p-6">
-      <h2 className="text-2xl font-bold text-purple-400 mb-6">🌟 Key Discovery</h2>
+      <h2 className="text-2xl font-bold text-purple-400 mb-6">Key Discovery</h2>
 
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl mb-6">
         <h3 className="text-xl font-bold text-purple-400 mb-4">Angular Momentum Transfer Is Universal!</h3>
@@ -763,16 +753,17 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
             <li>Accumulating net rotation over multiple cycles</li>
           </ol>
           <p className="text-emerald-400 font-medium mt-4">
-            This works in space, underwater, in mid-air—anywhere! No magic required, just physics!
+            This works in space, underwater, in mid-air - anywhere! No magic required, just physics!
           </p>
         </div>
       </div>
 
       <button
-        onMouseDown={(e) => { e.preventDefault(); goToPhase(7); }}
-        className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl hover:from-orange-500 hover:to-amber-500 transition-all duration-300"
+        onClick={() => goToPhase('transfer')}
+        style={{ zIndex: 10 }}
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl hover:from-orange-500 hover:to-amber-500 transition-all duration-300 relative"
       >
-        Explore Real-World Applications →
+        Explore Real-World Applications
       </button>
     </div>
   );
@@ -780,7 +771,7 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
   const applications = [
     {
       title: "Diving & Gymnastics",
-      icon: "🏊",
+      icon: "Diving",
       description: "Divers and gymnasts use asymmetric arm and leg movements to control twists in mid-air.",
       details: "A diver can initiate a twist after leaving the board by dropping one shoulder and asymmetrically moving their arms. The same physics that rights a cat allows them to add rotations!",
       animation: (
@@ -809,7 +800,7 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
     },
     {
       title: "Space Operations",
-      icon: "🚀",
+      icon: "Space",
       description: "Astronauts use self-rotation techniques during spacewalks and inside spacecraft.",
       details: "NASA trains astronauts in these maneuvers in underwater neutral buoyancy facilities. During EVAs, being able to reorient without grabbing anything can be crucial for safety.",
       animation: (
@@ -837,9 +828,9 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
     },
     {
       title: "Falling Robots",
-      icon: "🤖",
+      icon: "Robot",
       description: "Aerial drones and falling robots use reaction wheels and limb movements to self-right.",
-      details: "Boston Dynamics' robots use rapid limb movements to reorient during falls. Some drones have internal reaction wheels that spin up to control orientation without aerodynamic surfaces.",
+      details: "Boston Dynamics robots use rapid limb movements to reorient during falls. Some drones have internal reaction wheels that spin up to control orientation without aerodynamic surfaces.",
       animation: (
         <svg width="200" height="150" className="mx-auto">
           {/* Robot body */}
@@ -866,9 +857,9 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
     },
     {
       title: "Ice Skating Spins",
-      icon: "⛸️",
+      icon: "Skating",
       description: "Skaters use arm and leg positions not just for speed, but also to initiate and control twist direction.",
-      details: "A skater can start a spin in one direction, then use asymmetric arm movements to reverse it or add twisting rotations—all through angular momentum transfer between body parts.",
+      details: "A skater can start a spin in one direction, then use asymmetric arm movements to reverse it or add twisting rotations - all through angular momentum transfer between body parts.",
       animation: (
         <svg width="200" height="150" className="mx-auto">
           {/* Ice */}
@@ -897,8 +888,9 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
         {applications.map((app, index) => (
           <button
             key={index}
-            onMouseDown={(e) => { e.preventDefault(); setActiveAppTab(index); }}
-            className={`px-4 py-2 rounded-lg font-medium transition-all ${
+            onClick={() => setActiveAppTab(index)}
+            style={{ zIndex: 10 }}
+            className={`px-4 py-2 rounded-lg font-medium transition-all relative ${
               activeAppTab === index
                 ? 'bg-orange-600 text-white'
                 : completedApps.has(index)
@@ -906,14 +898,13 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
                 : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
             }`}
           >
-            {app.icon} {app.title.split(' ')[0]}
+            {app.title.split(' ')[0]}
           </button>
         ))}
       </div>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full">
         <div className="flex items-center gap-3 mb-4">
-          <span className="text-3xl">{applications[activeAppTab].icon}</span>
           <h3 className="text-xl font-bold text-white">{applications[activeAppTab].title}</h3>
         </div>
 
@@ -926,12 +917,26 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
           {applications[activeAppTab].details}
         </p>
 
-        {!completedApps.has(activeAppTab) && (
+        {!completedApps.has(activeAppTab) ? (
           <button
-            onMouseDown={(e) => { e.preventDefault(); handleAppComplete(activeAppTab); }}
-            className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors"
+            onClick={() => handleAppComplete(activeAppTab)}
+            style={{ zIndex: 10 }}
+            className="mt-4 px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg font-medium transition-colors relative"
           >
-            ✓ Mark as Understood
+            Mark as Understood
+          </button>
+        ) : (
+          <button
+            onClick={() => {
+              const nextIncomplete = applications.findIndex((_, i) => !completedApps.has(i));
+              if (nextIncomplete !== -1) {
+                setActiveAppTab(nextIncomplete);
+              }
+            }}
+            style={{ zIndex: 10 }}
+            className="mt-4 px-4 py-2 bg-orange-600 hover:bg-orange-500 text-white rounded-lg font-medium transition-colors relative"
+          >
+            Next Application
           </button>
         )}
       </div>
@@ -951,10 +956,11 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
 
       {completedApps.size >= 4 && (
         <button
-          onMouseDown={(e) => { e.preventDefault(); goToPhase(8); }}
-          className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl hover:from-orange-500 hover:to-amber-500 transition-all duration-300"
+          onClick={() => goToPhase('test')}
+          style={{ zIndex: 10 }}
+          className="mt-6 px-6 py-3 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl hover:from-orange-500 hover:to-amber-500 transition-all duration-300 relative"
         >
-          Take the Knowledge Test →
+          Take the Knowledge Test
         </button>
       )}
     </div>
@@ -975,8 +981,9 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
                 {q.options.map((option, oIndex) => (
                   <button
                     key={oIndex}
-                    onMouseDown={(e) => { e.preventDefault(); handleTestAnswer(qIndex, oIndex); }}
-                    className={`p-3 rounded-lg text-left text-sm transition-all ${
+                    onClick={() => handleTestAnswer(qIndex, oIndex)}
+                    style={{ zIndex: 10 }}
+                    className={`p-3 rounded-lg text-left text-sm transition-all relative ${
                       testAnswers[qIndex] === oIndex
                         ? 'bg-orange-600 text-white'
                         : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
@@ -990,9 +997,10 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
           ))}
 
           <button
-            onMouseDown={(e) => { e.preventDefault(); setShowTestResults(true); }}
+            onClick={() => setShowTestResults(true)}
             disabled={testAnswers.includes(-1)}
-            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all ${
+            style={{ zIndex: 10 }}
+            className={`w-full py-4 rounded-xl font-semibold text-lg transition-all relative ${
               testAnswers.includes(-1)
                 ? 'bg-slate-700 text-slate-500 cursor-not-allowed'
                 : 'bg-gradient-to-r from-orange-600 to-amber-600 text-white hover:from-orange-500 hover:to-amber-500'
@@ -1003,29 +1011,31 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
         </div>
       ) : (
         <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl w-full text-center">
-          <div className="text-6xl mb-4">{calculateScore() >= 7 ? '🎉' : '📚'}</div>
+          <div className="text-6xl mb-4">{calculateScore() >= 7 ? 'Excellent!' : 'Keep Learning'}</div>
           <h3 className="text-2xl font-bold text-white mb-2">
             Score: {calculateScore()}/10
           </h3>
           <p className="text-slate-300 mb-6">
             {calculateScore() >= 7
-              ? 'Excellent! You\'ve mastered angular momentum transfer!'
+              ? 'Excellent! You have mastered angular momentum transfer!'
               : 'Keep studying! Review the concepts and try again.'}
           </p>
 
           {calculateScore() >= 7 ? (
             <button
-              onMouseDown={(e) => { e.preventDefault(); goToPhase(9); }}
-              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300"
+              onClick={() => goToPhase('mastery')}
+              style={{ zIndex: 10 }}
+              className="px-8 py-4 bg-gradient-to-r from-emerald-600 to-teal-600 text-white font-semibold rounded-xl hover:from-emerald-500 hover:to-teal-500 transition-all duration-300 relative"
             >
-              Claim Your Mastery Badge →
+              Claim Your Mastery Badge
             </button>
           ) : (
             <button
-              onMouseDown={(e) => { e.preventDefault(); setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase(3); }}
-              className="px-8 py-4 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl hover:from-orange-500 hover:to-amber-500 transition-all duration-300"
+              onClick={() => { setShowTestResults(false); setTestAnswers(Array(10).fill(-1)); goToPhase('review'); }}
+              style={{ zIndex: 10 }}
+              className="px-8 py-4 bg-gradient-to-r from-orange-600 to-amber-600 text-white font-semibold rounded-xl hover:from-orange-500 hover:to-amber-500 transition-all duration-300 relative"
             >
-              Review & Try Again
+              Review and Try Again
             </button>
           )}
         </div>
@@ -1036,37 +1046,38 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
   const renderMastery = () => (
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
       <div className="bg-gradient-to-br from-orange-900/50 via-amber-900/50 to-yellow-900/50 rounded-3xl p-8 max-w-2xl">
-        <div className="text-8xl mb-6">🐱</div>
+        <div className="text-8xl mb-6">Congratulations!</div>
         <h1 className="text-3xl font-bold text-white mb-4">Angular Momentum Master!</h1>
         <p className="text-xl text-slate-300 mb-6">
-          You've mastered the physics of angular momentum transfer and the cat righting reflex!
+          You have mastered the physics of angular momentum transfer and the cat righting reflex!
         </p>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🔄</div>
+            <div className="text-2xl mb-2">Rotation</div>
             <p className="text-sm text-slate-300">Momentum Transfer</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🐱</div>
+            <div className="text-2xl mb-2">Cat</div>
             <p className="text-sm text-slate-300">Righting Reflex</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">🚀</div>
+            <div className="text-2xl mb-2">Space</div>
             <p className="text-sm text-slate-300">Space Maneuvers</p>
           </div>
           <div className="bg-slate-800/50 rounded-xl p-4">
-            <div className="text-2xl mb-2">⚖️</div>
+            <div className="text-2xl mb-2">Balance</div>
             <p className="text-sm text-slate-300">Moment of Inertia</p>
           </div>
         </div>
 
         <div className="flex gap-4 justify-center">
           <button
-            onMouseDown={(e) => { e.preventDefault(); goToPhase(0); }}
-            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors"
+            onClick={() => goToPhase('hook')}
+            style={{ zIndex: 10 }}
+            className="px-6 py-3 bg-slate-700 hover:bg-slate-600 text-white font-medium rounded-xl transition-colors relative"
           >
-            ↺ Explore Again
+            Explore Again
           </button>
         </div>
       </div>
@@ -1075,19 +1086,21 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
 
   const renderPhase = () => {
     switch (phase) {
-      case 0: return renderHook();
-      case 1: return renderPredict();
-      case 2: return renderPlay();
-      case 3: return renderReview();
-      case 4: return renderTwistPredict();
-      case 5: return renderTwistPlay();
-      case 6: return renderTwistReview();
-      case 7: return renderTransfer();
-      case 8: return renderTest();
-      case 9: return renderMastery();
+      case 'hook': return renderHook();
+      case 'predict': return renderPredict();
+      case 'play': return renderPlay();
+      case 'review': return renderReview();
+      case 'twist_predict': return renderTwistPredict();
+      case 'twist_play': return renderTwistPlay();
+      case 'twist_review': return renderTwistReview();
+      case 'transfer': return renderTransfer();
+      case 'test': return renderTest();
+      case 'mastery': return renderMastery();
       default: return renderHook();
     }
   };
+
+  const phaseIndex = phaseOrder.indexOf(phase);
 
   return (
     <div className="min-h-screen bg-[#0a0f1a] text-white relative overflow-hidden">
@@ -1102,12 +1115,13 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, current
         <div className="flex items-center justify-between px-4 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-medium text-orange-400">Angular Momentum</span>
           <div className="flex gap-1.5">
-            {PHASES.map((p, i) => (
+            {phaseOrder.map((p, i) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
-                className={`h-2 rounded-full transition-all duration-300 ${
-                  phase === p ? 'bg-orange-500 w-6' : phase > i ? 'bg-emerald-500 w-2' : 'bg-slate-600 w-2'
+                onClick={() => goToPhase(p)}
+                style={{ zIndex: 10 }}
+                className={`h-2 rounded-full transition-all duration-300 relative ${
+                  phase === p ? 'bg-orange-500 w-6' : phaseIndex > i ? 'bg-emerald-500 w-2' : 'bg-slate-600 w-2'
                 }`}
                 title={phaseLabels[p]}
               />

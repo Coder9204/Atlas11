@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 
 // Premium Design System
 const premiumDesign = {
@@ -46,6 +46,23 @@ const premiumDesign = {
   },
 };
 
+type Phase = 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
+
+const phaseOrder: Phase[] = ['hook', 'predict', 'play', 'review', 'twist_predict', 'twist_play', 'twist_review', 'transfer', 'test', 'mastery'];
+
+const phaseLabels: Record<Phase, string> = {
+  'hook': 'Hook',
+  'predict': 'Predict',
+  'play': 'Lab',
+  'review': 'Review',
+  'twist_predict': 'Twist Predict',
+  'twist_play': 'Twist Lab',
+  'twist_review': 'Twist Review',
+  'transfer': 'Transfer',
+  'test': 'Test',
+  'mastery': 'Mastery'
+};
+
 type GameEventType =
   | 'phase_change'
   | 'prediction_made'
@@ -61,20 +78,6 @@ interface GameEvent {
   type: GameEventType;
   data?: Record<string, unknown>;
 }
-
-const PHASES: number[] = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
-const phaseLabels: Record<number, string> = {
-  0: 'Hook',
-  1: 'Predict',
-  2: 'Lab',
-  3: 'Review',
-  4: 'Twist Predict',
-  5: 'Twist Lab',
-  6: 'Twist Review',
-  7: 'Transfer',
-  8: 'Test',
-  9: 'Mastery'
-};
 
 interface Charge {
   id: number;
@@ -93,18 +96,15 @@ interface FieldVector {
 
 interface ElectricFieldMappingRendererProps {
   onGameEvent?: (event: GameEvent) => void;
-  currentPhase?: number;
-  onPhaseComplete?: (phase: number) => void;
+  gamePhase?: string;
+  onPhaseComplete?: (phase: string) => void;
 }
 
-export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase, onPhaseComplete }: ElectricFieldMappingRendererProps) {
-  const navigationLockRef = useRef(false);
-  const lastClickRef = useRef(0);
-
+export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, onPhaseComplete }: ElectricFieldMappingRendererProps) {
   // Core State
-  const [phase, setPhase] = useState<number>(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) return currentPhase;
-    return 0;
+  const [phase, setPhase] = useState<Phase>(() => {
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) return gamePhase as Phase;
+    return 'hook';
   });
   const [isMobile, setIsMobile] = useState(false);
 
@@ -259,10 +259,10 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
 
   // Phase sync
   useEffect(() => {
-    if (currentPhase !== undefined && PHASES.includes(currentPhase)) {
-      setPhase(currentPhase);
+    if (gamePhase && phaseOrder.includes(gamePhase as Phase)) {
+      setPhase(gamePhase as Phase);
     }
-  }, [currentPhase]);
+  }, [gamePhase]);
 
   // Audio feedback
   const playSound = useCallback((type: 'click' | 'success' | 'failure' | 'transition' | 'complete') => {
@@ -295,38 +295,24 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
     onGameEvent?.({ type, data });
   }, [onGameEvent]);
 
-  // Navigation with debouncing
-  const goToPhase = useCallback((newPhase: number) => {
-    const now = Date.now();
-    if (now - lastClickRef.current < 200) return;
-    lastClickRef.current = now;
-    if (navigationLockRef.current) return;
-    if (!PHASES.includes(newPhase)) return;
-    navigationLockRef.current = true;
+  // Navigation
+  const goToPhase = useCallback((newPhase: Phase) => {
+    if (!phaseOrder.includes(newPhase)) return;
     playSound('transition');
     setPhase(newPhase);
     emitEvent('phase_change', { from: phase, to: newPhase, phaseLabel: phaseLabels[newPhase] });
     onPhaseComplete?.(newPhase);
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
   }, [phase, playSound, emitEvent, onPhaseComplete]);
 
   const goNext = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex < PHASES.length - 1) goToPhase(PHASES[currentIndex + 1]);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex < phaseOrder.length - 1) goToPhase(phaseOrder[currentIndex + 1]);
   }, [phase, goToPhase]);
 
   const goBack = useCallback(() => {
-    const currentIndex = PHASES.indexOf(phase);
-    if (currentIndex > 0) goToPhase(PHASES[currentIndex - 1]);
+    const currentIndex = phaseOrder.indexOf(phase);
+    if (currentIndex > 0) goToPhase(phaseOrder[currentIndex - 1]);
   }, [phase, goToPhase]);
-
-  // Debounced state update helper
-  const safeNavigate = useCallback((action: () => void) => {
-    if (navigationLockRef.current) return;
-    navigationLockRef.current = true;
-    action();
-    setTimeout(() => { navigationLockRef.current = false; }, 400);
-  }, []);
 
   // Calculate electric field at a point
   const calculateField = useCallback((x: number, y: number, chargeList: Charge[]): { ex: number; ey: number } => {
@@ -418,7 +404,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
 
   // Initialize play phase
   useEffect(() => {
-    if (phase === 2) {
+    if (phase === 'play') {
       const initialCharges: Charge[] = [
         { id: 0, x: 150, y: 150, q: 1 }
       ];
@@ -430,7 +416,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
 
   // Update fields when charges change
   useEffect(() => {
-    if (phase === 2 && charges.length > 0) {
+    if (phase === 'play' && charges.length > 0) {
       setFieldVectors(generateFieldVectors(charges));
       setFieldLines(generateFieldLines(charges));
     }
@@ -438,7 +424,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
 
   // Initialize twist phase (dipole)
   useEffect(() => {
-    if (phase === 5) {
+    if (phase === 'twist_play') {
       const dipole: Charge[] = [
         { id: 0, x: 150 - separation / 2, y: 150, q: 1 },
         { id: 1, x: 150 + separation / 2, y: 150, q: -1 }
@@ -477,6 +463,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
       transition: 'all 0.3s ease',
       fontFamily: premiumDesign.typography.fontFamily,
       opacity: disabled ? 0.5 : 1,
+      zIndex: 10,
     };
 
     const variants = {
@@ -500,7 +487,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
     return (
       <button
         style={{ ...baseStyle, ...variants[variant] }}
-        onMouseDown={(e) => {
+        onClick={(e) => {
           e.preventDefault();
           if (!disabled) onClick();
         }}
@@ -512,8 +499,8 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
   }
 
   function renderProgressBar() {
-    const currentIndex = PHASES.indexOf(phase);
-    const progress = ((currentIndex + 1) / PHASES.length) * 100;
+    const currentIndex = phaseOrder.indexOf(phase);
+    const progress = ((currentIndex + 1) / phaseOrder.length) * 100;
 
     return (
       <div style={{ marginBottom: premiumDesign.spacing.lg }}>
@@ -524,7 +511,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
           fontSize: '12px',
           color: premiumDesign.colors.text.muted,
         }}>
-          <span>Phase {currentIndex + 1} of {PHASES.length}</span>
+          <span>Phase {currentIndex + 1} of {phaseOrder.length}</span>
           <span>{phaseLabels[phase]}</span>
         </div>
         <div style={{
@@ -731,22 +718,24 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
         <div className="flex gap-4 mt-8">
           {hookStep > 0 && (
             <button
-              onMouseDown={(e) => { e.preventDefault(); safeNavigate(() => setHookStep(h => h - 1)); }}
+              onClick={(e) => { e.preventDefault(); setHookStep(h => h - 1); }}
               className="px-6 py-3 bg-slate-700/50 hover:bg-slate-600/50 text-white rounded-xl font-medium transition-all"
+              style={{ zIndex: 10 }}
             >
               Back
             </button>
           )}
           <button
-            onMouseDown={(e) => {
+            onClick={(e) => {
               e.preventDefault();
               if (hookStep < hookContent.length - 1) {
-                safeNavigate(() => setHookStep(h => h + 1));
+                setHookStep(h => h + 1);
               } else {
                 goNext();
               }
             }}
             className="px-8 py-3 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-400 hover:to-blue-400 text-white rounded-xl font-semibold shadow-lg shadow-cyan-500/25 transition-all"
+            style={{ zIndex: 10 }}
           >
             {hookStep < hookContent.length - 1 ? 'Continue' : 'Make a Prediction'}
           </button>
@@ -774,7 +763,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.md,
           }}>
-            🤔 Make Your Prediction
+            Make Your Prediction
           </h2>
           <p style={{
             color: premiumDesign.colors.text.secondary,
@@ -809,10 +798,11 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
-                safeNavigate(() => setPrediction(p.id));
+                setPrediction(p.id);
               }}
             >
               {p.text}
@@ -821,10 +811,10 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(0) },
+          { text: '← Back', onClick: () => goToPhase('hook') },
           {
             text: 'Test My Prediction →',
-            onClick: nextPhase,
+            onClick: goNext,
             disabled: !prediction,
           }
         )}
@@ -844,7 +834,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.sm,
           }}>
-            🗺️ Electric Field Mapper
+            Electric Field Mapper
           </h2>
           <p style={{ color: premiumDesign.colors.text.secondary }}>
             Add charges and visualize the electric field around them
@@ -896,8 +886,9 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                     fontWeight: 'bold',
                     fontSize: '16px',
                     cursor: 'pointer',
+                    zIndex: 10,
                   }}
-                  onMouseDown={(e) => {
+                  onClick={(e) => {
                     e.preventDefault();
                     addCharge(1);
                   }}
@@ -915,13 +906,14 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                     fontWeight: 'bold',
                     fontSize: '16px',
                     cursor: 'pointer',
+                    zIndex: 10,
                   }}
-                  onMouseDown={(e) => {
+                  onClick={(e) => {
                     e.preventDefault();
                     addCharge(-1);
                   }}
                 >
-                  − Negative
+                  - Negative
                 </button>
               </div>
             </div>
@@ -976,13 +968,14 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                 background: 'transparent',
                 color: premiumDesign.colors.text.secondary,
                 cursor: 'pointer',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
                 setCharges([{ id: 0, x: 150, y: 150, q: 1 }]);
               }}
             >
-              🔄 Reset to Single Charge
+              Reset to Single Charge
             </button>
 
             <div style={{
@@ -992,15 +985,15 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
               border: '1px solid rgba(16, 185, 129, 0.3)',
             }}>
               <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '14px', margin: 0 }}>
-                💡 Field lines point AWAY from + charges, TOWARD − charges. Closer lines = stronger field!
+                Field lines point AWAY from + charges, TOWARD - charges. Closer lines = stronger field!
               </p>
             </div>
           </div>
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(1) },
-          { text: 'Review Results →', onClick: nextPhase }
+          { text: '← Back', onClick: () => goToPhase('predict') },
+          { text: 'Review Results →', onClick: goNext }
         )}
       </div>
     );
@@ -1011,7 +1004,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
       {
         title: "Field Direction Convention",
         content: "Electric field lines point in the direction a positive test charge would move. Since positive charges repel other positive charges, lines point AWAY from positive charges. Since positive is attracted to negative, lines point TOWARD negative charges.",
-        formula: "E⃗ points: + → away, − → toward",
+        formula: "E points: + -> away, - -> toward",
       },
       {
         title: "Field Strength from Line Density",
@@ -1021,7 +1014,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
       {
         title: "Field Lines Never Cross",
         content: "Electric field lines NEVER cross each other. At any point in space, the electric field has only one direction. If lines crossed, there would be two directions at that point - which is impossible!",
-        formula: "One point → One direction → No crossing",
+        formula: "One point -> One direction -> No crossing",
       },
       {
         title: "Your Prediction",
@@ -1042,7 +1035,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
             fontWeight: 700,
             color: premiumDesign.colors.text.primary,
           }}>
-            📊 Understanding Electric Fields
+            Understanding Electric Fields
           </h2>
         </div>
 
@@ -1100,10 +1093,11 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                     : premiumDesign.colors.background.tertiary,
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
+                  zIndex: 10,
                 }}
-                onMouseDown={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
-                  safeNavigate(() => setReviewStep(i));
+                  setReviewStep(i);
                 }}
               />
             ))}
@@ -1111,12 +1105,12 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(2) },
+          { text: '← Back', onClick: () => goToPhase('play') },
           {
             text: reviewStep < reviewContent.length - 1 ? 'Continue →' : 'Try a Twist →',
             onClick: () => {
               if (reviewStep < reviewContent.length - 1) {
-                safeNavigate(() => setReviewStep(r => r + 1));
+                setReviewStep(r => r + 1);
               } else {
                 goNext();
               }
@@ -1146,7 +1140,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.md,
           }}>
-            🔄 The Twist: Electric Dipole
+            The Twist: Electric Dipole
           </h2>
           <p style={{
             color: premiumDesign.colors.text.secondary,
@@ -1181,10 +1175,11 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                 cursor: 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
-                safeNavigate(() => setTwistPrediction(p.id));
+                setTwistPrediction(p.id);
               }}
             >
               {p.text}
@@ -1193,10 +1188,10 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(3) },
+          { text: '← Back', onClick: () => goToPhase('review') },
           {
             text: 'Test My Prediction →',
-            onClick: nextPhase,
+            onClick: goNext,
             disabled: !twistPrediction,
           }
         )}
@@ -1216,7 +1211,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.sm,
           }}>
-            🧲 Electric Dipole Field
+            Electric Dipole Field
           </h2>
           <p style={{ color: premiumDesign.colors.text.secondary }}>
             Observe how field lines connect between opposite charges
@@ -1286,7 +1281,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                 Dipole Properties
               </h4>
               <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '14px', margin: 0 }}>
-                Notice how field lines start at the positive charge (+) and end at the negative charge (−), creating a connected pattern.
+                Notice how field lines start at the positive charge (+) and end at the negative charge (-), creating a connected pattern.
               </p>
             </div>
 
@@ -1297,7 +1292,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
               border: '1px solid rgba(139, 92, 246, 0.3)',
             }}>
               <p style={{ color: premiumDesign.colors.text.secondary, fontSize: '14px', margin: 0 }}>
-                💡 This is an electric dipole - like in water molecules! The field pattern is essential for understanding molecular interactions.
+                This is an electric dipole - like in water molecules! The field pattern is essential for understanding molecular interactions.
               </p>
             </div>
 
@@ -1312,15 +1307,15 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                 Dipole Moment
               </div>
               <div style={{ color: premiumDesign.colors.secondary, fontSize: '18px', fontFamily: 'monospace' }}>
-                p⃗ = q × d⃗
+                p = q x d
               </div>
             </div>
           </div>
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(4) },
-          { text: 'Review Results →', onClick: nextPhase }
+          { text: '← Back', onClick: () => goToPhase('twist_predict') },
+          { text: 'Review Results →', onClick: goNext }
         )}
       </div>
     );
@@ -1341,7 +1336,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
       },
       {
         title: "Superposition of Fields",
-        content: "The total field at any point is the vector sum of fields from all charges (superposition). Between a + and − charge, fields add to create strong connecting lines. Beyond the dipole, fields partially cancel.",
+        content: "The total field at any point is the vector sum of fields from all charges (superposition). Between a + and - charge, fields add to create strong connecting lines. Beyond the dipole, fields partially cancel.",
       },
     ];
 
@@ -1355,7 +1350,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
             fontWeight: 700,
             color: premiumDesign.colors.text.primary,
           }}>
-            🔍 Dipole Analysis
+            Dipole Analysis
           </h2>
         </div>
 
@@ -1421,10 +1416,11 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                     : premiumDesign.colors.background.tertiary,
                   cursor: 'pointer',
                   transition: 'all 0.3s ease',
+                  zIndex: 10,
                 }}
-                onMouseDown={(e) => {
+                onClick={(e) => {
                   e.preventDefault();
-                  safeNavigate(() => setTwistReviewStep(i));
+                  setTwistReviewStep(i);
                 }}
               />
             ))}
@@ -1432,12 +1428,12 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(5) },
+          { text: '← Back', onClick: () => goToPhase('twist_play') },
           {
             text: twistReviewStep < twistReviewContent.length - 1 ? 'Continue →' : 'Real-World Examples →',
             onClick: () => {
               if (twistReviewStep < twistReviewContent.length - 1) {
-                safeNavigate(() => setTwistReviewStep(t => t + 1));
+                setTwistReviewStep(t => t + 1);
               } else {
                 goNext();
               }
@@ -1451,22 +1447,22 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
   function renderTransferPhase() {
     const applications = [
       {
-        title: "⚡ Capacitors",
+        title: "Capacitors",
         description: "Capacitors store energy in the electric field between parallel plates. Understanding field patterns helps engineers design capacitors with uniform fields for maximum energy storage in devices from phones to electric cars.",
-        fact: "The energy stored in a capacitor is proportional to E² - doubling the field quadruples the stored energy!",
+        fact: "The energy stored in a capacitor is proportional to E squared - doubling the field quadruples the stored energy!",
       },
       {
-        title: "🏠 Lightning Rods",
+        title: "Lightning Rods",
         description: "Lightning rods work because electric fields concentrate at sharp points. The intense field at the rod's tip ionizes air, creating a path for lightning to safely discharge to ground instead of striking buildings.",
         fact: "Benjamin Franklin invented the lightning rod in 1752 after his famous (and dangerous!) kite experiment.",
       },
       {
-        title: "📺 Old CRT Displays",
+        title: "Old CRT Displays",
         description: "Cathode ray tube (CRT) TVs and monitors used electric fields to steer electron beams and draw images on screen. Changing the field deflected electrons to different positions, painting pictures line by line.",
         fact: "A CRT TV could draw 15,000+ horizontal lines per second, creating smooth motion video!",
       },
       {
-        title: "🔬 Particle Accelerators",
+        title: "Particle Accelerators",
         description: "Particle accelerators like the Large Hadron Collider use carefully shaped electric fields to accelerate charged particles to near light speed. Field mapping is crucial for controlling these incredibly precise machines.",
         fact: "The LHC's beam travels at 99.9999991% the speed of light - if it were a train, it could circle Earth 7.5 times per second!",
       },
@@ -1483,7 +1479,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.sm,
           }}>
-            🌍 Electric Fields in Action
+            Electric Fields in Action
           </h2>
           <p style={{ color: premiumDesign.colors.text.secondary }}>
             Explore all {applications.length} applications to unlock the quiz
@@ -1516,13 +1512,14 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                 cursor: 'pointer',
                 fontSize: '14px',
                 transition: 'all 0.3s ease',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
-                safeNavigate(() => setActiveApp(index));
+                setActiveApp(index);
               }}
             >
-              {completedApps.has(index) && '✓ '}{app.title.split(' ')[0]}
+              {completedApps.has(index) && '✓ '}{app.title}
             </button>
           ))}
         </div>
@@ -1559,14 +1556,14 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
             border: '1px solid rgba(16, 185, 129, 0.3)',
           }}>
             <p style={{ margin: 0, color: premiumDesign.colors.success, fontWeight: 600 }}>
-              💡 Fun Fact
+              Fun Fact
             </p>
             <p style={{ margin: `${premiumDesign.spacing.sm}px 0 0`, color: premiumDesign.colors.text.secondary }}>
               {applications[activeApp].fact}
             </p>
           </div>
 
-          {!completedApps.has(activeApp) && (
+          {!completedApps.has(activeApp) ? (
             <button
               style={{
                 display: 'block',
@@ -1580,21 +1577,45 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                 fontSize: '16px',
                 fontWeight: 600,
                 cursor: 'pointer',
+                zIndex: 10,
               }}
-              onMouseDown={(e) => {
+              onClick={(e) => {
                 e.preventDefault();
-                safeNavigate(() => {
-                  const newCompleted = new Set(completedApps);
-                  newCompleted.add(activeApp);
-                  setCompletedApps(newCompleted);
-                  if (activeApp < applications.length - 1) {
-                    setActiveApp(activeApp + 1);
-                  }
-                });
+                const newCompleted = new Set(completedApps);
+                newCompleted.add(activeApp);
+                setCompletedApps(newCompleted);
+                if (activeApp < applications.length - 1) {
+                  setActiveApp(activeApp + 1);
+                }
               }}
             >
-              ✓ Mark as Read
+              Mark as Read
             </button>
+          ) : (
+            activeApp < applications.length - 1 && (
+              <button
+                style={{
+                  display: 'block',
+                  width: '100%',
+                  marginTop: premiumDesign.spacing.lg,
+                  padding: premiumDesign.spacing.md,
+                  borderRadius: premiumDesign.radius.md,
+                  border: 'none',
+                  background: premiumDesign.colors.gradient.secondary,
+                  color: 'white',
+                  fontSize: '16px',
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  zIndex: 10,
+                }}
+                onClick={(e) => {
+                  e.preventDefault();
+                  setActiveApp(activeApp + 1);
+                }}
+              >
+                Next Application →
+              </button>
+            )
           )}
         </div>
 
@@ -1607,10 +1628,10 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
         </div>
 
         {renderBottomBar(
-          { text: '← Back', onClick: () => goToPhase(6) },
+          { text: '← Back', onClick: () => goToPhase('twist_review') },
           {
             text: completedApps.size === applications.length ? 'Take the Quiz →' : `Explore ${applications.length - completedApps.size} More →`,
-            onClick: nextPhase,
+            onClick: goNext,
             disabled: completedApps.size < applications.length,
           }
         )}
@@ -1680,7 +1701,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                   setTestComplete(false);
                   setCurrentQuestion(0);
                   setTestScore(0);
-                  goToPhase(3);
+                  goToPhase('review');
                 }
               },
               passed ? 'success' : 'primary'
@@ -1740,6 +1761,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                 cursor: showExplanation ? 'default' : 'pointer',
                 textAlign: 'left',
                 transition: 'all 0.3s ease',
+                zIndex: 10,
               };
 
               if (showExplanation) {
@@ -1759,10 +1781,10 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
                 <button
                   key={index}
                   style={buttonStyle}
-                  onMouseDown={(e) => {
+                  onClick={(e) => {
                     e.preventDefault();
                     if (!showExplanation) {
-                      safeNavigate(() => setSelectedAnswer(index));
+                      setSelectedAnswer(index);
                     }
                   }}
                   disabled={showExplanation}
@@ -1796,12 +1818,10 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
             renderButton(
               'Check Answer',
               () => {
-                safeNavigate(() => {
-                  setShowExplanation(true);
-                  if (question.options[selectedAnswer as number]?.correct) {
-                    setTestScore(s => s + 1);
-                  }
-                });
+                setShowExplanation(true);
+                if (question.options[selectedAnswer as number]?.correct) {
+                  setTestScore(s => s + 1);
+                }
               },
               'primary',
               selectedAnswer === null
@@ -1810,15 +1830,13 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
             renderButton(
               currentQuestion < testQuestions.length - 1 ? 'Next Question →' : 'See Results',
               () => {
-                safeNavigate(() => {
-                  if (currentQuestion < testQuestions.length - 1) {
-                    setCurrentQuestion(c => c + 1);
-                    setSelectedAnswer(null);
-                    setShowExplanation(false);
-                  } else {
-                    setTestComplete(true);
-                  }
-                });
+                if (currentQuestion < testQuestions.length - 1) {
+                  setCurrentQuestion(c => c + 1);
+                  setSelectedAnswer(null);
+                  setShowExplanation(false);
+                } else {
+                  setTestComplete(true);
+                }
               },
               'primary'
             )
@@ -1885,15 +1903,15 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
             lineHeight: 2,
             paddingLeft: premiumDesign.spacing.lg,
           }}>
-            <li>Field lines: away from +, toward −</li>
+            <li>Field lines: away from +, toward -</li>
             <li>Line density indicates field strength</li>
             <li>Field lines never cross</li>
-            <li>Dipoles: + and − create connected field patterns</li>
+            <li>Dipoles: + and - create connected field patterns</li>
           </ul>
         </div>
 
         <div style={{ display: 'flex', gap: premiumDesign.spacing.md, flexWrap: 'wrap', justifyContent: 'center' }}>
-          {renderButton('← Review Again', () => goToPhase(0), 'secondary')}
+          {renderButton('← Review Again', () => goToPhase('hook'), 'secondary')}
         </div>
       </div>
     );
@@ -1913,18 +1931,19 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
           <span className="text-sm font-semibold text-white/80 tracking-wide">Electric Field Mapping</span>
           <div className="flex items-center gap-1.5">
-            {PHASES.map((p) => (
+            {phaseOrder.map((p) => (
               <button
                 key={p}
-                onMouseDown={(e) => { e.preventDefault(); goToPhase(p); }}
+                onClick={(e) => { e.preventDefault(); goToPhase(p); }}
                 className={`h-2 rounded-full transition-all duration-300 ${
                   phase === p
                     ? 'bg-cyan-400 w-6 shadow-lg shadow-cyan-400/30'
-                    : phase > p
+                    : phaseOrder.indexOf(phase) > phaseOrder.indexOf(p)
                       ? 'bg-emerald-500 w-2'
                       : 'bg-slate-700 w-2 hover:bg-slate-600'
                 }`}
                 title={phaseLabels[p]}
+                style={{ zIndex: 10 }}
               />
             ))}
           </div>
@@ -1935,16 +1954,16 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, currentPhase
       {/* Main content */}
       <div className="relative pt-16 pb-12">
         <div style={{ maxWidth: 900, margin: '0 auto', padding: isMobile ? premiumDesign.spacing.md : premiumDesign.spacing.xl }}>
-          {phase === 0 && renderHookPhase()}
-          {phase === 1 && renderPredictPhase()}
-          {phase === 2 && renderPlayPhase()}
-          {phase === 3 && renderReviewPhase()}
-          {phase === 4 && renderTwistPredictPhase()}
-          {phase === 5 && renderTwistPlayPhase()}
-          {phase === 6 && renderTwistReviewPhase()}
-          {phase === 7 && renderTransferPhase()}
-          {phase === 8 && renderTestPhase()}
-          {phase === 9 && renderMasteryPhase()}
+          {phase === 'hook' && renderHookPhase()}
+          {phase === 'predict' && renderPredictPhase()}
+          {phase === 'play' && renderPlayPhase()}
+          {phase === 'review' && renderReviewPhase()}
+          {phase === 'twist_predict' && renderTwistPredictPhase()}
+          {phase === 'twist_play' && renderTwistPlayPhase()}
+          {phase === 'twist_review' && renderTwistReviewPhase()}
+          {phase === 'transfer' && renderTransferPhase()}
+          {phase === 'test' && renderTestPhase()}
+          {phase === 'mastery' && renderMasteryPhase()}
         </div>
       </div>
     </div>
