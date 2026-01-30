@@ -114,6 +114,40 @@ export default function SoapBoatRenderer({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // PREMIUM DESIGN SYSTEM (matches WaveParticleDuality template)
+  // ─────────────────────────────────────────────────────────────────────────
+  const colors = {
+    primary: '#06b6d4',       // cyan-500 (water theme)
+    primaryDark: '#0891b2',   // cyan-600
+    accent: '#a855f7',        // purple-500
+    secondary: '#8b5cf6',     // violet-500
+    success: '#10b981',       // emerald-500
+    danger: '#ef4444',        // red-500
+    warning: '#f59e0b',       // amber-500
+    bgDark: '#020617',        // slate-950
+    bgCard: '#0f172a',        // slate-900
+    bgCardLight: '#1e293b',   // slate-800
+    textPrimary: '#f8fafc',   // slate-50
+    textSecondary: '#94a3b8', // slate-400
+    textMuted: '#64748b',     // slate-500
+    border: '#334155',        // slate-700
+    borderLight: '#475569',   // slate-600
+  };
+
+  const typo = {
+    title: isMobile ? '28px' : '36px',
+    heading: isMobile ? '20px' : '24px',
+    bodyLarge: isMobile ? '16px' : '18px',
+    body: isMobile ? '14px' : '16px',
+    small: isMobile ? '12px' : '14px',
+    label: isMobile ? '10px' : '12px',
+    pagePadding: isMobile ? '16px' : '24px',
+    cardPadding: isMobile ? '12px' : '16px',
+    sectionGap: isMobile ? '16px' : '20px',
+    elementGap: isMobile ? '8px' : '12px'
+  };
+
   const goToPhase = (newPhase: Phase) => {
     const now = Date.now();
     if (now - lastClickRef.current < 200) return;

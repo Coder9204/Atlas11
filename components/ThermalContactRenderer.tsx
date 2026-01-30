@@ -78,6 +78,40 @@ export default function ThermalContactRenderer({
   const navigationLockRef = useRef(false);
   const lastClickRef = useRef(0);
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // PREMIUM DESIGN SYSTEM (matches WaveParticleDuality template)
+  // ─────────────────────────────────────────────────────────────────────────
+  const colors = {
+    primary: '#ef4444',       // red-500 (heat theme)
+    primaryDark: '#dc2626',   // red-600
+    accent: '#3b82f6',        // blue-500 (cold theme)
+    secondary: '#f97316',     // orange-500
+    success: '#10b981',       // emerald-500
+    danger: '#ef4444',        // red-500
+    warning: '#f59e0b',       // amber-500
+    bgDark: '#020617',        // slate-950
+    bgCard: '#0f172a',        // slate-900
+    bgCardLight: '#1e293b',   // slate-800
+    textPrimary: '#f8fafc',   // slate-50
+    textSecondary: '#94a3b8', // slate-400
+    textMuted: '#64748b',     // slate-500
+    border: '#334155',        // slate-700
+    borderLight: '#475569',   // slate-600
+  };
+
+  const typo = {
+    title: isMobile ? '28px' : '36px',
+    heading: isMobile ? '20px' : '24px',
+    bodyLarge: isMobile ? '16px' : '18px',
+    body: isMobile ? '14px' : '16px',
+    small: isMobile ? '12px' : '14px',
+    label: isMobile ? '10px' : '12px',
+    pagePadding: isMobile ? '16px' : '24px',
+    cardPadding: isMobile ? '12px' : '16px',
+    sectionGap: isMobile ? '16px' : '20px',
+    elementGap: isMobile ? '8px' : '12px'
+  };
+
   // Game-specific state
   const [interfaceType, setInterfaceType] = useState<InterfaceType>("bare_contact");
   const [hotBlockTemp, setHotBlockTemp] = useState(80);

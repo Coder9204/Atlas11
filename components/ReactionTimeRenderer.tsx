@@ -331,15 +331,30 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   };
 
   // ─────────────────────────────────────────────────────────────────────────
-  // PREMIUM COLOR PALETTE
+  // PREMIUM DESIGN SYSTEM (matches WaveParticleDuality template)
   // ─────────────────────────────────────────────────────────────────────────
 
   const colors = {
-    primary: '#6366F1',
-    secondary: '#8B5CF6',
-    accent: '#F59E0B',
-    success: '#10B981',
-    danger: '#EF4444',
+    // Core brand
+    primary: '#6366F1',       // indigo-500
+    primaryDark: '#4f46e5',   // indigo-600
+    accent: '#F59E0B',        // amber-500
+    secondary: '#8B5CF6',     // purple-500
+    success: '#10b981',       // emerald-500
+    danger: '#ef4444',        // red-500
+    warning: '#f59e0b',       // amber-500
+    // Backgrounds
+    bgDark: '#020617',        // slate-950
+    bgCard: '#0f172a',        // slate-900
+    bgCardLight: '#1e293b',   // slate-800
+    // Text
+    textPrimary: '#f8fafc',   // slate-50
+    textSecondary: '#94a3b8', // slate-400
+    textMuted: '#64748b',     // slate-500
+    // Borders
+    border: '#334155',        // slate-700
+    borderLight: '#475569',   // slate-600
+    // Game-specific
     neutral: '#64748B',
     ruler: '#F59E0B',
     hand: '#FBBF24',
@@ -347,6 +362,21 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
     good: '#3B82F6',
     average: '#F59E0B',
     slow: '#EF4444'
+  };
+
+  // Typography system - responsive sizes
+  const typo = {
+    title: isMobile ? '28px' : '36px',
+    heading: isMobile ? '20px' : '24px',
+    bodyLarge: isMobile ? '16px' : '18px',
+    body: isMobile ? '14px' : '16px',
+    small: isMobile ? '12px' : '14px',
+    label: isMobile ? '10px' : '12px',
+    // Spacing
+    pagePadding: isMobile ? '16px' : '24px',
+    cardPadding: isMobile ? '12px' : '16px',
+    sectionGap: isMobile ? '16px' : '20px',
+    elementGap: isMobile ? '8px' : '12px'
   };
 
   // Get rating based on reaction time
@@ -380,35 +410,96 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   };
 
   const renderBottomBar = (onNext: () => void, canProceed: boolean, buttonText: string = 'Continue') => (
-    <div className="mt-6 flex justify-center">
+    <div style={{
+      marginTop: typo.sectionGap,
+      display: 'flex',
+      justifyContent: 'center',
+      padding: `${typo.cardPadding} 0`
+    }}>
       <button
-        onMouseDown={(e) => {
-          e.preventDefault();
-          if (canProceed) onNext();
-        }}
+        onMouseDown={(e) => { e.preventDefault(); if (canProceed) onNext(); }}
+        onTouchEnd={(e) => { e.preventDefault(); if (canProceed) onNext(); }}
         disabled={!canProceed}
-        className={`px-8 py-3 rounded-xl font-semibold text-lg transition-all duration-300 ${
-          canProceed
-            ? 'bg-gradient-to-r from-indigo-500 to-purple-500 text-white shadow-lg hover:shadow-xl hover:scale-105'
-            : 'bg-gray-200 text-gray-400 cursor-not-allowed'
-        }`}
+        style={{
+          padding: isMobile ? '14px 28px' : '16px 32px',
+          borderRadius: '12px',
+          fontWeight: 600,
+          fontSize: typo.bodyLarge,
+          transition: 'all 0.3s ease',
+          border: 'none',
+          cursor: canProceed ? 'pointer' : 'not-allowed',
+          minHeight: '48px',
+          background: canProceed
+            ? `linear-gradient(135deg, ${colors.primary} 0%, ${colors.secondary} 100%)`
+            : colors.bgCardLight,
+          color: canProceed ? 'white' : colors.textMuted,
+          boxShadow: canProceed ? `0 4px 20px ${colors.primary}40` : 'none',
+          opacity: canProceed ? 1 : 0.6
+        }}
       >
-        {buttonText}
+        {buttonText} {canProceed && '→'}
       </button>
     </div>
   );
 
   const renderKeyTakeaway = (title: string, content: string) => (
-    <div className="bg-gradient-to-r from-amber-50 to-orange-50 border-l-4 border-amber-400 p-4 rounded-r-lg mb-4">
-      <h4 className="font-bold text-amber-800 mb-1">💡 {title}</h4>
-      <p className="text-amber-900">{content}</p>
+    <div style={{
+      padding: typo.cardPadding,
+      borderRadius: '12px',
+      marginBottom: typo.sectionGap,
+      background: `linear-gradient(135deg, ${colors.warning}15 0%, ${colors.warning}05 100%)`,
+      borderLeft: `4px solid ${colors.warning}`
+    }}>
+      <h4 style={{ fontWeight: 700, fontSize: typo.body, color: colors.warning, marginBottom: '4px' }}>💡 {title}</h4>
+      <p style={{ fontSize: typo.small, color: colors.textSecondary, lineHeight: 1.6, margin: 0 }}>{content}</p>
     </div>
   );
 
-  const renderSectionHeader = (title: string, subtitle?: string) => (
-    <div className="text-center mb-6">
-      <h2 className="text-2xl font-bold text-gray-800 mb-1">{title}</h2>
-      {subtitle && <p className="text-gray-600">{subtitle}</p>}
+  const renderSectionHeader = (step: string, title: string, subtitle?: string) => (
+    <div style={{ marginBottom: typo.sectionGap, textAlign: 'center' }}>
+      <p style={{
+        fontSize: typo.label,
+        fontWeight: 700,
+        textTransform: 'uppercase',
+        letterSpacing: '0.1em',
+        color: colors.primary,
+        marginBottom: '8px'
+      }}>{step}</p>
+      <h2 style={{
+        fontSize: typo.heading,
+        fontWeight: 800,
+        color: colors.textPrimary,
+        margin: 0,
+        marginBottom: subtitle ? '8px' : 0
+      }}>{title}</h2>
+      {subtitle && <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0 }}>{subtitle}</p>}
+    </div>
+  );
+
+  // Premium wrapper for consistent phase styling
+  const renderPremiumWrapper = (content: React.ReactNode, bottomBar?: React.ReactNode) => (
+    <div style={{
+      display: 'flex',
+      flexDirection: 'column',
+      height: '100%',
+      minHeight: 'calc(100vh - 80px)',
+      background: colors.bgDark,
+      overflow: 'auto'
+    }}>
+      <div style={{ flex: 1, overflowY: 'auto', paddingBottom: bottomBar ? '80px' : '20px' }}>
+        {content}
+      </div>
+      {bottomBar && (
+        <div style={{
+          position: 'sticky',
+          bottom: 0,
+          background: `linear-gradient(to top, ${colors.bgDark} 80%, transparent)`,
+          padding: typo.cardPadding,
+          paddingTop: '24px'
+        }}>
+          {bottomBar}
+        </div>
+      )}
     </div>
   );
 
@@ -604,58 +695,95 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
   const renderPredict = () => {
     const predictionOptions = [
-      { id: 'fast', label: 'Less than 100ms (lightning fast!)', icon: '⚡' },
-      { id: 'medium', label: '150-250ms (typical human range)', icon: '👤' },
-      { id: 'slow', label: '300-500ms (pretty slow)', icon: '🐢' },
-      { id: 'very_slow', label: 'More than 500ms (half a second+)', icon: '🦥' }
+      { id: 'fast', label: 'Less than 100ms', desc: 'Lightning fast!', icon: '⚡' },
+      { id: 'medium', label: '150-250ms', desc: 'Typical human range', icon: '👤' },
+      { id: 'slow', label: '300-500ms', desc: 'Pretty slow', icon: '🐢' },
+      { id: 'very_slow', label: 'More than 500ms', desc: 'Half a second+', icon: '🦥' }
     ];
 
-    return (
-      <div>
-        {renderSectionHeader('Your Prediction', 'How fast is human reaction?')}
+    return renderPremiumWrapper(
+      <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
+        {renderSectionHeader('Step 1 • Make Your Prediction', 'How Fast Is Human Reaction?', 'Predict before you test!')}
 
-        <div className="bg-blue-50 rounded-xl p-4 mb-5">
-          <p className="text-blue-800">
-            From the moment your eyes see the ruler drop to the moment your hand
-            squeezes to catch it—how long does that take?
+        <div style={{
+          padding: typo.cardPadding,
+          borderRadius: '12px',
+          marginBottom: typo.sectionGap,
+          background: `${colors.primary}15`,
+          border: `1px solid ${colors.primary}30`
+        }}>
+          <p style={{ fontSize: typo.body, color: colors.textSecondary, margin: 0, lineHeight: 1.6 }}>
+            From the moment your eyes see the ruler drop to the moment your hand squeezes to catch it—<strong style={{ color: colors.textPrimary }}>how long does that take?</strong>
           </p>
         </div>
 
-        <div className="grid grid-cols-1 gap-3 mb-6">
+        <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap, marginBottom: typo.sectionGap }}>
           {predictionOptions.map(option => (
             <button
               key={option.id}
-              onMouseDown={(e) => {
+              onMouseDown={() => {
+                setPrediction(option.id);
+                playSound('click');
+                emitEvent('prediction', { prediction: option.id });
+              }}
+              onTouchEnd={(e) => {
                 e.preventDefault();
                 setPrediction(option.id);
                 playSound('click');
                 emitEvent('prediction', { prediction: option.id });
               }}
-              className={`p-4 rounded-xl border-2 transition-all text-left flex items-center gap-3 ${
-                prediction === option.id
-                  ? 'border-indigo-500 bg-indigo-50 shadow-md'
-                  : 'border-gray-200 hover:border-gray-300 bg-white'
-              }`}
+              style={{
+                display: 'flex',
+                alignItems: 'center',
+                gap: '12px',
+                padding: typo.cardPadding,
+                borderRadius: '12px',
+                textAlign: 'left',
+                background: prediction === option.id ? `${colors.primary}15` : colors.bgCard,
+                border: `2px solid ${prediction === option.id ? colors.primary : colors.border}`,
+                cursor: 'pointer',
+                transition: 'all 0.2s ease'
+              }}
             >
-              <span className="text-2xl">{option.icon}</span>
-              <span className={prediction === option.id ? 'text-indigo-700 font-semibold' : 'text-gray-700'}>
-                {option.label}
-              </span>
+              <div style={{
+                width: '48px',
+                height: '48px',
+                borderRadius: '10px',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                fontSize: '24px',
+                background: prediction === option.id ? `${colors.primary}25` : colors.bgCardLight,
+                flexShrink: 0
+              }}>
+                {option.icon}
+              </div>
+              <div style={{ flex: 1 }}>
+                <p style={{ fontWeight: 700, fontSize: typo.body, margin: 0, color: prediction === option.id ? colors.textPrimary : colors.textSecondary }}>{option.label}</p>
+                <p style={{ fontSize: typo.small, color: colors.textMuted, margin: 0 }}>{option.desc}</p>
+              </div>
               {prediction === option.id && (
-                <span className="ml-auto text-indigo-500">✓</span>
+                <div style={{ width: '24px', height: '24px', borderRadius: '50%', background: colors.primary, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <span style={{ color: 'white', fontSize: '14px' }}>✓</span>
+                </div>
               )}
             </button>
           ))}
         </div>
 
-        {renderBottomBar(() => goToPhase('play'), prediction !== null, 'Test Your Reaction')}
-      </div>
+        <div style={{ padding: typo.cardPadding, borderRadius: '10px', background: `${colors.warning}10`, border: `1px solid ${colors.warning}25` }}>
+          <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0, lineHeight: 1.5 }}>
+            <span style={{ color: colors.warning, fontWeight: 700 }}>💡 Hint:</span> Your brain processes visual signals → makes decisions → sends signals to muscles. How fast can this chain be?
+          </p>
+        </div>
+      </div>,
+      renderBottomBar(() => goToPhase('play'), prediction !== null, 'Test Your Reaction')
     );
   };
 
   const renderPlay = () => (
-    <div>
-      {renderSectionHeader('Ruler Drop Test', 'Catch it as fast as you can!')}
+    <div style={{ padding: typo.pagePadding, maxWidth: '700px', margin: '0 auto' }}>
+      {renderSectionHeader('Step 2 • Experiment', 'Ruler Drop Test', 'Catch it as fast as you can!')}
 
       {/* Interactive Controls Panel */}
       <div className="bg-slate-800/50 rounded-xl p-4 mb-4 border border-slate-700/50">
@@ -831,8 +959,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   );
 
   const renderReview = () => (
-    <div>
-      {renderSectionHeader('The Physics of Reaction Time', 'Free fall as a stopwatch')}
+    <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
+      {renderSectionHeader('Step 3 • Understand', 'The Physics of Reaction Time', 'Free fall as a stopwatch')}
 
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 mb-5">
         <div className="text-center mb-4">
@@ -895,14 +1023,14 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
 
   const renderTwistPredict = () => {
     const twistOptions = [
-      { id: 'same', label: 'Distractions don\'t affect reaction time', icon: '=' },
-      { id: 'slower', label: 'Distractions make reaction time slower', icon: '🐢' },
-      { id: 'faster', label: 'Distractions make you more alert (faster)', icon: '⚡' }
+      { id: 'same', label: 'No change', desc: "Distractions don't affect reaction time", icon: '=' },
+      { id: 'slower', label: 'Slower', desc: 'Distractions make reaction time slower', icon: '🐢' },
+      { id: 'faster', label: 'Faster', desc: 'Distractions make you more alert', icon: '⚡' }
     ];
 
     return (
-      <div>
-        {renderSectionHeader('The Distraction Twist', 'What happens when you multitask?')}
+      <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
+        {renderSectionHeader('Step 4 • The Twist', 'What Happens When You Multitask?', 'Predict the effect of distractions')}
 
         <div className="bg-purple-50 rounded-xl p-4 mb-5">
           <p className="text-purple-800">
@@ -943,8 +1071,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   };
 
   const renderTwistPlay = () => (
-    <div>
-      {renderSectionHeader('Distraction Test', 'Catch while multitasking')}
+    <div style={{ padding: typo.pagePadding, maxWidth: '700px', margin: '0 auto' }}>
+      {renderSectionHeader('Step 5 • Twist Experiment', 'Distraction Test', 'Catch the ruler while multitasking')}
 
       <div className="bg-white rounded-2xl shadow-lg p-4 mb-4">
         {renderRulerDrop(true)}
@@ -1051,8 +1179,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   );
 
   const renderTwistReview = () => (
-    <div>
-      {renderSectionHeader('Distraction Effects', 'Why multitasking is dangerous')}
+    <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
+      {renderSectionHeader('Step 6 • Twist Review', 'Distraction Effects', 'Why multitasking is dangerous')}
 
       <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-5 mb-5">
         <svg viewBox="0 0 300 120" className="w-full h-28 mb-4">
@@ -1185,8 +1313,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   ];
 
   const renderTransfer = () => (
-    <div>
-      {renderSectionHeader('Reaction Time Matters', 'From racing to medicine')}
+    <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
+      {renderSectionHeader('Step 7 • Real-World', 'Reaction Time Matters', 'From racing to medicine')}
 
       {completedApps < realWorldApps.length ? (
         <div className="bg-white rounded-2xl shadow-lg overflow-hidden">
@@ -1410,8 +1538,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
     if (showTestResults) {
       const score = calculateTestScore();
       return (
-        <div className="text-center">
-          {renderSectionHeader('Test Results', `You scored ${score}/10`)}
+        <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto', textAlign: 'center' }}>
+          {renderSectionHeader('Step 8 • Results', 'Test Complete', `You scored ${score}/10`)}
 
           <div className="bg-gradient-to-br from-indigo-100 to-purple-100 rounded-2xl p-6 mb-6">
             <div className="text-6xl mb-4">
@@ -1456,8 +1584,8 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
     }
 
     return (
-      <div>
-        {renderSectionHeader('Knowledge Check', `${testAnswers.filter(a => a !== null).length}/10 answered`)}
+      <div style={{ padding: typo.pagePadding, maxWidth: '600px', margin: '0 auto' }}>
+        {renderSectionHeader('Step 8 • Test', 'Knowledge Check', `${testAnswers.filter(a => a !== null).length}/10 answered`)}
 
         <div className="space-y-6 max-h-96 overflow-y-auto mb-4">
           {testQuestions.map((q, qIndex) => (
