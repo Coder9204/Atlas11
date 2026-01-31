@@ -352,49 +352,270 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onP
     const centX = (centerX - carX) / radius * 35 * Math.min(centripetalForce / 5, 2);
     const centY = (centerY - carY) / radius * 35 * Math.min(centripetalForce / 5, 2);
 
+    // Motion trail positions (previous car positions)
+    const trailAngles = [1, 2, 3, 4, 5].map(i => carAngle - i * 12);
+    const trailPositions = trailAngles.map(angle => ({
+      x: centerX + Math.cos(angle * Math.PI / 180) * radius,
+      y: centerY + Math.sin(angle * Math.PI / 180) * radius
+    }));
+
     return (
-      <svg width={size} height={size} className="overflow-visible">
-        <circle cx={centerX} cy={centerY} r={radius + 20} fill="#374151" />
-        <circle cx={centerX} cy={centerY} r={radius - 20} fill="#1e293b" />
-        <circle cx={centerX} cy={centerY} r={radius} fill="none" stroke="#fbbf24" strokeWidth="2" strokeDasharray="10 5" />
-        {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
-          <line key={angle}
-            x1={centerX + Math.cos(angle * Math.PI / 180) * (radius - 15)}
-            y1={centerY + Math.sin(angle * Math.PI / 180) * (radius - 15)}
-            x2={centerX + Math.cos(angle * Math.PI / 180) * (radius + 15)}
-            y2={centerY + Math.sin(angle * Math.PI / 180) * (radius + 15)}
-            stroke="white" strokeWidth="2" />
-        ))}
-        {isSliding && (
-          <g>
-            {[1, 2, 3].map(i => (
-              <circle key={i} cx={carX - centX * 0.2 * i} cy={carY - centY * 0.2 * i} r={4 - i} fill="#ef4444" opacity={0.8 - i * 0.2} />
-            ))}
-            <text x={carX} y={carY - 35} fill="#ef4444" fontSize="11" fontWeight="bold" textAnchor="middle">SLIDING!</text>
+      <div className="relative">
+        <svg width={size} height={size} className="overflow-visible">
+          <defs>
+            {/* Track gradient - outer to inner with depth */}
+            <radialGradient id="centTrackGradient" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="40%" stopColor="#334155" />
+              <stop offset="60%" stopColor="#475569" />
+              <stop offset="80%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </radialGradient>
+
+            {/* Path line gradient */}
+            <linearGradient id="centPathGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+
+            {/* Car body gradient - 3D effect */}
+            <radialGradient id="centCarGradient" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="30%" stopColor="#3b82f6" />
+              <stop offset="60%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </radialGradient>
+
+            {/* Sliding car gradient */}
+            <radialGradient id="centCarSlidingGradient" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="30%" stopColor="#ef4444" />
+              <stop offset="60%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </radialGradient>
+
+            {/* Velocity arrow gradient */}
+            <linearGradient id="centVelocityGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="40%" stopColor="#4ade80" />
+              <stop offset="70%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#16a34a" />
+            </linearGradient>
+
+            {/* Force arrow gradient */}
+            <linearGradient id="centForceGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="40%" stopColor="#f87171" />
+              <stop offset="70%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* Center point gradient */}
+            <radialGradient id="centCenterGradient" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="30%" stopColor="#fde047" />
+              <stop offset="60%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </radialGradient>
+
+            {/* Glow filters */}
+            <filter id="centVelocityGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="centForceGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="centCenterGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="centCarGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow markers with gradients */}
+            <marker id="centArrowVelocity" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
+              <path d="M0,0 L0,8 L12,4 z" fill="url(#centVelocityGradient)" />
+            </marker>
+            <marker id="centArrowForce" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
+              <path d="M0,0 L0,8 L12,4 z" fill="url(#centForceGradient)" />
+            </marker>
+          </defs>
+
+          {/* Track background with gradient */}
+          <circle cx={centerX} cy={centerY} r={radius + 20} fill="url(#centTrackGradient)" />
+          <circle cx={centerX} cy={centerY} r={radius - 20} fill="#0f172a" />
+
+          {/* Path line with gradient */}
+          <circle cx={centerX} cy={centerY} r={radius} fill="none" stroke="url(#centPathGradient)" strokeWidth="3" strokeDasharray="12 6" />
+
+          {/* Road markings with subtle gradient */}
+          {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
+            <line key={angle}
+              x1={centerX + Math.cos(angle * Math.PI / 180) * (radius - 15)}
+              y1={centerY + Math.sin(angle * Math.PI / 180) * (radius - 15)}
+              x2={centerX + Math.cos(angle * Math.PI / 180) * (radius + 15)}
+              y2={centerY + Math.sin(angle * Math.PI / 180) * (radius + 15)}
+              stroke="rgba(255,255,255,0.7)" strokeWidth="2" />
+          ))}
+
+          {/* Motion trail effect */}
+          {trailPositions.map((pos, i) => (
+            <circle
+              key={i}
+              cx={pos.x}
+              cy={pos.y}
+              r={6 - i}
+              fill={isSliding ? '#ef4444' : '#3b82f6'}
+              opacity={0.4 - i * 0.07}
+            />
+          ))}
+
+          {/* Sliding warning particles */}
+          {isSliding && (
+            <g>
+              {[1, 2, 3, 4].map(i => (
+                <circle
+                  key={i}
+                  cx={carX - centX * 0.25 * i}
+                  cy={carY - centY * 0.25 * i}
+                  r={5 - i}
+                  fill="#ef4444"
+                  opacity={0.9 - i * 0.2}
+                  filter="url(#centForceGlow)"
+                />
+              ))}
+            </g>
+          )}
+
+          {/* Car with 3D gradient */}
+          <g transform={`translate(${carX}, ${carY}) rotate(${carAngle + 90})`} filter="url(#centCarGlow)">
+            {/* Car shadow */}
+            <rect x="-9" y="-14" width="18" height="28" rx="4" fill="rgba(0,0,0,0.3)" transform="translate(2, 2)" />
+            {/* Car body */}
+            <rect x="-10" y="-16" width="20" height="32" rx="4" fill={isSliding ? 'url(#centCarSlidingGradient)' : 'url(#centCarGradient)'} />
+            {/* Windshield with reflection */}
+            <rect x="-8" y="-12" width="16" height="10" rx="2" fill="#93c5fd" opacity="0.9" />
+            <rect x="-6" y="-10" width="6" height="6" rx="1" fill="rgba(255,255,255,0.3)" />
+            {/* Wheels with depth */}
+            <rect x="-11" y="-14" width="5" height="7" rx="1" fill="#1f2937" />
+            <rect x="6" y="-14" width="5" height="7" rx="1" fill="#1f2937" />
+            <rect x="-11" y="6" width="5" height="7" rx="1" fill="#1f2937" />
+            <rect x="6" y="6" width="5" height="7" rx="1" fill="#1f2937" />
+            {/* Wheel highlights */}
+            <rect x="-10" y="-13" width="3" height="2" rx="0.5" fill="#374151" />
+            <rect x="7" y="-13" width="3" height="2" rx="0.5" fill="#374151" />
+            <rect x="-10" y="7" width="3" height="2" rx="0.5" fill="#374151" />
+            <rect x="7" y="7" width="3" height="2" rx="0.5" fill="#374151" />
           </g>
-        )}
-        <g transform={`translate(${carX}, ${carY}) rotate(${carAngle + 90})`}>
-          <rect x="-10" y="-16" width="20" height="32" rx="4" fill={isSliding ? '#ef4444' : '#3b82f6'} />
-          <rect x="-8" y="-12" width="16" height="10" rx="2" fill="#93c5fd" />
-          <rect x="-11" y="-14" width="5" height="7" rx="1" fill="#1f2937" />
-          <rect x="6" y="-14" width="5" height="7" rx="1" fill="#1f2937" />
-          <rect x="-11" y="6" width="5" height="7" rx="1" fill="#1f2937" />
-          <rect x="6" y="6" width="5" height="7" rx="1" fill="#1f2937" />
-        </g>
+
+          {/* Vectors with glow effects */}
+          {showVec && (
+            <g>
+              {/* Velocity vector with glow */}
+              <line
+                x1={carX}
+                y1={carY}
+                x2={carX + velX}
+                y2={carY + velY}
+                stroke="url(#centVelocityGradient)"
+                strokeWidth="4"
+                markerEnd="url(#centArrowVelocity)"
+                filter="url(#centVelocityGlow)"
+              />
+
+              {/* Force vector with glow */}
+              <line
+                x1={carX}
+                y1={carY}
+                x2={carX + centX}
+                y2={carY + centY}
+                stroke="url(#centForceGradient)"
+                strokeWidth="4"
+                markerEnd="url(#centArrowForce)"
+                filter="url(#centForceGlow)"
+              />
+
+              {/* Center point with glow */}
+              <circle cx={centerX} cy={centerY} r="8" fill="url(#centCenterGradient)" filter="url(#centCenterGlow)" />
+              <circle cx={centerX} cy={centerY} r="4" fill="#fef08a" />
+            </g>
+          )}
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
         {showVec && (
-          <g>
-            <line x1={carX} y1={carY} x2={carX + velX} y2={carY + velY} stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowGreen)" />
-            <text x={carX + velX * 1.2} y={carY + velY * 1.2} fill="#22c55e" fontSize="12" fontWeight="bold">v</text>
-            <line x1={carX} y1={carY} x2={carX + centX} y2={carY + centY} stroke="#ef4444" strokeWidth="3" markerEnd="url(#arrowRed)" />
-            <text x={(carX + centerX) / 2 - 15} y={(carY + centerY) / 2} fill="#ef4444" fontSize="11" fontWeight="bold">F_c</text>
-            <circle cx={centerX} cy={centerY} r="5" fill="#fbbf24" />
-          </g>
+          <>
+            <div
+              className="absolute font-bold"
+              style={{
+                left: `${carX + velX * 1.3}px`,
+                top: `${carY + velY * 1.3}px`,
+                fontSize: typo.small,
+                color: '#4ade80',
+                textShadow: '0 0 8px rgba(34, 197, 94, 0.6)',
+                transform: 'translate(-50%, -50%)'
+              }}
+            >
+              v
+            </div>
+            <div
+              className="absolute font-bold"
+              style={{
+                left: `${(carX + centerX) / 2}px`,
+                top: `${(carY + centerY) / 2 - 12}px`,
+                fontSize: typo.small,
+                color: '#f87171',
+                textShadow: '0 0 8px rgba(239, 68, 68, 0.6)',
+                transform: 'translate(-50%, -50%)'
+              }}
+            >
+              F_c
+            </div>
+          </>
         )}
-        <defs>
-          <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#22c55e" /></marker>
-          <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto"><path d="M0,0 L0,6 L9,3 z" fill="#ef4444" /></marker>
-        </defs>
-      </svg>
+
+        {/* Sliding warning label */}
+        {isSliding && (
+          <div
+            className="absolute font-bold animate-pulse"
+            style={{
+              left: `${carX}px`,
+              top: `${carY - 40}px`,
+              fontSize: typo.small,
+              color: '#ef4444',
+              textShadow: '0 0 10px rgba(239, 68, 68, 0.8)',
+              transform: 'translate(-50%, -50%)'
+            }}
+          >
+            SLIDING!
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -405,83 +626,268 @@ const CentripetalForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onP
     const ballX = centerX + Math.cos(carAngle * Math.PI / 180) * simRadius;
     const ballY = centerY + Math.sin(carAngle * Math.PI / 180) * simRadius;
 
+    // Motion trail for ball
+    const ballTrailAngles = [1, 2, 3, 4, 5].map(i => carAngle - i * 15);
+    const ballTrailPositions = ballTrailAngles.map(angle => ({
+      x: centerX + Math.cos(angle * Math.PI / 180) * simRadius,
+      y: centerY + Math.sin(angle * Math.PI / 180) * simRadius
+    }));
+
+    // Velocity vector endpoint
+    const velEndX = ballX + Math.cos((carAngle + 90) * Math.PI / 180) * 45;
+    const velEndY = ballY + Math.sin((carAngle + 90) * Math.PI / 180) * 45;
+
     return (
-      <svg width={size} height={size} className="overflow-visible">
-        {/* Background */}
-        <circle cx={centerX} cy={centerY} r={simRadius + 30} fill="#1e293b" />
+      <div className="relative">
+        <svg width={size} height={size} className="overflow-visible">
+          <defs>
+            {/* Background gradient */}
+            <radialGradient id="centTwistBgGradient" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="80%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </radialGradient>
 
-        {/* Path indicator */}
-        <circle cx={centerX} cy={centerY} r={simRadius} fill="none" stroke="#475569" strokeWidth="2" strokeDasharray="5 5" />
+            {/* Path circle gradient */}
+            <linearGradient id="centTwistPathGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="25%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="75%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
 
-        {/* Center point */}
-        <circle cx={centerX} cy={centerY} r="8" fill="#fbbf24" />
+            {/* Ball gradient - 3D sphere effect */}
+            <radialGradient id="centTwistBallGradient" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="25%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </radialGradient>
 
-        {!stringBroken ? (
-          <>
-            {/* String */}
-            <line x1={centerX} y1={centerY} x2={ballX} y2={ballY} stroke="#94a3b8" strokeWidth="3" />
+            {/* Released ball gradient (red) */}
+            <radialGradient id="centTwistBallReleasedGradient" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="25%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </radialGradient>
 
-            {/* Ball */}
-            <circle cx={ballX} cy={ballY} r="15" fill="#3b82f6" />
-            <circle cx={ballX - 4} cy={ballY - 4} r="4" fill="#93c5fd" opacity="0.5" />
+            {/* String gradient */}
+            <linearGradient id="centTwistStringGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="30%" stopColor="#cbd5e1" />
+              <stop offset="50%" stopColor="#f1f5f9" />
+              <stop offset="70%" stopColor="#cbd5e1" />
+              <stop offset="100%" stopColor="#94a3b8" />
+            </linearGradient>
 
-            {/* Velocity vector */}
-            <line
-              x1={ballX}
-              y1={ballY}
-              x2={ballX + Math.cos((carAngle + 90) * Math.PI / 180) * 40}
-              y2={ballY + Math.sin((carAngle + 90) * Math.PI / 180) * 40}
-              stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowGreenTwist)"
-            />
-            <text
-              x={ballX + Math.cos((carAngle + 90) * Math.PI / 180) * 50}
-              y={ballY + Math.sin((carAngle + 90) * Math.PI / 180) * 50}
-              fill="#22c55e" fontSize="14" fontWeight="bold"
-            >v</text>
-          </>
-        ) : (
-          <>
-            {/* Broken string at center */}
-            <line x1={centerX} y1={centerY} x2={centerX + 20} y2={centerY + 10} stroke="#ef4444" strokeWidth="2" />
+            {/* Center pivot gradient */}
+            <radialGradient id="centTwistCenterGradient" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="30%" stopColor="#fde047" />
+              <stop offset="60%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </radialGradient>
 
-            {/* Ball flying tangentially */}
-            <circle
-              cx={ballX + ballPosition.x}
-              cy={ballY + ballPosition.y}
-              r="15"
-              fill="#ef4444"
-            />
-            <circle
-              cx={ballX + ballPosition.x - 4}
-              cy={ballY + ballPosition.y - 4}
-              r="4"
-              fill="#fca5a5"
-              opacity="0.5"
-            />
+            {/* Velocity arrow gradient */}
+            <linearGradient id="centTwistVelocityGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="40%" stopColor="#4ade80" />
+              <stop offset="70%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#16a34a" />
+            </linearGradient>
 
-            {/* Tangent line showing path */}
-            <line
-              x1={ballX}
-              y1={ballY}
-              x2={ballX + Math.cos(releaseAngle) * 100}
-              y2={ballY + Math.sin(releaseAngle) * 100}
-              stroke="#22c55e"
-              strokeWidth="2"
-              strokeDasharray="5 5"
-            />
+            {/* Tangent path gradient */}
+            <linearGradient id="centTwistTangentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#16a34a" stopOpacity="0.3" />
+            </linearGradient>
 
-            <text x={centerX} y={size - 20} fill="#ef4444" fontSize="12" fontWeight="bold" textAnchor="middle">
-              Ball travels in a STRAIGHT LINE!
-            </text>
-          </>
+            {/* Glow filters */}
+            <filter id="centTwistBallGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="centTwistCenterGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="centTwistVelocityGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow marker */}
+            <marker id="centTwistArrowVelocity" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
+              <path d="M0,0 L0,8 L12,4 z" fill="url(#centTwistVelocityGradient)" />
+            </marker>
+          </defs>
+
+          {/* Background with gradient */}
+          <circle cx={centerX} cy={centerY} r={simRadius + 30} fill="url(#centTwistBgGradient)" />
+
+          {/* Path indicator with gradient */}
+          <circle cx={centerX} cy={centerY} r={simRadius} fill="none" stroke="url(#centTwistPathGradient)" strokeWidth="2" strokeDasharray="6 4" />
+
+          {/* Center pivot point with glow */}
+          <circle cx={centerX} cy={centerY} r="10" fill="url(#centTwistCenterGradient)" filter="url(#centTwistCenterGlow)" />
+          <circle cx={centerX} cy={centerY} r="5" fill="#fef08a" />
+
+          {!stringBroken ? (
+            <>
+              {/* Motion trail */}
+              {ballTrailPositions.map((pos, i) => (
+                <circle
+                  key={i}
+                  cx={pos.x}
+                  cy={pos.y}
+                  r={8 - i * 1.2}
+                  fill="#3b82f6"
+                  opacity={0.4 - i * 0.07}
+                />
+              ))}
+
+              {/* String with gradient and shadow */}
+              <line
+                x1={centerX}
+                y1={centerY}
+                x2={ballX}
+                y2={ballY}
+                stroke="rgba(0,0,0,0.3)"
+                strokeWidth="4"
+                transform="translate(1, 1)"
+              />
+              <line
+                x1={centerX}
+                y1={centerY}
+                x2={ballX}
+                y2={ballY}
+                stroke="url(#centTwistStringGradient)"
+                strokeWidth="3"
+              />
+
+              {/* Ball with 3D gradient and glow */}
+              <circle cx={ballX} cy={ballY} r="16" fill="url(#centTwistBallGradient)" filter="url(#centTwistBallGlow)" />
+              {/* Highlight reflection */}
+              <ellipse cx={ballX - 5} cy={ballY - 5} rx="5" ry="4" fill="rgba(255,255,255,0.4)" />
+
+              {/* Velocity vector with glow */}
+              <line
+                x1={ballX}
+                y1={ballY}
+                x2={velEndX}
+                y2={velEndY}
+                stroke="url(#centTwistVelocityGradient)"
+                strokeWidth="4"
+                markerEnd="url(#centTwistArrowVelocity)"
+                filter="url(#centTwistVelocityGlow)"
+              />
+            </>
+          ) : (
+            <>
+              {/* Broken string pieces at center */}
+              <line x1={centerX} y1={centerY} x2={centerX + 15} y2={centerY + 8} stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
+              <line x1={centerX} y1={centerY} x2={centerX - 12} y2={centerY + 10} stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
+
+              {/* Trail of flying ball */}
+              {[1, 2, 3, 4, 5].map(i => (
+                <circle
+                  key={i}
+                  cx={ballX + ballPosition.x - Math.cos(releaseAngle) * 8 * i}
+                  cy={ballY + ballPosition.y - Math.sin(releaseAngle) * 8 * i}
+                  r={10 - i * 1.5}
+                  fill="#ef4444"
+                  opacity={0.5 - i * 0.08}
+                />
+              ))}
+
+              {/* Ball flying tangentially with glow */}
+              <circle
+                cx={ballX + ballPosition.x}
+                cy={ballY + ballPosition.y}
+                r="16"
+                fill="url(#centTwistBallReleasedGradient)"
+                filter="url(#centTwistBallGlow)"
+              />
+              <ellipse
+                cx={ballX + ballPosition.x - 5}
+                cy={ballY + ballPosition.y - 5}
+                rx="5"
+                ry="4"
+                fill="rgba(255,255,255,0.3)"
+              />
+
+              {/* Tangent line showing straight path */}
+              <line
+                x1={ballX}
+                y1={ballY}
+                x2={ballX + Math.cos(releaseAngle) * 120}
+                y2={ballY + Math.sin(releaseAngle) * 120}
+                stroke="url(#centTwistTangentGradient)"
+                strokeWidth="3"
+                strokeDasharray="8 4"
+                filter="url(#centTwistVelocityGlow)"
+              />
+
+              {/* Release point marker */}
+              <circle cx={ballX} cy={ballY} r="6" fill="#22c55e" opacity="0.6" />
+            </>
+          )}
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        {!stringBroken && (
+          <div
+            className="absolute font-bold"
+            style={{
+              left: `${velEndX + Math.cos((carAngle + 90) * Math.PI / 180) * 12}px`,
+              top: `${velEndY + Math.sin((carAngle + 90) * Math.PI / 180) * 12}px`,
+              fontSize: typo.body,
+              color: '#4ade80',
+              textShadow: '0 0 8px rgba(34, 197, 94, 0.6)',
+              transform: 'translate(-50%, -50%)'
+            }}
+          >
+            v
+          </div>
         )}
 
-        <defs>
-          <marker id="arrowGreenTwist" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#22c55e" />
-          </marker>
-        </defs>
-      </svg>
+        {stringBroken && (
+          <div
+            className="absolute font-bold text-center"
+            style={{
+              left: '50%',
+              bottom: '8px',
+              fontSize: typo.small,
+              color: '#f87171',
+              textShadow: '0 0 10px rgba(239, 68, 68, 0.6)',
+              transform: 'translateX(-50%)',
+              whiteSpace: 'nowrap'
+            }}
+          >
+            Ball travels in a STRAIGHT LINE!
+          </div>
+        )}
+      </div>
     );
   };
 

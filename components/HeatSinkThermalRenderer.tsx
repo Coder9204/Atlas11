@@ -393,76 +393,336 @@ const HeatSinkThermalRenderer: React.FC<HeatSinkThermalRendererProps> = ({
     const finWidth = Math.max(2, (baseWidth - 20) / finCount);
     const finSpacing = (baseWidth - finWidth * finCount) / (finCount + 1);
 
+    // Temperature-based color for heat flow visualization
+    const heatColor = cpuTemp < 50 ? '#22c55e' : cpuTemp < 70 ? '#eab308' : cpuTemp < 85 ? '#f97316' : '#ef4444';
+    const heatColorLight = cpuTemp < 50 ? '#4ade80' : cpuTemp < 70 ? '#facc15' : cpuTemp < 85 ? '#fb923c' : '#f87171';
+
     return (
-      <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto">
-        <defs>
-          <linearGradient id="heatGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor={getTempColor(cpuTemp)} />
-            <stop offset="100%" stopColor={getTempColor(cpuTemp - 20)} />
-          </linearGradient>
-          <linearGradient id="finGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#6b7280" />
-            <stop offset="100%" stopColor="#9ca3af" />
-          </linearGradient>
-        </defs>
+      <div style={{ display: 'flex', flexDirection: 'column', gap: typo.elementGap }}>
+        <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto">
+          <defs>
+            {/* Premium lab background gradient */}
+            <linearGradient id="hsinkLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0a0f1a" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-        {/* CPU Die */}
-        <rect x="170" y="240" width="60" height="20" fill={getTempColor(cpuTemp)} stroke="#1f2937" strokeWidth="2" />
-        <text x="200" y="255" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold">CPU</text>
+            {/* CPU die gradient with heat glow */}
+            <linearGradient id="hsinkCpuDie" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor={heatColor} />
+              <stop offset="25%" stopColor={heatColorLight} />
+              <stop offset="50%" stopColor={heatColor} />
+              <stop offset="75%" stopColor={heatColorLight} />
+              <stop offset="100%" stopColor={heatColor} stopOpacity="0.9" />
+            </linearGradient>
 
-        {/* Thermal Paste Layer */}
-        <rect x="160" y="232" width="80" height="8" fill={thermalPaste === 'none' ? '#374151' : thermalPaste === 'cheap' ? '#6b7280' : '#a855f7'} />
-        <text x="280" y="238" fontSize="9" fill="#9ca3af">TIM: {thermalResistance.R_tim.toFixed(2)} K/W</text>
+            {/* Aluminum heatsink base - brushed metal effect */}
+            <linearGradient id="hsinkAluminumBase" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="15%" stopColor="#9ca3af" />
+              <stop offset="30%" stopColor="#6b7280" />
+              <stop offset="50%" stopColor="#d1d5db" />
+              <stop offset="70%" stopColor="#6b7280" />
+              <stop offset="85%" stopColor="#9ca3af" />
+              <stop offset="100%" stopColor="#6b7280" />
+            </linearGradient>
 
-        {/* Heatsink Base */}
-        <rect x="100" y="220" width={baseWidth} height="12" fill="#4b5563" stroke="#374151" strokeWidth="1" />
+            {/* Premium aluminum fin gradient - metallic sheen */}
+            <linearGradient id="hsinkFinMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#9ca3af" />
+              <stop offset="20%" stopColor="#d1d5db" />
+              <stop offset="40%" stopColor="#9ca3af" />
+              <stop offset="60%" stopColor="#6b7280" />
+              <stop offset="80%" stopColor="#9ca3af" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
 
-        {/* Fins */}
-        {Array.from({ length: finCount }).map((_, i) => {
-          const x = 100 + finSpacing + i * (finWidth + finSpacing);
-          const heatIntensity = Math.max(0.3, 1 - (i / finCount) * 0.5);
-          return (
-            <rect
-              key={i}
-              x={x}
-              y={220 - finHeight * 2}
-              width={finWidth}
-              height={finHeight * 2}
-              fill={`rgba(107, 114, 128, ${heatIntensity})`}
-              stroke="#374151"
-              strokeWidth="0.5"
-            />
-          );
-        })}
+            {/* Thermal paste gradients */}
+            <linearGradient id="hsinkTIMNone" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+            <linearGradient id="hsinkTIMCheap" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="30%" stopColor="#9ca3af" />
+              <stop offset="70%" stopColor="#9ca3af" />
+              <stop offset="100%" stopColor="#6b7280" />
+            </linearGradient>
+            <linearGradient id="hsinkTIMPremium" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7c3aed" />
+              <stop offset="25%" stopColor="#a855f7" />
+              <stop offset="50%" stopColor="#c084fc" />
+              <stop offset="75%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#7c3aed" />
+            </linearGradient>
 
-        {/* Airflow arrows */}
-        {fanSpeed > 0 && Array.from({ length: 5 }).map((_, i) => {
-          const x = 80 + ((animationFrame * (fanSpeed / 30) + i * 60) % 240);
-          return (
-            <g key={i} transform={`translate(${x}, ${180 - finHeight})`}>
-              <path d="M0,0 L15,0 L12,-4 M15,0 L12,4" fill="none" stroke="#60a5fa" strokeWidth="2" opacity={fanSpeed / 100} />
-            </g>
-          );
-        })}
+            {/* Airflow gradient */}
+            <linearGradient id="hsinkAirflow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0" />
+              <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#93c5fd" stopOpacity="1" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.4" />
+            </linearGradient>
 
-        {/* Temperature display */}
-        <rect x="310" y="180" width="70" height="80" fill="#1f2937" rx="5" />
-        <text x="345" y="205" textAnchor="middle" fontSize="12" fill="#9ca3af">CPU Temp</text>
-        <text x="345" y="235" textAnchor="middle" fontSize="24" fill={getTempColor(cpuTemp)} fontWeight="bold">{cpuTemp.toFixed(0)}°C</text>
-        <text x="345" y="252" textAnchor="middle" fontSize="10" fill="#6b7280">{cpuTemp < 70 ? 'Safe' : cpuTemp < 85 ? 'Warm' : 'HOT!'}</text>
+            {/* Heat flow visualization gradient */}
+            <linearGradient id="hsinkHeatFlow" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor={heatColor} stopOpacity="0.9" />
+              <stop offset="30%" stopColor={heatColorLight} stopOpacity="0.6" />
+              <stop offset="60%" stopColor={heatColor} stopOpacity="0.3" />
+              <stop offset="100%" stopColor={heatColorLight} stopOpacity="0.1" />
+            </linearGradient>
 
-        {/* Thermal resistance chain */}
-        <text x="20" y="30" fontSize="11" fill="#e5e7eb" fontWeight="bold">Thermal Chain (Series):</text>
-        <text x="20" y="50" fontSize="9" fill="#9ca3af">R_junction: {thermalResistance.R_jc.toFixed(2)} K/W</text>
-        <text x="20" y="65" fontSize="9" fill="#9ca3af">R_TIM: {thermalResistance.R_tim.toFixed(2)} K/W</text>
-        <text x="20" y="80" fontSize="9" fill="#9ca3af">R_base: {thermalResistance.R_base.toFixed(2)} K/W</text>
-        <text x="20" y="95" fontSize="9" fill="#9ca3af">R_fins: {thermalResistance.R_fins.toFixed(2)} K/W</text>
-        <text x="20" y="115" fontSize="10" fill="#22d3ee" fontWeight="bold">Total: {thermalResistance.total.toFixed(2)} K/W</text>
+            {/* Temperature display panel gradient */}
+            <linearGradient id="hsinkTempPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
 
-        {/* Power indicator */}
-        <text x="20" y="140" fontSize="10" fill="#f59e0b">Power: {cpuPower}W</text>
-        <text x="20" y="155" fontSize="9" fill="#9ca3af">deltaT = P x R = {(cpuPower * thermalResistance.total).toFixed(1)}°C</text>
-      </svg>
+            {/* CPU glow filter */}
+            <filter id="hsinkCpuGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Heat wave glow */}
+            <filter id="hsinkHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Airflow blur */}
+            <filter id="hsinkAirBlur" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Metallic highlight filter */}
+            <filter id="hsinkMetalShine">
+              <feGaussianBlur stdDeviation="0.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          {/* Premium dark background */}
+          <rect width="400" height="300" fill="url(#hsinkLabBg)" />
+
+          {/* Heat flow waves rising from CPU */}
+          {Array.from({ length: 5 }).map((_, i) => {
+            const yOffset = (animationFrame * 0.5 + i * 25) % 100;
+            const opacity = Math.max(0, 1 - yOffset / 100) * (cpuPower / 200);
+            return (
+              <ellipse
+                key={`heat-wave-${i}`}
+                cx="200"
+                cy={235 - yOffset}
+                rx={15 + i * 5}
+                ry={3 + i}
+                fill="url(#hsinkHeatFlow)"
+                opacity={opacity * 0.5}
+                filter="url(#hsinkHeatGlow)"
+              />
+            );
+          })}
+
+          {/* CPU Die with glow effect */}
+          <rect
+            x="170"
+            y="240"
+            width="60"
+            height="20"
+            fill="url(#hsinkCpuDie)"
+            stroke="#1f2937"
+            strokeWidth="2"
+            rx="2"
+            filter="url(#hsinkCpuGlow)"
+          />
+          {/* CPU die inner glow */}
+          <rect
+            x="175"
+            y="245"
+            width="50"
+            height="10"
+            fill={heatColorLight}
+            opacity="0.4"
+            rx="1"
+          />
+
+          {/* Thermal Paste Layer with appropriate gradient */}
+          <rect
+            x="160"
+            y="232"
+            width="80"
+            height="8"
+            fill={thermalPaste === 'none' ? 'url(#hsinkTIMNone)' : thermalPaste === 'cheap' ? 'url(#hsinkTIMCheap)' : 'url(#hsinkTIMPremium)'}
+            rx="1"
+          />
+
+          {/* Heatsink Base - brushed aluminum */}
+          <rect
+            x="100"
+            y="220"
+            width={baseWidth}
+            height="12"
+            fill="url(#hsinkAluminumBase)"
+            stroke="#374151"
+            strokeWidth="1"
+            filter="url(#hsinkMetalShine)"
+          />
+          {/* Base highlight */}
+          <rect
+            x="100"
+            y="220"
+            width={baseWidth}
+            height="3"
+            fill="rgba(255,255,255,0.15)"
+          />
+
+          {/* Fins with metallic gradient and heat coloring */}
+          {Array.from({ length: finCount }).map((_, i) => {
+            const x = 100 + finSpacing + i * (finWidth + finSpacing);
+            const heatIntensity = Math.max(0.2, 1 - (i / finCount) * 0.6);
+            const centerDistance = Math.abs(i - finCount / 2) / (finCount / 2);
+
+            return (
+              <g key={i}>
+                {/* Fin body with metallic gradient */}
+                <rect
+                  x={x}
+                  y={220 - finHeight * 2}
+                  width={finWidth}
+                  height={finHeight * 2}
+                  fill="url(#hsinkFinMetal)"
+                  stroke="#374151"
+                  strokeWidth="0.5"
+                  opacity={0.7 + heatIntensity * 0.3}
+                />
+                {/* Heat overlay on fin */}
+                <rect
+                  x={x}
+                  y={220 - finHeight * 2}
+                  width={finWidth}
+                  height={finHeight * 2}
+                  fill={heatColor}
+                  opacity={heatIntensity * 0.25 * (1 - centerDistance * 0.5)}
+                />
+                {/* Fin highlight */}
+                <rect
+                  x={x}
+                  y={220 - finHeight * 2}
+                  width={finWidth * 0.3}
+                  height={finHeight * 2}
+                  fill="rgba(255,255,255,0.1)"
+                />
+              </g>
+            );
+          })}
+
+          {/* Airflow arrows with gradient and animation */}
+          {fanSpeed > 0 && Array.from({ length: 6 }).map((_, i) => {
+            const x = 70 + ((animationFrame * (fanSpeed / 25) + i * 50) % 260);
+            const yBase = 180 - finHeight;
+            const yWave = Math.sin((animationFrame * 0.1 + i) * 0.5) * 3;
+            return (
+              <g key={`airflow-${i}`} transform={`translate(${x}, ${yBase + yWave})`} filter="url(#hsinkAirBlur)">
+                <path
+                  d="M0,0 L20,0 L16,-5 M20,0 L16,5"
+                  fill="none"
+                  stroke="url(#hsinkAirflow)"
+                  strokeWidth="2.5"
+                  opacity={(fanSpeed / 100) * 0.9}
+                  strokeLinecap="round"
+                />
+              </g>
+            );
+          })}
+
+          {/* Temperature display panel */}
+          <rect x="310" y="175" width="80" height="95" fill="url(#hsinkTempPanel)" rx="8" stroke="#334155" strokeWidth="1" />
+          {/* Inner glow for panel */}
+          <rect x="315" y="180" width="70" height="85" fill="none" rx="6" stroke={heatColor} strokeWidth="1" opacity="0.3" />
+        </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          padding: `0 ${typo.cardPadding}`,
+          gap: typo.elementGap
+        }}>
+          {/* Thermal Chain Info */}
+          <div style={{
+            backgroundColor: 'rgba(15, 23, 42, 0.8)',
+            borderRadius: '8px',
+            padding: typo.cardPadding,
+            border: '1px solid #334155',
+            flex: 1
+          }}>
+            <div style={{ fontSize: typo.body, fontWeight: 700, color: '#e5e7eb', marginBottom: '8px' }}>
+              Thermal Chain (Series)
+            </div>
+            <div style={{ fontSize: typo.small, color: '#9ca3af', lineHeight: 1.6 }}>
+              <div>R_junction: {thermalResistance.R_jc.toFixed(2)} K/W</div>
+              <div>R_TIM: {thermalResistance.R_tim.toFixed(2)} K/W</div>
+              <div>R_base: {thermalResistance.R_base.toFixed(2)} K/W</div>
+              <div>R_fins: {thermalResistance.R_fins.toFixed(2)} K/W</div>
+              <div style={{ fontSize: typo.body, color: '#22d3ee', fontWeight: 700, marginTop: '4px' }}>
+                Total: {thermalResistance.total.toFixed(2)} K/W
+              </div>
+            </div>
+          </div>
+
+          {/* Temperature Display */}
+          <div style={{
+            backgroundColor: 'rgba(15, 23, 42, 0.8)',
+            borderRadius: '8px',
+            padding: typo.cardPadding,
+            border: `1px solid ${heatColor}40`,
+            textAlign: 'center',
+            minWidth: '100px'
+          }}>
+            <div style={{ fontSize: typo.small, color: '#9ca3af', marginBottom: '4px' }}>CPU Temp</div>
+            <div style={{ fontSize: typo.heading, fontWeight: 700, color: heatColor }}>
+              {cpuTemp.toFixed(0)}°C
+            </div>
+            <div style={{ fontSize: typo.label, color: '#6b7280', marginTop: '2px' }}>
+              {cpuTemp < 70 ? 'Safe' : cpuTemp < 85 ? 'Warm' : 'HOT!'}
+            </div>
+          </div>
+
+          {/* Power Info */}
+          <div style={{
+            backgroundColor: 'rgba(15, 23, 42, 0.8)',
+            borderRadius: '8px',
+            padding: typo.cardPadding,
+            border: '1px solid #334155',
+            flex: 1
+          }}>
+            <div style={{ fontSize: typo.body, color: '#f59e0b', fontWeight: 600 }}>
+              Power: {cpuPower}W
+            </div>
+            <div style={{ fontSize: typo.small, color: '#9ca3af', marginTop: '4px' }}>
+              deltaT = P x R
+            </div>
+            <div style={{ fontSize: typo.small, color: '#9ca3af' }}>
+              = {(cpuPower * thermalResistance.total).toFixed(1)}°C
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 

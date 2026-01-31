@@ -629,6 +629,10 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
     const svgHeight = 300;
     const groundY = 50 + cliffHeight;
 
+    // Calculate ball positions clamped to ground
+    const droppedBallY = Math.min(droppedBall.y, groundY);
+    const thrownBallY = Math.min(thrownBall.y, groundY);
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: `${design.space.lg}px` }}>
         <svg width={svgWidth} height={svgHeight} style={{
@@ -636,30 +640,143 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
           borderRadius: `${design.radius.lg}px`,
           border: `1px solid ${design.colors.border}`
         }}>
-          {/* Sky gradient */}
+          {/* Premium defs section with gradients and filters */}
           <defs>
-            <linearGradient id="sky" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e3a5f" />
+            {/* Sky gradient with depth */}
+            <linearGradient id="projSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="30%" stopColor="#1e3a5f" />
+              <stop offset="70%" stopColor="#1e293b" />
               <stop offset="100%" stopColor={design.colors.bgSecondary} />
             </linearGradient>
+
+            {/* Ground gradient with depth */}
+            <linearGradient id="projGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#134e3a" />
+              <stop offset="40%" stopColor="#1e4d3d" />
+              <stop offset="100%" stopColor="#14352a" />
+            </linearGradient>
+
+            {/* Cliff/table gradient with 3D effect */}
+            <linearGradient id="projCliffGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1a1a24" />
+              <stop offset="50%" stopColor="#22222e" />
+              <stop offset="100%" stopColor="#2a2a36" />
+            </linearGradient>
+
+            {/* Dropped ball (red) 3D gradient */}
+            <radialGradient id="projDroppedBallGradient" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor={design.colors.error} />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </radialGradient>
+
+            {/* Thrown ball (green) 3D gradient */}
+            <radialGradient id="projThrownBallGradient" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="50%" stopColor={design.colors.accent} />
+              <stop offset="100%" stopColor="#15803d" />
+            </radialGradient>
+
+            {/* Glow filter for dropped ball (red) */}
+            <filter id="projDroppedGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glow filter for thrown ball (green) */}
+            <filter id="projThrownGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Trajectory glow filter */}
+            <filter id="projTrailGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Motion blur filter for projectiles */}
+            <filter id="projMotionBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation={isSimulating ? "2,0" : "0"} />
+            </filter>
+
+            {/* Arrowhead marker with gradient fill */}
+            <marker id="projArrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill={design.colors.accent} />
+            </marker>
+
+            {/* Ground line highlight */}
+            <linearGradient id="projGroundLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0" />
+              <stop offset="20%" stopColor="#22c55e" stopOpacity="0.5" />
+              <stop offset="80%" stopColor="#22c55e" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+            </linearGradient>
           </defs>
-          <rect x="0" y="0" width={svgWidth} height={groundY} fill="url(#sky)" />
 
-          {/* Ground */}
-          <rect x="0" y={groundY} width={svgWidth} height={svgHeight - groundY} fill="#1e4d3d" />
+          {/* Sky with premium gradient */}
+          <rect x="0" y="0" width={svgWidth} height={groundY} fill="url(#projSkyGradient)" />
 
-          {/* Cliff/table */}
-          <rect x="0" y="0" width="120" height={groundY} fill={design.colors.bgSecondary} stroke={design.colors.border} strokeWidth="2" />
+          {/* Grid lines for measurement */}
+          {Array.from({ length: Math.floor(svgWidth / 50) }).map((_, i) => (
+            <line
+              key={`vgrid-${i}`}
+              x1={(i + 1) * 50}
+              y1="0"
+              x2={(i + 1) * 50}
+              y2={groundY}
+              stroke={design.colors.border}
+              strokeWidth="1"
+              strokeDasharray="2,6"
+              opacity="0.3"
+            />
+          ))}
+          {Array.from({ length: Math.floor(groundY / 50) }).map((_, i) => (
+            <line
+              key={`hgrid-${i}`}
+              x1="120"
+              y1={(i + 1) * 50}
+              x2={svgWidth}
+              y2={(i + 1) * 50}
+              stroke={design.colors.border}
+              strokeWidth="1"
+              strokeDasharray="2,6"
+              opacity="0.3"
+            />
+          ))}
 
-          {/* Trails */}
+          {/* Ground with premium gradient */}
+          <rect x="0" y={groundY} width={svgWidth} height={svgHeight - groundY} fill="url(#projGroundGradient)" />
+
+          {/* Ground surface highlight line */}
+          <line x1="0" y1={groundY} x2={svgWidth} y2={groundY} stroke="url(#projGroundLine)" strokeWidth="2" />
+
+          {/* Cliff/table with 3D gradient */}
+          <rect x="0" y="0" width="120" height={groundY} fill="url(#projCliffGradient)" stroke={design.colors.borderLight} strokeWidth="1" />
+          {/* Cliff edge highlight */}
+          <line x1="120" y1="0" x2="120" y2={groundY} stroke={design.colors.borderLight} strokeWidth="2" />
+
+          {/* Trails with glow effect */}
           {showTrails && trails.dropped.length > 1 && (
             <polyline
               points={trails.dropped.map(p => `${p.x},${p.y}`).join(' ')}
               fill="none"
               stroke={design.colors.error}
-              strokeWidth="2"
-              strokeDasharray="4,4"
-              opacity="0.7"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity="0.8"
+              filter="url(#projTrailGlow)"
             />
           )}
           {showTrails && trails.thrown.length > 1 && (
@@ -667,65 +784,146 @@ const ProjectileIndependenceRenderer: React.FC<ProjectileIndependenceRendererPro
               points={trails.thrown.map(p => `${p.x},${p.y}`).join(' ')}
               fill="none"
               stroke={design.colors.accent}
-              strokeWidth="2"
-              strokeDasharray="4,4"
-              opacity="0.7"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              opacity="0.8"
+              filter="url(#projTrailGlow)"
             />
           )}
 
-          {/* Dropped ball (red) */}
-          <circle cx={droppedBall.x} cy={Math.min(droppedBall.y, groundY)} r="12" fill={design.colors.error} stroke={design.colors.textPrimary} strokeWidth="2" />
-          <text x={droppedBall.x - 20} y={Math.min(droppedBall.y, groundY) - 18} fill={design.colors.error} fontSize="11" fontWeight="bold">
-            Dropped
-          </text>
+          {/* Dropped ball with 3D gradient, glow, and motion blur */}
+          <circle
+            cx={droppedBall.x}
+            cy={droppedBallY}
+            r="14"
+            fill="url(#projDroppedBallGradient)"
+            filter={isSimulating && !droppedLanded ? "url(#projMotionBlur)" : "url(#projDroppedGlow)"}
+          />
+          {/* Highlight on dropped ball */}
+          <circle
+            cx={droppedBall.x - 4}
+            cy={droppedBallY - 4}
+            r="4"
+            fill="white"
+            opacity="0.3"
+          />
 
-          {/* Thrown ball (green) */}
-          <circle cx={thrownBall.x} cy={Math.min(thrownBall.y, groundY)} r="12" fill={design.colors.accent} stroke={design.colors.textPrimary} strokeWidth="2" />
-          <text x={thrownBall.x - 15} y={Math.min(thrownBall.y, groundY) - 18} fill={design.colors.accent} fontSize="11" fontWeight="bold">
-            Thrown
-          </text>
+          {/* Thrown ball with 3D gradient, glow, and motion blur */}
+          <circle
+            cx={thrownBall.x}
+            cy={thrownBallY}
+            r="14"
+            fill="url(#projThrownBallGradient)"
+            filter={isSimulating && !thrownLanded ? "url(#projMotionBlur)" : "url(#projThrownGlow)"}
+          />
+          {/* Highlight on thrown ball */}
+          <circle
+            cx={thrownBall.x - 4}
+            cy={thrownBallY - 4}
+            r="4"
+            fill="white"
+            opacity="0.3"
+          />
 
           {/* Velocity arrow for thrown ball */}
           {!isSimulating && (
-            <line
-              x1={thrownBall.x + 15}
-              y1={thrownBall.y}
-              x2={thrownBall.x + 15 + horizontalSpeed * 0.4}
-              y2={thrownBall.y}
-              stroke={design.colors.accent}
-              strokeWidth="2"
-              markerEnd="url(#arrowhead)"
-            />
-          )}
-          <defs>
-            <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill={design.colors.accent} />
-            </marker>
-          </defs>
-
-          {/* Time display */}
-          <text x="10" y="25" fill={design.colors.textPrimary} fontSize="14" fontWeight="bold">
-            t = {time.toFixed(2)}s
-          </text>
-
-          {/* Landing indicators */}
-          {droppedLanded && (
-            <text x={droppedBall.x - 10} y={groundY + 20} fill={design.colors.error} fontSize="11">
-              Landed
-            </text>
-          )}
-          {thrownLanded && (
-            <text x={thrownBall.x - 10} y={groundY + 35} fill={design.colors.accent} fontSize="11">
-              Landed at x={Math.round(thrownBall.x)}
-            </text>
+            <>
+              {/* Arrow glow */}
+              <line
+                x1={thrownBall.x + 17}
+                y1={thrownBall.y}
+                x2={thrownBall.x + 17 + horizontalSpeed * 0.4}
+                y2={thrownBall.y}
+                stroke={design.colors.accent}
+                strokeWidth="6"
+                opacity="0.3"
+                strokeLinecap="round"
+              />
+              {/* Arrow main */}
+              <line
+                x1={thrownBall.x + 17}
+                y1={thrownBall.y}
+                x2={thrownBall.x + 17 + horizontalSpeed * 0.4}
+                y2={thrownBall.y}
+                stroke={design.colors.accent}
+                strokeWidth="3"
+                strokeLinecap="round"
+                markerEnd="url(#projArrowhead)"
+              />
+            </>
           )}
 
-          {/* Height indicator */}
-          <line x1="125" y1="50" x2="125" y2={groundY} stroke={design.colors.textTertiary} strokeDasharray="4,4" />
-          <text x="130" y={50 + cliffHeight / 2} fill={design.colors.textTertiary} fontSize="11">
-            h = {cliffHeight}px
-          </text>
+          {/* Height indicator with improved styling */}
+          <line x1="128" y1="50" x2="128" y2={groundY} stroke={design.colors.textTertiary} strokeWidth="1" strokeDasharray="4,4" opacity="0.6" />
+          <line x1="124" y1="50" x2="132" y2="50" stroke={design.colors.textTertiary} strokeWidth="1" opacity="0.6" />
+          <line x1="124" y1={groundY} x2="132" y2={groundY} stroke={design.colors.textTertiary} strokeWidth="1" opacity="0.6" />
         </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: `${svgWidth}px`,
+          marginTop: `-${design.space.sm}px`
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: `${design.space.sm}px` }}>
+            <span style={{
+              fontSize: typo.label,
+              fontWeight: 700,
+              color: design.colors.textPrimary,
+              background: design.colors.bgSecondary,
+              padding: `${design.space.xs}px ${design.space.sm}px`,
+              borderRadius: `${design.radius.sm}px`,
+              border: `1px solid ${design.colors.border}`
+            }}>
+              t = {time.toFixed(2)}s
+            </span>
+            <span style={{
+              fontSize: typo.label,
+              color: design.colors.textTertiary
+            }}>
+              h = {cliffHeight}px
+            </span>
+          </div>
+          <div style={{ display: 'flex', gap: `${design.space.md}px` }}>
+            <span style={{
+              fontSize: typo.label,
+              fontWeight: 600,
+              color: design.colors.error,
+              display: 'flex',
+              alignItems: 'center',
+              gap: `${design.space.xs}px`
+            }}>
+              <span style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: design.colors.error,
+                boxShadow: `0 0 6px ${design.colors.error}`
+              }} />
+              Dropped {droppedLanded && '(Landed)'}
+            </span>
+            <span style={{
+              fontSize: typo.label,
+              fontWeight: 600,
+              color: design.colors.accent,
+              display: 'flex',
+              alignItems: 'center',
+              gap: `${design.space.xs}px`
+            }}>
+              <span style={{
+                width: '8px',
+                height: '8px',
+                borderRadius: '50%',
+                background: design.colors.accent,
+                boxShadow: `0 0 6px ${design.colors.accent}`
+              }} />
+              Thrown {thrownLanded && `(x=${Math.round(thrownBall.x)})`}
+            </span>
+          </div>
+        </div>
 
         {showControls && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: `${design.space.md}px`, width: '100%', maxWidth: '400px' }}>

@@ -633,12 +633,16 @@ export default function DiffractionRenderer() {
   );
 
   // =============================================================================
-  // DIFFRACTION VISUALIZATION
+  // DIFFRACTION VISUALIZATION - PREMIUM QUALITY
   // =============================================================================
   const renderDiffractionVisualization = useCallback(() => {
     const width = isMobile ? 340 : 500;
     const height = isMobile ? 380 : 450;
     const laserColor = WAVELENGTHS[wavelength].color;
+
+    // Derive lighter/darker variants for gradients
+    const laserColorLight = wavelength === 'red' ? '#FF6B6B' : wavelength === 'green' ? '#4ADE80' : '#60A5FA';
+    const laserColorDark = wavelength === 'red' ? '#B91C1C' : wavelength === 'green' ? '#15803D' : '#1D4ED8';
 
     // Positions
     const laserX = 30;
@@ -650,6 +654,9 @@ export default function DiffractionRenderer() {
     const patternHeight = height * 0.7;
     const patternTop = height * 0.15;
 
+    // Distance measurement
+    const slitToScreen = screenX - slitX;
+
     return (
       <div
         style={{
@@ -659,144 +666,349 @@ export default function DiffractionRenderer() {
           gap: defined.spacing.md,
         }}
       >
+        {/* Title moved outside SVG using typo system */}
+        <div
+          style={{
+            fontSize: typo.body,
+            fontWeight: defined.typography.weights.semibold,
+            color: defined.colors.text.secondary,
+            textAlign: 'center',
+          }}
+        >
+          {slitMode === 'single' ? 'Single Slit' : 'Double Slit'} Diffraction
+        </div>
+
         <svg width={width} height={height} style={{ overflow: 'visible' }}>
           <defs>
-            {/* Laser glow */}
-            <filter id="laserGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+            {/* Premium laser glow filter */}
+            <filter id="diffLaserGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur1" />
+              <feGaussianBlur stdDeviation="3" result="blur2" />
               <feMerge>
-                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
 
-            {/* Screen gradient based on pattern */}
-            <linearGradient id="patternGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            {/* Wave glow filter */}
+            <filter id="diffWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Screen glow filter for interference pattern */}
+            <filter id="diffScreenGlow" x="-100%" y="-20%" width="300%" height="140%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Intensity bloom filter */}
+            <filter id="diffIntensityBloom" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="bloom" />
+              <feBlend in="SourceGraphic" in2="bloom" mode="screen" />
+            </filter>
+
+            {/* Metal gradient for slit barrier */}
+            <linearGradient id="diffMetalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1F2937" />
+              <stop offset="15%" stopColor="#374151" />
+              <stop offset="30%" stopColor="#4B5563" />
+              <stop offset="50%" stopColor="#6B7280" />
+              <stop offset="70%" stopColor="#4B5563" />
+              <stop offset="85%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1F2937" />
+            </linearGradient>
+
+            {/* Metal edge highlight */}
+            <linearGradient id="diffMetalEdge" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#9CA3AF" />
+              <stop offset="50%" stopColor="#D1D5DB" />
+              <stop offset="100%" stopColor="#9CA3AF" />
+            </linearGradient>
+
+            {/* Laser source gradient */}
+            <linearGradient id="diffLaserBody" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4B5563" />
+              <stop offset="50%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1F2937" />
+            </linearGradient>
+
+            {/* Laser beam gradient */}
+            <linearGradient id="diffBeamGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={laserColor} stopOpacity="1" />
+              <stop offset="100%" stopColor={laserColorLight} stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Wave gradient for animated circles */}
+            <radialGradient id="diffWaveRadial" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={laserColor} stopOpacity="0" />
+              <stop offset="70%" stopColor={laserColor} stopOpacity="0.6" />
+              <stop offset="100%" stopColor={laserColorLight} stopOpacity="0" />
+            </radialGradient>
+
+            {/* Screen base gradient */}
+            <linearGradient id="diffScreenBase" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0F172A" />
+              <stop offset="50%" stopColor="#1E293B" />
+              <stop offset="100%" stopColor="#0F172A" />
+            </linearGradient>
+
+            {/* Diffraction pattern gradient with realistic intensity */}
+            <linearGradient id="diffPatternGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              {pattern.map((intensity, i) => {
+                // Enhanced intensity mapping for realistic look
+                const enhancedIntensity = Math.pow(intensity, 0.7); // Gamma correction
+                return (
+                  <stop
+                    key={i}
+                    offset={`${(i / pattern.length) * 100}%`}
+                    stopColor={intensity > 0.7 ? laserColorLight : laserColor}
+                    stopOpacity={enhancedIntensity * 0.95 + 0.05}
+                  />
+                );
+              })}
+            </linearGradient>
+
+            {/* Glow overlay for bright fringes */}
+            <linearGradient id="diffGlowOverlay" x1="0%" y1="0%" x2="0%" y2="100%">
               {pattern.map((intensity, i) => (
                 <stop
                   key={i}
                   offset={`${(i / pattern.length) * 100}%`}
-                  stopColor={laserColor}
-                  stopOpacity={intensity * 0.9 + 0.1}
+                  stopColor="#FFFFFF"
+                  stopOpacity={intensity > 0.8 ? 0.3 : 0}
                 />
               ))}
             </linearGradient>
+
+            {/* Background gradient */}
+            <linearGradient id="diffBgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1E293B" />
+              <stop offset="100%" stopColor="#0F172A" />
+            </linearGradient>
+
+            {/* Intensity graph gradient */}
+            <linearGradient id="diffGraphGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={laserColor} stopOpacity="0.8" />
+              <stop offset="100%" stopColor={laserColorDark} stopOpacity="0.2" />
+            </linearGradient>
           </defs>
 
-          {/* Background */}
-          <rect width={width} height={height} fill={defined.colors.background.secondary} rx="12" />
+          {/* Background with subtle gradient */}
+          <rect width={width} height={height} fill="url(#diffBgGradient)" rx="12" />
 
-          {/* Title */}
-          <text
-            x={width / 2}
-            y={25}
-            fill={defined.colors.text.muted}
-            fontSize="14"
-            fontFamily={defined.typography.fontFamily}
-            textAnchor="middle"
-          >
-            {slitMode === 'single' ? 'Single Slit' : 'Double Slit'} Diffraction
-          </text>
+          {/* Subtle grid pattern for depth */}
+          <g opacity="0.05">
+            {[...Array(Math.floor(width / 30))].map((_, i) => (
+              <line key={`v${i}`} x1={i * 30} y1="0" x2={i * 30} y2={height} stroke="#64748B" strokeWidth="0.5" />
+            ))}
+            {[...Array(Math.floor(height / 30))].map((_, i) => (
+              <line key={`h${i}`} x1="0" y1={i * 30} x2={width} y2={i * 30} stroke="#64748B" strokeWidth="0.5" />
+            ))}
+          </g>
 
-          {/* Laser source */}
-          <rect x={laserX - 10} y={laserY - 15} width="30" height="30" fill="#374151" rx="4" />
-          <rect x={laserX - 5} y={laserY - 10} width="20" height="20" fill="#4B5563" rx="2" />
-          <circle cx={laserX + 18} cy={laserY} r="4" fill={laserColor} filter="url(#laserGlow)" />
-          <text
-            x={laserX + 5}
-            y={laserY + 35}
-            fill={defined.colors.text.muted}
-            fontSize="10"
-            fontFamily={defined.typography.fontFamily}
-            textAnchor="middle"
-          >
-            Laser
-          </text>
+          {/* Laser source with premium styling */}
+          <g>
+            {/* Laser housing */}
+            <rect x={laserX - 12} y={laserY - 18} width="36" height="36" fill="url(#diffLaserBody)" rx="6" />
+            <rect x={laserX - 12} y={laserY - 18} width="36" height="2" fill="url(#diffMetalEdge)" rx="1" />
 
-          {/* Laser beam to slit */}
+            {/* Laser aperture */}
+            <circle cx={laserX + 20} cy={laserY} r="8" fill="#1F2937" />
+            <circle cx={laserX + 20} cy={laserY} r="6" fill="#0F172A" />
+
+            {/* Laser emission point with glow */}
+            <circle cx={laserX + 20} cy={laserY} r="4" fill={laserColor} filter="url(#diffLaserGlow)" />
+            <circle cx={laserX + 20} cy={laserY} r="2" fill={laserColorLight} />
+          </g>
+
+          {/* Laser beam to slit with gradient */}
           <line
-            x1={laserX + 22}
+            x1={laserX + 26}
             y1={laserY}
             x2={slitX - 5}
             y2={laserY}
-            stroke={laserColor}
-            strokeWidth="3"
-            filter="url(#laserGlow)"
+            stroke="url(#diffBeamGradient)"
+            strokeWidth="4"
+            filter="url(#diffLaserGlow)"
+          />
+          {/* Core beam */}
+          <line
+            x1={laserX + 26}
+            y1={laserY}
+            x2={slitX - 5}
+            y2={laserY}
+            stroke={laserColorLight}
+            strokeWidth="1.5"
+            opacity="0.9"
           />
 
-          {/* Slit barrier */}
-          <rect x={slitX - 5} y={patternTop} width="10" height={patternHeight} fill="#1F2937" />
+          {/* Slit barrier with metal gradient */}
+          <rect
+            x={slitX - 6}
+            y={patternTop}
+            width="12"
+            height={patternHeight}
+            fill="url(#diffMetalGradient)"
+            stroke="#4B5563"
+            strokeWidth="0.5"
+          />
+          {/* Top edge highlight */}
+          <rect x={slitX - 6} y={patternTop} width="12" height="2" fill="url(#diffMetalEdge)" opacity="0.5" />
 
-          {/* Slits */}
+          {/* Slits with glow effect */}
           {slitMode === 'single' ? (
-            // Single slit
-            <rect
-              x={slitX - 5}
-              y={laserY - slitWidth / 4}
-              width="10"
-              height={slitWidth / 2}
-              fill={defined.colors.background.secondary}
-            />
+            // Single slit with edge glow
+            <g>
+              <rect
+                x={slitX - 6}
+                y={laserY - slitWidth / 4}
+                width="12"
+                height={slitWidth / 2}
+                fill="#0F172A"
+              />
+              {/* Slit edge glow */}
+              <line
+                x1={slitX - 6}
+                y1={laserY - slitWidth / 4}
+                x2={slitX - 6}
+                y2={laserY + slitWidth / 4}
+                stroke={laserColor}
+                strokeWidth="1"
+                opacity="0.4"
+              />
+              <line
+                x1={slitX + 6}
+                y1={laserY - slitWidth / 4}
+                x2={slitX + 6}
+                y2={laserY + slitWidth / 4}
+                stroke={laserColor}
+                strokeWidth="1"
+                opacity="0.4"
+              />
+              {/* Slit width measurement */}
+              <g opacity="0.6">
+                <line
+                  x1={slitX}
+                  y1={laserY - slitWidth / 4 - 8}
+                  x2={slitX}
+                  y2={laserY + slitWidth / 4 + 8}
+                  stroke={defined.colors.accent}
+                  strokeWidth="1"
+                  strokeDasharray="2,2"
+                />
+              </g>
+            </g>
           ) : (
-            // Double slit
-            <>
+            // Double slit with edge glow
+            <g>
               <rect
-                x={slitX - 5}
+                x={slitX - 6}
                 y={laserY - slitSeparation / 4 - slitWidth / 8}
-                width="10"
+                width="12"
                 height={slitWidth / 4}
-                fill={defined.colors.background.secondary}
+                fill="#0F172A"
               />
               <rect
-                x={slitX - 5}
+                x={slitX - 6}
                 y={laserY + slitSeparation / 4 - slitWidth / 8}
-                width="10"
+                width="12"
                 height={slitWidth / 4}
-                fill={defined.colors.background.secondary}
+                fill="#0F172A"
               />
-            </>
+              {/* Slit edge glow for both slits */}
+              {[-1, 1].map((dir) => (
+                <g key={dir}>
+                  <line
+                    x1={slitX - 6}
+                    y1={laserY + dir * slitSeparation / 4 - slitWidth / 8}
+                    x2={slitX - 6}
+                    y2={laserY + dir * slitSeparation / 4 + slitWidth / 8}
+                    stroke={laserColor}
+                    strokeWidth="1"
+                    opacity="0.4"
+                  />
+                  <line
+                    x1={slitX + 6}
+                    y1={laserY + dir * slitSeparation / 4 - slitWidth / 8}
+                    x2={slitX + 6}
+                    y2={laserY + dir * slitSeparation / 4 + slitWidth / 8}
+                    stroke={laserColor}
+                    strokeWidth="1"
+                    opacity="0.4"
+                  />
+                </g>
+              ))}
+              {/* Slit separation measurement */}
+              <g opacity="0.6">
+                <line
+                  x1={slitX + 15}
+                  y1={laserY - slitSeparation / 4}
+                  x2={slitX + 15}
+                  y2={laserY + slitSeparation / 4}
+                  stroke={defined.colors.accent}
+                  strokeWidth="1"
+                  strokeDasharray="2,2"
+                />
+                <line
+                  x1={slitX + 12}
+                  y1={laserY - slitSeparation / 4}
+                  x2={slitX + 18}
+                  y2={laserY - slitSeparation / 4}
+                  stroke={defined.colors.accent}
+                  strokeWidth="1"
+                />
+                <line
+                  x1={slitX + 12}
+                  y1={laserY + slitSeparation / 4}
+                  x2={slitX + 18}
+                  y2={laserY + slitSeparation / 4}
+                  stroke={defined.colors.accent}
+                  strokeWidth="1"
+                />
+              </g>
+            </g>
           )}
 
-          <text
-            x={slitX}
-            y={height - 15}
-            fill={defined.colors.text.muted}
-            fontSize="10"
-            fontFamily={defined.typography.fontFamily}
-            textAnchor="middle"
-          >
-            {slitMode === 'single' ? 'Slit' : 'Slits'}
-          </text>
-
-          {/* Wave visualization */}
+          {/* Wave visualization with gradient and glow */}
           {showWaves && (
-            <g opacity={0.3}>
-              {/* Circular waves from slit(s) */}
+            <g>
+              {/* Clip path for waves */}
+              <clipPath id="diffWaveClip">
+                <rect x={slitX + 6} y={patternTop} width={screenX - slitX - 20} height={patternHeight} />
+              </clipPath>
+
               {slitMode === 'single' ? (
-                // Single source waves
-                [0, 1, 2, 3, 4, 5].map((i) => {
-                  const radius = 30 + i * 25 + (animationPhase % 25);
-                  return (
-                    <circle
-                      key={i}
-                      cx={slitX}
-                      cy={laserY}
-                      r={radius}
-                      fill="none"
-                      stroke={laserColor}
-                      strokeWidth="1"
-                      opacity={1 - i * 0.15}
-                      style={{
-                        clipPath: `polygon(${slitX}px 0, ${screenX}px 0, ${screenX}px ${height}px, ${slitX}px ${height}px)`,
-                      }}
-                    />
-                  );
-                })
-              ) : (
-                // Two source waves
-                <>
-                  {[0, 1, 2, 3, 4].map((i) => {
+                // Single source waves with gradient
+                <g clipPath="url(#diffWaveClip)">
+                  {[0, 1, 2, 3, 4, 5, 6].map((i) => {
                     const radius = 25 + i * 22 + (animationPhase % 22);
+                    const opacity = Math.max(0, 0.5 - i * 0.07);
+                    return (
+                      <circle
+                        key={i}
+                        cx={slitX}
+                        cy={laserY}
+                        r={radius}
+                        fill="none"
+                        stroke={laserColor}
+                        strokeWidth="2"
+                        opacity={opacity}
+                        filter="url(#diffWaveGlow)"
+                      />
+                    );
+                  })}
+                </g>
+              ) : (
+                // Two source waves with interference visualization
+                <g clipPath="url(#diffWaveClip)">
+                  {[0, 1, 2, 3, 4, 5].map((i) => {
+                    const radius = 22 + i * 20 + (animationPhase % 20);
+                    const opacity = Math.max(0, 0.45 - i * 0.07);
                     return (
                       <g key={i}>
                         <circle
@@ -805,8 +1017,9 @@ export default function DiffractionRenderer() {
                           r={radius}
                           fill="none"
                           stroke={laserColor}
-                          strokeWidth="1"
-                          opacity={0.7 - i * 0.12}
+                          strokeWidth="1.5"
+                          opacity={opacity}
+                          filter="url(#diffWaveGlow)"
                         />
                         <circle
                           cx={slitX}
@@ -814,96 +1027,172 @@ export default function DiffractionRenderer() {
                           r={radius}
                           fill="none"
                           stroke={laserColor}
-                          strokeWidth="1"
-                          opacity={0.7 - i * 0.12}
+                          strokeWidth="1.5"
+                          opacity={opacity}
+                          filter="url(#diffWaveGlow)"
                         />
                       </g>
                     );
                   })}
-                </>
+                </g>
               )}
             </g>
           )}
 
-          {/* Diffracted light rays (simplified) */}
-          {[...Array(11)].map((_, i) => {
-            const angle = ((i - 5) / 5) * 0.25;
-            const endY = laserY + Math.tan(angle) * (screenX - slitX);
-            const intensity = pattern[Math.floor((i / 11) * pattern.length + pattern.length / 2)];
+          {/* Diffracted light rays with intensity-based opacity */}
+          <g opacity="0.4">
+            {[...Array(15)].map((_, i) => {
+              const angle = ((i - 7) / 7) * 0.3;
+              const endY = laserY + Math.tan(angle) * (screenX - slitX - 15);
+              const patternIndex = Math.floor((i / 15) * pattern.length + pattern.length * 0.35);
+              const intensity = pattern[Math.min(patternIndex, pattern.length - 1)] || 0;
 
-            return (
-              <line
-                key={i}
-                x1={slitX + 5}
-                y1={laserY}
-                x2={screenX - 10}
-                y2={endY}
-                stroke={laserColor}
-                strokeWidth={1}
-                opacity={intensity * 0.3}
-              />
-            );
-          })}
+              if (intensity < 0.1) return null;
 
-          {/* Screen */}
-          <rect x={screenX - 10} y={patternTop} width="15" height={patternHeight} fill="#1F2937" rx="2" />
+              return (
+                <line
+                  key={i}
+                  x1={slitX + 6}
+                  y1={laserY}
+                  x2={screenX - 12}
+                  y2={endY}
+                  stroke={laserColor}
+                  strokeWidth={intensity * 2}
+                  opacity={intensity * 0.5}
+                  filter={intensity > 0.7 ? "url(#diffWaveGlow)" : undefined}
+                />
+              );
+            })}
+          </g>
 
-          {/* Diffraction pattern on screen */}
-          <rect
-            x={screenX - 8}
-            y={patternTop + 2}
-            width="11"
-            height={patternHeight - 4}
-            fill="url(#patternGradient)"
-            rx="1"
-          />
+          {/* Screen with premium styling */}
+          <g>
+            {/* Screen base */}
+            <rect
+              x={screenX - 12}
+              y={patternTop}
+              width="18"
+              height={patternHeight}
+              fill="url(#diffScreenBase)"
+              stroke="#374151"
+              strokeWidth="0.5"
+              rx="2"
+            />
 
-          <text
-            x={screenX - 3}
-            y={height - 15}
-            fill={defined.colors.text.muted}
-            fontSize="10"
-            fontFamily={defined.typography.fontFamily}
-            textAnchor="middle"
-          >
-            Screen
-          </text>
+            {/* Diffraction pattern with realistic intensity */}
+            <rect
+              x={screenX - 10}
+              y={patternTop + 2}
+              width="14"
+              height={patternHeight - 4}
+              fill="url(#diffPatternGradient)"
+              rx="1"
+              filter="url(#diffScreenGlow)"
+            />
 
-          {/* Pattern indicators */}
+            {/* Glow overlay for bright spots */}
+            <rect
+              x={screenX - 10}
+              y={patternTop + 2}
+              width="14"
+              height={patternHeight - 4}
+              fill="url(#diffGlowOverlay)"
+              rx="1"
+              filter="url(#diffIntensityBloom)"
+            />
+
+            {/* Screen frame highlight */}
+            <rect
+              x={screenX - 12}
+              y={patternTop}
+              width="18"
+              height="2"
+              fill="url(#diffMetalEdge)"
+              opacity="0.3"
+              rx="1"
+            />
+          </g>
+
+          {/* Distance measurement line */}
+          <g opacity="0.5">
+            <line
+              x1={slitX}
+              y1={patternTop + patternHeight + 15}
+              x2={screenX - 3}
+              y2={patternTop + patternHeight + 15}
+              stroke={defined.colors.text.muted}
+              strokeWidth="1"
+              strokeDasharray="4,2"
+            />
+            <line
+              x1={slitX}
+              y1={patternTop + patternHeight + 10}
+              x2={slitX}
+              y2={patternTop + patternHeight + 20}
+              stroke={defined.colors.text.muted}
+              strokeWidth="1"
+            />
+            <line
+              x1={screenX - 3}
+              y1={patternTop + patternHeight + 10}
+              x2={screenX - 3}
+              y2={patternTop + patternHeight + 20}
+              stroke={defined.colors.text.muted}
+              strokeWidth="1"
+            />
+          </g>
+
+          {/* Fringe order indicators for double slit */}
           {slitMode === 'double' && (
             <g>
-              <text
-                x={screenX + 15}
-                y={laserY}
-                fill={defined.colors.text.muted}
-                fontSize="9"
-                fontFamily={defined.typography.fontFamily}
-              >
-                m=0
-              </text>
-              <text
-                x={screenX + 15}
-                y={laserY - 35}
-                fill={defined.colors.text.muted}
-                fontSize="9"
-                fontFamily={defined.typography.fontFamily}
-              >
-                m=1
-              </text>
-              <text
-                x={screenX + 15}
-                y={laserY + 35}
-                fill={defined.colors.text.muted}
-                fontSize="9"
-                fontFamily={defined.typography.fontFamily}
-              >
-                m=1
-              </text>
+              {/* Central maximum indicator */}
+              <circle cx={screenX + 8} cy={laserY} r="3" fill={defined.colors.primary} opacity="0.8" />
+              {/* First order maxima indicators */}
+              <circle cx={screenX + 8} cy={laserY - 35} r="2" fill={defined.colors.accent} opacity="0.6" />
+              <circle cx={screenX + 8} cy={laserY + 35} r="2" fill={defined.colors.accent} opacity="0.6" />
             </g>
           )}
         </svg>
 
-        {/* Pattern graph */}
+        {/* Labels moved outside SVG using typo system */}
+        <div
+          style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            width: '100%',
+            maxWidth: width,
+            padding: `0 ${defined.spacing.sm}`,
+          }}
+        >
+          <div style={{ fontSize: typo.label, color: defined.colors.text.muted, textAlign: 'center', width: '60px' }}>
+            Laser
+          </div>
+          <div style={{ fontSize: typo.label, color: defined.colors.text.muted, textAlign: 'center', flex: 1 }}>
+            {slitMode === 'single' ? `Slit (${slitWidth} \u03BCm)` : `Slits (d = ${slitSeparation} \u03BCm)`}
+          </div>
+          <div style={{ fontSize: typo.label, color: defined.colors.text.muted, textAlign: 'center', width: '60px' }}>
+            Screen
+          </div>
+        </div>
+
+        {/* Fringe order labels for double slit - outside SVG */}
+        {slitMode === 'double' && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'flex-end',
+              width: '100%',
+              maxWidth: width,
+              gap: defined.spacing.md,
+              fontSize: typo.label,
+            }}
+          >
+            <span style={{ color: defined.colors.primary }}>m=0 (central)</span>
+            <span style={{ color: defined.colors.accent }}>m=\u00B11 (first order)</span>
+          </div>
+        )}
+
+        {/* Pattern graph with premium styling */}
         <div
           style={{
             background: defined.colors.background.card,
@@ -917,35 +1206,78 @@ export default function DiffractionRenderer() {
         >
           <div
             style={{
-              fontSize: defined.typography.sizes.sm,
+              fontSize: typo.small,
               color: defined.colors.text.muted,
               marginBottom: defined.spacing.sm,
               textAlign: 'center',
+              fontWeight: defined.typography.weights.medium,
             }}
           >
-            Intensity Pattern
+            Intensity Distribution I(\u03B8)
           </div>
-          <svg width="100%" height="60" viewBox="0 0 200 60" preserveAspectRatio="none">
+          <svg width="100%" height="70" viewBox="0 0 200 70" preserveAspectRatio="none">
+            <defs>
+              <linearGradient id="diffGraphFill" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor={laserColor} stopOpacity="0.6" />
+                <stop offset="100%" stopColor={laserColor} stopOpacity="0.1" />
+              </linearGradient>
+            </defs>
+
+            {/* Grid lines */}
+            <g opacity="0.15">
+              <line x1="0" y1="35" x2="200" y2="35" stroke="#64748B" strokeWidth="0.5" strokeDasharray="2,4" />
+              <line x1="100" y1="5" x2="100" y2="65" stroke="#64748B" strokeWidth="0.5" strokeDasharray="2,4" />
+            </g>
+
+            {/* Filled area under curve */}
             <path
-              d={`M 0 ${60 - pattern[0] * 50} ${pattern
-                .map((p, i) => `L ${(i / pattern.length) * 200} ${60 - p * 50}`)
+              d={`M 0 65 L 0 ${65 - pattern[0] * 55} ${pattern
+                .map((p, i) => `L ${(i / pattern.length) * 200} ${65 - p * 55}`)
+                .join(' ')} L 200 65 Z`}
+              fill="url(#diffGraphFill)"
+            />
+
+            {/* Main curve with glow */}
+            <path
+              d={`M 0 ${65 - pattern[0] * 55} ${pattern
+                .map((p, i) => `L ${(i / pattern.length) * 200} ${65 - p * 55}`)
                 .join(' ')}`}
               fill="none"
               stroke={laserColor}
-              strokeWidth="2"
+              strokeWidth="2.5"
+              filter="url(#diffWaveGlow)"
             />
-            {/* Filled area */}
+
+            {/* Bright line on top */}
             <path
-              d={`M 0 60 L 0 ${60 - pattern[0] * 50} ${pattern
-                .map((p, i) => `L ${(i / pattern.length) * 200} ${60 - p * 50}`)
-                .join(' ')} L 200 60 Z`}
-              fill={`${laserColor}30`}
+              d={`M 0 ${65 - pattern[0] * 55} ${pattern
+                .map((p, i) => `L ${(i / pattern.length) * 200} ${65 - p * 55}`)
+                .join(' ')}`}
+              fill="none"
+              stroke={laserColorLight}
+              strokeWidth="1"
+              opacity="0.7"
             />
           </svg>
+
+          {/* Axis labels */}
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              fontSize: typo.label,
+              color: defined.colors.text.muted,
+              marginTop: '4px',
+            }}
+          >
+            <span>-\u03B8</span>
+            <span style={{ color: defined.colors.text.secondary }}>Position on Screen</span>
+            <span>+\u03B8</span>
+          </div>
         </div>
       </div>
     );
-  }, [isMobile, wavelength, slitWidth, slitSeparation, slitMode, showWaves, pattern, animationPhase]);
+  }, [isMobile, wavelength, slitWidth, slitSeparation, slitMode, showWaves, pattern, animationPhase, typo]);
 
   // =============================================================================
   // CONTROLS PANEL

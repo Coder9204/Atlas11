@@ -259,126 +259,395 @@ const EvaporativeCoolingRenderer: React.FC<EvaporativeCoolingRendererProps> = ({
     }
   ];
 
-  // Render skin visualization
+  // Render skin visualization with premium SVG graphics
   const renderSkinVisualization = (wet: boolean, temp: number, wind: number = 0) => {
     const evapRate = calculateEvaporationRate(humidity, wind);
 
     return (
-      <svg viewBox="0 0 400 350" className="w-full max-w-md mx-auto">
-        <defs>
-          <linearGradient id="airGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1e3a5f" />
-            <stop offset="100%" stopColor="#2d4a6f" />
-          </linearGradient>
-          <linearGradient id="skinGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={getSkinColor(temp)} />
-            <stop offset="100%" stopColor="#d4a088" />
-          </linearGradient>
-        </defs>
+      <div className="relative">
+        <svg viewBox="0 0 400 350" className="w-full max-w-md mx-auto">
+          <defs>
+            {/* Premium air atmosphere gradient */}
+            <linearGradient id="evapAirGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0c1929" />
+              <stop offset="25%" stopColor="#152238" />
+              <stop offset="50%" stopColor="#1a3050" />
+              <stop offset="75%" stopColor="#1e3a5f" />
+              <stop offset="100%" stopColor="#234668" />
+            </linearGradient>
 
-        <rect width="400" height="100" fill="url(#airGradient)" />
+            {/* Premium skin gradient with temperature coloring */}
+            <linearGradient id="evapSkinGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={getSkinColor(temp)} />
+              <stop offset="20%" stopColor={getSkinColor(temp)} stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#d4a090" />
+              <stop offset="80%" stopColor="#c89080" />
+              <stop offset="100%" stopColor="#b88070" />
+            </linearGradient>
 
-        {[...Array(Math.round(humidity / 10))].map((_, i) => (
-          <circle
-            key={i}
-            cx={50 + i * 35 + Math.sin(animationFrame / 10 + i) * 10}
-            cy={30 + Math.cos(animationFrame / 15 + i) * 15}
-            r={3}
-            fill="rgba(100, 149, 237, 0.5)"
-          />
-        ))}
+            {/* Liquid water droplet gradient */}
+            <radialGradient id="evapLiquidDroplet" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.95" />
+              <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.85" />
+              <stop offset="60%" stopColor="#3b82f6" stopOpacity="0.75" />
+              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.6" />
+            </radialGradient>
 
-        {wind > 0 && (
-          <g>
-            {[...Array(Math.round(wind / 2))].map((_, i) => {
-              const x = 30 + ((animationFrame * 2 + i * 50) % 340);
-              return (
-                <g key={i} transform={`translate(${x}, ${40 + i * 15})`}>
-                  <path d="M 0 0 L 20 0 L 15 -5 M 20 0 L 15 5" fill="none" stroke="#60a5fa" strokeWidth={2} />
-                </g>
-              );
-            })}
-          </g>
-        )}
+            {/* Vapor molecule gradient */}
+            <radialGradient id="evapVaporGradient" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.8" />
+              <stop offset="40%" stopColor="#67e8f9" stopOpacity="0.5" />
+              <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+            </radialGradient>
 
-        <rect y="100" width="400" height="250" fill="url(#skinGradient)" />
+            {/* Temperature hot gradient (for thermometer) */}
+            <linearGradient id="evapTempHot" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="25%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#f87171" />
+              <stop offset="75%" stopColor="#fca5a5" />
+              <stop offset="100%" stopColor="#fecaca" />
+            </linearGradient>
 
-        {[...Array(8)].map((_, i) => (
-          <path
-            key={i}
-            d={`M ${i * 50 + 25} 100 Q ${i * 50 + 40} 150 ${i * 50 + 25} 200`}
-            fill="none"
-            stroke="rgba(0,0,0,0.1)"
-            strokeWidth={1}
-          />
-        ))}
+            {/* Temperature warm gradient */}
+            <linearGradient id="evapTempWarm" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#d97706" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="75%" stopColor="#fcd34d" />
+              <stop offset="100%" stopColor="#fef08a" />
+            </linearGradient>
 
-        {wet && waterDroplets.map((droplet) => {
-          const isEvaporating = evaporatingDroplets.includes(droplet.id);
-          return (
-            <g key={droplet.id}>
-              <ellipse
-                cx={droplet.x}
-                cy={droplet.y}
-                rx={isEvaporating ? 4 : 6}
-                ry={isEvaporating ? 2 : 4}
-                fill="rgba(100, 149, 237, 0.7)"
-                className={isEvaporating ? "animate-pulse" : ""}
-              />
-              {isEvaporating && (
-                <g>
-                  {[0, 1, 2].map((i) => (
-                    <circle
-                      key={i}
-                      cx={droplet.x + (i - 1) * 8}
-                      cy={droplet.y - 10 - animationFrame % 20}
-                      r={3}
-                      fill="rgba(100, 149, 237, 0.3)"
+            {/* Temperature cool gradient */}
+            <linearGradient id="evapTempCool" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#1d4ed8" />
+              <stop offset="25%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#60a5fa" />
+              <stop offset="75%" stopColor="#93c5fd" />
+              <stop offset="100%" stopColor="#bfdbfe" />
+            </linearGradient>
+
+            {/* Humidity particle gradient */}
+            <radialGradient id="evapHumidityParticle" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Wind streak gradient */}
+            <linearGradient id="evapWindStreak" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0" />
+              <stop offset="30%" stopColor="#93c5fd" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#bfdbfe" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#93c5fd" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Liquid surface shimmer */}
+            <linearGradient id="evapLiquidSurface" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="25%" stopColor="#93c5fd" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#bfdbfe" stopOpacity="0.7" />
+              <stop offset="75%" stopColor="#93c5fd" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Cooling effect radial */}
+            <radialGradient id="evapCoolingEffect" cx="50%" cy="0%" r="100%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.4" />
+              <stop offset="40%" stopColor="#06b6d4" stopOpacity="0.2" />
+              <stop offset="70%" stopColor="#0891b2" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Thermometer body gradient */}
+            <linearGradient id="evapThermometerBody" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="30%" stopColor="#374151" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* Glow filter for evaporating molecules */}
+            <filter id="evapVaporGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle glow for water droplets */}
+            <filter id="evapDropletGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Intense glow for cooling effect indicator */}
+            <filter id="evapCoolingGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Wind blur effect */}
+            <filter id="evapWindBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Skin texture pattern */}
+            <pattern id="evapSkinTexture" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="transparent" />
+              <circle cx="10" cy="10" r="0.5" fill="rgba(0,0,0,0.05)" />
+            </pattern>
+          </defs>
+
+          {/* Premium air background */}
+          <rect width="400" height="100" fill="url(#evapAirGradient)" />
+
+          {/* Humidity particles in air */}
+          {[...Array(Math.round(humidity / 10))].map((_, i) => (
+            <circle
+              key={i}
+              cx={50 + i * 35 + Math.sin(animationFrame / 10 + i) * 10}
+              cy={30 + Math.cos(animationFrame / 15 + i) * 15}
+              r={4}
+              fill="url(#evapHumidityParticle)"
+            />
+          ))}
+
+          {/* Wind streaks */}
+          {wind > 0 && (
+            <g filter="url(#evapWindBlur)">
+              {[...Array(Math.round(wind / 2))].map((_, i) => {
+                const x = 30 + ((animationFrame * 2 + i * 50) % 340);
+                return (
+                  <g key={i} transform={`translate(${x}, ${40 + i * 15})`}>
+                    <path
+                      d="M -15 0 Q 0 -2 15 0 Q 0 2 -15 0"
+                      fill="url(#evapWindStreak)"
+                      opacity={0.7}
                     />
-                  ))}
-                </g>
-              )}
+                    <path
+                      d="M 0 0 L 25 0 L 20 -4 M 25 0 L 20 4"
+                      fill="none"
+                      stroke="url(#evapWindStreak)"
+                      strokeWidth={2}
+                      strokeLinecap="round"
+                    />
+                  </g>
+                );
+              })}
             </g>
-          );
-        })}
+          )}
 
-        {wet && evapRate > 0 && (
-          <g>
-            {[...Array(Math.round(evapRate * 5))].map((_, i) => {
-              const x = 80 + i * 60 + Math.sin(animationFrame / 20 + i) * 20;
-              const y = 95 - (animationFrame + i * 10) % 50;
-              const opacity = 0.3 * (1 - ((animationFrame + i * 10) % 50) / 50);
-              return (
-                <circle key={i} cx={x} cy={y} r={4} fill={`rgba(100, 149, 237, ${opacity})`} />
-              );
-            })}
+          {/* Premium skin surface */}
+          <rect y="100" width="400" height="250" fill="url(#evapSkinGradient)" />
+          <rect y="100" width="400" height="250" fill="url(#evapSkinTexture)" />
+
+          {/* Skin texture lines */}
+          {[...Array(8)].map((_, i) => (
+            <path
+              key={i}
+              d={`M ${i * 50 + 25} 100 Q ${i * 50 + 40} 150 ${i * 50 + 25} 200`}
+              fill="none"
+              stroke="rgba(0,0,0,0.08)"
+              strokeWidth={1}
+            />
+          ))}
+
+          {/* Cooling effect overlay when wet */}
+          {wet && evapRate > 0.3 && (
+            <rect
+              y="100"
+              width="400"
+              height="100"
+              fill="url(#evapCoolingEffect)"
+              opacity={evapRate * 0.5}
+            />
+          )}
+
+          {/* Liquid surface layer when wet */}
+          {wet && waterDroplets.length > 5 && (
+            <g>
+              <ellipse
+                cx="200"
+                cy="105"
+                rx={150 + Math.sin(animationFrame / 15) * 10}
+                ry="8"
+                fill="url(#evapLiquidSurface)"
+                opacity={0.6}
+              />
+            </g>
+          )}
+
+          {/* Water droplets with premium gradient */}
+          {wet && waterDroplets.map((droplet) => {
+            const isEvaporating = evaporatingDroplets.includes(droplet.id);
+            return (
+              <g key={droplet.id} filter={isEvaporating ? "url(#evapVaporGlow)" : "url(#evapDropletGlow)"}>
+                <ellipse
+                  cx={droplet.x}
+                  cy={droplet.y}
+                  rx={isEvaporating ? 4 : 7}
+                  ry={isEvaporating ? 2 : 4}
+                  fill={isEvaporating ? "url(#evapVaporGradient)" : "url(#evapLiquidDroplet)"}
+                  className={isEvaporating ? "animate-pulse" : ""}
+                />
+                {/* Droplet highlight */}
+                {!isEvaporating && (
+                  <ellipse
+                    cx={droplet.x - 2}
+                    cy={droplet.y - 1}
+                    rx={2}
+                    ry={1}
+                    fill="rgba(255,255,255,0.4)"
+                  />
+                )}
+                {/* Evaporating vapor trails */}
+                {isEvaporating && (
+                  <g filter="url(#evapVaporGlow)">
+                    {[0, 1, 2].map((i) => {
+                      const yOffset = (animationFrame + i * 7) % 25;
+                      const opacity = 0.6 * (1 - yOffset / 25);
+                      return (
+                        <circle
+                          key={i}
+                          cx={droplet.x + (i - 1) * 8}
+                          cy={droplet.y - 8 - yOffset}
+                          r={3 + i * 0.5}
+                          fill="url(#evapVaporGradient)"
+                          opacity={opacity}
+                        />
+                      );
+                    })}
+                  </g>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Rising vapor molecules */}
+          {wet && evapRate > 0 && (
+            <g filter="url(#evapVaporGlow)">
+              {[...Array(Math.round(evapRate * 6))].map((_, i) => {
+                const x = 60 + i * 50 + Math.sin(animationFrame / 20 + i * 2) * 25;
+                const yProgress = ((animationFrame * 1.5 + i * 15) % 60);
+                const y = 95 - yProgress;
+                const opacity = 0.5 * (1 - yProgress / 60);
+                const scale = 0.8 + (yProgress / 60) * 0.4;
+                return (
+                  <circle
+                    key={i}
+                    cx={x}
+                    cy={y}
+                    r={4 * scale}
+                    fill="url(#evapVaporGradient)"
+                    opacity={opacity}
+                  />
+                );
+              })}
+            </g>
+          )}
+
+          {/* Premium thermometer */}
+          <g transform="translate(325, 140)">
+            {/* Thermometer outer body */}
+            <rect x={0} y={0} width={55} height={130} rx={8} fill="url(#evapThermometerBody)" stroke="#4b5563" strokeWidth={1} />
+
+            {/* Thermometer inner well */}
+            <rect x={10} y={10} width={35} height={110} rx={4} fill="#111827" />
+
+            {/* Temperature mercury/fill */}
+            <rect
+              x={15}
+              y={115 - (temp - 30) * 12}
+              width={25}
+              height={(temp - 30) * 12}
+              rx={3}
+              fill={temp >= 36 ? 'url(#evapTempHot)' : temp >= 34 ? 'url(#evapTempWarm)' : 'url(#evapTempCool)'}
+            />
+
+            {/* Temperature scale marks */}
+            {[30, 32, 34, 36, 38].map((mark, i) => (
+              <g key={mark}>
+                <line x1={45} y1={115 - (mark - 30) * 12} x2={50} y2={115 - (mark - 30) * 12} stroke="#6b7280" strokeWidth={1} />
+              </g>
+            ))}
+
+            {/* Bulb at bottom */}
+            <circle cx={27.5} cy={125} r={8} fill={temp >= 36 ? '#ef4444' : temp >= 34 ? '#fbbf24' : '#3b82f6'} />
           </g>
-        )}
 
-        <g transform="translate(320, 150)">
-          <rect x={0} y={0} width={50} height={120} fill="#1f2937" stroke="#374151" rx={5} />
-          <rect
-            x={10}
-            y={110 - (temp - 30) * 10}
-            width={30}
-            height={(temp - 30) * 10}
-            fill={temp >= 36 ? '#ef4444' : temp >= 34 ? '#fbbf24' : '#3b82f6'}
-            rx={3}
-          />
-          <text x={25} y={-10} textAnchor="middle" fontSize="12" fill="#e5e7eb">
+          {/* Cooling effect indicator */}
+          {wet && evapRate > 0.5 && (
+            <g filter="url(#evapCoolingGlow)">
+              <path
+                d={`M 280 120 L 280 ${120 + evapRate * 30}`}
+                stroke="url(#evapTempCool)"
+                strokeWidth={3}
+                strokeLinecap="round"
+                opacity={0.7}
+              >
+                <animate
+                  attributeName="opacity"
+                  values="0.7;0.3;0.7"
+                  dur="1.5s"
+                  repeatCount="indefinite"
+                />
+              </path>
+              <polygon
+                points="280,150 275,140 285,140"
+                fill="#3b82f6"
+                opacity={evapRate}
+              >
+                <animate
+                  attributeName="opacity"
+                  values="0.8;0.4;0.8"
+                  dur="1.5s"
+                  repeatCount="indefinite"
+                />
+              </polygon>
+            </g>
+          )}
+        </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div className="absolute top-2 left-4 space-y-1">
+          <div className="text-slate-200" style={{ fontSize: typo.small }}>
+            Humidity: <span className="text-cyan-400 font-semibold">{humidity}%</span>
+          </div>
+          <div className="text-slate-200" style={{ fontSize: typo.small }}>
+            Evap Rate: <span className="text-emerald-400 font-semibold">{(evapRate * 100).toFixed(0)}%</span>
+          </div>
+          {wind > 0 && (
+            <div className="text-slate-200" style={{ fontSize: typo.small }}>
+              Wind: <span className="text-blue-400 font-semibold">{wind} m/s</span>
+            </div>
+          )}
+        </div>
+
+        {/* Temperature label outside SVG */}
+        <div className="absolute top-2 right-4 text-center">
+          <div className="text-white font-bold" style={{ fontSize: typo.bodyLarge }}>
             {temp.toFixed(1)}C
-          </text>
-          <text x={25} y={135} textAnchor="middle" fontSize="10" fill="#9ca3af">
+          </div>
+          <div className="text-slate-400" style={{ fontSize: typo.label }}>
             Skin Temp
-          </text>
-        </g>
-
-        <text x={20} y={30} fontSize="12" fill="#e5e7eb">Humidity: {humidity}%</text>
-        <text x={20} y={50} fontSize="12" fill="#e5e7eb">Evap Rate: {(evapRate * 100).toFixed(0)}%</text>
-        {wind > 0 && (
-          <text x={20} y={70} fontSize="12" fill="#60a5fa">Wind: {wind} m/s</text>
-        )}
-      </svg>
+          </div>
+        </div>
+      </div>
     );
   };
 

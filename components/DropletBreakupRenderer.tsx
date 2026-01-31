@@ -440,11 +440,39 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
       { color: colors.textMuted, label: 'Necking region' },
     ];
 
+    // Labels for outside SVG
+    const annotationLabels = showViscosity ? null : [
+      { text: 'Stable stream', y: 120 },
+      { text: 'Necking forms', y: 190 },
+      { text: 'Droplets break off', y: 260 },
+    ];
+
     return (
       <div style={{ position: 'relative', width: '100%', maxWidth: '700px', margin: '0 auto' }}>
+        {/* Title - moved outside SVG */}
+        <div style={{ textAlign: 'center', marginBottom: typo.elementGap }}>
+          <h3 style={{
+            fontSize: typo.heading,
+            fontWeight: 700,
+            color: colors.textPrimary,
+            margin: 0,
+            marginBottom: '4px'
+          }}>
+            {showViscosity ? 'Viscosity Effect on Breakup' : 'Rayleigh-Plateau Instability'}
+          </h3>
+          <p style={{
+            fontSize: typo.small,
+            color: colors.textSecondary,
+            margin: 0
+          }}>
+            {showViscosity ? 'Compare water vs honey breakup patterns' : 'Liquid jets break into droplets'}
+          </p>
+        </div>
+
+        {/* Legend - moved outside SVG */}
         <div style={{
           position: 'absolute',
-          top: isMobile ? '8px' : '12px',
+          top: isMobile ? '60px' : '70px',
           right: isMobile ? '8px' : '12px',
           background: 'rgba(15, 23, 42, 0.95)',
           borderRadius: '8px',
@@ -452,210 +480,579 @@ const DropletBreakupRenderer: React.FC<DropletBreakupRendererProps> = ({
           border: `1px solid ${colors.border}`,
           zIndex: 10
         }}>
-          <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Legend</p>
+          <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>Legend</p>
           {legendItems.map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: item.color, flexShrink: 0 }} />
-              <span style={{ fontSize: '10px', color: colors.textSecondary }}>{item.label}</span>
+              <span style={{ fontSize: typo.label, color: colors.textSecondary }}>{item.label}</span>
             </div>
           ))}
         </div>
 
-        <svg viewBox={`0 0 ${width} ${height}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: 'auto', display: 'block' }}>
+        {/* Annotation labels outside SVG (for main view only) */}
+        {!showViscosity && annotationLabels && (
+          <div style={{
+            position: 'absolute',
+            top: isMobile ? '60px' : '70px',
+            left: isMobile ? `${width * 0.5 + 50}px` : `${width * 0.5 + 70}px`,
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '0',
+            pointerEvents: 'none'
+          }}>
+            {annotationLabels.map((label, i) => (
+              <div key={i} style={{
+                fontSize: typo.small,
+                color: colors.textMuted,
+                marginTop: i === 0 ? '50px' : '55px'
+              }}>
+                ← {label.text}
+              </div>
+            ))}
+          </div>
+        )}
+
+        <svg viewBox={`0 0 ${width} ${height - 50}`} preserveAspectRatio="xMidYMid meet" style={{ width: '100%', height: 'auto', display: 'block' }}>
           <defs>
-            <linearGradient id="streamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.stream} />
-              <stop offset="100%" stopColor={colors.droplet} />
+            {/* Premium background gradient */}
+            <linearGradient id="dropLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
             </linearGradient>
-            <linearGradient id="honeyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.honey} />
-              <stop offset="100%" stopColor={colors.honeyDark} />
+
+            {/* Premium faucet metal gradient - 5 color stops */}
+            <linearGradient id="dropFaucetMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#71717a" />
+              <stop offset="25%" stopColor="#52525b" />
+              <stop offset="50%" stopColor="#3f3f46" />
+              <stop offset="75%" stopColor="#52525b" />
+              <stop offset="100%" stopColor="#27272a" />
             </linearGradient>
-            <radialGradient id="dropletGradient" cx="30%" cy="30%" r="70%">
-              <stop offset="0%" stopColor={colors.primaryLight} />
-              <stop offset="100%" stopColor={colors.droplet} />
+
+            {/* Faucet nozzle inner gradient */}
+            <linearGradient id="dropFaucetNozzle" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#3f3f46" />
+              <stop offset="30%" stopColor="#27272a" />
+              <stop offset="70%" stopColor="#18181b" />
+              <stop offset="100%" stopColor="#09090b" />
+            </linearGradient>
+
+            {/* Water stream gradient with 6 color stops for depth */}
+            <linearGradient id="dropStreamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#7dd3fc" />
+              <stop offset="20%" stopColor="#38bdf8" />
+              <stop offset="40%" stopColor="#0ea5e9" />
+              <stop offset="60%" stopColor="#0284c7" />
+              <stop offset="80%" stopColor="#0369a1" />
+              <stop offset="100%" stopColor="#075985" />
+            </linearGradient>
+
+            {/* Honey stream gradient with 5 color stops */}
+            <linearGradient id="dropHoneyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fde68a" />
+              <stop offset="25%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+
+            {/* Premium 3D water droplet gradient */}
+            <radialGradient id="dropWaterDroplet" cx="35%" cy="30%" r="65%" fx="25%" fy="20%">
+              <stop offset="0%" stopColor="#e0f2fe" stopOpacity="1" />
+              <stop offset="15%" stopColor="#bae6fd" stopOpacity="0.95" />
+              <stop offset="35%" stopColor="#7dd3fc" stopOpacity="0.9" />
+              <stop offset="55%" stopColor="#38bdf8" stopOpacity="0.85" />
+              <stop offset="75%" stopColor="#0ea5e9" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#0369a1" stopOpacity="0.75" />
             </radialGradient>
+
+            {/* Premium 3D honey droplet gradient */}
+            <radialGradient id="dropHoneyDroplet" cx="35%" cy="30%" r="65%" fx="25%" fy="20%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="20%" stopColor="#fde68a" stopOpacity="0.95" />
+              <stop offset="40%" stopColor="#fbbf24" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.85" />
+              <stop offset="80%" stopColor="#d97706" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#92400e" stopOpacity="0.75" />
+            </radialGradient>
+
+            {/* Droplet highlight for 3D effect */}
+            <radialGradient id="dropHighlight" cx="30%" cy="25%" r="40%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Surface tension visualization gradient */}
+            <linearGradient id="dropSurfaceTension" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0" />
+              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#67e8f9" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Air flow streamline gradient */}
+            <linearGradient id="dropAirFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#64748b" stopOpacity="0" />
+              <stop offset="20%" stopColor="#94a3b8" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#cbd5e1" stopOpacity="0.5" />
+              <stop offset="80%" stopColor="#94a3b8" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#64748b" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Necking region gradient for breakup effect */}
+            <linearGradient id="dropNeckingGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#0ea5e9" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#0284c7" stopOpacity="0.5" />
+              <stop offset="70%" stopColor="#0ea5e9" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Inset card gradient */}
+            <linearGradient id="dropInsetBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Glow filter for droplets */}
+            <filter id="dropGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft glow for stream */}
+            <filter id="dropStreamGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle glow for surface tension lines */}
+            <filter id="dropTensionGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow for depth */}
+            <filter id="dropInnerShadow">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Fragmentation particle glow */}
+            <filter id="dropFragmentGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Grid pattern for lab background */}
+            <pattern id="dropLabGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+              <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
           </defs>
 
-          <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
-
-          <text x={width / 2} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
-            {showViscosity ? 'Viscosity Effect on Breakup' : 'Rayleigh-Plateau Instability'}
-          </text>
-          <text x={width / 2} y="48" textAnchor="middle" fill={colors.textSecondary} fontSize={isMobile ? 11 : 14}>
-            {showViscosity ? 'Compare water vs honey breakup patterns' : 'Liquid jets break into droplets'}
-          </text>
+          {/* Premium dark lab background */}
+          <rect x="0" y="0" width={width} height={height - 50} fill="url(#dropLabBg)" rx="12" />
+          <rect x="0" y="0" width={width} height={height - 50} fill="url(#dropLabGrid)" rx="12" />
 
           {showViscosity ? (
             // Viscosity comparison view
             <>
               {/* Water column */}
               <g transform={`translate(${width * 0.25}, 0)`}>
-                {/* Faucet */}
-                <rect x="-20" y="60" width="40" height="25" fill="#64748b" rx="4" />
-                <rect x="-10" y="80" width="20" height="15" fill="#475569" rx="2" />
+                {/* Premium Faucet with metallic finish */}
+                <rect x="-25" y="10" width="50" height="30" fill="url(#dropFaucetMetal)" rx="6" />
+                <rect x="-25" y="10" width="50" height="4" fill="#a1a1aa" rx="2" opacity="0.5" />
+                <rect x="-12" y="35" width="24" height="18" fill="url(#dropFaucetNozzle)" rx="3" />
+                <ellipse cx="0" cy="53" rx="10" ry="2" fill="#18181b" />
 
-                {/* Continuous stream */}
-                <rect x="-5" y="95" width="10" height="35" fill="url(#streamGradient)" rx="5" />
+                {/* Air flow streamlines around water */}
+                {[0, 1, 2].map(i => (
+                  <path
+                    key={`water-air-${i}`}
+                    d={`M ${-30 - i * 8} ${80 + i * 20} Q ${-20 - i * 5} ${100 + i * 25}, ${-25 - i * 6} ${130 + i * 30}`}
+                    stroke="url(#dropAirFlow)"
+                    strokeWidth="1.5"
+                    fill="none"
+                    opacity={0.3 + Math.sin(animTime + i) * 0.1}
+                  />
+                ))}
+                {[0, 1, 2].map(i => (
+                  <path
+                    key={`water-air-r-${i}`}
+                    d={`M ${30 + i * 8} ${80 + i * 20} Q ${20 + i * 5} ${100 + i * 25}, ${25 + i * 6} ${130 + i * 30}`}
+                    stroke="url(#dropAirFlow)"
+                    strokeWidth="1.5"
+                    fill="none"
+                    opacity={0.3 + Math.sin(animTime + i + 1) * 0.1}
+                  />
+                ))}
 
-                {/* Necking region */}
+                {/* Continuous stream with glow */}
+                <rect x="-6" y="53" width="12" height="40" fill="url(#dropStreamGradient)" rx="6" filter="url(#dropStreamGlow)" />
+
+                {/* Surface tension visualization on stream */}
+                <ellipse cx="0" cy="70" rx="8" ry="2" fill="none" stroke="url(#dropSurfaceTension)" strokeWidth="1" filter="url(#dropTensionGlow)" opacity={0.6 + Math.sin(animTime * 2) * 0.2} />
+                <ellipse cx="0" cy="85" rx="7" ry="2" fill="none" stroke="url(#dropSurfaceTension)" strokeWidth="1" filter="url(#dropTensionGlow)" opacity={0.6 + Math.sin(animTime * 2 + 0.5) * 0.2} />
+
+                {/* Necking region with breakup effect */}
                 <path
-                  d={`M -5 130 Q -3 ${140 + neckingAmplitude}, -5 150 L 5 150 Q 7 ${140 - neckingAmplitude}, 5 130 Z`}
-                  fill="url(#streamGradient)"
+                  d={`M -6 93 Q -4 ${103 + neckingAmplitude}, -5 113 Q -3 ${118 + neckingAmplitude * 0.5}, -4 123 L 4 123 Q 3 ${118 - neckingAmplitude * 0.5}, 5 113 Q 4 ${103 - neckingAmplitude}, 6 93 Z`}
+                  fill="url(#dropNeckingGradient)"
+                  filter="url(#dropStreamGlow)"
                 />
 
-                {/* Droplets - fast clean breakup */}
-                {[0, 1, 2, 3, 4].map(i => {
-                  const baseY = 160 + i * 28;
-                  const y = baseY + ((animTime * breakupSpeed * 50) % 28);
-                  if (y > height - 60) return null;
+                {/* Fragmentation particles at breakup point */}
+                {[0, 1, 2, 3].map(i => {
+                  const angle = (animTime * 2 + i * 1.5) % (Math.PI * 2);
+                  const px = Math.cos(angle) * (4 + Math.sin(animTime * 3) * 2);
+                  const py = 118 + Math.sin(angle) * 3;
                   return (
                     <circle
-                      key={i}
-                      cx={0}
-                      cy={y}
-                      r={10}
-                      fill="url(#dropletGradient)"
+                      key={`frag-w-${i}`}
+                      cx={px}
+                      cy={py}
+                      r={1 + Math.sin(animTime + i) * 0.5}
+                      fill="#7dd3fc"
+                      filter="url(#dropFragmentGlow)"
+                      opacity={0.4 + Math.sin(animTime * 2 + i) * 0.3}
                     />
                   );
                 })}
 
-                <text x="0" y={height - 25} textAnchor="middle" fill={colors.water} fontSize="12" fontWeight="600">
-                  Water (Low η)
-                </text>
-                <text x="0" y={height - 10} textAnchor="middle" fill={colors.textMuted} fontSize="10">
-                  Clean, fast breakup
-                </text>
+                {/* Premium 3D Droplets - fast clean breakup */}
+                {[0, 1, 2, 3, 4].map(i => {
+                  const baseY = 133 + i * 28;
+                  const y = baseY + ((animTime * breakupSpeed * 50) % 28);
+                  if (y > height - 100) return null;
+                  const dropletRadius = 10 - i * 0.3;
+                  return (
+                    <g key={`water-drop-${i}`} filter="url(#dropGlow)">
+                      <circle
+                        cx={0}
+                        cy={y}
+                        r={dropletRadius}
+                        fill="url(#dropWaterDroplet)"
+                      />
+                      {/* Highlight for 3D effect */}
+                      <circle
+                        cx={-dropletRadius * 0.25}
+                        cy={y - dropletRadius * 0.25}
+                        r={dropletRadius * 0.4}
+                        fill="url(#dropHighlight)"
+                      />
+                    </g>
+                  );
+                })}
               </g>
 
               {/* Honey column */}
               <g transform={`translate(${width * 0.75}, 0)`}>
-                {/* Faucet */}
-                <rect x="-20" y="60" width="40" height="25" fill="#64748b" rx="4" />
-                <rect x="-10" y="80" width="20" height="15" fill="#475569" rx="2" />
+                {/* Premium Faucet */}
+                <rect x="-25" y="10" width="50" height="30" fill="url(#dropFaucetMetal)" rx="6" />
+                <rect x="-25" y="10" width="50" height="4" fill="#a1a1aa" rx="2" opacity="0.5" />
+                <rect x="-12" y="35" width="24" height="18" fill="url(#dropFaucetNozzle)" rx="3" />
+                <ellipse cx="0" cy="53" rx="10" ry="2" fill="#18181b" />
+
+                {/* Air flow streamlines around honey */}
+                {[0, 1, 2].map(i => (
+                  <path
+                    key={`honey-air-${i}`}
+                    d={`M ${-30 - i * 8} ${80 + i * 25} Q ${-15 - i * 4} ${120 + i * 30}, ${-20 - i * 5} ${170 + i * 35}`}
+                    stroke="url(#dropAirFlow)"
+                    strokeWidth="1.5"
+                    fill="none"
+                    opacity={0.3 + Math.sin(animTime + i + 2) * 0.1}
+                  />
+                ))}
 
                 {/* Long continuous stream with beads forming */}
-                <rect x="-4" y="95" width="8" height={100 + Math.sin(animTime * 0.5) * 10} fill="url(#honeyGradient)" rx="4" />
+                <rect x="-5" y="53" width="10" height={100 + Math.sin(animTime * 0.5) * 10} fill="url(#dropHoneyGradient)" rx="5" filter="url(#dropStreamGlow)" />
 
-                {/* Beads on string */}
+                {/* Surface tension rings on honey stream */}
+                {[0, 1, 2, 3].map(i => (
+                  <ellipse
+                    key={`honey-tension-${i}`}
+                    cx="0"
+                    cy={70 + i * 25}
+                    rx="7"
+                    ry="2"
+                    fill="none"
+                    stroke="#fde68a"
+                    strokeWidth="0.8"
+                    opacity={0.4 + Math.sin(animTime + i * 0.5) * 0.2}
+                    filter="url(#dropTensionGlow)"
+                  />
+                ))}
+
+                {/* Beads on string with 3D effect */}
                 {[0, 1, 2].map(i => {
-                  const y = 120 + i * 40 + (animTime * 5 % 40);
-                  if (y > 195) return null;
-                  const size = 8 + Math.sin(animTime + i) * 2;
+                  const y = 90 + i * 35 + (animTime * 5 % 35);
+                  if (y > 170) return null;
+                  const size = 9 + Math.sin(animTime + i) * 2;
                   return (
-                    <circle
-                      key={i}
-                      cx={0}
-                      cy={y}
-                      r={size}
-                      fill="url(#honeyGradient)"
-                    />
+                    <g key={`honey-bead-${i}`} filter="url(#dropGlow)">
+                      <circle
+                        cx={0}
+                        cy={y}
+                        r={size}
+                        fill="url(#dropHoneyDroplet)"
+                      />
+                      <circle
+                        cx={-size * 0.25}
+                        cy={y - size * 0.25}
+                        r={size * 0.35}
+                        fill="url(#dropHighlight)"
+                      />
+                      {/* Thin connecting thread */}
+                      <rect
+                        x="-1.5"
+                        y={y + size}
+                        width="3"
+                        height={20 - size}
+                        fill="url(#dropHoneyGradient)"
+                        opacity="0.7"
+                      />
+                    </g>
                   );
                 })}
 
-                {/* Eventual droplet */}
-                <circle
-                  cx={0}
-                  cy={220 + ((animTime * 10) % 50)}
-                  r={12}
-                  fill="url(#honeyGradient)"
-                  opacity={animTime % 3 > 1.5 ? 1 : 0}
-                />
-
-                <text x="0" y={height - 25} textAnchor="middle" fill={colors.honey} fontSize="12" fontWeight="600">
-                  Honey (High η)
-                </text>
-                <text x="0" y={height - 10} textAnchor="middle" fill={colors.textMuted} fontSize="10">
-                  Beads on a string
-                </text>
+                {/* Eventual droplet with 3D effect */}
+                {animTime % 3 > 1.5 && (
+                  <g filter="url(#dropGlow)">
+                    <circle
+                      cx={0}
+                      cy={195 + ((animTime * 10) % 50)}
+                      r={13}
+                      fill="url(#dropHoneyDroplet)"
+                    />
+                    <circle
+                      cx={-3}
+                      cy={192 + ((animTime * 10) % 50)}
+                      r={5}
+                      fill="url(#dropHighlight)"
+                    />
+                  </g>
+                )}
               </g>
+
+              {/* Labels outside SVG area - using absolute positioning in parent */}
             </>
           ) : (
             // Main breakup visualization
             <>
-              {/* Faucet */}
-              <rect x={width / 2 - 30} y="60" width="60" height="30" fill="#64748b" rx="6" />
-              <rect x={width / 2 - 15} y="85" width="30" height="20" fill="#475569" rx="3" />
+              {/* Premium Faucet with metallic gradient */}
+              <rect x={width / 2 - 35} y="10" width="70" height="35" fill="url(#dropFaucetMetal)" rx="8" />
+              {/* Highlight strip on faucet */}
+              <rect x={width / 2 - 35} y="10" width="70" height="5" fill="#a1a1aa" rx="3" opacity="0.4" />
+              {/* Faucet nozzle */}
+              <rect x={width / 2 - 18} y="40" width="36" height="22" fill="url(#dropFaucetNozzle)" rx="4" />
+              {/* Nozzle opening shadow */}
+              <ellipse cx={width / 2} cy="62" rx="14" ry="3" fill="#09090b" />
 
-              {/* Continuous stream section */}
+              {/* Air flow streamlines */}
+              {[0, 1, 2, 3].map(i => (
+                <path
+                  key={`air-left-${i}`}
+                  d={`M ${width / 2 - 50 - i * 12} ${80 + i * 30} Q ${width / 2 - 30 - i * 8} ${120 + i * 35}, ${width / 2 - 40 - i * 10} ${170 + i * 40}`}
+                  stroke="url(#dropAirFlow)"
+                  strokeWidth="2"
+                  fill="none"
+                  opacity={0.25 + Math.sin(animTime * 0.8 + i) * 0.1}
+                />
+              ))}
+              {[0, 1, 2, 3].map(i => (
+                <path
+                  key={`air-right-${i}`}
+                  d={`M ${width / 2 + 50 + i * 12} ${80 + i * 30} Q ${width / 2 + 30 + i * 8} ${120 + i * 35}, ${width / 2 + 40 + i * 10} ${170 + i * 40}`}
+                  stroke="url(#dropAirFlow)"
+                  strokeWidth="2"
+                  fill="none"
+                  opacity={0.25 + Math.sin(animTime * 0.8 + i + 1) * 0.1}
+                />
+              ))}
+
+              {/* Continuous stream section with premium gradient */}
               <rect
-                x={width / 2 - 8}
-                y="105"
-                width="16"
-                height="50"
-                fill="url(#streamGradient)"
-                rx="8"
+                x={width / 2 - 9}
+                y="62"
+                width="18"
+                height="55"
+                fill="url(#dropStreamGradient)"
+                rx="9"
+                filter="url(#dropStreamGlow)"
               />
 
-              {/* Necking region with animated perturbations */}
+              {/* Surface tension visualization - animated rings */}
+              {[0, 1, 2].map(i => (
+                <ellipse
+                  key={`tension-ring-${i}`}
+                  cx={width / 2}
+                  cy={75 + i * 18}
+                  rx={12 - i}
+                  ry={3}
+                  fill="none"
+                  stroke="url(#dropSurfaceTension)"
+                  strokeWidth="1.5"
+                  filter="url(#dropTensionGlow)"
+                  opacity={0.5 + Math.sin(animTime * 2 + i * 0.7) * 0.3}
+                />
+              ))}
+
+              {/* Necking region with animated perturbations and premium gradient */}
               <path
-                d={`M ${width / 2 - 8} 155
-                    Q ${width / 2 - 6 + Math.sin(animTime * 3) * neckingAmplitude} 175, ${width / 2 - 8} 195
-                    Q ${width / 2 - 10 - Math.sin(animTime * 3 + 1) * neckingAmplitude} 215, ${width / 2 - 6} 230
-                    L ${width / 2 + 6} 230
-                    Q ${width / 2 + 10 + Math.sin(animTime * 3 + 1) * neckingAmplitude} 215, ${width / 2 + 8} 195
-                    Q ${width / 2 + 6 - Math.sin(animTime * 3) * neckingAmplitude} 175, ${width / 2 + 8} 155
+                d={`M ${width / 2 - 9} 117
+                    Q ${width / 2 - 7 + Math.sin(animTime * 3) * neckingAmplitude} 137, ${width / 2 - 9} 157
+                    Q ${width / 2 - 11 - Math.sin(animTime * 3 + 1) * neckingAmplitude} 177, ${width / 2 - 7} 192
+                    L ${width / 2 + 7} 192
+                    Q ${width / 2 + 11 + Math.sin(animTime * 3 + 1) * neckingAmplitude} 177, ${width / 2 + 9} 157
+                    Q ${width / 2 + 7 - Math.sin(animTime * 3) * neckingAmplitude} 137, ${width / 2 + 9} 117
                     Z`}
-                fill="url(#streamGradient)"
+                fill="url(#dropNeckingGradient)"
+                filter="url(#dropStreamGlow)"
               />
 
-              {/* Droplets */}
-              {[0, 1, 2, 3].map(i => {
-                const baseY = 245 + i * dropletSpacing;
-                const y = baseY + ((animTime * breakupSpeed * 30) % dropletSpacing);
-                if (y > height - 40) return null;
-                const dropletSize = 10 - i * 0.5;
+              {/* Fragmentation spray particles at pinch points */}
+              {[0, 1, 2, 3, 4, 5].map(i => {
+                const angle = (animTime * 2.5 + i * 1.0) % (Math.PI * 2);
+                const radius = 5 + Math.sin(animTime * 3 + i) * 3;
+                const px = width / 2 + Math.cos(angle) * radius;
+                const py = 175 + Math.sin(angle) * 4;
                 return (
                   <circle
-                    key={i}
-                    cx={width / 2}
-                    cy={y}
-                    r={dropletSize}
-                    fill="url(#dropletGradient)"
+                    key={`frag-${i}`}
+                    cx={px}
+                    cy={py}
+                    r={1.5 + Math.sin(animTime + i) * 0.5}
+                    fill="#7dd3fc"
+                    filter="url(#dropFragmentGlow)"
+                    opacity={0.3 + Math.sin(animTime * 2 + i * 0.8) * 0.3}
                   />
                 );
               })}
 
-              {/* Labels */}
-              <g transform={`translate(${width / 2 + 60}, 120)`}>
-                <text fill={colors.textMuted} fontSize="11">← Stable stream</text>
-              </g>
-              <g transform={`translate(${width / 2 + 60}, 190)`}>
-                <text fill={colors.textMuted} fontSize="11">← Necking forms</text>
-              </g>
-              <g transform={`translate(${width / 2 + 60}, 260)`}>
-                <text fill={colors.textMuted} fontSize="11">← Droplets break off</text>
-              </g>
+              {/* Premium 3D Droplets */}
+              {[0, 1, 2, 3].map(i => {
+                const baseY = 207 + i * dropletSpacing;
+                const y = baseY + ((animTime * breakupSpeed * 30) % dropletSpacing);
+                if (y > height - 80) return null;
+                const dropletSize = 11 - i * 0.6;
+                return (
+                  <g key={`droplet-${i}`} filter="url(#dropGlow)">
+                    <circle
+                      cx={width / 2}
+                      cy={y}
+                      r={dropletSize}
+                      fill="url(#dropWaterDroplet)"
+                    />
+                    {/* 3D highlight */}
+                    <circle
+                      cx={width / 2 - dropletSize * 0.25}
+                      cy={y - dropletSize * 0.25}
+                      r={dropletSize * 0.4}
+                      fill="url(#dropHighlight)"
+                    />
+                    {/* Subtle bottom shadow */}
+                    <ellipse
+                      cx={width / 2}
+                      cy={y + dropletSize * 0.8}
+                      rx={dropletSize * 0.6}
+                      ry={dropletSize * 0.15}
+                      fill="#0369a1"
+                      opacity="0.3"
+                    />
+                  </g>
+                );
+              })}
 
-              {/* Surface area comparison inset */}
-              <g transform={`translate(${isMobile ? 15 : 40}, ${height - 100})`}>
-                <rect width={isMobile ? 90 : 110} height="75" fill={colors.bgCard} rx="8" />
-                <text x={isMobile ? 45 : 55} y="18" textAnchor="middle" fill={colors.textSecondary} fontSize="10" fontWeight="600">
-                  Surface Area
-                </text>
+              {/* Surface area comparison inset with premium styling */}
+              <g transform={`translate(${isMobile ? 12 : 35}, ${height - 145})`}>
+                <rect width={isMobile ? 95 : 115} height="80" fill="url(#dropInsetBg)" rx="10" stroke={colors.border} strokeWidth="1" />
 
-                {/* Cylinder */}
-                <rect x="12" y="28" width="25" height="14" fill={colors.textMuted} rx="3" />
-                <text x="50" y="38" fill={colors.textMuted} fontSize="9">Cylinder</text>
+                {/* Cylinder with gradient */}
+                <rect x="14" y="30" width="28" height="16" fill={colors.textMuted} rx="4" opacity="0.8" />
+                <rect x="14" y="30" width="28" height="3" fill="#94a3b8" rx="2" opacity="0.5" />
 
-                {/* Arrow */}
-                <text x={isMobile ? 45 : 55} y="55" textAnchor="middle" fill={colors.success} fontSize="11">↓ less!</text>
-
-                {/* Spheres */}
-                <circle cx="20" cy="62" r="8" fill={colors.droplet} />
-                <circle cx="40" cy="65" r="6" fill={colors.droplet} />
-                <text x="55" y="66" fill={colors.droplet} fontSize="9">Spheres</text>
+                {/* Spheres with 3D effect */}
+                <circle cx="22" cy="65" r="9" fill="url(#dropWaterDroplet)" />
+                <circle cx="19" cy="62" r="3" fill="url(#dropHighlight)" />
+                <circle cx="42" cy="68" r="7" fill="url(#dropWaterDroplet)" />
+                <circle cx="40" cy="66" r="2.5" fill="url(#dropHighlight)" />
               </g>
             </>
           )}
-
-          {/* Formula */}
-          <g transform={`translate(${isMobile ? 15 : 25}, ${height - 25})`}>
-            <text fill={colors.textSecondary} fontSize={isMobile ? 9 : 11}>
-              Most unstable wavelength: <tspan fill={colors.primaryLight}>λ ≈ 9r</tspan> (9× jet radius)
-            </text>
-          </g>
         </svg>
+
+        {/* Bottom labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: showViscosity ? 'space-around' : 'space-between',
+          alignItems: 'flex-start',
+          padding: `${typo.elementGap} ${typo.pagePadding}`,
+          marginTop: typo.elementGap
+        }}>
+          {showViscosity ? (
+            <>
+              {/* Water label */}
+              <div style={{ textAlign: 'center', flex: 1 }}>
+                <p style={{ fontSize: typo.body, fontWeight: 600, color: colors.water, margin: 0 }}>
+                  Water (Low viscosity)
+                </p>
+                <p style={{ fontSize: typo.small, color: colors.textMuted, margin: 0 }}>
+                  Clean, fast breakup
+                </p>
+              </div>
+              {/* Honey label */}
+              <div style={{ textAlign: 'center', flex: 1 }}>
+                <p style={{ fontSize: typo.body, fontWeight: 600, color: colors.honey, margin: 0 }}>
+                  Honey (High viscosity)
+                </p>
+                <p style={{ fontSize: typo.small, color: colors.textMuted, margin: 0 }}>
+                  Beads on a string
+                </p>
+              </div>
+            </>
+          ) : (
+            <>
+              {/* Surface area inset label */}
+              <div style={{ maxWidth: isMobile ? '100px' : '120px' }}>
+                <p style={{ fontSize: typo.small, fontWeight: 600, color: colors.textSecondary, margin: 0, marginBottom: '2px' }}>
+                  Surface Area
+                </p>
+                <p style={{ fontSize: typo.label, color: colors.textMuted, margin: 0 }}>
+                  Cylinder → Spheres
+                </p>
+                <p style={{ fontSize: typo.label, color: colors.success, margin: 0, fontWeight: 600 }}>
+                  ↓ 15% less area!
+                </p>
+              </div>
+              {/* Formula */}
+              <div style={{ textAlign: 'right' }}>
+                <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>
+                  Most unstable wavelength:
+                </p>
+                <p style={{ fontSize: typo.body, color: colors.primaryLight, margin: 0, fontWeight: 600 }}>
+                  λ ≈ 9r <span style={{ color: colors.textMuted, fontWeight: 400 }}>(9× jet radius)</span>
+                </p>
+              </div>
+            </>
+          )}
+        </div>
       </div>
     );
   };

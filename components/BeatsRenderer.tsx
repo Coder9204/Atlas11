@@ -407,7 +407,7 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     );
   };
 
-  // Beats visualization
+  // Beats visualization - Premium quality SVG graphics
   const renderBeatsVisualization = () => {
     const width = 450;
     const height = 220;
@@ -439,8 +439,8 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
       return `M ${points.join(' L ')}`;
     };
 
-    // Beat envelope
-    const generateEnvelope = () => {
+    // Beat envelope (upper)
+    const generateEnvelopeUpper = () => {
       const points: string[] = [];
       for (let x = 0; x <= width; x += 4) {
         const t = x * timeScale + time;
@@ -451,109 +451,313 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
       return `M ${points.join(' L ')}`;
     };
 
+    // Beat envelope (lower)
+    const generateEnvelopeLower = () => {
+      const points: string[] = [];
+      for (let x = 0; x <= width; x += 4) {
+        const t = x * timeScale + time;
+        const envelope = Math.abs(Math.cos(Math.PI * beatFrequency * t * 0.005));
+        const y = 170 + (amp1 + amp2) * envelope / 2;
+        points.push(`${x},${y}`);
+      }
+      return `M ${points.join(' L ')}`;
+    };
+
     return (
-      <svg viewBox={`0 0 ${width + 50} ${height + 30}`} style={{ width: '100%', height: '100%', maxHeight: '260px' }}>
-        <defs>
-          <linearGradient id="beatsGrad1" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={design.colors.accentPrimary} stopOpacity="0.8" />
-            <stop offset="100%" stopColor={design.colors.accentSecondary} />
-          </linearGradient>
-          <linearGradient id="beatsGrad2" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={design.colors.cyan} stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#22d3ee" />
-          </linearGradient>
-          <linearGradient id="beatsCombined" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={design.colors.success} />
-            <stop offset="100%" stopColor="#34d399" />
-          </linearGradient>
-          <filter id="beatsGlow">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
+      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%', maxHeight: '320px' }}>
+        {/* Frequency labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          padding: `0 ${typo.pagePadding}`,
+          marginBottom: typo.elementGap
+        }}>
+          <div style={{ display: 'flex', gap: typo.sectionGap }}>
+            <span style={{
+              fontSize: typo.small,
+              fontWeight: 600,
+              color: design.colors.accentPrimary,
+              fontFamily: design.font.mono
+            }}>
+              f1 = {freq1} Hz
+            </span>
+            <span style={{
+              fontSize: typo.small,
+              fontWeight: 600,
+              color: design.colors.cyan,
+              fontFamily: design.font.mono
+            }}>
+              f2 = {freq2} Hz
+            </span>
+          </div>
+          <div style={{
+            padding: '8px 16px',
+            borderRadius: design.radius.md,
+            background: design.colors.bgCard,
+            border: `1px solid ${design.colors.border}`,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span style={{ fontSize: typo.label, color: design.colors.textMuted, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Beat</span>
+            <span style={{ fontSize: typo.heading, fontWeight: 800, color: design.colors.warning, fontFamily: design.font.mono }}>{beatFrequency} Hz</span>
+          </div>
+        </div>
 
-        <rect x="0" y="0" width={width + 50} height={height + 30} fill={design.colors.bgDeep} rx="12" />
+        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', flex: 1 }}>
+          <defs>
+            {/* Premium Wave 1 gradient - Teal/Cyan with 4 stops */}
+            <linearGradient id="beatsWave1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#5eead4" stopOpacity="0.6" />
+              <stop offset="30%" stopColor={design.colors.accentPrimary} stopOpacity="0.9" />
+              <stop offset="70%" stopColor={design.colors.accentSecondary} stopOpacity="1" />
+              <stop offset="100%" stopColor="#5eead4" stopOpacity="0.6" />
+            </linearGradient>
 
-        {/* Labels */}
-        <text x="25" y="45" fill={design.colors.accentPrimary} fontSize="11" fontWeight="600">f₁ = {freq1} Hz</text>
-        <text x="25" y="95" fill={design.colors.cyan} fontSize="11" fontWeight="600">f₂ = {freq2} Hz</text>
-        <text x="25" y="175" fill={design.colors.success} fontSize="11" fontWeight="600">Combined</text>
+            {/* Premium Wave 2 gradient - Cyan/Blue with 4 stops */}
+            <linearGradient id="beatsWave2Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.6" />
+              <stop offset="30%" stopColor={design.colors.cyan} stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#0ea5e9" stopOpacity="1" />
+              <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.6" />
+            </linearGradient>
 
-        {/* Wave 1 */}
-        <g transform="translate(25, 0)">
-          <line x1="0" y1="50" x2={width} y2="50" stroke={design.colors.border} strokeDasharray="4,4" opacity="0.3" />
-          <path d={generateWavePath(freq1, amp1 * 0.6, 50)} fill="none" stroke="url(#beatsGrad1)" strokeWidth="2.5" filter="url(#beatsGlow)" />
-        </g>
+            {/* Premium Combined wave gradient - Emerald with 4 stops */}
+            <linearGradient id="beatsCombinedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6ee7b7" stopOpacity="0.7" />
+              <stop offset="30%" stopColor={design.colors.success} stopOpacity="0.95" />
+              <stop offset="70%" stopColor="#059669" stopOpacity="1" />
+              <stop offset="100%" stopColor="#6ee7b7" stopOpacity="0.7" />
+            </linearGradient>
 
-        {/* Wave 2 */}
-        <g transform="translate(25, 0)">
-          <line x1="0" y1="100" x2={width} y2="100" stroke={design.colors.border} strokeDasharray="4,4" opacity="0.3" />
-          <path d={generateWavePath(freq2, amp2 * 0.6, 100)} fill="none" stroke="url(#beatsGrad2)" strokeWidth="2.5" filter="url(#beatsGlow)" />
-        </g>
+            {/* Envelope gradient - Warning/Amber */}
+            <linearGradient id="beatsEnvelopeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.3" />
+              <stop offset="50%" stopColor={design.colors.warning} stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#fcd34d" stopOpacity="0.3" />
+            </linearGradient>
 
-        {/* Combined wave with envelope */}
-        <g transform="translate(25, 0)">
-          <line x1="0" y1="170" x2={width} y2="170" stroke={design.colors.border} strokeDasharray="4,4" opacity="0.3" />
-          <path d={generateEnvelope()} fill="none" stroke={design.colors.warning} strokeWidth="1.5" strokeDasharray="6,3" opacity="0.6" />
-          <path d={generateBeatPath()} fill="none" stroke="url(#beatsCombined)" strokeWidth="3" filter="url(#beatsGlow)" />
-        </g>
+            {/* Background gradient for premium depth */}
+            <linearGradient id="beatsBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={design.colors.bgDeep} />
+              <stop offset="50%" stopColor="#031a17" />
+              <stop offset="100%" stopColor={design.colors.bgDeep} />
+            </linearGradient>
 
-        {/* Beat frequency indicator */}
-        <g transform={`translate(${width - 80}, 15)`}>
-          <rect x="0" y="0" width="100" height="50" rx="8" fill={design.colors.bgCard} stroke={design.colors.border} />
-          <text x="50" y="18" textAnchor="middle" fill={design.colors.textMuted} fontSize="9" fontWeight="600">BEAT FREQ</text>
-          <text x="50" y="38" textAnchor="middle" fill={design.colors.warning} fontSize="18" fontWeight="800">{beatFrequency} Hz</text>
-        </g>
-      </svg>
+            {/* Wave glow filter with blur and merge */}
+            <filter id="beatsWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Intense glow for combined wave */}
+            <filter id="beatsCombinedGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle glow for envelope */}
+            <filter id="beatsEnvelopeGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Grid pattern */}
+            <pattern id="beatsGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke={design.colors.border} strokeWidth="0.3" strokeOpacity="0.2" />
+            </pattern>
+          </defs>
+
+          {/* Premium background with gradient */}
+          <rect x="0" y="0" width={width} height={height} fill="url(#beatsBgGrad)" rx="12" />
+          <rect x="0" y="0" width={width} height={height} fill="url(#beatsGrid)" rx="12" />
+
+          {/* Wave 1 section */}
+          <g>
+            {/* Center line */}
+            <line x1="0" y1="40" x2={width} y2="40" stroke={design.colors.border} strokeWidth="0.5" opacity="0.4" />
+            {/* Wave with glow */}
+            <path
+              d={generateWavePath(freq1, amp1 * 0.5, 40)}
+              fill="none"
+              stroke="url(#beatsWave1Grad)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              filter="url(#beatsWaveGlow)"
+            />
+          </g>
+
+          {/* Wave 2 section */}
+          <g>
+            {/* Center line */}
+            <line x1="0" y1="90" x2={width} y2="90" stroke={design.colors.border} strokeWidth="0.5" opacity="0.4" />
+            {/* Wave with glow */}
+            <path
+              d={generateWavePath(freq2, amp2 * 0.5, 90)}
+              fill="none"
+              stroke="url(#beatsWave2Grad)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              filter="url(#beatsWaveGlow)"
+            />
+          </g>
+
+          {/* Separator line */}
+          <line x1="20" y1="125" x2={width - 20} y2="125" stroke={design.colors.border} strokeWidth="1" opacity="0.3" />
+          <text x={width / 2} y="128" textAnchor="middle" fill={design.colors.textMuted} fontSize="8" fontWeight="600" opacity="0.6">SUPERPOSITION</text>
+
+          {/* Combined wave section with envelope */}
+          <g>
+            {/* Center line */}
+            <line x1="0" y1="170" x2={width} y2="170" stroke={design.colors.border} strokeWidth="0.5" opacity="0.4" />
+
+            {/* Beat envelope - upper and lower bounds with glow */}
+            <path
+              d={generateEnvelopeUpper()}
+              fill="none"
+              stroke="url(#beatsEnvelopeGrad)"
+              strokeWidth="1.5"
+              strokeDasharray="8,4"
+              strokeLinecap="round"
+              filter="url(#beatsEnvelopeGlow)"
+            />
+            <path
+              d={generateEnvelopeLower()}
+              fill="none"
+              stroke="url(#beatsEnvelopeGrad)"
+              strokeWidth="1.5"
+              strokeDasharray="8,4"
+              strokeLinecap="round"
+              filter="url(#beatsEnvelopeGlow)"
+            />
+
+            {/* Combined wave with intense glow */}
+            <path
+              d={generateBeatPath()}
+              fill="none"
+              stroke="url(#beatsCombinedGrad)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              filter="url(#beatsCombinedGlow)"
+            />
+          </g>
+
+          {/* Wave labels inside SVG - minimal */}
+          <text x="8" y="44" fill={design.colors.accentPrimary} fontSize="9" fontWeight="600" opacity="0.8">Wave 1</text>
+          <text x="8" y="94" fill={design.colors.cyan} fontSize="9" fontWeight="600" opacity="0.8">Wave 2</text>
+          <text x="8" y="174" fill={design.colors.success} fontSize="9" fontWeight="600" opacity="0.8">Combined</text>
+        </svg>
+      </div>
     );
   };
 
-  // Application tab SVG graphics
+  // Application tab SVG graphics - Premium quality
   const renderApplicationGraphic = () => {
     const app = applications[activeApp];
 
     if (app.id === 'tuning') {
       return (
         <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }}>
-          <rect x="0" y="0" width="300" height="200" fill={design.colors.bgDeep} rx="12" />
+          <defs>
+            {/* Premium background gradient */}
+            <linearGradient id="beatsTuningBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={design.colors.bgDeep} />
+              <stop offset="50%" stopColor="#031a17" />
+              <stop offset="100%" stopColor={design.colors.bgDeep} />
+            </linearGradient>
+
+            {/* Tuning fork 1 gradient - Teal */}
+            <linearGradient id="beatsFork1Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#5eead4" />
+              <stop offset="40%" stopColor={design.colors.accentPrimary} />
+              <stop offset="100%" stopColor="#0d9488" />
+            </linearGradient>
+
+            {/* Tuning fork 2 gradient - Cyan */}
+            <linearGradient id="beatsFork2Grad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#67e8f9" />
+              <stop offset="40%" stopColor={design.colors.cyan} />
+              <stop offset="100%" stopColor="#0284c7" />
+            </linearGradient>
+
+            {/* Sound wave glow */}
+            <filter id="beatsSoundGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Interference glow */}
+            <radialGradient id="beatsInterferenceGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={design.colors.success} stopOpacity="0.6" />
+              <stop offset="50%" stopColor={design.colors.success} stopOpacity="0.2" />
+              <stop offset="100%" stopColor={design.colors.success} stopOpacity="0" />
+            </radialGradient>
+
+            {/* Metal handle gradient */}
+            <linearGradient id="beatsMetalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="30%" stopColor="#4b5563" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+          </defs>
+
+          <rect x="0" y="0" width="300" height="200" fill="url(#beatsTuningBg)" rx="12" />
+
+          {/* Interference zone glow */}
+          <ellipse cx="150" cy="60" rx="40" ry="35" fill="url(#beatsInterferenceGlow)" />
 
           {/* Tuning fork 1 */}
           <g transform="translate(80, 50)">
-            <rect x="-5" y="0" width="10" height="80" rx="3" fill={design.colors.bgElevated} />
-            <rect x="-15" y="-40" width="10" height="50" rx="2" fill={design.colors.accentPrimary}>
+            <rect x="-5" y="0" width="10" height="80" rx="3" fill="url(#beatsMetalGrad)" />
+            <rect x="-15" y="-40" width="10" height="50" rx="2" fill="url(#beatsFork1Grad)" filter="url(#beatsSoundGlow)">
               <animate attributeName="x" values="-15;-13;-15;-17;-15" dur="0.5s" repeatCount="indefinite" />
             </rect>
-            <rect x="5" y="-40" width="10" height="50" rx="2" fill={design.colors.accentPrimary}>
+            <rect x="5" y="-40" width="10" height="50" rx="2" fill="url(#beatsFork1Grad)" filter="url(#beatsSoundGlow)">
               <animate attributeName="x" values="5;7;5;3;5" dur="0.5s" repeatCount="indefinite" />
             </rect>
-            <text x="0" y="100" textAnchor="middle" fill={design.colors.textSecondary} fontSize="12">440 Hz</text>
           </g>
 
           {/* Tuning fork 2 */}
           <g transform="translate(220, 50)">
-            <rect x="-5" y="0" width="10" height="80" rx="3" fill={design.colors.bgElevated} />
-            <rect x="-15" y="-40" width="10" height="50" rx="2" fill={design.colors.cyan}>
+            <rect x="-5" y="0" width="10" height="80" rx="3" fill="url(#beatsMetalGrad)" />
+            <rect x="-15" y="-40" width="10" height="50" rx="2" fill="url(#beatsFork2Grad)" filter="url(#beatsSoundGlow)">
               <animate attributeName="x" values="-15;-14;-15;-16;-15" dur="0.48s" repeatCount="indefinite" />
             </rect>
-            <rect x="5" y="-40" width="10" height="50" rx="2" fill={design.colors.cyan}>
+            <rect x="5" y="-40" width="10" height="50" rx="2" fill="url(#beatsFork2Grad)" filter="url(#beatsSoundGlow)">
               <animate attributeName="x" values="5;6;5;4;5" dur="0.48s" repeatCount="indefinite" />
             </rect>
-            <text x="0" y="100" textAnchor="middle" fill={design.colors.textSecondary} fontSize="12">444 Hz</text>
           </g>
 
-          {/* Sound waves meeting */}
+          {/* Sound waves meeting with glow */}
           <g transform="translate(150, 60)">
             {[0, 1, 2].map((i) => (
-              <circle key={i} cx="0" cy="0" r={20 + i * 15} fill="none" stroke={design.colors.success} strokeWidth="2" opacity={0.5 - i * 0.15}>
+              <circle key={i} cx="0" cy="0" r={20 + i * 15} fill="none" stroke={design.colors.success} strokeWidth="2" filter="url(#beatsSoundGlow)" opacity={0.6 - i * 0.15}>
                 <animate attributeName="r" values={`${20 + i * 15};${30 + i * 15};${20 + i * 15}`} dur="1s" repeatCount="indefinite" />
-                <animate attributeName="opacity" values={`${0.5 - i * 0.15};${0.3 - i * 0.1};${0.5 - i * 0.15}`} dur="1s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values={`${0.6 - i * 0.15};${0.3 - i * 0.1};${0.6 - i * 0.15}`} dur="1s" repeatCount="indefinite" />
               </circle>
             ))}
           </g>
 
-          <text x="150" y="185" textAnchor="middle" fill={design.colors.textSecondary} fontSize="11">
-            Beat freq = |444 - 440| = 4 Hz
-          </text>
+          {/* Frequency labels */}
+          <text x="80" y="150" textAnchor="middle" fill={design.colors.accentPrimary} fontSize="11" fontWeight="600">440 Hz</text>
+          <text x="220" y="150" textAnchor="middle" fill={design.colors.cyan} fontSize="11" fontWeight="600">444 Hz</text>
+
+          {/* Beat frequency display */}
+          <rect x="100" y="165" width="100" height="28" rx="6" fill={design.colors.bgCard} stroke={design.colors.border} strokeWidth="1" />
+          <text x="150" y="177" textAnchor="middle" fill={design.colors.textMuted} fontSize="8" fontWeight="600">BEAT FREQUENCY</text>
+          <text x="150" y="189" textAnchor="middle" fill={design.colors.warning} fontSize="11" fontWeight="700">4 Hz</text>
         </svg>
       );
     }
@@ -561,59 +765,118 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     if (app.id === 'radar') {
       return (
         <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }}>
-          <rect x="0" y="0" width="300" height="200" fill={design.colors.bgDeep} rx="12" />
+          <defs>
+            {/* Premium background */}
+            <linearGradient id="beatsRadarBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={design.colors.bgDeep} />
+              <stop offset="50%" stopColor="#0a1628" />
+              <stop offset="100%" stopColor={design.colors.bgDeep} />
+            </linearGradient>
+
+            {/* Transmitted wave gradient */}
+            <linearGradient id="beatsTransmitGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={design.colors.accentPrimary} stopOpacity="0.9" />
+              <stop offset="50%" stopColor={design.colors.accentSecondary} stopOpacity="1" />
+              <stop offset="100%" stopColor={design.colors.accentPrimary} stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Reflected wave gradient */}
+            <linearGradient id="beatsReflectGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={design.colors.cyan} stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#0ea5e9" stopOpacity="0.8" />
+              <stop offset="100%" stopColor={design.colors.cyan} stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Car gradient */}
+            <linearGradient id="beatsCarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="50%" stopColor={design.colors.warning} />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Wave glow filter */}
+            <filter id="beatsRadarGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Radar gun metal */}
+            <linearGradient id="beatsGunMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="50%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+          </defs>
+
+          <rect x="0" y="0" width="300" height="200" fill="url(#beatsRadarBg)" rx="12" />
 
           {/* Radar gun */}
-          <g transform="translate(40, 80)">
-            <rect x="0" y="0" width="50" height="30" rx="4" fill={design.colors.bgElevated} stroke={design.colors.border} />
-            <rect x="50" y="8" width="20" height="14" rx="2" fill={design.colors.cyan} />
-            <circle cx="60" cy="15" r="4" fill={design.colors.accentPrimary}>
-              <animate attributeName="opacity" values="1;0.5;1" dur="0.3s" repeatCount="indefinite" />
+          <g transform="translate(40, 75)">
+            <rect x="0" y="0" width="55" height="35" rx="6" fill="url(#beatsGunMetal)" stroke={design.colors.border} strokeWidth="1" />
+            <rect x="50" y="8" width="25" height="19" rx="3" fill={design.colors.cyan} filter="url(#beatsRadarGlow)" />
+            <circle cx="62" cy="17" r="5" fill={design.colors.accentPrimary}>
+              <animate attributeName="opacity" values="1;0.4;1" dur="0.3s" repeatCount="indefinite" />
+              <animate attributeName="r" values="5;6;5" dur="0.3s" repeatCount="indefinite" />
             </circle>
+            {/* Display */}
+            <rect x="8" y="8" width="35" height="18" rx="2" fill={design.colors.bgDeep} />
+            <text x="25" y="20" textAnchor="middle" fill={design.colors.success} fontSize="8" fontFamily={design.font.mono}>72 mph</text>
           </g>
 
           {/* Transmitted waves */}
           {[0, 1, 2, 3].map((i) => (
             <path
               key={i}
-              d={`M 70 95 Q ${100 + i * 25} ${85 + 5 * Math.sin(time * 10 + i)} ${130 + i * 25} 95`}
+              d={`M 75 93 Q ${105 + i * 28} ${82 + 6 * Math.sin(time * 10 + i)} ${135 + i * 28} 93`}
               fill="none"
-              stroke={design.colors.accentPrimary}
-              strokeWidth="2"
-              opacity={0.8 - i * 0.15}
+              stroke="url(#beatsTransmitGrad)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              filter="url(#beatsRadarGlow)"
+              opacity={0.9 - i * 0.15}
             />
           ))}
 
           {/* Car */}
-          <g transform="translate(210, 75)">
-            <rect x="0" y="10" width="50" height="25" rx="4" fill={design.colors.warning} />
-            <rect x="5" y="5" width="40" height="15" rx="3" fill="#fcd34d" />
-            <circle cx="12" cy="35" r="8" fill={design.colors.bgDeep} />
-            <circle cx="38" cy="35" r="8" fill={design.colors.bgDeep} />
+          <g transform="translate(210, 70)">
+            <rect x="0" y="12" width="55" height="28" rx="5" fill="url(#beatsCarGrad)" />
+            <rect x="5" y="5" width="45" height="18" rx="4" fill="#fef3c7" />
+            {/* Windows */}
+            <rect x="10" y="8" width="15" height="12" rx="2" fill="#0ea5e9" opacity="0.4" />
+            <rect x="28" y="8" width="18" height="12" rx="2" fill="#0ea5e9" opacity="0.4" />
+            {/* Wheels */}
+            <circle cx="15" cy="40" r="9" fill="#1f2937" />
+            <circle cx="15" cy="40" r="5" fill="#4b5563" />
+            <circle cx="40" cy="40" r="9" fill="#1f2937" />
+            <circle cx="40" cy="40" r="5" fill="#4b5563" />
             {/* Motion lines */}
-            <line x1="55" y1="20" x2="70" y2="20" stroke={design.colors.textMuted} strokeWidth="2" />
-            <line x1="55" y1="28" x2="65" y2="28" stroke={design.colors.textMuted} strokeWidth="2" />
+            <line x1="58" y1="22" x2="75" y2="22" stroke={design.colors.textMuted} strokeWidth="2" strokeLinecap="round" opacity="0.6" />
+            <line x1="58" y1="30" x2="68" y2="30" stroke={design.colors.textMuted} strokeWidth="2" strokeLinecap="round" opacity="0.4" />
           </g>
 
           {/* Reflected waves (shifted frequency) */}
           {[0, 1, 2].map((i) => (
             <path
               key={`r${i}`}
-              d={`M 200 95 Q ${175 - i * 25} ${105 + 5 * Math.sin(time * 10 + i)} ${150 - i * 25} 95`}
+              d={`M 200 93 Q ${172 - i * 28} ${104 + 6 * Math.sin(time * 10 + i)} ${145 - i * 28} 93`}
               fill="none"
-              stroke={design.colors.cyan}
+              stroke="url(#beatsReflectGrad)"
               strokeWidth="2"
-              opacity={0.6 - i * 0.15}
-              strokeDasharray="4,4"
+              strokeLinecap="round"
+              strokeDasharray="6,4"
+              filter="url(#beatsRadarGlow)"
+              opacity={0.7 - i * 0.15}
             />
           ))}
 
-          <text x="150" y="155" textAnchor="middle" fill={design.colors.textSecondary} fontSize="11">
-            Doppler shift creates beat frequency
-          </text>
-          <text x="150" y="175" textAnchor="middle" fill={design.colors.warning} fontSize="13" fontWeight="600">
-            Speed = 72 mph
-          </text>
+          {/* Info panel */}
+          <rect x="85" y="145" width="130" height="48" rx="8" fill={design.colors.bgCard} stroke={design.colors.border} strokeWidth="1" />
+          <text x="150" y="160" textAnchor="middle" fill={design.colors.textMuted} fontSize="8" fontWeight="600">DOPPLER BEAT</text>
+          <text x="150" y="177" textAnchor="middle" fill={design.colors.warning} fontSize="14" fontWeight="700">72 mph</text>
+          <text x="150" y="189" textAnchor="middle" fill={design.colors.textMuted} fontSize="7">v = c * f_beat / 2f0</text>
         </svg>
       );
     }
@@ -621,57 +884,124 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     if (app.id === 'music') {
       return (
         <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }}>
-          <rect x="0" y="0" width="300" height="200" fill={design.colors.bgDeep} rx="12" />
+          <defs>
+            {/* Premium background */}
+            <linearGradient id="beatsMusicBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={design.colors.bgDeep} />
+              <stop offset="50%" stopColor="#0a1a14" />
+              <stop offset="100%" stopColor={design.colors.bgDeep} />
+            </linearGradient>
 
-          {/* Synthesizer */}
-          <rect x="50" y="60" width="200" height="80" rx="8" fill={design.colors.bgElevated} stroke={design.colors.border} strokeWidth="2" />
+            {/* Synth body gradient */}
+            <linearGradient id="beatsSynthGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="30%" stopColor="#1f2937" />
+              <stop offset="70%" stopColor="#111827" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-          {/* Keys */}
-          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
-            <rect
-              key={i}
-              x={60 + i * 18}
-              y="100"
-              width="14"
-              height="35"
-              rx="2"
-              fill={i % 2 === 0 ? '#f5f5f4' : design.colors.bgDeep}
-              stroke={design.colors.border}
-            />
-          ))}
+            {/* Sound wave pulse */}
+            <radialGradient id="beatsPulseGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={design.colors.success} stopOpacity="0.8" />
+              <stop offset="40%" stopColor={design.colors.success} stopOpacity="0.3" />
+              <stop offset="100%" stopColor={design.colors.success} stopOpacity="0" />
+            </radialGradient>
 
-          {/* Oscillator displays */}
-          <g transform="translate(70, 70)">
-            <rect x="0" y="0" width="70" height="25" rx="4" fill={design.colors.bgDeep} />
-            <text x="35" y="10" textAnchor="middle" fill={design.colors.textMuted} fontSize="7">OSC 1</text>
-            <text x="35" y="20" textAnchor="middle" fill={design.colors.accentPrimary} fontSize="10" fontWeight="700">440 Hz</text>
-          </g>
-          <g transform="translate(160, 70)">
-            <rect x="0" y="0" width="70" height="25" rx="4" fill={design.colors.bgDeep} />
-            <text x="35" y="10" textAnchor="middle" fill={design.colors.textMuted} fontSize="7">OSC 2</text>
-            <text x="35" y="20" textAnchor="middle" fill={design.colors.cyan} fontSize="10" fontWeight="700">443 Hz</text>
-          </g>
+            {/* Glow filter */}
+            <filter id="beatsMusicGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-          {/* Sound waves */}
+            {/* LED glow */}
+            <filter id="beatsLedGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <rect x="0" y="0" width="300" height="200" fill="url(#beatsMusicBg)" rx="12" />
+
+          {/* Sound wave pulses */}
           {[0, 1, 2, 3].map((i) => {
             const modulation = Math.sin(time * 3) * 0.5 + 0.5;
             return (
               <circle
                 key={i}
                 cx="150"
-                cy="40"
-                r={10 + i * 12}
+                cy="35"
+                r={8 + i * 14}
                 fill="none"
                 stroke={design.colors.success}
                 strokeWidth="2"
-                opacity={(0.6 - i * 0.15) * modulation}
+                filter="url(#beatsMusicGlow)"
+                opacity={(0.7 - i * 0.15) * modulation}
               />
             );
           })}
 
-          <text x="150" y="185" textAnchor="middle" fill={design.colors.textSecondary} fontSize="11">
-            Detuned oscillators create pulsating sound
-          </text>
+          {/* Synthesizer */}
+          <rect x="45" y="58" width="210" height="90" rx="10" fill="url(#beatsSynthGrad)" stroke={design.colors.border} strokeWidth="2" />
+
+          {/* Top panel */}
+          <rect x="55" y="65" width="190" height="35" rx="4" fill={design.colors.bgDeep} />
+
+          {/* Oscillator displays */}
+          <g transform="translate(65, 72)">
+            <rect x="0" y="0" width="75" height="22" rx="3" fill="#0a0f14" stroke={design.colors.accentPrimary} strokeWidth="1" strokeOpacity="0.5" />
+            <text x="37" y="9" textAnchor="middle" fill={design.colors.textMuted} fontSize="6" fontWeight="600">OSC 1</text>
+            <text x="37" y="18" textAnchor="middle" fill={design.colors.accentPrimary} fontSize="10" fontWeight="700" filter="url(#beatsLedGlow)">440 Hz</text>
+          </g>
+          <g transform="translate(160, 72)">
+            <rect x="0" y="0" width="75" height="22" rx="3" fill="#0a0f14" stroke={design.colors.cyan} strokeWidth="1" strokeOpacity="0.5" />
+            <text x="37" y="9" textAnchor="middle" fill={design.colors.textMuted} fontSize="6" fontWeight="600">OSC 2</text>
+            <text x="37" y="18" textAnchor="middle" fill={design.colors.cyan} fontSize="10" fontWeight="700" filter="url(#beatsLedGlow)">443 Hz</text>
+          </g>
+
+          {/* LED indicators */}
+          <circle cx="250" y="80" r="3" fill={design.colors.success} filter="url(#beatsLedGlow)">
+            <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
+          </circle>
+
+          {/* Keys */}
+          {[0, 1, 2, 3, 4, 5, 6, 7, 8, 9].map((i) => (
+            <g key={i}>
+              <rect
+                x={58 + i * 19}
+                y="105"
+                width="15"
+                height="38"
+                rx="2"
+                fill={i % 2 === 0 ? '#fafaf9' : '#1f2937'}
+                stroke={design.colors.border}
+                strokeWidth="0.5"
+              />
+              {/* Key pressed effect */}
+              {i === 4 && (
+                <rect
+                  x={58 + i * 19}
+                  y="107"
+                  width="15"
+                  height="36"
+                  rx="2"
+                  fill={design.colors.accentPrimary}
+                  opacity="0.3"
+                />
+              )}
+            </g>
+          ))}
+
+          {/* Beat indicator */}
+          <rect x="100" y="160" width="100" height="32" rx="8" fill={design.colors.bgCard} stroke={design.colors.border} strokeWidth="1" />
+          <text x="150" y="173" textAnchor="middle" fill={design.colors.textMuted} fontSize="7" fontWeight="600">DETUNE BEAT</text>
+          <text x="150" y="186" textAnchor="middle" fill={design.colors.success} fontSize="12" fontWeight="700">3 Hz pulse</text>
         </svg>
       );
     }
@@ -679,62 +1009,134 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
     if (app.id === 'medical') {
       return (
         <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }}>
-          <rect x="0" y="0" width="300" height="200" fill={design.colors.bgDeep} rx="12" />
+          <defs>
+            {/* Premium background */}
+            <linearGradient id="beatsMedicalBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={design.colors.bgDeep} />
+              <stop offset="50%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor={design.colors.bgDeep} />
+            </linearGradient>
+
+            {/* Ultrasound wave gradient */}
+            <linearGradient id="beatsUltrasoundGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={design.colors.warning} stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#fcd34d" stopOpacity="1" />
+              <stop offset="100%" stopColor={design.colors.warning} stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Reflected wave gradient */}
+            <linearGradient id="beatsEchoGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={design.colors.accentPrimary} stopOpacity="0.4" />
+              <stop offset="50%" stopColor={design.colors.accentSecondary} stopOpacity="0.8" />
+              <stop offset="100%" stopColor={design.colors.accentPrimary} stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Blood vessel gradient */}
+            <linearGradient id="beatsVesselGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+
+            {/* Blood cell gradient */}
+            <radialGradient id="beatsCellGrad" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </radialGradient>
+
+            {/* Probe gradient */}
+            <linearGradient id="beatsProbeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Glow filter */}
+            <filter id="beatsMedGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          <rect x="0" y="0" width="300" height="200" fill="url(#beatsMedicalBg)" rx="12" />
 
           {/* Ultrasound probe */}
-          <g transform="translate(50, 70)">
-            <rect x="0" y="0" width="30" height="60" rx="4" fill={design.colors.bgElevated} stroke={design.colors.border} />
-            <rect x="5" y="55" width="20" height="10" rx="2" fill={design.colors.warning} />
+          <g transform="translate(45, 60)">
+            <rect x="0" y="0" width="35" height="70" rx="6" fill="url(#beatsProbeGrad)" stroke={design.colors.border} strokeWidth="1" />
+            {/* Emitter surface */}
+            <rect x="5" y="62" width="25" height="8" rx="2" fill={design.colors.warning} filter="url(#beatsMedGlow)">
+              <animate attributeName="opacity" values="0.8;1;0.8" dur="0.3s" repeatCount="indefinite" />
+            </rect>
+            {/* Display */}
+            <rect x="5" y="8" width="25" height="18" rx="2" fill={design.colors.bgDeep} />
+            <text x="17" y="20" textAnchor="middle" fill={design.colors.success} fontSize="6" fontFamily={design.font.mono}>5MHz</text>
+            {/* LED */}
+            <circle cx="17" cy="32" r="3" fill={design.colors.success} filter="url(#beatsMedGlow)">
+              <animate attributeName="opacity" values="1;0.4;1" dur="0.5s" repeatCount="indefinite" />
+            </circle>
           </g>
 
           {/* Sound waves going in */}
           {[0, 1, 2].map((i) => (
             <path
               key={i}
-              d={`M 80 100 Q ${100 + i * 20} ${90 + 5 * Math.sin(time * 8 + i)} ${120 + i * 20} 100`}
+              d={`M 80 100 Q ${102 + i * 22} ${88 + 6 * Math.sin(time * 8 + i)} ${125 + i * 22} 100`}
               fill="none"
-              stroke={design.colors.warning}
-              strokeWidth="2"
-              opacity={0.8 - i * 0.2}
+              stroke="url(#beatsUltrasoundGrad)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              filter="url(#beatsMedGlow)"
+              opacity={0.9 - i * 0.2}
             />
           ))}
 
           {/* Blood vessel */}
-          <g transform="translate(170, 60)">
-            <ellipse cx="40" cy="40" rx="50" ry="35" fill="none" stroke="#ef4444" strokeWidth="3" />
-            <ellipse cx="40" cy="40" rx="35" ry="25" fill={design.colors.bgDeep} />
+          <g transform="translate(168, 55)">
+            {/* Outer wall */}
+            <ellipse cx="45" cy="45" rx="55" ry="40" fill="none" stroke="url(#beatsVesselGrad)" strokeWidth="4" />
+            {/* Inner space */}
+            <ellipse cx="45" cy="45" rx="40" ry="30" fill={design.colors.bgDeep} />
 
             {/* Blood cells moving */}
-            {[0, 1, 2, 3].map((i) => (
-              <circle
-                key={i}
-                cx={25 + ((time * 30 + i * 20) % 70)}
-                cy={40 + 10 * Math.sin((time * 30 + i * 20) % 70 * 0.1)}
-                r="4"
-                fill="#ef4444"
-              />
-            ))}
+            {[0, 1, 2, 3, 4].map((i) => {
+              const pos = (time * 25 + i * 18) % 80;
+              return (
+                <ellipse
+                  key={i}
+                  cx={10 + pos}
+                  cy={45 + 12 * Math.sin(pos * 0.08)}
+                  rx="5"
+                  ry="4"
+                  fill="url(#beatsCellGrad)"
+                />
+              );
+            })}
           </g>
 
           {/* Reflected waves */}
-          {[0, 1].map((i) => (
+          {[0, 1, 2].map((i) => (
             <path
               key={`r${i}`}
-              d={`M 170 100 Q ${150 - i * 20} ${110 + 5 * Math.sin(time * 8 + i)} ${130 - i * 20} 100`}
+              d={`M 168 100 Q ${146 - i * 22} ${112 + 6 * Math.sin(time * 8 + i)} ${124 - i * 22} 100`}
               fill="none"
-              stroke={design.colors.accentPrimary}
+              stroke="url(#beatsEchoGrad)"
               strokeWidth="2"
-              opacity={0.6 - i * 0.2}
-              strokeDasharray="4,4"
+              strokeLinecap="round"
+              strokeDasharray="6,4"
+              filter="url(#beatsMedGlow)"
+              opacity={0.7 - i * 0.2}
             />
           ))}
 
-          <text x="150" y="155" textAnchor="middle" fill={design.colors.textSecondary} fontSize="11">
-            Moving blood cells shift frequency
-          </text>
-          <text x="150" y="175" textAnchor="middle" fill={design.colors.error} fontSize="13" fontWeight="600">
-            Blood flow: 0.8 m/s
-          </text>
+          {/* Info panel */}
+          <rect x="80" y="145" width="140" height="48" rx="8" fill={design.colors.bgCard} stroke={design.colors.border} strokeWidth="1" />
+          <text x="150" y="160" textAnchor="middle" fill={design.colors.textMuted} fontSize="7" fontWeight="600">DOPPLER ULTRASOUND</text>
+          <text x="150" y="177" textAnchor="middle" fill={design.colors.error} fontSize="14" fontWeight="700">0.8 m/s</text>
+          <text x="150" y="189" textAnchor="middle" fill={design.colors.textMuted} fontSize="7">Blood flow velocity</text>
         </svg>
       );
     }
@@ -819,17 +1221,35 @@ const BeatsRenderer: React.FC<BeatsRendererProps> = ({ onGameEvent, gamePhase })
             boxShadow: design.shadow.glow(design.colors.accentPrimary)
           }}>
             <svg viewBox="0 0 60 60" style={{ width: '60%', height: '60%' }}>
-              {/* Sound wave visualization */}
+              <defs>
+                {/* Premium wave gradient */}
+                <linearGradient id="beatsIconWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#5eead4" stopOpacity="0.6" />
+                  <stop offset="30%" stopColor={design.colors.accentPrimary} stopOpacity="0.9" />
+                  <stop offset="70%" stopColor={design.colors.accentSecondary} stopOpacity="1" />
+                  <stop offset="100%" stopColor="#5eead4" stopOpacity="0.6" />
+                </linearGradient>
+                {/* Icon glow filter */}
+                <filter id="beatsIconGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="1.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              {/* Sound wave visualization - premium */}
               {[0, 1, 2].map((i) => {
-                const opacity = 0.8 - i * 0.2 + 0.2 * Math.sin(time * 4 + i);
+                const opacity = 0.85 - i * 0.2 + 0.15 * Math.sin(time * 4 + i);
                 return (
                   <path
                     key={i}
-                    d={`M 10 30 Q 20 ${20 - i * 3} 30 30 Q 40 ${40 + i * 3} 50 30`}
+                    d={`M 8 30 Q 18 ${18 - i * 4} 30 30 Q 42 ${42 + i * 4} 52 30`}
                     fill="none"
-                    stroke={design.colors.accentPrimary}
-                    strokeWidth="3"
+                    stroke="url(#beatsIconWaveGrad)"
+                    strokeWidth={3.5 - i * 0.3}
                     strokeLinecap="round"
+                    filter="url(#beatsIconGlow)"
                     opacity={opacity}
                   />
                 );

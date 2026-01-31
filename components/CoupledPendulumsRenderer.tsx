@@ -323,12 +323,40 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
     if (score >= 8 && onCorrectAnswer) onCorrectAnswer();
   };
 
+  // Store motion trail history
+  const [trailHistory, setTrailHistory] = useState<Array<{x1: number, y1: number, x2: number, y2: number}>>([]);
+
+  // Update trail history when pendulum moves
+  useEffect(() => {
+    if (isPlaying) {
+      const width = 400;
+      const pivotY = 60;
+      const pendulumLength = 150;
+      const x1 = width * 0.3 + pendulumLength * Math.sin(pendulum.theta1);
+      const y1 = pivotY + pendulumLength * Math.cos(pendulum.theta1);
+      const x2 = width * 0.7 + pendulumLength * Math.sin(pendulum.theta2);
+      const y2 = pivotY + pendulumLength * Math.cos(pendulum.theta2);
+
+      setTrailHistory(prev => {
+        const newHistory = [...prev, {x1, y1, x2, y2}];
+        return newHistory.slice(-20); // Keep last 20 positions
+      });
+    }
+  }, [pendulum, isPlaying]);
+
+  // Clear trail on reset
+  useEffect(() => {
+    if (!isPlaying && time === 0) {
+      setTrailHistory([]);
+    }
+  }, [isPlaying, time]);
+
   const renderVisualization = (interactive: boolean) => {
     const width = 400;
-    const height = 350;
-    const pivotY = 60;
-    const pendulumLength = 150;
-    const bobRadius = 20;
+    const height = 300;
+    const pivotY = 50;
+    const pendulumLength = 140;
+    const bobRadius = 18;
 
     // Calculate bob positions
     const x1 = width * 0.3 + pendulumLength * Math.sin(pendulum.theta1);
@@ -341,17 +369,22 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
     const spring1X = width * 0.3 + pendulumLength * 0.4 * Math.sin(pendulum.theta1);
     const spring2X = width * 0.7 + pendulumLength * 0.4 * Math.sin(pendulum.theta2);
 
-    // Generate spring path
+    // Spring stretch for color intensity
+    const springStretch = Math.abs(spring2X - spring1X - (width * 0.4));
+    const stretchIntensity = Math.min(springStretch / 30, 1);
+
+    // Generate spring path with more coils for realism
     const generateSpringPath = () => {
-      const numCoils = 10;
-      const amplitude = 8;
-      const dx = (spring2X - spring1X) / numCoils;
+      const numCoils = 12;
+      const amplitude = 6 + stretchIntensity * 4;
+      const springLength = spring2X - spring1X;
+      const coilWidth = springLength / numCoils;
 
       let path = `M ${spring1X} ${springY}`;
       for (let i = 0; i < numCoils; i++) {
-        const x = spring1X + dx * (i + 0.5);
+        const x = spring1X + coilWidth * (i + 0.5);
         const yOffset = i % 2 === 0 ? amplitude : -amplitude;
-        path += ` L ${x} ${springY + yOffset}`;
+        path += ` Q ${spring1X + coilWidth * i + coilWidth * 0.25} ${springY + yOffset * 1.5}, ${x} ${springY + yOffset}`;
       }
       path += ` L ${spring2X} ${springY}`;
       return path;
@@ -361,108 +394,368 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
     const energies = getEnergies();
     const maxEnergy = energies.total || 1;
 
+    // Energy transfer visualization - particles flowing between pendulums
+    const energyTransferDirection = energies.total1 > energies.total2 ? 1 : -1;
+    const transferIntensity = Math.abs(energies.total1 - energies.total2) / maxEnergy;
+
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '500px' }}
         >
-          {/* Support beam */}
-          <rect x={width * 0.2} y={pivotY - 10} width={width * 0.6} height={10} fill="#475569" rx={3} />
+          {/* === COMPREHENSIVE DEFS SECTION === */}
+          <defs>
+            {/* Premium background gradient */}
+            <linearGradient id="coupBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-          {/* Pivot points */}
-          <circle cx={width * 0.3} cy={pivotY} r={6} fill="#64748b" />
-          <circle cx={width * 0.7} cy={pivotY} r={6} fill="#64748b" />
+            {/* Support beam metallic gradient */}
+            <linearGradient id="coupBeamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="80%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
 
-          {/* Coupling spring */}
+            {/* Pivot point metallic gradient */}
+            <radialGradient id="coupPivotGrad" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </radialGradient>
+
+            {/* Pendulum rod metallic gradient */}
+            <linearGradient id="coupRodGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="25%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="75%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* Pendulum 1 bob - 3D radial gradient (blue) */}
+            <radialGradient id="coupBob1Grad" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="30%" stopColor="#3b82f6" />
+              <stop offset="60%" stopColor="#2563eb" />
+              <stop offset="85%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </radialGradient>
+
+            {/* Pendulum 2 bob - 3D radial gradient (amber) */}
+            <radialGradient id="coupBob2Grad" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="30%" stopColor="#fbbf24" />
+              <stop offset="60%" stopColor="#f59e0b" />
+              <stop offset="85%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </radialGradient>
+
+            {/* Spring metallic gradient with energy indication */}
+            <linearGradient id="coupSpringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="20%" stopColor="#10b981" />
+              <stop offset="40%" stopColor="#34d399" />
+              <stop offset="50%" stopColor="#6ee7b7" />
+              <stop offset="60%" stopColor="#34d399" />
+              <stop offset="80%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+
+            {/* Spring stressed gradient (when stretched) */}
+            <linearGradient id="coupSpringStressGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="20%" stopColor="#ef4444" />
+              <stop offset="40%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#fca5a5" />
+              <stop offset="60%" stopColor="#f87171" />
+              <stop offset="80%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* Energy bar gradients */}
+            <linearGradient id="coupEnergy1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1d4ed8" />
+              <stop offset="30%" stopColor="#2563eb" />
+              <stop offset="60%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#60a5fa" />
+            </linearGradient>
+
+            <linearGradient id="coupEnergy2Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b45309" />
+              <stop offset="30%" stopColor="#d97706" />
+              <stop offset="60%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+
+            {/* Energy transfer particle gradient */}
+            <radialGradient id="coupTransferGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="1" />
+              <stop offset="40%" stopColor="#8b5cf6" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#7c3aed" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Motion trail gradient for bob 1 */}
+            <linearGradient id="coupTrail1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* Motion trail gradient for bob 2 */}
+            <linearGradient id="coupTrail2Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* Glow filter for pendulum 1 bob */}
+            <filter id="coupGlow1" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#3b82f6" floodOpacity="0.6" />
+              <feComposite in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glow filter for pendulum 2 bob */}
+            <filter id="coupGlow2" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#f59e0b" floodOpacity="0.6" />
+              <feComposite in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Spring glow filter */}
+            <filter id="coupSpringGlow" x="-50%" y="-100%" width="200%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Energy transfer glow */}
+            <filter id="coupTransferGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle inner shadow for depth */}
+            <filter id="coupInnerShadow">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur" />
+              <feOffset dx="1" dy="1" result="offsetBlur" />
+              <feComposite in="SourceGraphic" in2="offsetBlur" operator="over" />
+            </filter>
+          </defs>
+
+          {/* Premium dark background */}
+          <rect width={width} height={height} fill="url(#coupBgGrad)" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="coupGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect width={width} height={height} fill="url(#coupGrid)" />
+
+          {/* Support beam with metallic finish */}
+          <rect x={width * 0.15} y={pivotY - 12} width={width * 0.7} height={14} fill="url(#coupBeamGrad)" rx={4} />
+          <rect x={width * 0.15} y={pivotY - 12} width={width * 0.7} height={3} fill="#94a3b8" fillOpacity={0.3} rx={2} />
+
+          {/* Mounting brackets */}
+          <rect x={width * 0.15 - 5} y={pivotY - 16} width={10} height={22} fill="url(#coupBeamGrad)" rx={2} />
+          <rect x={width * 0.85 - 5} y={pivotY - 16} width={10} height={22} fill="url(#coupBeamGrad)" rx={2} />
+
+          {/* Pivot points with 3D effect */}
+          <circle cx={width * 0.3} cy={pivotY} r={8} fill="url(#coupPivotGrad)" />
+          <circle cx={width * 0.3} cy={pivotY} r={4} fill="#1e293b" />
+          <circle cx={width * 0.7} cy={pivotY} r={8} fill="url(#coupPivotGrad)" />
+          <circle cx={width * 0.7} cy={pivotY} r={4} fill="#1e293b" />
+
+          {/* Motion trails for pendulum 1 */}
+          {trailHistory.length > 1 && trailHistory.slice(0, -1).map((pos, i) => {
+            const nextPos = trailHistory[i + 1];
+            const opacity = (i / trailHistory.length) * 0.5;
+            return (
+              <line
+                key={`trail1-${i}`}
+                x1={pos.x1}
+                y1={pos.y1}
+                x2={nextPos.x1}
+                y2={nextPos.y1}
+                stroke="#3b82f6"
+                strokeWidth={2}
+                strokeOpacity={opacity}
+                strokeLinecap="round"
+              />
+            );
+          })}
+
+          {/* Motion trails for pendulum 2 */}
+          {trailHistory.length > 1 && trailHistory.slice(0, -1).map((pos, i) => {
+            const nextPos = trailHistory[i + 1];
+            const opacity = (i / trailHistory.length) * 0.5;
+            return (
+              <line
+                key={`trail2-${i}`}
+                x1={pos.x2}
+                y1={pos.y2}
+                x2={nextPos.x2}
+                y2={nextPos.y2}
+                stroke="#f59e0b"
+                strokeWidth={2}
+                strokeOpacity={opacity}
+                strokeLinecap="round"
+              />
+            );
+          })}
+
+          {/* Coupling spring with metallic finish and stress coloring */}
           <path
             d={generateSpringPath()}
             fill="none"
-            stroke={colors.spring}
-            strokeWidth={2}
+            stroke={stretchIntensity > 0.5 ? `url(#coupSpringStressGrad)` : `url(#coupSpringGrad)`}
+            strokeWidth={3}
+            strokeLinecap="round"
+            filter="url(#coupSpringGlow)"
           />
 
-          {/* Pendulum 1 rod */}
+          {/* Spring attachment points */}
+          <circle cx={spring1X} cy={springY} r={4} fill="url(#coupPivotGrad)" />
+          <circle cx={spring2X} cy={springY} r={4} fill="url(#coupPivotGrad)" />
+
+          {/* Energy transfer visualization - particles flowing along spring */}
+          {isPlaying && transferIntensity > 0.1 && (
+            <>
+              {[0, 1, 2].map((i) => {
+                const progress = ((time * 3 + i * 0.33) % 1);
+                const particleX = energyTransferDirection > 0
+                  ? spring1X + (spring2X - spring1X) * progress
+                  : spring2X - (spring2X - spring1X) * progress;
+                return (
+                  <circle
+                    key={`transfer-${i}`}
+                    cx={particleX}
+                    cy={springY + Math.sin(progress * Math.PI * 4) * 4}
+                    r={3 + transferIntensity * 2}
+                    fill="url(#coupTransferGrad)"
+                    filter="url(#coupTransferGlow)"
+                    opacity={transferIntensity * 0.8}
+                  />
+                );
+              })}
+            </>
+          )}
+
+          {/* Pendulum 1 rod with metallic finish */}
           <line
             x1={width * 0.3}
             y1={pivotY}
             x2={x1}
             y2={y1}
-            stroke="#64748b"
-            strokeWidth={4}
+            stroke="url(#coupRodGrad)"
+            strokeWidth={5}
+            strokeLinecap="round"
           />
 
-          {/* Pendulum 2 rod */}
+          {/* Pendulum 2 rod with metallic finish */}
           <line
             x1={width * 0.7}
             y1={pivotY}
             x2={x2}
             y2={y2}
-            stroke="#64748b"
-            strokeWidth={4}
+            stroke="url(#coupRodGrad)"
+            strokeWidth={5}
+            strokeLinecap="round"
           />
 
-          {/* Pendulum 1 bob */}
+          {/* Pendulum 1 bob with 3D gradient and glow */}
           <circle
             cx={x1}
             cy={y1}
             r={bobRadius}
-            fill={colors.pendulum1}
-            filter="url(#glow1)"
+            fill="url(#coupBob1Grad)"
+            filter="url(#coupGlow1)"
+          />
+          {/* Highlight on bob 1 */}
+          <ellipse
+            cx={x1 - bobRadius * 0.3}
+            cy={y1 - bobRadius * 0.3}
+            rx={bobRadius * 0.3}
+            ry={bobRadius * 0.2}
+            fill="white"
+            fillOpacity={0.3}
           />
 
-          {/* Pendulum 2 bob */}
+          {/* Pendulum 2 bob with 3D gradient and glow */}
           <circle
             cx={x2}
             cy={y2}
             r={bobRadius}
-            fill={colors.pendulum2}
-            filter="url(#glow2)"
+            fill="url(#coupBob2Grad)"
+            filter="url(#coupGlow2)"
+          />
+          {/* Highlight on bob 2 */}
+          <ellipse
+            cx={x2 - bobRadius * 0.3}
+            cy={y2 - bobRadius * 0.3}
+            rx={bobRadius * 0.3}
+            ry={bobRadius * 0.2}
+            fill="white"
+            fillOpacity={0.3}
           />
 
-          {/* Glow filters */}
-          <defs>
-            <filter id="glow1" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feFlood floodColor={colors.pendulum1} floodOpacity="0.5" />
-              <feComposite in2="blur" operator="in" />
-              <feMerge>
-                <feMergeNode />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-            <filter id="glow2" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feFlood floodColor={colors.pendulum2} floodOpacity="0.5" />
-              <feComposite in2="blur" operator="in" />
-              <feMerge>
-                <feMergeNode />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
+          {/* Energy bars with premium styling */}
+          <rect x={width * 0.1} y={height - 25} width={width * 0.35} height={10} fill="rgba(255,255,255,0.08)" rx={5} />
+          <rect x={width * 0.1} y={height - 25} width={Math.max(0, width * 0.35 * (energies.total1 / maxEnergy))} height={10} fill="url(#coupEnergy1Grad)" rx={5} />
 
-          {/* Labels */}
-          <text x={width * 0.3} y={height - 40} textAnchor="middle" fill={colors.pendulum1} fontSize={14} fontWeight="bold">
-            Pendulum 1
-          </text>
-          <text x={width * 0.7} y={height - 40} textAnchor="middle" fill={colors.pendulum2} fontSize={14} fontWeight="bold">
-            Pendulum 2
-          </text>
-
-          {/* Energy bars */}
-          <rect x={width * 0.15} y={height - 30} width={width * 0.3} height={12} fill="rgba(255,255,255,0.1)" rx={6} />
-          <rect x={width * 0.15} y={height - 30} width={width * 0.3 * (energies.total1 / maxEnergy)} height={12} fill={colors.pendulum1} rx={6} />
-
-          <rect x={width * 0.55} y={height - 30} width={width * 0.3} height={12} fill="rgba(255,255,255,0.1)" rx={6} />
-          <rect x={width * 0.55} y={height - 30} width={width * 0.3 * (energies.total2 / maxEnergy)} height={12} fill={colors.pendulum2} rx={6} />
-
-          <text x={width * 0.15} y={height - 35} fill={colors.textMuted} fontSize={10}>Energy</text>
-          <text x={width * 0.55} y={height - 35} fill={colors.textMuted} fontSize={10}>Energy</text>
+          <rect x={width * 0.55} y={height - 25} width={width * 0.35} height={10} fill="rgba(255,255,255,0.08)" rx={5} />
+          <rect x={width * 0.55} y={height - 25} width={Math.max(0, width * 0.35 * (energies.total2 / maxEnergy))} height={10} fill="url(#coupEnergy2Grad)" rx={5} />
         </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-around',
+          width: '100%',
+          maxWidth: '500px',
+          marginTop: '-8px'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: colors.pendulum1, fontSize: typo.small, fontWeight: 'bold' }}>
+              Pendulum 1
+            </div>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>
+              Energy
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: colors.pendulum2, fontSize: typo.small, fontWeight: 'bold' }}>
+              Pendulum 2
+            </div>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>
+              Energy
+            </div>
+          </div>
+        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
@@ -472,14 +765,19 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isPlaying ? colors.error : colors.success,
+                background: isPlaying
+                  ? `linear-gradient(135deg, ${colors.error} 0%, #dc2626 100%)`
+                  : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
+                boxShadow: isPlaying
+                  ? `0 4px 20px ${colors.error}40`
+                  : `0 4px 20px ${colors.success}40`,
               }}
             >
-              {isPlaying ? '⏸ Pause' : '▶ Play'}
+              {isPlaying ? 'Pause' : 'Play'}
             </button>
             <button
               onClick={resetSimulation}
@@ -491,10 +789,10 @@ const CoupledPendulumsRenderer: React.FC<CoupledPendulumsRendererProps> = ({
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
               }}
             >
-              🔄 Reset
+              Reset
             </button>
           </div>
         )}

@@ -598,6 +598,216 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
     }
   ];
 
+  // Premium SVG definitions for all phases
+  const renderSvgDefs = () => (
+    <defs>
+      {/* === GRADIENTS === */}
+
+      {/* Earth sphere gradient - deep ocean blues with atmosphere */}
+      <radialGradient id="coriEarthSphere" cx="35%" cy="35%" r="65%">
+        <stop offset="0%" stopColor="#0ea5e9" />
+        <stop offset="25%" stopColor="#0284c7" />
+        <stop offset="50%" stopColor="#0369a1" />
+        <stop offset="75%" stopColor="#075985" />
+        <stop offset="100%" stopColor="#0c4a6e" />
+      </radialGradient>
+
+      {/* Earth continents gradient */}
+      <linearGradient id="coriContinents" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.5" />
+        <stop offset="50%" stopColor="#16a34a" stopOpacity="0.4" />
+        <stop offset="100%" stopColor="#15803d" stopOpacity="0.3" />
+      </linearGradient>
+
+      {/* Atmosphere glow gradient */}
+      <radialGradient id="coriAtmosphere" cx="50%" cy="50%" r="50%">
+        <stop offset="85%" stopColor="#0ea5e9" stopOpacity="0" />
+        <stop offset="95%" stopColor="#38bdf8" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.1" />
+      </radialGradient>
+
+      {/* Merry-go-round platform gradient */}
+      <radialGradient id="coriPlatform" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#334155" />
+        <stop offset="40%" stopColor="#1e293b" />
+        <stop offset="80%" stopColor="#0f172a" />
+        <stop offset="100%" stopColor="#020617" />
+      </radialGradient>
+
+      {/* Center pole metallic gradient */}
+      <radialGradient id="coriCenterPole" cx="30%" cy="30%" r="70%">
+        <stop offset="0%" stopColor="#94a3b8" />
+        <stop offset="30%" stopColor="#64748b" />
+        <stop offset="70%" stopColor="#475569" />
+        <stop offset="100%" stopColor="#334155" />
+      </radialGradient>
+
+      {/* Northern rotation arrow gradient (green) */}
+      <linearGradient id="coriArrowNorth" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+        <stop offset="30%" stopColor="#4ade80" />
+        <stop offset="70%" stopColor="#22c55e" />
+        <stop offset="100%" stopColor="#16a34a" stopOpacity="0.3" />
+      </linearGradient>
+
+      {/* Southern rotation arrow gradient (red) */}
+      <linearGradient id="coriArrowSouth" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+        <stop offset="30%" stopColor="#f87171" />
+        <stop offset="70%" stopColor="#ef4444" />
+        <stop offset="100%" stopColor="#dc2626" stopOpacity="0.3" />
+      </linearGradient>
+
+      {/* Ball/projectile gradient */}
+      <radialGradient id="coriBall" cx="35%" cy="35%" r="65%">
+        <stop offset="0%" stopColor="#fde047" />
+        <stop offset="40%" stopColor="#fbbf24" />
+        <stop offset="70%" stopColor="#f59e0b" />
+        <stop offset="100%" stopColor="#d97706" />
+      </radialGradient>
+
+      {/* Trajectory path gradient */}
+      <linearGradient id="coriTrajectory" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.2" />
+        <stop offset="25%" stopColor="#fbbf24" stopOpacity="0.6" />
+        <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.9" />
+        <stop offset="75%" stopColor="#f59e0b" stopOpacity="0.6" />
+        <stop offset="100%" stopColor="#d97706" stopOpacity="0.2" />
+      </linearGradient>
+
+      {/* Person (you) gradient - blue */}
+      <radialGradient id="coriPersonYou" cx="35%" cy="35%" r="65%">
+        <stop offset="0%" stopColor="#60a5fa" />
+        <stop offset="50%" stopColor="#3b82f6" />
+        <stop offset="100%" stopColor="#2563eb" />
+      </radialGradient>
+
+      {/* Person (friend) gradient - green */}
+      <radialGradient id="coriPersonFriend" cx="35%" cy="35%" r="65%">
+        <stop offset="0%" stopColor="#4ade80" />
+        <stop offset="50%" stopColor="#22c55e" />
+        <stop offset="100%" stopColor="#16a34a" />
+      </radialGradient>
+
+      {/* Hurricane spiral gradient - cyan/white */}
+      <linearGradient id="coriHurricaneNorth" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#f8fafc" />
+        <stop offset="30%" stopColor="#e0f2fe" />
+        <stop offset="60%" stopColor="#7dd3fc" />
+        <stop offset="100%" stopColor="#38bdf8" />
+      </linearGradient>
+
+      {/* Hurricane spiral gradient - orange/white for south */}
+      <linearGradient id="coriHurricaneSouth" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#f8fafc" />
+        <stop offset="30%" stopColor="#fed7aa" />
+        <stop offset="60%" stopColor="#fdba74" />
+        <stop offset="100%" stopColor="#f97316" />
+      </linearGradient>
+
+      {/* Sink basin gradient */}
+      <radialGradient id="coriSinkBasin" cx="50%" cy="40%" r="60%">
+        <stop offset="0%" stopColor="#475569" />
+        <stop offset="50%" stopColor="#334155" />
+        <stop offset="100%" stopColor="#1e293b" />
+      </radialGradient>
+
+      {/* Water swirl gradient */}
+      <linearGradient id="coriWaterSwirl" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.8" />
+        <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.5" />
+        <stop offset="100%" stopColor="#2563eb" stopOpacity="0.2" />
+      </linearGradient>
+
+      {/* Info panel gradient */}
+      <linearGradient id="coriInfoPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#1e293b" />
+        <stop offset="50%" stopColor="#0f172a" />
+        <stop offset="100%" stopColor="#020617" />
+      </linearGradient>
+
+      {/* Coriolis force vector gradient */}
+      <linearGradient id="coriForceVector" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#c084fc" stopOpacity="0.3" />
+        <stop offset="30%" stopColor="#a855f7" />
+        <stop offset="70%" stopColor="#9333ea" />
+        <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.3" />
+      </linearGradient>
+
+      {/* === FILTERS === */}
+
+      {/* Ball glow filter */}
+      <filter id="coriBallGlow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Rotation arrow glow */}
+      <filter id="coriArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Hurricane glow filter */}
+      <filter id="coriHurricaneGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Earth atmosphere glow */}
+      <filter id="coriAtmosphereGlow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="8" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Person glow filter */}
+      <filter id="coriPersonGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Trajectory glow */}
+      <filter id="coriTrajectoryGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Force vector glow */}
+      <filter id="coriForceGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2.5" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Background vignette */}
+      <radialGradient id="coriVignette" cx="50%" cy="50%" r="70%">
+        <stop offset="0%" stopColor="#0f172a" />
+        <stop offset="70%" stopColor="#0f172a" />
+        <stop offset="100%" stopColor="#020617" />
+      </radialGradient>
+    </defs>
+  );
+
   const renderPhaseContent = () => {
     switch (phase) {
       case 'hook':
@@ -621,21 +831,26 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
             <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-3xl p-6 max-w-2xl border border-slate-700/50 shadow-2xl shadow-sky-500/5 mb-8">
               <div className="relative w-full max-w-md h-64 rounded-xl overflow-hidden mx-auto">
               <svg viewBox="0 0 400 300" className="w-full h-full">
-                {/* Dark background */}
-                <rect width="400" height="300" fill="#0f172a" />
+                {renderSvgDefs()}
 
-                {/* Earth from space */}
-                <circle cx="200" cy="150" r="100" fill="#0369a1" />
-                <ellipse cx="200" cy="150" rx="100" ry="30" fill="#22c55e" opacity="0.3" />
+                {/* Premium dark background with vignette */}
+                <rect width="400" height="300" fill="url(#coriVignette)" />
 
-                {/* Hurricane in Northern Hemisphere */}
-                <g transform="translate(160, 100)">
+                {/* Earth from space with premium gradient */}
+                <g filter="url(#coriAtmosphereGlow)">
+                  <circle cx="200" cy="150" r="105" fill="url(#coriAtmosphere)" />
+                </g>
+                <circle cx="200" cy="150" r="100" fill="url(#coriEarthSphere)" />
+                <ellipse cx="200" cy="150" rx="100" ry="30" fill="url(#coriContinents)" />
+
+                {/* Hurricane in Northern Hemisphere with glow */}
+                <g transform="translate(160, 100)" filter="url(#coriHurricaneGlow)">
                   <g>
                     {[0, 1, 2].map(i => (
                       <path
                         key={i}
                         d={`M 0 0 Q ${10 + i * 8} ${-6 - i * 3}, ${20 + i * 5} ${-12 - i * 2}`}
-                        stroke="#f8fafc"
+                        stroke="url(#coriHurricaneNorth)"
                         strokeWidth={3 - i * 0.5}
                         fill="none"
                         transform={`rotate(${i * 90})`}
@@ -643,19 +858,18 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                         <animateTransform attributeName="transform" type="rotate" from={`${i * 90}`} to={`${i * 90 - 360}`} dur="3s" repeatCount="indefinite" additive="sum" />
                       </path>
                     ))}
-                    <circle cx="0" cy="0" r="5" fill="#0f172a" />
+                    <circle cx="0" cy="0" r="5" fill="#0f172a" stroke="#38bdf8" strokeWidth="1" />
                   </g>
-                  <text x="0" y="35" textAnchor="middle" fontSize="10" fill="#38bdf8">CCW</text>
                 </g>
 
-                {/* Hurricane in Southern Hemisphere */}
-                <g transform="translate(240, 200)">
+                {/* Hurricane in Southern Hemisphere with glow */}
+                <g transform="translate(240, 200)" filter="url(#coriHurricaneGlow)">
                   <g>
                     {[0, 1, 2].map(i => (
                       <path
                         key={i}
                         d={`M 0 0 Q ${10 + i * 8} ${-6 - i * 3}, ${20 + i * 5} ${-12 - i * 2}`}
-                        stroke="#f8fafc"
+                        stroke="url(#coriHurricaneSouth)"
                         strokeWidth={3 - i * 0.5}
                         fill="none"
                         transform={`rotate(${i * 90})`}
@@ -663,22 +877,20 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                         <animateTransform attributeName="transform" type="rotate" from={`${i * 90}`} to={`${i * 90 + 360}`} dur="3s" repeatCount="indefinite" additive="sum" />
                       </path>
                     ))}
-                    <circle cx="0" cy="0" r="5" fill="#0f172a" />
+                    <circle cx="0" cy="0" r="5" fill="#0f172a" stroke="#f97316" strokeWidth="1" />
                   </g>
-                  <text x="0" y="35" textAnchor="middle" fontSize="10" fill="#f97316">CW</text>
                 </g>
-
-                {/* Labels */}
-                <text x="120" y="80" fontSize="12" fill="#94a3b8">Northern</text>
-                <text x="260" y="240" fontSize="12" fill="#94a3b8">Southern</text>
-
-                {/* Question */}
-                <text x="200" y="30" textAnchor="middle" fontSize="14" fill="#fbbf24" fontWeight="bold">
-                  Why do they spin opposite ways?
-                </text>
               </svg>
               </div>
-              <p className="text-lg text-slate-300 mt-4 mb-2">
+              {/* Labels moved outside SVG using typo system */}
+              <div className="flex justify-between px-8 mt-2 mb-2">
+                <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Northern: <span className="text-sky-400 font-semibold">CCW</span></span>
+                <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Southern: <span className="text-orange-400 font-semibold">CW</span></span>
+              </div>
+              <p style={{ fontSize: typo.body, color: colors.warning, fontWeight: 600, textAlign: 'center', marginBottom: '8px' }}>
+                Why do they spin opposite ways?
+              </p>
+              <p className="text-lg text-slate-300 mt-2 mb-2">
                 Hurricanes in the Northern Hemisphere <span className="text-sky-400 font-bold">always spin counterclockwise</span>.
               </p>
               <p className="text-base text-slate-400">
@@ -764,30 +976,46 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
 
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-            <h2 className="text-2xl font-bold text-sky-400 mb-4">The Merry-Go-Round Experiment</h2>
+            {/* Title moved outside SVG */}
+            <h2 className="text-2xl font-bold text-sky-400 mb-2">The Merry-Go-Round Experiment</h2>
+            <p style={{ fontSize: typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
+              {hemisphere === 'north' ? 'Northern Hemisphere (looking down)' : 'Southern Hemisphere (looking up)'}
+            </p>
 
             <div className="relative w-full max-w-lg h-72 bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-xl mb-4 overflow-hidden">
               <svg viewBox="0 0 400 280" className="w-full h-full">
-                <rect width="400" height="280" fill="#0f172a" />
+                {renderSvgDefs()}
+
+                {/* Premium dark background with vignette */}
+                <rect width="400" height="280" fill="url(#coriVignette)" />
 
                 {/* Merry-go-round (viewed from above) */}
                 <g transform={`translate(200, 140) rotate(${earthRotation})`}>
-                  {/* Platform */}
-                  <circle cx="0" cy="0" r="80" fill="#1e293b" stroke="#334155" strokeWidth="3" />
+                  {/* Platform with premium gradient */}
+                  <circle cx="0" cy="0" r="82" fill="#0f172a" />
+                  <circle cx="0" cy="0" r="80" fill="url(#coriPlatform)" stroke="#475569" strokeWidth="2" />
 
-                  {/* Rotation direction indicator */}
-                  <path
-                    d="M -60 -50 A 78 78 0 0 1 60 -50"
-                    stroke={hemisphere === 'north' ? '#22c55e' : '#ef4444'}
-                    strokeWidth="3"
-                    fill="none"
-                  />
-                  <polygon
-                    points={hemisphere === 'north' ? "60,-50 50,-45 50,-55" : "-60,-50 -50,-45 -50,-55"}
-                    fill={hemisphere === 'north' ? '#22c55e' : '#ef4444'}
-                  />
+                  {/* Platform ring details */}
+                  <circle cx="0" cy="0" r="75" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="4 4" />
+                  <circle cx="0" cy="0" r="55" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="2 6" />
+                  <circle cx="0" cy="0" r="35" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="2 6" />
 
-                  {/* Radial lines */}
+                  {/* Rotation direction indicator with glow */}
+                  <g filter="url(#coriArrowGlow)">
+                    <path
+                      d="M -60 -50 A 78 78 0 0 1 60 -50"
+                      stroke={hemisphere === 'north' ? 'url(#coriArrowNorth)' : 'url(#coriArrowSouth)'}
+                      strokeWidth="4"
+                      fill="none"
+                      strokeLinecap="round"
+                    />
+                    <polygon
+                      points={hemisphere === 'north' ? "60,-50 48,-42 48,-58" : "-60,-50 -48,-42 -48,-58"}
+                      fill={hemisphere === 'north' ? '#4ade80' : '#f87171'}
+                    />
+                  </g>
+
+                  {/* Radial lines with gradient opacity */}
                   {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
                     <line
                       key={angle}
@@ -795,76 +1023,141 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                       y1="0"
                       x2={Math.cos(angle * Math.PI / 180) * 75}
                       y2={Math.sin(angle * Math.PI / 180) * 75}
-                      stroke="#334155"
+                      stroke="#475569"
                       strokeWidth="1"
+                      opacity="0.5"
                     />
                   ))}
 
-                  {/* Center pole */}
-                  <circle cx="0" cy="0" r="10" fill="#475569" stroke="#64748b" strokeWidth="2" />
+                  {/* Center pole with metallic gradient */}
+                  <circle cx="0" cy="0" r="12" fill="url(#coriCenterPole)" stroke="#64748b" strokeWidth="1" />
+                  <circle cx="0" cy="0" r="4" fill="#94a3b8" />
 
-                  {/* Thrower (you) */}
-                  <circle cx="0" cy="-60" r="14" fill="#3b82f6" stroke="#60a5fa" strokeWidth="2" />
-                  <text x="0" y="-56" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold">You</text>
+                  {/* Thrower (you) with glow */}
+                  <g filter="url(#coriPersonGlow)">
+                    <circle cx="0" cy="-60" r="14" fill="url(#coriPersonYou)" />
+                  </g>
 
-                  {/* Target friend */}
-                  <circle cx="0" cy="60" r="14" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
-                  <text x="0" y="64" textAnchor="middle" fontSize="10" fill="white" fontWeight="bold">Friend</text>
+                  {/* Target friend with glow */}
+                  <g filter="url(#coriPersonGlow)">
+                    <circle cx="0" cy="60" r="14" fill="url(#coriPersonFriend)" />
+                  </g>
 
                   {/* Intended path (dashed) */}
-                  <line x1="0" y1="-44" x2="0" y2="44" stroke="#64748b" strokeWidth="2" strokeDasharray="5" />
+                  <line x1="0" y1="-44" x2="0" y2="44" stroke="#64748b" strokeWidth="2" strokeDasharray="6 4" opacity="0.6" />
 
-                  {/* Ball (if launched) */}
-                  {ballLaunched && ballProgress < 1 && (
-                    <circle
-                      cx={Math.sin(ballActualAngle * Math.PI / 180) * ballRadius}
-                      cy={-Math.cos(ballActualAngle * Math.PI / 180) * ballRadius + 10}
-                      r="10"
-                      fill="#fbbf24"
-                      stroke="#f59e0b"
-                      strokeWidth="2"
-                    />
+                  {/* Actual curved trajectory path (if ball launched) with glow */}
+                  {ballLaunched && (
+                    <g filter="url(#coriTrajectoryGlow)">
+                      <path
+                        d={`M 0 -44 Q ${deflectionDir * 40} 0, ${deflectionDir * 30} 44`}
+                        stroke="url(#coriTrajectory)"
+                        strokeWidth="3"
+                        fill="none"
+                        strokeLinecap="round"
+                      />
+                    </g>
                   )}
 
-                  {/* Actual path (if ball launched) */}
-                  {ballLaunched && (
-                    <path
-                      d={`M 0 -44 Q ${deflectionDir * 40} 0, ${deflectionDir * 30} 44`}
-                      stroke="#fbbf24"
-                      strokeWidth="2"
-                      fill="none"
-                    />
+                  {/* Coriolis force vector visualization (perpendicular to velocity) */}
+                  {ballLaunched && ballProgress > 0.1 && ballProgress < 0.9 && (
+                    <g filter="url(#coriForceGlow)">
+                      <line
+                        x1={Math.sin(ballActualAngle * Math.PI / 180) * ballRadius}
+                        y1={-Math.cos(ballActualAngle * Math.PI / 180) * ballRadius + 10}
+                        x2={Math.sin(ballActualAngle * Math.PI / 180) * ballRadius + deflectionDir * 25}
+                        y2={-Math.cos(ballActualAngle * Math.PI / 180) * ballRadius + 10}
+                        stroke="url(#coriForceVector)"
+                        strokeWidth="3"
+                        strokeLinecap="round"
+                      />
+                      <polygon
+                        points={`${Math.sin(ballActualAngle * Math.PI / 180) * ballRadius + deflectionDir * 25},${-Math.cos(ballActualAngle * Math.PI / 180) * ballRadius + 10} ${Math.sin(ballActualAngle * Math.PI / 180) * ballRadius + deflectionDir * 18},${-Math.cos(ballActualAngle * Math.PI / 180) * ballRadius + 5} ${Math.sin(ballActualAngle * Math.PI / 180) * ballRadius + deflectionDir * 18},${-Math.cos(ballActualAngle * Math.PI / 180) * ballRadius + 15}`}
+                        fill="#a855f7"
+                      />
+                    </g>
+                  )}
+
+                  {/* Ball (if launched) with premium gradient and glow */}
+                  {ballLaunched && ballProgress < 1 && (
+                    <g filter="url(#coriBallGlow)">
+                      <circle
+                        cx={Math.sin(ballActualAngle * Math.PI / 180) * ballRadius}
+                        cy={-Math.cos(ballActualAngle * Math.PI / 180) * ballRadius + 10}
+                        r="10"
+                        fill="url(#coriBall)"
+                      />
+                      {/* Ball highlight */}
+                      <circle
+                        cx={Math.sin(ballActualAngle * Math.PI / 180) * ballRadius - 3}
+                        cy={-Math.cos(ballActualAngle * Math.PI / 180) * ballRadius + 7}
+                        r="3"
+                        fill="#fef3c7"
+                        opacity="0.6"
+                      />
+                    </g>
                   )}
                 </g>
 
-                {/* Labels */}
-                <text x="200" y="25" textAnchor="middle" fontSize="14" fill="white" fontWeight="bold">
-                  {hemisphere === 'north' ? 'Northern Hemisphere (looking down)' : 'Southern Hemisphere (looking up)'}
-                </text>
-
-                {/* Hemisphere info box */}
-                <g transform="translate(20, 40)">
-                  <rect width="100" height="65" fill="#1e293b" rx="6" />
-                  <text x="50" y="18" textAnchor="middle" fontSize="11" fill="#94a3b8" fontWeight="bold">Rotation</text>
-                  <text x="50" y="38" textAnchor="middle" fontSize="14" fill={hemisphere === 'north' ? '#22c55e' : '#ef4444'} fontWeight="bold">
+                {/* Info panels with premium gradient */}
+                <g transform="translate(15, 15)">
+                  <rect width="85" height="60" fill="url(#coriInfoPanel)" rx="8" stroke="#334155" strokeWidth="1" />
+                  <text x="42" y="18" textAnchor="middle" fontSize="9" fill="#64748b" fontWeight="600">ROTATION</text>
+                  <text x="42" y="36" textAnchor="middle" fontSize="16" fill={hemisphere === 'north' ? '#4ade80' : '#f87171'} fontWeight="bold">
                     {hemisphere === 'north' ? 'CCW' : 'CW'}
                   </text>
-                  <text x="50" y="55" textAnchor="middle" fontSize="10" fill="#64748b">
+                  <text x="42" y="52" textAnchor="middle" fontSize="8" fill="#64748b">
                     Deflects {hemisphere === 'north' ? 'RIGHT' : 'LEFT'}
                   </text>
                 </g>
 
-                {/* Result */}
+                {/* Result panel */}
                 {ballLaunched && ballProgress >= 0.9 && (
-                  <g transform="translate(280, 40)">
-                    <rect width="100" height="50" fill="#1e293b" rx="6" />
-                    <text x="50" y="20" textAnchor="middle" fontSize="12" fill="#fbbf24" fontWeight="bold">Ball missed!</text>
-                    <text x="50" y="40" textAnchor="middle" fontSize="11" fill="#94a3b8">
+                  <g transform="translate(300, 15)">
+                    <rect width="85" height="50" fill="url(#coriInfoPanel)" rx="8" stroke="#fbbf24" strokeWidth="1" opacity="0.8" />
+                    <text x="42" y="20" textAnchor="middle" fontSize="11" fill="#fbbf24" fontWeight="bold">Ball missed!</text>
+                    <text x="42" y="38" textAnchor="middle" fontSize="10" fill="#94a3b8">
                       Curved {hemisphere === 'north' ? 'right' : 'left'}
                     </text>
                   </g>
                 )}
+
+                {/* Legend for force vector */}
+                {ballLaunched && ballProgress > 0.1 && ballProgress < 0.9 && (
+                  <g transform="translate(300, 230)">
+                    <rect width="85" height="35" fill="url(#coriInfoPanel)" rx="6" stroke="#a855f7" strokeWidth="1" opacity="0.7" />
+                    <line x1="10" y1="17" x2="30" y2="17" stroke="#a855f7" strokeWidth="2" />
+                    <text x="40" y="21" fontSize="9" fill="#c084fc">Coriolis</text>
+                    <text x="40" y="30" fontSize="8" fill="#94a3b8">Force</text>
+                  </g>
+                )}
               </svg>
+
+              {/* Person labels outside SVG */}
+              <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 pointer-events-none" style={{ width: '200px', height: '200px' }}>
+                <span
+                  className="absolute text-white text-xs font-bold"
+                  style={{
+                    top: '15%',
+                    left: '50%',
+                    transform: `translateX(-50%) rotate(${-earthRotation}deg)`,
+                    textShadow: '0 0 4px rgba(0,0,0,0.8)'
+                  }}
+                >
+                  You
+                </span>
+                <span
+                  className="absolute text-white text-xs font-bold"
+                  style={{
+                    bottom: '15%',
+                    left: '50%',
+                    transform: `translateX(-50%) rotate(${-earthRotation}deg)`,
+                    textShadow: '0 0 4px rgba(0,0,0,0.8)'
+                  }}
+                >
+                  Friend
+                </span>
+              </div>
             </div>
 
             {/* Controls */}
@@ -1056,67 +1349,101 @@ const CoriolisEffectRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
       case 'twist_play':
         return (
           <div className="flex flex-col items-center justify-center min-h-[400px] p-6">
-            <h2 className="text-2xl font-bold text-purple-400 mb-4">The Scale Problem</h2>
+            <h2 className="text-2xl font-bold text-purple-400 mb-2">The Scale Problem</h2>
+            <p style={{ fontSize: typo.body, color: colors.textSecondary, marginBottom: '12px' }}>
+              Coriolis Force vs. Scale
+            </p>
 
             <div className="relative w-full max-w-lg h-72 bg-gradient-to-b from-purple-900/30 to-slate-900/50 rounded-xl mb-4 overflow-hidden">
               <svg viewBox="0 0 400 280" className="w-full h-full">
-                <rect width="400" height="280" fill="#0f172a" />
+                {renderSvgDefs()}
 
-                <text x="200" y="25" textAnchor="middle" fontSize="14" fill="white" fontWeight="bold">
-                  Coriolis Force vs. Scale
-                </text>
+                {/* Premium dark background */}
+                <rect width="400" height="280" fill="url(#coriVignette)" />
 
-                {/* Hurricane (large scale) */}
-                <g transform="translate(100, 130)">
-                  <text x="0" y="-75" textAnchor="middle" fontSize="12" fill="#38bdf8" fontWeight="bold">Hurricane</text>
-                  <text x="0" y="-60" textAnchor="middle" fontSize="10" fill="#64748b">(~500 km)</text>
+                {/* Hurricane (large scale) with premium effects */}
+                <g transform="translate(100, 120)">
+                  {/* Hurricane glow background */}
+                  <circle cx="0" cy="0" r="55" fill="#0ea5e9" opacity="0.1" />
 
-                  <g>
-                    {[0, 1, 2].map(i => (
+                  {/* Hurricane spiral with gradient and glow */}
+                  <g filter="url(#coriHurricaneGlow)">
+                    {[0, 1, 2, 3].map(i => (
                       <path
                         key={i}
                         d={`M 0 0 Q ${15 + i * 10} ${-10 - i * 5}, ${30 + i * 8} ${-20 - i * 4}`}
-                        stroke="#38bdf8"
-                        strokeWidth={3 - i * 0.5}
+                        stroke="url(#coriHurricaneNorth)"
+                        strokeWidth={3.5 - i * 0.5}
                         fill="none"
                         transform={`rotate(${i * 90})`}
+                        strokeLinecap="round"
                       >
                         <animateTransform attributeName="transform" type="rotate" from={`${i * 90}`} to={`${i * 90 - 360}`} dur="3s" repeatCount="indefinite" additive="sum" />
                       </path>
                     ))}
                   </g>
-                  <circle cx="0" cy="0" r="10" fill="#0f172a" stroke="#64748b" strokeWidth="2" />
-
-                  <text x="0" y="65" textAnchor="middle" fontSize="12" fill="#22c55e" fontWeight="bold">STRONG</text>
-                  <text x="0" y="80" textAnchor="middle" fontSize="10" fill="#64748b">Hours to form</text>
+                  {/* Hurricane eye */}
+                  <circle cx="0" cy="0" r="12" fill="#0f172a" stroke="#38bdf8" strokeWidth="2" />
+                  <circle cx="0" cy="0" r="4" fill="#0c4a6e" />
                 </g>
 
-                {/* Sink (small scale) */}
-                <g transform="translate(300, 130)">
-                  <text x="0" y="-75" textAnchor="middle" fontSize="12" fill="#94a3b8" fontWeight="bold">Sink Drain</text>
-                  <text x="0" y="-60" textAnchor="middle" fontSize="10" fill="#64748b">(~30 cm)</text>
+                {/* Sink (small scale) with premium effects */}
+                <g transform="translate(300, 120)">
+                  {/* Sink basin with gradient */}
+                  <ellipse cx="0" cy="0" rx="45" ry="28" fill="url(#coriSinkBasin)" stroke="#64748b" strokeWidth="1" />
+                  <ellipse cx="0" cy="-5" rx="38" ry="22" fill="none" stroke="#475569" strokeWidth="1" opacity="0.5" />
 
-                  <ellipse cx="0" cy="0" rx="40" ry="25" fill="#334155" stroke="#475569" strokeWidth="2" />
-                  <circle cx="0" cy="8" r="10" fill="#1e293b" />
+                  {/* Drain hole */}
+                  <circle cx="0" cy="5" r="12" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+                  <circle cx="0" cy="5" r="6" fill="#020617" />
 
+                  {/* Water swirl with gradient */}
                   <g>
-                    <path d="M 0 5 Q 10 0, 6 12 Q 0 18, -6 12 Q -10 0, 0 5" stroke="#60a5fa" strokeWidth="2" fill="none" opacity="0.6">
+                    <path d="M 0 2 Q 12 -3, 8 14 Q 0 22, -8 14 Q -12 -3, 0 2" stroke="url(#coriWaterSwirl)" strokeWidth="2.5" fill="none" strokeLinecap="round">
                       <animateTransform attributeName="transform" type="rotate" values="0;360;720;360;0" dur="4s" repeatCount="indefinite" />
                     </path>
+                    <path d="M 0 4 Q 6 1, 4 10 Q 0 14, -4 10 Q -6 1, 0 4" stroke="#3b82f6" strokeWidth="1.5" fill="none" opacity="0.5">
+                      <animateTransform attributeName="transform" type="rotate" values="0;-360;-720;-360;0" dur="3s" repeatCount="indefinite" />
+                    </path>
                   </g>
-
-                  <text x="0" y="65" textAnchor="middle" fontSize="12" fill="#ef4444" fontWeight="bold">NEGLIGIBLE</text>
-                  <text x="0" y="80" textAnchor="middle" fontSize="10" fill="#64748b">Seconds to drain</text>
                 </g>
 
-                {/* Comparison */}
-                <g transform="translate(145, 180)">
-                  <rect width="110" height="60" fill="#1e293b" rx="6" />
-                  <text x="55" y="18" textAnchor="middle" fontSize="11" fill="#94a3b8" fontWeight="bold">What Dominates?</text>
-                  <text x="55" y="36" textAnchor="middle" fontSize="9" fill="#64748b">Sink: Basin shape, water motion</text>
-                  <text x="55" y="52" textAnchor="middle" fontSize="9" fill="#38bdf8">Hurricane: Coriolis!</text>
+                {/* Comparison panel with gradient */}
+                <g transform="translate(145, 195)">
+                  <rect width="110" height="55" fill="url(#coriInfoPanel)" rx="8" stroke="#475569" strokeWidth="1" />
+                  <text x="55" y="16" textAnchor="middle" fontSize="10" fill="#94a3b8" fontWeight="bold">What Dominates?</text>
+                  <text x="55" y="32" textAnchor="middle" fontSize="8" fill="#64748b">Sink: Basin shape</text>
+                  <text x="55" y="46" textAnchor="middle" fontSize="9" fill="#38bdf8" fontWeight="600">Hurricane: Coriolis!</text>
+                </g>
+
+                {/* VS divider */}
+                <g transform="translate(200, 120)">
+                  <circle cx="0" cy="0" r="18" fill="url(#coriInfoPanel)" stroke="#a855f7" strokeWidth="2" />
+                  <text x="0" y="5" textAnchor="middle" fontSize="12" fill="#c084fc" fontWeight="bold">VS</text>
                 </g>
               </svg>
+
+              {/* Labels outside SVG */}
+              <div className="absolute top-4 left-6 text-center">
+                <span style={{ fontSize: typo.small, color: '#38bdf8', fontWeight: 600 }}>Hurricane</span>
+                <br />
+                <span style={{ fontSize: typo.label, color: colors.textMuted }}>(~500 km)</span>
+              </div>
+              <div className="absolute top-4 right-6 text-center">
+                <span style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Sink Drain</span>
+                <br />
+                <span style={{ fontSize: typo.label, color: colors.textMuted }}>(~30 cm)</span>
+              </div>
+              <div className="absolute bottom-6 left-12">
+                <span style={{ fontSize: typo.small, color: colors.success, fontWeight: 700 }}>STRONG</span>
+                <br />
+                <span style={{ fontSize: typo.label, color: colors.textMuted }}>Hours to form</span>
+              </div>
+              <div className="absolute bottom-6 right-12">
+                <span style={{ fontSize: typo.small, color: colors.danger, fontWeight: 700 }}>NEGLIGIBLE</span>
+                <br />
+                <span style={{ fontSize: typo.label, color: colors.textMuted }}>Seconds to drain</span>
+              </div>
             </div>
 
             <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4 mb-4 max-w-lg">

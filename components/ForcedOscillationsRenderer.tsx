@@ -755,88 +755,330 @@ const ForcedOscillationsRenderer: React.FC<Props> = ({
       <h2 className="text-2xl font-bold text-white mb-4">Forced Oscillation Lab</h2>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
-        {/* Visualization */}
-        <svg width="100%" height="200" viewBox="0 0 400 200" className="mb-4">
-          {/* Ceiling with driving motor */}
-          <rect x="0" y="0" width="400" height="25" fill="#374151"/>
-          <pattern id="motorPattern" width="20" height="20" patternUnits="userSpaceOnUse">
-            <line x1="0" y1="20" x2="20" y2="0" stroke="#4b5563" strokeWidth="2"/>
-          </pattern>
-          <rect x="0" y="0" width="400" height="25" fill="url(#motorPattern)"/>
+        {/* Premium Visualization with SVG */}
+        <svg width="100%" height="280" viewBox="0 0 500 280" className="mb-4">
+          <defs>
+            {/* Premium ceiling/mount gradient */}
+            <linearGradient id="foscCeilingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="30%" stopColor="#374151" />
+              <stop offset="70%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
 
-          {/* Driving mechanism */}
-          <circle cx="200" cy="15" r="10" fill="#ef4444"/>
+            {/* Driving motor housing gradient */}
+            <radialGradient id="foscMotorGrad" cx="50%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="40%" stopColor="#dc2626" />
+              <stop offset="70%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </radialGradient>
+
+            {/* Motor arm/crank gradient */}
+            <linearGradient id="foscCrankGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+
+            {/* Spring coil gradient */}
+            <linearGradient id="foscSpringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="75%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fcd34d" />
+            </linearGradient>
+
+            {/* Mass 3D gradient - normal state */}
+            <linearGradient id="foscMassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="25%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* Mass 3D gradient - resonance state */}
+            <linearGradient id="foscMassResonanceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="25%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+
+            {/* Driving force arrow gradient */}
+            <linearGradient id="foscForceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#c084fc" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#e879f9" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Amplitude curve gradient */}
+            <linearGradient id="foscCurveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="40%" stopColor="#8b5cf6" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="60%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+
+            {/* Graph background gradient */}
+            <linearGradient id="foscGraphBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#020617" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Resonance peak glow */}
+            <radialGradient id="foscResonanceGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#dc2626" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Glow filters */}
+            <filter id="foscMotorGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="foscMassGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="foscResonanceFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="foscSpringGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Hatching pattern for ceiling */}
+            <pattern id="foscHatchPattern" width="12" height="12" patternUnits="userSpaceOnUse" patternTransform="rotate(45)">
+              <line x1="0" y1="0" x2="0" y2="12" stroke="#4b5563" strokeWidth="2" />
+            </pattern>
+          </defs>
+
+          {/* Dark lab background */}
+          <rect width="500" height="280" fill="#030712" />
+
+          {/* Premium ceiling with hatching */}
+          <rect x="0" y="0" width="500" height="30" fill="url(#foscCeilingGrad)" />
+          <rect x="0" y="0" width="500" height="30" fill="url(#foscHatchPattern)" opacity="0.3" />
+          <rect x="0" y="28" width="500" height="3" fill="#1f2937" />
+
+          {/* Driving motor housing with glow */}
+          <g filter={isAnimating ? "url(#foscMotorGlow)" : undefined}>
+            <circle cx="250" cy="18" r="14" fill="url(#foscMotorGrad)" />
+            <circle cx="250" cy="18" r="10" fill="#1f2937" />
+            <circle cx="250" cy="18" r="6" fill="url(#foscMotorGrad)" />
+          </g>
+
+          {/* Rotating crank arm */}
           <line
-            x1="200"
-            y1="15"
-            x2={200 + Math.cos(time * drivingFrequency * 5) * 8}
-            y2={15 + Math.sin(time * drivingFrequency * 5) * 8}
-            stroke="#fbbf24"
-            strokeWidth="3"
+            x1="250"
+            y1="18"
+            x2={250 + Math.cos(time * drivingFrequency * 5) * 10}
+            y2={18 + Math.sin(time * drivingFrequency * 5) * 10}
+            stroke="url(#foscCrankGrad)"
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          <circle
+            cx={250 + Math.cos(time * drivingFrequency * 5) * 10}
+            cy={18 + Math.sin(time * drivingFrequency * 5) * 10}
+            r="3"
+            fill="#fcd34d"
           />
 
-          {/* Spring (length varies with displacement) */}
-          <path
-            d={`M200 25 ${Array.from({length: 8}, (_, i) =>
-              `Q ${180 + (i % 2) * 40} ${30 + i * (70 + displacement * 0.3) / 8}, 200 ${35 + (i + 1) * (70 + displacement * 0.3) / 8}`
-            ).join(' ')}`}
-            stroke="#f59e0b"
-            strokeWidth="3"
-            fill="none"
-          />
-
-          {/* Mass */}
-          <rect
-            x="170"
-            y={95 + displacement * 0.5}
-            width="60"
-            height="40"
-            rx="5"
-            fill={isAtResonance ? '#ef4444' : '#3b82f6'}
-            className={isAtResonance ? 'animate-pulse' : ''}
-          />
-          <text x="200" y={120 + displacement * 0.5} textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
-            {displacement.toFixed(0)}
-          </text>
-
-          {/* Resonance indicator */}
-          {isAtResonance && (
-            <text x="300" y="80" fill="#ef4444" fontSize="14" fontWeight="bold" className="animate-pulse">
-              RESONANCE!
-            </text>
+          {/* Driving force visualization arrow */}
+          {isAnimating && (
+            <g opacity={0.7 + Math.sin(time * drivingFrequency * 5) * 0.3}>
+              <path
+                d={`M${290} ${60 + displacement * 0.3} L${330} ${60 + displacement * 0.3} L${325} ${55 + displacement * 0.3} M${330} ${60 + displacement * 0.3} L${325} ${65 + displacement * 0.3}`}
+                stroke="url(#foscForceGrad)"
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
           )}
 
-          {/* Amplitude graph */}
-          <rect x="20" y="40" width="100" height="120" fill="#0f172a" rx="5"/>
-          <text x="70" y="55" textAnchor="middle" fill="#64748b" fontSize="8">Amplitude Response</text>
+          {/* Premium spring with gradient and glow */}
+          <g filter="url(#foscSpringGlow)">
+            <path
+              d={`M250 32 ${Array.from({length: 10}, (_, i) =>
+                `Q ${220 + (i % 2) * 60} ${38 + i * (80 + displacement * 0.4) / 10}, 250 ${44 + (i + 1) * (80 + displacement * 0.4) / 10}`
+              ).join(' ')}`}
+              stroke="url(#foscSpringGrad)"
+              strokeWidth="4"
+              fill="none"
+              strokeLinecap="round"
+            />
+          </g>
 
-          {/* Draw amplitude curve */}
-          <path
-            d={`M30 150 ${Array.from({length: 80}, (_, i) => {
-              const omega = (i / 80) * 2;
-              const A = 1 / Math.sqrt(Math.pow(1 - omega * omega, 2) + Math.pow(2 * 0.1 * omega, 2));
-              const y = 150 - Math.min(A * 15, 90);
-              return `L${30 + i} ${y}`;
-            }).join(' ')}`}
-            stroke="#3b82f6"
-            strokeWidth="1.5"
-            fill="none"
-          />
+          {/* Damper visualization */}
+          <g opacity="0.6">
+            <rect x="270" y="60" width="8" height={60 + displacement * 0.3} fill="#64748b" rx="2" />
+            <rect x="268" y={115 + displacement * 0.3} width="12" height="8" fill="#475569" rx="1" />
+          </g>
 
-          {/* Current frequency indicator */}
-          <line
-            x1={30 + drivingFrequency * 40}
-            y1="60"
-            x2={30 + drivingFrequency * 40}
-            y2="155"
-            stroke="#ef4444"
-            strokeWidth="2"
-            strokeDasharray="4"
-          />
-          <circle cx={30 + drivingFrequency * 40} cy={150 - Math.min(amplitude * 15, 90)} r="4" fill="#ef4444"/>
+          {/* Premium 3D Mass with glow */}
+          <g filter={isAtResonance ? "url(#foscMassGlow)" : undefined}>
+            {/* Shadow */}
+            <ellipse
+              cx="250"
+              cy={175 + displacement * 0.5}
+              rx="35"
+              ry="8"
+              fill="#000"
+              opacity="0.3"
+            />
+            {/* Main mass body */}
+            <rect
+              x="210"
+              y={120 + displacement * 0.5}
+              width="80"
+              height="50"
+              rx="8"
+              fill={isAtResonance ? 'url(#foscMassResonanceGrad)' : 'url(#foscMassGrad)'}
+            />
+            {/* 3D highlight */}
+            <rect
+              x="215"
+              y={125 + displacement * 0.5}
+              width="70"
+              height="15"
+              rx="4"
+              fill="white"
+              opacity="0.15"
+            />
+            {/* Mass indicator line */}
+            <line
+              x1="250"
+              y1={145 + displacement * 0.5}
+              x2="250"
+              y2={155 + displacement * 0.5}
+              stroke="white"
+              strokeWidth="2"
+              opacity="0.5"
+            />
+          </g>
 
-          <text x="70" y="165" textAnchor="middle" fill="#64748b" fontSize="8">omega/omega_0</text>
+          {/* Resonance indicator with animated glow */}
+          {isAtResonance && (
+            <g filter="url(#foscResonanceFilter)">
+              <circle cx="380" cy="80" r="20" fill="url(#foscResonanceGlow)">
+                <animate attributeName="r" values="18;22;18" dur="0.5s" repeatCount="indefinite" />
+              </circle>
+            </g>
+          )}
+
+          {/* Amplitude Response Graph */}
+          <g transform="translate(20, 50)">
+            {/* Graph background */}
+            <rect x="0" y="0" width="120" height="140" fill="url(#foscGraphBg)" rx="6" stroke="#334155" strokeWidth="1" />
+
+            {/* Grid lines */}
+            {[0, 1, 2, 3, 4].map(i => (
+              <line key={`h${i}`} x1="10" y1={20 + i * 25} x2="110" y2={20 + i * 25} stroke="#1e293b" strokeWidth="0.5" />
+            ))}
+            {[0, 1, 2, 3, 4].map(i => (
+              <line key={`v${i}`} x1={10 + i * 25} y1="15" x2={10 + i * 25} y2="125" stroke="#1e293b" strokeWidth="0.5" />
+            ))}
+
+            {/* Resonance zone highlight */}
+            <rect x="55" y="15" width="20" height="110" fill="#ef4444" opacity="0.1" />
+
+            {/* Premium amplitude curve with gradient */}
+            <path
+              d={`M15 120 ${Array.from({length: 90}, (_, i) => {
+                const omega = (i / 90) * 2;
+                const A = 1 / Math.sqrt(Math.pow(1 - omega * omega, 2) + Math.pow(2 * 0.1 * omega, 2));
+                const y = 120 - Math.min(A * 18, 100);
+                return `L${15 + i} ${y}`;
+              }).join(' ')}`}
+              stroke="url(#foscCurveGrad)"
+              strokeWidth="2.5"
+              fill="none"
+              strokeLinecap="round"
+            />
+
+            {/* Resonance peak marker */}
+            <circle cx={15 + 45} cy={120 - Math.min((1 / (2 * 0.1)) * 18, 100)} r="5" fill="#ef4444" opacity="0.5">
+              <animate attributeName="r" values="4;6;4" dur="1s" repeatCount="indefinite" />
+            </circle>
+
+            {/* Current frequency indicator line */}
+            <line
+              x1={15 + drivingFrequency * 45}
+              y1="15"
+              x2={15 + drivingFrequency * 45}
+              y2="125"
+              stroke="#f59e0b"
+              strokeWidth="2"
+              strokeDasharray="4 2"
+            />
+
+            {/* Current position dot on curve */}
+            <circle
+              cx={15 + drivingFrequency * 45}
+              cy={120 - Math.min(amplitude * 18, 100)}
+              r="6"
+              fill="#f59e0b"
+              filter="url(#foscMotorGlow)"
+            />
+
+            {/* Axis labels area - minimal, text moved outside */}
+            <line x1="10" y1="120" x2="110" y2="120" stroke="#64748b" strokeWidth="1" />
+            <line x1="10" y1="15" x2="10" y2="125" stroke="#64748b" strokeWidth="1" />
+          </g>
+
+          {/* Equilibrium position reference line */}
+          <line x1="150" y1="145" x2="350" y2="145" stroke="#334155" strokeWidth="1" strokeDasharray="8 4" opacity="0.5" />
         </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div className="flex justify-between mb-4 px-4">
+          <div className="text-center">
+            <p style={{ fontSize: typo.small }} className="text-slate-400">Amplitude Response</p>
+            <p style={{ fontSize: typo.label }} className="text-slate-500">omega / omega_0</p>
+          </div>
+          <div className="text-center">
+            <p style={{ fontSize: typo.body }} className={`font-bold ${isAtResonance ? 'text-red-400' : 'text-slate-300'}`}>
+              {isAtResonance ? 'RESONANCE!' : 'Forced Oscillation'}
+            </p>
+            <p style={{ fontSize: typo.small }} className="text-slate-400">
+              Displacement: <span className="text-white font-mono">{displacement.toFixed(1)}</span>
+            </p>
+          </div>
+          <div className="text-center">
+            {isAnimating && (
+              <p style={{ fontSize: typo.label }} className="text-purple-400">
+                Driving Force
+              </p>
+            )}
+          </div>
+        </div>
 
         {/* Controls */}
         <div className="flex flex-col gap-4">

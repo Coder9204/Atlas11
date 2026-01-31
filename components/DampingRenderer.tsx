@@ -602,7 +602,10 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
     const springCoils = 8;
     const springWidth = displayX - 50;
 
-    const mediumColor = medium === 'air' ? 'transparent' : medium === 'water' ? `${colors.accent}15` : `${colors.warning}15`;
+    // Calculate decay envelope for visual display
+    const omega0 = 2 * Math.PI;
+    const gamma = dampingRatio * omega0;
+    const envelopeAmp = 100 * Math.exp(-gamma * time);
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: space.md }}>
@@ -610,26 +613,181 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
           width={svgWidth}
           height={svgHeight}
           style={{
-            background: `linear-gradient(180deg, ${colors.bgTertiary} 0%, ${colors.bgSecondary} 100%)`,
             borderRadius: radius.lg,
             border: `1px solid ${colors.border}`
           }}
         >
-          {/* Medium indicator */}
+          {/* Premium Definitions */}
+          <defs>
+            {/* Background gradient with depth */}
+            <linearGradient id="dampBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1a1a24"/>
+              <stop offset="25%" stopColor="#16161e"/>
+              <stop offset="50%" stopColor="#121218"/>
+              <stop offset="75%" stopColor="#0f0f14"/>
+              <stop offset="100%" stopColor="#0a0a0f"/>
+            </linearGradient>
+
+            {/* Medium transparency gradients */}
+            <linearGradient id="dampAirMedium" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="transparent"/>
+              <stop offset="100%" stopColor="transparent"/>
+            </linearGradient>
+            <linearGradient id="dampWaterMedium" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.accent} stopOpacity="0.05"/>
+              <stop offset="50%" stopColor={colors.accent} stopOpacity="0.15"/>
+              <stop offset="100%" stopColor={colors.accent} stopOpacity="0.25"/>
+            </linearGradient>
+            <linearGradient id="dampHoneyMedium" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.warning} stopOpacity="0.1"/>
+              <stop offset="50%" stopColor={colors.warning} stopOpacity="0.2"/>
+              <stop offset="100%" stopColor={colors.warning} stopOpacity="0.35"/>
+            </linearGradient>
+
+            {/* Wall metallic gradient */}
+            <linearGradient id="dampWallGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#2a2a36"/>
+              <stop offset="30%" stopColor="#4a4a58"/>
+              <stop offset="50%" stopColor="#5a5a68"/>
+              <stop offset="70%" stopColor="#4a4a58"/>
+              <stop offset="100%" stopColor="#3a3a48"/>
+            </linearGradient>
+
+            {/* Spring metallic gradient */}
+            <linearGradient id="dampSpringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colors.primaryDark}/>
+              <stop offset="25%" stopColor={colors.primary}/>
+              <stop offset="50%" stopColor={colors.primaryLight}/>
+              <stop offset="75%" stopColor={colors.primary}/>
+              <stop offset="100%" stopColor={colors.primaryDark}/>
+            </linearGradient>
+
+            {/* Mass 3D radial gradient */}
+            <radialGradient id="dampMassGrad" cx="30%" cy="25%">
+              <stop offset="0%" stopColor={colors.accentLight}/>
+              <stop offset="35%" stopColor={colors.accent}/>
+              <stop offset="70%" stopColor={colors.accent}/>
+              <stop offset="100%" stopColor="#0891b2"/>
+            </radialGradient>
+
+            {/* Mass highlight (top shine) */}
+            <radialGradient id="dampMassHighlight" cx="35%" cy="20%">
+              <stop offset="0%" stopColor="white" stopOpacity="0.5"/>
+              <stop offset="50%" stopColor="white" stopOpacity="0.1"/>
+              <stop offset="100%" stopColor="white" stopOpacity="0"/>
+            </radialGradient>
+
+            {/* Mass glow filter */}
+            <filter id="dampMassGlow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            {/* Spring glow filter */}
+            <filter id="dampSpringGlow" x="-20%" y="-50%" width="140%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            {/* Shadow filter for mass */}
+            <filter id="dampMassShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="3" dy="5" stdDeviation="4" floodColor="#000" floodOpacity="0.5"/>
+            </filter>
+
+            {/* Equilibrium glow */}
+            <linearGradient id="dampEqGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.textTertiary} stopOpacity="0"/>
+              <stop offset="50%" stopColor={colors.textTertiary} stopOpacity="0.6"/>
+              <stop offset="100%" stopColor={colors.textTertiary} stopOpacity="0"/>
+            </linearGradient>
+
+            {/* Amplitude marker gradient */}
+            <linearGradient id="dampAmpMarkerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colors.success} stopOpacity="0"/>
+              <stop offset="50%" stopColor={colors.success} stopOpacity="0.8"/>
+              <stop offset="100%" stopColor={colors.success} stopOpacity="0"/>
+            </linearGradient>
+
+            {/* Damping particles pattern */}
+            <pattern id="dampParticles" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="0.5" fill={medium === 'water' ? colors.accent : colors.warning} opacity="0.3"/>
+              <circle cx="12" cy="8" r="0.4" fill={medium === 'water' ? colors.accent : colors.warning} opacity="0.2"/>
+              <circle cx="6" cy="16" r="0.6" fill={medium === 'water' ? colors.accent : colors.warning} opacity="0.25"/>
+              <circle cx="18" cy="14" r="0.3" fill={medium === 'water' ? colors.accent : colors.warning} opacity="0.35"/>
+            </pattern>
+          </defs>
+
+          {/* Background with gradient */}
+          <rect width={svgWidth} height={svgHeight} fill="url(#dampBgGrad)"/>
+
+          {/* Subtle grid lines for depth */}
+          <g opacity="0.08">
+            {[...Array(6)].map((_, i) => (
+              <line key={`h${i}`} x1="0" y1={i * svgHeight / 5} x2={svgWidth} y2={i * svgHeight / 5} stroke={colors.textTertiary} strokeWidth="0.5"/>
+            ))}
+            {[...Array(8)].map((_, i) => (
+              <line key={`v${i}`} x1={i * svgWidth / 7} y1="0" x2={i * svgWidth / 7} y2={svgHeight} stroke={colors.textTertiary} strokeWidth="0.5"/>
+            ))}
+          </g>
+
+          {/* Medium layer with transparency gradient */}
           <rect
-            x="0" y={centerY - 45}
-            width={svgWidth} height="90"
-            fill={mediumColor}
+            x="22" y={centerY - 50}
+            width={svgWidth - 22} height="100"
+            fill={medium === 'air' ? 'url(#dampAirMedium)' : medium === 'water' ? 'url(#dampWaterMedium)' : 'url(#dampHoneyMedium)'}
           />
-          <text x="12" y="20" fill={colors.textTertiary} fontSize="12" fontWeight="500">
-            Medium: {medium.charAt(0).toUpperCase() + medium.slice(1)}
-          </text>
 
-          {/* Wall */}
-          <rect x="0" y={centerY - 45} width="22" height="90" fill={colors.border} rx="4" />
-          <line x1="22" y1={centerY - 45} x2="22" y2={centerY + 45} stroke={colors.borderLight} strokeWidth="2" />
+          {/* Particles for water/honey */}
+          {medium !== 'air' && (
+            <rect
+              x="22" y={centerY - 50}
+              width={svgWidth - 22} height="100"
+              fill="url(#dampParticles)"
+              opacity={medium === 'honey' ? 0.6 : 0.4}
+            />
+          )}
 
-          {/* Spring (zigzag) */}
+          {/* Decay envelope visualization (amplitude markers) */}
+          {isOscillating && dampingRatio < 1 && (
+            <g opacity="0.4">
+              {/* Upper envelope */}
+              <line
+                x1={equilibriumX + envelopeAmp * 1.2}
+                y1={centerY - 40}
+                x2={equilibriumX + envelopeAmp * 1.2}
+                y2={centerY + 40}
+                stroke="url(#dampAmpMarkerGrad)"
+                strokeWidth="2"
+                strokeDasharray="4,4"
+              />
+              {/* Lower envelope */}
+              <line
+                x1={equilibriumX - envelopeAmp * 1.2}
+                y1={centerY - 40}
+                x2={equilibriumX - envelopeAmp * 1.2}
+                y2={centerY + 40}
+                stroke="url(#dampAmpMarkerGrad)"
+                strokeWidth="2"
+                strokeDasharray="4,4"
+              />
+            </g>
+          )}
+
+          {/* Wall with metallic gradient */}
+          <rect x="0" y={centerY - 50} width="22" height="100" fill="url(#dampWallGrad)" rx="2" />
+          {/* Wall highlight */}
+          <line x1="11" y1={centerY - 48} x2="11" y2={centerY + 48} stroke="#6a6a78" strokeWidth="1" opacity="0.5"/>
+          {/* Wall shadow edge */}
+          <line x1="22" y1={centerY - 50} x2="22" y2={centerY + 50} stroke="#1a1a24" strokeWidth="2" />
+
+          {/* Spring with metallic look and glow */}
           <path
             d={(() => {
               let path = `M 22 ${centerY}`;
@@ -637,64 +795,152 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
               for (let i = 0; i < springCoils; i++) {
                 const x1 = 22 + (i + 0.25) * coilWidth;
                 const x2 = 22 + (i + 0.75) * coilWidth;
-                const y1 = centerY + (i % 2 === 0 ? 18 : -18);
-                const y2 = centerY + (i % 2 === 0 ? -18 : 18);
+                const y1 = centerY + (i % 2 === 0 ? 20 : -20);
+                const y2 = centerY + (i % 2 === 0 ? -20 : 20);
                 path += ` L ${x1} ${y1} L ${x2} ${y2}`;
               }
               path += ` L ${displayX - massSize / 2} ${centerY}`;
               return path;
             })()}
             fill="none"
-            stroke={colors.primary}
-            strokeWidth="3"
+            stroke="url(#dampSpringGrad)"
+            strokeWidth="4"
             strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#dampSpringGlow)"
           />
 
-          {/* Mass glow */}
+          {/* Equilibrium line with gradient */}
+          <line
+            x1={equilibriumX}
+            y1={centerY - 60}
+            x2={equilibriumX}
+            y2={centerY + 60}
+            stroke="url(#dampEqGrad)"
+            strokeWidth="2"
+            strokeDasharray="8,4"
+          />
+
+          {/* Mass shadow */}
           <rect
-            x={displayX - massSize / 2 - 6}
-            y={centerY - massSize / 2 - 6}
-            width={massSize + 12}
-            height={massSize + 12}
-            rx="10"
-            fill={`${colors.accent}20`}
+            x={displayX - massSize / 2 + 4}
+            y={centerY - massSize / 2 + 6}
+            width={massSize}
+            height={massSize}
+            rx="8"
+            fill="#000"
+            opacity="0.3"
           />
 
-          {/* Mass */}
+          {/* Mass outer glow */}
+          <rect
+            x={displayX - massSize / 2 - 8}
+            y={centerY - massSize / 2 - 8}
+            width={massSize + 16}
+            height={massSize + 16}
+            rx="12"
+            fill={colors.accent}
+            opacity="0.15"
+            filter="url(#dampMassGlow)"
+          />
+
+          {/* Mass with 3D gradient */}
           <rect
             x={displayX - massSize / 2}
             y={centerY - massSize / 2}
             width={massSize}
             height={massSize}
-            rx="6"
-            fill={colors.accent}
-            stroke={colors.textPrimary}
-            strokeWidth="2"
+            rx="8"
+            fill="url(#dampMassGrad)"
+            filter="url(#dampMassShadow)"
           />
 
-          {/* Equilibrium line */}
-          <line
-            x1={equilibriumX}
-            y1={centerY - 55}
-            x2={equilibriumX}
-            y2={centerY + 55}
-            stroke={colors.textTertiary}
+          {/* Mass highlight overlay */}
+          <rect
+            x={displayX - massSize / 2}
+            y={centerY - massSize / 2}
+            width={massSize}
+            height={massSize}
+            rx="8"
+            fill="url(#dampMassHighlight)"
+          />
+
+          {/* Mass edge highlight */}
+          <rect
+            x={displayX - massSize / 2 + 1}
+            y={centerY - massSize / 2 + 1}
+            width={massSize - 2}
+            height={massSize - 2}
+            rx="7"
+            fill="none"
+            stroke="white"
             strokeWidth="1"
-            strokeDasharray="6,4"
+            opacity="0.15"
           />
-          <text x={equilibriumX} y={centerY + 70} fill={colors.textTertiary} fontSize="11" textAnchor="middle">
-            Equilibrium
-          </text>
 
-          {/* Damping type indicator */}
-          <text x={svgWidth - 12} y="20" fill={colors.primary} fontSize="13" textAnchor="end" fontWeight="700">
-            {getDampingType(dampingRatio) === 'underdamped' ? '〰️ Underdamped' :
-             getDampingType(dampingRatio) === 'critical' ? '⚡ Critical' : '🐢 Overdamped'}
-          </text>
-          <text x={svgWidth - 12} y="38" fill={colors.textSecondary} fontSize="12" textAnchor="end">
-            ζ = {dampingRatio.toFixed(2)}
-          </text>
+          {/* Velocity indicator arrow when moving */}
+          {isOscillating && Math.abs(velocity) > 5 && (
+            <g>
+              <line
+                x1={displayX}
+                y1={centerY - massSize / 2 - 15}
+                x2={displayX + Math.sign(velocity) * Math.min(Math.abs(velocity) * 0.3, 30)}
+                y2={centerY - massSize / 2 - 15}
+                stroke={colors.warning}
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
+              <polygon
+                points={`${displayX + Math.sign(velocity) * Math.min(Math.abs(velocity) * 0.3, 30)},${centerY - massSize / 2 - 15} ${displayX + Math.sign(velocity) * (Math.min(Math.abs(velocity) * 0.3, 30) - 8)},${centerY - massSize / 2 - 20} ${displayX + Math.sign(velocity) * (Math.min(Math.abs(velocity) * 0.3, 30) - 8)},${centerY - massSize / 2 - 10}`}
+                fill={colors.warning}
+              />
+            </g>
+          )}
         </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: svgWidth,
+          marginTop: `-${space.sm}`,
+          padding: `0 ${space.sm}`
+        }}>
+          <div style={{ textAlign: 'left' }}>
+            <span style={{
+              fontSize: typo.label,
+              color: colors.textTertiary,
+              fontWeight: 500
+            }}>
+              Medium: {medium.charAt(0).toUpperCase() + medium.slice(1)}
+            </span>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{
+              fontSize: typo.label,
+              color: colors.textTertiary
+            }}>
+              Equilibrium
+            </span>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{
+              fontSize: typo.small,
+              color: getDampingType(dampingRatio) === 'critical' ? colors.success : colors.primary,
+              fontWeight: 700
+            }}>
+              {getDampingType(dampingRatio) === 'underdamped' ? 'Underdamped' :
+               getDampingType(dampingRatio) === 'critical' ? 'Critical' : 'Overdamped'}
+            </div>
+            <div style={{
+              fontSize: typo.label,
+              color: colors.textSecondary
+            }}>
+              zeta = {dampingRatio.toFixed(2)}
+            </div>
+          </div>
+        </div>
 
         {showControls && (
           <div style={{
@@ -782,6 +1028,9 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
     const graphHeight = 140;
     const maxT = Math.max(10, ...amplitudeHistory.map(h => h.t));
     const maxAmp = 100;
+    const padding = { left: 40, right: 15, top: 15, bottom: 25 };
+    const plotWidth = graphWidth - padding.left - padding.right;
+    const plotHeight = graphHeight - padding.top - padding.bottom;
 
     return (
       <div style={{
@@ -791,71 +1040,269 @@ const DampingRenderer: React.FC<DampingRendererProps> = ({
         borderRadius: radius.md,
         border: `1px solid ${colors.border}`
       }}>
-        <h4 style={{ fontSize: '13px', color: colors.textSecondary, marginBottom: space.md, fontWeight: 600 }}>
-          📈 Amplitude vs Time
-        </h4>
-        <svg width={graphWidth} height={graphHeight} style={{ background: colors.bgPrimary, borderRadius: radius.sm }}>
-          {/* Grid lines */}
-          {[0.25, 0.5, 0.75, 1].map(frac => (
-            <line
-              key={frac}
-              x1="40" y1={graphHeight - frac * (graphHeight - 20)}
-              x2={graphWidth - 10} y2={graphHeight - frac * (graphHeight - 20)}
-              stroke={colors.border}
-              strokeWidth="1"
-              strokeDasharray="2,2"
-            />
-          ))}
+        {/* Title moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: space.sm,
+          marginBottom: space.md
+        }}>
+          <span style={{ fontSize: typo.body }}>Amplitude vs Time</span>
+        </div>
 
-          {/* Axes */}
-          <line x1="40" y1="10" x2="40" y2={graphHeight - 10} stroke={colors.textSecondary} strokeWidth="1" />
-          <line x1="40" y1={graphHeight - 10} x2={graphWidth - 10} y2={graphHeight - 10} stroke={colors.textSecondary} strokeWidth="1" />
+        <svg width={graphWidth} height={graphHeight} style={{ borderRadius: radius.sm }}>
+          {/* Premium Definitions */}
+          <defs>
+            {/* Graph background gradient */}
+            <linearGradient id="dampGraphBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f0f14"/>
+              <stop offset="50%" stopColor="#0a0a0f"/>
+              <stop offset="100%" stopColor="#08080c"/>
+            </linearGradient>
 
-          {/* Labels */}
-          <text x="15" y={graphHeight / 2} fill={colors.textTertiary} fontSize="10" transform={`rotate(-90, 15, ${graphHeight / 2})`} textAnchor="middle">
-            Amplitude
-          </text>
-          <text x={(graphWidth - 40) / 2 + 40} y={graphHeight - 2} fill={colors.textTertiary} fontSize="10" textAnchor="middle">
-            Time (s)
-          </text>
+            {/* Data line gradient */}
+            <linearGradient id="dampDataLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colors.primaryDark}/>
+              <stop offset="50%" stopColor={colors.primary}/>
+              <stop offset="100%" stopColor={colors.primaryLight}/>
+            </linearGradient>
 
-          {/* Data line */}
+            {/* Area fill gradient under data line */}
+            <linearGradient id="dampAreaFill" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.primary} stopOpacity="0.3"/>
+              <stop offset="100%" stopColor={colors.primary} stopOpacity="0"/>
+            </linearGradient>
+
+            {/* Envelope gradient */}
+            <linearGradient id="dampEnvelopeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colors.accent} stopOpacity="0.4"/>
+              <stop offset="50%" stopColor={colors.accent} stopOpacity="0.8"/>
+              <stop offset="100%" stopColor={colors.accent} stopOpacity="0.4"/>
+            </linearGradient>
+
+            {/* Axis gradient */}
+            <linearGradient id="dampAxisGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colors.textTertiary} stopOpacity="0.8"/>
+              <stop offset="100%" stopColor={colors.textTertiary} stopOpacity="0.3"/>
+            </linearGradient>
+
+            {/* Glow filter for data line */}
+            <filter id="dampLineGlow" x="-20%" y="-50%" width="140%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            {/* Current point glow */}
+            <filter id="dampPointGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width={graphWidth} height={graphHeight} fill="url(#dampGraphBg)" rx="6"/>
+
+          {/* Subtle grid */}
+          <g opacity="0.15">
+            {[0.25, 0.5, 0.75, 1].map(frac => (
+              <line
+                key={`h${frac}`}
+                x1={padding.left}
+                y1={padding.top + plotHeight * (1 - frac)}
+                x2={graphWidth - padding.right}
+                y2={padding.top + plotHeight * (1 - frac)}
+                stroke={colors.border}
+                strokeWidth="1"
+                strokeDasharray="4,4"
+              />
+            ))}
+            {[0.25, 0.5, 0.75, 1].map(frac => (
+              <line
+                key={`v${frac}`}
+                x1={padding.left + plotWidth * frac}
+                y1={padding.top}
+                x2={padding.left + plotWidth * frac}
+                y2={padding.top + plotHeight}
+                stroke={colors.border}
+                strokeWidth="1"
+                strokeDasharray="4,4"
+              />
+            ))}
+          </g>
+
+          {/* Axes with gradient */}
+          <line
+            x1={padding.left}
+            y1={padding.top}
+            x2={padding.left}
+            y2={padding.top + plotHeight}
+            stroke={colors.textSecondary}
+            strokeWidth="1.5"
+          />
+          <line
+            x1={padding.left}
+            y1={padding.top + plotHeight}
+            x2={graphWidth - padding.right}
+            y2={padding.top + plotHeight}
+            stroke="url(#dampAxisGrad)"
+            strokeWidth="1.5"
+          />
+
+          {/* Theoretical envelope for underdamped - filled area */}
+          {dampingRatio < 1 && (
+            <>
+              {/* Envelope fill area */}
+              <path
+                d={(() => {
+                  const omega0 = 2 * Math.PI;
+                  const gamma = dampingRatio * omega0;
+                  let path = `M ${padding.left} ${padding.top}`;
+                  for (let t = 0; t <= maxT; t += 0.2) {
+                    const amp = 100 * Math.exp(-gamma * t);
+                    const x = padding.left + (t / maxT) * plotWidth;
+                    const y = padding.top + plotHeight * (1 - amp / maxAmp);
+                    path += ` L ${x},${y}`;
+                  }
+                  path += ` L ${graphWidth - padding.right},${padding.top + plotHeight}`;
+                  path += ` L ${padding.left},${padding.top + plotHeight} Z`;
+                  return path;
+                })()}
+                fill={colors.accent}
+                opacity="0.08"
+              />
+              {/* Envelope line */}
+              <path
+                d={(() => {
+                  const omega0 = 2 * Math.PI;
+                  const gamma = dampingRatio * omega0;
+                  let path = '';
+                  for (let t = 0; t <= maxT; t += 0.1) {
+                    const amp = 100 * Math.exp(-gamma * t);
+                    const x = padding.left + (t / maxT) * plotWidth;
+                    const y = padding.top + plotHeight * (1 - amp / maxAmp);
+                    path += (t === 0 ? 'M' : 'L') + `${x},${y}`;
+                  }
+                  return path;
+                })()}
+                fill="none"
+                stroke="url(#dampEnvelopeGrad)"
+                strokeWidth="2"
+                strokeDasharray="6,4"
+              />
+            </>
+          )}
+
+          {/* Area fill under data line */}
+          <path
+            d={(() => {
+              let path = `M ${padding.left + (amplitudeHistory[0].t / maxT) * plotWidth} ${padding.top + plotHeight}`;
+              amplitudeHistory.forEach(h => {
+                const x = padding.left + (h.t / maxT) * plotWidth;
+                const y = padding.top + plotHeight * (1 - h.amp / maxAmp);
+                path += ` L ${x},${y}`;
+              });
+              const lastH = amplitudeHistory[amplitudeHistory.length - 1];
+              path += ` L ${padding.left + (lastH.t / maxT) * plotWidth},${padding.top + plotHeight} Z`;
+              return path;
+            })()}
+            fill="url(#dampAreaFill)"
+          />
+
+          {/* Data line with glow */}
           <polyline
             points={amplitudeHistory.map(h => {
-              const x = 40 + (h.t / maxT) * (graphWidth - 50);
-              const y = graphHeight - 10 - (h.amp / maxAmp) * (graphHeight - 20);
+              const x = padding.left + (h.t / maxT) * plotWidth;
+              const y = padding.top + plotHeight * (1 - h.amp / maxAmp);
               return `${x},${y}`;
             }).join(' ')}
             fill="none"
-            stroke={colors.primary}
-            strokeWidth="2"
+            stroke="url(#dampDataLineGrad)"
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#dampLineGlow)"
           />
 
-          {/* Theoretical envelope for underdamped */}
-          {dampingRatio < 1 && (
-            <path
-              d={(() => {
-                const omega0 = 2 * Math.PI;
-                const gamma = dampingRatio * omega0;
-                let path = '';
-                for (let t = 0; t <= maxT; t += 0.1) {
-                  const amp = 100 * Math.exp(-gamma * t);
-                  const x = 40 + (t / maxT) * (graphWidth - 50);
-                  const y = graphHeight - 10 - (amp / maxAmp) * (graphHeight - 20);
-                  path += (t === 0 ? 'M' : 'L') + `${x},${y}`;
-                }
-                return path;
-              })()}
-              fill="none"
-              stroke={colors.accent}
-              strokeWidth="1"
-              strokeDasharray="4,4"
+          {/* Current point indicator */}
+          {amplitudeHistory.length > 0 && (
+            <circle
+              cx={padding.left + (amplitudeHistory[amplitudeHistory.length - 1].t / maxT) * plotWidth}
+              cy={padding.top + plotHeight * (1 - amplitudeHistory[amplitudeHistory.length - 1].amp / maxAmp)}
+              r="5"
+              fill={colors.primary}
+              filter="url(#dampPointGlow)"
             />
           )}
+
+          {/* Amplitude markers on Y axis */}
+          {[0, 50, 100].map(amp => (
+            <text
+              key={amp}
+              x={padding.left - 5}
+              y={padding.top + plotHeight * (1 - amp / maxAmp) + 4}
+              fill={colors.textTertiary}
+              fontSize="9"
+              textAnchor="end"
+            >
+              {amp}
+            </text>
+          ))}
+
+          {/* Time markers on X axis */}
+          {[0, Math.round(maxT / 2), Math.round(maxT)].map(t => (
+            <text
+              key={t}
+              x={padding.left + (t / maxT) * plotWidth}
+              y={graphHeight - 5}
+              fill={colors.textTertiary}
+              fontSize="9"
+              textAnchor="middle"
+            >
+              {t}s
+            </text>
+          ))}
         </svg>
-        <p style={{ fontSize: '11px', color: colors.textTertiary, marginTop: space.sm, textAlign: 'center' }}>
-          Pink: measured amplitude • Cyan dashed: theoretical envelope e^(-γt)
-        </p>
+
+        {/* Legend moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: space.lg,
+          marginTop: space.sm
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: space.xs }}>
+            <div style={{
+              width: 16,
+              height: 3,
+              background: `linear-gradient(90deg, ${colors.primaryDark}, ${colors.primaryLight})`,
+              borderRadius: 2
+            }}/>
+            <span style={{ fontSize: typo.label, color: colors.textTertiary }}>
+              Measured
+            </span>
+          </div>
+          {dampingRatio < 1 && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: space.xs }}>
+              <div style={{
+                width: 16,
+                height: 3,
+                background: colors.accent,
+                borderRadius: 2,
+                opacity: 0.7
+              }}/>
+              <span style={{ fontSize: typo.label, color: colors.textTertiary }}>
+                Envelope e^(-gt)
+              </span>
+            </div>
+          )}
+        </div>
       </div>
     );
   };

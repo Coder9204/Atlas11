@@ -394,51 +394,347 @@ const EnergyConservationRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, o
     }
     const pathD = trackPoints.map((p, i) => `${i === 0 ? 'M' : 'L'} ${p.x * 3} ${p.y * 2}`).join(' ');
 
+    // Calculate energy transfer indicator position (flows from marble)
+    const energyFlowAngle = Math.atan2(marbleVel.y, marbleVel.x);
+    const speed = Math.sqrt(marbleVel.x ** 2 + marbleVel.y ** 2);
+    const flowIntensity = Math.min(1, speed / 100);
+
     return (
       <div className="bg-slate-800/50 rounded-2xl p-4 border border-slate-700/50">
-        <svg viewBox="0 0 300 200" className="w-full h-48 bg-gradient-to-b from-slate-900 to-slate-800 rounded-xl">
-          {[20, 40, 60, 80].map(y => (
-            <line key={y} x1="0" y1={y * 2} x2="300" y2={y * 2} stroke="#334155" strokeWidth="0.5" strokeDasharray="4,4" />
-          ))}
-          <path d={pathD} fill="none" stroke="#94a3b8" strokeWidth="4" strokeLinecap="round" />
-          <circle cx={marblePos.x * 3} cy={marblePos.y * 2} r="12" fill="url(#marbleGradient)" />
+        {/* Height markers - moved outside SVG using typo system */}
+        <div className="flex justify-between mb-2">
+          <div className="flex items-center gap-2">
+            <span className="text-amber-400 font-semibold" style={{ fontSize: typo.label }}>PE</span>
+            <span className="text-slate-500" style={{ fontSize: typo.label }}>High</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-emerald-400 font-semibold" style={{ fontSize: typo.label }}>KE</span>
+            <span className="text-slate-500" style={{ fontSize: typo.label }}>{isRunning ? 'Active' : 'Ready'}</span>
+          </div>
+        </div>
+
+        <svg viewBox="0 0 300 200" className="w-full h-48 bg-gradient-to-b from-slate-900 to-slate-800 rounded-xl overflow-hidden">
+          {/* Premium defs section with gradients and filters */}
           <defs>
-            <radialGradient id="marbleGradient" cx="30%" cy="30%">
-              <stop offset="0%" stopColor="#a855f7" />
-              <stop offset="100%" stopColor="#7c3aed" />
+            {/* Track gradient */}
+            <linearGradient id="enerTrackGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* Track surface highlight */}
+            <linearGradient id="enerTrackHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Marble 3D gradient */}
+            <radialGradient id="enerMarbleGradient" cx="35%" cy="25%" r="60%">
+              <stop offset="0%" stopColor="#c084fc" />
+              <stop offset="40%" stopColor="#a855f7" />
+              <stop offset="80%" stopColor="#7c3aed" />
+              <stop offset="100%" stopColor="#5b21b6" />
             </radialGradient>
+
+            {/* Marble inner glow */}
+            <radialGradient id="enerMarbleInnerGlow" cx="30%" cy="30%" r="50%">
+              <stop offset="0%" stopColor="#e9d5ff" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#c084fc" stopOpacity="0" />
+            </radialGradient>
+
+            {/* PE energy aura (amber) */}
+            <radialGradient id="enerPEAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* KE energy aura (emerald) */}
+            <radialGradient id="enerKEAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#34d399" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#10b981" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Glow filter for marble */}
+            <filter id="enerMarbleGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Stronger glow for energy transfer */}
+            <filter id="enerEnergyGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Drop shadow for track */}
+            <filter id="enerTrackShadow" x="-10%" y="-10%" width="120%" height="130%">
+              <feDropShadow dx="0" dy="2" stdDeviation="2" floodColor="#000" floodOpacity="0.3" />
+            </filter>
+
+            {/* Height marker gradient */}
+            <linearGradient id="enerHeightGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+            </linearGradient>
           </defs>
-          <text x="10" y="25" fill="#64748b" fontSize="10">High PE</text>
-          <text x="10" y="175" fill="#64748b" fontSize="10">Low PE</text>
+
+          {/* Background height zones */}
+          <rect x="0" y="0" width="300" height="50" fill="url(#enerHeightGradient)" />
+
+          {/* Grid lines with better styling */}
+          {[20, 40, 60, 80].map((y, i) => (
+            <g key={y}>
+              <line
+                x1="0"
+                y1={y * 2}
+                x2="300"
+                y2={y * 2}
+                stroke="#334155"
+                strokeWidth="0.5"
+                strokeDasharray="4,4"
+                opacity={0.5}
+              />
+              {/* Height markers on left */}
+              <rect
+                x="0"
+                y={y * 2 - 1}
+                width="3"
+                height="2"
+                fill={y < 40 ? '#fbbf24' : '#475569'}
+                opacity={y < 40 ? 0.6 : 0.3}
+              />
+            </g>
+          ))}
+
+          {/* Track shadow */}
+          <path
+            d={pathD}
+            fill="none"
+            stroke="#000"
+            strokeWidth="6"
+            strokeLinecap="round"
+            opacity="0.2"
+            transform="translate(1, 3)"
+          />
+
+          {/* Track with 3D effect - bottom layer */}
+          <path
+            d={pathD}
+            fill="none"
+            stroke="#334155"
+            strokeWidth="8"
+            strokeLinecap="round"
+          />
+
+          {/* Track main surface with gradient */}
+          <path
+            d={pathD}
+            fill="none"
+            stroke="url(#enerTrackHighlight)"
+            strokeWidth="5"
+            strokeLinecap="round"
+            filter="url(#enerTrackShadow)"
+          />
+
+          {/* Track highlight line */}
+          <path
+            d={pathD}
+            fill="none"
+            stroke="#94a3b8"
+            strokeWidth="1.5"
+            strokeLinecap="round"
+            opacity="0.6"
+            transform="translate(0, -2)"
+          />
+
+          {/* Energy aura based on PE (amber) - shows when high */}
+          <circle
+            cx={marblePos.x * 3}
+            cy={marblePos.y * 2}
+            r={20 + (energy.potential / 5)}
+            fill="url(#enerPEAura)"
+            opacity={energy.potential / 100}
+            style={{ transition: 'all 0.1s ease-out' }}
+          />
+
+          {/* Energy aura based on KE (emerald) - shows when moving fast */}
+          <circle
+            cx={marblePos.x * 3}
+            cy={marblePos.y * 2}
+            r={20 + (energy.kinetic / 5)}
+            fill="url(#enerKEAura)"
+            opacity={energy.kinetic / 100}
+            style={{ transition: 'all 0.1s ease-out' }}
+          />
+
+          {/* Energy transfer particles (animated when running) */}
+          {isRunning && flowIntensity > 0.1 && (
+            <>
+              {[0, 1, 2].map((i) => (
+                <circle
+                  key={i}
+                  cx={marblePos.x * 3 - Math.cos(energyFlowAngle) * (15 + i * 8)}
+                  cy={marblePos.y * 2 - Math.sin(energyFlowAngle) * (15 + i * 8)}
+                  r={3 - i * 0.5}
+                  fill={energy.kinetic > energy.potential ? '#34d399' : '#fbbf24'}
+                  opacity={(1 - i * 0.3) * flowIntensity}
+                  filter="url(#enerEnergyGlow)"
+                >
+                  <animate
+                    attributeName="opacity"
+                    values={`${(1 - i * 0.3) * flowIntensity};${(0.5 - i * 0.15) * flowIntensity};${(1 - i * 0.3) * flowIntensity}`}
+                    dur="0.3s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              ))}
+            </>
+          )}
+
+          {/* Marble shadow */}
+          <ellipse
+            cx={marblePos.x * 3 + 2}
+            cy={marblePos.y * 2 + 10}
+            rx="10"
+            ry="4"
+            fill="#000"
+            opacity="0.3"
+          />
+
+          {/* Marble with 3D effect */}
+          <circle
+            cx={marblePos.x * 3}
+            cy={marblePos.y * 2}
+            r="12"
+            fill="url(#enerMarbleGradient)"
+            filter="url(#enerMarbleGlow)"
+            stroke="#5b21b6"
+            strokeWidth="0.5"
+          />
+
+          {/* Marble highlight for 3D effect */}
+          <circle
+            cx={marblePos.x * 3 - 3}
+            cy={marblePos.y * 2 - 4}
+            r="4"
+            fill="url(#enerMarbleInnerGlow)"
+          />
+
+          {/* Small specular highlight */}
+          <circle
+            cx={marblePos.x * 3 - 4}
+            cy={marblePos.y * 2 - 5}
+            r="2"
+            fill="#fff"
+            opacity="0.7"
+          />
         </svg>
 
+        {/* Height indicator labels - moved outside SVG using typo system */}
+        <div className="flex justify-between mt-2 px-2">
+          <span style={{ fontSize: typo.label }} className="text-amber-500/70">h = max</span>
+          <span style={{ fontSize: typo.label }} className="text-slate-500">Height Reference</span>
+          <span style={{ fontSize: typo.label }} className="text-emerald-500/70">h = 0</span>
+        </div>
+
+        {/* Energy bars with premium gradients */}
         <div className="grid grid-cols-3 gap-4 mt-4">
           <div>
             <div className="flex justify-between mb-1">
-              <span className="text-xs text-amber-400">Potential</span>
-              <span className="text-xs text-amber-400">{Math.round(energy.potential)}%</span>
+              <span style={{ fontSize: typo.label }} className="text-amber-400 font-medium">Potential (PE)</span>
+              <span style={{ fontSize: typo.label }} className="text-amber-400 font-bold">{Math.round(energy.potential)}%</span>
             </div>
-            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-              <div className="h-full bg-amber-400 transition-all" style={{ width: `${energy.potential}%` }} />
-            </div>
-          </div>
-          <div>
-            <div className="flex justify-between mb-1">
-              <span className="text-xs text-emerald-400">Kinetic</span>
-              <span className="text-xs text-emerald-400">{Math.round(energy.kinetic)}%</span>
-            </div>
-            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-              <div className="h-full bg-emerald-400 transition-all" style={{ width: `${energy.kinetic}%` }} />
+            <div className="h-3 bg-slate-700/80 rounded-full overflow-hidden shadow-inner">
+              <div
+                className="h-full rounded-full transition-all duration-100 ease-out"
+                style={{
+                  width: `${energy.potential}%`,
+                  background: 'linear-gradient(90deg, #f59e0b 0%, #fbbf24 50%, #fcd34d 100%)',
+                  boxShadow: energy.potential > 20 ? '0 0 10px rgba(251, 191, 36, 0.5)' : 'none'
+                }}
+              />
             </div>
           </div>
           <div>
             <div className="flex justify-between mb-1">
-              <span className="text-xs text-purple-400">Total</span>
-              <span className="text-xs text-purple-400">{Math.round(energy.total)}%</span>
+              <span style={{ fontSize: typo.label }} className="text-emerald-400 font-medium">Kinetic (KE)</span>
+              <span style={{ fontSize: typo.label }} className="text-emerald-400 font-bold">{Math.round(energy.kinetic)}%</span>
             </div>
-            <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-              <div className="h-full bg-purple-400 transition-all" style={{ width: `${energy.total}%` }} />
+            <div className="h-3 bg-slate-700/80 rounded-full overflow-hidden shadow-inner">
+              <div
+                className="h-full rounded-full transition-all duration-100 ease-out"
+                style={{
+                  width: `${energy.kinetic}%`,
+                  background: 'linear-gradient(90deg, #059669 0%, #10b981 50%, #34d399 100%)',
+                  boxShadow: energy.kinetic > 20 ? '0 0 10px rgba(52, 211, 153, 0.5)' : 'none'
+                }}
+              />
             </div>
+          </div>
+          <div>
+            <div className="flex justify-between mb-1">
+              <span style={{ fontSize: typo.label }} className="text-purple-400 font-medium">Total (E)</span>
+              <span style={{ fontSize: typo.label }} className="text-purple-400 font-bold">{Math.round(energy.total)}%</span>
+            </div>
+            <div className="h-3 bg-slate-700/80 rounded-full overflow-hidden shadow-inner">
+              <div
+                className="h-full rounded-full transition-all duration-100 ease-out"
+                style={{
+                  width: `${energy.total}%`,
+                  background: 'linear-gradient(90deg, #7c3aed 0%, #a855f7 50%, #c084fc 100%)',
+                  boxShadow: '0 0 10px rgba(168, 85, 247, 0.4)'
+                }}
+              />
+            </div>
+          </div>
+        </div>
+
+        {/* Energy transfer indicator */}
+        <div className="mt-3 flex items-center justify-center gap-3">
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-amber-400" style={{ boxShadow: energy.potential > 30 ? '0 0 6px #fbbf24' : 'none' }} />
+            <span style={{ fontSize: typo.label }} className="text-slate-400">PE</span>
+          </div>
+          <div className="flex items-center gap-1">
+            {isRunning ? (
+              <svg width="40" height="12" viewBox="0 0 40 12">
+                <defs>
+                  <linearGradient id="enerTransferArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor={energy.potential > energy.kinetic ? '#fbbf24' : '#34d399'} />
+                    <stop offset="100%" stopColor={energy.potential > energy.kinetic ? '#34d399' : '#fbbf24'} />
+                  </linearGradient>
+                </defs>
+                <path
+                  d={energy.potential > energy.kinetic ? "M5 6 L30 6 L25 2 M30 6 L25 10" : "M35 6 L10 6 L15 2 M10 6 L15 10"}
+                  stroke="url(#enerTransferArrow)"
+                  strokeWidth="2"
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                >
+                  <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
+                </path>
+              </svg>
+            ) : (
+              <svg width="40" height="12" viewBox="0 0 40 12">
+                <line x1="5" y1="6" x2="35" y2="6" stroke="#475569" strokeWidth="2" strokeDasharray="4,2" />
+              </svg>
+            )}
+          </div>
+          <div className="flex items-center gap-1">
+            <div className="w-2 h-2 rounded-full bg-emerald-400" style={{ boxShadow: energy.kinetic > 30 ? '0 0 6px #34d399' : 'none' }} />
+            <span style={{ fontSize: typo.label }} className="text-slate-400">KE</span>
           </div>
         </div>
       </div>

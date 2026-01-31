@@ -538,312 +538,634 @@ const LensFocusingRenderer: React.FC<LensFocusingRendererProps> = ({
       }}>
         <svg width={simWidth} height={simHeight} style={{ display: 'block', margin: '0 auto' }}>
           <defs>
-            <linearGradient id="lensGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="transparent" />
-              <stop offset="20%" stopColor={colors.primary} stopOpacity="0.3" />
-              <stop offset="50%" stopColor={colors.primary} stopOpacity="0.5" />
-              <stop offset="80%" stopColor={colors.primary} stopOpacity="0.3" />
-              <stop offset="100%" stopColor="transparent" />
+            {/* === LENS GRADIENTS === */}
+
+            {/* Premium glass gradient for convex lens - realistic 3D effect */}
+            <linearGradient id="lensGlassGradConvex" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.1"/>
+              <stop offset="15%" stopColor="#22d3ee" stopOpacity="0.25"/>
+              <stop offset="35%" stopColor="#67e8f9" stopOpacity="0.45"/>
+              <stop offset="50%" stopColor="#a5f3fc" stopOpacity="0.6"/>
+              <stop offset="65%" stopColor="#67e8f9" stopOpacity="0.45"/>
+              <stop offset="85%" stopColor="#22d3ee" stopOpacity="0.25"/>
+              <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.1"/>
             </linearGradient>
+
+            {/* Lens edge highlight for 3D effect */}
+            <linearGradient id="lensEdgeHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4"/>
+              <stop offset="50%" stopColor="#22d3ee"/>
+              <stop offset="100%" stopColor="#06b6d4"/>
+            </linearGradient>
+
+            {/* Concave lens gradient */}
+            <linearGradient id="lensGlassGradConcave" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.4"/>
+              <stop offset="20%" stopColor="#67e8f9" stopOpacity="0.2"/>
+              <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.08"/>
+              <stop offset="80%" stopColor="#67e8f9" stopOpacity="0.2"/>
+              <stop offset="100%" stopColor="#a5f3fc" stopOpacity="0.4"/>
+            </linearGradient>
+
+            {/* === FOCAL POINT GRADIENTS === */}
+            <radialGradient id="lensFocalGrad" cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#fef08a"/>
+              <stop offset="50%" stopColor="#fbbf24"/>
+              <stop offset="100%" stopColor="#f59e0b"/>
+            </radialGradient>
+
+            <radialGradient id="lens2FGrad" cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#c4b5fd"/>
+              <stop offset="50%" stopColor="#a78bfa"/>
+              <stop offset="100%" stopColor="#8b5cf6"/>
+            </radialGradient>
+
+            {/* === OBJECT/IMAGE GRADIENTS === */}
+            <linearGradient id="lensObjectGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e"/>
+              <stop offset="50%" stopColor="#4ade80"/>
+              <stop offset="100%" stopColor="#86efac"/>
+            </linearGradient>
+
+            <linearGradient id="lensImageGradReal" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#ec4899"/>
+              <stop offset="50%" stopColor="#f472b6"/>
+              <stop offset="100%" stopColor="#f9a8d4"/>
+            </linearGradient>
+
+            <linearGradient id="lensImageGradVirtual" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7"/>
+              <stop offset="50%" stopColor="#c084fc"/>
+              <stop offset="100%" stopColor="#d8b4fe"/>
+            </linearGradient>
+
+            {/* === LIGHT RAY GRADIENTS === */}
+            <linearGradient id="lensRay1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fef08a"/>
+              <stop offset="100%" stopColor="#fbbf24"/>
+            </linearGradient>
+
+            <linearGradient id="lensRay2Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f9a8d4"/>
+              <stop offset="100%" stopColor="#f472b6"/>
+            </linearGradient>
+
+            <linearGradient id="lensRay3Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#c4b5fd"/>
+              <stop offset="100%" stopColor="#a78bfa"/>
+            </linearGradient>
+
+            {/* === GLOW FILTERS === */}
+            <filter id="lensGlowYellow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feFlood floodColor="#fbbf24" floodOpacity="0.6"/>
+              <feComposite in2="blur" operator="in"/>
+              <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            <filter id="lensGlowPink" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feFlood floodColor="#f472b6" floodOpacity="0.6"/>
+              <feComposite in2="blur" operator="in"/>
+              <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            <filter id="lensGlowPurple" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feFlood floodColor="#a78bfa" floodOpacity="0.6"/>
+              <feComposite in2="blur" operator="in"/>
+              <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            <filter id="lensGlowCyan" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur"/>
+              <feFlood floodColor="#22d3ee" floodOpacity="0.5"/>
+              <feComposite in2="blur" operator="in"/>
+              <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            <filter id="lensFocalGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur"/>
+              <feFlood floodColor="#fbbf24" floodOpacity="0.8"/>
+              <feComposite in2="blur" operator="in"/>
+              <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            <filter id="lensConvergenceGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur"/>
+              <feFlood floodColor="#f472b6" floodOpacity="0.7"/>
+              <feComposite in2="blur" operator="in"/>
+              <feMerge>
+                <feMergeNode/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            <filter id="lensShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.3"/>
+            </filter>
+
+            {/* Light pulse gradient */}
+            <radialGradient id="lensPulseGrad" cx="50%" cy="50%">
+              <stop offset="0%" stopColor="#fef9c3"/>
+              <stop offset="50%" stopColor="#fde047"/>
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0"/>
+            </radialGradient>
           </defs>
 
-          {/* Optical axis */}
+          {/* Background gradient */}
+          <rect width={simWidth} height={simHeight} fill="url(#lensBgGrad)" rx={8}/>
+
+          {/* Optical axis with subtle glow */}
           <line
             x1={20}
             y1={centerY}
             x2={simWidth - 20}
             y2={centerY}
-            stroke={colors.border}
+            stroke="#334155"
             strokeWidth={1}
-            strokeDasharray="5,5"
+            strokeDasharray="8,4"
+          />
+          <line
+            x1={20}
+            y1={centerY}
+            x2={simWidth - 20}
+            y2={centerY}
+            stroke="#475569"
+            strokeWidth={0.5}
           />
 
-          {/* Focal points */}
+          {/* Focal points with premium styling */}
           {showFocalPoints && (
             <>
-              {/* Left focal point (F) */}
-              <circle cx={focalX_left} cy={centerY} r={5} fill={colors.warning} />
-              <text x={focalX_left} y={centerY + 20} fill={colors.warning}
-                    fontSize={11} textAnchor="middle">F</text>
+              {/* Left focal point (F) with glow */}
+              <g filter="url(#lensFocalGlow)">
+                <circle cx={focalX_left} cy={centerY} r={7} fill="url(#lensFocalGrad)"/>
+                <circle cx={focalX_left} cy={centerY} r={3} fill="#fef9c3"/>
+              </g>
 
-              {/* Right focal point (F') */}
-              <circle cx={focalX_right} cy={centerY} r={5} fill={colors.warning} />
-              <text x={focalX_right} y={centerY + 20} fill={colors.warning}
-                    fontSize={11} textAnchor="middle">F'</text>
+              {/* Right focal point (F') with glow */}
+              <g filter="url(#lensFocalGlow)">
+                <circle cx={focalX_right} cy={centerY} r={7} fill="url(#lensFocalGrad)"/>
+                <circle cx={focalX_right} cy={centerY} r={3} fill="#fef9c3"/>
+              </g>
 
-              {/* 2F points */}
-              <circle cx={focalX_left - Math.abs(focalLength) * scale / 2} cy={centerY}
-                      r={3} fill={colors.secondary} opacity={0.5} />
-              <text x={focalX_left - Math.abs(focalLength) * scale / 2} y={centerY + 20}
-                    fill={colors.secondary} fontSize={9} textAnchor="middle" opacity={0.5}>2F</text>
-
-              <circle cx={focalX_right + Math.abs(focalLength) * scale / 2} cy={centerY}
-                      r={3} fill={colors.secondary} opacity={0.5} />
-              <text x={focalX_right + Math.abs(focalLength) * scale / 2} y={centerY + 20}
-                    fill={colors.secondary} fontSize={9} textAnchor="middle" opacity={0.5}>2F'</text>
+              {/* 2F points with subtle styling */}
+              <g opacity={0.7}>
+                <circle cx={focalX_left - Math.abs(focalLength) * scale / 2} cy={centerY}
+                        r={5} fill="url(#lens2FGrad)"/>
+                <circle cx={focalX_right + Math.abs(focalLength) * scale / 2} cy={centerY}
+                        r={5} fill="url(#lens2FGrad)"/>
+              </g>
             </>
           )}
 
-          {/* Lens */}
-          {lensType === 'converging' ? (
-            // Convex lens shape
-            <ellipse
-              cx={lensX}
-              cy={centerY}
-              rx={15}
-              ry={100}
-              fill="url(#lensGrad)"
-              stroke={colors.primary}
-              strokeWidth={2}
-            />
-          ) : (
-            // Concave lens shape (narrower in middle)
-            <path
-              d={`M ${lensX - 8} ${centerY - 100}
-                  Q ${lensX + 15} ${centerY} ${lensX - 8} ${centerY + 100}
-                  L ${lensX + 8} ${centerY + 100}
-                  Q ${lensX - 15} ${centerY} ${lensX + 8} ${centerY - 100}
-                  Z`}
-              fill="url(#lensGrad)"
-              stroke={colors.primary}
-              strokeWidth={2}
-            />
-          )}
-          <text x={lensX} y={30} fill={colors.primary} fontSize={11} textAnchor="middle">
-            {lensType === 'converging' ? 'Convex Lens' : 'Concave Lens'}
-          </text>
+          {/* Premium 3D Lens */}
+          <g filter="url(#lensGlowCyan)">
+            {lensType === 'converging' ? (
+              // Convex lens with 3D glass effect
+              <g>
+                {/* Outer glow/halo */}
+                <ellipse
+                  cx={lensX}
+                  cy={centerY}
+                  rx={18}
+                  ry={105}
+                  fill="none"
+                  stroke="#22d3ee"
+                  strokeWidth={1}
+                  opacity={0.3}
+                />
+                {/* Main lens body */}
+                <ellipse
+                  cx={lensX}
+                  cy={centerY}
+                  rx={15}
+                  ry={100}
+                  fill="url(#lensGlassGradConvex)"
+                  stroke="url(#lensEdgeHighlight)"
+                  strokeWidth={2}
+                />
+                {/* Center highlight line for 3D effect */}
+                <ellipse
+                  cx={lensX}
+                  cy={centerY}
+                  rx={2}
+                  ry={85}
+                  fill="rgba(255,255,255,0.25)"
+                />
+                {/* Edge reflection */}
+                <ellipse
+                  cx={lensX - 8}
+                  cy={centerY}
+                  rx={1}
+                  ry={75}
+                  fill="rgba(255,255,255,0.15)"
+                />
+              </g>
+            ) : (
+              // Concave lens with 3D effect (narrower in middle)
+              <g>
+                <path
+                  d={`M ${lensX - 10} ${centerY - 100}
+                      Q ${lensX + 18} ${centerY} ${lensX - 10} ${centerY + 100}
+                      L ${lensX + 10} ${centerY + 100}
+                      Q ${lensX - 18} ${centerY} ${lensX + 10} ${centerY - 100}
+                      Z`}
+                  fill="url(#lensGlassGradConcave)"
+                  stroke="url(#lensEdgeHighlight)"
+                  strokeWidth={2}
+                />
+                {/* Edge highlights */}
+                <path
+                  d={`M ${lensX - 8} ${centerY - 90}
+                      Q ${lensX + 12} ${centerY} ${lensX - 8} ${centerY + 90}`}
+                  fill="none"
+                  stroke="rgba(255,255,255,0.2)"
+                  strokeWidth={1}
+                />
+              </g>
+            )}
+          </g>
 
-          {/* Object (arrow) */}
-          <line
-            x1={objectX}
-            y1={centerY}
-            x2={objectX}
-            y2={centerY - objectHeight}
-            stroke={colors.success}
-            strokeWidth={3}
-          />
-          <polygon
-            points={`${objectX},${centerY - objectHeight - 10} ${objectX - 8},${centerY - objectHeight + 5} ${objectX + 8},${centerY - objectHeight + 5}`}
-            fill={colors.success}
-          />
-          <text x={objectX} y={centerY + 20} fill={colors.success} fontSize={11} textAnchor="middle">
-            Object
-          </text>
+          {/* Object (premium arrow) */}
+          <g filter="url(#lensShadow)">
+            <line
+              x1={objectX}
+              y1={centerY}
+              x2={objectX}
+              y2={centerY - objectHeight}
+              stroke="url(#lensObjectGrad)"
+              strokeWidth={4}
+              strokeLinecap="round"
+            />
+            <polygon
+              points={`${objectX},${centerY - objectHeight - 12} ${objectX - 10},${centerY - objectHeight + 4} ${objectX + 10},${centerY - objectHeight + 4}`}
+              fill="url(#lensObjectGrad)"
+            />
+            {/* Base indicator */}
+            <circle cx={objectX} cy={centerY} r={4} fill="#22c55e"/>
+          </g>
 
-          {/* Principal rays */}
+          {/* Principal rays with glow effects */}
           {showRays && (
             <g>
-              {/* Ray 1: Parallel to axis, through F' */}
-              <line
-                x1={objectX}
-                y1={centerY - objectHeight}
-                x2={lensX}
-                y2={centerY - objectHeight}
-                stroke="#ffd700"
-                strokeWidth={2}
-                opacity={0.8}
-              />
-              {lensType === 'converging' && imageData.isReal && (
+              {/* Ray 1: Parallel to axis, through F' (Yellow) */}
+              <g filter="url(#lensGlowYellow)">
                 <line
-                  x1={lensX}
+                  x1={objectX}
                   y1={centerY - objectHeight}
-                  x2={Math.min(simWidth - 20, imageX)}
-                  y2={centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)}
-                  stroke="#ffd700"
-                  strokeWidth={2}
-                  opacity={0.8}
+                  x2={lensX}
+                  y2={centerY - objectHeight}
+                  stroke="url(#lensRay1Grad)"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
                 />
+              </g>
+              {lensType === 'converging' && imageData.isReal && (
+                <g filter="url(#lensGlowYellow)">
+                  <line
+                    x1={lensX}
+                    y1={centerY - objectHeight}
+                    x2={Math.min(simWidth - 20, imageX)}
+                    y2={centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)}
+                    stroke="url(#lensRay1Grad)"
+                    strokeWidth={2.5}
+                    strokeLinecap="round"
+                  />
+                </g>
               )}
               {(lensType === 'diverging' || !imageData.isReal) && (
                 <>
                   {/* Diverging ray or virtual image backward extension */}
-                  <line
-                    x1={lensX}
-                    y1={centerY - objectHeight}
-                    x2={simWidth - 20}
-                    y2={centerY - objectHeight + (simWidth - 20 - lensX) * (objectHeight / Math.abs(focalLength))}
-                    stroke="#ffd700"
-                    strokeWidth={2}
-                    opacity={0.8}
-                  />
+                  <g filter="url(#lensGlowYellow)">
+                    <line
+                      x1={lensX}
+                      y1={centerY - objectHeight}
+                      x2={simWidth - 20}
+                      y2={centerY - objectHeight + (simWidth - 20 - lensX) * (objectHeight / Math.abs(focalLength))}
+                      stroke="url(#lensRay1Grad)"
+                      strokeWidth={2.5}
+                      strokeLinecap="round"
+                    />
+                  </g>
                   {/* Dashed backward extension for virtual image */}
                   <line
                     x1={lensX}
                     y1={centerY - objectHeight}
                     x2={Math.max(20, imageX)}
                     y2={centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)}
-                    stroke="#ffd700"
+                    stroke="#fbbf24"
                     strokeWidth={1.5}
-                    strokeDasharray="5,5"
-                    opacity={0.5}
+                    strokeDasharray="6,4"
+                    opacity={0.6}
                   />
                 </>
               )}
 
-              {/* Ray 2: Through center of lens (undeviated) */}
-              <line
-                x1={objectX}
-                y1={centerY - objectHeight}
-                x2={lensX}
-                y2={centerY}
-                stroke={colors.accent}
-                strokeWidth={2}
-                opacity={0.8}
-              />
-              <line
-                x1={lensX}
-                y1={centerY}
-                x2={imageData.isReal ? Math.min(simWidth - 20, imageX) : simWidth - 20}
-                y2={imageData.isReal
-                  ? centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)
-                  : centerY + (simWidth - 20 - lensX) * objectHeight / objectDistance}
-                stroke={colors.accent}
-                strokeWidth={2}
-                opacity={0.8}
-              />
+              {/* Ray 2: Through center of lens (undeviated) - Pink */}
+              <g filter="url(#lensGlowPink)">
+                <line
+                  x1={objectX}
+                  y1={centerY - objectHeight}
+                  x2={lensX}
+                  y2={centerY}
+                  stroke="url(#lensRay2Grad)"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                />
+                <line
+                  x1={lensX}
+                  y1={centerY}
+                  x2={imageData.isReal ? Math.min(simWidth - 20, imageX) : simWidth - 20}
+                  y2={imageData.isReal
+                    ? centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)
+                    : centerY + (simWidth - 20 - lensX) * objectHeight / objectDistance}
+                  stroke="url(#lensRay2Grad)"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                />
+              </g>
               {isVirtual && (
                 <line
                   x1={lensX}
                   y1={centerY}
                   x2={Math.max(20, imageX)}
                   y2={centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)}
-                  stroke={colors.accent}
+                  stroke="#f472b6"
                   strokeWidth={1.5}
-                  strokeDasharray="5,5"
-                  opacity={0.5}
+                  strokeDasharray="6,4"
+                  opacity={0.6}
                 />
               )}
 
-              {/* Ray 3: Through F, emerges parallel */}
+              {/* Ray 3: Through F, emerges parallel - Purple */}
               {lensType === 'converging' && (
-                <>
+                <g filter="url(#lensGlowPurple)">
                   <line
                     x1={objectX}
                     y1={centerY - objectHeight}
                     x2={lensX}
                     y2={centerY - objectHeight * (objectDistance - focalLength) / objectDistance}
-                    stroke={colors.secondary}
-                    strokeWidth={2}
-                    opacity={0.8}
+                    stroke="url(#lensRay3Grad)"
+                    strokeWidth={2.5}
+                    strokeLinecap="round"
                   />
                   <line
                     x1={lensX}
                     y1={centerY - objectHeight * (objectDistance - focalLength) / objectDistance}
                     x2={simWidth - 20}
                     y2={centerY - objectHeight * (objectDistance - focalLength) / objectDistance}
-                    stroke={colors.secondary}
-                    strokeWidth={2}
-                    opacity={0.8}
+                    stroke="url(#lensRay3Grad)"
+                    strokeWidth={2.5}
+                    strokeLinecap="round"
                   />
-                </>
+                </g>
               )}
             </g>
           )}
 
-          {/* Image (if it fits in view) */}
+          {/* Convergence glow at image point */}
+          {imageData.isReal && imageData.imageDistance > 0 && imageData.imageDistance < 350 && showRays && (
+            <g filter="url(#lensConvergenceGlow)">
+              <circle
+                cx={Math.max(20, Math.min(simWidth - 20, imageX))}
+                cy={centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)}
+                r={8}
+                fill="#f472b6"
+                opacity={0.8}
+              />
+            </g>
+          )}
+
+          {/* Image (premium styling) */}
           {imageData.imageDistance > -200 && imageData.imageDistance < 400 && (
-            <g opacity={isVirtual ? 0.6 : 1}>
+            <g opacity={isVirtual ? 0.7 : 1} filter={isVirtual ? undefined : "url(#lensShadow)"}>
               <line
                 x1={Math.max(20, Math.min(simWidth - 20, imageX))}
                 y1={centerY}
                 x2={Math.max(20, Math.min(simWidth - 20, imageX))}
                 y2={centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1)}
-                stroke={colors.accent}
-                strokeWidth={3}
-                strokeDasharray={isVirtual ? "5,5" : "none"}
+                stroke={isVirtual ? "url(#lensImageGradVirtual)" : "url(#lensImageGradReal)"}
+                strokeWidth={4}
+                strokeLinecap="round"
+                strokeDasharray={isVirtual ? "6,4" : "none"}
               />
               <polygon
-                points={`${Math.max(20, Math.min(simWidth - 20, imageX))},${centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1) + (imageData.isUpright ? -10 : 10)} ${Math.max(20, Math.min(simWidth - 20, imageX)) - 8},${centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1) + (imageData.isUpright ? 5 : -5)} ${Math.max(20, Math.min(simWidth - 20, imageX)) + 8},${centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1) + (imageData.isUpright ? 5 : -5)}`}
-                fill={colors.accent}
-                opacity={isVirtual ? 0.6 : 1}
+                points={`${Math.max(20, Math.min(simWidth - 20, imageX))},${centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1) + (imageData.isUpright ? -12 : 12)} ${Math.max(20, Math.min(simWidth - 20, imageX)) - 10},${centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1) + (imageData.isUpright ? 4 : -4)} ${Math.max(20, Math.min(simWidth - 20, imageX)) + 10},${centerY + imageData.imageHeight * (imageData.isUpright ? -1 : 1) + (imageData.isUpright ? 4 : -4)}`}
+                fill={isVirtual ? "url(#lensImageGradVirtual)" : "url(#lensImageGradReal)"}
+                opacity={isVirtual ? 0.7 : 1}
               />
-              <text
-                x={Math.max(35, Math.min(simWidth - 35, imageX))}
-                y={centerY + 25}
-                fill={colors.accent}
-                fontSize={10}
-                textAnchor="middle"
-              >
-                {isVirtual ? 'Virtual Image' : 'Real Image'}
-              </text>
+              {/* Base indicator */}
+              <circle
+                cx={Math.max(20, Math.min(simWidth - 20, imageX))}
+                cy={centerY}
+                r={4}
+                fill={isVirtual ? "#a855f7" : "#ec4899"}
+                opacity={isVirtual ? 0.7 : 1}
+              />
             </g>
           )}
 
-          {/* Animated light pulses */}
+          {/* Animated light pulses with premium gradient */}
           {showRays && [0, 1, 2].map(i => {
             const t = (animationTime * 0.4 + i * 0.33) % 1;
             const x = objectX + (lensX - objectX) * t;
             const y = (centerY - objectHeight);
             if (t > 0.95) return null;
             return (
-              <circle
-                key={`pulse-${i}`}
-                cx={x}
-                cy={y}
-                r={4}
-                fill="#ffd700"
-                opacity={1 - t}
-              />
+              <g key={`pulse-${i}`}>
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={6}
+                  fill="url(#lensPulseGrad)"
+                  opacity={(1 - t) * 0.8}
+                />
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={3}
+                  fill="#fef9c3"
+                  opacity={1 - t}
+                />
+              </g>
             );
           })}
         </svg>
+
+        {/* Labels moved outside SVG using typo system for better readability */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: spacing.sm,
+          padding: `0 ${spacing.md}px`,
+        }}>
+          {/* Object label */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.xs,
+          }}>
+            <div style={{
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #22c55e, #4ade80)',
+            }}/>
+            <span style={{ fontSize: typo.small, color: colors.success, fontWeight: 600 }}>Object</span>
+          </div>
+
+          {/* Lens type label */}
+          <div style={{
+            padding: `${spacing.xs}px ${spacing.sm}px`,
+            background: 'rgba(34, 211, 238, 0.15)',
+            borderRadius: radius.sm,
+            border: '1px solid rgba(34, 211, 238, 0.3)',
+          }}>
+            <span style={{ fontSize: typo.small, color: '#22d3ee', fontWeight: 600 }}>
+              {lensType === 'converging' ? 'Convex Lens' : 'Concave Lens'}
+            </span>
+          </div>
+
+          {/* Image label */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: spacing.xs,
+          }}>
+            <div style={{
+              width: 10,
+              height: 10,
+              borderRadius: '50%',
+              background: isVirtual
+                ? 'linear-gradient(135deg, #a855f7, #c084fc)'
+                : 'linear-gradient(135deg, #ec4899, #f472b6)',
+            }}/>
+            <span style={{
+              fontSize: typo.small,
+              color: isVirtual ? '#a855f7' : '#ec4899',
+              fontWeight: 600
+            }}>
+              {isVirtual ? 'Virtual Image' : 'Real Image'}
+            </span>
+          </div>
+        </div>
+
+        {/* Focal point labels outside SVG */}
+        {showFocalPoints && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'center',
+            gap: spacing.lg,
+            marginTop: spacing.sm,
+          }}>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.xs,
+            }}>
+              <div style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #fbbf24, #fde047)',
+                boxShadow: '0 0 6px rgba(251, 191, 36, 0.6)',
+              }}/>
+              <span style={{ fontSize: typo.label, color: colors.warning, fontWeight: 500 }}>F, F' (Focal Points)</span>
+            </div>
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: spacing.xs,
+            }}>
+              <div style={{
+                width: 8,
+                height: 8,
+                borderRadius: '50%',
+                background: 'linear-gradient(135deg, #a78bfa, #c4b5fd)',
+              }}/>
+              <span style={{ fontSize: typo.label, color: colors.secondary, fontWeight: 500 }}>2F, 2F'</span>
+            </div>
+          </div>
+        )}
 
         {/* Image properties display */}
         <div style={{
           display: 'grid',
           gridTemplateColumns: 'repeat(4, 1fr)',
           gap: spacing.sm,
-          marginTop: spacing.lg,
+          marginTop: spacing.md,
         }}>
           <div style={{
-            background: colors.background,
+            background: 'linear-gradient(135deg, rgba(251, 191, 36, 0.1), rgba(251, 191, 36, 0.05))',
+            border: '1px solid rgba(251, 191, 36, 0.2)',
             padding: spacing.sm,
             borderRadius: radius.md,
             textAlign: 'center',
           }}>
-            <div style={{ color: colors.warning, fontSize: typography.small.fontSize }}>
+            <div style={{ color: colors.warning, fontSize: typo.label, fontWeight: 500, marginBottom: 2 }}>
               Focal Length
             </div>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: colors.text }}>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: '700', color: colors.text }}>
               {focalLength}px
             </div>
           </div>
           <div style={{
-            background: colors.background,
+            background: 'linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(34, 197, 94, 0.05))',
+            border: '1px solid rgba(34, 197, 94, 0.2)',
             padding: spacing.sm,
             borderRadius: radius.md,
             textAlign: 'center',
           }}>
-            <div style={{ color: colors.success, fontSize: typography.small.fontSize }}>
-              Image Dist
+            <div style={{ color: colors.success, fontSize: typo.label, fontWeight: 500, marginBottom: 2 }}>
+              Image Distance
             </div>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: colors.text }}>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: '700', color: colors.text }}>
               {imageData.imageDistance.toFixed(0)}px
             </div>
           </div>
           <div style={{
-            background: colors.background,
+            background: 'linear-gradient(135deg, rgba(244, 114, 182, 0.1), rgba(244, 114, 182, 0.05))',
+            border: '1px solid rgba(244, 114, 182, 0.2)',
             padding: spacing.sm,
             borderRadius: radius.md,
             textAlign: 'center',
           }}>
-            <div style={{ color: colors.accent, fontSize: typography.small.fontSize }}>
+            <div style={{ color: colors.accent, fontSize: typo.label, fontWeight: 500, marginBottom: 2 }}>
               Magnification
             </div>
-            <div style={{ fontSize: '18px', fontWeight: '700', color: colors.text }}>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: '700', color: colors.text }}>
               {imageData.magnification.toFixed(2)}x
             </div>
           </div>
           <div style={{
-            background: colors.background,
+            background: 'linear-gradient(135deg, rgba(129, 140, 248, 0.1), rgba(129, 140, 248, 0.05))',
+            border: '1px solid rgba(129, 140, 248, 0.2)',
             padding: spacing.sm,
             borderRadius: radius.md,
             textAlign: 'center',
           }}>
-            <div style={{ color: colors.secondary, fontSize: typography.small.fontSize }}>
+            <div style={{ color: colors.secondary, fontSize: typo.label, fontWeight: 500, marginBottom: 2 }}>
               Image Type
             </div>
-            <div style={{ fontSize: '14px', fontWeight: '600', color: colors.text }}>
+            <div style={{ fontSize: typo.body, fontWeight: '600', color: colors.text }}>
               {imageData.isReal ? 'Real' : 'Virtual'}, {imageData.isUpright ? 'Upright' : 'Inverted'}
             </div>
           </div>

@@ -394,122 +394,429 @@ const DRAMRefreshRenderer: React.FC<DRAMRefreshRendererProps> = ({
     const refreshProgress = Math.min(100, (timeSinceRefresh / refreshRate) * 100);
 
     return (
-      <svg
-        width="100%"
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
-        style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
-      >
-        <defs>
-          <linearGradient id="chargeGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor={colors.error} />
-            <stop offset="50%" stopColor={colors.warning} />
-            <stop offset="100%" stopColor={colors.charge} />
-          </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
+      <div style={{ width: '100%', maxWidth: '500px' }}>
+        <svg
+          width="100%"
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          style={{ borderRadius: '12px' }}
+        >
+          <defs>
+            {/* Premium chip substrate gradient */}
+            <linearGradient id="dramChipSubstrate" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1a1a2e" />
+              <stop offset="25%" stopColor="#16213e" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f0f1a" />
+            </linearGradient>
 
-        {/* Title */}
-        <text x={width/2} y={25} textAnchor="middle" fill={colors.textPrimary} fontSize={14} fontWeight="bold">
-          DRAM Memory Cell Array
-        </text>
+            {/* Capacitor body metallic gradient */}
+            <linearGradient id="dramCapacitorBody" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="25%" stopColor="#334155" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="75%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
 
-        {/* Memory cells grid */}
-        {cellCharges.map((charge, i) => {
-          const col = i % 4;
-          const row = Math.floor(i / 4);
-          const x = 60 + col * 80;
-          const y = 60 + row * 90;
-          const chargeHeight = (charge / 100) * 50;
+            {/* Capacitor plate gradient */}
+            <linearGradient id="dramCapacitorPlate" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="30%" stopColor="#475569" />
+              <stop offset="70%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
 
-          return (
-            <g key={i}>
-              {/* Capacitor outline */}
-              <rect
-                x={x}
-                y={y}
-                width={50}
-                height={60}
-                fill="none"
-                stroke={colors.capacitor}
-                strokeWidth={2}
-                rx={4}
-              />
-              {/* Charge level */}
-              <rect
-                x={x + 5}
-                y={y + 55 - chargeHeight}
-                width={40}
-                height={chargeHeight}
-                fill={charge > 70 ? colors.charge : charge > 50 ? colors.warning : colors.error}
-                opacity={0.8}
-                rx={2}
-              />
-              {/* Bit value */}
-              <text
-                x={x + 25}
-                y={y + 75}
-                textAnchor="middle"
-                fill={charge > 50 ? colors.success : colors.error}
-                fontSize={10}
-                fontWeight="bold"
-              >
-                {charge > 50 ? '1' : '0/ERR'}
-              </text>
-              {/* Leakage arrows (when charge is leaking) */}
-              {isSimulating && charge < 95 && (
-                <g filter="url(#glow)">
-                  <path
-                    d={`M ${x + 25} ${y + 55} L ${x + 25} ${y + 65}`}
-                    stroke={colors.leak}
-                    strokeWidth={2}
-                    markerEnd="url(#arrowhead)"
-                    opacity={0.6}
+            {/* Charge level gradient - full charge */}
+            <linearGradient id="dramChargeHigh" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#0891b2" />
+              <stop offset="25%" stopColor="#06b6d4" />
+              <stop offset="50%" stopColor="#22d3ee" />
+              <stop offset="75%" stopColor="#67e8f9" />
+              <stop offset="100%" stopColor="#a5f3fc" />
+            </linearGradient>
+
+            {/* Charge level gradient - medium charge */}
+            <linearGradient id="dramChargeMedium" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#b45309" />
+              <stop offset="25%" stopColor="#d97706" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#fcd34d" />
+            </linearGradient>
+
+            {/* Charge level gradient - low charge (critical) */}
+            <linearGradient id="dramChargeLow" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#991b1b" />
+              <stop offset="25%" stopColor="#b91c1c" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="75%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+
+            {/* Refresh progress bar gradient */}
+            <linearGradient id="dramRefreshBar" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7c3aed" />
+              <stop offset="25%" stopColor="#8b5cf6" />
+              <stop offset="50%" stopColor="#a78bfa" />
+              <stop offset="75%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#7c3aed" />
+            </linearGradient>
+
+            {/* Refresh progress bar critical gradient */}
+            <linearGradient id="dramRefreshBarCritical" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b91c1c" />
+              <stop offset="25%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+
+            {/* Leakage particle gradient */}
+            <radialGradient id="dramLeakageGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fb923c" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f97316" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#ea580c" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#c2410c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Transistor gate gradient */}
+            <linearGradient id="dramTransistorGate" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Circuit trace gradient */}
+            <linearGradient id="dramCircuitTrace" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0f766e" />
+              <stop offset="50%" stopColor="#14b8a6" />
+              <stop offset="100%" stopColor="#0f766e" />
+            </linearGradient>
+
+            {/* Cell glow filter for charged state */}
+            <filter id="dramCellGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Leakage glow filter */}
+            <filter id="dramLeakageFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Refresh pulse glow */}
+            <filter id="dramRefreshPulse" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Status indicator glow */}
+            <filter id="dramStatusGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow marker for leakage */}
+            <marker id="dramArrowhead" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+              <polygon points="0 0, 6 3, 0 6" fill="url(#dramLeakageGlow)" />
+            </marker>
+
+            {/* Grid pattern for chip background */}
+            <pattern id="dramChipGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e3a5f" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* Background with chip substrate */}
+          <rect width={width} height={height} fill="url(#dramChipSubstrate)" />
+          <rect width={width} height={height} fill="url(#dramChipGrid)" />
+
+          {/* Memory cells grid */}
+          {cellCharges.map((charge, i) => {
+            const col = i % 4;
+            const row = Math.floor(i / 4);
+            const x = 60 + col * 80;
+            const y = 45 + row * 95;
+            const chargeHeight = (charge / 100) * 45;
+            const chargeGradient = charge > 70 ? 'url(#dramChargeHigh)' : charge > 50 ? 'url(#dramChargeMedium)' : 'url(#dramChargeLow)';
+            const isRefreshing = timeSinceRefresh < 5 && charge > 95;
+
+            return (
+              <g key={i}>
+                {/* Cell container with metallic border */}
+                <rect
+                  x={x - 2}
+                  y={y - 2}
+                  width={54}
+                  height={74}
+                  fill="url(#dramCapacitorBody)"
+                  rx={6}
+                  stroke="#475569"
+                  strokeWidth={1}
+                />
+
+                {/* Capacitor plates visualization */}
+                <rect x={x} y={y} width={50} height={3} fill="url(#dramCapacitorPlate)" rx={1} />
+                <rect x={x} y={y + 67} width={50} height={3} fill="url(#dramCapacitorPlate)" rx={1} />
+
+                {/* Dielectric layer (capacitor interior) */}
+                <rect
+                  x={x + 3}
+                  y={y + 5}
+                  width={44}
+                  height={60}
+                  fill="#0a0f1a"
+                  rx={3}
+                />
+
+                {/* Charge level visualization with glow */}
+                <g filter={charge > 70 ? 'url(#dramCellGlow)' : undefined}>
+                  <rect
+                    x={x + 5}
+                    y={y + 62 - chargeHeight}
+                    width={40}
+                    height={chargeHeight}
+                    fill={chargeGradient}
+                    rx={2}
+                    opacity={0.9}
                   />
                 </g>
+
+                {/* Charge particles (animated dots) */}
+                {charge > 30 && Array.from({ length: Math.floor(charge / 25) }).map((_, idx) => (
+                  <circle
+                    key={idx}
+                    cx={x + 10 + (idx % 3) * 15}
+                    cy={y + 55 - Math.floor(idx / 3) * 12 - (charge / 100) * 20}
+                    r={2}
+                    fill={charge > 70 ? '#67e8f9' : charge > 50 ? '#fbbf24' : '#f87171'}
+                    opacity={0.7 + Math.random() * 0.3}
+                  >
+                    {isSimulating && (
+                      <animate
+                        attributeName="opacity"
+                        values="0.7;1;0.7"
+                        dur="0.5s"
+                        repeatCount="indefinite"
+                      />
+                    )}
+                  </circle>
+                ))}
+
+                {/* Transistor gate (access transistor) */}
+                <rect
+                  x={x + 18}
+                  y={y - 8}
+                  width={14}
+                  height={6}
+                  fill="url(#dramTransistorGate)"
+                  rx={2}
+                />
+                <rect x={x + 23} y={y - 12} width={4} height={4} fill="#fbbf24" />
+
+                {/* Word line trace */}
+                <line
+                  x1={x - 10}
+                  y1={y - 5}
+                  x2={x + 60}
+                  y2={y - 5}
+                  stroke="url(#dramCircuitTrace)"
+                  strokeWidth={2}
+                  opacity={0.6}
+                />
+
+                {/* Bit line trace */}
+                <line
+                  x1={x + 25}
+                  y1={y + 72}
+                  x2={x + 25}
+                  y2={y + 85}
+                  stroke="url(#dramCircuitTrace)"
+                  strokeWidth={2}
+                  opacity={0.6}
+                />
+
+                {/* Leakage visualization (animated particles flowing down) */}
+                {isSimulating && charge < 95 && charge > 10 && (
+                  <g filter="url(#dramLeakageFilter)">
+                    {Array.from({ length: 3 }).map((_, idx) => (
+                      <circle
+                        key={idx}
+                        cx={x + 15 + idx * 10}
+                        cy={y + 65}
+                        r={2}
+                        fill="url(#dramLeakageGlow)"
+                      >
+                        <animate
+                          attributeName="cy"
+                          values={`${y + 65};${y + 80};${y + 65}`}
+                          dur={`${0.8 + idx * 0.2}s`}
+                          repeatCount="indefinite"
+                        />
+                        <animate
+                          attributeName="opacity"
+                          values="0.8;0.3;0.8"
+                          dur={`${0.8 + idx * 0.2}s`}
+                          repeatCount="indefinite"
+                        />
+                      </circle>
+                    ))}
+                  </g>
+                )}
+
+                {/* Refresh pulse animation */}
+                {isRefreshing && (
+                  <rect
+                    x={x + 3}
+                    y={y + 5}
+                    width={44}
+                    height={60}
+                    fill="#22d3ee"
+                    opacity={0.3}
+                    rx={3}
+                  >
+                    <animate
+                      attributeName="opacity"
+                      values="0.5;0;0.5"
+                      dur="0.3s"
+                      repeatCount="3"
+                    />
+                  </rect>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Refresh cycle indicator arc */}
+          <g transform={`translate(${width / 2}, 235)`}>
+            {/* Background arc */}
+            <path
+              d={`M -140 0 A 140 140 0 0 1 140 0`}
+              fill="none"
+              stroke="#1e293b"
+              strokeWidth={12}
+              strokeLinecap="round"
+            />
+            {/* Progress arc */}
+            <path
+              d={`M -140 0 A 140 140 0 0 1 ${-140 + 280 * (1 - refreshProgress / 100)} ${-Math.sin(Math.acos((280 * (1 - refreshProgress / 100) - 140) / 140)) * 140 || 0}`}
+              fill="none"
+              stroke={refreshProgress > 80 ? 'url(#dramRefreshBarCritical)' : 'url(#dramRefreshBar)'}
+              strokeWidth={12}
+              strokeLinecap="round"
+              filter={refreshProgress > 80 ? 'url(#dramRefreshPulse)' : undefined}
+            />
+          </g>
+
+          {/* Status indicators */}
+          <g transform="translate(50, 260)">
+            {/* Charge status */}
+            <rect
+              x={0}
+              y={0}
+              width={140}
+              height={30}
+              fill="#0f172a"
+              rx={8}
+              stroke={avgCharge > 70 ? '#22d3ee' : avgCharge > 50 ? '#fbbf24' : '#ef4444'}
+              strokeWidth={1}
+              strokeOpacity={0.5}
+            />
+            <circle
+              cx={20}
+              cy={15}
+              r={6}
+              fill={avgCharge > 70 ? '#22d3ee' : avgCharge > 50 ? '#fbbf24' : '#ef4444'}
+              filter="url(#dramStatusGlow)"
+            />
+
+            {/* Data status */}
+            <rect
+              x={160}
+              y={0}
+              width={140}
+              height={30}
+              fill="#0f172a"
+              rx={8}
+              stroke={dataLost ? '#ef4444' : '#10b981'}
+              strokeWidth={1}
+              strokeOpacity={0.5}
+            />
+            <circle
+              cx={180}
+              cy={15}
+              r={6}
+              fill={dataLost ? '#ef4444' : '#10b981'}
+              filter="url(#dramStatusGlow)"
+            >
+              {dataLost && (
+                <animate
+                  attributeName="opacity"
+                  values="1;0.3;1"
+                  dur="0.5s"
+                  repeatCount="indefinite"
+                />
               )}
-            </g>
-          );
-        })}
+            </circle>
+          </g>
+        </svg>
 
-        {/* Arrow marker definition */}
-        <defs>
-          <marker id="arrowhead" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-            <polygon points="0 0, 6 3, 0 6" fill={colors.leak} />
-          </marker>
-        </defs>
-
-        {/* Refresh countdown bar */}
-        <rect x={50} y={240} width={300} height={20} fill="rgba(255,255,255,0.1)" rx={4} />
-        <rect
-          x={50}
-          y={240}
-          width={300 * (1 - refreshProgress / 100)}
-          height={20}
-          fill={refreshProgress > 80 ? colors.error : colors.accent}
-          rx={4}
-        />
-        <text x={200} y={254} textAnchor="middle" fill={colors.textPrimary} fontSize={11}>
-          Refresh in: {Math.max(0, refreshRate - timeSinceRefresh).toFixed(0)}ms
-        </text>
-
-        {/* Status display */}
-        <rect x={50} y={270} width={140} height={25} fill="rgba(0,0,0,0.5)" rx={4} />
-        <text x={120} y={287} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
-          Avg Charge: {avgCharge.toFixed(0)}%
-        </text>
-
-        <rect x={210} y={270} width={140} height={25} fill="rgba(0,0,0,0.5)" rx={4} />
-        <text x={280} y={287} textAnchor="middle" fill={dataLost ? colors.error : colors.success} fontSize={11}>
-          {dataLost ? 'DATA LOST!' : 'Data OK'}
-        </text>
-      </svg>
+        {/* Text labels outside SVG using typo system */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', padding: '0 50px' }}>
+          <div style={{
+            background: 'rgba(15, 23, 42, 0.9)',
+            padding: '6px 12px',
+            borderRadius: '8px',
+            border: `1px solid ${avgCharge > 70 ? 'rgba(34, 211, 238, 0.3)' : avgCharge > 50 ? 'rgba(251, 191, 36, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`,
+          }}>
+            <span style={{
+              fontSize: typo.small,
+              fontWeight: 600,
+              color: avgCharge > 70 ? colors.charge : avgCharge > 50 ? colors.warning : colors.error,
+            }}>
+              Avg Charge: {avgCharge.toFixed(0)}%
+            </span>
+          </div>
+          <div style={{
+            background: 'rgba(15, 23, 42, 0.9)',
+            padding: '6px 12px',
+            borderRadius: '8px',
+            border: `1px solid ${dataLost ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
+          }}>
+            <span style={{
+              fontSize: typo.small,
+              fontWeight: 700,
+              color: dataLost ? colors.error : colors.success,
+            }}>
+              {dataLost ? 'DATA LOST!' : 'Data Intact'}
+            </span>
+          </div>
+        </div>
+        <div style={{ textAlign: 'center', marginTop: '4px' }}>
+          <span style={{
+            fontSize: typo.small,
+            color: refreshProgress > 80 ? colors.error : colors.accent,
+            fontWeight: 600,
+          }}>
+            Refresh in: {Math.max(0, refreshRate - timeSinceRefresh).toFixed(0)}ms
+          </span>
+        </div>
+      </div>
     );
   };
 

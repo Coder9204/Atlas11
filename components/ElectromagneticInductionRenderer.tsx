@@ -585,7 +585,7 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
     }
   }, [showTestResults]);
 
-  // Render coil and magnet visualization
+  // Render coil and magnet visualization with premium SVG graphics
   const renderInductionVisualization = (width: number, height: number, interactive: boolean = true) => {
     const coilCenterX = width / 2;
     const coilCenterY = height / 2;
@@ -594,149 +594,383 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
     const emfIntensity = Math.min(Math.abs(inducedEMF) / 50, 1);
 
     return (
-      <svg width={width} height={height} className="mx-auto">
-        <defs>
-          <linearGradient id="coilGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#f59e0b" />
-            <stop offset="100%" stopColor="#d97706" />
-          </linearGradient>
-          <linearGradient id="magnetNorth" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#dc2626" />
-          </linearGradient>
-          <linearGradient id="magnetSouth" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#2563eb" />
-          </linearGradient>
-        </defs>
+      <div className="flex flex-col items-center">
+        <svg width={width} height={height} className="mx-auto">
+          <defs>
+            {/* === PREMIUM ELECTROMAGNETIC INDUCTION GRADIENTS === */}
 
-        {/* Background */}
-        <rect x="0" y="0" width={width} height={height} fill="#1e293b" rx="8" />
+            {/* Premium copper coil gradient with metallic sheen */}
+            <linearGradient id="emiCoilGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="75%" stopColor="#b45309" />
+              <stop offset="100%" stopColor="#92400e" />
+            </linearGradient>
 
-        {/* Field lines (if enabled) */}
-        {showFieldLines && (
-          <g opacity="0.4">
-            {[-40, -20, 0, 20, 40].map((offset, i) => (
-              <path
-                key={i}
-                d={`M ${magnetX - 50} ${coilCenterY + offset}
-                    Q ${coilCenterX} ${coilCenterY + offset * 0.5}
-                    ${magnetX + 100} ${coilCenterY + offset}`}
-                fill="none"
-                stroke="#60a5fa"
-                strokeWidth="1"
-                strokeDasharray="4 4"
-              />
-            ))}
-          </g>
-        )}
+            {/* Copper wire connection gradient */}
+            <linearGradient id="emiWireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="30%" stopColor="#f59e0b" />
+              <stop offset="70%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
 
-        {/* Coil (solenoid representation) */}
-        <g>
-          {/* Coil windings */}
-          {[...Array(8)].map((_, i) => (
-            <ellipse
-              key={i}
-              cx={coilCenterX}
-              cy={coilCenterY}
-              rx={30 + i * 3}
-              ry={50}
-              fill="none"
-              stroke="url(#coilGrad)"
-              strokeWidth="3"
-              opacity={0.8 - i * 0.08}
-            />
-          ))}
+            {/* North pole magnet gradient - rich red with depth */}
+            <linearGradient id="emiMagnetNorth" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="20%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="80%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
 
-          {/* Coil glow based on EMF */}
-          <ellipse
-            cx={coilCenterX}
-            cy={coilCenterY}
-            rx={55}
-            ry={60}
-            fill="none"
-            stroke={emfColor}
-            strokeWidth={emfIntensity * 8}
-            opacity={emfIntensity * 0.5}
-            filter="blur(4px)"
-          />
+            {/* South pole magnet gradient - rich blue with depth */}
+            <linearGradient id="emiMagnetSouth" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="20%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="80%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
 
-          {/* Wire connections */}
-          <line x1={coilCenterX - 60} y1={coilCenterY - 40} x2={coilCenterX - 90} y2={coilCenterY - 60} stroke="#f59e0b" strokeWidth="3" />
-          <line x1={coilCenterX - 60} y1={coilCenterY + 40} x2={coilCenterX - 90} y2={coilCenterY + 60} stroke="#f59e0b" strokeWidth="3" />
+            {/* Induced current positive gradient (green) */}
+            <linearGradient id="emiCurrentPositive" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="25%" stopColor="#4ade80" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="75%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
 
-          {/* Galvanometer */}
-          <circle cx={coilCenterX - 100} cy={coilCenterY} r={25} fill="#334155" stroke="#64748b" strokeWidth="2" />
-          <text x={coilCenterX - 100} y={coilCenterY - 30} textAnchor="middle" fill="#94a3b8" fontSize="10">EMF</text>
+            {/* Induced current negative gradient (red) */}
+            <linearGradient id="emiCurrentNegative" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="25%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
 
-          {/* Galvanometer needle */}
-          <line
-            x1={coilCenterX - 100}
-            y1={coilCenterY}
-            x2={coilCenterX - 100 + Math.sin(inducedEMF * 0.1) * 18}
-            y2={coilCenterY - Math.cos(inducedEMF * 0.1) * 18}
-            stroke={emfColor}
-            strokeWidth="2"
-            strokeLinecap="round"
-          />
-          <circle cx={coilCenterX - 100} cy={coilCenterY} r={4} fill={emfColor} />
-        </g>
+            {/* Magnetic field line gradient */}
+            <linearGradient id="emiFieldLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.2" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#2563eb" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.2" />
+            </linearGradient>
 
-        {/* Bar Magnet */}
-        <g transform={`translate(${magnetX}, ${coilCenterY})`}>
-          {/* Magnet body */}
-          <rect x="-40" y="-20" width="40" height="40" fill="url(#magnetNorth)" rx="4" />
-          <rect x="0" y="-20" width="40" height="40" fill="url(#magnetSouth)" rx="4" />
+            {/* Galvanometer housing gradient */}
+            <radialGradient id="emiGalvanometer" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="40%" stopColor="#334155" />
+              <stop offset="70%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </radialGradient>
 
-          {/* Labels */}
-          <text x="-20" y="5" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">N</text>
-          <text x="20" y="5" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">S</text>
+            {/* EMF glow radial gradient */}
+            <radialGradient id="emiEmfGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={emfColor} stopOpacity="0.8" />
+              <stop offset="40%" stopColor={emfColor} stopOpacity="0.4" />
+              <stop offset="70%" stopColor={emfColor} stopOpacity="0.2" />
+              <stop offset="100%" stopColor={emfColor} stopOpacity="0" />
+            </radialGradient>
 
-          {/* Motion arrow */}
-          {isAnimating && magnetVelocity !== 0 && (
-            <g>
-              <line
-                x1={magnetVelocity > 0 ? 50 : -50}
-                y1="0"
-                x2={magnetVelocity > 0 ? 70 : -70}
-                y2="0"
-                stroke="#22c55e"
-                strokeWidth="3"
-                markerEnd="url(#arrowGreen)"
-              />
+            {/* Lab background gradient */}
+            <linearGradient id="emiLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Data panel gradient */}
+            <linearGradient id="emiDataPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* === PREMIUM GLOW FILTERS === */}
+
+            {/* Magnetic field line glow */}
+            <filter id="emiFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Coil EMF glow effect */}
+            <filter id="emiCoilGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation={4 + emfIntensity * 4} result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Galvanometer needle glow */}
+            <filter id="emiNeedleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Magnet 3D shadow */}
+            <filter id="emiMagnetShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="3" stdDeviation="3" floodColor="#000000" floodOpacity="0.4" />
+            </filter>
+
+            {/* Motion arrow glow */}
+            <filter id="emiMotionGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow markers */}
+            <marker id="emiArrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L9,3 z" fill="#22c55e" />
+            </marker>
+
+            {/* Subtle grid pattern */}
+            <pattern id="emiLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* Premium dark lab background */}
+          <rect x="0" y="0" width={width} height={height} fill="url(#emiLabBg)" rx="12" />
+          <rect x="0" y="0" width={width} height={height} fill="url(#emiLabGrid)" rx="12" />
+
+          {/* Magnetic field lines with glow (if enabled) */}
+          {showFieldLines && (
+            <g filter="url(#emiFieldGlow)">
+              {[-40, -20, 0, 20, 40].map((offset, i) => (
+                <path
+                  key={i}
+                  d={`M ${magnetX - 50} ${coilCenterY + offset}
+                      Q ${coilCenterX} ${coilCenterY + offset * 0.5}
+                      ${magnetX + 100} ${coilCenterY + offset}`}
+                  fill="none"
+                  stroke="url(#emiFieldLine)"
+                  strokeWidth="2"
+                  strokeDasharray="6 4"
+                  opacity={0.6 + (1 - Math.abs(offset) / 40) * 0.4}
+                />
+              ))}
+              {/* Field line arrows */}
+              {[-20, 0, 20].map((offset, i) => (
+                <circle
+                  key={`arrow-${i}`}
+                  cx={coilCenterX + 30}
+                  cy={coilCenterY + offset * 0.7}
+                  r="3"
+                  fill="#3b82f6"
+                  opacity="0.7"
+                />
+              ))}
             </g>
           )}
-        </g>
 
-        {/* Arrow marker */}
-        <defs>
-          <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#22c55e" />
-          </marker>
-        </defs>
+          {/* Coil (solenoid representation) with premium copper gradient */}
+          <g>
+            {/* Outer coil glow based on EMF */}
+            {emfIntensity > 0.05 && (
+              <ellipse
+                cx={coilCenterX}
+                cy={coilCenterY}
+                rx={58}
+                ry={65}
+                fill="none"
+                stroke={emfColor}
+                strokeWidth={emfIntensity * 12}
+                opacity={emfIntensity * 0.6}
+                filter="url(#emiCoilGlow)"
+              />
+            )}
 
-        {/* Data display */}
-        <g>
-          <rect x="10" y="10" width="120" height="70" fill="#0f172a" rx="6" opacity="0.8" />
-          <text x="20" y="30" fill="#94a3b8" fontSize="10">Flux (Φ):</text>
-          <text x="100" y="30" fill="#60a5fa" fontSize="10" textAnchor="end">{calculateFlux().toFixed(4)} Wb</text>
-          <text x="20" y="48" fill="#94a3b8" fontSize="10">EMF:</text>
-          <text x="100" y="48" fill={emfColor} fontSize="10" textAnchor="end">{inducedEMF.toFixed(1)} mV</text>
-          <text x="20" y="66" fill="#94a3b8" fontSize="10">Current:</text>
-          <text x="100" y="66" fill={emfColor} fontSize="10" textAnchor="end">{inducedCurrent.toFixed(2)} mA</text>
-        </g>
+            {/* Coil windings with copper sheen */}
+            {[...Array(10)].map((_, i) => (
+              <ellipse
+                key={i}
+                cx={coilCenterX}
+                cy={coilCenterY}
+                rx={28 + i * 3}
+                ry={48}
+                fill="none"
+                stroke="url(#emiCoilGrad)"
+                strokeWidth="4"
+                opacity={0.9 - i * 0.07}
+              />
+            ))}
 
-        {/* Interactive hint */}
-        {interactive && !isAnimating && (
-          <text x={width / 2} y={height - 15} textAnchor="middle" fill="#64748b" fontSize="11">
-            Click "Start Demo" to move the magnet
-          </text>
-        )}
-      </svg>
+            {/* Premium wire connections */}
+            <line
+              x1={coilCenterX - 58}
+              y1={coilCenterY - 38}
+              x2={coilCenterX - 88}
+              y2={coilCenterY - 55}
+              stroke="url(#emiWireGrad)"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+            <line
+              x1={coilCenterX - 58}
+              y1={coilCenterY + 38}
+              x2={coilCenterX - 88}
+              y2={coilCenterY + 55}
+              stroke="url(#emiWireGrad)"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+
+            {/* Wire terminals */}
+            <circle cx={coilCenterX - 88} cy={coilCenterY - 55} r="4" fill="#fbbf24" />
+            <circle cx={coilCenterX - 88} cy={coilCenterY + 55} r="4" fill="#fbbf24" />
+
+            {/* Premium Galvanometer */}
+            <circle
+              cx={coilCenterX - 105}
+              cy={coilCenterY}
+              r={28}
+              fill="url(#emiGalvanometer)"
+              stroke="#475569"
+              strokeWidth="2"
+            />
+            {/* Galvanometer face */}
+            <circle
+              cx={coilCenterX - 105}
+              cy={coilCenterY}
+              r={22}
+              fill="#0f172a"
+              stroke="#334155"
+              strokeWidth="1"
+            />
+            {/* Scale markings */}
+            {[-30, -15, 0, 15, 30].map((angle, i) => (
+              <line
+                key={i}
+                x1={coilCenterX - 105 + Math.sin(angle * Math.PI / 180) * 16}
+                y1={coilCenterY - Math.cos(angle * Math.PI / 180) * 16}
+                x2={coilCenterX - 105 + Math.sin(angle * Math.PI / 180) * 19}
+                y2={coilCenterY - Math.cos(angle * Math.PI / 180) * 19}
+                stroke="#64748b"
+                strokeWidth="1"
+              />
+            ))}
+
+            {/* Galvanometer needle with glow */}
+            <line
+              x1={coilCenterX - 105}
+              y1={coilCenterY}
+              x2={coilCenterX - 105 + Math.sin(inducedEMF * 0.1) * 18}
+              y2={coilCenterY - Math.cos(inducedEMF * 0.1) * 18}
+              stroke={emfColor}
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              filter="url(#emiNeedleGlow)"
+            />
+            <circle cx={coilCenterX - 105} cy={coilCenterY} r={5} fill={emfColor} filter="url(#emiNeedleGlow)" />
+          </g>
+
+          {/* Premium Bar Magnet with 3D effect */}
+          <g transform={`translate(${magnetX}, ${coilCenterY})`} filter="url(#emiMagnetShadow)">
+            {/* Magnet body - North pole */}
+            <rect x="-42" y="-22" width="42" height="44" fill="url(#emiMagnetNorth)" rx="4" />
+            {/* Magnet body - South pole */}
+            <rect x="0" y="-22" width="42" height="44" fill="url(#emiMagnetSouth)" rx="4" />
+
+            {/* Magnet divider line */}
+            <line x1="0" y1="-22" x2="0" y2="22" stroke="#1e293b" strokeWidth="2" />
+
+            {/* 3D highlight on top */}
+            <rect x="-42" y="-22" width="42" height="6" fill="rgba(255,255,255,0.15)" rx="4" />
+            <rect x="0" y="-22" width="42" height="6" fill="rgba(255,255,255,0.15)" rx="4" />
+
+            {/* Motion arrow with glow */}
+            {isAnimating && magnetVelocity !== 0 && (
+              <g filter="url(#emiMotionGlow)">
+                <line
+                  x1={magnetVelocity > 0 ? 52 : -52}
+                  y1="0"
+                  x2={magnetVelocity > 0 ? 75 : -75}
+                  y2="0"
+                  stroke="#22c55e"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  markerEnd="url(#emiArrowGreen)"
+                />
+              </g>
+            )}
+          </g>
+
+          {/* Premium Data display panel */}
+          <g>
+            <rect x="8" y="8" width="130" height="78" fill="url(#emiDataPanel)" rx="8" stroke="#334155" strokeWidth="1" />
+            {/* Panel header */}
+            <rect x="8" y="8" width="130" height="20" fill="#1e293b" rx="8" />
+            <rect x="8" y="20" width="130" height="8" fill="#1e293b" />
+
+            {/* Data values */}
+            <text x="18" y="48" fill="#94a3b8" fontSize="10" fontWeight="500">Flux (Φ)</text>
+            <text x="128" y="48" fill="#60a5fa" fontSize="11" textAnchor="end" fontWeight="600">{calculateFlux().toFixed(4)} Wb</text>
+            <text x="18" y="64" fill="#94a3b8" fontSize="10" fontWeight="500">EMF</text>
+            <text x="128" y="64" fill={emfColor} fontSize="11" textAnchor="end" fontWeight="600">{inducedEMF.toFixed(1)} mV</text>
+            <text x="18" y="80" fill="#94a3b8" fontSize="10" fontWeight="500">Current</text>
+            <text x="128" y="80" fill={emfColor} fontSize="11" textAnchor="end" fontWeight="600">{inducedCurrent.toFixed(2)} mA</text>
+          </g>
+
+          {/* Induced current flow visualization */}
+          {Math.abs(inducedCurrent) > 0.1 && (
+            <g>
+              {/* Current flow particles around coil */}
+              {[0, 1, 2, 3].map((i) => {
+                const angle = (Date.now() / 500 + i * 0.25) * Math.PI * 2 * (inducedCurrent > 0 ? 1 : -1);
+                const rx = 52;
+                const ry = 58;
+                return (
+                  <circle
+                    key={i}
+                    cx={coilCenterX + Math.cos(angle) * rx}
+                    cy={coilCenterY + Math.sin(angle) * ry * 0.6}
+                    r={3}
+                    fill={inducedCurrent > 0 ? 'url(#emiCurrentPositive)' : 'url(#emiCurrentNegative)'}
+                    opacity={0.8 - i * 0.15}
+                  />
+                );
+              })}
+            </g>
+          )}
+        </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div className="flex justify-between w-full mt-2 px-4" style={{ maxWidth: width }}>
+          <span style={{ fontSize: typo.label, color: '#64748b' }}>Galvanometer</span>
+          <span style={{ fontSize: typo.label, color: '#64748b' }}>
+            {interactive && !isAnimating ? 'Click "Start Demo" to move the magnet' : 'Bar Magnet'}
+          </span>
+          <span style={{ fontSize: typo.label, color: inducedEMF > 0 ? '#22c55e' : inducedEMF < 0 ? '#ef4444' : '#64748b' }}>
+            {Math.abs(inducedEMF) > 0.1 ? (inducedEMF > 0 ? 'N→S Current' : 'S→N Current') : 'No Current'}
+          </span>
+        </div>
+
+        {/* N/S pole labels outside SVG */}
+        <div className="flex justify-center gap-8 mt-1">
+          <span style={{ fontSize: typo.small, color: '#ef4444', fontWeight: 700 }}>N (North)</span>
+          <span style={{ fontSize: typo.small, color: '#3b82f6', fontWeight: 700 }}>S (South)</span>
+        </div>
+      </div>
     );
   };
 
-  // Render flux graph
+  // Render premium flux graph
   const renderFluxGraph = (width: number, height: number) => {
     const graphWidth = width - 40;
     const graphHeight = height - 40;
@@ -749,31 +983,82 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
     }).join(' ');
 
     return (
-      <svg width={width} height={height} className="mx-auto">
-        <rect x="0" y="0" width={width} height={height} fill="#0f172a" rx="6" />
+      <div className="flex flex-col items-center">
+        <svg width={width} height={height} className="mx-auto">
+          <defs>
+            {/* Graph background gradient */}
+            <linearGradient id="emiGraphBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#020617" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
 
-        {/* Grid */}
-        <line x1="20" y1={height / 2} x2={width - 20} y2={height / 2} stroke="#334155" strokeWidth="1" />
-        <line x1="20" y1="20" x2="20" y2={height - 20} stroke="#334155" strokeWidth="1" />
+            {/* Flux curve gradient */}
+            <linearGradient id="emiFluxCurve" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#2563eb" />
+            </linearGradient>
 
-        {/* Labels */}
-        <text x="10" y="15" fill="#64748b" fontSize="10">Φ</text>
-        <text x={width - 25} y={height / 2 + 15} fill="#64748b" fontSize="10">t</text>
+            {/* Curve glow filter */}
+            <filter id="emiCurveGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* Flux curve */}
-        {fluxHistory.length > 1 && (
-          <polyline
-            points={points}
-            fill="none"
-            stroke="#3b82f6"
-            strokeWidth="2"
-          />
-        )}
+            {/* Grid pattern */}
+            <pattern id="emiGraphGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.5" />
+            </pattern>
+          </defs>
 
-        <text x={width / 2} y={height - 5} textAnchor="middle" fill="#94a3b8" fontSize="10">
-          Magnetic Flux vs Time
-        </text>
-      </svg>
+          {/* Background with grid */}
+          <rect x="0" y="0" width={width} height={height} fill="url(#emiGraphBg)" rx="8" />
+          <rect x="20" y="15" width={graphWidth} height={graphHeight + 10} fill="url(#emiGraphGrid)" />
+
+          {/* Axes with subtle styling */}
+          <line x1="20" y1={height / 2} x2={width - 20} y2={height / 2} stroke="#334155" strokeWidth="1" strokeDasharray="4 2" />
+          <line x1="20" y1="15" x2="20" y2={height - 15} stroke="#475569" strokeWidth="1.5" />
+
+          {/* Zero line indicator */}
+          <circle cx="20" cy={height / 2} r="3" fill="#3b82f6" />
+
+          {/* Flux curve with glow */}
+          {fluxHistory.length > 1 && (
+            <polyline
+              points={points}
+              fill="none"
+              stroke="url(#emiFluxCurve)"
+              strokeWidth="2.5"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#emiCurveGlow)"
+            />
+          )}
+
+          {/* Current value indicator dot */}
+          {fluxHistory.length > 0 && (
+            <circle
+              cx={20 + ((fluxHistory.length - 1) / 100) * graphWidth}
+              cy={height / 2 - (fluxHistory[fluxHistory.length - 1] / maxFlux) * (graphHeight / 2 - 10)}
+              r="4"
+              fill="#60a5fa"
+              stroke="#1e293b"
+              strokeWidth="2"
+            />
+          )}
+        </svg>
+
+        {/* Labels outside SVG */}
+        <div className="flex justify-between w-full px-2" style={{ maxWidth: width }}>
+          <span style={{ fontSize: typo.label, color: '#3b82f6', fontWeight: 600 }}>Φ (Flux)</span>
+          <span style={{ fontSize: typo.label, color: '#64748b' }}>Magnetic Flux vs Time</span>
+          <span style={{ fontSize: typo.label, color: '#64748b' }}>t (Time)</span>
+        </div>
+      </div>
     );
   };
 
@@ -798,44 +1083,162 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
       {/* Premium Card */}
       <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 max-w-2xl shadow-2xl">
         <svg width={isMobile ? 280 : 360} height={200} className="mx-auto mb-4">
-          {/* Simple demo animation */}
-          <rect x="0" y="0" width={isMobile ? 280 : 360} height="200" fill="#1e293b" rx="8" />
-
-          {/* Coil */}
-          {[...Array(5)].map((_, i) => (
-            <ellipse
-              key={i}
-              cx={isMobile ? 140 : 180}
-              cy="100"
-              rx={25 + i * 4}
-              ry={40}
-              fill="none"
-              stroke="#f59e0b"
-              strokeWidth="3"
-            />
-          ))}
-
-          {/* Magnet moving */}
-          <g className="animate-pulse">
-            <rect x={isMobile ? 200 : 260} y="80" width="50" height="40" rx="4" fill="#ef4444" />
-            <rect x={isMobile ? 250 : 310} y="80" width="50" height="40" rx="4" fill="#3b82f6" />
-            <text x={isMobile ? 225 : 285} y="105" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">N</text>
-            <text x={isMobile ? 275 : 335} y="105" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">S</text>
-          </g>
-
-          {/* Light bulb */}
-          <circle cx={isMobile ? 60 : 70} cy="100" r="20" fill="#fbbf24" opacity="0.6" />
-          <circle cx={isMobile ? 60 : 70} cy="100" r="15" fill="#fef3c7" />
-          <text x={isMobile ? 60 : 70} y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">Light!</text>
-
-          {/* Arrow */}
-          <path d={`M ${isMobile ? 190 : 250} 100 L ${isMobile ? 170 : 220} 100`} stroke="#22c55e" strokeWidth="3" markerEnd="url(#hookArrow)" />
           <defs>
-            <marker id="hookArrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto">
+            {/* Premium hook visualization gradients */}
+            <linearGradient id="emiHookBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            <linearGradient id="emiHookCoil" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            <linearGradient id="emiHookNorth" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            <linearGradient id="emiHookSouth" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#2563eb" />
+            </linearGradient>
+
+            <radialGradient id="emiHookBulbGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="40%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            <filter id="emiHookGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="emiHookBulbGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <marker id="emiHookArrow" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto">
               <path d="M0,0 L0,6 L9,3 z" fill="#22c55e" />
             </marker>
+
+            <pattern id="emiHookGrid" width="15" height="15" patternUnits="userSpaceOnUse">
+              <rect width="15" height="15" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
           </defs>
+
+          {/* Premium background */}
+          <rect x="0" y="0" width={isMobile ? 280 : 360} height="200" fill="url(#emiHookBg)" rx="12" />
+          <rect x="0" y="0" width={isMobile ? 280 : 360} height="200" fill="url(#emiHookGrid)" rx="12" />
+
+          {/* Premium Coil with glow */}
+          <g filter="url(#emiHookGlow)">
+            {[...Array(6)].map((_, i) => (
+              <ellipse
+                key={i}
+                cx={isMobile ? 140 : 180}
+                cy="100"
+                rx={22 + i * 5}
+                ry={38}
+                fill="none"
+                stroke="url(#emiHookCoil)"
+                strokeWidth="3.5"
+                opacity={0.9 - i * 0.1}
+              />
+            ))}
+          </g>
+
+          {/* Wire to bulb */}
+          <line
+            x1={isMobile ? 118 : 155}
+            y1="75"
+            x2={isMobile ? 75 : 90}
+            y2="75"
+            stroke="url(#emiHookCoil)"
+            strokeWidth="3"
+          />
+          <line
+            x1={isMobile ? 75 : 90}
+            y1="75"
+            x2={isMobile ? 60 : 70}
+            y2="85"
+            stroke="url(#emiHookCoil)"
+            strokeWidth="3"
+          />
+
+          {/* Premium light bulb with glow effect */}
+          <g filter="url(#emiHookBulbGlowFilter)">
+            <circle cx={isMobile ? 60 : 70} cy="100" r="22" fill="url(#emiHookBulbGlow)" />
+          </g>
+          <circle cx={isMobile ? 60 : 70} cy="100" r="14" fill="#fef3c7" stroke="#fbbf24" strokeWidth="2" />
+          {/* Filament */}
+          <path
+            d={`M ${isMobile ? 55 : 65} 97 Q ${isMobile ? 60 : 70} 92 ${isMobile ? 65 : 75} 97 Q ${isMobile ? 60 : 70} 108 ${isMobile ? 55 : 65} 103`}
+            fill="none"
+            stroke="#f59e0b"
+            strokeWidth="1.5"
+          />
+          {/* Bulb base */}
+          <rect x={isMobile ? 55 : 65} y="118" width="10" height="8" fill="#64748b" rx="1" />
+
+          {/* Premium Magnet with 3D effect */}
+          <g className="animate-pulse">
+            <rect x={isMobile ? 195 : 255} y="78" width="45" height="44" rx="5" fill="url(#emiHookNorth)" />
+            <rect x={isMobile ? 240 : 300} y="78" width="45" height="44" rx="5" fill="url(#emiHookSouth)" />
+            {/* 3D highlights */}
+            <rect x={isMobile ? 195 : 255} y="78" width="45" height="8" fill="rgba(255,255,255,0.15)" rx="5" />
+            <rect x={isMobile ? 240 : 300} y="78" width="45" height="8" fill="rgba(255,255,255,0.15)" rx="5" />
+            {/* Divider */}
+            <line x1={isMobile ? 240 : 300} y1="78" x2={isMobile ? 240 : 300} y2="122" stroke="#1e293b" strokeWidth="2" />
+          </g>
+
+          {/* Motion arrow with glow */}
+          <g filter="url(#emiHookGlow)">
+            <path
+              d={`M ${isMobile ? 188 : 248} 100 L ${isMobile ? 168 : 218} 100`}
+              stroke="#22c55e"
+              strokeWidth="4"
+              strokeLinecap="round"
+              markerEnd="url(#emiHookArrow)"
+            />
+          </g>
+
+          {/* Magnetic field visualization */}
+          <g opacity="0.4">
+            {[-15, 0, 15].map((offset, i) => (
+              <path
+                key={i}
+                d={`M ${isMobile ? 195 : 255} ${100 + offset} Q ${isMobile ? 167 : 217} ${100 + offset * 0.5} ${isMobile ? 162 : 202} ${100 + offset * 0.3}`}
+                fill="none"
+                stroke="#60a5fa"
+                strokeWidth="1.5"
+                strokeDasharray="4 3"
+              />
+            ))}
+          </g>
         </svg>
+
+        {/* Labels outside SVG */}
+        <div className="flex justify-around w-full mb-4 px-2">
+          <span style={{ fontSize: typo.label, color: '#fbbf24' }}>Light Bulb</span>
+          <span style={{ fontSize: typo.label, color: '#f59e0b' }}>Copper Coil</span>
+          <span style={{ fontSize: typo.label, color: '#ef4444' }}>N</span>
+          <span style={{ fontSize: typo.label, color: '#3b82f6' }}>S</span>
+        </div>
 
         <p className="text-xl text-slate-300 mb-4">
           Move a magnet near a coil of wire... and a light bulb turns on!
@@ -1129,68 +1532,180 @@ const ElectromagneticInductionRenderer: React.FC<Props> = ({
       <h2 className="text-2xl font-bold text-purple-400 mb-4">Flux Trapping in Superconductors</h2>
 
       <div className="grid md:grid-cols-2 gap-6 mb-6 max-w-3xl">
+        {/* Normal Conductor Card */}
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-cyan-400 mb-2 text-center">Normal Conductor</h3>
-          <svg width="180" height="140" className="mx-auto">
-            <rect x="0" y="0" width="180" height="140" fill="#1e293b" rx="8" />
+          <svg width="180" height="120" className="mx-auto">
+            <defs>
+              {/* Normal conductor background */}
+              <linearGradient id="emiNormalBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0f172a" />
+                <stop offset="50%" stopColor="#1e293b" />
+                <stop offset="100%" stopColor="#0f172a" />
+              </linearGradient>
 
-            {/* Ring */}
-            <ellipse cx="90" cy="70" rx="50" ry="30" fill="none" stroke="#94a3b8" strokeWidth="8" />
+              {/* Normal conductor ring gradient - dull metal */}
+              <linearGradient id="emiNormalRing" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#9ca3af" />
+                <stop offset="30%" stopColor="#6b7280" />
+                <stop offset="70%" stopColor="#4b5563" />
+                <stop offset="100%" stopColor="#374151" />
+              </linearGradient>
+
+              {/* Fading field gradient */}
+              <linearGradient id="emiFadingField" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.5" />
+                <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.1" />
+              </linearGradient>
+
+              <marker id="emiTwistArrowRed" markerWidth="8" markerHeight="8" refX="4" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" fill="#ef4444" />
+              </marker>
+
+              <pattern id="emiNormalGrid" width="12" height="12" patternUnits="userSpaceOnUse">
+                <rect width="12" height="12" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.4" />
+              </pattern>
+            </defs>
+
+            {/* Background */}
+            <rect x="0" y="0" width="180" height="120" fill="url(#emiNormalBg)" rx="10" />
+            <rect x="0" y="0" width="180" height="120" fill="url(#emiNormalGrid)" rx="10" />
+
+            {/* Ring with metallic look */}
+            <ellipse cx="90" cy="55" rx="52" ry="28" fill="none" stroke="url(#emiNormalRing)" strokeWidth="10" />
+            <ellipse cx="90" cy="55" rx="52" ry="28" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="2" />
 
             {/* Fading field lines */}
-            <g opacity="0.3">
-              {[-20, 0, 20].map((offset, i) => (
-                <line key={i} x1="50" y1={70 + offset} x2="130" y2={70 + offset} stroke="#60a5fa" strokeWidth="2" strokeDasharray="4 2" />
+            <g opacity="0.4">
+              {[-18, 0, 18].map((offset, i) => (
+                <line
+                  key={i}
+                  x1="48"
+                  y1={55 + offset}
+                  x2="132"
+                  y2={55 + offset}
+                  stroke="url(#emiFadingField)"
+                  strokeWidth="2.5"
+                  strokeDasharray="5 3"
+                  opacity={0.6 - i * 0.1}
+                />
               ))}
             </g>
 
-            {/* Arrow showing decay */}
-            <path d="M90,110 L90,125" stroke="#ef4444" strokeWidth="2" markerEnd="url(#twistArrowRed)" />
-            <text x="90" y="138" textAnchor="middle" fill="#ef4444" fontSize="9">Field decays</text>
+            {/* Decay arrow */}
+            <path d="M90,90 L90,108" stroke="#ef4444" strokeWidth="2.5" strokeLinecap="round" markerEnd="url(#emiTwistArrowRed)" />
           </svg>
+          {/* Label outside SVG */}
+          <p className="text-center mt-1" style={{ fontSize: typo.label, color: '#ef4444' }}>Field decays over time</p>
           <p className="text-center text-sm text-slate-400 mt-2">
             Resistance causes induced currents to decay
           </p>
         </div>
 
+        {/* Superconductor Card */}
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-purple-400 mb-2 text-center">Superconductor</h3>
-          <svg width="180" height="140" className="mx-auto">
-            <rect x="0" y="0" width="180" height="140" fill="#1e293b" rx="8" />
-
-            {/* Ring with glow */}
-            <ellipse cx="90" cy="70" rx="50" ry="30" fill="none" stroke="#a855f7" strokeWidth="4" filter="url(#glow)" />
-            <ellipse cx="90" cy="70" rx="50" ry="30" fill="none" stroke="#e879f9" strokeWidth="8" />
-
-            {/* Trapped field lines */}
-            {[-20, 0, 20].map((offset, i) => (
-              <line key={i} x1="50" y1={70 + offset} x2="130" y2={70 + offset} stroke="#60a5fa" strokeWidth="2" />
-            ))}
-
-            {/* Forever symbol */}
-            <text x="90" y="125" textAnchor="middle" fill="#22c55e" fontSize="16">∞</text>
-            <text x="90" y="138" textAnchor="middle" fill="#22c55e" fontSize="9">Field trapped forever</text>
-
+          <svg width="180" height="120" className="mx-auto">
             <defs>
-              <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
-                <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+              {/* Superconductor background */}
+              <linearGradient id="emiSuperBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0f172a" />
+                <stop offset="50%" stopColor="#1e1b4b" />
+                <stop offset="100%" stopColor="#0f172a" />
+              </linearGradient>
+
+              {/* Superconductor ring gradient - vibrant purple */}
+              <linearGradient id="emiSuperRing" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#e879f9" />
+                <stop offset="25%" stopColor="#d946ef" />
+                <stop offset="50%" stopColor="#c026d3" />
+                <stop offset="75%" stopColor="#a855f7" />
+                <stop offset="100%" stopColor="#9333ea" />
+              </linearGradient>
+
+              {/* Trapped field gradient - bright and stable */}
+              <linearGradient id="emiTrappedField" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.7" />
+                <stop offset="50%" stopColor="#60a5fa" stopOpacity="1" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.7" />
+              </linearGradient>
+
+              {/* Superconductor glow filter */}
+              <filter id="emiSuperGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="5" result="blur" />
                 <feMerge>
-                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="blur" />
                   <feMergeNode in="SourceGraphic" />
                 </feMerge>
               </filter>
+
+              {/* Field line glow */}
+              <filter id="emiFieldGlowTwist" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="1.5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <pattern id="emiSuperGrid" width="12" height="12" patternUnits="userSpaceOnUse">
+                <rect width="12" height="12" fill="none" stroke="#4c1d95" strokeWidth="0.3" strokeOpacity="0.4" />
+              </pattern>
             </defs>
+
+            {/* Background */}
+            <rect x="0" y="0" width="180" height="120" fill="url(#emiSuperBg)" rx="10" />
+            <rect x="0" y="0" width="180" height="120" fill="url(#emiSuperGrid)" rx="10" />
+
+            {/* Ring outer glow */}
+            <ellipse cx="90" cy="55" rx="52" ry="28" fill="none" stroke="#a855f7" strokeWidth="16" opacity="0.3" filter="url(#emiSuperGlow)" />
+
+            {/* Ring with premium gradient */}
+            <ellipse cx="90" cy="55" rx="52" ry="28" fill="none" stroke="url(#emiSuperRing)" strokeWidth="10" />
+            <ellipse cx="90" cy="55" rx="52" ry="28" fill="none" stroke="rgba(255,255,255,0.2)" strokeWidth="2" />
+
+            {/* Trapped field lines with glow */}
+            <g filter="url(#emiFieldGlowTwist)">
+              {[-18, 0, 18].map((offset, i) => (
+                <line
+                  key={i}
+                  x1="48"
+                  y1={55 + offset}
+                  x2="132"
+                  y2={55 + offset}
+                  stroke="url(#emiTrappedField)"
+                  strokeWidth="3"
+                />
+              ))}
+            </g>
+
+            {/* Current flow indicators */}
+            <g opacity="0.7">
+              {[0, 1, 2, 3].map((i) => {
+                const angle = (i / 4) * Math.PI * 2;
+                return (
+                  <circle
+                    key={i}
+                    cx={90 + Math.cos(angle) * 52}
+                    cy={55 + Math.sin(angle) * 28 * 0.6}
+                    r="4"
+                    fill="#22c55e"
+                    opacity={0.8}
+                  />
+                );
+              })}
+            </g>
+
+            {/* Infinity symbol */}
+            <text x="90" y="105" textAnchor="middle" fill="#22c55e" fontSize="20" fontWeight="bold">∞</text>
           </svg>
+          {/* Label outside SVG */}
+          <p className="text-center mt-1" style={{ fontSize: typo.label, color: '#22c55e' }}>Field trapped forever</p>
           <p className="text-center text-sm text-slate-400 mt-2">
             Zero resistance = currents flow forever!
           </p>
         </div>
-
-        <defs>
-          <marker id="twistArrowRed" markerWidth="10" markerHeight="10" refX="5" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#ef4444" />
-          </marker>
-        </defs>
       </div>
 
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl">

@@ -373,7 +373,7 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
   );
 
   // ============================================================================
-  // SPEAKER VISUALIZATION (Enhanced with realistic graphics)
+  // SPEAKER VISUALIZATION (Premium SVG with gradients and effects)
   // ============================================================================
 
   const SpeakerVisualization: React.FC<{
@@ -417,417 +417,882 @@ const SpeakerPrincipleRenderer: React.FC<SpeakerPrincipleRendererProps> = ({ onG
       return points.join(' ');
     }, [animPhase, audioAmplitude, svgHeight]);
 
+    // Sound wave rings for visualization
+    const soundWaveRings = useMemo(() => {
+      if (!animated || soundIntensity < 10) return [];
+      const rings = [];
+      for (let i = 0; i < 4; i++) {
+        const phase = (animPhase * 2 + i * Math.PI / 2) % (Math.PI * 2);
+        const scale = 0.5 + (phase / (Math.PI * 2)) * 1.5;
+        const opacity = Math.max(0, 1 - phase / (Math.PI * 2)) * (soundIntensity / 100);
+        rings.push({ scale, opacity, id: i });
+      }
+      return rings;
+    }, [animPhase, animated, soundIntensity]);
+
     return (
-      <svg
-        width="100%"
-        height="100%"
-        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-        style={{ maxWidth: svgWidth, margin: '0 auto', display: 'block' }}
-      >
-        {/* === DEFINITIONS === */}
-        <defs>
-          {/* Magnet gradients - North pole (red) */}
-          <linearGradient id="magnetNorthGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#7f1d1d" />
-            <stop offset="30%" stopColor="#dc2626" />
-            <stop offset="50%" stopColor="#ef4444" />
-            <stop offset="70%" stopColor="#dc2626" />
-            <stop offset="100%" stopColor="#991b1b" />
-          </linearGradient>
+      <div style={{ position: 'relative' }}>
+        <svg
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+          style={{ maxWidth: svgWidth, margin: '0 auto', display: 'block' }}
+        >
+          {/* === COMPREHENSIVE DEFS SECTION === */}
+          <defs>
+            {/* === MAGNET GRADIENTS === */}
+            {/* Premium North pole magnet - metallic red with depth */}
+            <linearGradient id="spkMagnetNorth" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7f1d1d" />
+              <stop offset="15%" stopColor="#991b1b" />
+              <stop offset="35%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="65%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </linearGradient>
 
-          {/* Magnet gradient - South pole (blue) */}
-          <linearGradient id="magnetSouthGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#1e3a8a" />
-            <stop offset="30%" stopColor="#2563eb" />
-            <stop offset="50%" stopColor="#3b82f6" />
-            <stop offset="70%" stopColor="#2563eb" />
-            <stop offset="100%" stopColor="#1e40af" />
-          </linearGradient>
+            {/* Premium South pole magnet - metallic blue with depth */}
+            <linearGradient id="spkMagnetSouth" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a8a" />
+              <stop offset="15%" stopColor="#1d4ed8" />
+              <stop offset="35%" stopColor="#2563eb" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="65%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1e3a8a" />
+            </linearGradient>
 
-          {/* Wire gradient (copper) */}
-          <linearGradient id="wireGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#fcd34d" />
-            <stop offset="30%" stopColor="#fbbf24" />
-            <stop offset="50%" stopColor="#f59e0b" />
-            <stop offset="70%" stopColor="#d97706" />
-            <stop offset="100%" stopColor="#b45309" />
-          </linearGradient>
+            {/* Magnet yoke - brushed steel effect */}
+            <linearGradient id="spkYokeMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="20%" stopColor="#374151" />
+              <stop offset="40%" stopColor="#4b5563" />
+              <stop offset="60%" stopColor="#374151" />
+              <stop offset="80%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
 
-          {/* Current glow */}
-          <radialGradient id="currentGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.8" />
-            <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
-          </radialGradient>
+            {/* Magnet yoke vertical gradient for 3D effect */}
+            <linearGradient id="spkYokeDepth" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="20%" stopColor="#374151" />
+              <stop offset="80%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
 
-          {/* Force arrow gradient */}
-          <linearGradient id="forceGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#a855f7" />
-            <stop offset="100%" stopColor="#c084fc" />
-          </linearGradient>
+            {/* === VOICE COIL / WIRE GRADIENTS === */}
+            {/* Premium copper wire with 3D shading */}
+            <linearGradient id="spkCopperWire" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="15%" stopColor="#fcd34d" />
+              <stop offset="35%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="70%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#92400e" />
+            </linearGradient>
 
-          {/* Magnetic field gradient */}
-          <linearGradient id="fieldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#dc2626" stopOpacity="0.3" />
-            <stop offset="50%" stopColor="#a855f7" stopOpacity="0.5" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.3" />
-          </linearGradient>
+            {/* Wire highlight for specular reflection */}
+            <linearGradient id="spkWireHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.5)" />
+              <stop offset="30%" stopColor="rgba(255,255,255,0.2)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+            </linearGradient>
 
-          {/* Shadow filter */}
-          <filter id="magnetShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="2" dy="4" stdDeviation="4" floodOpacity="0.4" />
-          </filter>
+            {/* Voice coil winding pattern */}
+            <linearGradient id="spkCoilWinding" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b45309" />
+              <stop offset="10%" stopColor="#d97706" />
+              <stop offset="20%" stopColor="#b45309" />
+              <stop offset="30%" stopColor="#d97706" />
+              <stop offset="40%" stopColor="#b45309" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="60%" stopColor="#b45309" />
+              <stop offset="70%" stopColor="#d97706" />
+              <stop offset="80%" stopColor="#b45309" />
+              <stop offset="90%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
 
-          {/* Glow filter */}
-          <filter id="wireGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
+            {/* Terminal connector metallic */}
+            <radialGradient id="spkTerminal" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#a8a29e" />
+              <stop offset="40%" stopColor="#78716c" />
+              <stop offset="80%" stopColor="#57534e" />
+              <stop offset="100%" stopColor="#44403c" />
+            </radialGradient>
 
-          {/* Arrow marker */}
-          <marker id="forceArrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
-            <path d="M0,2 L10,5 L0,8 L2,5 Z" fill={colors.force} />
-          </marker>
+            {/* === CURRENT & ELECTRICITY GRADIENTS === */}
+            {/* Electric current glow */}
+            <radialGradient id="spkCurrentGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+            </radialGradient>
 
-          <marker id="currentArrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
-            <path d="M0,1 L8,4 L0,7 L1.5,4 Z" fill={colors.current} />
-          </marker>
+            {/* Current flow beam */}
+            <linearGradient id="spkCurrentBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.2" />
+              <stop offset="30%" stopColor="#67e8f9" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#a5f3fc" stopOpacity="1" />
+              <stop offset="70%" stopColor="#67e8f9" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.2" />
+            </linearGradient>
 
-          <marker id="fieldArrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-            <path d="M0,0 L6,3 L0,6 Z" fill="#a855f7" />
-          </marker>
-        </defs>
+            {/* === FORCE VECTOR GRADIENTS === */}
+            {/* Lorentz force arrow gradient */}
+            <linearGradient id="spkForceGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#e879f9" />
+              <stop offset="30%" stopColor="#c084fc" />
+              <stop offset="60%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#9333ea" />
+            </linearGradient>
 
-        {/* === BACKGROUND === */}
-        <rect width={svgWidth} height={svgHeight} fill={colors.bgSurface} rx="12" />
+            {/* Force arrow glow */}
+            <radialGradient id="spkForceGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#e879f9" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+            </radialGradient>
 
-        {/* Subtle grid */}
-        <pattern id="speakerGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-          <path d="M 20 0 L 0 0 0 20" fill="none" stroke={colors.bgElevated} strokeWidth="0.5" opacity="0.4" />
-        </pattern>
-        <rect width={svgWidth} height={svgHeight} fill="url(#speakerGrid)" rx="12" />
+            {/* === MAGNETIC FIELD GRADIENTS === */}
+            {/* B-field line gradient */}
+            <linearGradient id="spkFieldLine" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#dc2626" stopOpacity="0.6" />
+              <stop offset="25%" stopColor="#a855f7" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#c084fc" stopOpacity="1" />
+              <stop offset="75%" stopColor="#a855f7" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.6" />
+            </linearGradient>
 
-        {/* === MAGNET ASSEMBLY === */}
-        <g filter="url(#magnetShadow)">
-          {/* Magnet yoke (back plate) */}
-          <rect
-            x={centerX - 100}
-            y={centerY - 80}
-            width={200}
-            height={160}
-            rx="8"
-            fill="#374151"
-            stroke="#4b5563"
-            strokeWidth="2"
-          />
+            {/* === SPEAKER CONE GRADIENTS === */}
+            {/* Speaker cone 3D effect */}
+            <radialGradient id="spkConeGradient" cx="50%" cy="30%" r="80%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="30%" stopColor="#334155" />
+              <stop offset="60%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </radialGradient>
 
-          {/* Magnet yoke detail */}
-          <rect
-            x={centerX - 95}
-            y={centerY - 75}
-            width={190}
-            height={150}
-            rx="6"
-            fill="#1f2937"
-          />
+            {/* Cone dust cap */}
+            <radialGradient id="spkDustCap" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </radialGradient>
 
-          {/* North pole magnet (top) */}
-          <rect
-            x={centerX - 80}
-            y={centerY - 65}
-            width={160}
-            height={45}
-            rx="4"
-            fill="url(#magnetNorthGradient)"
-          />
-          <text
-            x={centerX}
-            y={centerY - 38}
-            textAnchor="middle"
-            fill="#fef2f2"
-            fontSize="14"
-            fontWeight="700"
-          >
-            N
-          </text>
+            {/* === SOUND WAVE GRADIENTS === */}
+            {/* Sound wave ring */}
+            <radialGradient id="spkSoundWave" cx="50%" cy="50%" r="50%">
+              <stop offset="70%" stopColor="#06b6d4" stopOpacity="0" />
+              <stop offset="85%" stopColor="#22d3ee" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#67e8f9" stopOpacity="0" />
+            </radialGradient>
 
-          {/* South pole magnet (bottom) */}
-          <rect
-            x={centerX - 80}
-            y={centerY + 20}
-            width={160}
-            height={45}
-            rx="4"
-            fill="url(#magnetSouthGradient)"
-          />
-          <text
-            x={centerX}
-            y={centerY + 47}
-            textAnchor="middle"
-            fill="#eff6ff"
-            fontSize="14"
-            fontWeight="700"
-          >
-            S
-          </text>
+            {/* Waveform display gradient */}
+            <linearGradient id="spkWaveformGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0891b2" />
+              <stop offset="25%" stopColor="#06b6d4" />
+              <stop offset="50%" stopColor="#22d3ee" />
+              <stop offset="75%" stopColor="#06b6d4" />
+              <stop offset="100%" stopColor="#0891b2" />
+            </linearGradient>
 
-          {/* Air gap (where the wire goes) */}
-          <rect
-            x={centerX - 80}
-            y={centerY - 18}
-            width={160}
-            height={36}
-            fill={colors.bgDeep}
-            stroke="#374151"
-            strokeWidth="1"
-          />
-        </g>
+            {/* === BACKGROUND GRADIENTS === */}
+            {/* Lab background */}
+            <linearGradient id="spkLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0a101a" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-        {/* === MAGNETIC FIELD LINES === */}
-        <g opacity={magnetStrength / 150 + 0.3}>
-          {[0, 1, 2, 3, 4].map(i => {
-            const xOffset = (i - 2) * 30;
-            return (
-              <g key={i}>
-                <line
-                  x1={centerX + xOffset}
-                  y1={centerY - 60}
-                  x2={centerX + xOffset}
-                  y2={centerY + 60}
-                  stroke="#a855f7"
-                  strokeWidth="1.5"
-                  strokeDasharray="4,4"
-                  opacity="0.6"
-                  markerEnd="url(#fieldArrow)"
-                />
-              </g>
-            );
-          })}
-        </g>
+            {/* Air gap darkness */}
+            <linearGradient id="spkAirGap" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#020617" />
+              <stop offset="50%" stopColor="#030712" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
 
-        {/* === WIRE (Copper conductor) === */}
-        <g transform={`translate(0, ${currentDisplacement})`} filter={audioAmplitude > 30 ? "url(#wireGlow)" : undefined}>
-          {/* Wire body */}
-          <rect
-            x={centerX - 70}
-            y={centerY - 6}
-            width={140}
-            height={12}
-            rx="6"
-            fill="url(#wireGradient)"
-            stroke="#92400e"
-            strokeWidth="1"
-          />
+            {/* Info panel background */}
+            <linearGradient id="spkPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(15,23,42,0.98)" />
+              <stop offset="100%" stopColor="rgba(2,6,23,0.95)" />
+            </linearGradient>
 
-          {/* Wire highlight */}
-          <rect
-            x={centerX - 65}
-            y={centerY - 4}
-            width={130}
-            height={3}
-            rx="1.5"
-            fill="rgba(255,255,255,0.3)"
-          />
+            {/* === GLOW FILTERS === */}
+            {/* Premium wire glow effect */}
+            <filter id="spkWireGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur1" />
+              <feGaussianBlur stdDeviation="2" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-          {/* Wire terminals */}
-          <circle cx={centerX - 75} cy={centerY} r="8" fill="#78716c" stroke="#57534e" strokeWidth="2" />
-          <circle cx={centerX + 75} cy={centerY} r="8" fill="#78716c" stroke="#57534e" strokeWidth="2" />
+            {/* Current particle glow */}
+            <filter id="spkCurrentGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-          {/* Current flow indicator */}
-          {audioAmplitude > 10 && (
-            <g opacity={audioAmplitude / 100}>
-              <line
-                x1={currentDirection > 0 ? centerX - 60 : centerX + 60}
-                y1={centerY}
-                x2={currentDirection > 0 ? centerX + 50 : centerX - 50}
-                y2={centerY}
-                stroke={colors.current}
-                strokeWidth="3"
-                strokeLinecap="round"
-                markerEnd="url(#currentArrow)"
-              />
+            {/* Force arrow glow */}
+            <filter id="spkForceGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-              {/* Current glow particles */}
-              {[0, 1, 2].map(i => {
-                const particleX = centerX - 50 + ((animPhase * 20 + i * 40) % 100);
-                return (
-                  <circle
-                    key={i}
-                    cx={particleX}
-                    cy={centerY}
-                    r="4"
-                    fill="url(#currentGlow)"
-                  />
-                );
-              })}
-            </g>
-          )}
-        </g>
+            {/* Magnet shadow with depth */}
+            <filter id="spkMagnetShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="3" dy="5" stdDeviation="6" floodOpacity="0.5" />
+            </filter>
 
-        {/* === FORCE VECTORS (Lorentz Force) === */}
-        {showForceVectors && wireDisplacement > 2 && (
-          <g transform={`translate(0, ${currentDisplacement})`}>
-            {/* Main force arrow */}
-            <line
-              x1={centerX}
-              y1={centerY}
-              x2={centerX}
-              y2={centerY + (currentDirection > 0 ? -40 : 40)}
-              stroke="url(#forceGradient)"
-              strokeWidth="4"
-              strokeLinecap="round"
-              markerEnd="url(#forceArrow)"
-              filter="url(#wireGlow)"
-            />
+            {/* Inner glow for panels */}
+            <filter id="spkPanelGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
 
-            {/* Force label */}
-            <rect
-              x={centerX + 15}
-              y={centerY + (currentDirection > 0 ? -45 : 25)}
-              width="35"
-              height="18"
-              rx="4"
-              fill="rgba(168,85,247,0.2)"
-              stroke={colors.force}
-              strokeWidth="1"
-            />
-            <text
-              x={centerX + 32}
-              y={centerY + (currentDirection > 0 ? -32 : 38)}
-              textAnchor="middle"
-              fill={colors.force}
-              fontSize="11"
-              fontWeight="700"
-            >
-              F
-            </text>
-          </g>
-        )}
+            {/* Sound wave pulse filter */}
+            <filter id="spkSoundPulse" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* === WAVEFORM DISPLAY === */}
-        {showWaveform && (
-          <g>
-            <rect
-              x={15}
-              y={svgHeight - 90}
-              width={130}
-              height={80}
-              rx="8"
-              fill="rgba(15,23,42,0.95)"
-              stroke={colors.bgElevated}
-              strokeWidth="1"
-            />
-            <text x={80} y={svgHeight - 72} textAnchor="middle" fill={colors.textSecondary} fontSize="9" fontWeight="600">
-              AUDIO SIGNAL
-            </text>
+            {/* === ARROW MARKERS === */}
+            {/* Force arrow marker */}
+            <marker id="spkForceArrow" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+              <path d="M0,2 L10,5 L0,8 L2,5 Z" fill="url(#spkForceGradient)" />
+            </marker>
 
-            {/* Waveform */}
-            <polyline
-              points={waveformPoints}
+            {/* Current arrow marker */}
+            <marker id="spkCurrentArrow" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+              <path d="M0,1 L8,4 L0,7 L1.5,4 Z" fill="#67e8f9" />
+            </marker>
+
+            {/* B-field arrow marker */}
+            <marker id="spkFieldArrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+              <path d="M0,0 L6,3 L0,6 Z" fill="#c084fc" />
+            </marker>
+
+            {/* === PATTERNS === */}
+            {/* Lab grid pattern */}
+            <pattern id="spkLabGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+              <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
+            </pattern>
+
+            {/* Voice coil winding pattern */}
+            <pattern id="spkCoilPattern" width="6" height="12" patternUnits="userSpaceOnUse">
+              <rect width="6" height="12" fill="#b45309" />
+              <rect x="0" y="0" width="6" height="2" fill="#d97706" />
+              <rect x="0" y="6" width="6" height="2" fill="#d97706" />
+            </pattern>
+          </defs>
+
+          {/* === PREMIUM BACKGROUND === */}
+          <rect width={svgWidth} height={svgHeight} fill="url(#spkLabBg)" rx="12" />
+          <rect width={svgWidth} height={svgHeight} fill="url(#spkLabGrid)" rx="12" />
+
+          {/* === SOUND WAVE VISUALIZATION (behind speaker) === */}
+          {soundWaveRings.map(ring => (
+            <ellipse
+              key={ring.id}
+              cx={centerX + 120}
+              cy={centerY}
+              rx={30 * ring.scale}
+              ry={50 * ring.scale}
               fill="none"
-              stroke={colors.current}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              stroke="url(#spkSoundWave)"
+              strokeWidth="3"
+              opacity={ring.opacity}
+              filter="url(#spkSoundPulse)"
             />
+          ))}
 
-            {/* Center line */}
-            <line
-              x1={20}
-              y1={svgHeight - 50}
-              x2={140}
-              y2={svgHeight - 50}
-              stroke={colors.textMuted}
-              strokeWidth="1"
-              strokeDasharray="2,2"
+          {/* === PREMIUM MAGNET ASSEMBLY === */}
+          <g filter="url(#spkMagnetShadow)">
+            {/* Magnet yoke (back plate) with 3D effect */}
+            <rect
+              x={centerX - 100}
+              y={centerY - 80}
+              width={200}
+              height={160}
+              rx="8"
+              fill="url(#spkYokeMetal)"
+            />
+            {/* Yoke depth shading */}
+            <rect
+              x={centerX - 100}
+              y={centerY - 80}
+              width={200}
+              height={160}
+              rx="8"
+              fill="url(#spkYokeDepth)"
               opacity="0.5"
             />
-          </g>
-        )}
-
-        {/* === DISPLACEMENT DISPLAY === */}
-        {showLabels && (
-          <g transform={`translate(${svgWidth - 100}, ${svgHeight - 90})`}>
-            <rect x={0} y={0} width={90} height={80} rx="8" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
-            <text x={45} y={16} textAnchor="middle" fill={colors.textSecondary} fontSize="9" fontWeight="600">
-              DISPLACEMENT
-            </text>
-
-            {/* Displacement bar */}
-            <rect x={15} y={28} width={60} height={8} rx="4" fill={colors.bgElevated} />
+            {/* Yoke highlight edge */}
             <rect
-              x={15}
-              y={28}
-              width={Math.min(60, wireDisplacement * 2.4)}
-              height={8}
-              rx="4"
-              fill={wireDisplacement > 15 ? colors.success : wireDisplacement > 8 ? colors.warning : colors.textMuted}
+              x={centerX - 100}
+              y={centerY - 80}
+              width={200}
+              height={6}
+              rx="3"
+              fill="rgba(255,255,255,0.1)"
             />
 
-            <text x={45} y={55} textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="700">
-              ±{wireDisplacement.toFixed(1)}mm
-            </text>
+            {/* Magnet yoke inner detail */}
+            <rect
+              x={centerX - 95}
+              y={centerY - 75}
+              width={190}
+              height={150}
+              rx="6"
+              fill="#111827"
+              opacity="0.6"
+            />
 
-            <text x={45} y={72} textAnchor="middle" fill={colors.textMuted} fontSize="9">
-              Sound: {soundIntensity}%
-            </text>
+            {/* North pole magnet (top) with metallic sheen */}
+            <rect
+              x={centerX - 80}
+              y={centerY - 65}
+              width={160}
+              height={45}
+              rx="4"
+              fill="url(#spkMagnetNorth)"
+            />
+            {/* North magnet highlight */}
+            <rect
+              x={centerX - 78}
+              y={centerY - 63}
+              width={156}
+              height={8}
+              rx="2"
+              fill="rgba(255,255,255,0.15)"
+            />
+
+            {/* South pole magnet (bottom) with metallic sheen */}
+            <rect
+              x={centerX - 80}
+              y={centerY + 20}
+              width={160}
+              height={45}
+              rx="4"
+              fill="url(#spkMagnetSouth)"
+            />
+            {/* South magnet highlight */}
+            <rect
+              x={centerX - 78}
+              y={centerY + 22}
+              width={156}
+              height={8}
+              rx="2"
+              fill="rgba(255,255,255,0.12)"
+            />
+
+            {/* Air gap (where the voice coil goes) */}
+            <rect
+              x={centerX - 80}
+              y={centerY - 18}
+              width={160}
+              height={36}
+              fill="url(#spkAirGap)"
+              stroke="#1f2937"
+              strokeWidth="1"
+            />
+
+            {/* Air gap inner shadow */}
+            <rect
+              x={centerX - 78}
+              y={centerY - 16}
+              width={156}
+              height={32}
+              fill="none"
+              stroke="rgba(0,0,0,0.3)"
+              strokeWidth="2"
+              rx="1"
+            />
           </g>
-        )}
 
-        {/* === INFO PANELS === */}
-
-        {/* Frequency display - Top left */}
-        {showLabels && (
-          <g transform="translate(10, 10)">
-            <rect x={0} y={0} width={85} height={50} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
-            <text x={42} y={16} textAnchor="middle" fill={colors.textSecondary} fontSize="9" fontWeight="600">
-              FREQUENCY
-            </text>
-            <text x={42} y={38} textAnchor="middle" fill={colors.current} fontSize="16" fontWeight="700">
-              {audioFrequency}Hz
-            </text>
+          {/* === MAGNETIC FIELD LINES === */}
+          <g opacity={magnetStrength / 120 + 0.2}>
+            {[-2, -1, 0, 1, 2].map(i => {
+              const xOffset = i * 30;
+              return (
+                <g key={i}>
+                  <line
+                    x1={centerX + xOffset}
+                    y1={centerY - 58}
+                    x2={centerX + xOffset}
+                    y2={centerY + 58}
+                    stroke="url(#spkFieldLine)"
+                    strokeWidth="2"
+                    strokeDasharray="6,4"
+                    opacity="0.7"
+                    markerEnd="url(#spkFieldArrow)"
+                  />
+                  {/* Field line glow */}
+                  <line
+                    x1={centerX + xOffset}
+                    y1={centerY - 58}
+                    x2={centerX + xOffset}
+                    y2={centerY + 58}
+                    stroke="#a855f7"
+                    strokeWidth="4"
+                    strokeDasharray="6,4"
+                    opacity="0.15"
+                  />
+                </g>
+              );
+            })}
           </g>
-        )}
 
-        {/* Magnet strength - Top right */}
-        {showLabels && (
-          <g transform={`translate(${svgWidth - 95}, 10)`}>
-            <rect x={0} y={0} width={85} height={50} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
-            <text x={42} y={16} textAnchor="middle" fill={colors.textSecondary} fontSize="9" fontWeight="600">
-              B-FIELD
-            </text>
-            <text x={42} y={38} textAnchor="middle" fill={colors.magnet} fontSize="16" fontWeight="700">
-              {magnetStrength}%
-            </text>
+          {/* === PREMIUM VOICE COIL / WIRE === */}
+          <g transform={`translate(0, ${currentDisplacement})`}>
+            {/* Wire glow when active */}
+            {audioAmplitude > 30 && (
+              <rect
+                x={centerX - 72}
+                y={centerY - 8}
+                width={144}
+                height={16}
+                rx="8"
+                fill="#fbbf24"
+                opacity="0.3"
+                filter="url(#spkWireGlow)"
+              />
+            )}
+
+            {/* Voice coil winding detail (background) */}
+            <rect
+              x={centerX - 70}
+              y={centerY - 6}
+              width={140}
+              height={12}
+              rx="6"
+              fill="url(#spkCoilPattern)"
+              opacity="0.8"
+            />
+
+            {/* Main wire body with copper gradient */}
+            <rect
+              x={centerX - 70}
+              y={centerY - 6}
+              width={140}
+              height={12}
+              rx="6"
+              fill="url(#spkCopperWire)"
+              stroke="#78350f"
+              strokeWidth="1"
+            />
+
+            {/* Wire specular highlight */}
+            <rect
+              x={centerX - 68}
+              y={centerY - 5}
+              width={136}
+              height={4}
+              rx="2"
+              fill="url(#spkWireHighlight)"
+            />
+
+            {/* Wire shadow (bottom) */}
+            <rect
+              x={centerX - 68}
+              y={centerY + 3}
+              width={136}
+              height={2}
+              rx="1"
+              fill="rgba(0,0,0,0.3)"
+            />
+
+            {/* Terminal connectors */}
+            <circle cx={centerX - 78} cy={centerY} r="10" fill="url(#spkTerminal)" stroke="#44403c" strokeWidth="2" />
+            <circle cx={centerX - 78} cy={centerY} r="5" fill="#292524" />
+            <circle cx={centerX + 78} cy={centerY} r="10" fill="url(#spkTerminal)" stroke="#44403c" strokeWidth="2" />
+            <circle cx={centerX + 78} cy={centerY} r="5" fill="#292524" />
+
+            {/* Current flow visualization */}
+            {audioAmplitude > 10 && (
+              <g opacity={audioAmplitude / 100} filter="url(#spkCurrentGlowFilter)">
+                {/* Current beam */}
+                <line
+                  x1={currentDirection > 0 ? centerX - 60 : centerX + 60}
+                  y1={centerY}
+                  x2={currentDirection > 0 ? centerX + 55 : centerX - 55}
+                  y2={centerY}
+                  stroke="url(#spkCurrentBeam)"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                  markerEnd="url(#spkCurrentArrow)"
+                />
+
+                {/* Animated current particles */}
+                {[0, 1, 2, 3].map(i => {
+                  const particleX = centerX - 55 + ((animPhase * 25 + i * 30) % 110);
+                  return (
+                    <circle
+                      key={i}
+                      cx={particleX}
+                      cy={centerY}
+                      r="5"
+                      fill="url(#spkCurrentGlow)"
+                    />
+                  );
+                })}
+              </g>
+            )}
           </g>
-        )}
 
-        {/* Formula display - Bottom center */}
+          {/* === LORENTZ FORCE VECTORS === */}
+          {showForceVectors && wireDisplacement > 2 && (
+            <g transform={`translate(0, ${currentDisplacement})`} filter="url(#spkForceGlowFilter)">
+              {/* Force arrow glow background */}
+              <line
+                x1={centerX}
+                y1={centerY}
+                x2={centerX}
+                y2={centerY + (currentDirection > 0 ? -45 : 45)}
+                stroke="url(#spkForceGlow)"
+                strokeWidth="10"
+                strokeLinecap="round"
+                opacity="0.5"
+              />
+
+              {/* Main force arrow */}
+              <line
+                x1={centerX}
+                y1={centerY}
+                x2={centerX}
+                y2={centerY + (currentDirection > 0 ? -42 : 42)}
+                stroke="url(#spkForceGradient)"
+                strokeWidth="5"
+                strokeLinecap="round"
+                markerEnd="url(#spkForceArrow)"
+              />
+            </g>
+          )}
+
+          {/* === MINI SPEAKER CONE VISUALIZATION (side view) === */}
+          <g transform={`translate(${centerX + 130}, ${centerY})`}>
+            {/* Cone outline */}
+            <path
+              d={`M 0,${-25 + currentDisplacement * 0.5}
+                  L 40,${-50 + currentDisplacement * 0.3}
+                  L 40,${50 + currentDisplacement * 0.3}
+                  L 0,${25 + currentDisplacement * 0.5} Z`}
+              fill="url(#spkConeGradient)"
+              stroke="#475569"
+              strokeWidth="1"
+            />
+            {/* Dust cap */}
+            <ellipse
+              cx={5}
+              cy={currentDisplacement * 0.5}
+              rx="8"
+              ry="15"
+              fill="url(#spkDustCap)"
+            />
+            {/* Cone surround (flexible edge) */}
+            <path
+              d={`M 40,${-50 + currentDisplacement * 0.3}
+                  Q 55,${-45 + currentDisplacement * 0.1} 55,0
+                  Q 55,${45 + currentDisplacement * 0.1} 40,${50 + currentDisplacement * 0.3}`}
+              fill="none"
+              stroke="#374151"
+              strokeWidth="4"
+              opacity="0.7"
+            />
+          </g>
+
+          {/* === WAVEFORM DISPLAY (Audio Signal) === */}
+          {showWaveform && (
+            <g>
+              <rect
+                x={15}
+                y={svgHeight - 90}
+                width={130}
+                height={80}
+                rx="8"
+                fill="url(#spkPanelBg)"
+                stroke="#334155"
+                strokeWidth="1"
+              />
+              {/* Panel inner glow */}
+              <rect
+                x={17}
+                y={svgHeight - 88}
+                width={126}
+                height={76}
+                rx="6"
+                fill="none"
+                stroke="rgba(6,182,212,0.1)"
+                strokeWidth="1"
+              />
+
+              {/* Waveform with gradient */}
+              <polyline
+                points={waveformPoints}
+                fill="none"
+                stroke="url(#spkWaveformGrad)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+
+              {/* Center baseline */}
+              <line
+                x1={20}
+                y1={svgHeight - 50}
+                x2={140}
+                y2={svgHeight - 50}
+                stroke="#334155"
+                strokeWidth="1"
+                strokeDasharray="3,3"
+                opacity="0.6"
+              />
+            </g>
+          )}
+
+          {/* === DISPLACEMENT METER === */}
+          {showLabels && (
+            <g transform={`translate(${svgWidth - 100}, ${svgHeight - 90})`}>
+              <rect x={0} y={0} width={90} height={80} rx="8" fill="url(#spkPanelBg)" stroke="#334155" strokeWidth="1" />
+
+              {/* Displacement bar background */}
+              <rect x={15} y={28} width={60} height={10} rx="5" fill="#1e293b" />
+              {/* Displacement bar fill */}
+              <rect
+                x={15}
+                y={28}
+                width={Math.min(60, wireDisplacement * 2.4)}
+                height={10}
+                rx="5"
+                fill={wireDisplacement > 15 ? colors.success : wireDisplacement > 8 ? colors.warning : '#475569'}
+              />
+              {/* Bar highlight */}
+              <rect
+                x={15}
+                y={28}
+                width={Math.min(60, wireDisplacement * 2.4)}
+                height={3}
+                rx="1.5"
+                fill="rgba(255,255,255,0.2)"
+              />
+            </g>
+          )}
+
+          {/* === LEGEND PANEL === */}
+          {showLabels && (
+            <g transform={`translate(${svgWidth - 120}, 70)`}>
+              <rect x={0} y={0} width={110} height={58} rx="6" fill="url(#spkPanelBg)" stroke="#334155" strokeWidth="1" />
+              {/* Current line */}
+              <line x1={8} y1={15} x2={28} y2={15} stroke="url(#spkCurrentBeam)" strokeWidth="3" strokeLinecap="round" />
+              {/* B-field line */}
+              <line x1={8} y1={31} x2={28} y2={31} stroke="url(#spkFieldLine)" strokeWidth="2" strokeDasharray="4,3" />
+              {/* Force line */}
+              <line x1={8} y1={47} x2={28} y2={47} stroke="url(#spkForceGradient)" strokeWidth="3" strokeLinecap="round" />
+            </g>
+          )}
+        </svg>
+
+        {/* === TEXT LABELS OUTSIDE SVG (using typo system) === */}
         {showLabels && (
-          <g transform={`translate(${centerX - 50}, ${svgHeight - 35})`}>
-            <rect x={0} y={0} width={100} height={28} rx="6" fill="rgba(168,85,247,0.15)" stroke={colors.force} strokeWidth="1" />
-            <text x={50} y={18} textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="600">
+          <>
+            {/* Waveform label */}
+            {showWaveform && (
+              <div style={{
+                position: 'absolute',
+                left: isMobile ? '25px' : '35px',
+                bottom: isMobile ? '72px' : '82px',
+                fontSize: typo.label,
+                fontWeight: 600,
+                color: colors.textSecondary,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px'
+              }}>
+                AUDIO SIGNAL
+              </div>
+            )}
+
+            {/* Displacement label and value */}
+            <div style={{
+              position: 'absolute',
+              right: isMobile ? '25px' : '35px',
+              bottom: isMobile ? '72px' : '82px',
+              textAlign: 'center',
+              width: '80px'
+            }}>
+              <div style={{
+                fontSize: typo.label,
+                fontWeight: 600,
+                color: colors.textSecondary,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                marginBottom: '4px'
+              }}>
+                DISPLACEMENT
+              </div>
+              <div style={{
+                fontSize: typo.heading,
+                fontWeight: 700,
+                color: colors.textPrimary
+              }}>
+                {wireDisplacement.toFixed(1)}mm
+              </div>
+              <div style={{
+                fontSize: typo.label,
+                color: colors.textMuted
+              }}>
+                Sound: {soundIntensity}%
+              </div>
+            </div>
+
+            {/* Frequency display - Top left */}
+            <div style={{
+              position: 'absolute',
+              left: isMobile ? '18px' : '22px',
+              top: isMobile ? '18px' : '22px',
+              textAlign: 'center',
+              padding: '8px 12px',
+              background: 'rgba(2,6,23,0.9)',
+              borderRadius: '8px',
+              border: '1px solid #334155'
+            }}>
+              <div style={{
+                fontSize: typo.label,
+                fontWeight: 600,
+                color: colors.textSecondary,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                marginBottom: '2px'
+              }}>
+                FREQUENCY
+              </div>
+              <div style={{
+                fontSize: typo.bodyLarge,
+                fontWeight: 700,
+                color: colors.current
+              }}>
+                {audioFrequency}Hz
+              </div>
+            </div>
+
+            {/* Magnet strength - Top right */}
+            <div style={{
+              position: 'absolute',
+              right: isMobile ? '18px' : '22px',
+              top: isMobile ? '18px' : '22px',
+              textAlign: 'center',
+              padding: '8px 12px',
+              background: 'rgba(2,6,23,0.9)',
+              borderRadius: '8px',
+              border: '1px solid #334155'
+            }}>
+              <div style={{
+                fontSize: typo.label,
+                fontWeight: 600,
+                color: colors.textSecondary,
+                textTransform: 'uppercase',
+                letterSpacing: '0.5px',
+                marginBottom: '2px'
+              }}>
+                B-FIELD
+              </div>
+              <div style={{
+                fontSize: typo.bodyLarge,
+                fontWeight: 700,
+                color: colors.magnet
+              }}>
+                {magnetStrength}%
+              </div>
+            </div>
+
+            {/* Force label (when showing force vectors) */}
+            {showForceVectors && wireDisplacement > 2 && (
+              <div style={{
+                position: 'absolute',
+                left: '50%',
+                top: '50%',
+                transform: `translate(30px, ${currentDisplacement + (Math.sin(animPhase) > 0 ? -50 : 20)}px)`,
+                padding: '4px 10px',
+                background: 'rgba(168,85,247,0.2)',
+                border: '1px solid #a855f7',
+                borderRadius: '6px',
+                fontSize: typo.small,
+                fontWeight: 700,
+                color: colors.force
+              }}>
+                F
+              </div>
+            )}
+
+            {/* Legend labels */}
+            <div style={{
+              position: 'absolute',
+              right: isMobile ? '18px' : '22px',
+              top: isMobile ? '82px' : '86px',
+              fontSize: typo.label,
+              color: colors.textMuted,
+              lineHeight: '16px'
+            }}>
+              <div style={{ marginBottom: '1px', marginLeft: '32px' }}>Current (I)</div>
+              <div style={{ marginBottom: '1px', marginLeft: '32px', marginTop: '6px' }}>B-Field</div>
+              <div style={{ marginLeft: '32px', marginTop: '6px' }}>Force (F)</div>
+            </div>
+
+            {/* Formula display - Bottom center */}
+            <div style={{
+              position: 'absolute',
+              left: '50%',
+              bottom: isMobile ? '12px' : '16px',
+              transform: 'translateX(-50%)',
+              padding: '6px 16px',
+              background: 'rgba(168,85,247,0.15)',
+              border: '1px solid #a855f7',
+              borderRadius: '8px',
+              fontSize: typo.body,
+              fontWeight: 600,
+              color: colors.textPrimary
+            }}>
               F = B × I × L
-            </text>
-          </g>
-        )}
+            </div>
 
-        {/* Legend */}
-        {showLabels && (
-          <g transform={`translate(${svgWidth - 120}, 70)`}>
-            <rect x={0} y={0} width={110} height={55} rx="6" fill="rgba(15,23,42,0.9)" />
-            <line x1={8} y1={14} x2={25} y2={14} stroke={colors.current} strokeWidth="3" />
-            <text x={30} y={18} fill={colors.textMuted} fontSize="9">Current (I)</text>
-            <line x1={8} y1={30} x2={25} y2={30} stroke="#a855f7" strokeWidth="2" strokeDasharray="4,4" />
-            <text x={30} y={34} fill={colors.textMuted} fontSize="9">B-Field</text>
-            <line x1={8} y1={46} x2={25} y2={46} stroke={colors.force} strokeWidth="3" />
-            <text x={30} y={50} fill={colors.textMuted} fontSize="9">Force (F)</text>
-          </g>
+            {/* N/S pole labels */}
+            <div style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              transform: `translate(-50%, ${isMobile ? -52 : -58}px)`,
+              fontSize: typo.body,
+              fontWeight: 700,
+              color: '#fef2f2'
+            }}>
+              N
+            </div>
+            <div style={{
+              position: 'absolute',
+              left: '50%',
+              top: '50%',
+              transform: `translate(-50%, ${isMobile ? 38 : 42}px)`,
+              fontSize: typo.body,
+              fontWeight: 700,
+              color: '#eff6ff'
+            }}>
+              S
+            </div>
+          </>
         )}
-      </svg>
+      </div>
     );
   };
 

@@ -240,72 +240,158 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
     for (let i = 0; i < n; i++) antinodes.push(50 + ((i + 0.5) * stringLength / n));
 
     return (
-      <svg viewBox="0 0 500 240" className="w-full h-full max-h-60">
-        <defs>
-          <linearGradient id="swStringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#f59e0b" />
-            <stop offset="50%" stopColor="#fbbf24" />
-            <stop offset="100%" stopColor="#f59e0b" />
-          </linearGradient>
-          <filter id="swGlow">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-          <radialGradient id="nodeGrad">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#991b1b" />
-          </radialGradient>
-          <radialGradient id="antinodeGrad">
-            <stop offset="0%" stopColor="#10b981" />
-            <stop offset="100%" stopColor="#047857" />
-          </radialGradient>
-        </defs>
+      <div className="flex flex-col items-center gap-2 w-full">
+        <svg viewBox="0 0 500 200" className="w-full h-full max-h-52">
+          <defs>
+            {/* Premium wave gradient */}
+            <linearGradient id="standWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#d97706" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="75%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+            {/* Wave glow filter */}
+            <filter id="standWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur1" />
+              <feGaussianBlur stdDeviation="8" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Node gradient with glow */}
+            <radialGradient id="standNodeGrad" cx="30%" cy="30%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </radialGradient>
+            <filter id="standNodeGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor="#ef4444" floodOpacity="0.6" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Antinode gradient with glow */}
+            <radialGradient id="standAntinodeGrad" cx="30%" cy="30%">
+              <stop offset="0%" stopColor="#6ee7b7" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#047857" />
+            </radialGradient>
+            <filter id="standAntinodeGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feFlood floodColor="#10b981" floodOpacity="0.5" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Fixed end gradient */}
+            <linearGradient id="standFixedEndGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
+            {/* Background gradient */}
+            <linearGradient id="standBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#05060a" />
+            </linearGradient>
+          </defs>
 
-        <rect x="0" y="0" width="500" height="240" fill="#05060a" rx="12" />
+          {/* Background */}
+          <rect x="0" y="0" width="500" height="200" fill="url(#standBgGrad)" rx="12" />
 
-        {/* Grid */}
-        <g opacity="0.1">
-          {[...Array(6)].map((_, i) => (
-            <line key={`h${i}`} x1="50" y1={40 + i * 30} x2="450" y2={40 + i * 30} stroke="#6b7488" />
+          {/* Subtle grid */}
+          <g opacity="0.08">
+            {[...Array(5)].map((_, i) => (
+              <line key={`standGrid-h${i}`} x1="50" y1={40 + i * 35} x2="450" y2={40 + i * 35} stroke="#6b7488" strokeWidth="0.5" />
+            ))}
+            {[...Array(9)].map((_, i) => (
+              <line key={`standGrid-v${i}`} x1={50 + i * 50} y1="25" x2={50 + i * 50} y2="175" stroke="#6b7488" strokeWidth="0.5" />
+            ))}
+          </g>
+
+          {/* Equilibrium line */}
+          <line x1="50" y1={stringY} x2="450" y2={stringY} stroke="#6b7488" strokeDasharray="6,4" opacity="0.25" strokeWidth="1" />
+
+          {/* Fixed ends with premium styling */}
+          <g>
+            <rect x="32" y={stringY - 30} width="24" height="60" rx="6" fill="url(#standFixedEndGrad)" stroke="#4b5563" strokeWidth="1" />
+            <rect x="36" y={stringY - 26} width="4" height="52" rx="2" fill="#6b7280" opacity="0.3" />
+          </g>
+          <g>
+            <rect x="444" y={stringY - 30} width="24" height="60" rx="6" fill="url(#standFixedEndGrad)" stroke="#4b5563" strokeWidth="1" />
+            <rect x="460" y={stringY - 26} width="4" height="52" rx="2" fill="#6b7280" opacity="0.3" />
+          </g>
+
+          {/* Antinode amplitude indicators */}
+          {antinodes.map((x, i) => (
+            <g key={`standAmpIndicator-${i}`}>
+              <line x1={x} y1={stringY - amp - 8} x2={x} y2={stringY + amp + 8} stroke="#10b981" strokeWidth="1" strokeDasharray="4,3" opacity="0.3" />
+              <circle cx={x} cy={stringY - amp - 12} r="3" fill="#10b981" opacity="0.4" />
+              <circle cx={x} cy={stringY + amp + 12} r="3" fill="#10b981" opacity="0.4" />
+            </g>
           ))}
-        </g>
 
-        {/* Equilibrium line */}
-        <line x1="50" y1={stringY} x2="450" y2={stringY} stroke="#6b7488" strokeDasharray="4,4" opacity="0.3" />
+          {/* Vibrating string with premium glow */}
+          <path d={generateWavePath()} fill="none" stroke="url(#standWaveGrad)" strokeWidth="5" strokeLinecap="round" filter="url(#standWaveGlow)" />
 
-        {/* Fixed ends */}
-        <rect x="35" y={stringY - 25} width="20" height="50" rx="4" fill="#1e232f" stroke="#252a38" />
-        <rect x="445" y={stringY - 25} width="20" height="50" rx="4" fill="#1e232f" stroke="#252a38" />
+          {/* Nodes with labels */}
+          {nodes.map((x, i) => (
+            <g key={`standNode-${i}`}>
+              <circle cx={x} cy={stringY} r="10" fill="url(#standNodeGrad)" filter="url(#standNodeGlow)">
+                <animate attributeName="r" values="10;12;10" dur="2s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={x} cy={stringY} r="4" fill="#fef2f2" />
+              {/* Node label marker */}
+              <circle cx={x} cy={stringY + 28} r="8" fill="#1f2937" stroke="#ef4444" strokeWidth="1" opacity="0.9" />
+              <text x={x} y={stringY + 32} textAnchor="middle" fill="#fca5a5" fontSize="8" fontWeight="700">N</text>
+            </g>
+          ))}
 
-        {/* Vibrating string */}
-        <path d={generateWavePath()} fill="none" stroke="url(#swStringGrad)" strokeWidth="4" strokeLinecap="round" filter="url(#swGlow)" />
+          {/* Antinodes with labels */}
+          {antinodes.map((x, i) => (
+            <g key={`standAntinode-${i}`}>
+              <circle cx={x} cy={stringY} r="8" fill="url(#standAntinodeGrad)" filter="url(#standAntinodeGlow)" opacity="0.9" />
+              <circle cx={x} cy={stringY} r="3" fill="#d1fae5" />
+              {/* Antinode label marker */}
+              <circle cx={x} cy={stringY - 28} r="8" fill="#1f2937" stroke="#10b981" strokeWidth="1" opacity="0.9" />
+              <text x={x} y={stringY - 24} textAnchor="middle" fill="#6ee7b7" fontSize="8" fontWeight="700">A</text>
+            </g>
+          ))}
 
-        {/* Nodes */}
-        {nodes.map((x, i) => (
-          <g key={`node-${i}`}>
-            <circle cx={x} cy={stringY} r="8" fill="url(#nodeGrad)" opacity="0.9">
-              <animate attributeName="r" values="8;10;8" dur="2s" repeatCount="indefinite" />
-            </circle>
-            <circle cx={x} cy={stringY} r="3" fill="#fecaca" />
+          {/* Harmonic indicator badge */}
+          <g transform="translate(10, 10)">
+            <rect x="0" y="0" width="50" height="28" rx="6" fill="#1f2937" stroke="#f59e0b" strokeWidth="1" />
+            <text x="25" y="11" textAnchor="middle" fill="#fbbf24" fontSize="8" fontWeight="600">n = {n}</text>
+            <text x="25" y="22" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="800">
+              {n === 1 ? '1st' : n === 2 ? '2nd' : n === 3 ? '3rd' : `${n}th`}
+            </text>
           </g>
-        ))}
-
-        {/* Antinodes */}
-        {antinodes.map((x, i) => (
-          <g key={`antinode-${i}`}>
-            <line x1={x} y1={stringY - amp - 5} x2={x} y2={stringY + amp + 5} stroke="#10b981" strokeWidth="1" strokeDasharray="3,3" opacity="0.4" />
-            <circle cx={x} cy={stringY} r="6" fill="url(#antinodeGrad)" opacity="0.8" />
-          </g>
-        ))}
-
-        {/* Info panel */}
-        <g transform="translate(360, 10)">
-          <rect x="0" y="0" width="130" height="70" rx="8" fill="#161a24" fillOpacity="0.95" stroke="#252a38" />
-          <text x="10" y="22" fill="#6b7488" fontSize="9" fontWeight="600">HARMONIC #{n}</text>
-          <text x="10" y="42" fill="#f59e0b" fontSize="18" fontWeight="800">{frequency} Hz</text>
-          <text x="10" y="58" fill="#6b7488" fontSize="9">{n + 1} nodes - {n} antinodes</text>
-        </g>
-      </svg>
+        </svg>
+        {/* Text labels moved outside SVG using typo system */}
+        <div className="flex items-center justify-between w-full px-4" style={{ maxWidth: 500 }}>
+          <div className="flex items-center gap-4">
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-red-500" />
+              <span style={{ fontSize: typo.label }} className="text-slate-400 font-medium">Nodes ({n + 1})</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <span className="w-3 h-3 rounded-full bg-emerald-500" />
+              <span style={{ fontSize: typo.label }} className="text-slate-400 font-medium">Antinodes ({n})</span>
+            </div>
+          </div>
+          <div className="text-right">
+            <span style={{ fontSize: typo.small }} className="text-amber-400 font-bold">{frequency} Hz</span>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -315,217 +401,502 @@ const StandingWavesRenderer: React.FC<StandingWavesRendererProps> = ({ onGameEve
 
     if (app.id === 'guitar') {
       return (
-        <svg viewBox="0 0 300 200" className="w-full h-40">
-          <defs>
-            <linearGradient id="guitarBody" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#92400e" />
-              <stop offset="100%" stopColor="#78350f" />
-            </linearGradient>
-            <linearGradient id="guitarNeck" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#44403c" />
-              <stop offset="100%" stopColor="#292524" />
-            </linearGradient>
-          </defs>
-          <rect x="0" y="0" width="300" height="200" fill="#05060a" rx="12" />
+        <div className="flex flex-col items-center gap-2">
+          <svg viewBox="0 0 300 170" className="w-full h-36">
+            <defs>
+              {/* Premium guitar body gradient */}
+              <radialGradient id="standGuitarBody" cx="40%" cy="30%">
+                <stop offset="0%" stopColor="#b45309" />
+                <stop offset="50%" stopColor="#92400e" />
+                <stop offset="100%" stopColor="#78350f" />
+              </radialGradient>
+              <linearGradient id="standGuitarNeck" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#57534e" />
+                <stop offset="30%" stopColor="#44403c" />
+                <stop offset="70%" stopColor="#44403c" />
+                <stop offset="100%" stopColor="#292524" />
+              </linearGradient>
+              <linearGradient id="standGuitarString" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#d97706" />
+                <stop offset="50%" stopColor="#fbbf24" />
+                <stop offset="100%" stopColor="#d97706" />
+              </linearGradient>
+              <filter id="standGuitarGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feFlood floodColor="#f59e0b" floodOpacity="0.5" />
+                <feComposite in2="blur" operator="in" />
+                <feMerge>
+                  <feMergeNode />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              <filter id="standGuitarShadow">
+                <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000" floodOpacity="0.4" />
+              </filter>
+              <linearGradient id="standGuitarBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#0a0f1a" />
+                <stop offset="100%" stopColor="#05060a" />
+              </linearGradient>
+            </defs>
+            <rect x="0" y="0" width="300" height="170" fill="url(#standGuitarBg)" rx="12" />
 
-          {/* Guitar body */}
-          <ellipse cx="220" cy="120" rx="60" ry="70" fill="url(#guitarBody)" />
-          <ellipse cx="220" cy="120" rx="20" ry="20" fill="#1c1917" />
-
-          {/* Neck */}
-          <rect x="40" y="105" width="140" height="30" fill="url(#guitarNeck)" rx="2" />
-
-          {/* Frets */}
-          {[60, 85, 105, 120, 135, 150, 162].map((x, i) => (
-            <line key={i} x1={x} y1="108" x2={x} y2="132" stroke="#a8a29e" strokeWidth="2" />
-          ))}
-
-          {/* Strings */}
-          {[110, 115, 120, 125, 130].map((y, i) => (
-            <g key={i}>
-              <line x1="40" y1={y} x2="280" y2={y} stroke="#f59e0b" strokeWidth="1" opacity="0.7" />
-              {i === 2 && (
-                <path
-                  d={`M 40 ${y} Q 100 ${y + 8 * Math.sin(time * 5)} 160 ${y} Q 220 ${y - 8 * Math.sin(time * 5)} 280 ${y}`}
-                  fill="none"
-                  stroke="#fbbf24"
-                  strokeWidth="2"
-                />
-              )}
+            {/* Guitar body with shadow */}
+            <g filter="url(#standGuitarShadow)">
+              <ellipse cx="220" cy="100" rx="60" ry="65" fill="url(#standGuitarBody)" />
             </g>
-          ))}
+            {/* Sound hole */}
+            <ellipse cx="220" cy="100" rx="20" ry="20" fill="#1c1917" />
+            <ellipse cx="220" cy="100" rx="18" ry="18" fill="none" stroke="#44403c" strokeWidth="2" />
 
-          {/* Finger position */}
-          <circle cx="95" cy="120" r="8" fill="#f59e0b" opacity="0.8">
-            <animate attributeName="opacity" values="0.8;1;0.8" dur="1s" repeatCount="indefinite" />
-          </circle>
+            {/* Neck with fretboard */}
+            <rect x="40" y="85" width="145" height="30" fill="url(#standGuitarNeck)" rx="3" />
+            {/* Fretboard inlay */}
+            <rect x="42" y="87" width="141" height="26" fill="#292524" rx="2" />
 
-          <text x="150" y="180" textAnchor="middle" fill="#a8b0c2" fontSize="11">
-            Pressing frets changes effective string length
-          </text>
-        </svg>
+            {/* Frets with metallic look */}
+            {[60, 85, 105, 120, 135, 150, 165].map((x, i) => (
+              <g key={`standFret-${i}`}>
+                <line x1={x} y1="87" x2={x} y2="113" stroke="#d6d3d1" strokeWidth="2" />
+                <line x1={x + 1} y1="87" x2={x + 1} y2="113" stroke="#78716c" strokeWidth="1" opacity="0.5" />
+              </g>
+            ))}
+
+            {/* Position markers */}
+            <circle cx="95" cy="100" r="3" fill="#78716c" opacity="0.6" />
+            <circle cx="135" cy="100" r="3" fill="#78716c" opacity="0.6" />
+
+            {/* Strings with vibration */}
+            {[90, 95, 100, 105, 110].map((y, i) => (
+              <g key={`standString-${i}`}>
+                {i === 2 ? (
+                  <path
+                    d={`M 40 ${y} Q 80 ${y + 6 * Math.sin(time * 6)} 120 ${y} Q 160 ${y - 6 * Math.sin(time * 6)} 200 ${y} Q 240 ${y + 6 * Math.sin(time * 6)} 280 ${y}`}
+                    fill="none"
+                    stroke="url(#standGuitarString)"
+                    strokeWidth="2"
+                    filter="url(#standGuitarGlow)"
+                  />
+                ) : (
+                  <line x1="40" y1={y} x2="280" y2={y} stroke="#92400e" strokeWidth={1.5 - i * 0.1} opacity="0.6" />
+                )}
+              </g>
+            ))}
+
+            {/* Finger position with glow */}
+            <g>
+              <circle cx="75" cy="100" r="10" fill="#f59e0b" opacity="0.3" filter="url(#standGuitarGlow)">
+                <animate attributeName="r" values="10;14;10" dur="1.5s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="75" cy="100" r="7" fill="#fbbf24">
+                <animate attributeName="opacity" values="0.9;1;0.9" dur="1s" repeatCount="indefinite" />
+              </circle>
+            </g>
+
+            {/* Length indicator */}
+            <g opacity="0.6">
+              <line x1="75" y1="125" x2="280" y2="125" stroke="#10b981" strokeWidth="1" strokeDasharray="4,2" />
+              <polygon points="75,122 75,128 80,125" fill="#10b981" />
+              <polygon points="280,122 280,128 275,125" fill="#10b981" />
+            </g>
+
+            {/* Harmonic indicator */}
+            <g transform="translate(10, 10)">
+              <rect x="0" y="0" width="40" height="22" rx="4" fill="#1f2937" stroke="#f59e0b" strokeWidth="1" opacity="0.9" />
+              <text x="20" y="15" textAnchor="middle" fill="#fbbf24" fontSize="9" fontWeight="700">L/2</text>
+            </g>
+          </svg>
+          <p style={{ fontSize: typo.label }} className="text-slate-400 text-center px-4">
+            Pressing frets changes effective string length, raising pitch
+          </p>
+        </div>
       );
     }
 
     if (app.id === 'laser') {
       return (
-        <svg viewBox="0 0 300 200" className="w-full h-40">
-          <defs>
-            <linearGradient id="laserBeam" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.2" />
-              <stop offset="50%" stopColor="#8b5cf6" />
-              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.2" />
-            </linearGradient>
-            <filter id="laserGlow">
-              <feGaussianBlur stdDeviation="4" />
-            </filter>
-          </defs>
-          <rect x="0" y="0" width="300" height="200" fill="#05060a" rx="12" />
+        <div className="flex flex-col items-center gap-2">
+          <svg viewBox="0 0 300 160" className="w-full h-36">
+            <defs>
+              {/* Premium laser beam gradient */}
+              <linearGradient id="standLaserBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#6d28d9" stopOpacity="0.3" />
+                <stop offset="25%" stopColor="#7c3aed" />
+                <stop offset="50%" stopColor="#a78bfa" />
+                <stop offset="75%" stopColor="#7c3aed" />
+                <stop offset="100%" stopColor="#6d28d9" stopOpacity="0.3" />
+              </linearGradient>
+              {/* Mirror gradient */}
+              <linearGradient id="standMirrorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#c4b5fd" />
+                <stop offset="50%" stopColor="#a78bfa" />
+                <stop offset="100%" stopColor="#8b5cf6" />
+              </linearGradient>
+              {/* Laser glow filter */}
+              <filter id="standLaserGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="5" result="blur1" />
+                <feGaussianBlur stdDeviation="10" result="blur2" />
+                <feMerge>
+                  <feMergeNode in="blur2" />
+                  <feMergeNode in="blur1" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Cavity tube gradient */}
+              <linearGradient id="standCavityGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1f2937" />
+                <stop offset="50%" stopColor="#111827" />
+                <stop offset="100%" stopColor="#1f2937" />
+              </linearGradient>
+              <linearGradient id="standLaserBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#0a0f1a" />
+                <stop offset="100%" stopColor="#05060a" />
+              </linearGradient>
+              {/* Output beam gradient */}
+              <linearGradient id="standOutputBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#8b5cf6" />
+                <stop offset="100%" stopColor="#c4b5fd" />
+              </linearGradient>
+            </defs>
+            <rect x="0" y="0" width="300" height="160" fill="url(#standLaserBg)" rx="12" />
 
-          {/* Laser cavity tube */}
-          <rect x="40" y="80" width="220" height="40" rx="6" fill="#1e232f" stroke="#252a38" />
+            {/* Laser cavity tube with premium styling */}
+            <rect x="40" y="60" width="220" height="40" rx="8" fill="url(#standCavityGrad)" stroke="#374151" strokeWidth="1" />
+            <rect x="42" y="62" width="216" height="2" rx="1" fill="#4b5563" opacity="0.3" />
 
-          {/* Mirrors */}
-          <rect x="30" y="70" width="15" height="60" rx="3" fill="#a78bfa" />
-          <rect x="255" y="70" width="15" height="60" rx="3" fill="#a78bfa" opacity="0.7" />
+            {/* Standing light wave nodes */}
+            <g opacity="0.95">
+              {[0, 1, 2, 3, 4].map((i) => {
+                const x = 55 + i * 50;
+                const phase = time * 8 + i * Math.PI * 0.5;
+                return (
+                  <g key={`standLaserNode-${i}`}>
+                    {/* Wave amplitude envelope */}
+                    <ellipse cx={x} cy={80} rx="4" ry={Math.abs(Math.sin(phase)) * 18 + 2} fill="#a78bfa" opacity="0.8">
+                      <animate attributeName="ry" values="18;2;18" dur="0.4s" repeatCount="indefinite" begin={`${i * 0.08}s`} />
+                    </ellipse>
+                    {/* Node marker */}
+                    {i < 4 && (
+                      <circle cx={x + 25} cy={80} r="3" fill="#6d28d9" opacity="0.6" />
+                    )}
+                  </g>
+                );
+              })}
+            </g>
 
-          {/* Standing light wave */}
-          <g opacity="0.9">
-            {[0, 1, 2, 3, 4].map((i) => {
-              const x = 55 + i * 50;
-              return (
-                <g key={i}>
-                  <ellipse cx={x} cy={100} rx="3" ry="15" fill="#8b5cf6">
-                    <animate attributeName="ry" values="15;0;15" dur="0.5s" repeatCount="indefinite" />
-                  </ellipse>
-                </g>
-              );
-            })}
-          </g>
+            {/* Laser beam core with intense glow */}
+            <rect x="50" y="76" width="200" height="8" rx="4" fill="url(#standLaserBeam)" filter="url(#standLaserGlow)" />
+            <rect x="50" y="78" width="200" height="4" rx="2" fill="#c4b5fd" opacity="0.6" />
 
-          {/* Laser beam glow */}
-          <rect x="50" y="95" width="200" height="10" fill="url(#laserBeam)" filter="url(#laserGlow)" opacity="0.7" />
+            {/* Mirrors with premium styling */}
+            <g>
+              {/* Left mirror - fully reflective */}
+              <rect x="28" y="52" width="18" height="56" rx="4" fill="url(#standMirrorGrad)" />
+              <rect x="30" y="54" width="3" height="52" rx="1" fill="#ddd6fe" opacity="0.4" />
+              <text x="37" y="125" textAnchor="middle" fill="#a78bfa" fontSize="8" fontWeight="600">100%</text>
+            </g>
+            <g>
+              {/* Right mirror - partially transmissive */}
+              <rect x="254" y="52" width="18" height="56" rx="4" fill="url(#standMirrorGrad)" opacity="0.7" />
+              <rect x="256" y="54" width="3" height="52" rx="1" fill="#ddd6fe" opacity="0.3" />
+              <text x="263" y="125" textAnchor="middle" fill="#a78bfa" fontSize="8" fontWeight="600">~99%</text>
+            </g>
 
-          {/* Output beam */}
-          <line x1="270" y1="100" x2="300" y2="100" stroke="#8b5cf6" strokeWidth="3">
-            <animate attributeName="opacity" values="0.5;1;0.5" dur="0.2s" repeatCount="indefinite" />
-          </line>
+            {/* Output beam with animation */}
+            <g>
+              <line x1="272" y1="80" x2="295" y2="80" stroke="url(#standOutputBeam)" strokeWidth="4" strokeLinecap="round" filter="url(#standLaserGlow)">
+                <animate attributeName="opacity" values="0.7;1;0.7" dur="0.15s" repeatCount="indefinite" />
+              </line>
+              {/* Beam particles */}
+              {[0, 1, 2].map((i) => (
+                <circle key={`standBeamParticle-${i}`} cy="80" r="2" fill="#c4b5fd">
+                  <animate attributeName="cx" values="275;300" dur="0.3s" repeatCount="indefinite" begin={`${i * 0.1}s`} />
+                  <animate attributeName="opacity" values="1;0" dur="0.3s" repeatCount="indefinite" begin={`${i * 0.1}s`} />
+                </circle>
+              ))}
+            </g>
 
-          <text x="150" y="180" textAnchor="middle" fill="#a8b0c2" fontSize="11">
+            {/* Wavelength indicator */}
+            <g transform="translate(10, 10)">
+              <rect x="0" y="0" width="55" height="22" rx="4" fill="#1f2937" stroke="#8b5cf6" strokeWidth="1" opacity="0.9" />
+              <text x="28" y="15" textAnchor="middle" fill="#a78bfa" fontSize="9" fontWeight="700">L = n(lambda)/2</text>
+            </g>
+          </svg>
+          <p style={{ fontSize: typo.label }} className="text-slate-400 text-center px-4">
             Only resonant wavelengths amplify between mirrors
-          </text>
-        </svg>
+          </p>
+        </div>
       );
     }
 
     if (app.id === 'quantum') {
       return (
-        <svg viewBox="0 0 300 200" className="w-full h-40">
-          <defs>
-            <radialGradient id="nucleus">
-              <stop offset="0%" stopColor="#f59e0b" />
-              <stop offset="100%" stopColor="#d97706" />
-            </radialGradient>
-            <filter id="electronGlow">
-              <feGaussianBlur stdDeviation="3" />
-            </filter>
-          </defs>
-          <rect x="0" y="0" width="300" height="200" fill="#05060a" rx="12" />
+        <div className="flex flex-col items-center gap-2">
+          <svg viewBox="0 0 300 160" className="w-full h-36">
+            <defs>
+              {/* Premium nucleus gradient */}
+              <radialGradient id="standNucleus" cx="35%" cy="35%">
+                <stop offset="0%" stopColor="#fcd34d" />
+                <stop offset="50%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#b45309" />
+              </radialGradient>
+              {/* Nucleus glow */}
+              <filter id="standNucleusGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feFlood floodColor="#f59e0b" floodOpacity="0.6" />
+                <feComposite in2="blur" operator="in" />
+                <feMerge>
+                  <feMergeNode />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Electron glow */}
+              <filter id="standElectronGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feFlood floodColor="#10b981" floodOpacity="0.7" />
+                <feComposite in2="blur" operator="in" />
+                <feMerge>
+                  <feMergeNode />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Orbital gradients */}
+              <linearGradient id="standOrbital1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#6ee7b7" />
+                <stop offset="100%" stopColor="#10b981" />
+              </linearGradient>
+              <linearGradient id="standOrbital2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#34d399" />
+                <stop offset="100%" stopColor="#059669" />
+              </linearGradient>
+              <linearGradient id="standOrbital3" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#10b981" />
+                <stop offset="100%" stopColor="#047857" />
+              </linearGradient>
+              <linearGradient id="standQuantumBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#0a0f1a" />
+                <stop offset="100%" stopColor="#05060a" />
+              </linearGradient>
+            </defs>
+            <rect x="0" y="0" width="300" height="160" fill="url(#standQuantumBg)" rx="12" />
 
-          {/* Nucleus */}
-          <circle cx="150" cy="100" r="15" fill="url(#nucleus)">
-            <animate attributeName="r" values="15;17;15" dur="2s" repeatCount="indefinite" />
-          </circle>
+            {/* Nucleus with premium glow */}
+            <g>
+              <circle cx="150" cy="80" r="18" fill="url(#standNucleus)" filter="url(#standNucleusGlow)">
+                <animate attributeName="r" values="18;20;18" dur="2s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="145" cy="75" r="4" fill="#fef3c7" opacity="0.6" />
+              {/* Protons/neutrons visual */}
+              <circle cx="148" cy="82" r="5" fill="#fbbf24" opacity="0.7" />
+              <circle cx="155" cy="78" r="5" fill="#f59e0b" opacity="0.7" />
+            </g>
 
-          {/* Electron orbitals as standing waves */}
-          {[40, 60, 85].map((r, i) => {
-            const points: string[] = [];
-            const n = i + 1;
-            for (let angle = 0; angle <= 360; angle += 5) {
-              const rad = (angle * Math.PI) / 180;
-              const waveAmp = 5 * Math.sin(n * rad + time * 2);
-              const x = 150 + (r + waveAmp) * Math.cos(rad);
-              const y = 100 + (r + waveAmp) * Math.sin(rad);
-              points.push(`${x},${y}`);
-            }
-            return (
-              <g key={i}>
-                <path
-                  d={`M ${points.join(' L ')} Z`}
-                  fill="none"
-                  stroke="#10b981"
-                  strokeWidth="2"
-                  opacity={0.4 + i * 0.2}
-                />
-                {/* Electron */}
-                <circle
-                  cx={150 + r * Math.cos(time * (3 - i))}
-                  cy={100 + r * Math.sin(time * (3 - i))}
-                  r="4"
-                  fill="#10b981"
-                  filter="url(#electronGlow)"
-                />
+            {/* Electron orbitals as standing waves */}
+            {[35, 55, 78].map((r, i) => {
+              const points: string[] = [];
+              const n = i + 1;
+              for (let angle = 0; angle <= 360; angle += 3) {
+                const rad = (angle * Math.PI) / 180;
+                const waveAmp = 6 * Math.sin(n * rad * 2 + time * 2.5);
+                const x = 150 + (r + waveAmp) * Math.cos(rad);
+                const y = 80 + (r + waveAmp) * Math.sin(rad);
+                points.push(`${x},${y}`);
+              }
+              return (
+                <g key={`standOrbital-${i}`}>
+                  {/* Orbital wave path */}
+                  <path
+                    d={`M ${points.join(' L ')} Z`}
+                    fill="none"
+                    stroke={`url(#standOrbital${i + 1})`}
+                    strokeWidth={2.5 - i * 0.3}
+                    opacity={0.5 + i * 0.15}
+                  />
+                  {/* Electron with glow trail */}
+                  <g>
+                    <circle
+                      cx={150 + r * Math.cos(time * (2.5 - i * 0.5))}
+                      cy={80 + r * Math.sin(time * (2.5 - i * 0.5))}
+                      r="6"
+                      fill="#10b981"
+                      filter="url(#standElectronGlow)"
+                    />
+                    <circle
+                      cx={150 + r * Math.cos(time * (2.5 - i * 0.5))}
+                      cy={80 + r * Math.sin(time * (2.5 - i * 0.5))}
+                      r="3"
+                      fill="#d1fae5"
+                    />
+                  </g>
+                </g>
+              );
+            })}
+
+            {/* Energy level labels with premium styling */}
+            <g transform="translate(240, 25)">
+              <rect x="0" y="0" width="50" height="70" rx="6" fill="#1f2937" stroke="#10b981" strokeWidth="1" opacity="0.8" />
+              <text x="25" y="15" textAnchor="middle" fill="#6ee7b7" fontSize="8" fontWeight="600">SHELLS</text>
+              <g transform="translate(10, 25)">
+                <circle cx="8" cy="0" r="4" fill="#047857" />
+                <text x="18" y="4" fill="#6b7488" fontSize="9" fontWeight="500">n=1</text>
               </g>
-            );
-          })}
+              <g transform="translate(10, 40)">
+                <circle cx="8" cy="0" r="4" fill="#059669" />
+                <text x="18" y="4" fill="#6b7488" fontSize="9" fontWeight="500">n=2</text>
+              </g>
+              <g transform="translate(10, 55)">
+                <circle cx="8" cy="0" r="4" fill="#10b981" />
+                <text x="18" y="4" fill="#6b7488" fontSize="9" fontWeight="500">n=3</text>
+              </g>
+            </g>
 
-          {/* Energy level labels */}
-          <text x="200" y="65" fill="#6b7488" fontSize="9">n=3</text>
-          <text x="200" y="85" fill="#6b7488" fontSize="9">n=2</text>
-          <text x="200" y="110" fill="#6b7488" fontSize="9">n=1</text>
-
-          <text x="150" y="185" textAnchor="middle" fill="#a8b0c2" fontSize="11">
+            {/* Quantum number indicator */}
+            <g transform="translate(10, 10)">
+              <rect x="0" y="0" width="65" height="22" rx="4" fill="#1f2937" stroke="#10b981" strokeWidth="1" opacity="0.9" />
+              <text x="33" y="15" textAnchor="middle" fill="#6ee7b7" fontSize="9" fontWeight="700">n*lambda = 2*pi*r</text>
+            </g>
+          </svg>
+          <p style={{ fontSize: typo.label }} className="text-slate-400 text-center px-4">
             Only whole-number wavelengths form stable orbitals
-          </text>
-        </svg>
+          </p>
+        </div>
       );
     }
 
     if (app.id === 'acoustics') {
       return (
-        <svg viewBox="0 0 300 200" className="w-full h-40">
-          <rect x="0" y="0" width="300" height="200" fill="#05060a" rx="12" />
+        <div className="flex flex-col items-center gap-2">
+          <svg viewBox="0 0 300 160" className="w-full h-36">
+            <defs>
+              {/* Room wall gradient */}
+              <linearGradient id="standWallGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#374151" />
+                <stop offset="50%" stopColor="#4b5563" />
+                <stop offset="100%" stopColor="#374151" />
+              </linearGradient>
+              {/* Sound wave gradient */}
+              <linearGradient id="standSoundWave" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#f472b6" />
+                <stop offset="50%" stopColor="#ec4899" />
+                <stop offset="100%" stopColor="#f472b6" />
+              </linearGradient>
+              {/* Pressure node glow */}
+              <filter id="standPressureGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feFlood floodColor="#ec4899" floodOpacity="0.6" />
+                <feComposite in2="blur" operator="in" />
+                <feMerge>
+                  <feMergeNode />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Absorber gradient */}
+              <linearGradient id="standAbsorberGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1f2937" />
+                <stop offset="50%" stopColor="#111827" />
+                <stop offset="100%" stopColor="#1f2937" />
+              </linearGradient>
+              <linearGradient id="standAcousticsBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#0a0f1a" />
+                <stop offset="100%" stopColor="#05060a" />
+              </linearGradient>
+              {/* Floor gradient */}
+              <linearGradient id="standFloorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1f2937" />
+                <stop offset="100%" stopColor="#111827" />
+              </linearGradient>
+            </defs>
+            <rect x="0" y="0" width="300" height="160" fill="url(#standAcousticsBg)" rx="12" />
 
-          {/* Room outline */}
-          <rect x="40" y="40" width="220" height="120" fill="none" stroke="#252a38" strokeWidth="3" />
+            {/* Room 3D effect - floor */}
+            <polygon points="50,130 250,130 270,145 30,145" fill="url(#standFloorGrad)" opacity="0.5" />
 
-          {/* Standing wave pattern (room mode) */}
-          {[0, 1, 2].map((mode) => {
-            const y = 70 + mode * 30;
-            const points: string[] = [];
-            const n = 2;
-            for (let x = 40; x <= 260; x += 4) {
-              const relX = (x - 40) / 220;
-              const amp = 12 * Math.sin(Math.PI * n * relX) * Math.sin(time * 3 + mode);
-              points.push(`${x},${y + amp}`);
-            }
-            return (
-              <path
-                key={mode}
-                d={`M ${points.join(' L ')}`}
-                fill="none"
-                stroke="#ec4899"
-                strokeWidth="2"
-                opacity={0.5 + mode * 0.15}
-              />
-            );
-          })}
+            {/* Room walls with premium styling */}
+            <g>
+              {/* Left wall */}
+              <rect x="40" y="30" width="8" height="100" fill="url(#standWallGrad)" />
+              <rect x="40" y="30" width="2" height="100" fill="#6b7280" opacity="0.3" />
+              {/* Right wall */}
+              <rect x="252" y="30" width="8" height="100" fill="url(#standWallGrad)" />
+              <rect x="258" y="30" width="2" height="100" fill="#374151" opacity="0.3" />
+              {/* Top wall */}
+              <rect x="40" y="26" width="220" height="8" fill="url(#standWallGrad)" />
+              {/* Bottom wall */}
+              <rect x="40" y="126" width="220" height="8" fill="url(#standWallGrad)" />
+            </g>
 
-          {/* Pressure nodes */}
-          <circle cx="150" cy="100" r="6" fill="#ec4899" opacity="0.6">
-            <animate attributeName="r" values="6;8;6" dur="1.5s" repeatCount="indefinite" />
-          </circle>
+            {/* Room interior */}
+            <rect x="48" y="34" width="204" height="92" fill="#0a0f1a" opacity="0.8" />
 
-          {/* Absorber panels */}
-          <rect x="45" y="45" width="8" height="30" fill="#1e232f" rx="2" />
-          <rect x="45" y="125" width="8" height="30" fill="#1e232f" rx="2" />
-          <rect x="247" y="45" width="8" height="30" fill="#1e232f" rx="2" />
-          <rect x="247" y="125" width="8" height="30" fill="#1e232f" rx="2" />
+            {/* Standing wave patterns (room modes) */}
+            {[0, 1, 2].map((mode) => {
+              const y = 55 + mode * 25;
+              const points: string[] = [];
+              const n = 2;
+              const phaseShift = mode * 0.7;
+              for (let x = 48; x <= 252; x += 3) {
+                const relX = (x - 48) / 204;
+                const amp = 10 * Math.sin(Math.PI * n * relX) * Math.sin(time * 3.5 + phaseShift);
+                points.push(`${x},${y + amp}`);
+              }
+              return (
+                <path
+                  key={`standRoomMode-${mode}`}
+                  d={`M ${points.join(' L ')}`}
+                  fill="none"
+                  stroke="url(#standSoundWave)"
+                  strokeWidth={2.5 - mode * 0.3}
+                  opacity={0.6 + mode * 0.12}
+                  strokeLinecap="round"
+                />
+              );
+            })}
 
-          <text x="150" y="185" textAnchor="middle" fill="#a8b0c2" fontSize="11">
+            {/* Pressure nodes/antinodes */}
+            <g>
+              {/* Center antinode (high pressure) */}
+              <circle cx="150" cy="80" r="12" fill="#ec4899" opacity="0.2" filter="url(#standPressureGlow)">
+                <animate attributeName="r" values="12;18;12" dur="1.2s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="150" cy="80" r="6" fill="#ec4899" opacity="0.7">
+                <animate attributeName="opacity" values="0.7;1;0.7" dur="1.2s" repeatCount="indefinite" />
+              </circle>
+              {/* Side nodes (low pressure) */}
+              <circle cx="99" cy="80" r="4" fill="#6b7280" opacity="0.5" />
+              <circle cx="201" cy="80" r="4" fill="#6b7280" opacity="0.5" />
+            </g>
+
+            {/* Acoustic absorber panels with premium styling */}
+            <g>
+              {/* Left absorbers */}
+              <rect x="50" y="38" width="10" height="25" rx="3" fill="url(#standAbsorberGrad)" stroke="#374151" strokeWidth="0.5" />
+              <rect x="52" y="40" width="2" height="21" rx="1" fill="#4b5563" opacity="0.3" />
+              <rect x="50" y="100" width="10" height="25" rx="3" fill="url(#standAbsorberGrad)" stroke="#374151" strokeWidth="0.5" />
+              <rect x="52" y="102" width="2" height="21" rx="1" fill="#4b5563" opacity="0.3" />
+              {/* Right absorbers */}
+              <rect x="240" y="38" width="10" height="25" rx="3" fill="url(#standAbsorberGrad)" stroke="#374151" strokeWidth="0.5" />
+              <rect x="246" y="40" width="2" height="21" rx="1" fill="#374151" opacity="0.3" />
+              <rect x="240" y="100" width="10" height="25" rx="3" fill="url(#standAbsorberGrad)" stroke="#374151" strokeWidth="0.5" />
+              <rect x="246" y="102" width="2" height="21" rx="1" fill="#374151" opacity="0.3" />
+            </g>
+
+            {/* Room mode indicator */}
+            <g transform="translate(10, 10)">
+              <rect x="0" y="0" width="50" height="22" rx="4" fill="#1f2937" stroke="#ec4899" strokeWidth="1" opacity="0.9" />
+              <text x="25" y="15" textAnchor="middle" fill="#f472b6" fontSize="9" fontWeight="700">f = c/(2L)</text>
+            </g>
+
+            {/* Wavelength label */}
+            <g opacity="0.6">
+              <line x1="99" y1="138" x2="201" y2="138" stroke="#ec4899" strokeWidth="1" />
+              <polygon points="99,135 99,141 104,138" fill="#ec4899" />
+              <polygon points="201,135 201,141 196,138" fill="#ec4899" />
+              <text x="150" y="148" textAnchor="middle" fill="#f472b6" fontSize="8">lambda/2</text>
+            </g>
+          </svg>
+          <p style={{ fontSize: typo.label }} className="text-slate-400 text-center px-4">
             Room modes cause bass buildup between parallel walls
-          </text>
-        </svg>
+          </p>
+        </div>
       );
     }
 

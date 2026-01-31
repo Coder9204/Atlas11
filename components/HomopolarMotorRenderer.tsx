@@ -477,10 +477,29 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
 
     return (
       <div style={{ position: 'relative', width: '100%', maxWidth: '620px', margin: '0 auto' }}>
+        {/* Title - moved outside SVG using typo system */}
+        <div style={{ textAlign: 'center', marginBottom: typo.elementGap }}>
+          <h3 style={{
+            fontSize: typo.heading,
+            fontWeight: 700,
+            color: colors.textPrimary,
+            margin: 0
+          }}>
+            Homopolar Motor
+          </h3>
+          <p style={{
+            fontSize: typo.small,
+            color: colors.textSecondary,
+            margin: `4px 0 0 0`
+          }}>
+            The simplest electric motor on Earth
+          </p>
+        </div>
+
         {/* Legend */}
         <div style={{
           position: 'absolute',
-          top: isMobile ? '8px' : '12px',
+          top: isMobile ? '48px' : '56px',
           right: isMobile ? '8px' : '12px',
           background: 'rgba(15, 23, 42, 0.95)',
           borderRadius: '8px',
@@ -488,84 +507,250 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
           border: `1px solid ${colors.border}`,
           zIndex: 10
         }}>
-          <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>
+          <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>
             Legend
           </p>
           {legendItems.map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: item.color, flexShrink: 0 }} />
-              <span style={{ fontSize: '11px', color: colors.textSecondary }}>{item.label}</span>
+              <span style={{ fontSize: typo.label, color: colors.textSecondary }}>{item.label}</span>
             </div>
           ))}
         </div>
+
+        {/* Info panels - moved outside SVG */}
+        <div style={{
+          position: 'absolute',
+          bottom: isMobile ? '8px' : '12px',
+          left: isMobile ? '8px' : '12px',
+          background: colors.bgCard,
+          borderRadius: '8px',
+          padding: isMobile ? '8px 12px' : '10px 14px',
+          border: `1px solid ${colors.border}`,
+          zIndex: 10
+        }}>
+          <p style={{ fontSize: typo.label, color: colors.textSecondary, fontWeight: 600, margin: 0 }}>
+            Lorentz Force
+          </p>
+          <p style={{ fontSize: typo.bodyLarge, color: colors.primary, fontWeight: 700, fontFamily: 'monospace', margin: '2px 0 0 0' }}>
+            F = B x I x L
+          </p>
+        </div>
+
+        {/* Status panel - moved outside SVG */}
+        {isRunning && (
+          <div style={{
+            position: 'absolute',
+            bottom: isMobile ? '8px' : '12px',
+            right: isMobile ? '8px' : '12px',
+            background: colors.bgCard,
+            borderRadius: '8px',
+            padding: isMobile ? '8px 12px' : '10px 14px',
+            border: `1.5px solid ${colors.success}`,
+            zIndex: 10
+          }}>
+            <p style={{ fontSize: typo.label, color: colors.success, fontWeight: 600, margin: 0 }}>
+              Motor Running
+            </p>
+            <p style={{ fontSize: typo.body, color: colors.textPrimary, margin: '2px 0 0 0' }}>
+              {Math.abs(rotationSpeed * 60).toFixed(0)} RPM {rotationSpeed > 0 ? 'CW' : 'CCW'}
+            </p>
+          </div>
+        )}
+
+        {/* Current indicator label - moved outside SVG */}
+        {isRunning && (
+          <div style={{
+            position: 'absolute',
+            top: isMobile ? '48px' : '56px',
+            left: isMobile ? '8px' : '12px',
+            background: colors.bgCard,
+            borderRadius: '8px',
+            padding: isMobile ? '6px 10px' : '8px 12px',
+            border: `1px solid ${colors.border}`,
+            zIndex: 10,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span style={{ fontSize: typo.label, color: colors.current, fontWeight: 600 }}>
+              Current
+            </span>
+            <span style={{ fontSize: typo.bodyLarge, color: colors.current, fontWeight: 700 }}>
+              I
+            </span>
+            <svg width="24" height="12" viewBox="0 0 24 12">
+              <defs>
+                <marker id="homoCurrentArrowSmall" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L6,3 z" fill={colors.current} />
+                </marker>
+              </defs>
+              <line x1="0" y1="6" x2="18" y2="6" stroke={colors.current} strokeWidth="2" markerEnd="url(#homoCurrentArrowSmall)" />
+            </svg>
+          </div>
+        )}
+
         <svg
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', display: 'block' }}
         >
         <defs>
-          {/* Battery gradient */}
-          <linearGradient id="batteryBody" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#475569" />
+          {/* === PREMIUM BATTERY GRADIENTS === */}
+          {/* Battery body - metallic gray with depth */}
+          <linearGradient id="homoBatteryBody" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="20%" stopColor="#475569" />
             <stop offset="50%" stopColor="#334155" />
-            <stop offset="100%" stopColor="#1e293b" />
+            <stop offset="80%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
           </linearGradient>
 
-          {/* Positive terminal */}
-          <linearGradient id="posTerminal" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={colors.warningLight} />
-            <stop offset="100%" stopColor={colors.warning} />
+          {/* Battery body highlight */}
+          <linearGradient id="homoBatteryHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.3" />
+            <stop offset="30%" stopColor="#64748b" stopOpacity="0.1" />
+            <stop offset="70%" stopColor="#475569" stopOpacity="0.1" />
+            <stop offset="100%" stopColor="#334155" stopOpacity="0.3" />
           </linearGradient>
 
-          {/* Magnet gradients */}
-          <radialGradient id="magnetN" cx="50%" cy="30%" r="70%">
-            <stop offset="0%" stopColor={colors.errorLight} />
-            <stop offset="100%" stopColor={colors.error} />
+          {/* Positive terminal - golden metallic */}
+          <linearGradient id="homoPosTerminal" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fde68a" />
+            <stop offset="25%" stopColor="#fbbf24" />
+            <stop offset="50%" stopColor="#f59e0b" />
+            <stop offset="75%" stopColor="#d97706" />
+            <stop offset="100%" stopColor="#b45309" />
+          </linearGradient>
+
+          {/* Negative terminal - brushed metal */}
+          <linearGradient id="homoNegTerminal" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#374151" />
+            <stop offset="25%" stopColor="#4b5563" />
+            <stop offset="50%" stopColor="#374151" />
+            <stop offset="75%" stopColor="#4b5563" />
+            <stop offset="100%" stopColor="#374151" />
+          </linearGradient>
+
+          {/* === PREMIUM MAGNET GRADIENTS === */}
+          {/* North pole - rich red with metallic sheen */}
+          <radialGradient id="homoMagnetN" cx="40%" cy="30%" r="80%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="25%" stopColor="#f87171" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="75%" stopColor="#dc2626" />
+            <stop offset="100%" stopColor="#b91c1c" />
           </radialGradient>
-          <radialGradient id="magnetS" cx="50%" cy="30%" r="70%">
-            <stop offset="0%" stopColor={colors.primaryLight} />
-            <stop offset="100%" stopColor={colors.primary} />
+
+          {/* South pole - deep blue with depth */}
+          <radialGradient id="homoMagnetS" cx="40%" cy="30%" r="80%">
+            <stop offset="0%" stopColor="#93c5fd" />
+            <stop offset="25%" stopColor="#60a5fa" />
+            <stop offset="50%" stopColor="#3b82f6" />
+            <stop offset="75%" stopColor="#2563eb" />
+            <stop offset="100%" stopColor="#1d4ed8" />
           </radialGradient>
 
-          {/* Copper gradient */}
-          <linearGradient id="copper" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={colors.warning} />
-            <stop offset="50%" stopColor={colors.warningLight} />
-            <stop offset="100%" stopColor={colors.warning} />
+          {/* Magnet edge highlight */}
+          <linearGradient id="homoMagnetEdge" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="white" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="white" stopOpacity="0.1" />
+            <stop offset="100%" stopColor="black" stopOpacity="0.2" />
           </linearGradient>
 
-          {/* Glow filter */}
-          <filter id="glow" x="-50%" y="-50%" width="200%" height="200%">
+          {/* === PREMIUM COPPER WIRE GRADIENT === */}
+          {/* Copper wire - realistic metallic copper */}
+          <linearGradient id="homoCopper" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#92400e" />
+            <stop offset="20%" stopColor="#d97706" />
+            <stop offset="40%" stopColor="#fbbf24" />
+            <stop offset="50%" stopColor="#fde68a" />
+            <stop offset="60%" stopColor="#fbbf24" />
+            <stop offset="80%" stopColor="#d97706" />
+            <stop offset="100%" stopColor="#92400e" />
+          </linearGradient>
+
+          {/* Copper wire glow when running */}
+          <radialGradient id="homoCopperGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+            <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.6" />
+            <stop offset="70%" stopColor="#d97706" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+          </radialGradient>
+
+          {/* === PREMIUM GLOW FILTERS === */}
+          {/* Wire glow when motor is running */}
+          <filter id="homoWireGlow" x="-100%" y="-100%" width="300%" height="300%">
             <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Spark glow at contact points */}
+          <filter id="homoSparkGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Force arrow glow */}
+          <filter id="homoForceGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
 
-          {/* Field arrow marker */}
-          <marker id="fieldArrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
-            <path d="M0,1 L0,7 L7,4 z" fill={magnetPolarity === 'north' ? colors.error : colors.primary} opacity="0.7" />
+          {/* Magnetic field line glow */}
+          <filter id="homoFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* === ARROW MARKERS === */}
+          {/* Field arrow marker with glow */}
+          <marker id="homoFieldArrow" markerWidth="10" markerHeight="10" refX="7" refY="5" orient="auto">
+            <path d="M0,1 L0,9 L9,5 z" fill={magnetPolarity === 'north' ? colors.error : colors.primary} opacity="0.8" />
           </marker>
 
-          {/* Force arrow marker */}
-          <marker id="forceArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-            <path d="M0,0 L0,10 L10,5 z" fill={colors.success} />
+          {/* Force arrow marker - premium green */}
+          <marker id="homoForceArrow" markerWidth="12" markerHeight="12" refX="9" refY="6" orient="auto">
+            <path d="M0,0 L0,12 L12,6 z" fill={colors.success} />
           </marker>
+
+          {/* Current arrow marker */}
+          <marker id="homoCurrentArrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+            <path d="M0,0 L0,8 L8,4 z" fill={colors.current} />
+          </marker>
+
+          {/* === BACKGROUND GRADIENT === */}
+          <linearGradient id="homoLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
+
+          {/* Subtle grid pattern */}
+          <pattern id="homoGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
+          </pattern>
         </defs>
 
-        {/* Background */}
-        <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
+        {/* Premium background */}
+        <rect x="0" y="0" width={width} height={height} fill="url(#homoLabBg)" rx="12" />
+        <rect x="0" y="0" width={width} height={height} fill="url(#homoGrid)" rx="12" />
 
-        {/* Title */}
-        <text x={cx} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
-          Homopolar Motor
-        </text>
-        <text x={cx} y="48" textAnchor="middle" fill="#e2e8f0" fontSize={isMobile ? 12 : 14} fontWeight="500">
-          The simplest electric motor on Earth
-        </text>
-
-        {/* Magnetic field lines (radial) */}
+        {/* Magnetic field lines (radial) with glow */}
         {[...Array(8)].map((_, i) => {
           const angle = (i * Math.PI) / 4;
           const startR = isMobile ? 32 : 52;
@@ -580,47 +765,76 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               stroke={magnetPolarity === 'north' ? colors.error : colors.primary}
               strokeWidth="2"
               strokeDasharray="6,4"
-              opacity="0.4"
-              markerEnd="url(#fieldArrow)"
+              opacity="0.5"
+              filter="url(#homoFieldGlow)"
+              markerEnd="url(#homoFieldArrow)"
             />
           );
         })}
 
-        {/* AA Battery (vertical) */}
+        {/* AA Battery (vertical) - Premium design */}
         <g transform={`translate(${cx}, ${cy - (isMobile ? 75 : 115)})`}>
-          {/* Battery body */}
-          <rect x="-18" y="0" width="36" height={isMobile ? 55 : 75} rx="5" fill="url(#batteryBody)" stroke={colors.border} strokeWidth="1.5" />
+          {/* Battery body with metallic gradient */}
+          <rect x="-18" y="0" width="36" height={isMobile ? 55 : 75} rx="5" fill="url(#homoBatteryBody)" />
+          {/* Highlight overlay */}
+          <rect x="-18" y="0" width="36" height={isMobile ? 55 : 75} rx="5" fill="url(#homoBatteryHighlight)" />
+          {/* Edge detail */}
+          <rect x="-18" y="0" width="36" height={isMobile ? 55 : 75} rx="5" fill="none" stroke={colors.border} strokeWidth="1" />
 
-          {/* Positive terminal (bump) */}
-          <rect x="-8" y="-10" width="16" height="12" rx="3" fill="url(#posTerminal)" />
-          <text x="0" y="-14" textAnchor="middle" fill={colors.warningLight} fontSize="14" fontWeight="bold">+</text>
+          {/* Positive terminal (bump) - golden */}
+          <rect x="-8" y="-10" width="16" height="12" rx="3" fill="url(#homoPosTerminal)" />
+          {/* Terminal highlight */}
+          <rect x="-6" y="-9" width="4" height="8" rx="1" fill="white" opacity="0.2" />
 
-          {/* Battery label */}
-          <text x="0" y={isMobile ? 32 : 42} textAnchor="middle" fill={colors.textSecondary} fontSize="10" fontWeight="bold">AA</text>
-          <text x="0" y={isMobile ? 44 : 54} textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="600">1.5V</text>
+          {/* Battery label band */}
+          <rect x="-16" y={isMobile ? 20 : 28} width="32" height={isMobile ? 28 : 36} fill="#1e293b" />
+          <rect x="-16" y={isMobile ? 20 : 28} width="32" height="2" fill="#374151" />
 
-          {/* Negative terminal */}
-          <rect x="-14" y={isMobile ? 50 : 70} width="28" height="5" rx="2" fill={colors.bgCardLight} />
-          <text x="0" y={isMobile ? 65 : 90} textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="700">−</text>
+          {/* Negative terminal - brushed metal */}
+          <rect x="-14" y={isMobile ? 50 : 70} width="28" height="5" rx="2" fill="url(#homoNegTerminal)" />
         </g>
 
-        {/* Neodymium Magnet (disk) */}
+        {/* Neodymium Magnet (disk) - Premium 3D effect */}
+        {/* Magnet shadow */}
+        <ellipse
+          cx={cx + 3}
+          cy={cy + 4}
+          rx={isMobile ? 28 : 48}
+          ry={isMobile ? 12 : 18}
+          fill="black"
+          opacity="0.3"
+        />
+        {/* Main magnet body */}
         <ellipse
           cx={cx}
           cy={cy}
           rx={isMobile ? 28 : 48}
           ry={isMobile ? 12 : 18}
-          fill={magnetPolarity === 'north' ? 'url(#magnetN)' : 'url(#magnetS)'}
-          stroke={magnetPolarity === 'north' ? colors.errorLight : colors.primaryLight}
-          strokeWidth="2"
+          fill={magnetPolarity === 'north' ? 'url(#homoMagnetN)' : 'url(#homoMagnetS)'}
         />
-        <text x={cx} y={cy + 5} textAnchor="middle" fill="white" fontSize={isMobile ? 12 : 16} fontWeight="bold">
-          {magnetPolarity === 'north' ? 'N' : 'S'}
-        </text>
+        {/* Magnet edge highlight */}
+        <ellipse
+          cx={cx}
+          cy={cy}
+          rx={isMobile ? 28 : 48}
+          ry={isMobile ? 12 : 18}
+          fill="url(#homoMagnetEdge)"
+          opacity="0.5"
+        />
+        {/* Magnet stroke */}
+        <ellipse
+          cx={cx}
+          cy={cy}
+          rx={isMobile ? 28 : 48}
+          ry={isMobile ? 12 : 18}
+          fill="none"
+          stroke={magnetPolarity === 'north' ? '#fca5a5' : '#93c5fd'}
+          strokeWidth="1.5"
+        />
 
-        {/* Copper Wire Loop (rotating) */}
-        <g filter={isRunning ? 'url(#glow)' : undefined}>
-          {/* Wire arc - top portion */}
+        {/* Copper Wire Loop (rotating) - Premium copper */}
+        <g filter={isRunning ? 'url(#homoWireGlow)' : undefined}>
+          {/* Wire arc - with premium copper gradient */}
           <path
             d={`M ${cx + wireRadius * Math.cos(angleRad)} ${cy - 25 + wireRadius * Math.sin(angleRad) * 0.3}
                 Q ${cx} ${cy - (isMobile ? 55 : 85)} ${cx - wireRadius * Math.cos(angleRad)} ${cy - 25 - wireRadius * Math.sin(angleRad) * 0.3}
@@ -628,35 +842,74 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
                 Q ${cx} ${cy + (isMobile ? 18 : 25)} ${cx + wireRadius * Math.cos(angleRad)} ${cy - wireRadius * Math.sin(angleRad) * 0.3}
                 Z`}
             fill="none"
-            stroke="url(#copper)"
+            stroke="url(#homoCopper)"
             strokeWidth={isMobile ? 5 : 8}
             strokeLinecap="round"
           />
 
-          {/* Contact point sparks */}
+          {/* Rotation motion lines when running */}
           {isRunning && (
             <>
-              <circle
-                cx={cx + wireRadius * Math.cos(angleRad)}
-                cy={cy + wireRadius * Math.sin(angleRad) * 0.3}
-                r="5"
-                fill={colors.warningLight}
-                opacity={0.5 + 0.5 * Math.sin(wireAngle * 0.15)}
-              />
-              <circle
-                cx={cx - wireRadius * Math.cos(angleRad)}
-                cy={cy - wireRadius * Math.sin(angleRad) * 0.3}
-                r="5"
-                fill={colors.warningLight}
-                opacity={0.5 + 0.5 * Math.cos(wireAngle * 0.15)}
-              />
+              {/* Motion trail arcs */}
+              {[1, 2, 3].map((i) => {
+                const trailAngle = angleRad - (i * 0.15 * forceDir);
+                return (
+                  <path
+                    key={`trail-${i}`}
+                    d={`M ${cx + wireRadius * 0.9 * Math.cos(trailAngle)} ${cy + wireRadius * 0.3 * Math.sin(trailAngle)}
+                        A ${wireRadius * 0.9} ${wireRadius * 0.3} 0 0 ${forceDir > 0 ? 1 : 0}
+                        ${cx + wireRadius * 0.9 * Math.cos(trailAngle + 0.3 * forceDir)} ${cy + wireRadius * 0.3 * Math.sin(trailAngle + 0.3 * forceDir)}`}
+                    fill="none"
+                    stroke={colors.warning}
+                    strokeWidth="2"
+                    opacity={0.3 - i * 0.08}
+                    strokeDasharray="4,4"
+                  />
+                );
+              })}
+            </>
+          )}
+
+          {/* Contact point sparks with enhanced glow */}
+          {isRunning && (
+            <>
+              <g filter="url(#homoSparkGlow)">
+                <circle
+                  cx={cx + wireRadius * Math.cos(angleRad)}
+                  cy={cy + wireRadius * Math.sin(angleRad) * 0.3}
+                  r="6"
+                  fill="url(#homoCopperGlow)"
+                  opacity={0.6 + 0.4 * Math.sin(wireAngle * 0.15)}
+                />
+                <circle
+                  cx={cx + wireRadius * Math.cos(angleRad)}
+                  cy={cy + wireRadius * Math.sin(angleRad) * 0.3}
+                  r="3"
+                  fill="#fef3c7"
+                />
+              </g>
+              <g filter="url(#homoSparkGlow)">
+                <circle
+                  cx={cx - wireRadius * Math.cos(angleRad)}
+                  cy={cy - wireRadius * Math.sin(angleRad) * 0.3}
+                  r="6"
+                  fill="url(#homoCopperGlow)"
+                  opacity={0.6 + 0.4 * Math.cos(wireAngle * 0.15)}
+                />
+                <circle
+                  cx={cx - wireRadius * Math.cos(angleRad)}
+                  cy={cy - wireRadius * Math.sin(angleRad) * 0.3}
+                  r="3"
+                  fill="#fef3c7"
+                />
+              </g>
             </>
           )}
         </g>
 
-        {/* Lorentz Force Arrow (when running) */}
+        {/* Lorentz Force Arrow (when running) - Premium with glow */}
         {isRunning && forceStrength > 0 && (
-          <g>
+          <g filter="url(#homoForceGlow)">
             {/* Force vector on wire */}
             <line
               x1={cx + wireRadius * Math.cos(angleRad) * 0.7}
@@ -665,56 +918,21 @@ const HomopolarMotorRenderer: React.FC<HomopolarMotorRendererProps> = ({
               y2={cy - 45 * forceDir * Math.cos(angleRad)}
               stroke={colors.success}
               strokeWidth="3"
-              markerEnd="url(#forceArrow)"
+              markerEnd="url(#homoForceArrow)"
             />
-            <text
-              x={cx + wireRadius * Math.cos(angleRad) * 0.7 + 55 * forceDir * Math.sin(angleRad)}
-              y={cy - 55 * forceDir * Math.cos(angleRad)}
-              fill={colors.success}
-              fontSize="14"
-              fontWeight="bold"
-            >
-              F
-            </text>
           </g>
         )}
 
-        {/* Current direction indicator */}
+        {/* Current direction indicator - Premium design */}
         {isRunning && (
-          <g transform={`translate(${width - (isMobile ? 75 : 100)}, ${isMobile ? 70 : 85})`}>
-            <rect x="-35" y="-25" width="70" height="50" fill={colors.bgCard} rx="6" stroke={colors.border} />
-            <text x="0" y="-8" textAnchor="middle" fill="#fbbf24" fontSize="10" fontWeight="600">Current</text>
+          <g transform={`translate(${width - (isMobile ? 65 : 90)}, ${isMobile ? 60 : 75})`}>
+            <rect x="-30" y="-22" width="60" height="44" fill={colors.bgCard} rx="6" stroke={colors.border} opacity="0.95" />
             <path
-              d="M -15,10 L 15,10"
+              d="M -12,5 L 12,5"
               stroke={colors.current}
               strokeWidth="3"
+              markerEnd="url(#homoCurrentArrow)"
             />
-            <polygon points="15,5 15,15 25,10" fill={colors.current} />
-            <text x="0" y="25" textAnchor="middle" fill={colors.current} fontSize="11" fontWeight="bold">I</text>
-          </g>
-        )}
-
-        {/* Info panel */}
-        <g transform={`translate(${isMobile ? 15 : 25}, ${height - (isMobile ? 55 : 65)})`}>
-          <rect x="0" y="0" width={isMobile ? 140 : 180} height={isMobile ? 45 : 55} fill={colors.bgCard} rx="8" stroke={colors.border} />
-          <text x="10" y={isMobile ? 18 : 22} fill={colors.textSecondary} fontSize={isMobile ? 10 : 12} fontWeight="600">
-            Lorentz Force
-          </text>
-          <text x="10" y={isMobile ? 34 : 42} fill={colors.primary} fontSize={isMobile ? 14 : 18} fontWeight="bold" fontFamily="monospace">
-            F = B × I × L
-          </text>
-        </g>
-
-        {/* Status panel */}
-        {isRunning && (
-          <g transform={`translate(${width - (isMobile ? 155 : 205)}, ${height - (isMobile ? 55 : 65)})`}>
-            <rect x="0" y="0" width={isMobile ? 140 : 180} height={isMobile ? 45 : 55} fill={colors.bgCard} rx="8" stroke={colors.success} strokeWidth="1.5" />
-            <text x="10" y={isMobile ? 18 : 22} fill={colors.success} fontSize={isMobile ? 10 : 12} fontWeight="600">
-              Motor Running
-            </text>
-            <text x="10" y={isMobile ? 34 : 42} fill={colors.textPrimary} fontSize={isMobile ? 12 : 14}>
-              {Math.abs(rotationSpeed * 60).toFixed(0)} RPM • {rotationSpeed > 0 ? 'CW' : 'CCW'}
-            </text>
           </g>
         )}
       </svg>

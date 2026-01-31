@@ -343,107 +343,514 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
     const cellHeight = 280 / gridSize;
 
     return (
-      <svg
-        ref={svgRef}
-        viewBox="0 0 400 280"
-        className="w-full h-56 cursor-pointer touch-none"
-        onMouseDown={handleSvgTouch}
-        onMouseMove={(e) => e.buttons && handleSvgTouch(e)}
-        onMouseUp={handleTouchEnd}
-        onMouseLeave={handleTouchEnd}
-        onTouchStart={handleSvgTouch}
-        onTouchMove={handleSvgTouch}
-        onTouchEnd={handleTouchEnd}
-      >
-        <rect width="400" height="280" fill="#1a1a2e" rx="8" />
-        {showGrid && (
-          <g>
-            {[...Array(gridSize + 1)].map((_, i) => (
-              <line key={`h${i}`} x1="0" y1={i * cellHeight} x2="400" y2={i * cellHeight} stroke="#3b82f6" strokeWidth="1" opacity="0.3" />
-            ))}
-            {[...Array(gridSize + 1)].map((_, i) => (
-              <line key={`v${i}`} x1={i * cellWidth} y1="0" x2={i * cellWidth} y2="280" stroke="#22c55e" strokeWidth="1" opacity="0.3" />
-            ))}
-            {[...Array(gridSize + 1)].map((_, i) =>
-              [...Array(gridSize + 1)].map((_, j) => (
-                <circle key={`n${i}-${j}`} cx={i * cellWidth} cy={j * cellHeight} r="3" fill="#4b5563" />
-              ))
-            )}
-          </g>
-        )}
-        {points.map((point, idx) => {
-          const gridX = Math.round(point.x / cellWidth);
-          const gridY = Math.round(point.y / cellHeight);
-          const detected = point.capacitance > 0;
+      <div style={{ position: 'relative' }}>
+        <svg
+          ref={svgRef}
+          viewBox="0 0 400 280"
+          className="w-full h-56 cursor-pointer touch-none"
+          onMouseDown={handleSvgTouch}
+          onMouseMove={(e) => e.buttons && handleSvgTouch(e)}
+          onMouseUp={handleTouchEnd}
+          onMouseLeave={handleTouchEnd}
+          onTouchStart={handleSvgTouch}
+          onTouchMove={handleSvgTouch}
+          onTouchEnd={handleTouchEnd}
+        >
+          <defs>
+            {/* Premium glass screen gradient */}
+            <linearGradient id="capScreenGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="25%" stopColor="#0f2847" />
+              <stop offset="50%" stopColor="#0a1929" />
+              <stop offset="75%" stopColor="#0f2847" />
+              <stop offset="100%" stopColor="#1e3a5f" />
+            </linearGradient>
 
-          return (
-            <g key={idx}>
-              <circle cx={point.x} cy={point.y} r={detected ? "25" : "20"} fill={detected ? "rgba(59, 130, 246, 0.3)" : "rgba(239, 68, 68, 0.3)"} stroke={detected ? "#3b82f6" : "#ef4444"} strokeWidth="2" />
-              {detected && showGrid && (
-                <g className="animate-pulse">
-                  {[-1, 0, 1].map(dx =>
-                    [-1, 0, 1].map(dy => {
-                      const nx = gridX + dx;
-                      const ny = gridY + dy;
-                      if (nx >= 0 && nx <= gridSize && ny >= 0 && ny <= gridSize) {
-                        const dist = Math.sqrt(dx * dx + dy * dy);
-                        const intensity = 1 - dist * 0.3;
-                        return <circle key={`effect-${dx}-${dy}`} cx={nx * cellWidth} cy={ny * cellHeight} r="6" fill={`rgba(59, 130, 246, ${intensity * 0.8})`} />;
-                      }
-                      return null;
-                    })
-                  )}
-                  {[...Array(8)].map((_, i) => {
-                    const angle = (i / 8) * Math.PI * 2;
-                    const length = 30;
-                    return (
-                      <line key={`field-${i}`} x1={point.x} y1={point.y} x2={point.x + Math.cos(angle) * length} y2={point.y + Math.sin(angle) * length} stroke="#3b82f6" strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
-                    );
-                  })}
-                </g>
+            {/* Glass reflection overlay */}
+            <linearGradient id="capGlassReflection" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
+              <stop offset="20%" stopColor="#ffffff" stopOpacity="0.05" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.1" />
+            </linearGradient>
+
+            {/* Finger gradient - warm skin tones */}
+            <radialGradient id="capFingerGrad" cx="40%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="#fcd5ce" />
+              <stop offset="30%" stopColor="#f8b4a8" />
+              <stop offset="60%" stopColor="#e8998d" />
+              <stop offset="85%" stopColor="#d68878" />
+              <stop offset="100%" stopColor="#c47b6b" />
+            </radialGradient>
+
+            {/* Glove gradient - fabric texture */}
+            <radialGradient id="capGloveGrad" cx="40%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="35%" stopColor="#4b5563" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </radialGradient>
+
+            {/* Capacitive glove gradient - with conductive threads */}
+            <radialGradient id="capTouchGloveGrad" cx="40%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="#67e8f9" />
+              <stop offset="25%" stopColor="#22d3ee" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="75%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </radialGradient>
+
+            {/* Touch point glow - cyan electric */}
+            <radialGradient id="capTouchGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+              <stop offset="30%" stopColor="#06b6d4" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#0891b2" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+            </radialGradient>
+
+            {/* No-detection glow - red warning */}
+            <radialGradient id="capNoTouchGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f87171" stopOpacity="0.8" />
+              <stop offset="40%" stopColor="#ef4444" stopOpacity="0.5" />
+              <stop offset="70%" stopColor="#dc2626" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Electric field gradient */}
+            <linearGradient id="capFieldLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a78bfa" stopOpacity="0" />
+              <stop offset="30%" stopColor="#8b5cf6" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#7c3aed" stopOpacity="1" />
+              <stop offset="70%" stopColor="#8b5cf6" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Electrode X gradient - horizontal */}
+            <linearGradient id="capElectrodeX" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1d4ed8" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Electrode Y gradient - vertical */}
+            <linearGradient id="capElectrodeY" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#15803d" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#22c55e" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Grid node gradient */}
+            <radialGradient id="capGridNode" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="60%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </radialGradient>
+
+            {/* Activated node gradient */}
+            <radialGradient id="capActiveNode" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#67e8f9" />
+              <stop offset="40%" stopColor="#22d3ee" />
+              <stop offset="70%" stopColor="#06b6d4" />
+              <stop offset="100%" stopColor="#0891b2" />
+            </radialGradient>
+
+            {/* Touch glow filter */}
+            <filter id="capTouchBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Electric field glow filter */}
+            <filter id="capFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Finger shadow filter */}
+            <filter id="capFingerShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000000" floodOpacity="0.4" />
+            </filter>
+
+            {/* Capacitive grid pattern */}
+            <pattern id="capGridPattern" width={cellWidth} height={cellHeight} patternUnits="userSpaceOnUse">
+              <rect width={cellWidth} height={cellHeight} fill="none" stroke="#1e3a5f" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* Premium glass screen background */}
+          <rect width="400" height="280" fill="url(#capScreenGlass)" rx="8" />
+
+          {/* Capacitive grid pattern overlay */}
+          <rect width="400" height="280" fill="url(#capGridPattern)" rx="8" />
+
+          {/* Glass reflection layer */}
+          <rect width="400" height="280" fill="url(#capGlassReflection)" rx="8" />
+
+          {/* Electrode grid visualization */}
+          {showGrid && (
+            <g>
+              {/* Horizontal electrodes (X) */}
+              {[...Array(gridSize + 1)].map((_, i) => (
+                <line key={`h${i}`} x1="0" y1={i * cellHeight} x2="400" y2={i * cellHeight} stroke="url(#capElectrodeX)" strokeWidth="1.5" />
+              ))}
+              {/* Vertical electrodes (Y) */}
+              {[...Array(gridSize + 1)].map((_, i) => (
+                <line key={`v${i}`} x1={i * cellWidth} y1="0" x2={i * cellWidth} y2="280" stroke="url(#capElectrodeY)" strokeWidth="1.5" />
+              ))}
+              {/* Grid intersection nodes */}
+              {[...Array(gridSize + 1)].map((_, i) =>
+                [...Array(gridSize + 1)].map((_, j) => (
+                  <circle key={`n${i}-${j}`} cx={i * cellWidth} cy={j * cellHeight} r="3" fill="url(#capGridNode)" />
+                ))
               )}
-              <text x={point.x} y={point.y - 35} textAnchor="middle" className="text-2xl">
-                {mode === 'finger' ? '👆' : mode === 'glove' ? '🧤' : '🧤'}
-              </text>
-              <rect x={point.x - 35} y={point.y + 30} width="70" height="20" rx="4" fill={detected ? '#22c55e' : '#ef4444'} />
-              <text x={point.x} y={point.y + 44} textAnchor="middle" className="fill-white text-xs font-bold">{detected ? 'DETECTED' : 'NO SIGNAL'}</text>
             </g>
+          )}
+
+          {/* Touch points with premium graphics */}
+          {points.map((point, idx) => {
+            const gridX = Math.round(point.x / cellWidth);
+            const gridY = Math.round(point.y / cellHeight);
+            const detected = point.capacitance > 0;
+            const fingerGradient = mode === 'finger' ? 'url(#capFingerGrad)'
+              : mode === 'capacitiveGlove' ? 'url(#capTouchGloveGrad)'
+              : 'url(#capGloveGrad)';
+
+            return (
+              <g key={idx}>
+                {/* Touch point glow effect */}
+                <circle
+                  cx={point.x}
+                  cy={point.y}
+                  r={detected ? 35 : 28}
+                  fill={detected ? "url(#capTouchGlow)" : "url(#capNoTouchGlow)"}
+                  filter="url(#capTouchBlur)"
+                />
+
+                {/* Activated grid nodes when detected */}
+                {detected && showGrid && (
+                  <g>
+                    {[-1, 0, 1].map(dx =>
+                      [-1, 0, 1].map(dy => {
+                        const nx = gridX + dx;
+                        const ny = gridY + dy;
+                        if (nx >= 0 && nx <= gridSize && ny >= 0 && ny <= gridSize) {
+                          const dist = Math.sqrt(dx * dx + dy * dy);
+                          const intensity = 1 - dist * 0.3;
+                          return (
+                            <circle
+                              key={`effect-${dx}-${dy}`}
+                              cx={nx * cellWidth}
+                              cy={ny * cellHeight}
+                              r={6 + intensity * 2}
+                              fill="url(#capActiveNode)"
+                              opacity={intensity}
+                              className="animate-pulse"
+                            />
+                          );
+                        }
+                        return null;
+                      })
+                    )}
+                    {/* Electric field lines radiating from touch point */}
+                    {[...Array(12)].map((_, i) => {
+                      const angle = (i / 12) * Math.PI * 2;
+                      const length = 35;
+                      return (
+                        <line
+                          key={`field-${i}`}
+                          x1={point.x}
+                          y1={point.y}
+                          x2={point.x + Math.cos(angle) * length}
+                          y2={point.y + Math.sin(angle) * length}
+                          stroke="url(#capFieldLine)"
+                          strokeWidth="2"
+                          strokeDasharray="6,3"
+                          filter="url(#capFieldGlow)"
+                          className="animate-pulse"
+                        />
+                      );
+                    })}
+                  </g>
+                )}
+
+                {/* Finger/glove representation with premium styling */}
+                <ellipse
+                  cx={point.x}
+                  cy={point.y - 15}
+                  rx="18"
+                  ry="25"
+                  fill={fingerGradient}
+                  stroke={detected ? "#22d3ee" : "#ef4444"}
+                  strokeWidth="2"
+                  filter="url(#capFingerShadow)"
+                />
+
+                {/* Conductive thread highlight for touch gloves */}
+                {mode === 'capacitiveGlove' && (
+                  <ellipse
+                    cx={point.x}
+                    cy={point.y + 5}
+                    rx="12"
+                    ry="8"
+                    fill="none"
+                    stroke="#67e8f9"
+                    strokeWidth="2"
+                    strokeDasharray="4,2"
+                  />
+                )}
+
+                {/* Status indicator badge */}
+                <rect
+                  x={point.x - 35}
+                  y={point.y + 35}
+                  width="70"
+                  height="22"
+                  rx="6"
+                  fill={detected ? '#059669' : '#dc2626'}
+                  stroke={detected ? '#10b981' : '#ef4444'}
+                  strokeWidth="1"
+                />
+              </g>
+            );
+          })}
+
+          {/* Screen bezel effect */}
+          <rect
+            width="400"
+            height="280"
+            fill="none"
+            rx="8"
+            stroke="url(#capScreenGlass)"
+            strokeWidth="3"
+          />
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        {points.length === 0 && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: colors.textMuted,
+            fontSize: typo.body,
+            textAlign: 'center',
+            pointerEvents: 'none'
+          }}>
+            Touch or click anywhere!
+          </div>
+        )}
+
+        {points.map((point, idx) => {
+          const detected = point.capacitance > 0;
+          const svgWidth = 400;
+          const svgHeight = 280;
+          const containerWidth = 100; // percentage
+          return (
+            <div key={`label-${idx}`} style={{
+              position: 'absolute',
+              top: `${((point.y + 35 + 5) / svgHeight) * 100}%`,
+              left: `${(point.x / svgWidth) * containerWidth}%`,
+              transform: 'translateX(-50%)',
+              color: '#ffffff',
+              fontSize: typo.small,
+              fontWeight: 'bold',
+              textAlign: 'center',
+              pointerEvents: 'none',
+              width: '70px'
+            }}>
+              {detected ? 'DETECTED' : 'NO SIGNAL'}
+            </div>
           );
         })}
-        {points.length === 0 && <text x="200" y="140" textAnchor="middle" className="fill-gray-500 text-sm">Touch or click anywhere!</text>}
+
         {points.length > 0 && points[0].capacitance > 0 && (
-          <g>
-            <rect x="10" y="10" width="100" height="40" rx="4" fill="#1f2937" opacity="0.9" />
-            <text x="60" y="28" textAnchor="middle" className="fill-gray-400 text-xs">Position</text>
-            <text x="60" y="43" textAnchor="middle" className="fill-cyan-400 text-xs font-bold">({Math.round(points[0].x)}, {Math.round(points[0].y)})</text>
-          </g>
+          <div style={{
+            position: 'absolute',
+            top: '10px',
+            left: '10px',
+            background: 'rgba(31, 41, 55, 0.95)',
+            borderRadius: '6px',
+            padding: '8px 12px',
+            pointerEvents: 'none',
+            border: `1px solid ${colors.border}`
+          }}>
+            <div style={{ color: colors.textSecondary, fontSize: typo.label, marginBottom: '2px' }}>Position</div>
+            <div style={{ color: colors.touchPoint, fontSize: typo.small, fontWeight: 'bold' }}>
+              ({Math.round(points[0].x)}, {Math.round(points[0].y)})
+            </div>
+          </div>
         )}
-      </svg>
+      </div>
     );
   };
 
   const renderCapacitorDiagram = () => (
-    <svg viewBox="0 0 300 150" className="w-full h-32">
-      <rect width="300" height="150" fill="#111827" />
-      <g transform="translate(50, 20)">
-        <text x="50" y="0" textAnchor="middle" className="fill-gray-400 text-xs">Traditional Capacitor</text>
-        <line x1="20" y1="30" x2="20" y2="90" stroke="#3b82f6" strokeWidth="4" />
-        <line x1="80" y1="30" x2="80" y2="90" stroke="#3b82f6" strokeWidth="4" />
-        <text x="50" y="70" textAnchor="middle" className="fill-yellow-400 text-xs">Gap</text>
-        <rect x="30" y="40" width="40" height="30" fill="#fbbf24" fillOpacity="0.3" stroke="#fbbf24" strokeDasharray="2,2" />
-        <text x="50" y="120" textAnchor="middle" className="fill-gray-500 text-xs">2 plates, 1 gap</text>
-      </g>
-      <g transform="translate(180, 20)">
-        <text x="50" y="0" textAnchor="middle" className="fill-gray-400 text-xs">Touchscreen + Finger</text>
-        <line x1="20" y1="30" x2="20" y2="90" stroke="#3b82f6" strokeWidth="4" />
-        <text x="20" y="105" textAnchor="middle" className="fill-blue-400 text-xs">Screen</text>
-        <ellipse cx="80" cy="60" rx="20" ry="30" fill="#fca5a5" stroke="#ef4444" strokeWidth="2" />
-        <text x="80" y="105" textAnchor="middle" className="fill-red-400 text-xs">Finger</text>
-        <path d="M 25 50 Q 50 50 75 50" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="4,4" />
-        <path d="M 25 70 Q 50 70 75 70" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="4,4" />
-        <text x="50" y="45" textAnchor="middle" className="fill-green-400 text-xs">E-field</text>
-      </g>
-    </svg>
+    <div style={{ position: 'relative' }}>
+      <svg viewBox="0 0 300 150" className="w-full h-32">
+        <defs>
+          {/* Background gradient */}
+          <linearGradient id="capDiagramBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="50%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
+
+          {/* Capacitor plate gradient */}
+          <linearGradient id="capPlateGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#1d4ed8" />
+            <stop offset="30%" stopColor="#3b82f6" />
+            <stop offset="70%" stopColor="#60a5fa" />
+            <stop offset="100%" stopColor="#3b82f6" />
+          </linearGradient>
+
+          {/* Electric field gradient */}
+          <linearGradient id="capEFieldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#4ade80" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0.3" />
+          </linearGradient>
+
+          {/* Dielectric gradient */}
+          <linearGradient id="capDielectricGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.4" />
+          </linearGradient>
+
+          {/* Finger gradient for diagram */}
+          <radialGradient id="capDiagramFinger" cx="40%" cy="30%" r="60%">
+            <stop offset="0%" stopColor="#fcd5ce" />
+            <stop offset="40%" stopColor="#f8b4a8" />
+            <stop offset="70%" stopColor="#e8998d" />
+            <stop offset="100%" stopColor="#d68878" />
+          </radialGradient>
+
+          {/* Field glow filter */}
+          <filter id="capDiagramFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        {/* Background */}
+        <rect width="300" height="150" fill="url(#capDiagramBg)" rx="8" />
+
+        {/* Traditional Capacitor section */}
+        <g transform="translate(50, 20)">
+          {/* Capacitor plates */}
+          <rect x="15" y="25" width="10" height="70" rx="2" fill="url(#capPlateGrad)" />
+          <rect x="75" y="25" width="10" height="70" rx="2" fill="url(#capPlateGrad)" />
+
+          {/* Dielectric gap */}
+          <rect x="30" y="35" width="40" height="50" fill="url(#capDielectricGrad)" stroke="#fbbf24" strokeWidth="1" strokeDasharray="3,2" rx="2" />
+
+          {/* Electric field lines */}
+          {[40, 50, 60, 70].map((y, i) => (
+            <line key={i} x1="28" y1={y} x2="72" y2={y} stroke="url(#capEFieldGrad)" strokeWidth="2" strokeDasharray="4,3" filter="url(#capDiagramFieldGlow)" />
+          ))}
+        </g>
+
+        {/* Touchscreen + Finger section */}
+        <g transform="translate(180, 20)">
+          {/* Screen electrode */}
+          <rect x="15" y="25" width="10" height="70" rx="2" fill="url(#capPlateGrad)" />
+
+          {/* Finger representation */}
+          <ellipse cx="80" cy="60" rx="22" ry="32" fill="url(#capDiagramFinger)" stroke="#f87171" strokeWidth="2" />
+
+          {/* Electric field lines curving to finger */}
+          <path d="M 28 45 Q 55 45 72 50" fill="none" stroke="url(#capEFieldGrad)" strokeWidth="2" strokeDasharray="4,3" filter="url(#capDiagramFieldGlow)" />
+          <path d="M 28 60 Q 55 60 72 60" fill="none" stroke="url(#capEFieldGrad)" strokeWidth="2" strokeDasharray="4,3" filter="url(#capDiagramFieldGlow)" />
+          <path d="M 28 75 Q 55 75 72 70" fill="none" stroke="url(#capEFieldGrad)" strokeWidth="2" strokeDasharray="4,3" filter="url(#capDiagramFieldGlow)" />
+        </g>
+      </svg>
+
+      {/* Text labels outside SVG */}
+      <div style={{
+        position: 'absolute',
+        top: '8px',
+        left: '50px',
+        width: '100px',
+        textAlign: 'center',
+        color: colors.textSecondary,
+        fontSize: typo.label,
+        fontWeight: 500
+      }}>
+        Traditional Capacitor
+      </div>
+      <div style={{
+        position: 'absolute',
+        bottom: '8px',
+        left: '50px',
+        width: '100px',
+        textAlign: 'center',
+        color: colors.textMuted,
+        fontSize: typo.label
+      }}>
+        2 plates, 1 gap
+      </div>
+      <div style={{
+        position: 'absolute',
+        top: '55%',
+        left: '95px',
+        color: '#fbbf24',
+        fontSize: typo.label,
+        fontWeight: 500
+      }}>
+        Gap
+      </div>
+
+      <div style={{
+        position: 'absolute',
+        top: '8px',
+        right: '20px',
+        width: '100px',
+        textAlign: 'center',
+        color: colors.textSecondary,
+        fontSize: typo.label,
+        fontWeight: 500
+      }}>
+        Touchscreen + Finger
+      </div>
+      <div style={{
+        position: 'absolute',
+        bottom: '16px',
+        left: '195px',
+        color: '#60a5fa',
+        fontSize: typo.label
+      }}>
+        Screen
+      </div>
+      <div style={{
+        position: 'absolute',
+        bottom: '16px',
+        right: '30px',
+        color: '#fca5a5',
+        fontSize: typo.label
+      }}>
+        Finger
+      </div>
+      <div style={{
+        position: 'absolute',
+        top: '38%',
+        right: '60px',
+        color: '#4ade80',
+        fontSize: typo.label,
+        fontWeight: 500
+      }}>
+        E-field
+      </div>
+    </div>
   );
 
   const colors = {
@@ -602,98 +1009,320 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
     const fieldIntensity = isDetected ? normalizedCapacitance : 0.1;
 
     return (
-      <svg viewBox="0 0 400 200" className="w-full h-48">
-        <defs>
-          <linearGradient id="electrodeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#1d4ed8" />
-          </linearGradient>
-          <linearGradient id="fieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#22c55e" stopOpacity={fieldIntensity} />
-            <stop offset="100%" stopColor="#22c55e" stopOpacity={fieldIntensity * 0.3} />
-          </linearGradient>
-        </defs>
+      <div style={{ position: 'relative' }}>
+        <svg viewBox="0 0 400 200" className="w-full h-48">
+          <defs>
+            {/* Premium background gradient */}
+            <linearGradient id="capVizBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0a1628" />
+              <stop offset="70%" stopColor="#0a1628" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect width="400" height="200" fill="#111827" rx="8" />
+            {/* Premium electrode gradient with metallic look */}
+            <linearGradient id="capVizElectrode" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="25%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
 
-        {/* Glass layer */}
-        <rect x="50" y="130" width="300" height="20" fill="rgba(147, 197, 253, 0.3)" stroke="#93c5fd" strokeWidth="1" />
-        <text x="200" y="145" textAnchor="middle" className="fill-blue-300 text-xs">Glass (ε = {dielectricConstant.toFixed(1)})</text>
+            {/* Glass layer gradient with depth */}
+            <linearGradient id="capVizGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#bfdbfe" stopOpacity="0.4" />
+              <stop offset="30%" stopColor="#93c5fd" stopOpacity="0.25" />
+              <stop offset="70%" stopColor="#60a5fa" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.15" />
+            </linearGradient>
 
-        {/* Electrode grid */}
-        <rect x="50" y="150" width="300" height="10" fill="url(#electrodeGrad)" />
-        <text x="200" y="175" textAnchor="middle" className="fill-blue-400 text-xs">Electrode Grid (spacing: {electrodeSpacing}mm)</text>
+            {/* Finger gradient - warm skin tones */}
+            <radialGradient id="capVizFinger" cx="40%" cy="30%" r="65%">
+              <stop offset="0%" stopColor="#fcd5ce" />
+              <stop offset="25%" stopColor="#f8b4a8" />
+              <stop offset="50%" stopColor="#e8998d" />
+              <stop offset="75%" stopColor="#d68878" />
+              <stop offset="100%" stopColor="#c47b6b" />
+            </radialGradient>
 
-        {/* Electric field lines - dynamic based on distance */}
-        {isDetected && [...Array(7)].map((_, i) => {
-          const startX = 120 + i * 25;
-          const endX = startX + (Math.random() - 0.5) * 10;
-          return (
-            <g key={i}>
-              <path
-                d={`M ${startX} 130 Q ${(startX + endX) / 2} ${(fingerY + 130) / 2} ${endX} ${fingerY + 20}`}
-                fill="none"
-                stroke="#22c55e"
-                strokeWidth={2 * fieldIntensity}
-                strokeDasharray="4,2"
-                opacity={fieldIntensity}
-                className="animate-pulse"
-              />
-              {/* Field arrows */}
-              <circle cx={endX} cy={fingerY + 20} r={3 * fieldIntensity} fill="#22c55e" opacity={fieldIntensity} />
-            </g>
-          );
-        })}
+            {/* Electric field gradient with glow */}
+            <linearGradient id="capVizField" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity={fieldIntensity * 0.3} />
+              <stop offset="40%" stopColor="#4ade80" stopOpacity={fieldIntensity * 0.7} />
+              <stop offset="60%" stopColor="#86efac" stopOpacity={fieldIntensity * 0.9} />
+              <stop offset="100%" stopColor="#4ade80" stopOpacity={fieldIntensity * 0.5} />
+            </linearGradient>
 
-        {/* Finger representation */}
-        <ellipse
-          cx="200"
-          cy={fingerY}
-          rx="30"
-          ry="20"
-          fill="#fca5a5"
-          stroke={isDetected ? "#22c55e" : "#ef4444"}
-          strokeWidth="3"
-        />
-        <text x="200" y={fingerY + 5} textAnchor="middle" className="fill-gray-800 text-xs font-bold">Finger</text>
+            {/* Capacitance meter gradient - detected */}
+            <linearGradient id="capVizMeterGreen" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#15803d" />
+              <stop offset="30%" stopColor="#16a34a" />
+              <stop offset="60%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#4ade80" />
+            </linearGradient>
 
-        {/* Distance indicator */}
-        <line x1="240" y1={fingerY + 20} x2="240" y2="130" stroke="#fbbf24" strokeWidth="2" strokeDasharray="4,4" />
-        <text x="260" y={(fingerY + 130) / 2 + 10} className="fill-yellow-400 text-xs">{fingerDistance}mm</text>
+            {/* Capacitance meter gradient - not detected */}
+            <linearGradient id="capVizMeterGray" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#6b7280" />
+            </linearGradient>
 
-        {/* Capacitance meter */}
-        <rect x="320" y="20" width="60" height="100" rx="4" fill="#1f2937" stroke="#4b5563" />
-        <text x="350" y="35" textAnchor="middle" className="fill-gray-400 text-xs">C</text>
-        <rect
-          x="330"
-          y={110 - normalizedCapacitance * 70}
-          width="40"
-          height={normalizedCapacitance * 70}
-          fill={isDetected ? "#22c55e" : "#4b5563"}
-          rx="2"
-        />
-        {/* Threshold line */}
-        <line x1="325" y1={110 - touchThreshold * 70} x2="375" y2={110 - touchThreshold * 70} stroke="#f59e0b" strokeWidth="2" strokeDasharray="3,3" />
-        <text x="350" y={105 - touchThreshold * 70} textAnchor="middle" className="fill-amber-400 text-xs">Threshold</text>
+            {/* Status badge gradients */}
+            <linearGradient id="capVizStatusGreen" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
 
-        {/* Detection status */}
-        <rect
-          x="320"
-          y="125"
-          width="60"
-          height="20"
-          rx="4"
-          fill={isDetected ? "#22c55e" : "#ef4444"}
-        />
-        <text x="350" y="139" textAnchor="middle" className="fill-white text-xs font-bold">
+            <linearGradient id="capVizStatusRed" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* Distance indicator gradient */}
+            <linearGradient id="capVizDistance" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Field glow filter */}
+            <filter id="capVizFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Finger shadow filter */}
+            <filter id="capVizFingerShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="2" dy="3" stdDeviation="4" floodColor="#000000" floodOpacity="0.5" />
+            </filter>
+
+            {/* Meter glow filter */}
+            <filter id="capVizMeterGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Premium background */}
+          <rect width="400" height="200" fill="url(#capVizBg)" rx="8" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="capVizGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e3a5f" strokeWidth="0.3" strokeOpacity="0.4" />
+          </pattern>
+          <rect width="400" height="200" fill="url(#capVizGrid)" rx="8" />
+
+          {/* Glass layer with premium styling */}
+          <rect x="50" y="130" width="250" height="22" fill="url(#capVizGlass)" rx="3" />
+          <rect x="50" y="130" width="250" height="22" fill="none" stroke="#93c5fd" strokeWidth="1" strokeOpacity="0.6" rx="3" />
+          {/* Glass reflection highlight */}
+          <rect x="52" y="132" width="246" height="4" fill="white" fillOpacity="0.1" rx="2" />
+
+          {/* Electrode grid with metallic look */}
+          <rect x="50" y="152" width="250" height="12" fill="url(#capVizElectrode)" rx="2" />
+          {/* Electrode segments */}
+          {[...Array(10)].map((_, i) => (
+            <rect key={i} x={55 + i * 25} y="154" width="20" height="8" fill="none" stroke="#60a5fa" strokeWidth="0.5" strokeOpacity="0.4" rx="1" />
+          ))}
+
+          {/* Electric field lines - dynamic curved paths */}
+          {isDetected && [...Array(9)].map((_, i) => {
+            const startX = 80 + i * 25;
+            const controlOffset = (Math.sin(i * 0.8) * 15);
+            return (
+              <g key={i}>
+                <path
+                  d={`M ${startX} 130 Q ${startX + controlOffset} ${(fingerY + 130) / 2} ${startX + controlOffset * 0.5} ${fingerY + 22}`}
+                  fill="none"
+                  stroke="url(#capVizField)"
+                  strokeWidth={2.5 * fieldIntensity}
+                  strokeDasharray="6,4"
+                  filter="url(#capVizFieldGlow)"
+                  className="animate-pulse"
+                />
+                {/* Field termination point */}
+                <circle
+                  cx={startX + controlOffset * 0.5}
+                  cy={fingerY + 22}
+                  r={4 * fieldIntensity}
+                  fill="#4ade80"
+                  opacity={fieldIntensity * 0.8}
+                  filter="url(#capVizFieldGlow)"
+                />
+              </g>
+            );
+          })}
+
+          {/* Finger representation with premium styling */}
+          <ellipse
+            cx="175"
+            cy={fingerY}
+            rx="35"
+            ry="22"
+            fill="url(#capVizFinger)"
+            stroke={isDetected ? "#22c55e" : "#ef4444"}
+            strokeWidth="3"
+            filter="url(#capVizFingerShadow)"
+          />
+          {/* Fingernail highlight */}
+          <ellipse
+            cx="175"
+            cy={fingerY - 8}
+            rx="15"
+            ry="8"
+            fill="white"
+            fillOpacity="0.15"
+          />
+
+          {/* Distance indicator with arrow markers */}
+          <line x1="220" y1={fingerY + 22} x2="220" y2="128" stroke="url(#capVizDistance)" strokeWidth="2" strokeDasharray="5,3" />
+          {/* Arrow heads */}
+          <polygon points={`215,${fingerY + 22} 225,${fingerY + 22} 220,${fingerY + 28}`} fill="#f59e0b" opacity="0.8" />
+          <polygon points="215,128 225,128 220,122" fill="#f59e0b" opacity="0.8" />
+
+          {/* Capacitance meter with premium styling */}
+          <rect x="320" y="20" width="65" height="105" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1.5" />
+          {/* Meter inner frame */}
+          <rect x="325" y="35" width="55" height="75" rx="4" fill="#1e293b" />
+
+          {/* Capacitance bar */}
+          <rect
+            x="332"
+            y={102 - normalizedCapacitance * 60}
+            width="41"
+            height={Math.max(normalizedCapacitance * 60, 2)}
+            fill={isDetected ? "url(#capVizMeterGreen)" : "url(#capVizMeterGray)"}
+            rx="3"
+            filter={isDetected ? "url(#capVizMeterGlow)" : undefined}
+          />
+
+          {/* Threshold line */}
+          <line x1="328" y1={102 - touchThreshold * 60} x2="378" y2={102 - touchThreshold * 60} stroke="#f59e0b" strokeWidth="2" strokeDasharray="4,2" />
+
+          {/* Detection status badge */}
+          <rect
+            x="320"
+            y="130"
+            width="65"
+            height="24"
+            rx="6"
+            fill={isDetected ? "url(#capVizStatusGreen)" : "url(#capVizStatusRed)"}
+            stroke={isDetected ? "#4ade80" : "#f87171"}
+            strokeWidth="1"
+          />
+
+          {/* Frame border */}
+          <rect width="400" height="200" fill="none" stroke="#334155" strokeWidth="2" rx="8" />
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        <div style={{
+          position: 'absolute',
+          top: '10px',
+          left: '15px',
+          color: colors.touchPoint,
+          fontSize: typo.body,
+          fontFamily: 'monospace',
+          fontWeight: 'bold'
+        }}>
+          C = εA/d
+        </div>
+        <div style={{
+          position: 'absolute',
+          top: '28px',
+          left: '15px',
+          color: colors.textSecondary,
+          fontSize: typo.small
+        }}>
+          Capacitance: {currentCapacitance.toFixed(2)} (norm)
+        </div>
+
+        {/* Glass label */}
+        <div style={{
+          position: 'absolute',
+          top: '68%',
+          left: '175px',
+          transform: 'translateX(-50%)',
+          color: '#93c5fd',
+          fontSize: typo.label,
+          textAlign: 'center'
+        }}>
+          Glass (ε = {dielectricConstant.toFixed(1)})
+        </div>
+
+        {/* Electrode label */}
+        <div style={{
+          position: 'absolute',
+          bottom: '10px',
+          left: '175px',
+          transform: 'translateX(-50%)',
+          color: '#60a5fa',
+          fontSize: typo.label,
+          textAlign: 'center'
+        }}>
+          Electrode Grid (spacing: {electrodeSpacing}mm)
+        </div>
+
+        {/* Distance label */}
+        <div style={{
+          position: 'absolute',
+          top: `${((fingerY + 130) / 2 / 200) * 100}%`,
+          left: '240px',
+          color: '#fbbf24',
+          fontSize: typo.small,
+          fontWeight: 'bold'
+        }}>
+          {fingerDistance.toFixed(1)}mm
+        </div>
+
+        {/* Meter label */}
+        <div style={{
+          position: 'absolute',
+          top: '12px',
+          right: '25px',
+          color: colors.textSecondary,
+          fontSize: typo.label,
+          textAlign: 'center',
+          width: '55px'
+        }}>
+          C
+        </div>
+
+        {/* Threshold label */}
+        <div style={{
+          position: 'absolute',
+          top: `${((102 - touchThreshold * 60 - 8) / 200) * 100}%`,
+          right: '10px',
+          color: '#f59e0b',
+          fontSize: typo.label
+        }}>
+          Threshold
+        </div>
+
+        {/* Status label */}
+        <div style={{
+          position: 'absolute',
+          bottom: '20px',
+          right: '25px',
+          color: '#ffffff',
+          fontSize: typo.label,
+          fontWeight: 'bold',
+          width: '55px',
+          textAlign: 'center'
+        }}>
           {isDetected ? "DETECTED" : "NO SIGNAL"}
-        </text>
-
-        {/* Formula display */}
-        <text x="50" y="20" className="fill-cyan-400 text-xs font-mono">C = εA/d</text>
-        <text x="50" y="35" className="fill-gray-400 text-xs">Capacitance: {currentCapacitance.toFixed(2)} (norm)</text>
-      </svg>
+        </div>
+      </div>
     );
   };
 
@@ -948,140 +1577,352 @@ const CapacitiveTouchRenderer: React.FC<CapacitiveTouchRendererProps> = ({
     };
 
     return (
-      <svg
-        viewBox="0 0 400 280"
-        className="w-full h-64 cursor-pointer touch-none"
-        onClick={handleGridClick}
-        style={{ zIndex: 10 }}
-      >
-        <rect width="400" height="280" fill="#1a1a2e" rx="8" />
+      <div style={{ position: 'relative' }}>
+        <svg
+          viewBox="0 0 400 280"
+          className="w-full h-64 cursor-pointer touch-none"
+          onClick={handleGridClick}
+          style={{ zIndex: 10 }}
+        >
+          <defs>
+            {/* Premium background gradient */}
+            <linearGradient id="capMultiBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0a0f1e" />
+              <stop offset="50%" stopColor="#111827" />
+              <stop offset="100%" stopColor="#0a0f1e" />
+            </linearGradient>
 
-        {/* Capacitance Grid Visualization */}
-        {[...Array(gridSize)].map((_, i) =>
-          [...Array(gridSize)].map((_, j) => {
-            const capacitance = getGridCapacitance(i + 0.5, j + 0.5);
-            return (
-              <rect
-                key={`cell-${i}-${j}`}
-                x={i * cellWidth + 2}
-                y={j * cellHeight + 2}
-                width={cellWidth - 4}
-                height={cellHeight - 4}
-                fill={`rgba(59, 130, 246, ${capacitance * 0.8})`}
-                stroke={capacitance > 0.3 ? "#22c55e" : "#4b5563"}
-                strokeWidth={capacitance > 0.3 ? 2 : 1}
-                rx="2"
-              />
-            );
-          })
-        )}
+            {/* Cell heatmap gradient - low intensity */}
+            <linearGradient id="capCellLow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="50%" stopColor="#1e40af" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#1e3a5f" />
+            </linearGradient>
 
-        {/* Grid lines */}
-        {[...Array(gridSize + 1)].map((_, i) => (
-          <g key={`lines-${i}`}>
-            <line x1="0" y1={i * cellHeight} x2="400" y2={i * cellHeight} stroke="#3b82f6" strokeWidth="1" opacity="0.3" />
-            <line x1={i * cellWidth} y1="0" x2={i * cellWidth} y2="280" stroke="#22c55e" strokeWidth="1" opacity="0.3" />
-          </g>
-        ))}
+            {/* Cell heatmap gradient - high intensity */}
+            <linearGradient id="capCellHigh" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22d3ee" />
+              <stop offset="30%" stopColor="#06b6d4" />
+              <stop offset="70%" stopColor="#0891b2" />
+              <stop offset="100%" stopColor="#0e7490" />
+            </linearGradient>
 
-        {/* Touch points */}
-        {activePoints.map((point, idx) => (
-          <g key={`touch-${point.id}`}>
-            {/* Finger ripple effect */}
-            <circle
-              cx={point.x}
-              cy={point.y}
-              r="35"
-              fill="none"
-              stroke="#22c55e"
-              strokeWidth="2"
-              opacity="0.3"
-              className="animate-ping"
-            />
-            {/* Electric field lines */}
-            {[...Array(8)].map((_, i) => {
-              const angle = (i / 8) * Math.PI * 2;
+            {/* Multi-touch finger gradient */}
+            <radialGradient id="capMultiFinger" cx="40%" cy="30%" r="65%">
+              <stop offset="0%" stopColor="#fcd5ce" />
+              <stop offset="30%" stopColor="#f8b4a8" />
+              <stop offset="60%" stopColor="#e8998d" />
+              <stop offset="85%" stopColor="#d68878" />
+              <stop offset="100%" stopColor="#c47b6b" />
+            </radialGradient>
+
+            {/* Field line gradient */}
+            <linearGradient id="capMultiField" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#22c55e" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#4ade80" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Ripple gradient */}
+            <radialGradient id="capRippleGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
+              <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Gesture line gradient - pinch */}
+            <linearGradient id="capPinchLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="1" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Rotation arc gradient */}
+            <linearGradient id="capRotateArc" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#c084fc" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#a855f7" stopOpacity="1" />
+              <stop offset="100%" stopColor="#c084fc" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Touch glow filter */}
+            <filter id="capMultiTouchGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Field glow filter */}
+            <filter id="capMultiFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Finger shadow */}
+            <filter id="capMultiFingerShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="1" dy="2" stdDeviation="3" floodColor="#000000" floodOpacity="0.5" />
+            </filter>
+          </defs>
+
+          {/* Premium background */}
+          <rect width="400" height="280" fill="url(#capMultiBg)" rx="8" />
+
+          {/* Capacitance Grid Visualization with heatmap */}
+          {[...Array(gridSize)].map((_, i) =>
+            [...Array(gridSize)].map((_, j) => {
+              const capacitance = getGridCapacitance(i + 0.5, j + 0.5);
+              const isActive = capacitance > 0.3;
               return (
-                <line
-                  key={`field-${idx}-${i}`}
-                  x1={point.x}
-                  y1={point.y}
-                  x2={point.x + Math.cos(angle) * 40}
-                  y2={point.y + Math.sin(angle) * 40}
-                  stroke="#22c55e"
-                  strokeWidth="1"
-                  strokeDasharray="4,4"
-                  opacity="0.5"
-                />
+                <g key={`cell-${i}-${j}`}>
+                  {/* Cell background with gradient based on intensity */}
+                  <rect
+                    x={i * cellWidth + 2}
+                    y={j * cellHeight + 2}
+                    width={cellWidth - 4}
+                    height={cellHeight - 4}
+                    fill={isActive ? `rgba(6, 182, 212, ${capacitance * 0.7})` : 'url(#capCellLow)'}
+                    stroke={isActive ? "#22d3ee" : "#334155"}
+                    strokeWidth={isActive ? 2 : 0.5}
+                    rx="4"
+                    filter={isActive ? "url(#capMultiTouchGlow)" : undefined}
+                  />
+                  {/* Inner glow for active cells */}
+                  {isActive && (
+                    <rect
+                      x={i * cellWidth + 5}
+                      y={j * cellHeight + 5}
+                      width={cellWidth - 10}
+                      height={cellHeight - 10}
+                      fill="none"
+                      stroke="#67e8f9"
+                      strokeWidth="1"
+                      strokeOpacity={capacitance * 0.5}
+                      rx="2"
+                    />
+                  )}
+                </g>
               );
-            })}
-            {/* Finger circle */}
-            <circle
-              cx={point.x}
-              cy={point.y}
-              r="25"
-              fill="rgba(252, 165, 165, 0.8)"
-              stroke="#22c55e"
-              strokeWidth="3"
-            />
-            <text x={point.x} y={point.y + 5} textAnchor="middle" className="fill-gray-800 text-xs font-bold">
-              {idx + 1}
-            </text>
-          </g>
-        ))}
+            })
+          )}
 
-        {/* Gesture indicator */}
+          {/* Premium electrode grid lines */}
+          {[...Array(gridSize + 1)].map((_, i) => (
+            <g key={`lines-${i}`}>
+              <line x1="0" y1={i * cellHeight} x2="400" y2={i * cellHeight} stroke="#3b82f6" strokeWidth="1.5" opacity="0.4" />
+              <line x1={i * cellWidth} y1="0" x2={i * cellWidth} y2="280" stroke="#22c55e" strokeWidth="1.5" opacity="0.4" />
+              {/* Grid intersection highlights */}
+              {[...Array(gridSize + 1)].map((_, j) => (
+                <circle key={`node-${i}-${j}`} cx={i * cellWidth} cy={j * cellHeight} r="2" fill="#4b5563" />
+              ))}
+            </g>
+          ))}
+
+          {/* Touch points with premium graphics */}
+          {activePoints.map((point, idx) => (
+            <g key={`touch-${point.id}`}>
+              {/* Outer ripple effect */}
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r="45"
+                fill="url(#capRippleGrad)"
+                className="animate-ping"
+              />
+
+              {/* Inner ripple */}
+              <circle
+                cx={point.x}
+                cy={point.y}
+                r="35"
+                fill="none"
+                stroke="#22d3ee"
+                strokeWidth="2"
+                strokeOpacity="0.5"
+                className="animate-pulse"
+              />
+
+              {/* Electric field lines with glow */}
+              {[...Array(10)].map((_, i) => {
+                const angle = (i / 10) * Math.PI * 2;
+                const length = 45;
+                return (
+                  <line
+                    key={`field-${idx}-${i}`}
+                    x1={point.x}
+                    y1={point.y}
+                    x2={point.x + Math.cos(angle) * length}
+                    y2={point.y + Math.sin(angle) * length}
+                    stroke="url(#capMultiField)"
+                    strokeWidth="2"
+                    strokeDasharray="5,4"
+                    filter="url(#capMultiFieldGlow)"
+                    className="animate-pulse"
+                  />
+                );
+              })}
+
+              {/* Finger representation with premium styling */}
+              <ellipse
+                cx={point.x}
+                cy={point.y}
+                rx="22"
+                ry="26"
+                fill="url(#capMultiFinger)"
+                stroke="#22d3ee"
+                strokeWidth="3"
+                filter="url(#capMultiFingerShadow)"
+              />
+
+              {/* Fingernail highlight */}
+              <ellipse
+                cx={point.x}
+                cy={point.y - 8}
+                rx="10"
+                ry="6"
+                fill="white"
+                fillOpacity="0.2"
+              />
+            </g>
+          ))}
+
+          {/* Gesture indicator - Pinch */}
+          {gestureMode === 'pinch' && activePoints.length >= 2 && (
+            <g>
+              <line
+                x1={activePoints[0].x}
+                y1={activePoints[0].y}
+                x2={activePoints[1].x}
+                y2={activePoints[1].y}
+                stroke="url(#capPinchLine)"
+                strokeWidth="3"
+                strokeDasharray="8,4"
+                filter="url(#capMultiFieldGlow)"
+              />
+              {/* Arrow indicators at ends */}
+              <circle cx={activePoints[0].x} cy={activePoints[0].y} r="5" fill="#f59e0b" />
+              <circle cx={activePoints[1].x} cy={activePoints[1].y} r="5" fill="#f59e0b" />
+            </g>
+          )}
+
+          {/* Gesture indicator - Rotate arc */}
+          {gestureMode === 'rotate' && activePoints.length >= 2 && (
+            <g>
+              <circle cx="200" cy="140" r="70" fill="none" stroke="url(#capRotateArc)" strokeWidth="2" strokeDasharray="6,4" />
+              {/* Rotation direction arrow */}
+              <path
+                d={`M 200 70 A 70 70 0 0 1 ${200 + 70 * Math.sin(rotationAngle * Math.PI / 180)} ${140 - 70 * Math.cos(rotationAngle * Math.PI / 180)}`}
+                fill="none"
+                stroke="#a855f7"
+                strokeWidth="3"
+                filter="url(#capMultiFieldGlow)"
+              />
+            </g>
+          )}
+
+          {/* Status display badge */}
+          <rect x="10" y="248" width="130" height="28" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+
+          {/* Frame border */}
+          <rect width="400" height="280" fill="none" stroke="#334155" strokeWidth="2" rx="8" />
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        {/* Touch count label */}
+        <div style={{
+          position: 'absolute',
+          bottom: '12px',
+          left: '18px',
+          color: colors.touchPoint,
+          fontSize: typo.small,
+          fontWeight: 'bold'
+        }}>
+          Touch Points: {activePoints.length}
+        </div>
+
+        {/* Gesture mode labels */}
         {gestureMode === 'pinch' && activePoints.length >= 2 && (
-          <g>
-            <line
-              x1={activePoints[0].x}
-              y1={activePoints[0].y}
-              x2={activePoints[1].x}
-              y2={activePoints[1].y}
-              stroke="#fbbf24"
-              strokeWidth="2"
-              strokeDasharray="6,3"
-            />
-            <text x="200" y="30" textAnchor="middle" className="fill-amber-400 text-sm font-bold">
-              Pinch Gesture - Distance: {Math.round(pinchScale * 100)}%
-            </text>
-          </g>
+          <div style={{
+            position: 'absolute',
+            top: '12px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            color: '#f59e0b',
+            fontSize: typo.body,
+            fontWeight: 'bold',
+            textAlign: 'center'
+          }}>
+            Pinch Gesture - Distance: {Math.round(pinchScale * 100)}%
+          </div>
         )}
 
         {gestureMode === 'spread' && activePoints.length >= 2 && (
-          <text x="200" y="30" textAnchor="middle" className="fill-green-400 text-sm font-bold">
+          <div style={{
+            position: 'absolute',
+            top: '12px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            color: '#4ade80',
+            fontSize: typo.body,
+            fontWeight: 'bold',
+            textAlign: 'center'
+          }}>
             Spread Gesture - Zoom In
-          </text>
+          </div>
         )}
 
         {gestureMode === 'rotate' && activePoints.length >= 2 && (
-          <g>
-            <text x="200" y="30" textAnchor="middle" className="fill-purple-400 text-sm font-bold">
-              Rotate Gesture - Angle: {rotationAngle}deg
-            </text>
-            {/* Rotation arc indicator */}
-            <path
-              d={`M 200 140 m -50 0 a 50 50 0 0 1 ${50 + 50 * Math.cos(rotationAngle * Math.PI / 180)} ${-50 * Math.sin(rotationAngle * Math.PI / 180)}`}
-              fill="none"
-              stroke="#a855f7"
-              strokeWidth="2"
-              strokeDasharray="4,2"
-            />
-          </g>
+          <div style={{
+            position: 'absolute',
+            top: '12px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            color: '#a855f7',
+            fontSize: typo.body,
+            fontWeight: 'bold',
+            textAlign: 'center'
+          }}>
+            Rotate Gesture - Angle: {rotationAngle}deg
+          </div>
         )}
 
-        {/* Status display */}
-        <rect x="10" y="250" width="120" height="25" rx="4" fill="#1f2937" opacity="0.9" />
-        <text x="70" y="267" textAnchor="middle" className="fill-cyan-400 text-xs font-bold">
-          Touch Points: {activePoints.length}
-        </text>
+        {/* Finger number labels */}
+        {activePoints.map((point, idx) => (
+          <div
+            key={`label-${point.id}`}
+            style={{
+              position: 'absolute',
+              top: `${(point.y / 280) * 100}%`,
+              left: `${(point.x / 400) * 100}%`,
+              transform: 'translate(-50%, -50%)',
+              color: '#1f2937',
+              fontSize: typo.small,
+              fontWeight: 'bold',
+              pointerEvents: 'none'
+            }}
+          >
+            {idx + 1}
+          </div>
+        ))}
 
         {activePoints.length === 0 && (
-          <text x="200" y="140" textAnchor="middle" className="fill-gray-500 text-sm">
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            color: colors.textMuted,
+            fontSize: typo.body,
+            textAlign: 'center',
+            pointerEvents: 'none'
+          }}>
             Select a gesture or tap to add points
-          </text>
+          </div>
         )}
-      </svg>
+      </div>
     );
   };
 

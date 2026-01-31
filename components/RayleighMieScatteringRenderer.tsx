@@ -533,18 +533,37 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
     );
   }
 
-  // Helper function: Scattering Tank Visualization
+  // Helper function: Scattering Tank Visualization - PREMIUM SVG GRAPHICS
   function ScatteringTank() {
     const sideColor = getSideViewColor();
     const throughColor = getThroughViewColor();
     const mieFactor = Math.min(1, particleSize / 5);
 
-    // Generate particles for visualization
+    // Generate particles for visualization with varied properties
     const particles = Array.from({ length: Math.floor(concentration / 2) }, (_, i) => ({
-      x: 20 + Math.random() * 260,
-      y: 30 + Math.random() * 120,
-      size: mieFactor > 0.5 ? 3 + Math.random() * 4 : 1 + Math.random() * 2,
+      x: 50 + Math.random() * 200,
+      y: 35 + Math.random() * 110,
+      size: mieFactor > 0.5 ? 2.5 + Math.random() * 3.5 : 0.8 + Math.random() * 1.8,
+      opacity: 0.4 + Math.random() * 0.4,
+      delay: Math.random() * 2,
     }));
+
+    // Generate scattered light rays
+    const scatteredRays = Array.from({ length: 12 }, (_, i) => ({
+      angle: (i * 30 - 180) * (Math.PI / 180),
+      length: 25 + Math.random() * 35,
+      opacity: 0.15 + Math.random() * 0.25,
+    }));
+
+    // Color spectrum positions for visualization
+    const spectrumColors = [
+      { color: '#EF4444', x: 0, label: 'Red' },
+      { color: '#F97316', x: 16.6, label: 'Orange' },
+      { color: '#EAB308', x: 33.3, label: 'Yellow' },
+      { color: '#22C55E', x: 50, label: 'Green' },
+      { color: '#3B82F6', x: 66.6, label: 'Blue' },
+      { color: '#8B5CF6', x: 83.3, label: 'Violet' },
+    ];
 
     return (
       <div style={{
@@ -553,78 +572,411 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
         padding: spacing.lg,
         border: `1px solid ${colors.border}`,
       }}>
-        {/* Tank SVG */}
+        {/* Labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginBottom: spacing.sm,
+          padding: `0 ${spacing.sm}px`,
+        }}>
+          <div style={{
+            ...typography.caption,
+            color: colors.white,
+            fontWeight: 700,
+            textTransform: 'uppercase',
+            letterSpacing: '0.05em',
+          }}>
+            White Light Source
+          </div>
+          <div style={{
+            ...typography.caption,
+            color: throughColor,
+            fontWeight: 600,
+          }}>
+            Transmitted Light
+          </div>
+        </div>
+
+        {/* Tank SVG with Premium Graphics */}
         <svg
-          viewBox="0 0 300 200"
+          viewBox="0 0 300 180"
           style={{
             width: '100%',
-            height: isMobile ? 180 : 220,
-            background: 'linear-gradient(180deg, #0a0a0f 0%, #0f0f15 100%)',
+            height: isMobile ? 160 : 200,
+            background: 'linear-gradient(180deg, #050508 0%, #0a0a10 50%, #0f0f18 100%)',
             borderRadius: radius.md,
           }}
         >
-          {/* Tank outline */}
-          <rect x="40" y="25" width="220" height="130" fill="none" stroke={colors.border} strokeWidth="2" rx="4" />
-
-          {/* Tank interior - scattering medium */}
-          <rect x="42" y="27" width="216" height="126" fill={`${colors.bgHover}80`} rx="3" />
-
-          {/* Particles */}
-          {particles.map((p, i) => (
-            <circle
-              key={i}
-              cx={p.x}
-              cy={p.y}
-              r={p.size}
-              fill={mieFactor > 0.5 ? 'rgba(255,255,255,0.6)' : 'rgba(100,150,255,0.4)'}
-            />
-          ))}
-
-          {/* Light beam entering from left */}
+          {/* ============== COMPREHENSIVE DEFS SECTION ============== */}
           <defs>
-            <linearGradient id="beamGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#FFFFFF" />
-              <stop offset="100%" stopColor={throughColor} />
+            {/* === LIGHT SOURCE GRADIENTS === */}
+            <linearGradient id="scatWhiteLightSource" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
+              <stop offset="20%" stopColor="#FFFEF0" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#FFFDE7" stopOpacity="0.9" />
+              <stop offset="80%" stopColor="#FFF9C4" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#FFF59D" stopOpacity="0.8" />
             </linearGradient>
-          </defs>
-          <rect x="0" y="85" width="45" height="10" fill="#FFFFFF" />
-          <rect x="42" y="85" width="218" height="10" fill="url(#beamGradient)" opacity="0.8" />
-          <rect x="258" y="85" width="42" height="10" fill={throughColor} />
 
-          {/* Scattered light glow from side */}
+            {/* Main beam gradient - transitions through scattering */}
+            <linearGradient id="scatBeamGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.95" />
+              <stop offset="15%" stopColor="#FFFDE7" stopOpacity="0.9" />
+              <stop offset="35%" stopColor="#FFF59D" stopOpacity="0.8" />
+              <stop offset="55%" stopColor="#FFCC80" stopOpacity="0.7" />
+              <stop offset="75%" stopColor="#FF8A65" stopOpacity="0.6" />
+              <stop offset="100%" stopColor={throughColor} stopOpacity="0.5" />
+            </linearGradient>
+
+            {/* Rayleigh scattering gradient - blue dominant */}
+            <radialGradient id="scatRayleighGlow" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#60A5FA" stopOpacity="0.5" />
+              <stop offset="25%" stopColor="#3B82F6" stopOpacity="0.35" />
+              <stop offset="50%" stopColor="#2563EB" stopOpacity="0.2" />
+              <stop offset="75%" stopColor="#1D4ED8" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#1E40AF" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Mie scattering gradient - white/neutral */}
+            <radialGradient id="scatMieGlow" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.45" />
+              <stop offset="25%" stopColor="#F8FAFC" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#E2E8F0" stopOpacity="0.18" />
+              <stop offset="75%" stopColor="#CBD5E1" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#94A3B8" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Tank glass gradient with depth */}
+            <linearGradient id="scatTankGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#334155" stopOpacity="0.6" />
+              <stop offset="20%" stopColor="#475569" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#64748B" stopOpacity="0.3" />
+              <stop offset="80%" stopColor="#475569" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#334155" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* Tank interior gradient */}
+            <linearGradient id="scatTankInterior" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1E293B" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#0F172A" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Spectrum gradient for color band */}
+            <linearGradient id="scatSpectrumGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#EF4444" />
+              <stop offset="17%" stopColor="#F97316" />
+              <stop offset="33%" stopColor="#EAB308" />
+              <stop offset="50%" stopColor="#22C55E" />
+              <stop offset="67%" stopColor="#3B82F6" />
+              <stop offset="83%" stopColor="#8B5CF6" />
+              <stop offset="100%" stopColor="#A855F7" />
+            </linearGradient>
+
+            {/* Sky color representation gradient */}
+            <linearGradient id="scatSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0EA5E9" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#38BDF8" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#7DD3FC" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#BAE6FD" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Transmitted light gradient (sunset colors) */}
+            <linearGradient id="scatTransmittedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#F97316" stopOpacity="0.9" />
+              <stop offset="35%" stopColor="#EA580C" stopOpacity="0.8" />
+              <stop offset="65%" stopColor="#DC2626" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#B91C1C" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* === GLOW FILTERS === */}
+            {/* Primary light source glow */}
+            <filter id="scatLightGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur1" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Intense beam glow */}
+            <filter id="scatBeamGlow" x="-20%" y="-100%" width="140%" height="300%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur1" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur2" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur3" />
+              <feMerge>
+                <feMergeNode in="blur3" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft scattered light glow */}
+            <filter id="scatScatterGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur1" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="15" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Particle shimmer glow */}
+            <filter id="scatParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Camera indicator glow */}
+            <filter id="scatCameraGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* ============== BACKGROUND ATMOSPHERE ============== */}
+          <rect x="0" y="0" width="300" height="180" fill="url(#scatTankInterior)" opacity="0.5" />
+
+          {/* ============== TANK STRUCTURE ============== */}
+          {/* Tank shadow for depth */}
+          <rect x="42" y="27" width="216" height="126" fill="#000000" opacity="0.3" rx="4" />
+
+          {/* Tank interior with gradient */}
+          <rect x="40" y="25" width="216" height="126" fill="url(#scatTankInterior)" rx="4" />
+
+          {/* Tank glass outline with gradient */}
+          <rect x="40" y="25" width="216" height="126" fill="none" stroke="url(#scatTankGlass)" strokeWidth="3" rx="4" />
+
+          {/* Tank highlight (top edge) */}
+          <line x1="42" y1="27" x2="254" y2="27" stroke="#64748B" strokeWidth="1" opacity="0.5" />
+
+          {/* ============== LIGHT SOURCE ============== */}
+          {/* Light source housing */}
+          <rect x="0" y="75" width="42" height="30" fill="url(#scatTankGlass)" rx="3" />
+          <rect x="2" y="77" width="38" height="26" fill="#0F172A" rx="2" />
+
+          {/* Light source emitter with glow */}
+          <circle cx="38" cy="90" r="10" fill="url(#scatWhiteLightSource)" filter="url(#scatLightGlow)" />
+          <circle cx="38" cy="90" r="6" fill="#FFFFFF" opacity="0.9" />
+          <circle cx="36" cy="88" r="2" fill="#FFFFFF" />
+
+          {/* ============== LIGHT BEAM ============== */}
+          {/* Main beam with gradient and glow */}
+          <rect x="38" y="83" width="220" height="14" fill="url(#scatBeamGradient)" filter="url(#scatBeamGlow)" rx="2" />
+
+          {/* Beam core (brighter center) */}
+          <rect x="38" y="86" width="200" height="8" fill="url(#scatBeamGradient)" opacity="0.7" rx="1" />
+
+          {/* Transmitted light exiting */}
+          <rect x="256" y="83" width="44" height="14" fill={throughColor} opacity="0.8" rx="2" />
+          <circle cx="290" cy="90" r="8" fill={throughColor} filter="url(#scatLightGlow)" opacity="0.6" />
+
+          {/* ============== SCATTERING EFFECTS ============== */}
+          {/* Main scattered light glow - Rayleigh vs Mie */}
           <ellipse
             cx="150"
             cy="90"
-            rx={80 + concentration / 2}
-            ry={40 + concentration / 4}
-            fill={sideColor}
-            opacity={0.15 + concentration / 300}
+            rx={70 + concentration / 2.5}
+            ry={35 + concentration / 5}
+            fill={mieFactor > 0.5 ? 'url(#scatMieGlow)' : 'url(#scatRayleighGlow)'}
+            filter="url(#scatScatterGlow)"
+            opacity={0.3 + concentration / 200}
           />
 
-          {/* Labels */}
-          <text x="20" y="15" fill={colors.white} fontSize="10" fontWeight="bold">WHITE LIGHT</text>
-          <text x="250" y="15" fill={throughColor} fontSize="9">TRANSMITTED</text>
+          {/* Secondary scatter layer */}
+          <ellipse
+            cx="150"
+            cy="90"
+            rx={50 + concentration / 3}
+            ry={25 + concentration / 6}
+            fill={sideColor}
+            opacity={0.15 + concentration / 350}
+          />
 
-          {/* Camera indicators */}
+          {/* Scattered light rays emanating from beam */}
+          {scatteredRays.map((ray, i) => {
+            const startX = 80 + (i * 15);
+            const endX = startX + Math.cos(ray.angle) * ray.length;
+            const endY = 90 + Math.sin(ray.angle) * ray.length;
+            const rayColor = mieFactor > 0.5 ? '#E2E8F0' : '#60A5FA';
+            return (
+              <line
+                key={i}
+                x1={startX}
+                y1={90}
+                x2={endX}
+                y2={endY}
+                stroke={rayColor}
+                strokeWidth="1.5"
+                opacity={ray.opacity * (concentration / 100)}
+                strokeLinecap="round"
+              />
+            );
+          })}
+
+          {/* ============== PARTICLES ============== */}
+          {particles.map((p, i) => (
+            <g key={i}>
+              {/* Particle with glow */}
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={p.size}
+                fill={mieFactor > 0.5 ? '#F8FAFC' : '#93C5FD'}
+                opacity={p.opacity}
+                filter="url(#scatParticleGlow)"
+              >
+                {/* Subtle animation */}
+                <animate
+                  attributeName="opacity"
+                  values={`${p.opacity};${p.opacity * 0.6};${p.opacity}`}
+                  dur={`${2 + p.delay}s`}
+                  repeatCount="indefinite"
+                />
+              </circle>
+              {/* Particle highlight */}
+              <circle
+                cx={p.x - p.size * 0.3}
+                cy={p.y - p.size * 0.3}
+                r={p.size * 0.3}
+                fill="#FFFFFF"
+                opacity={p.opacity * 0.5}
+              />
+            </g>
+          ))}
+
+          {/* ============== COLOR SPECTRUM VISUALIZATION ============== */}
+          {/* Spectrum bar at bottom showing which colors scatter */}
+          <g transform="translate(45, 158)">
+            {/* Spectrum background */}
+            <rect x="0" y="0" width="180" height="8" fill="url(#scatSpectrumGradient)" rx="2" opacity="0.8" />
+
+            {/* Scattering intensity overlay - shows blue scatters more */}
+            {mieFactor < 0.5 && (
+              <g>
+                {/* Blue end scattered more - show with arrows/intensity */}
+                <rect x="120" y="-3" width="60" height="14" fill="url(#scatRayleighGlow)" opacity="0.4" rx="2" />
+                {/* Indicate blue scattering */}
+                <path d="M 155 7 L 155 -8 L 160 -3 L 155 -8 L 150 -3" stroke="#60A5FA" strokeWidth="1.5" fill="none" opacity="0.7" />
+              </g>
+            )}
+          </g>
+
+          {/* ============== SKY COLOR REPRESENTATION ============== */}
+          {/* Small sky indicator showing resulting color */}
+          <g transform="translate(235, 158)">
+            <rect x="0" y="0" width="20" height="8" fill={mieFactor > 0.5 ? '#E2E8F0' : 'url(#scatSkyGradient)'} rx="2" />
+          </g>
+
+          {/* ============== CAMERA/VIEW INDICATORS ============== */}
           {viewAngle === 'side' && (
             <g>
-              <text x="150" y="175" textAnchor="middle" fill={colors.sky} fontSize="10">📷 Side View</text>
-              <circle cx="150" cy="155" r="12" fill={sideColor} stroke={colors.sky} strokeWidth="2" />
+              {/* Camera indicator with glow */}
+              <circle
+                cx="150"
+                cy="145"
+                r="14"
+                fill={sideColor}
+                filter="url(#scatCameraGlow)"
+                opacity="0.8"
+              />
+              <circle
+                cx="150"
+                cy="145"
+                r="10"
+                fill="none"
+                stroke={colors.sky}
+                strokeWidth="2"
+              />
+              {/* Camera lens detail */}
+              <circle cx="150" cy="145" r="5" fill={sideColor} />
+              <circle cx="148" cy="143" r="1.5" fill="#FFFFFF" opacity="0.7" />
+
+              {/* View direction arrow */}
+              <path
+                d="M 150 125 L 150 115 M 146 119 L 150 115 L 154 119"
+                stroke={colors.sky}
+                strokeWidth="2"
+                fill="none"
+                opacity="0.8"
+              />
             </g>
           )}
           {viewAngle === 'through' && (
             <g>
-              <text x="280" y="100" fill={colors.orange} fontSize="10">📷</text>
-              <circle cx="275" cy="90" r="8" fill={throughColor} stroke={colors.orange} strokeWidth="2" />
+              {/* Through-view camera at exit */}
+              <circle
+                cx="278"
+                cy="90"
+                r="12"
+                fill={throughColor}
+                filter="url(#scatCameraGlow)"
+                opacity="0.8"
+              />
+              <circle
+                cx="278"
+                cy="90"
+                r="8"
+                fill="none"
+                stroke={colors.orange}
+                strokeWidth="2"
+              />
+              <circle cx="278" cy="90" r="4" fill={throughColor} />
+              <circle cx="276" cy="88" r="1.5" fill="#FFFFFF" opacity="0.7" />
             </g>
           )}
         </svg>
+
+        {/* Color Spectrum Legend - Outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          marginTop: spacing.sm,
+          padding: `${spacing.xs}px ${spacing.sm}px`,
+        }}>
+          <div style={{
+            ...typography.caption,
+            color: colors.textTertiary,
+            fontSize: 10,
+          }}>
+            {mieFactor < 0.5 ? 'Blue scatters most (1/λ⁴)' : 'All colors scatter equally'}
+          </div>
+          <div style={{
+            display: 'flex',
+            gap: 2,
+          }}>
+            {spectrumColors.map((c, i) => (
+              <div
+                key={i}
+                style={{
+                  width: 12,
+                  height: 6,
+                  background: c.color,
+                  borderRadius: 1,
+                  opacity: mieFactor > 0.5 ? 0.5 : (i > 3 ? 0.3 : 0.8),
+                }}
+                title={c.label}
+              />
+            ))}
+          </div>
+        </div>
 
         {/* View Toggle */}
         <div style={{
           display: 'flex',
           gap: spacing.sm,
-          marginTop: spacing.lg,
+          marginTop: spacing.md,
           marginBottom: spacing.md,
         }}>
           <button
@@ -651,6 +1003,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
               background: sideColor,
               margin: '8px auto 0',
               border: `2px solid ${colors.border}`,
+              boxShadow: viewAngle === 'side' ? `0 0 12px ${sideColor}` : 'none',
             }} />
           </button>
           <button
@@ -677,6 +1030,7 @@ export default function RayleighMieScatteringRenderer({ onGameEvent, gamePhase, 
               background: throughColor,
               margin: '8px auto 0',
               border: `2px solid ${colors.border}`,
+              boxShadow: viewAngle === 'through' ? `0 0 12px ${throughColor}` : 'none',
             }} />
           </button>
         </div>

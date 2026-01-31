@@ -511,92 +511,353 @@ const TwoBallCollisionRenderer: React.FC<TwoBallCollisionRendererProps> = ({
     }
 
     return (
-      <svg viewBox="0 0 400 150" className="w-full h-40 md:h-48">
-        {/* Background */}
-        <rect x="0" y="0" width="400" height="150" fill="#F8FAFC" rx="10" />
+      <div>
+        <svg viewBox="0 0 400 120" className="w-full h-32 md:h-40">
+          <defs>
+            {/* Premium background gradient */}
+            <linearGradient id="tbcLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        {/* Track */}
-        <rect x="20" y="90" width="360" height="10" fill={colors.track} rx="5" />
+            {/* Ball 1 - Blue 3D spherical gradient */}
+            <radialGradient id="tbcBall1Grad" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="25%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </radialGradient>
 
-        {/* Velocity arrows (before collision) */}
-        {animationPhase === 'before' && (
-          <g>
-            <line x1={ball1Pos + 30} y1="50" x2={ball1Pos + 60} y2="50" stroke={colors.ball1} strokeWidth="3" markerEnd="url(#arrow1)" />
-            <text x={ball1Pos + 45} y="40" textAnchor="middle" fill={colors.ball1} fontSize="10">v₁</text>
-            <text x={ball2Pos} y="40" textAnchor="middle" fill={colors.ball2} fontSize="10">v₂ = 0</text>
+            {/* Ball 2 Elastic - Red 3D spherical gradient */}
+            <radialGradient id="tbcBall2ElasticGrad" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="25%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </radialGradient>
+
+            {/* Ball 2 Inelastic - Amber/Orange 3D spherical gradient */}
+            <radialGradient id="tbcBall2InelasticGrad" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="25%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </radialGradient>
+
+            {/* Track gradient for metallic effect */}
+            <linearGradient id="tbcTrackGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="30%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Velocity arrow gradient - Blue */}
+            <linearGradient id="tbcArrow1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#60a5fa" />
+            </linearGradient>
+
+            {/* Velocity arrow gradient - Red */}
+            <linearGradient id="tbcArrow2Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+
+            {/* Collision impact glow gradient */}
+            <radialGradient id="tbcImpactGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+              <stop offset="30%" stopColor="#fcd34d" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Motion trail gradient - Ball 1 */}
+            <linearGradient id="tbcTrail1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Motion trail gradient - Ball 2 */}
+            <linearGradient id="tbcTrail2Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Ball glow filter */}
+            <filter id="tbcBallGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Impact glow filter */}
+            <filter id="tbcImpactBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" />
+            </filter>
+
+            {/* Ball shadow filter */}
+            <filter id="tbcBallShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000" floodOpacity="0.4" />
+            </filter>
+
+            {/* Highlight filter for specular reflection */}
+            <filter id="tbcSpecular" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          {/* Premium dark lab background */}
+          <rect x="0" y="0" width="400" height="120" fill="url(#tbcLabBg)" rx="10" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="tbcGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect x="0" y="0" width="400" height="120" fill="url(#tbcGrid)" rx="10" />
+
+          {/* Track with metallic gradient and depth */}
+          <rect x="20" y="78" width="360" height="12" fill="url(#tbcTrackGrad)" rx="6" />
+          <rect x="20" y="78" width="360" height="2" fill="#94a3b8" fillOpacity="0.3" rx="1" />
+          <rect x="20" y="88" width="360" height="2" fill="#1e293b" fillOpacity="0.5" rx="1" />
+
+          {/* Motion trails during animation */}
+          {isAnimating && animationPhase === 'before' && (
+            <ellipse
+              cx={ball1Pos - 15}
+              cy="72"
+              rx="25"
+              ry={m1Radius * 0.6}
+              fill="url(#tbcTrail1Grad)"
+            />
+          )}
+          {isAnimating && animationPhase === 'after' && ball2Vel > 0 && (
+            <ellipse
+              cx={ball2Pos - 20}
+              cy="72"
+              rx="30"
+              ry={m2Radius * 0.6}
+              fill="url(#tbcTrail2Grad)"
+            />
+          )}
+
+          {/* Velocity arrows (before collision) with gradient */}
+          {animationPhase === 'before' && (
+            <g>
+              <line
+                x1={ball1Pos + m1Radius + 5}
+                y1="45"
+                x2={ball1Pos + m1Radius + 35}
+                y2="45"
+                stroke="url(#tbcArrow1Grad)"
+                strokeWidth="4"
+                strokeLinecap="round"
+              />
+              <polygon
+                points={`${ball1Pos + m1Radius + 40},45 ${ball1Pos + m1Radius + 30},40 ${ball1Pos + m1Radius + 30},50`}
+                fill="#60a5fa"
+              />
+            </g>
+          )}
+
+          {/* Collision impact effect with premium glow */}
+          {animationPhase === 'collision' && (
+            <g>
+              {/* Outer glow ring */}
+              <circle cx="170" cy="72" r="50" fill="url(#tbcImpactGlow)" filter="url(#tbcImpactBlur)">
+                <animate attributeName="r" values="30;60;30" dur="0.3s" />
+                <animate attributeName="opacity" values="1;0.3;1" dur="0.3s" />
+              </circle>
+              {/* Inner bright flash */}
+              <circle cx="170" cy="72" r="25" fill="#fef9c3" opacity="0.9">
+                <animate attributeName="r" values="20;35;20" dur="0.3s" />
+                <animate attributeName="opacity" values="1;0.4;1" dur="0.3s" />
+              </circle>
+              {/* Spark particles */}
+              {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+                <circle
+                  key={i}
+                  cx={170 + Math.cos(angle * Math.PI / 180) * 35}
+                  cy={72 + Math.sin(angle * Math.PI / 180) * 35}
+                  r="3"
+                  fill="#fcd34d"
+                >
+                  <animate
+                    attributeName="cx"
+                    values={`${170 + Math.cos(angle * Math.PI / 180) * 25};${170 + Math.cos(angle * Math.PI / 180) * 50}`}
+                    dur="0.3s"
+                  />
+                  <animate
+                    attributeName="cy"
+                    values={`${72 + Math.sin(angle * Math.PI / 180) * 25};${72 + Math.sin(angle * Math.PI / 180) * 50}`}
+                    dur="0.3s"
+                  />
+                  <animate attributeName="opacity" values="1;0" dur="0.3s" />
+                </circle>
+              ))}
+            </g>
+          )}
+
+          {/* Velocity arrows (after collision) with gradients */}
+          {animationPhase === 'after' && (
+            <g>
+              {ball1Vel !== 0 && (
+                <>
+                  <line
+                    x1={ball1Vel > 0 ? ball1Pos + m1Radius + 5 : ball1Pos - m1Radius - 5}
+                    y1="45"
+                    x2={ball1Vel > 0 ? ball1Pos + m1Radius + 35 : ball1Pos - m1Radius - 35}
+                    y2="45"
+                    stroke="url(#tbcArrow1Grad)"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                  />
+                  <polygon
+                    points={ball1Vel > 0 ?
+                      `${ball1Pos + m1Radius + 40},45 ${ball1Pos + m1Radius + 30},40 ${ball1Pos + m1Radius + 30},50` :
+                      `${ball1Pos - m1Radius - 40},45 ${ball1Pos - m1Radius - 30},40 ${ball1Pos - m1Radius - 30},50`
+                    }
+                    fill="#60a5fa"
+                  />
+                </>
+              )}
+              {ball2Vel > 0 && (
+                <>
+                  <line
+                    x1={ball2Pos + m2Radius + 5}
+                    y1="45"
+                    x2={ball2Pos + m2Radius + 35}
+                    y2="45"
+                    stroke="url(#tbcArrow2Grad)"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                  />
+                  <polygon
+                    points={`${ball2Pos + m2Radius + 40},45 ${ball2Pos + m2Radius + 30},40 ${ball2Pos + m2Radius + 30},50`}
+                    fill="#f87171"
+                  />
+                </>
+              )}
+            </g>
+          )}
+
+          {/* Ball 1 with 3D gradient, shadow, and specular highlight */}
+          <g filter="url(#tbcBallShadow)">
+            <circle
+              cx={ball1Pos}
+              cy="72"
+              r={m1Radius}
+              fill="url(#tbcBall1Grad)"
+            />
+            {/* Specular highlight */}
+            <ellipse
+              cx={ball1Pos - m1Radius * 0.3}
+              cy={72 - m1Radius * 0.3}
+              rx={m1Radius * 0.25}
+              ry={m1Radius * 0.15}
+              fill="white"
+              opacity="0.5"
+            />
           </g>
-        )}
 
-        {/* Collision effect */}
-        {animationPhase === 'collision' && (
-          <circle cx="170" cy="75" r="40" fill={colors.collision} opacity="0.5">
-            <animate attributeName="r" values="30;50;30" dur="0.3s" />
-            <animate attributeName="opacity" values="0.8;0.2;0.8" dur="0.3s" />
-          </circle>
-        )}
-
-        {/* Velocity arrows (after collision) */}
-        {animationPhase === 'after' && (
-          <g>
-            {ball1Vel !== 0 && (
-              <>
-                <line
-                  x1={ball1Vel > 0 ? ball1Pos + m1Radius : ball1Pos - m1Radius}
-                  y1="50"
-                  x2={ball1Vel > 0 ? ball1Pos + m1Radius + 30 : ball1Pos - m1Radius - 30}
-                  y2="50"
-                  stroke={colors.ball1}
-                  strokeWidth="3"
-                />
-                <polygon
-                  points={ball1Vel > 0 ?
-                    `${ball1Pos + m1Radius + 30},50 ${ball1Pos + m1Radius + 20},45 ${ball1Pos + m1Radius + 20},55` :
-                    `${ball1Pos - m1Radius - 30},50 ${ball1Pos - m1Radius - 20},45 ${ball1Pos - m1Radius - 20},55`
-                  }
-                  fill={colors.ball1}
-                />
-              </>
-            )}
-            {ball2Vel > 0 && (
-              <>
-                <line x1={ball2Pos + m2Radius} y1="50" x2={ball2Pos + m2Radius + 30} y2="50" stroke={colors.ball2} strokeWidth="3" />
-                <polygon points={`${ball2Pos + m2Radius + 30},50 ${ball2Pos + m2Radius + 20},45 ${ball2Pos + m2Radius + 20},55`} fill={colors.ball2} />
-              </>
-            )}
+          {/* Ball 2 with 3D gradient, shadow, and specular highlight */}
+          <g filter="url(#tbcBallShadow)">
+            <circle
+              cx={ball2Pos}
+              cy="72"
+              r={m2Radius}
+              fill={type === 'elastic' ? 'url(#tbcBall2ElasticGrad)' : 'url(#tbcBall2InelasticGrad)'}
+            />
+            {/* Specular highlight */}
+            <ellipse
+              cx={ball2Pos - m2Radius * 0.3}
+              cy={72 - m2Radius * 0.3}
+              rx={m2Radius * 0.25}
+              ry={m2Radius * 0.15}
+              fill="white"
+              opacity="0.5"
+            />
           </g>
-        )}
+        </svg>
 
-        {/* Ball 1 */}
-        <circle
-          cx={ball1Pos}
-          cy="75"
-          r={m1Radius}
-          fill={colors.ball1}
-          stroke="white"
-          strokeWidth="2"
-        />
-        <text x={ball1Pos} y="80" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
-          {displayMass1}
-        </text>
+        {/* Labels outside SVG using typo system for responsive typography */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          marginTop: typo.elementGap,
+          padding: `0 ${typo.cardPadding}`
+        }}>
+          {/* Ball 1 label */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <div style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%)',
+              boxShadow: '0 2px 4px rgba(59, 130, 246, 0.3)'
+            }} />
+            <span style={{
+              fontSize: typo.small,
+              fontWeight: 600,
+              color: colors.textPrimary
+            }}>Ball 1: {displayMass1}</span>
+          </div>
 
-        {/* Ball 2 */}
-        <circle
-          cx={ball2Pos}
-          cy="75"
-          r={m2Radius}
-          fill={type === 'elastic' ? colors.ball2 : colors.inelastic}
-          stroke="white"
-          strokeWidth="2"
-        />
-        <text x={ball2Pos} y="80" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
-          {displayMass2}
-        </text>
+          {/* Collision type label */}
+          <div style={{
+            padding: '4px 12px',
+            borderRadius: '9999px',
+            background: type === 'elastic'
+              ? 'linear-gradient(135deg, rgba(16, 185, 129, 0.2) 0%, rgba(16, 185, 129, 0.1) 100%)'
+              : 'linear-gradient(135deg, rgba(245, 158, 11, 0.2) 0%, rgba(245, 158, 11, 0.1) 100%)',
+            border: `1px solid ${type === 'elastic' ? colors.elastic : colors.inelastic}40`
+          }}>
+            <span style={{
+              fontSize: typo.small,
+              fontWeight: 700,
+              color: type === 'elastic' ? colors.elastic : colors.inelastic
+            }}>
+              {type === 'elastic' ? 'ELASTIC' : 'INELASTIC'}
+            </span>
+          </div>
 
-        {/* Type label */}
-        <text x="200" y="135" textAnchor="middle" fill={type === 'elastic' ? colors.elastic : colors.inelastic} fontSize="12" fontWeight="bold">
-          {type === 'elastic' ? '🎱 ELASTIC (Bouncy)' : '🧱 INELASTIC (Sticky)'}
-        </text>
-      </svg>
+          {/* Ball 2 label */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px'
+          }}>
+            <span style={{
+              fontSize: typo.small,
+              fontWeight: 600,
+              color: colors.textPrimary
+            }}>Ball 2: {displayMass2}</span>
+            <div style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              background: type === 'elastic'
+                ? 'linear-gradient(135deg, #f87171 0%, #ef4444 100%)'
+                : 'linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%)',
+              boxShadow: type === 'elastic'
+                ? '0 2px 4px rgba(239, 68, 68, 0.3)'
+                : '0 2px 4px rgba(245, 158, 11, 0.3)'
+            }} />
+          </div>
+        </div>
+      </div>
     );
   };
 

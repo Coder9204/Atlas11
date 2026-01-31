@@ -363,7 +363,7 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
     </div>
   );
 
-  // Spring Visualization
+  // Spring Visualization with Premium SVG Graphics
   const SpringVisualization = () => {
     const baseY = 50;
     const restLength = 100;
@@ -387,67 +387,405 @@ const HookesLawRenderer: React.FC<HookesLawRendererProps> = ({ onGameEvent, game
     };
 
     return (
-      <svg viewBox="0 0 400 350" className="w-full max-h-[350px]">
-        <defs>
-          <linearGradient id="springGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#22c55e" />
-            <stop offset="100%" stopColor="#16a34a" />
-          </linearGradient>
-          <filter id="springGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-        </defs>
+      <div className="relative">
+        <svg viewBox="0 0 400 350" className="w-full max-h-[350px]">
+          <defs>
+            {/* ═══════════════════════════════════════════════════════════════════ */}
+            {/* PREMIUM GRADIENTS                                                   */}
+            {/* ═══════════════════════════════════════════════════════════════════ */}
 
-        <rect width="400" height="350" fill="#0f172a" />
-        <rect x="150" y="30" width="100" height="20" fill="#475569" rx="3" />
+            {/* Metallic Spring Gradient - 6 color stops for realistic metal look */}
+            <linearGradient id="hookeSpringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="15%" stopColor="#10b981" />
+              <stop offset="35%" stopColor="#34d399" />
+              <stop offset="50%" stopColor="#6ee7b7" />
+              <stop offset="70%" stopColor="#34d399" />
+              <stop offset="85%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
 
-        <path d={springPath()} fill="none" stroke="url(#springGrad)" strokeWidth="4" strokeLinecap="round" filter="url(#springGlow)" />
+            {/* Spring Coil Depth Gradient - vertical for 3D depth effect */}
+            <linearGradient id="hookeSpringDepthGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="1" />
+              <stop offset="25%" stopColor="#16a34a" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#15803d" stopOpacity="0.9" />
+              <stop offset="75%" stopColor="#166534" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#14532d" stopOpacity="1" />
+            </linearGradient>
 
-        <rect x="160" y={baseY + currentLength} width="80" height="50" rx="8" fill="#475569" stroke="#22c55e" strokeWidth="2" />
-        <text x="200" y={baseY + currentLength + 30} textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">
+            {/* Mass Block 3D Gradient - creates metallic cube appearance */}
+            <linearGradient id="hookeMassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#64748b" />
+              <stop offset="60%" stopColor="#475569" />
+              <stop offset="80%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Mass Block Highlight */}
+            <linearGradient id="hookeMassHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#cbd5e1" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#94a3b8" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#334155" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Wall/Support Gradient - brushed metal */}
+            <linearGradient id="hookeWallGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="20%" stopColor="#4b5563" />
+              <stop offset="40%" stopColor="#374151" />
+              <stop offset="60%" stopColor="#4b5563" />
+              <stop offset="80%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+
+            {/* Force Arrow Down (Weight) Gradient */}
+            <linearGradient id="hookeForceDownGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="30%" stopColor="#f87171" />
+              <stop offset="60%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* Force Arrow Up (Spring) Gradient */}
+            <linearGradient id="hookeForceUpGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="30%" stopColor="#4ade80" />
+              <stop offset="60%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#16a34a" />
+            </linearGradient>
+
+            {/* Equilibrium Line Glow Gradient */}
+            <linearGradient id="hookeEquilibriumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#14b8a6" stopOpacity="0" />
+              <stop offset="20%" stopColor="#14b8a6" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#2dd4bf" stopOpacity="1" />
+              <stop offset="80%" stopColor="#14b8a6" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#14b8a6" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Background Gradient */}
+            <linearGradient id="hookeBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Stats Panel Gradient */}
+            <linearGradient id="hookeStatsPanelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* ═══════════════════════════════════════════════════════════════════ */}
+            {/* GLOW FILTERS                                                        */}
+            {/* ═══════════════════════════════════════════════════════════════════ */}
+
+            {/* Spring Glow - soft emerald glow around spring coils */}
+            <filter id="hookeSpringGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Mass Glow - subtle glow for 3D depth */}
+            <filter id="hookeMassGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Force Arrow Glow - makes arrows pop */}
+            <filter id="hookeForceGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Equilibrium Position Glow - subtle indicator glow */}
+            <filter id="hookeEquilibriumGlow" x="-50%" y="-200%" width="200%" height="500%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner Shadow for depth */}
+            <filter id="hookeInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feOffset dx="2" dy="2" />
+              <feGaussianBlur stdDeviation="2" result="shadow" />
+              <feComposite in="SourceGraphic" in2="shadow" operator="over" />
+            </filter>
+
+            {/* ═══════════════════════════════════════════════════════════════════ */}
+            {/* ARROW MARKERS                                                       */}
+            {/* ═══════════════════════════════════════════════════════════════════ */}
+
+            <marker id="hookeArrowDown" markerWidth="12" markerHeight="12" refX="6" refY="0" orient="auto">
+              <path d="M0,0 L6,12 L12,0 L6,3 Z" fill="url(#hookeForceDownGrad)" />
+            </marker>
+            <marker id="hookeArrowUp" markerWidth="12" markerHeight="12" refX="6" refY="12" orient="auto">
+              <path d="M0,12 L6,0 L12,12 L6,9 Z" fill="url(#hookeForceUpGrad)" />
+            </marker>
+          </defs>
+
+          {/* Premium dark background with gradient */}
+          <rect width="400" height="350" fill="url(#hookeBgGrad)" />
+
+          {/* Subtle grid pattern for depth */}
+          {Array.from({ length: 20 }).map((_, i) => (
+            <line key={`hgrid-${i}`} x1={i * 20} y1="0" x2={i * 20} y2="350" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          ))}
+          {Array.from({ length: 18 }).map((_, i) => (
+            <line key={`vgrid-${i}`} x1="0" y1={i * 20} x2="400" y2={i * 20} stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          ))}
+
+          {/* Wall/Support with brushed metal gradient */}
+          <rect x="150" y="25" width="100" height="25" fill="url(#hookeWallGrad)" rx="4" />
+          <rect x="150" y="25" width="100" height="8" fill="url(#hookeMassHighlight)" rx="4" />
+
+          {/* Spring coils with metallic gradient and glow */}
+          <path
+            d={springPath()}
+            fill="none"
+            stroke="url(#hookeSpringGrad)"
+            strokeWidth="5"
+            strokeLinecap="round"
+            filter="url(#hookeSpringGlow)"
+          />
+          {/* Spring coil shadow for depth */}
+          <path
+            d={springPath()}
+            fill="none"
+            stroke="#064e3b"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeOpacity="0.3"
+            transform="translate(1, 1)"
+          />
+
+          {/* Mass block with 3D gradient and glow */}
+          <g filter="url(#hookeMassGlow)">
+            <rect
+              x="160"
+              y={baseY + currentLength}
+              width="80"
+              height="50"
+              rx="8"
+              fill="url(#hookeMassGrad)"
+            />
+            {/* Mass highlight overlay */}
+            <rect
+              x="160"
+              y={baseY + currentLength}
+              width="80"
+              height="20"
+              rx="8"
+              fill="url(#hookeMassHighlight)"
+            />
+            {/* Mass border glow */}
+            <rect
+              x="160"
+              y={baseY + currentLength}
+              width="80"
+              height="50"
+              rx="8"
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth="2"
+              strokeOpacity="0.6"
+            />
+          </g>
+
+          {/* Force arrows with glow effect */}
+          {showForceArrows && (
+            <g filter="url(#hookeForceGlow)">
+              {/* Weight arrow (down) */}
+              <line
+                x1="200"
+                y1={baseY + currentLength + 55}
+                x2="200"
+                y2={baseY + currentLength + 55 + appliedForce * 2}
+                stroke="url(#hookeForceDownGrad)"
+                strokeWidth="4"
+                markerEnd="url(#hookeArrowDown)"
+              />
+
+              {/* Spring force arrow (up) */}
+              <line
+                x1="200"
+                y1={baseY + currentLength - 5}
+                x2="200"
+                y2={baseY + currentLength - 5 - appliedForce * 2}
+                stroke="url(#hookeForceUpGrad)"
+                strokeWidth="4"
+                markerEnd="url(#hookeArrowUp)"
+              />
+            </g>
+          )}
+
+          {/* Equilibrium/Rest position indicator with glow */}
+          <g filter="url(#hookeEquilibriumGlow)">
+            <line
+              x1="260"
+              y1={baseY + restLength}
+              x2="340"
+              y2={baseY + restLength}
+              stroke="url(#hookeEquilibriumGrad)"
+              strokeWidth="2"
+              strokeDasharray="6 3"
+            />
+          </g>
+
+          {/* Current position indicator */}
+          <line
+            x1="260"
+            y1={baseY + currentLength + 25}
+            x2="340"
+            y2={baseY + currentLength + 25}
+            stroke="#14b8a6"
+            strokeWidth="1.5"
+            strokeDasharray="4 2"
+            strokeOpacity="0.8"
+          />
+
+          {/* Displacement bracket with glow */}
+          {stretchAmount > 10 && (
+            <g filter="url(#hookeEquilibriumGlow)">
+              <line
+                x1="300"
+                y1={baseY + restLength}
+                x2="300"
+                y2={baseY + currentLength + 25}
+                stroke="#2dd4bf"
+                strokeWidth="2.5"
+              />
+              {/* Top bracket cap */}
+              <line
+                x1="295"
+                y1={baseY + restLength}
+                x2="305"
+                y2={baseY + restLength}
+                stroke="#2dd4bf"
+                strokeWidth="2"
+              />
+              {/* Bottom bracket cap */}
+              <line
+                x1="295"
+                y1={baseY + currentLength + 25}
+                x2="305"
+                y2={baseY + currentLength + 25}
+                stroke="#2dd4bf"
+                strokeWidth="2"
+              />
+            </g>
+          )}
+
+          {/* Stats panel with gradient background */}
+          <rect x="15" y="245" width="160" height="90" rx="10" fill="url(#hookeStatsPanelGrad)" stroke="#334155" strokeWidth="1" />
+        </svg>
+
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+        {/* TEXT LABELS OUTSIDE SVG - Using typo system for responsive typography  */}
+        {/* ═══════════════════════════════════════════════════════════════════════ */}
+
+        {/* Mass label - positioned over the mass block */}
+        <div
+          className="absolute text-white font-bold text-center pointer-events-none"
+          style={{
+            fontSize: typo.body,
+            left: '50%',
+            top: `calc(${((baseY + currentLength + 25) / 350) * 100}% + 2px)`,
+            transform: 'translateX(-50%)',
+          }}
+        >
           {(appliedForce / 10).toFixed(1)} kg
-        </text>
+        </div>
 
+        {/* Force labels when arrows are shown */}
         {showForceArrows && (
           <>
-            <line x1="200" y1={baseY + currentLength + 55} x2="200" y2={baseY + currentLength + 55 + appliedForce * 2} stroke="#ef4444" strokeWidth="3" markerEnd="url(#arrowDown)" />
-            <text x="230" y={baseY + currentLength + 70} fill="#ef4444" fontSize="10" fontWeight="bold">W = {appliedForce.toFixed(0)} N</text>
+            {/* Weight label */}
+            <div
+              className="absolute font-bold pointer-events-none"
+              style={{
+                fontSize: typo.small,
+                color: '#f87171',
+                left: '60%',
+                top: `calc(${((baseY + currentLength + 70) / 350) * 100}%)`,
+              }}
+            >
+              W = {appliedForce.toFixed(0)} N
+            </div>
 
-            <line x1="200" y1={baseY + currentLength - 5} x2="200" y2={baseY + currentLength - 5 - appliedForce * 2} stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowUp)" />
-            <text x="230" y={baseY + currentLength - 30} fill="#22c55e" fontSize="10" fontWeight="bold">F = kx = {appliedForce.toFixed(0)} N</text>
+            {/* Spring force label */}
+            <div
+              className="absolute font-bold pointer-events-none"
+              style={{
+                fontSize: typo.small,
+                color: '#4ade80',
+                left: '60%',
+                top: `calc(${((baseY + currentLength - 40) / 350) * 100}%)`,
+              }}
+            >
+              F = kx = {appliedForce.toFixed(0)} N
+            </div>
           </>
         )}
 
-        <line x1="270" y1={baseY + restLength} x2="330" y2={baseY + restLength} stroke="#334155" strokeWidth="1" strokeDasharray="4" />
-        <line x1="270" y1={baseY + currentLength + 25} x2="330" y2={baseY + currentLength + 25} stroke="#14b8a6" strokeWidth="1" strokeDasharray="4" />
+        {/* Rest position label */}
+        <div
+          className="absolute pointer-events-none text-right"
+          style={{
+            fontSize: typo.label,
+            color: '#64748b',
+            right: '5%',
+            top: `calc(${((baseY + restLength) / 350) * 100}%)`,
+            transform: 'translateY(-50%)',
+          }}
+        >
+          Rest
+        </div>
 
+        {/* Displacement label */}
         {stretchAmount > 10 && (
-          <>
-            <line x1="300" y1={baseY + restLength} x2="300" y2={baseY + currentLength + 25} stroke="#14b8a6" strokeWidth="2" />
-            <text x="310" y={baseY + (restLength + currentLength) / 2 + 15} fill="#14b8a6" fontSize="11" fontWeight="bold">
-              x = {(displacement * 100).toFixed(1)} cm
-            </text>
-          </>
+          <div
+            className="absolute font-bold pointer-events-none"
+            style={{
+              fontSize: typo.small,
+              color: '#2dd4bf',
+              left: '78%',
+              top: `calc(${((baseY + (restLength + currentLength) / 2 + 15) / 350) * 100}%)`,
+            }}
+          >
+            x = {(displacement * 100).toFixed(1)} cm
+          </div>
         )}
 
-        <text x="350" y={baseY + restLength + 4} textAnchor="end" fill="#64748b" fontSize="9">Rest position</text>
-
-        <rect x="20" y="250" width="150" height="80" rx="8" fill="#1e293b" stroke="#334155" />
-        <text x="35" y="270" fill="#64748b" fontSize="9">Spring Constant (k)</text>
-        <text x="35" y="285" fill="#22c55e" fontSize="14" fontWeight="bold">{springConstant} N/m</text>
-        <text x="35" y="305" fill="#64748b" fontSize="9">Potential Energy</text>
-        <text x="35" y="320" fill="#f59e0b" fontSize="14" fontWeight="bold">{elasticPE.toFixed(2)} J</text>
-
-        <defs>
-          <marker id="arrowDown" markerWidth="10" markerHeight="10" refX="5" refY="0" orient="auto">
-            <path d="M0,0 L5,10 L10,0 L5,3 Z" fill="#ef4444" />
-          </marker>
-          <marker id="arrowUp" markerWidth="10" markerHeight="10" refX="5" refY="10" orient="auto">
-            <path d="M0,10 L5,0 L10,10 L5,7 Z" fill="#22c55e" />
-          </marker>
-        </defs>
-      </svg>
+        {/* Stats panel labels */}
+        <div
+          className="absolute pointer-events-none"
+          style={{
+            left: '6%',
+            top: '73%',
+          }}
+        >
+          <div style={{ fontSize: typo.label, color: '#64748b', marginBottom: '2px' }}>Spring Constant (k)</div>
+          <div style={{ fontSize: typo.bodyLarge, color: '#22c55e', fontWeight: 'bold' }}>{springConstant} N/m</div>
+          <div style={{ fontSize: typo.label, color: '#64748b', marginTop: '8px', marginBottom: '2px' }}>Potential Energy</div>
+          <div style={{ fontSize: typo.bodyLarge, color: '#f59e0b', fontWeight: 'bold' }}>{elasticPE.toFixed(2)} J</div>
+        </div>
+      </div>
     );
   };
 

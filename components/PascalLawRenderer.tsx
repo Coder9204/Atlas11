@@ -503,10 +503,9 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
   ];
 
   // ============================================================================
-  // SVG VISUALIZATIONS
+  // SVG VISUALIZATIONS - Premium Graphics with Gradients & Filters
   // ============================================================================
   const renderHydraulicSystem = (size: number = 400, showLabels: boolean = true) => {
-    const scale = size / 400;
     const pistonProgress = animationProgress / 100;
     const smallPistonY = 120 - pistonProgress * 30;
     const largePistonY = 120 - pistonProgress * (30 * smallPistonArea / largePistonArea);
@@ -514,198 +513,353 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     const largeWidth = Math.min(40 + ratio * 1.5, 100);
 
     return (
-      <svg
-        width={size}
-        height={size * 0.7}
-        viewBox="0 0 400 280"
-        className="overflow-visible mx-auto"
-      >
-        <defs>
-          <linearGradient id="fluidGradPascal" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#b91c1c" />
-          </linearGradient>
-          <linearGradient id="metalGradPascal" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#94a3b8" />
-            <stop offset="50%" stopColor="#e2e8f0" />
-            <stop offset="100%" stopColor="#64748b" />
-          </linearGradient>
-          <filter id="glowPascal" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <marker id="arrowDownPascal" markerWidth="10" markerHeight="10" refX="5" refY="10" orient="auto">
-            <path d="M0,0 L5,10 L10,0 L5,3 Z" fill="#22c55e" />
-          </marker>
-          <marker id="arrowUpPascal" markerWidth="10" markerHeight="10" refX="5" refY="0" orient="auto">
-            <path d="M0,10 L5,0 L10,10 L5,7 Z" fill="#ef4444" />
-          </marker>
-          <marker id="arrowRightPascal" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto">
-            <path d="M0,0 L10,5 L0,10 L3,5 Z" fill="#fcd34d" />
-          </marker>
-        </defs>
+      <div className="flex flex-col items-center">
+        <svg
+          width={size}
+          height={size * 0.65}
+          viewBox="0 0 400 260"
+          className="overflow-visible mx-auto"
+        >
+          <defs>
+            {/* Premium hydraulic fluid gradient with depth - 5 color stops */}
+            <linearGradient id="pascalFluidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.9" />
+              <stop offset="20%" stopColor="#ef4444" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="80%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </linearGradient>
 
-        {/* Container/reservoir with fluid */}
-        <rect x="50" y="160" width="300" height="80" fill="url(#fluidGradPascal)" rx="5" opacity="0.9" />
+            {/* Fluid surface highlight for 3D depth */}
+            <linearGradient id="pascalFluidSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fef2f2" stopOpacity="0.4" />
+              <stop offset="30%" stopColor="#fecaca" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </linearGradient>
 
-        {/* Pressure wave visualization */}
-        {showPressureWaves && isAnimating && (
-          <g opacity={0.6}>
-            <circle cx="90" cy="190" r={15 + animationProgress * 0.5} fill="none" stroke="#fcd34d" strokeWidth="2" opacity={Math.max(0, 1 - animationProgress / 80)}>
-              <animate attributeName="r" from="15" to="100" dur="1s" repeatCount="indefinite" />
-              <animate attributeName="opacity" from="0.6" to="0" dur="1s" repeatCount="indefinite" />
-            </circle>
-            <circle cx="90" cy="190" r={35 + animationProgress * 0.5} fill="none" stroke="#fcd34d" strokeWidth="1" opacity={Math.max(0, 0.4 - animationProgress / 100)}>
-              <animate attributeName="r" from="35" to="120" dur="1s" repeatCount="indefinite" />
-              <animate attributeName="opacity" from="0.4" to="0" dur="1s" repeatCount="indefinite" />
-            </circle>
-          </g>
-        )}
+            {/* Premium metallic piston gradient with 3D effect - 6 color stops */}
+            <linearGradient id="pascalPistonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#cbd5e1" />
+              <stop offset="15%" stopColor="#f1f5f9" />
+              <stop offset="30%" stopColor="#e2e8f0" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="70%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
 
-        {/* Container border */}
-        <rect x="45" y="155" width="310" height="90" fill="none" stroke="#475569" strokeWidth="5" rx="8" />
+            {/* Cylinder wall gradient - 5 stops for brushed metal */}
+            <linearGradient id="pascalCylinderGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="20%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="80%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        {/* Small piston cylinder */}
-        <rect x="65" y="90" width="50" height="75" fill="#1e293b" stroke="#475569" strokeWidth="3" rx="2" />
+            {/* Container wall gradient - 4 stops */}
+            <linearGradient id="pascalContainerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="30%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
 
-        {/* Small piston */}
-        <rect
-          x="68"
-          y={smallPistonY}
-          width="44"
-          height="55"
-          fill="url(#metalGradPascal)"
-          stroke="#475569"
-          strokeWidth="2"
-          rx="3"
-        />
+            {/* Load/weight gradient - 4 stops */}
+            <linearGradient id="pascalLoadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="30%" stopColor="#f59e0b" />
+              <stop offset="70%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
 
-        {/* Input force arrow */}
-        {showLabels && (
-          <>
+            {/* Pressure wave glow gradient */}
+            <radialGradient id="pascalPressureGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Input force arrow gradient */}
+            <linearGradient id="pascalInputForceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#16a34a" />
+            </linearGradient>
+
+            {/* Output force arrow gradient */}
+            <linearGradient id="pascalOutputForceGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* Glow filter for arrows - feGaussianBlur + feMerge pattern */}
+            <filter id="pascalArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Pressure wave glow filter */}
+            <filter id="pascalWaveGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow for depth */}
+            <filter id="pascalInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Arrow markers with gradient fills */}
+            <marker id="pascalArrowDown" markerWidth="12" markerHeight="12" refX="6" refY="10" orient="auto">
+              <path d="M1,0 L6,10 L11,0 L6,3 Z" fill="url(#pascalInputForceGrad)" />
+            </marker>
+            <marker id="pascalArrowUp" markerWidth="12" markerHeight="12" refX="6" refY="2" orient="auto">
+              <path d="M1,12 L6,2 L11,12 L6,9 Z" fill="url(#pascalOutputForceGrad)" />
+            </marker>
+            <marker id="pascalArrowRight" markerWidth="10" markerHeight="10" refX="10" refY="5" orient="auto">
+              <path d="M0,0 L10,5 L0,10 L3,5 Z" fill="#fcd34d" />
+            </marker>
+          </defs>
+
+          {/* Container/reservoir with premium fluid */}
+          <rect x="50" y="160" width="300" height="80" fill="url(#pascalFluidGrad)" rx="5" />
+          {/* Fluid surface highlight for 3D depth */}
+          <rect x="50" y="160" width="300" height="25" fill="url(#pascalFluidSurface)" rx="5" />
+
+          {/* Pressure wave visualization with premium glow */}
+          {showPressureWaves && isAnimating && (
+            <g filter="url(#pascalWaveGlow)">
+              <circle cx="90" cy="195" r={15 + animationProgress * 0.5} fill="none" stroke="url(#pascalPressureGlow)" strokeWidth="3" opacity={Math.max(0, 1 - animationProgress / 80)}>
+                <animate attributeName="r" from="15" to="100" dur="1s" repeatCount="indefinite" />
+                <animate attributeName="opacity" from="0.8" to="0" dur="1s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="90" cy="195" r={35 + animationProgress * 0.5} fill="none" stroke="#fcd34d" strokeWidth="2" opacity={Math.max(0, 0.5 - animationProgress / 100)}>
+                <animate attributeName="r" from="35" to="120" dur="1s" repeatCount="indefinite" />
+                <animate attributeName="opacity" from="0.5" to="0" dur="1s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="90" cy="195" r={55 + animationProgress * 0.5} fill="none" stroke="#f59e0b" strokeWidth="1" opacity={Math.max(0, 0.3 - animationProgress / 100)}>
+                <animate attributeName="r" from="55" to="140" dur="1s" repeatCount="indefinite" />
+                <animate attributeName="opacity" from="0.3" to="0" dur="1s" repeatCount="indefinite" />
+              </circle>
+            </g>
+          )}
+
+          {/* Container border with 3D effect */}
+          <rect x="45" y="155" width="310" height="90" fill="none" stroke="url(#pascalContainerGrad)" strokeWidth="6" rx="8" />
+          <rect x="47" y="157" width="306" height="86" fill="none" stroke="#1e293b" strokeWidth="2" rx="7" opacity="0.5" />
+
+          {/* Small piston cylinder with depth */}
+          <rect x="65" y="90" width="50" height="75" fill="url(#pascalCylinderGrad)" stroke="#475569" strokeWidth="2" rx="3" />
+          {/* Cylinder inner shadow */}
+          <rect x="68" y="93" width="44" height="69" fill="#0f172a" opacity="0.3" rx="2" />
+
+          {/* Small piston with 3D metallic effect */}
+          <rect
+            x="68"
+            y={smallPistonY}
+            width="44"
+            height="55"
+            fill="url(#pascalPistonGrad)"
+            stroke="#475569"
+            strokeWidth="1"
+            rx="3"
+          />
+          {/* Piston top highlight */}
+          <rect
+            x="70"
+            y={smallPistonY + 2}
+            width="40"
+            height="8"
+            fill="#f1f5f9"
+            opacity="0.4"
+            rx="2"
+          />
+          {/* Piston bottom shadow */}
+          <rect
+            x="70"
+            y={smallPistonY + 45}
+            width="40"
+            height="8"
+            fill="#1e293b"
+            opacity="0.5"
+            rx="2"
+          />
+
+          {/* Input force arrow with glow */}
+          <g filter="url(#pascalArrowGlow)">
             <line
               x1="90"
-              y1={smallPistonY - 35}
+              y1={smallPistonY - 40}
               x2="90"
               y2={smallPistonY - 8}
-              stroke="#22c55e"
-              strokeWidth="4"
-              markerEnd="url(#arrowDownPascal)"
+              stroke="url(#pascalInputForceGrad)"
+              strokeWidth="5"
+              strokeLinecap="round"
+              markerEnd="url(#pascalArrowDown)"
             />
-            <text
-              x="90"
-              y={smallPistonY - 45}
-              textAnchor="middle"
-              fill="#22c55e"
-              fontSize="13"
-              fontWeight="bold"
-            >
-              F₁ = {inputForce} N
-            </text>
-          </>
-        )}
+          </g>
 
-        {/* Large piston cylinder */}
-        <rect
-          x={350 - largeWidth - 10}
-          y="70"
-          width={largeWidth + 10}
-          height="95"
-          fill="#1e293b"
-          stroke="#475569"
-          strokeWidth="3"
-          rx="2"
-        />
+          {/* Large piston cylinder with depth */}
+          <rect
+            x={350 - largeWidth - 10}
+            y="70"
+            width={largeWidth + 10}
+            height="95"
+            fill="url(#pascalCylinderGrad)"
+            stroke="#475569"
+            strokeWidth="2"
+            rx="3"
+          />
+          {/* Cylinder inner shadow */}
+          <rect
+            x={350 - largeWidth - 7}
+            y="73"
+            width={largeWidth + 4}
+            height="89"
+            fill="#0f172a"
+            opacity="0.3"
+            rx="2"
+          />
 
-        {/* Large piston */}
-        <rect
-          x={350 - largeWidth - 7}
-          y={largePistonY}
-          width={largeWidth + 4}
-          height="55"
-          fill="url(#metalGradPascal)"
-          stroke="#475569"
-          strokeWidth="2"
-          rx="3"
-        />
+          {/* Large piston with 3D metallic effect */}
+          <rect
+            x={350 - largeWidth - 7}
+            y={largePistonY}
+            width={largeWidth + 4}
+            height="55"
+            fill="url(#pascalPistonGrad)"
+            stroke="#475569"
+            strokeWidth="1"
+            rx="3"
+          />
+          {/* Piston top highlight */}
+          <rect
+            x={350 - largeWidth - 4}
+            y={largePistonY + 2}
+            width={largeWidth - 2}
+            height="8"
+            fill="#f1f5f9"
+            opacity="0.4"
+            rx="2"
+          />
+          {/* Piston bottom shadow */}
+          <rect
+            x={350 - largeWidth - 4}
+            y={largePistonY + 45}
+            width={largeWidth - 2}
+            height="8"
+            fill="#1e293b"
+            opacity="0.5"
+            rx="2"
+          />
 
-        {/* Weight/load on large piston */}
-        <rect
-          x={350 - largeWidth - 2}
-          y={largePistonY - 35}
-          width={largeWidth - 6}
-          height="32"
-          fill="#f59e0b"
-          stroke="#d97706"
-          strokeWidth="2"
-          rx="5"
-        />
-        <text
-          x={350 - largeWidth/2 - 5}
-          y={largePistonY - 14}
-          textAnchor="middle"
-          fill="#1e293b"
-          fontSize="11"
-          fontWeight="bold"
-        >
-          LOAD
-        </text>
+          {/* Weight/load on large piston with premium gradient */}
+          <rect
+            x={350 - largeWidth - 2}
+            y={largePistonY - 35}
+            width={largeWidth - 6}
+            height="32"
+            fill="url(#pascalLoadGrad)"
+            stroke="#92400e"
+            strokeWidth="2"
+            rx="5"
+          />
+          {/* Load highlight */}
+          <rect
+            x={350 - largeWidth}
+            y={largePistonY - 33}
+            width={largeWidth - 10}
+            height="6"
+            fill="#fef3c7"
+            opacity="0.5"
+            rx="3"
+          />
+          <text
+            x={350 - largeWidth/2 - 5}
+            y={largePistonY - 14}
+            textAnchor="middle"
+            fill="#78350f"
+            fontSize="11"
+            fontWeight="bold"
+          >
+            LOAD
+          </text>
 
-        {/* Output force arrow */}
-        {showLabels && (
-          <>
+          {/* Output force arrow with glow */}
+          <g filter="url(#pascalArrowGlow)">
             <line
               x1={350 - largeWidth/2 - 5}
-              y1={largePistonY + 70}
+              y1={largePistonY + 75}
               x2={350 - largeWidth/2 - 5}
-              y2={largePistonY + 45}
-              stroke="#ef4444"
-              strokeWidth="4"
-              markerEnd="url(#arrowUpPascal)"
+              y2={largePistonY + 48}
+              stroke="url(#pascalOutputForceGrad)"
+              strokeWidth="5"
+              strokeLinecap="round"
+              markerEnd="url(#pascalArrowUp)"
             />
-            <text
-              x={350 - largeWidth/2 - 5}
-              y={largePistonY + 85}
-              textAnchor="middle"
-              fill="#ef4444"
-              fontSize="13"
-              fontWeight="bold"
-            >
-              F₂ = {outputForce.toFixed(0)} N
-            </text>
-          </>
-        )}
-
-        {/* Pressure transmission arrows */}
-        {showLabels && (
-          <g opacity="0.8">
-            <line x1="125" y1="195" x2="165" y2="195" stroke="#fcd34d" strokeWidth="2" markerEnd="url(#arrowRightPascal)" />
-            <line x1="185" y1="195" x2="225" y2="195" stroke="#fcd34d" strokeWidth="2" markerEnd="url(#arrowRightPascal)" />
-            <line x1="245" y1="195" x2="285" y2="195" stroke="#fcd34d" strokeWidth="2" markerEnd="url(#arrowRightPascal)" />
           </g>
-        )}
 
-        {/* Area labels */}
+          {/* Pressure transmission arrows with animation */}
+          <g opacity="0.9">
+            <line x1="125" y1="200" x2="165" y2="200" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round" markerEnd="url(#pascalArrowRight)">
+              {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />}
+            </line>
+            <line x1="185" y1="200" x2="225" y2="200" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round" markerEnd="url(#pascalArrowRight)">
+              {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" begin="0.15s" />}
+            </line>
+            <line x1="245" y1="200" x2="285" y2="200" stroke="#fcd34d" strokeWidth="3" strokeLinecap="round" markerEnd="url(#pascalArrowRight)">
+              {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" begin="0.3s" />}
+            </line>
+          </g>
+
+          {/* Pressure indicator box with glow */}
+          <rect x="155" y="172" width="90" height="24" fill="#1e293b" stroke="#fcd34d" strokeWidth="2" rx="6" opacity="0.95" />
+          <rect x="157" y="174" width="86" height="20" fill="#0f172a" opacity="0.5" rx="5" />
+        </svg>
+
+        {/* External labels using typo system for responsive typography */}
         {showLabels && (
-          <>
-            <text x="90" y="265" textAnchor="middle" fill="#94a3b8" fontSize="12">
-              A₁ = {smallPistonArea} cm²
-            </text>
-            <text x={350 - largeWidth/2 - 5} y="265" textAnchor="middle" fill="#94a3b8" fontSize="12">
-              A₂ = {largePistonArea} cm²
-            </text>
+          <div className="w-full flex justify-between items-start px-4 mt-2" style={{ maxWidth: size }}>
+            {/* Left side - Input */}
+            <div className="flex flex-col items-center text-center" style={{ width: '30%' }}>
+              <span style={{ fontSize: typo.body, fontWeight: 'bold', color: '#22c55e' }}>
+                F₁ = {inputForce} N
+              </span>
+              <span style={{ fontSize: typo.small, color: '#94a3b8' }}>
+                A₁ = {smallPistonArea} cm²
+              </span>
+            </div>
 
-            {/* Pressure label */}
-            <rect x="155" y="172" width="90" height="28" fill="#1e293b" stroke="#fcd34d" strokeWidth="1" rx="4" />
-            <text x="200" y="191" textAnchor="middle" fill="#fcd34d" fontSize="12" fontWeight="bold">
-              P = {pressure.toFixed(0)} N/cm²
-            </text>
-          </>
+            {/* Center - Pressure */}
+            <div className="flex flex-col items-center text-center" style={{ width: '40%' }}>
+              <span style={{ fontSize: typo.bodyLarge, fontWeight: 'bold', color: '#fcd34d' }}>
+                P = {pressure.toFixed(0)} N/cm²
+              </span>
+              <span style={{ fontSize: typo.label, color: '#64748b' }}>
+                Pressure (constant)
+              </span>
+            </div>
+
+            {/* Right side - Output */}
+            <div className="flex flex-col items-center text-center" style={{ width: '30%' }}>
+              <span style={{ fontSize: typo.body, fontWeight: 'bold', color: '#ef4444' }}>
+                F₂ = {outputForce.toFixed(0)} N
+              </span>
+              <span style={{ fontSize: typo.small, color: '#94a3b8' }}>
+                A₂ = {largePistonArea} cm²
+              </span>
+            </div>
+          </div>
         )}
-      </svg>
+      </div>
     );
   };
 
@@ -714,59 +868,128 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     const outputDist = outputDistance;
 
     return (
-      <svg width={isMobile ? 320 : 420} height={200} viewBox="0 0 420 200" className="mx-auto">
-        <defs>
-          <marker id="arrowGreenDown" markerWidth="8" markerHeight="8" refX="4" refY="8" orient="auto">
-            <path d="M0,0 L4,8 L8,0" fill="none" stroke="#22c55e" strokeWidth="2" />
-          </marker>
-          <marker id="arrowRedDown" markerWidth="8" markerHeight="8" refX="4" refY="8" orient="auto">
-            <path d="M0,0 L4,8 L8,0" fill="none" stroke="#ef4444" strokeWidth="2" />
-          </marker>
-        </defs>
+      <div className="flex flex-col items-center">
+        <svg width={isMobile ? 320 : 420} height={170} viewBox="0 0 420 170" className="mx-auto">
+          <defs>
+            {/* Premium cylinder gradient */}
+            <linearGradient id="pascalWorkCylinderGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="20%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="80%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        {/* Input side */}
-        <rect x="40" y="30" width="60" height="130" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="3" />
-        <rect x="45" y="50" width="50" height="35" fill="#94a3b8" stroke="#64748b" strokeWidth="2" rx="2" />
+            {/* Premium piston gradient */}
+            <linearGradient id="pascalWorkPistonGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#e2e8f0" />
+              <stop offset="20%" stopColor="#cbd5e1" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="80%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
 
-        {/* Input distance arrow (long) */}
-        <line x1="70" y1="95" x2="70" y2="150" stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowGreenDown)" />
-        <text x="70" y="175" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">
-          d₁ = {inputDistance} cm
-        </text>
+            {/* Connection pipe gradient */}
+            <linearGradient id="pascalWorkPipeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="30%" stopColor="#ef4444" />
+              <stop offset="70%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
 
-        {/* Input force label */}
-        <text x="70" y="25" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold">
-          F₁ = {inputForce} N
-        </text>
+            {/* Work box gradient */}
+            <linearGradient id="pascalWorkBoxGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e1b4b" />
+              <stop offset="50%" stopColor="#312e81" />
+              <stop offset="100%" stopColor="#1e1b4b" />
+            </linearGradient>
 
-        {/* Connection pipe */}
-        <path d="M100,100 L280,100" fill="none" stroke="#ef4444" strokeWidth="18" />
-        <path d="M100,100 L280,100" fill="none" stroke="#b91c1c" strokeWidth="14" />
+            {/* Arrow glow filter */}
+            <filter id="pascalWorkArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* Work conservation box */}
-        <rect x="140" y="45" width="140" height="45" fill="#1e293b" stroke="#a855f7" strokeWidth="2" rx="6" />
-        <text x="210" y="63" textAnchor="middle" fill="#a855f7" fontSize="12" fontWeight="bold">
-          Work In = Work Out
-        </text>
-        <text x="210" y="80" textAnchor="middle" fill="#c084fc" fontSize="11">
-          {inputForce}×{inputDistance} = {outputForce.toFixed(0)}×{outputDist.toFixed(1)}
-        </text>
+            {/* Arrow markers */}
+            <marker id="pascalWorkArrowGreenDown" markerWidth="10" markerHeight="10" refX="5" refY="8" orient="auto">
+              <path d="M0,0 L5,10 L10,0 L5,3 Z" fill="#22c55e" />
+            </marker>
+            <marker id="pascalWorkArrowRedDown" markerWidth="10" markerHeight="10" refX="5" refY="8" orient="auto">
+              <path d="M0,0 L5,10 L10,0 L5,3 Z" fill="#ef4444" />
+            </marker>
+          </defs>
 
-        {/* Output side */}
-        <rect x="280" y="30" width="100" height="130" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="3" />
-        <rect x="285" y="95" width="90" height="35" fill="#94a3b8" stroke="#64748b" strokeWidth="2" rx="2" />
+          {/* Input side cylinder */}
+          <rect x="40" y="30" width="60" height="130" fill="url(#pascalWorkCylinderGrad)" stroke="#475569" strokeWidth="2" rx="3" />
+          <rect x="42" y="32" width="56" height="126" fill="#0f172a" opacity="0.3" rx="2" />
 
-        {/* Output distance arrow (short) */}
-        <line x1="330" y1="140" x2="330" y2={140 + Math.max(15, 50/ratio)} stroke="#ef4444" strokeWidth="3" markerEnd="url(#arrowRedDown)" />
-        <text x="330" y="175" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">
-          d₂ = {outputDist.toFixed(1)} cm
-        </text>
+          {/* Input piston */}
+          <rect x="45" y="50" width="50" height="35" fill="url(#pascalWorkPistonGrad)" stroke="#64748b" strokeWidth="1" rx="2" />
+          <rect x="47" y="52" width="46" height="6" fill="#f1f5f9" opacity="0.4" rx="1" />
 
-        {/* Output force label */}
-        <text x="330" y="25" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">
-          F₂ = {outputForce.toFixed(0)} N
-        </text>
-      </svg>
+          {/* Input distance arrow with glow */}
+          <g filter="url(#pascalWorkArrowGlow)">
+            <line x1="70" y1="95" x2="70" y2="148" stroke="#22c55e" strokeWidth="4" strokeLinecap="round" markerEnd="url(#pascalWorkArrowGreenDown)" />
+          </g>
+
+          {/* Connection pipe with premium gradient */}
+          <rect x="100" y="92" width="180" height="16" fill="url(#pascalWorkPipeGrad)" rx="8" />
+          <rect x="102" y="94" width="176" height="4" fill="#fecaca" opacity="0.3" rx="2" />
+
+          {/* Work conservation box with premium styling */}
+          <rect x="140" y="45" width="140" height="42" fill="url(#pascalWorkBoxGrad)" stroke="#a855f7" strokeWidth="2" rx="8" />
+          <rect x="142" y="47" width="136" height="8" fill="#a855f7" opacity="0.2" rx="4" />
+
+          {/* Output side cylinder */}
+          <rect x="280" y="30" width="100" height="130" fill="url(#pascalWorkCylinderGrad)" stroke="#475569" strokeWidth="2" rx="3" />
+          <rect x="282" y="32" width="96" height="126" fill="#0f172a" opacity="0.3" rx="2" />
+
+          {/* Output piston */}
+          <rect x="285" y="95" width="90" height="35" fill="url(#pascalWorkPistonGrad)" stroke="#64748b" strokeWidth="1" rx="2" />
+          <rect x="287" y="97" width="86" height="6" fill="#f1f5f9" opacity="0.4" rx="1" />
+
+          {/* Output distance arrow with glow */}
+          <g filter="url(#pascalWorkArrowGlow)">
+            <line x1="330" y1="140" x2="330" y2={140 + Math.max(15, 50/ratio)} stroke="#ef4444" strokeWidth="4" strokeLinecap="round" markerEnd="url(#pascalWorkArrowRedDown)" />
+          </g>
+        </svg>
+
+        {/* External labels using typo system */}
+        <div className="w-full flex justify-between items-start px-2 mt-1" style={{ maxWidth: isMobile ? 320 : 420 }}>
+          {/* Input side labels */}
+          <div className="flex flex-col items-center text-center" style={{ width: '25%' }}>
+            <span style={{ fontSize: typo.small, fontWeight: 'bold', color: '#22c55e' }}>
+              F₁ = {inputForce} N
+            </span>
+            <span style={{ fontSize: typo.small, fontWeight: 'bold', color: '#22c55e' }}>
+              d₁ = {inputDistance} cm
+            </span>
+          </div>
+
+          {/* Center - Work conservation */}
+          <div className="flex flex-col items-center text-center" style={{ width: '50%' }}>
+            <span style={{ fontSize: typo.body, fontWeight: 'bold', color: '#a855f7' }}>
+              Work In = Work Out
+            </span>
+            <span style={{ fontSize: typo.small, color: '#c084fc' }}>
+              {inputForce} x {inputDistance} = {outputForce.toFixed(0)} x {outputDist.toFixed(1)}
+            </span>
+          </div>
+
+          {/* Output side labels */}
+          <div className="flex flex-col items-center text-center" style={{ width: '25%' }}>
+            <span style={{ fontSize: typo.small, fontWeight: 'bold', color: '#ef4444' }}>
+              F₂ = {outputForce.toFixed(0)} N
+            </span>
+            <span style={{ fontSize: typo.small, fontWeight: 'bold', color: '#ef4444' }}>
+              d₂ = {outputDist.toFixed(1)} cm
+            </span>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -778,104 +1001,209 @@ const PascalLawRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     const brakeForce = (brakePedalForce * caliperArea / masterCylinderArea);
 
     return (
-      <svg width={isMobile ? 340 : 450} height={280} viewBox="0 0 450 280" className="mx-auto">
-        <defs>
-          <linearGradient id="brakeFluid" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#dc2626" />
-          </linearGradient>
-          <linearGradient id="rotorGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#475569" />
-            <stop offset="50%" stopColor="#64748b" />
-            <stop offset="100%" stopColor="#334155" />
-          </linearGradient>
-        </defs>
+      <div className="flex flex-col items-center">
+        <svg width={isMobile ? 340 : 450} height={220} viewBox="0 0 450 220" className="mx-auto">
+          <defs>
+            {/* Premium brake fluid gradient - 5 color stops */}
+            <linearGradient id="pascalBrakeFluidGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.8" />
+              <stop offset="25%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="75%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
 
-        {/* Title */}
-        <text x="225" y="20" textAnchor="middle" fill="#94a3b8" fontSize="14" fontWeight="bold">
-          Hydraulic Brake System
-        </text>
+            {/* Premium rotor gradient - 6 color stops for metallic effect */}
+            <radialGradient id="pascalRotorGrad" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="20%" stopColor="#64748b" />
+              <stop offset="40%" stopColor="#475569" />
+              <stop offset="60%" stopColor="#64748b" />
+              <stop offset="80%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </radialGradient>
 
-        {/* Brake Pedal */}
-        <g transform={`translate(30, ${100 + pedalProgress * 30})`}>
-          <rect x="0" y="0" width="50" height="15" fill="#64748b" rx="3" />
-          <rect x="45" y="-40" width="8" height="50" fill="#475569" />
-          <text x="25" y="35" textAnchor="middle" fill="#94a3b8" fontSize="10">Pedal</text>
-        </g>
+            {/* Brake caliper gradient */}
+            <linearGradient id="pascalCaliperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="30%" stopColor="#ef4444" />
+              <stop offset="70%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
 
-        {/* Master Cylinder */}
-        <rect x="90" y="95" width="60" height="40" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="3" />
-        <rect x="95" y={105 + pedalProgress * 10} width="20" height="20" fill="#94a3b8" stroke="#64748b" strokeWidth="2" rx="2" />
-        <text x="120" y="150" textAnchor="middle" fill="#94a3b8" fontSize="9">Master</text>
-        <text x="120" y="160" textAnchor="middle" fill="#94a3b8" fontSize="9">2 cm²</text>
+            {/* Pedal metallic gradient */}
+            <linearGradient id="pascalPedalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="30%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
 
-        {/* Brake Lines */}
-        <path
-          d="M150,115 L200,115 L200,60 L280,60"
-          fill="none"
-          stroke="url(#brakeFluid)"
-          strokeWidth="8"
-          strokeLinecap="round"
-        />
-        <path
-          d="M150,115 L200,115 L200,170 L280,170"
-          fill="none"
-          stroke="url(#brakeFluid)"
-          strokeWidth="8"
-          strokeLinecap="round"
-        />
+            {/* Master cylinder gradient */}
+            <linearGradient id="pascalMasterCylGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="20%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="80%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        {/* Pressure indicator */}
-        {brakePedalForce > 0 && (
-          <g>
-            <rect x="180" y="100" width="50" height="25" fill="#1e293b" stroke="#fcd34d" strokeWidth="1" rx="3" />
-            <text x="205" y="117" textAnchor="middle" fill="#fcd34d" fontSize="10" fontWeight="bold">
-              {(brakePedalForce / masterCylinderArea).toFixed(0)} N/cm²
-            </text>
+            {/* Pressure glow filter */}
+            <filter id="pascalBrakePressureGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Rotor shine filter */}
+            <filter id="pascalRotorShine" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          {/* Brake Pedal with premium metallic look */}
+          <g transform={`translate(30, ${80 + pedalProgress * 30})`}>
+            <rect x="0" y="0" width="50" height="15" fill="url(#pascalPedalGrad)" rx="3" stroke="#475569" strokeWidth="1" />
+            <rect x="2" y="2" width="46" height="4" fill="#cbd5e1" opacity="0.3" rx="2" />
+            <rect x="45" y="-40" width="8" height="50" fill="url(#pascalPedalGrad)" stroke="#334155" strokeWidth="1" rx="1" />
           </g>
-        )}
 
-        {/* Front Wheel/Rotor */}
-        <g transform="translate(320, 60)">
-          <circle cx="40" cy="0" r="35" fill="url(#rotorGrad)" stroke="#334155" strokeWidth="3" />
-          <circle cx="40" cy="0" r="15" fill="#1e293b" />
-          {/* Brake caliper */}
-          <rect x={10 - caliperClamp} y="-12" width="15" height="24" fill="#ef4444" rx="2" />
-          <rect x={55 + caliperClamp} y="-12" width="15" height="24" fill="#ef4444" rx="2" />
-          <text x="40" y="55" textAnchor="middle" fill="#94a3b8" fontSize="9">Front Caliper</text>
-          <text x="40" y="65" textAnchor="middle" fill="#94a3b8" fontSize="9">20 cm²</text>
-        </g>
+          {/* Master Cylinder with premium styling */}
+          <rect x="90" y="75" width="60" height="40" fill="url(#pascalMasterCylGrad)" stroke="#475569" strokeWidth="2" rx="4" />
+          <rect x="92" y="77" width="56" height="36" fill="#0f172a" opacity="0.3" rx="3" />
 
-        {/* Rear Wheel/Rotor */}
-        <g transform="translate(320, 170)">
-          <circle cx="40" cy="0" r="35" fill="url(#rotorGrad)" stroke="#334155" strokeWidth="3" />
-          <circle cx="40" cy="0" r="15" fill="#1e293b" />
-          {/* Brake caliper */}
-          <rect x={10 - caliperClamp} y="-12" width="15" height="24" fill="#ef4444" rx="2" />
-          <rect x={55 + caliperClamp} y="-12" width="15" height="24" fill="#ef4444" rx="2" />
-          <text x="40" y="55" textAnchor="middle" fill="#94a3b8" fontSize="9">Rear Caliper</text>
-          <text x="40" y="65" textAnchor="middle" fill="#94a3b8" fontSize="9">20 cm²</text>
-        </g>
+          {/* Master cylinder piston */}
+          <rect x="95" y={85 + pedalProgress * 10} width="20" height="20" fill="url(#pascalPedalGrad)" stroke="#64748b" strokeWidth="1" rx="2" />
+          <rect x="97" y={87 + pedalProgress * 10} width="16" height="4" fill="#e2e8f0" opacity="0.4" rx="1" />
 
-        {/* Force readouts */}
-        <g transform="translate(30, 200)">
-          <rect x="0" y="0" width="100" height="50" fill="#1e293b" stroke="#22c55e" strokeWidth="1" rx="4" />
-          <text x="50" y="18" textAnchor="middle" fill="#22c55e" fontSize="10">Input Force</text>
-          <text x="50" y="38" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">{brakePedalForce} N</text>
-        </g>
+          {/* Brake Lines with premium gradient */}
+          <path
+            d="M150,95 L200,95 L200,50 L280,50"
+            fill="none"
+            stroke="url(#pascalBrakeFluidGrad)"
+            strokeWidth="10"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M152,95 L200,95 L200,52 L278,52"
+            fill="none"
+            stroke="#fecaca"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.3"
+          />
+          <path
+            d="M150,95 L200,95 L200,150 L280,150"
+            fill="none"
+            stroke="url(#pascalBrakeFluidGrad)"
+            strokeWidth="10"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          <path
+            d="M152,95 L200,95 L200,148 L278,148"
+            fill="none"
+            stroke="#fecaca"
+            strokeWidth="3"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            opacity="0.3"
+          />
 
-        <g transform="translate(150" y="200)">
-          <rect x="0" y="0" width="120" height="50" fill="#1e293b" stroke="#ef4444" strokeWidth="1" rx="4" />
-          <text x="60" y="18" textAnchor="middle" fill="#ef4444" fontSize="10">Output (per wheel)</text>
-          <text x="60" y="38" textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="bold">{brakeForce.toFixed(0)} N</text>
-        </g>
+          {/* Pressure indicator with glow */}
+          {brakePedalForce > 0 && (
+            <g filter="url(#pascalBrakePressureGlow)">
+              <rect x="175" y="80" width="60" height="28" fill="#1e293b" stroke="#fcd34d" strokeWidth="2" rx="6" />
+              <rect x="177" y="82" width="56" height="6" fill="#fcd34d" opacity="0.2" rx="3" />
+            </g>
+          )}
 
-        <g transform="translate(290, 200)">
-          <rect x="0" y="0" width="100" height="50" fill="#1e293b" stroke="#a855f7" strokeWidth="1" rx="4" />
-          <text x="50" y="18" textAnchor="middle" fill="#a855f7" fontSize="10">Multiplication</text>
-          <text x="50" y="38" textAnchor="middle" fill="#a855f7" fontSize="16" fontWeight="bold">{(caliperArea / masterCylinderArea)}×</text>
-        </g>
-      </svg>
+          {/* Front Wheel/Rotor with premium metallic effect */}
+          <g transform="translate(320, 50)" filter="url(#pascalRotorShine)">
+            <circle cx="40" cy="0" r="38" fill="url(#pascalRotorGrad)" stroke="#1e293b" strokeWidth="3" />
+            {/* Rotor ventilation slots */}
+            <circle cx="40" cy="0" r="30" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="8 4" />
+            <circle cx="40" cy="0" r="22" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="6 3" />
+            <circle cx="40" cy="0" r="15" fill="#0f172a" stroke="#1e293b" strokeWidth="2" />
+            {/* Hub center highlight */}
+            <circle cx="38" cy="-2" r="6" fill="#475569" opacity="0.5" />
+            {/* Brake calipers with gradient */}
+            <rect x={8 - caliperClamp} y="-14" width="18" height="28" fill="url(#pascalCaliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
+            <rect x={54 + caliperClamp} y="-14" width="18" height="28" fill="url(#pascalCaliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
+          </g>
+
+          {/* Rear Wheel/Rotor with premium metallic effect */}
+          <g transform="translate(320, 150)" filter="url(#pascalRotorShine)">
+            <circle cx="40" cy="0" r="38" fill="url(#pascalRotorGrad)" stroke="#1e293b" strokeWidth="3" />
+            {/* Rotor ventilation slots */}
+            <circle cx="40" cy="0" r="30" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="8 4" />
+            <circle cx="40" cy="0" r="22" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="6 3" />
+            <circle cx="40" cy="0" r="15" fill="#0f172a" stroke="#1e293b" strokeWidth="2" />
+            {/* Hub center highlight */}
+            <circle cx="38" cy="-2" r="6" fill="#475569" opacity="0.5" />
+            {/* Brake calipers with gradient */}
+            <rect x={8 - caliperClamp} y="-14" width="18" height="28" fill="url(#pascalCaliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
+            <rect x={54 + caliperClamp} y="-14" width="18" height="28" fill="url(#pascalCaliperGrad)" rx="3" stroke="#991b1b" strokeWidth="1" />
+          </g>
+        </svg>
+
+        {/* External labels using typo system */}
+        <div className="w-full grid grid-cols-4 gap-2 px-2 mt-2" style={{ maxWidth: isMobile ? 340 : 450 }}>
+          {/* Pedal label */}
+          <div className="flex flex-col items-center text-center">
+            <span style={{ fontSize: typo.label, color: '#64748b' }}>Pedal</span>
+          </div>
+
+          {/* Master cylinder label */}
+          <div className="flex flex-col items-center text-center">
+            <span style={{ fontSize: typo.label, color: '#94a3b8' }}>Master</span>
+            <span style={{ fontSize: typo.label, color: '#64748b' }}>2 cm²</span>
+          </div>
+
+          {/* Pressure label */}
+          {brakePedalForce > 0 ? (
+            <div className="flex flex-col items-center text-center">
+              <span style={{ fontSize: typo.small, fontWeight: 'bold', color: '#fcd34d' }}>
+                {(brakePedalForce / masterCylinderArea).toFixed(0)} N/cm²
+              </span>
+              <span style={{ fontSize: typo.label, color: '#64748b' }}>Pressure</span>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center text-center">
+              <span style={{ fontSize: typo.label, color: '#64748b' }}>Brake Lines</span>
+            </div>
+          )}
+
+          {/* Caliper label */}
+          <div className="flex flex-col items-center text-center">
+            <span style={{ fontSize: typo.label, color: '#94a3b8' }}>Calipers</span>
+            <span style={{ fontSize: typo.label, color: '#64748b' }}>20 cm² each</span>
+          </div>
+        </div>
+
+        {/* Force readouts using external labels */}
+        <div className="w-full grid grid-cols-3 gap-2 px-2 mt-3" style={{ maxWidth: isMobile ? 340 : 450 }}>
+          <div className="bg-slate-800/50 rounded-lg p-2 border border-green-500/30 text-center">
+            <span style={{ fontSize: typo.label, color: '#22c55e' }}>Input Force</span>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: 'bold', color: '#22c55e' }}>{brakePedalForce} N</div>
+          </div>
+
+          <div className="bg-slate-800/50 rounded-lg p-2 border border-red-500/30 text-center">
+            <span style={{ fontSize: typo.label, color: '#ef4444' }}>Output (per wheel)</span>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: 'bold', color: '#ef4444' }}>{brakeForce.toFixed(0)} N</div>
+          </div>
+
+          <div className="bg-slate-800/50 rounded-lg p-2 border border-purple-500/30 text-center">
+            <span style={{ fontSize: typo.label, color: '#a855f7' }}>Multiplication</span>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: 'bold', color: '#a855f7' }}>{(caliperArea / masterCylinderArea)}x</div>
+          </div>
+        </div>
+      </div>
     );
   };
 

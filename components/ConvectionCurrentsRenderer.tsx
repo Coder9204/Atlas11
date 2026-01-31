@@ -778,7 +778,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.sm,
           }}>
-            🌡️ Convection Current Simulator
+            Convection Current Simulator
           </h2>
           <p style={{ color: premiumDesign.colors.text.secondary }}>
             Add heat and watch how temperature differences create fluid flow
@@ -798,81 +798,209 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
             borderRadius: premiumDesign.radius.xl,
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(255,255,255,0.1)',
+            position: 'relative',
           }}>
             <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
-              {/* Container */}
-              <rect x="40" y="40" width="220" height="220" fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="2" rx="8" />
+              {/* Premium SVG Definitions */}
+              <defs>
+                {/* Hot zone gradient - warm colors with multiple stops */}
+                <linearGradient id="convHotZoneH" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#dc2626" stopOpacity="0.9" />
+                  <stop offset="25%" stopColor="#ef4444" stopOpacity="1" />
+                  <stop offset="50%" stopColor="#f97316" stopOpacity="1" />
+                  <stop offset="75%" stopColor="#ef4444" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0.9" />
+                </linearGradient>
+                <linearGradient id="convHotZoneV" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#dc2626" stopOpacity="0.9" />
+                  <stop offset="25%" stopColor="#ef4444" stopOpacity="1" />
+                  <stop offset="50%" stopColor="#f97316" stopOpacity="1" />
+                  <stop offset="75%" stopColor="#ef4444" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0.9" />
+                </linearGradient>
 
-              {/* Heat source indicators */}
+                {/* Cold zone gradient - cool colors */}
+                <linearGradient id="convColdZone" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#1e40af" stopOpacity="0.6" />
+                  <stop offset="25%" stopColor="#3b82f6" stopOpacity="0.7" />
+                  <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.8" />
+                  <stop offset="75%" stopColor="#3b82f6" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#1e40af" stopOpacity="0.6" />
+                </linearGradient>
+
+                {/* Container glass gradient */}
+                <linearGradient id="convContainerGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#475569" stopOpacity="0.4" />
+                  <stop offset="30%" stopColor="#64748b" stopOpacity="0.3" />
+                  <stop offset="70%" stopColor="#475569" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#334155" stopOpacity="0.4" />
+                </linearGradient>
+
+                {/* Temperature legend gradient */}
+                <linearGradient id="convTempLegend" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#1e40af" />
+                  <stop offset="25%" stopColor="#3b82f6" />
+                  <stop offset="50%" stopColor="#a855f7" />
+                  <stop offset="75%" stopColor="#f97316" />
+                  <stop offset="100%" stopColor="#ef4444" />
+                </linearGradient>
+
+                {/* Particle glow gradient */}
+                <radialGradient id="convParticleGlowHot" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#f97316" stopOpacity="0.8" />
+                  <stop offset="70%" stopColor="#ef4444" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+                </radialGradient>
+                <radialGradient id="convParticleGlowCold" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#60a5fa" stopOpacity="0.8" />
+                  <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Heat glow filter */}
+                <filter id="convHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Particle glow filter */}
+                <filter id="convParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Arrow glow filter */}
+                <filter id="convArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="1.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Flow arrow marker */}
+                <marker id="convArrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L9,3 z" fill="rgba(255,255,255,0.8)" />
+                </marker>
+
+                {/* Background pattern */}
+                <pattern id="convGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <rect width="20" height="20" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="0.5" />
+                </pattern>
+              </defs>
+
+              {/* Background with grid */}
+              <rect x="0" y="0" width="300" height="300" fill="#0a0f1a" />
+              <rect x="0" y="0" width="300" height="300" fill="url(#convGridPattern)" />
+
+              {/* Container with glass effect */}
+              <rect x="40" y="40" width="220" height="220" fill="url(#convContainerGlass)" stroke="rgba(148,163,184,0.4)" strokeWidth="2" rx="8" />
+              <rect x="42" y="42" width="216" height="216" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" rx="6" />
+
+              {/* Cold zone indicator at top */}
+              <rect x="50" y="45" width="200" height="8" fill="url(#convColdZone)" rx="4" opacity="0.6" />
+
+              {/* Heat source indicators with glow */}
               {heatSource === 'bottom' && (
-                <g>
-                  <rect x="50" y="252" width="200" height="10" fill="url(#heatGradient)" rx="5" />
-                  <text x="150" y="280" textAnchor="middle" fill="#EF4444" fontSize="12">🔥 Heat Source 🔥</text>
+                <g filter="url(#convHeatGlow)">
+                  <rect x="50" y="250" width="200" height="12" fill="url(#convHotZoneH)" rx="6" />
+                  <rect x="60" y="252" width="180" height="8" fill="#fbbf24" opacity="0.4" rx="4">
+                    <animate attributeName="opacity" values="0.4;0.7;0.4" dur="1s" repeatCount="indefinite" />
+                  </rect>
                 </g>
               )}
               {heatSource === 'left' && (
-                <g>
-                  <rect x="28" y="50" width="10" height="200" fill="url(#heatGradientV)" rx="5" />
+                <g filter="url(#convHeatGlow)">
+                  <rect x="28" y="50" width="12" height="200" fill="url(#convHotZoneV)" rx="6" />
+                  <rect x="30" y="60" width="8" height="180" fill="#fbbf24" opacity="0.4" rx="4">
+                    <animate attributeName="opacity" values="0.4;0.7;0.4" dur="1s" repeatCount="indefinite" />
+                  </rect>
                 </g>
               )}
               {heatSource === 'right' && (
-                <g>
-                  <rect x="262" y="50" width="10" height="200" fill="url(#heatGradientV)" rx="5" />
+                <g filter="url(#convHeatGlow)">
+                  <rect x="260" y="50" width="12" height="200" fill="url(#convHotZoneV)" rx="6" />
+                  <rect x="262" y="60" width="8" height="180" fill="#fbbf24" opacity="0.4" rx="4">
+                    <animate attributeName="opacity" values="0.4;0.7;0.4" dur="1s" repeatCount="indefinite" />
+                  </rect>
                 </g>
               )}
 
-              {/* Particles */}
+              {/* Particles with glow effect */}
               {particles.map(p => (
-                <circle
-                  key={p.id}
-                  cx={p.x}
-                  cy={p.y}
-                  r={5}
-                  fill={getTempColor(p.temp)}
-                  opacity={0.8}
-                />
+                <g key={p.id} filter="url(#convParticleGlow)">
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={6}
+                    fill={getTempColor(p.temp)}
+                    opacity="0.9"
+                  />
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={3}
+                    fill={p.temp > 60 ? '#fef3c7' : '#dbeafe'}
+                    opacity="0.6"
+                  />
+                </g>
               ))}
 
-              {/* Flow arrows when simulating */}
+              {/* Flow arrows when simulating with glow */}
               {isSimulating && heatSource === 'bottom' && (
-                <g opacity={0.4}>
-                  <path d="M150 200 L150 100" stroke="white" strokeWidth="2" markerEnd="url(#arrow)" />
-                  <path d="M100 80 L70 80 L70 220 L100 220" stroke="white" strokeWidth="1.5" fill="none" markerEnd="url(#arrow)" />
-                  <path d="M200 80 L230 80 L230 220 L200 220" stroke="white" strokeWidth="1.5" fill="none" markerEnd="url(#arrow)" />
+                <g opacity={0.6} filter="url(#convArrowGlow)">
+                  <path d="M150 210 L150 90" stroke="url(#convTempLegend)" strokeWidth="3" markerEnd="url(#convArrow)" />
+                  <path d="M100 70 L60 70 L60 230 L100 230" stroke="rgba(96,165,250,0.8)" strokeWidth="2" fill="none" markerEnd="url(#convArrow)" />
+                  <path d="M200 70 L240 70 L240 230 L200 230" stroke="rgba(96,165,250,0.8)" strokeWidth="2" fill="none" markerEnd="url(#convArrow)" />
                 </g>
               )}
 
-              {/* Definitions */}
-              <defs>
-                <linearGradient id="heatGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-                  <stop offset="0%" stopColor="#EF4444" />
-                  <stop offset="50%" stopColor="#F59E0B" />
-                  <stop offset="100%" stopColor="#EF4444" />
-                </linearGradient>
-                <linearGradient id="heatGradientV" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#EF4444" />
-                  <stop offset="50%" stopColor="#F59E0B" />
-                  <stop offset="100%" stopColor="#EF4444" />
-                </linearGradient>
-                <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                  <path d="M0,0 L0,6 L9,3 z" fill="white" />
-                </marker>
-              </defs>
-
               {/* Temperature legend */}
-              <g transform="translate(260, 50)">
-                <text x="5" y="0" fill="white" fontSize="10">Temp</text>
-                <rect x="0" y="10" width="15" height="80" rx="3">
-                  <linearGradient id="tempLegend" x1="0%" y1="100%" x2="0%" y2="0%">
-                    <stop offset="0%" stopColor="#4287f5" />
-                    <stop offset="100%" stopColor="#ef4444" />
-                  </linearGradient>
-                </rect>
-                <rect x="0" y="10" width="15" height="80" fill="url(#tempLegend)" rx="3" />
-                <text x="20" y="18" fill="white" fontSize="8">Hot</text>
-                <text x="20" y="88" fill="white" fontSize="8">Cold</text>
+              <g transform="translate(268, 50)">
+                <rect x="0" y="10" width="18" height="90" fill="url(#convTempLegend)" rx="4" stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
               </g>
             </svg>
+
+            {/* Labels outside SVG using typo system */}
+            <div style={{
+              position: 'absolute',
+              right: isMobile ? '8px' : '12px',
+              top: '60px',
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              gap: '2px',
+            }}>
+              <span style={{ fontSize: typo.label, color: premiumDesign.colors.text.muted, fontWeight: 600 }}>TEMP</span>
+              <div style={{ height: '90px' }} />
+              <span style={{ fontSize: typo.label, color: '#ef4444', fontWeight: 500 }}>Hot</span>
+              <div style={{ height: '60px' }} />
+              <span style={{ fontSize: typo.label, color: '#3b82f6', fontWeight: 500 }}>Cold</span>
+            </div>
+
+            {/* Heat source label */}
+            {heatSource !== 'off' && (
+              <div style={{
+                position: 'absolute',
+                bottom: isMobile ? '8px' : '12px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: typo.small,
+                color: '#f97316',
+                fontWeight: 600,
+                textAlign: 'center',
+              }}>
+                Heat Source Active
+              </div>
+            )}
           </div>
 
           {/* Controls */}
@@ -1162,7 +1290,7 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.sm,
           }}>
-            🍳 Pot of Water Simulation
+            Pot of Water Simulation
           </h2>
           <p style={{ color: premiumDesign.colors.text.secondary }}>
             Heat water from below and watch convection cells form
@@ -1182,83 +1310,230 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
             borderRadius: premiumDesign.radius.xl,
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(255,255,255,0.1)',
+            position: 'relative',
           }}>
             <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
-              {/* Pot shape */}
+              {/* Premium SVG Definitions for Pot Simulation */}
+              <defs>
+                {/* Pot metal gradient - brushed steel look */}
+                <linearGradient id="convPotMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#4b5563" />
+                  <stop offset="20%" stopColor="#6b7280" />
+                  <stop offset="40%" stopColor="#9ca3af" />
+                  <stop offset="60%" stopColor="#6b7280" />
+                  <stop offset="80%" stopColor="#4b5563" />
+                  <stop offset="100%" stopColor="#374151" />
+                </linearGradient>
+
+                {/* Pot interior shadow gradient */}
+                <linearGradient id="convPotInterior" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#1e293b" stopOpacity="0.3" />
+                  <stop offset="50%" stopColor="#0f172a" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#020617" stopOpacity="0.7" />
+                </linearGradient>
+
+                {/* Handle gradient */}
+                <linearGradient id="convHandleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#374151" />
+                  <stop offset="50%" stopColor="#6b7280" />
+                  <stop offset="100%" stopColor="#374151" />
+                </linearGradient>
+
+                {/* Burner heat gradient - radial for glow effect */}
+                <radialGradient id="convBurnerGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+                  <stop offset="30%" stopColor="#f97316" stopOpacity="0.8" />
+                  <stop offset="60%" stopColor="#ef4444" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Burner coil gradient */}
+                <linearGradient id="convBurnerCoil" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#1f2937" />
+                  <stop offset="25%" stopColor="#374151" />
+                  <stop offset="50%" stopColor="#4b5563" />
+                  <stop offset="75%" stopColor="#374151" />
+                  <stop offset="100%" stopColor="#1f2937" />
+                </linearGradient>
+
+                {/* Active burner coil (hot) */}
+                <linearGradient id="convBurnerCoilHot" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#7f1d1d" />
+                  <stop offset="25%" stopColor="#dc2626" />
+                  <stop offset="50%" stopColor="#f97316" />
+                  <stop offset="75%" stopColor="#dc2626" />
+                  <stop offset="100%" stopColor="#7f1d1d" />
+                </linearGradient>
+
+                {/* Water surface gradient */}
+                <linearGradient id="convWaterSurface" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#1e40af" stopOpacity="0.3" />
+                  <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#1e40af" stopOpacity="0.3" />
+                </linearGradient>
+
+                {/* Steam gradient */}
+                <radialGradient id="convSteamGrad" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+                  <stop offset="50%" stopColor="#e2e8f0" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#cbd5e1" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Convection arrow gradient */}
+                <linearGradient id="convFlowArrow" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+                  <stop offset="50%" stopColor="#a855f7" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity="0.8" />
+                </linearGradient>
+
+                {/* Heat glow filter */}
+                <filter id="convPotHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="6" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Particle glow filter */}
+                <filter id="convPotParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Steam blur filter */}
+                <filter id="convSteamBlur" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" />
+                </filter>
+
+                {/* Arrow glow filter */}
+                <filter id="convPotArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="1.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Arrow marker */}
+                <marker id="convPotArrowUp" markerWidth="10" markerHeight="10" refX="5" refY="10" orient="auto">
+                  <path d="M0,10 L5,0 L10,10" fill="rgba(255,255,255,0.8)" />
+                </marker>
+
+                {/* Background pattern */}
+                <pattern id="convPotGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+                  <rect width="20" height="20" fill="none" stroke="rgba(255,255,255,0.03)" strokeWidth="0.5" />
+                </pattern>
+              </defs>
+
+              {/* Background */}
+              <rect x="0" y="0" width="300" height="300" fill="#0a0f1a" />
+              <rect x="0" y="0" width="300" height="300" fill="url(#convPotGridPattern)" />
+
+              {/* Burner glow (behind pot) */}
+              {burnerPower > 0 && (
+                <g filter="url(#convPotHeatGlow)">
+                  <ellipse
+                    cx="150"
+                    cy="268"
+                    rx={50 + burnerPower * 12}
+                    ry={12 + burnerPower * 3}
+                    fill="url(#convBurnerGlow)"
+                    opacity={0.4 + burnerPower * 0.12}
+                  >
+                    <animate attributeName="opacity" values={`${0.3 + burnerPower * 0.1};${0.5 + burnerPower * 0.1};${0.3 + burnerPower * 0.1}`} dur="0.8s" repeatCount="indefinite" />
+                  </ellipse>
+                </g>
+              )}
+
+              {/* Burner coils */}
+              <circle cx="150" cy="270" r="42" fill="none" stroke={burnerPower > 0 ? "url(#convBurnerCoilHot)" : "url(#convBurnerCoil)"} strokeWidth="4" />
+              <circle cx="150" cy="270" r="30" fill="none" stroke={burnerPower > 0 ? "url(#convBurnerCoilHot)" : "url(#convBurnerCoil)"} strokeWidth="3" />
+              <circle cx="150" cy="270" r="18" fill="none" stroke={burnerPower > 0 ? "url(#convBurnerCoilHot)" : "url(#convBurnerCoil)"} strokeWidth="3" />
+
+              {/* Pot interior (shadow) */}
+              <path
+                d="M55 75 L55 225 Q55 245 75 245 L225 245 Q245 245 245 225 L245 75"
+                fill="url(#convPotInterior)"
+              />
+
+              {/* Water surface indicator */}
+              <rect x="58" y="78" width="184" height="6" fill="url(#convWaterSurface)" rx="3" />
+
+              {/* Water particles with glow */}
+              {potParticles.map(p => (
+                <g key={p.id} filter="url(#convPotParticleGlow)">
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={7}
+                    fill={getTempColor(p.temp)}
+                    opacity="0.9"
+                  />
+                  <circle
+                    cx={p.x}
+                    cy={p.y}
+                    r={3.5}
+                    fill={p.temp > 60 ? '#fef3c7' : '#dbeafe'}
+                    opacity="0.5"
+                  />
+                </g>
+              ))}
+
+              {/* Pot shape with metal gradient */}
               <path
                 d="M50 70 L50 230 Q50 250 70 250 L230 250 Q250 250 250 230 L250 70"
                 fill="none"
-                stroke="#666"
-                strokeWidth="6"
+                stroke="url(#convPotMetal)"
+                strokeWidth="7"
               />
-              {/* Pot handles */}
-              <ellipse cx="30" cy="150" rx="15" ry="30" fill="none" stroke="#666" strokeWidth="4" />
-              <ellipse cx="270" cy="150" rx="15" ry="30" fill="none" stroke="#666" strokeWidth="4" />
+              {/* Pot rim highlight */}
+              <path
+                d="M50 70 L250 70"
+                stroke="rgba(255,255,255,0.3)"
+                strokeWidth="2"
+              />
 
-              {/* Water particles */}
-              {potParticles.map(p => (
-                <circle
-                  key={p.id}
-                  cx={p.x}
-                  cy={p.y}
-                  r={6}
-                  fill={getTempColor(p.temp)}
-                  opacity={0.8}
-                />
-              ))}
+              {/* Pot handles with gradient */}
+              <ellipse cx="28" cy="150" rx="16" ry="32" fill="none" stroke="url(#convHandleGrad)" strokeWidth="5" />
+              <ellipse cx="272" cy="150" rx="16" ry="32" fill="none" stroke="url(#convHandleGrad)" strokeWidth="5" />
 
-              {/* Burner glow */}
-              {burnerPower > 0 && (
-                <g>
-                  <ellipse
-                    cx="150"
-                    cy="270"
-                    rx={60 + burnerPower * 10}
-                    ry="15"
-                    fill={`rgba(239, 68, 68, ${0.3 + burnerPower * 0.15})`}
-                  />
-                  <ellipse cx="150" cy="270" rx="50" ry="10" fill="#EF4444" opacity={burnerPower * 0.2} />
-                </g>
-              )}
-
-              {/* Burner ring */}
-              <circle cx="150" cy="270" r="40" fill="none" stroke="#444" strokeWidth="3" />
-              <circle cx="150" cy="270" r="30" fill="none" stroke="#444" strokeWidth="2" />
-              <circle cx="150" cy="270" r="20" fill="none" stroke="#444" strokeWidth="2" />
-
-              {/* Convection arrows when active */}
+              {/* Convection arrows when active with glow */}
               {isPotSimulating && burnerPower > 0 && (
-                <g opacity={0.3}>
+                <g opacity={0.5} filter="url(#convPotArrowGlow)">
                   {/* Left cell */}
-                  <path d="M100 200 L100 120 L70 120 L70 200" stroke="white" strokeWidth="1.5" fill="none" strokeDasharray="5,5" />
+                  <path d="M100 205 L100 115 L68 115 L68 205" stroke="rgba(96,165,250,0.7)" strokeWidth="2.5" fill="none" strokeDasharray="6,4" />
                   {/* Right cell */}
-                  <path d="M200 200 L200 120 L230 120 L230 200" stroke="white" strokeWidth="1.5" fill="none" strokeDasharray="5,5" />
+                  <path d="M200 205 L200 115 L232 115 L232 205" stroke="rgba(96,165,250,0.7)" strokeWidth="2.5" fill="none" strokeDasharray="6,4" />
                   {/* Center up arrow */}
-                  <path d="M150 210 L150 100" stroke="white" strokeWidth="2" markerEnd="url(#arrowUp)" />
+                  <path d="M150 215 L150 95" stroke="url(#convFlowArrow)" strokeWidth="3" markerEnd="url(#convPotArrowUp)" />
                 </g>
               )}
 
-              <defs>
-                <marker id="arrowUp" markerWidth="10" markerHeight="10" refX="5" refY="10" orient="auto">
-                  <path d="M0,10 L5,0 L10,10" fill="white" />
-                </marker>
-              </defs>
-
-              {/* Steam bubbles at high heat */}
+              {/* Steam bubbles at high heat with blur */}
               {burnerPower > 2 && isPotSimulating && (
-                <g>
-                  {[...Array(5)].map((_, i) => (
+                <g filter="url(#convSteamBlur)">
+                  {[...Array(7)].map((_, i) => (
                     <circle
                       key={i}
-                      cx={100 + i * 25}
-                      cy={90 + Math.sin(Date.now() / 500 + i) * 10}
-                      r={3}
-                      fill="rgba(255,255,255,0.3)"
+                      cx={85 + i * 22}
+                      cy={70}
+                      r={4 + Math.random() * 2}
+                      fill="url(#convSteamGrad)"
                     >
                       <animate
                         attributeName="cy"
-                        values="90;70;90"
-                        dur={`${1 + i * 0.2}s`}
+                        values="75;45;75"
+                        dur={`${0.8 + i * 0.15}s`}
+                        repeatCount="indefinite"
+                      />
+                      <animate
+                        attributeName="opacity"
+                        values="0.6;0.2;0.6"
+                        dur={`${0.8 + i * 0.15}s`}
                         repeatCount="indefinite"
                       />
                     </circle>
@@ -1266,6 +1541,22 @@ export default function ConvectionCurrentsRenderer({ onGameEvent, gamePhase, onP
                 </g>
               )}
             </svg>
+
+            {/* Labels outside SVG using typo system */}
+            {burnerPower > 0 && (
+              <div style={{
+                position: 'absolute',
+                bottom: isMobile ? '8px' : '12px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                fontSize: typo.small,
+                color: '#f97316',
+                fontWeight: 600,
+                textAlign: 'center',
+              }}>
+                Burner Active - Power Level {burnerPower}
+              </div>
+            )}
           </div>
 
           {/* Controls */}

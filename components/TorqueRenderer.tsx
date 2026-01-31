@@ -327,124 +327,305 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     const pushX = pushPosition * doorLength;
 
     return (
-      <svg width="100%" height={240} viewBox={`0 0 ${svgWidth} 240`} className="block mx-auto">
-        <defs>
-          <linearGradient id="torque-door-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#c4a882" />
-            <stop offset="50%" stopColor="#a08060" />
-            <stop offset="100%" stopColor="#6b5344" />
-          </linearGradient>
-          <filter id="torque-shadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="3" dy="4" stdDeviation="4" floodColor="#000" floodOpacity="0.5" />
-          </filter>
-          <filter id="torque-force-glow">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feFlood floodColor="#22c55e" floodOpacity="0.5" />
-            <feComposite in2="blur" operator="in" />
-            <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
-          </filter>
-        </defs>
+      <div>
+        <svg width="100%" height={240} viewBox={`0 0 ${svgWidth} 240`} className="block mx-auto">
+          <defs>
+            {/* === PREMIUM GRADIENTS === */}
 
-        {/* Background grid */}
-        <pattern id="torque-grid" width="30" height="30" patternUnits="userSpaceOnUse">
-          <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#3a2850" strokeWidth="0.5" opacity="0.3" />
-        </pattern>
-        <rect width={svgWidth} height={240} fill="#08050c" />
-        <rect width={svgWidth} height={240} fill="url(#torque-grid)" />
+            {/* Metal beam/lever gradient - brushed steel look */}
+            <linearGradient id="torqMetalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#e2e8f0" />
+              <stop offset="25%" stopColor="#cbd5e1" />
+              <stop offset="50%" stopColor="#f8fafc" />
+              <stop offset="75%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
 
-        {/* Wall */}
-        <rect x={0} y={hingeY - 80} width={50} height={160} fill="#3a3a4a" />
-        <rect x={45} y={hingeY - 80} width={5} height={160} fill="#4a4a5a" />
+            {/* Door wood grain - premium brown */}
+            <linearGradient id="torqDoorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#d4a574" />
+              <stop offset="30%" stopColor="#c4956a" />
+              <stop offset="50%" stopColor="#e0b88a" />
+              <stop offset="70%" stopColor="#b8845a" />
+              <stop offset="100%" stopColor="#8b5a2b" />
+            </linearGradient>
 
-        {/* Title */}
-        <text x={svgWidth / 2} y={22} textAnchor="middle" fill="#fafaf9" fontSize={12} fontWeight="600" fontFamily="system-ui">
+            {/* 3D Pivot radial gradient */}
+            <radialGradient id="torqPivotGrad" cx="35%" cy="35%">
+              <stop offset="0%" stopColor="#a1a1aa" />
+              <stop offset="40%" stopColor="#71717a" />
+              <stop offset="70%" stopColor="#52525b" />
+              <stop offset="100%" stopColor="#3f3f46" />
+            </radialGradient>
+
+            {/* Friction pivot - rusty orange */}
+            <radialGradient id="torqFrictionPivotGrad" cx="35%" cy="35%">
+              <stop offset="0%" stopColor="#fb923c" />
+              <stop offset="40%" stopColor="#ea580c" />
+              <stop offset="70%" stopColor="#9a3412" />
+              <stop offset="100%" stopColor="#7c2d12" />
+            </radialGradient>
+
+            {/* Force arrow gradient - glowing green */}
+            <linearGradient id="torqForceGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#16a34a" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#86efac" />
+            </linearGradient>
+
+            {/* Torque arc gradient - purple glow */}
+            <linearGradient id="torqTorqueArcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7" />
+              <stop offset="50%" stopColor="#c084fc" />
+              <stop offset="100%" stopColor="#a855f7" />
+            </linearGradient>
+
+            {/* Lever arm gradient - blue */}
+            <linearGradient id="torqLeverGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+
+            {/* Handle metallic gradient */}
+            <radialGradient id="torqHandleGrad" cx="30%" cy="30%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#b45309" />
+            </radialGradient>
+
+            {/* Wall gradient - 3D depth */}
+            <linearGradient id="torqWallGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#27272a" />
+              <stop offset="80%" stopColor="#3f3f46" />
+              <stop offset="100%" stopColor="#52525b" />
+            </linearGradient>
+
+            {/* === GLOW FILTERS === */}
+
+            {/* Force arrow glow */}
+            <filter id="torqForceGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#22c55e" floodOpacity="0.6" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Pivot glow (for highlighting) */}
+            <filter id="torqPivotGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor="#a855f7" floodOpacity="0.5" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Torque arc glow */}
+            <filter id="torqArcGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feFlood floodColor="#a855f7" floodOpacity="0.4" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Door shadow */}
+            <filter id="torqDoorShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="3" dy="4" stdDeviation="4" floodColor="#000" floodOpacity="0.5" />
+            </filter>
+
+            {/* Pivot shadow */}
+            <filter id="torqPivotShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="2" dy="3" stdDeviation="3" floodColor="#000" floodOpacity="0.6" />
+            </filter>
+
+            {/* Background grid pattern */}
+            <pattern id="torqGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <path d="M 30 0 L 0 0 0 30" fill="none" stroke="#3a2850" strokeWidth="0.5" opacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* Background */}
+          <rect width={svgWidth} height={240} fill="#08050c" />
+          <rect width={svgWidth} height={240} fill="url(#torqGrid)" />
+
+          {/* Wall with 3D depth */}
+          <rect x={0} y={hingeY - 80} width={50} height={160} fill="url(#torqWallGrad)" />
+          <rect x={48} y={hingeY - 80} width={4} height={160} fill="#52525b" />
+          <line x1={50} y1={hingeY - 80} x2={50} y2={hingeY + 80} stroke="#71717a" strokeWidth={1} />
+
+          {/* Pivot shadow on floor */}
+          <ellipse cx={hingeX + 5} cy={hingeY + 25} rx={18} ry={6} fill="#000" opacity={0.4} />
+
+          {/* Door with rotation */}
+          <g transform={`translate(${hingeX}, ${hingeY}) rotate(${doorAngle})`} filter="url(#torqDoorShadow)">
+            {/* Door body with premium gradient */}
+            <rect x={0} y={-doorWidth / 2} width={doorLength} height={doorWidth} rx={3} fill="url(#torqDoorGrad)" />
+
+            {/* Wood grain lines for realism */}
+            {[0.15, 0.3, 0.45, 0.6, 0.75, 0.9].map((pos, i) => (
+              <line key={i} x1={doorLength * pos} y1={-doorWidth / 2 + 2} x2={doorLength * pos} y2={doorWidth / 2 - 2}
+                    stroke="#8b5a2b" strokeWidth={0.5} opacity={0.25} />
+            ))}
+
+            {/* Door edge highlight */}
+            <line x1={2} y1={-doorWidth / 2 + 2} x2={2} y2={doorWidth / 2 - 2} stroke="#e0b88a" strokeWidth={1} opacity={0.5} />
+            <line x1={doorLength - 2} y1={-doorWidth / 2 + 2} x2={doorLength - 2} y2={doorWidth / 2 - 2} stroke="#8b5a2b" strokeWidth={1} opacity={0.5} />
+
+            {/* Premium door handle with metallic gradient */}
+            <circle cx={doorLength - 30} cy={0} r={10} fill="url(#torqHandleGrad)" stroke="#92400e" strokeWidth={2} />
+            <circle cx={doorLength - 30} cy={0} r={4} fill="#78350f" />
+            <circle cx={doorLength - 33} cy={-3} r={2} fill="#fcd34d" opacity={0.6} />
+
+            {/* Lever arm visualization */}
+            {showForceVector && (
+              <g>
+                <line x1={0} y1={32} x2={pushX} y2={32}
+                      stroke="url(#torqLeverGrad)" strokeWidth={3} strokeDasharray="6,3" />
+                <circle cx={0} cy={32} r={5} fill="#3b82f6" stroke="#60a5fa" strokeWidth={1} />
+                <circle cx={pushX} cy={32} r={5} fill="#3b82f6" stroke="#60a5fa" strokeWidth={1} />
+              </g>
+            )}
+
+            {/* Push point indicator with glow */}
+            <circle cx={pushX} cy={0} r={12} fill="#22c55e" stroke="#86efac" strokeWidth={2} filter="url(#torqForceGlow)">
+              <animate attributeName="r" values="10;13;10" dur="1.2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx={pushX} cy={0} r={4} fill="#fff" opacity={0.8} />
+
+            {/* Force arrow with gradient and glow */}
+            {showForceVector && (
+              <g transform={`translate(${pushX}, 0)`} filter="url(#torqForceGlow)">
+                <line x1={0} y1={-18} x2={0} y2={-18 - requiredForce * 1.2}
+                      stroke="url(#torqForceGrad)" strokeWidth={4} strokeLinecap="round" />
+                <polygon points={`0,${-18 - requiredForce * 1.2 - 10} -6,${-18 - requiredForce * 1.2} 6,${-18 - requiredForce * 1.2}`}
+                         fill="#86efac" />
+              </g>
+            )}
+
+            {/* Torque arc indicator (shows rotation direction) */}
+            {showForceVector && doorAngle > 5 && (
+              <g filter="url(#torqArcGlow)">
+                <path
+                  d={`M 30 0 A 30 30 0 0 0 ${30 * Math.cos(-Math.PI / 6)} ${30 * Math.sin(-Math.PI / 6)}`}
+                  stroke="url(#torqTorqueArcGrad)"
+                  strokeWidth={3}
+                  fill="none"
+                  strokeLinecap="round"
+                />
+                <polygon
+                  points={`${30 * Math.cos(-Math.PI / 6) - 4},${30 * Math.sin(-Math.PI / 6)} ${30 * Math.cos(-Math.PI / 6) + 3},${30 * Math.sin(-Math.PI / 6) - 6} ${30 * Math.cos(-Math.PI / 6) + 6},${30 * Math.sin(-Math.PI / 6) + 4}`}
+                  fill="#c084fc"
+                />
+              </g>
+            )}
+          </g>
+
+          {/* 3D Pivot/Hinge with shadow and gradient */}
+          <g transform={`translate(${hingeX}, ${hingeY})`} filter="url(#torqPivotShadow)">
+            {/* Outer ring */}
+            <circle r={16} fill={hasFriction ? 'url(#torqFrictionPivotGrad)' : 'url(#torqPivotGrad)'} stroke="#52525b" strokeWidth={2} />
+            {/* Inner detail rings */}
+            <circle r={10} fill="none" stroke={hasFriction ? '#7c2d12' : '#3f3f46'} strokeWidth={1} opacity={0.5} />
+            {/* Center bolt */}
+            <circle r={5} fill={hasFriction ? '#ea580c' : '#71717a'} />
+            {/* Highlight */}
+            <circle cx={-4} cy={-4} r={3} fill={hasFriction ? '#fdba74' : '#a1a1aa'} opacity={0.6} />
+          </g>
+
+          {/* Force meter panel */}
+          <g transform={`translate(${svgWidth - 95}, 165)`}>
+            <rect x={0} y={0} width={85} height={60} rx={10} fill="#181220"
+                  stroke="#3a2850" strokeWidth={1.5} />
+            <rect x={2} y={2} width={81} height={12} rx={6} fill="#1e1030" opacity={0.5} />
+          </g>
+
+          {/* Torque display panel */}
+          <g transform="translate(10, 165)">
+            <rect x={0} y={0} width={100} height={60} rx={10} fill="#181220"
+                  stroke="#3a2850" strokeWidth={1.5} />
+            <rect x={2} y={2} width={96} height={12} rx={6} fill="#1e1030" opacity={0.5} />
+          </g>
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: `${typo.elementGap} ${typo.cardPadding}`, marginTop: '-60px' }}>
+          <div style={{
+            background: '#181220',
+            borderRadius: '10px',
+            padding: '8px 12px',
+            border: '1px solid #3a2850',
+            minWidth: '100px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: typo.label, color: '#7a6890', marginBottom: '4px' }}>Torque (t = F x r)</div>
+            <div style={{ fontSize: typo.heading, fontWeight: 700, color: '#a855f7' }}>{requiredTorque} N-m</div>
+          </div>
+
+          <div style={{
+            background: '#181220',
+            borderRadius: '10px',
+            padding: '8px 12px',
+            border: '1px solid #3a2850',
+            minWidth: '85px',
+            textAlign: 'center'
+          }}>
+            <div style={{ fontSize: typo.label, color: '#7a6890', marginBottom: '4px' }}>Required Force</div>
+            <div style={{ fontSize: typo.heading, fontWeight: 700, color: requiredForce > 100 ? '#ef4444' : '#22c55e' }}>
+              {requiredForce.toFixed(1)}N
+            </div>
+          </div>
+        </div>
+
+        {/* Lever arm label */}
+        {showForceVector && (
+          <div style={{ textAlign: 'center', marginTop: typo.elementGap }}>
+            <span style={{
+              fontSize: typo.small,
+              color: '#3b82f6',
+              fontWeight: 600,
+              background: '#1e3a5f',
+              padding: '4px 12px',
+              borderRadius: '12px'
+            }}>
+              Lever arm r = {(pushPosition * 100).toFixed(0)}% of door length
+            </span>
+          </div>
+        )}
+
+        {/* Friction indicator */}
+        {hasFriction && (
+          <div style={{ textAlign: 'center', marginTop: typo.elementGap }}>
+            <span style={{
+              fontSize: typo.small,
+              color: '#f97316',
+              fontWeight: 600,
+              background: '#451a03',
+              padding: '4px 12px',
+              borderRadius: '12px'
+            }}>
+              Sticky hinge - extra torque needed!
+            </span>
+          </div>
+        )}
+
+        {/* Title moved outside SVG */}
+        <div style={{
+          textAlign: 'center',
+          marginTop: typo.elementGap,
+          fontSize: typo.small,
+          color: '#a1a1aa'
+        }}>
           Top-Down View (looking down at door)
-        </text>
-
-        {/* Door with rotation */}
-        <g transform={`translate(${hingeX}, ${hingeY}) rotate(${doorAngle})`} filter="url(#torque-shadow)">
-          {/* Door body */}
-          <rect x={0} y={-doorWidth / 2} width={doorLength} height={doorWidth} rx={3} fill="url(#torque-door-grad)" />
-
-          {/* Wood grain lines */}
-          {[0.2, 0.4, 0.6, 0.8].map((pos, i) => (
-            <line key={i} x1={doorLength * pos} y1={-doorWidth / 2 + 3} x2={doorLength * pos} y2={doorWidth / 2 - 3}
-                  stroke="#6b5344" strokeWidth={0.5} opacity={0.3} />
-          ))}
-
-          {/* Door handle */}
-          <circle cx={doorLength - 30} cy={0} r={9} fill="#c9a97c" stroke="#a08060" strokeWidth={2} />
-          <circle cx={doorLength - 30} cy={0} r={4} fill="#6b5344" />
-
-          {/* Lever arm visualization */}
-          {showForceVector && (
-            <g>
-              <line x1={0} y1={32} x2={pushX} y2={32}
-                    stroke="#3b82f6" strokeWidth={3} strokeDasharray="6,3" />
-              <circle cx={0} cy={32} r={4} fill="#3b82f6" />
-              <circle cx={pushX} cy={32} r={4} fill="#3b82f6" />
-              <text x={pushX / 2} y={50} textAnchor="middle" fill="#3b82f6" fontSize={10} fontWeight="600" fontFamily="system-ui">
-                r = {(pushPosition * 100).toFixed(0)}%
-              </text>
-            </g>
-          )}
-
-          {/* Push point indicator */}
-          <circle cx={pushX} cy={0} r={10} fill="#22c55e" stroke="#fff" strokeWidth={2}>
-            <animate attributeName="r" values="9;11;9" dur="1s" repeatCount="indefinite" />
-          </circle>
-
-          {/* Force arrow */}
-          {showForceVector && (
-            <g transform={`translate(${pushX}, 0)`} filter="url(#torque-force-glow)">
-              <line x1={0} y1={-16} x2={0} y2={-16 - requiredForce * 1.2}
-                    stroke="#22c55e" strokeWidth={3} strokeLinecap="round" />
-              <polygon points={`0,${-16 - requiredForce * 1.2 - 8} -5,${-16 - requiredForce * 1.2} 5,${-16 - requiredForce * 1.2}`}
-                       fill="#22c55e" />
-              <text x={16} y={-22 - requiredForce * 0.6} fill="#22c55e" fontSize={11} fontWeight="700" fontFamily="system-ui">
-                F = {requiredForce.toFixed(1)}N
-              </text>
-            </g>
-          )}
-        </g>
-
-        {/* Hinge */}
-        <g transform={`translate(${hingeX}, ${hingeY})`}>
-          <circle r={14} fill={hasFriction ? '#8b4513' : '#5a5a6a'} stroke="#7a7a8a" strokeWidth={3} />
-          <circle r={5} fill="#7a7a8a" />
-          {hasFriction && (
-            <text x={0} y={35} textAnchor="middle" fill="#f97316" fontSize={10} fontWeight="600" fontFamily="system-ui">
-              Sticky!
-            </text>
-          )}
-        </g>
-
-        {/* Force meter */}
-        <g transform={`translate(${svgWidth - 95}, 165)`}>
-          <rect x={0} y={0} width={85} height={60} rx={10} fill="#181220"
-                stroke="#3a2850" strokeWidth={1} />
-          <text x={42} y={16} textAnchor="middle" fill="#7a6890" fontSize={9} fontFamily="system-ui">
-            Required Force
-          </text>
-          <text x={42} y={42} textAnchor="middle"
-                fill={requiredForce > 100 ? '#ef4444' : '#22c55e'}
-                fontSize={20} fontWeight="700" fontFamily="system-ui">
-            {requiredForce.toFixed(1)}N
-          </text>
-        </g>
-
-        {/* Torque display */}
-        <g transform="translate(10, 165)">
-          <rect x={0} y={0} width={100} height={60} rx={10} fill="#181220"
-                stroke="#3a2850" strokeWidth={1} />
-          <text x={50} y={16} textAnchor="middle" fill="#7a6890" fontSize={9} fontFamily="system-ui">
-            Torque (t = F x r)
-          </text>
-          <text x={50} y={42} textAnchor="middle" fill="#a855f7" fontSize={18} fontWeight="700" fontFamily="system-ui">
-            {requiredTorque} N-m
-          </text>
-        </g>
-      </svg>
+        </div>
+      </div>
     );
   };
 
@@ -453,54 +634,137 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
     const svgWidth = Math.min(360, isMobile ? 320 : 360);
 
     return (
-      <svg width="100%" height={200} viewBox={`0 0 ${svgWidth} 200`} className="block mx-auto">
-        <defs>
-          <linearGradient id="seesaw-board-grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#8b7355" />
-            <stop offset="100%" stopColor="#6b5344" />
-          </linearGradient>
-        </defs>
+      <div>
+        <svg width="100%" height={180} viewBox={`0 0 ${svgWidth} 180`} className="block mx-auto">
+          <defs>
+            {/* Premium board gradient - polished wood */}
+            <linearGradient id="torqSeesawBoardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a3765c" />
+              <stop offset="25%" stopColor="#8b6348" />
+              <stop offset="50%" stopColor="#c9a07a" />
+              <stop offset="75%" stopColor="#8b6348" />
+              <stop offset="100%" stopColor="#6b4d38" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect width={svgWidth} height={200} fill="#08050c" />
+            {/* Fulcrum metal gradient */}
+            <linearGradient id="torqFulcrumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="40%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
 
-        {/* Ground */}
-        <rect x={0} y={160} width={svgWidth} height={40} fill="#1a1a2e" />
+            {/* Heavy weight gradient - red/orange */}
+            <radialGradient id="torqHeavyWeightGrad" cx="30%" cy="30%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </radialGradient>
 
-        {/* Fulcrum (triangle) */}
-        <polygon points={`${svgWidth/2},130 ${svgWidth/2 - 30},160 ${svgWidth/2 + 30},160`} fill="#4b5563" stroke="#6b7280" strokeWidth={2} />
+            {/* Light weight gradient - green */}
+            <radialGradient id="torqLightWeightGrad" cx="30%" cy="30%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#15803d" />
+            </radialGradient>
 
-        {/* Seesaw board */}
-        <rect x={40} y={118} width={svgWidth - 80} height={12} rx={4} fill="url(#seesaw-board-grad)" />
+            {/* Ground gradient */}
+            <linearGradient id="torqGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e1e2e" />
+              <stop offset="100%" stopColor="#0f0f1a" />
+            </linearGradient>
 
-        {/* Left weight (heavier, closer to center) */}
-        <g transform={`translate(100, 90)`}>
-          <circle r={28} fill="#ef4444" stroke="#dc2626" strokeWidth={2}>
-            <animate attributeName="cy" values="-2;2;-2" dur="3s" repeatCount="indefinite" />
-          </circle>
-          <text y={6} textAnchor="middle" fill="#fff" fontSize={14} fontWeight="700">5kg</text>
-        </g>
+            {/* Weight shadow filter */}
+            <filter id="torqWeightShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000" floodOpacity="0.5" />
+            </filter>
 
-        {/* Right weight (lighter, farther from center) */}
-        <g transform={`translate(${svgWidth - 80}, 90)`}>
-          <circle r={20} fill="#22c55e" stroke="#16a34a" strokeWidth={2}>
-            <animate attributeName="cy" values="2;-2;2" dur="3s" repeatCount="indefinite" />
-          </circle>
-          <text y={5} textAnchor="middle" fill="#fff" fontSize={12} fontWeight="700">2kg</text>
-        </g>
+            {/* Fulcrum shadow */}
+            <filter id="torqFulcrumShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#000" floodOpacity="0.4" />
+            </filter>
+          </defs>
 
-        {/* Distance labels */}
-        <line x1={svgWidth/2} y1={145} x2={100} y2={145} stroke="#3b82f6" strokeWidth={2} strokeDasharray="4,4" />
-        <text x={150} y={155} textAnchor="middle" fill="#3b82f6" fontSize={10}>r1 (short)</text>
+          {/* Background */}
+          <rect width={svgWidth} height={180} fill="#08050c" />
 
-        <line x1={svgWidth/2} y1={145} x2={svgWidth - 80} y2={145} stroke="#f97316" strokeWidth={2} strokeDasharray="4,4" />
-        <text x={svgWidth - 130} y={155} textAnchor="middle" fill="#f97316" fontSize={10}>r2 (long)</text>
+          {/* Ground with gradient */}
+          <rect x={0} y={145} width={svgWidth} height={35} fill="url(#torqGroundGrad)" />
+          <line x1={0} y1={145} x2={svgWidth} y2={145} stroke="#27272a" strokeWidth={1} />
+
+          {/* Fulcrum shadow on ground */}
+          <ellipse cx={svgWidth/2} cy={150} rx={35} ry={8} fill="#000" opacity={0.3} />
+
+          {/* Fulcrum (triangle) with 3D effect */}
+          <g filter="url(#torqFulcrumShadow)">
+            <polygon points={`${svgWidth/2},115 ${svgWidth/2 - 28},145 ${svgWidth/2 + 28},145`} fill="url(#torqFulcrumGrad)" stroke="#9ca3af" strokeWidth={1.5} />
+            {/* Highlight edge */}
+            <line x1={svgWidth/2} y1={117} x2={svgWidth/2 - 24} y2={143} stroke="#9ca3af" strokeWidth={1} opacity={0.5} />
+          </g>
+
+          {/* Seesaw board with premium wood grain */}
+          <g transform={`translate(${svgWidth/2}, 108)`}>
+            <rect x={-(svgWidth - 90)/2} y={-6} width={svgWidth - 90} height={12} rx={4} fill="url(#torqSeesawBoardGrad)" />
+            {/* Wood grain lines */}
+            {[-0.35, -0.15, 0.05, 0.25, 0.45].map((pos, i) => (
+              <line key={i} x1={(svgWidth - 90) * pos} y1={-4} x2={(svgWidth - 90) * pos} y2={4}
+                    stroke="#6b4d38" strokeWidth={0.5} opacity={0.3} />
+            ))}
+            {/* Board highlight */}
+            <line x1={-(svgWidth - 90)/2 + 4} y1={-4} x2={(svgWidth - 90)/2 - 4} y2={-4} stroke="#c9a07a" strokeWidth={1} opacity={0.4} />
+          </g>
+
+          {/* Left weight (heavier, closer to center) */}
+          <g transform={`translate(100, 78)`} filter="url(#torqWeightShadow)">
+            <circle r={28} fill="url(#torqHeavyWeightGrad)" stroke="#dc2626" strokeWidth={2}>
+              <animate attributeName="cy" values="-2;2;-2" dur="3s" repeatCount="indefinite" />
+            </circle>
+            {/* Weight highlight */}
+            <circle cx={-8} cy={-8} r={6} fill="#fca5a5" opacity={0.5} />
+          </g>
+
+          {/* Right weight (lighter, farther from center) */}
+          <g transform={`translate(${svgWidth - 80}, 78)`} filter="url(#torqWeightShadow)">
+            <circle r={20} fill="url(#torqLightWeightGrad)" stroke="#16a34a" strokeWidth={2}>
+              <animate attributeName="cy" values="2;-2;2" dur="3s" repeatCount="indefinite" />
+            </circle>
+            {/* Weight highlight */}
+            <circle cx={-5} cy={-5} r={4} fill="#86efac" opacity={0.5} />
+          </g>
+
+          {/* Lever arm indicators */}
+          <line x1={svgWidth/2} y1={130} x2={100} y2={130} stroke="#3b82f6" strokeWidth={2} strokeDasharray="5,3" opacity={0.8} />
+          <line x1={svgWidth/2} y1={130} x2={svgWidth - 80} y2={130} stroke="#f97316" strokeWidth={2} strokeDasharray="5,3" opacity={0.8} />
+
+          {/* Pivot point marker */}
+          <circle cx={svgWidth/2} cy={115} r={4} fill="#a855f7" stroke="#c084fc" strokeWidth={1} />
+        </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: `4px ${typo.cardPadding}`, marginTop: '-35px' }}>
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <span style={{ fontSize: typo.small, color: '#ef4444', fontWeight: 700 }}>5kg</span>
+            <div style={{ fontSize: typo.label, color: '#3b82f6', marginTop: '2px' }}>r1 (short)</div>
+          </div>
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <span style={{ fontSize: typo.small, color: '#22c55e', fontWeight: 700 }}>2kg</span>
+            <div style={{ fontSize: typo.label, color: '#f97316', marginTop: '2px' }}>r2 (long)</div>
+          </div>
+        </div>
 
         {/* Balance equation */}
-        <text x={svgWidth/2} y={185} textAnchor="middle" fill="#a855f7" fontSize={12} fontWeight="600">
-          5kg x r1 = 2kg x r2 (Balanced!)
-        </text>
-      </svg>
+        <div style={{ textAlign: 'center', marginTop: typo.elementGap }}>
+          <span style={{
+            fontSize: typo.small,
+            color: '#a855f7',
+            fontWeight: 600,
+            background: '#2d1f4e',
+            padding: '6px 14px',
+            borderRadius: '12px'
+          }}>
+            5kg x r1 = 2kg x r2 (Balanced!)
+          </span>
+        </div>
+      </div>
     );
   };
 
@@ -510,97 +774,187 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
     return (
       <svg width="100%" height={130} viewBox={`0 0 ${svgWidth} 130`} className="block mx-auto">
+        <defs>
+          {/* Wrench metal gradient */}
+          <linearGradient id="torqWrenchMetalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#d1d5db" />
+            <stop offset="30%" stopColor="#9ca3af" />
+            <stop offset="50%" stopColor="#e5e7eb" />
+            <stop offset="70%" stopColor="#6b7280" />
+            <stop offset="100%" stopColor="#4b5563" />
+          </linearGradient>
+
+          {/* Force arrow glow */}
+          <filter id="torqAppForceGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feFlood floodColor="#22c55e" floodOpacity="0.5" />
+            <feComposite in2="blur" operator="in" />
+            <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+
+          {/* Torque arc glow */}
+          <filter id="torqAppArcGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feFlood floodColor="#a855f7" floodOpacity="0.4" />
+            <feComposite in2="blur" operator="in" />
+            <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
+          </filter>
+
+          {/* Steering wheel gradient */}
+          <linearGradient id="torqSteeringGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#52525b" />
+            <stop offset="50%" stopColor="#3f3f46" />
+            <stop offset="100%" stopColor="#27272a" />
+          </linearGradient>
+
+          {/* Engine block gradient */}
+          <linearGradient id="torqEngineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#4b5563" />
+            <stop offset="50%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </linearGradient>
+
+          {/* Bolt metallic gradient */}
+          <radialGradient id="torqBoltGrad" cx="30%" cy="30%">
+            <stop offset="0%" stopColor="#a1a1aa" />
+            <stop offset="50%" stopColor="#71717a" />
+            <stop offset="100%" stopColor="#3f3f46" />
+          </radialGradient>
+
+          {/* Weight shadows */}
+          <filter id="torqAppShadow" x="-30%" y="-30%" width="160%" height="160%">
+            <feDropShadow dx="2" dy="3" stdDeviation="2" floodColor="#000" floodOpacity="0.4" />
+          </filter>
+
+          {/* Premium weight gradients */}
+          <radialGradient id="torqAppHeavyGrad" cx="30%" cy="30%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#b91c1c" />
+          </radialGradient>
+          <radialGradient id="torqAppLightGrad" cx="30%" cy="30%">
+            <stop offset="0%" stopColor="#86efac" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#15803d" />
+          </radialGradient>
+
+          {/* Hand/grip gradient */}
+          <radialGradient id="torqHandGripGrad" cx="30%" cy="30%">
+            <stop offset="0%" stopColor="#fdba74" />
+            <stop offset="50%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#c2410c" />
+          </radialGradient>
+        </defs>
+
         <rect width={svgWidth} height={130} fill="#0f0a14" rx={12} />
 
         {appId === 'wrench' && (
           <g>
-            {/* Wrench body */}
-            <rect x={70} y={55} width={160} height={18} rx={4} fill="#6b7280" />
-            <rect x={70} y={60} width={160} height={4} fill="#9ca3af" />
+            {/* Wrench body with premium metal gradient */}
+            <rect x={70} y={55} width={160} height={18} rx={4} fill="url(#torqWrenchMetalGrad)" filter="url(#torqAppShadow)" />
+            {/* Highlight stripe */}
+            <rect x={72} y={58} width={156} height={3} rx={1} fill="#e5e7eb" opacity={0.4} />
             {/* Wrench head */}
-            <circle cx={70} cy={64} r={20} fill="#4b5563" stroke="#6b7280" strokeWidth={2} />
-            <circle cx={70} cy={64} r={7} fill="#1f2937" />
-            {/* Bolt */}
-            <polygon points="70,64 77,60 77,56 70,52 63,56 63,60" fill="#374151" stroke="#4b5563" strokeWidth={1} />
-            {/* Force arrow */}
-            <line x1={230} y1={64} x2={230} y2={25} stroke="#22c55e" strokeWidth={3} />
-            <polygon points="230,20 224,30 236,30" fill="#22c55e" />
-            <text x={246} y={42} fill="#22c55e" fontSize={11} fontWeight="600">F</text>
+            <circle cx={70} cy={64} r={22} fill="url(#torqWrenchMetalGrad)" stroke="#9ca3af" strokeWidth={2} filter="url(#torqAppShadow)" />
+            <circle cx={70} cy={64} r={12} fill="#27272a" />
+            {/* Bolt with metallic gradient */}
+            <polygon points="70,64 78,59 78,54 70,49 62,54 62,59" fill="url(#torqBoltGrad)" stroke="#71717a" strokeWidth={1} />
+            {/* Force arrow with glow */}
+            <g filter="url(#torqAppForceGlow)">
+              <line x1={230} y1={64} x2={230} y2={22} stroke="#22c55e" strokeWidth={4} strokeLinecap="round" />
+              <polygon points="230,16 222,28 238,28" fill="#86efac" />
+            </g>
             {/* Lever arm */}
-            <line x1={70} y1={92} x2={230} y2={92} stroke="#3b82f6" strokeWidth={2} strokeDasharray="4,4" />
-            <text x={150} y={110} textAnchor="middle" fill="#3b82f6" fontSize={10} fontWeight="600">Lever arm (r)</text>
-            {/* Rotation indicator */}
-            <path d="M 52 45 A 28 28 0 0 0 52 83" stroke="#a855f7" strokeWidth={2} fill="none" />
-            <text x={32} y={68} fill="#a855f7" fontSize={13} fontWeight="700">t</text>
+            <line x1={70} y1={94} x2={230} y2={94} stroke="#3b82f6" strokeWidth={2} strokeDasharray="5,3" opacity={0.8} />
+            {/* Rotation indicator with glow */}
+            <g filter="url(#torqAppArcGlow)">
+              <path d="M 48 42 A 32 32 0 0 0 48 86" stroke="#a855f7" strokeWidth={3} fill="none" strokeLinecap="round" />
+              <polygon points="48,38 42,48 54,48" fill="#c084fc" />
+            </g>
           </g>
         )}
 
         {appId === 'seesaw' && (
           <g>
-            {/* Fulcrum */}
-            <polygon points={`${svgWidth/2},88 ${svgWidth/2 - 22},115 ${svgWidth/2 + 22},115`} fill="#4b5563" />
-            {/* Board */}
-            <rect x={35} y={78} width={svgWidth - 70} height={10} rx={3} fill="#8b7355" transform={`rotate(-5, ${svgWidth/2}, 83)`} />
+            {/* Fulcrum with gradient */}
+            <polygon points={`${svgWidth/2},88 ${svgWidth/2 - 24},115 ${svgWidth/2 + 24},115`} fill="url(#torqSteeringGrad)" stroke="#71717a" strokeWidth={1} />
+            {/* Board with wood grain effect */}
+            <g transform={`rotate(-5, ${svgWidth/2}, 83)`}>
+              <rect x={35} y={78} width={svgWidth - 70} height={10} rx={3} fill="#a3765c" />
+              <rect x={37} y={79} width={svgWidth - 74} height={2} rx={1} fill="#c9a07a" opacity={0.4} />
+            </g>
             {/* Heavy weight (left, closer to center) */}
-            <circle cx={90} cy={65} r={22} fill="#ef4444">
-              <animate attributeName="cy" values="63;67;63" dur="2.5s" repeatCount="indefinite" />
-            </circle>
-            <text x={90} y={71} textAnchor="middle" fill="#fff" fontSize={13} fontWeight="700">5kg</text>
+            <g filter="url(#torqAppShadow)">
+              <circle cx={90} cy={65} r={22} fill="url(#torqAppHeavyGrad)">
+                <animate attributeName="cy" values="63;67;63" dur="2.5s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={84} cy={59} r={5} fill="#fca5a5" opacity={0.5} />
+            </g>
             {/* Light weight (right, farther from center) */}
-            <circle cx={svgWidth - 75} cy={98} r={16} fill="#22c55e">
-              <animate attributeName="cy" values="100;96;100" dur="2.5s" repeatCount="indefinite" />
-            </circle>
-            <text x={svgWidth - 75} y={103} textAnchor="middle" fill="#fff" fontSize={11} fontWeight="700">2kg</text>
-            {/* Labels */}
-            <text x={90} y={35} textAnchor="middle" fill="#7a6890" fontSize={9}>short r1</text>
-            <text x={svgWidth - 75} y={35} textAnchor="middle" fill="#7a6890" fontSize={9}>long r2</text>
+            <g filter="url(#torqAppShadow)">
+              <circle cx={svgWidth - 75} cy={98} r={16} fill="url(#torqAppLightGrad)">
+                <animate attributeName="cy" values="100;96;100" dur="2.5s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={svgWidth - 79} cy={94} r={4} fill="#86efac" opacity={0.5} />
+            </g>
           </g>
         )}
 
         {appId === 'steering' && (
           <g>
-            {/* Steering wheel */}
-            <circle cx={svgWidth/2} cy={65} r={45} fill="none" stroke="#374151" strokeWidth={9} />
-            <circle cx={svgWidth/2} cy={65} r={45} fill="none" stroke="#4b5563" strokeWidth={5} />
-            <circle cx={svgWidth/2} cy={65} r={14} fill="#1f2937" stroke="#4b5563" strokeWidth={2} />
+            {/* Steering wheel outer ring with premium gradient */}
+            <circle cx={svgWidth/2} cy={65} r={45} fill="none" stroke="#27272a" strokeWidth={10} />
+            <circle cx={svgWidth/2} cy={65} r={45} fill="none" stroke="url(#torqSteeringGrad)" strokeWidth={6} />
+            {/* Center hub */}
+            <circle cx={svgWidth/2} cy={65} r={14} fill="#1f2937" stroke="#52525b" strokeWidth={2} />
+            <circle cx={svgWidth/2 - 3} cy={62} r={4} fill="#3f3f46" opacity={0.6} />
             {/* Spokes */}
-            <line x1={svgWidth/2} y1={65} x2={svgWidth/2} y2={24} stroke="#4b5563" strokeWidth={5} />
-            <line x1={svgWidth/2} y1={65} x2={svgWidth/2 - 36} y2={92} stroke="#4b5563" strokeWidth={5} />
-            <line x1={svgWidth/2} y1={65} x2={svgWidth/2 + 36} y2={92} stroke="#4b5563" strokeWidth={5} />
-            {/* Hands and force arrows */}
-            <circle cx={svgWidth/2 - 45} cy={65} r={7} fill="#f97316" />
-            <line x1={svgWidth/2 - 45} y1={55} x2={svgWidth/2 - 45} y2={38} stroke="#22c55e" strokeWidth={3} />
-            <polygon points={`${svgWidth/2 - 45},34 ${svgWidth/2 - 50},42 ${svgWidth/2 - 40},42`} fill="#22c55e" />
-            <circle cx={svgWidth/2 + 45} cy={65} r={7} fill="#f97316" />
-            <line x1={svgWidth/2 + 45} y1={75} x2={svgWidth/2 + 45} y2={92} stroke="#22c55e" strokeWidth={3} />
-            <polygon points={`${svgWidth/2 + 45},96 ${svgWidth/2 + 40},88 ${svgWidth/2 + 50},88`} fill="#22c55e" />
-            {/* Rotation indicator */}
-            <text x={svgWidth/2 + 68} y={68} fill="#a855f7" fontSize={13} fontWeight="700">t</text>
+            <line x1={svgWidth/2} y1={65} x2={svgWidth/2} y2={24} stroke="url(#torqSteeringGrad)" strokeWidth={6} strokeLinecap="round" />
+            <line x1={svgWidth/2} y1={65} x2={svgWidth/2 - 36} y2={92} stroke="url(#torqSteeringGrad)" strokeWidth={6} strokeLinecap="round" />
+            <line x1={svgWidth/2} y1={65} x2={svgWidth/2 + 36} y2={92} stroke="url(#torqSteeringGrad)" strokeWidth={6} strokeLinecap="round" />
+            {/* Hands with gradient */}
+            <circle cx={svgWidth/2 - 45} cy={65} r={8} fill="url(#torqHandGripGrad)" filter="url(#torqAppShadow)" />
+            <circle cx={svgWidth/2 + 45} cy={65} r={8} fill="url(#torqHandGripGrad)" filter="url(#torqAppShadow)" />
+            {/* Force arrows with glow */}
+            <g filter="url(#torqAppForceGlow)">
+              <line x1={svgWidth/2 - 45} y1={53} x2={svgWidth/2 - 45} y2={35} stroke="#22c55e" strokeWidth={3} strokeLinecap="round" />
+              <polygon points={`${svgWidth/2 - 45},30 ${svgWidth/2 - 50},40 ${svgWidth/2 - 40},40`} fill="#86efac" />
+              <line x1={svgWidth/2 + 45} y1={77} x2={svgWidth/2 + 45} y2={95} stroke="#22c55e" strokeWidth={3} strokeLinecap="round" />
+              <polygon points={`${svgWidth/2 + 45},100 ${svgWidth/2 + 40},90 ${svgWidth/2 + 50},90`} fill="#86efac" />
+            </g>
+            {/* Rotation arc with glow */}
+            <g filter="url(#torqAppArcGlow)">
+              <path d={`M ${svgWidth/2 + 55} 50 A 48 48 0 0 1 ${svgWidth/2 + 55} 80`} stroke="#a855f7" strokeWidth={3} fill="none" strokeLinecap="round" />
+            </g>
           </g>
         )}
 
         {appId === 'engine' && (
           <g>
-            {/* Engine block */}
-            <rect x={svgWidth/2 - 50} y={30} width={100} height={70} rx={8} fill="#374151" stroke="#4b5563" strokeWidth={2} />
+            {/* Engine block with gradient */}
+            <rect x={svgWidth/2 - 50} y={30} width={100} height={70} rx={8} fill="url(#torqEngineGrad)" stroke="#6b7280" strokeWidth={2} filter="url(#torqAppShadow)" />
+            {/* Engine detail lines */}
+            <line x1={svgWidth/2 - 45} y1={35} x2={svgWidth/2 + 45} y2={35} stroke="#4b5563" strokeWidth={1} />
+            <line x1={svgWidth/2 - 45} y1={45} x2={svgWidth/2 + 45} y2={45} stroke="#4b5563" strokeWidth={1} />
             {/* Crankshaft circle */}
-            <circle cx={svgWidth/2} cy={65} r={25} fill="#1f2937" stroke="#6b7280" strokeWidth={3} />
-            {/* Piston */}
-            <rect x={svgWidth/2 - 15} y={15} width={30} height={35} rx={4} fill="#6b7280">
-              <animate attributeName="y" values="15;25;15" dur="0.5s" repeatCount="indefinite" />
+            <circle cx={svgWidth/2} cy={65} r={25} fill="#1f2937" stroke="#71717a" strokeWidth={3} />
+            <circle cx={svgWidth/2 - 6} cy={60} r={6} fill="#27272a" opacity={0.5} />
+            {/* Piston with metallic look */}
+            <rect x={svgWidth/2 - 15} y={12} width={30} height={38} rx={4} fill="url(#torqWrenchMetalGrad)">
+              <animate attributeName="y" values="12;22;12" dur="0.5s" repeatCount="indefinite" />
             </rect>
             {/* Connecting rod */}
-            <line x1={svgWidth/2} y1={45} x2={svgWidth/2} y2={65} stroke="#9ca3af" strokeWidth={6} strokeLinecap="round">
-              <animate attributeName="y1" values="45;55;45" dur="0.5s" repeatCount="indefinite" />
+            <line x1={svgWidth/2} y1={48} x2={svgWidth/2} y2={65} stroke="#9ca3af" strokeWidth={7} strokeLinecap="round">
+              <animate attributeName="y1" values="48;58;48" dur="0.5s" repeatCount="indefinite" />
             </line>
-            {/* Rotation arrow */}
-            <path d={`M ${svgWidth/2 + 35} 55 A 35 35 0 0 1 ${svgWidth/2 + 35} 75`} stroke="#22c55e" strokeWidth={3} fill="none" />
-            <polygon points={`${svgWidth/2 + 35},80 ${svgWidth/2 + 30},72 ${svgWidth/2 + 40},72`} fill="#22c55e" />
-            {/* Torque label */}
-            <text x={svgWidth/2 + 55} y={68} fill="#a855f7" fontSize={12} fontWeight="700">Torque</text>
+            {/* Rotation arrow with glow */}
+            <g filter="url(#torqAppForceGlow)">
+              <path d={`M ${svgWidth/2 + 35} 52 A 35 35 0 0 1 ${svgWidth/2 + 35} 78`} stroke="#22c55e" strokeWidth={3} fill="none" strokeLinecap="round" />
+              <polygon points={`${svgWidth/2 + 35},83 ${svgWidth/2 + 29},73 ${svgWidth/2 + 41},73`} fill="#86efac" />
+            </g>
             {/* Output shaft */}
-            <rect x={svgWidth/2 + 50} y={58} width={40} height={14} rx={4} fill="#4b5563" />
-            <text x={svgWidth/2 + 70} y={90} textAnchor="middle" fill="#7a6890" fontSize={9}>Power out</text>
+            <rect x={svgWidth/2 + 50} y={58} width={40} height={14} rx={4} fill="url(#torqWrenchMetalGrad)" />
+            <line x1={svgWidth/2 + 52} y1={60} x2={svgWidth/2 + 88} y2={60} stroke="#e5e7eb" strokeWidth={1} opacity={0.3} />
           </g>
         )}
       </svg>
@@ -905,37 +1259,123 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
 
         {/* Interactive seesaw visualization */}
         <div className="bg-slate-800/50 rounded-2xl p-4 mb-6 max-w-md w-full border border-slate-700/50">
-          <svg width="100%" height={180} viewBox="0 0 360 180" className="block mx-auto">
-            <rect width={360} height={180} fill="#08050c" />
+          <svg width="100%" height={160} viewBox="0 0 360 160" className="block mx-auto">
+            <defs>
+              {/* Premium board gradient - polished wood */}
+              <linearGradient id="torqLabBoardGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#a3765c" />
+                <stop offset="25%" stopColor="#8b6348" />
+                <stop offset="50%" stopColor="#c9a07a" />
+                <stop offset="75%" stopColor="#8b6348" />
+                <stop offset="100%" stopColor="#6b4d38" />
+              </linearGradient>
 
-            {/* Ground */}
-            <rect x={0} y={150} width={360} height={30} fill="#1a1a2e" />
+              {/* Fulcrum metal gradient */}
+              <linearGradient id="torqLabFulcrumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#71717a" />
+                <stop offset="50%" stopColor="#52525b" />
+                <stop offset="100%" stopColor="#3f3f46" />
+              </linearGradient>
 
-            {/* Fulcrum */}
-            <polygon points="180,120 150,150 210,150" fill="#4b5563" stroke="#6b7280" strokeWidth={2} />
+              {/* Left weight gradient - red */}
+              <radialGradient id="torqLabLeftGrad" cx="30%" cy="30%">
+                <stop offset="0%" stopColor="#fca5a5" />
+                <stop offset="50%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#b91c1c" />
+              </radialGradient>
+
+              {/* Right weight gradient - green */}
+              <radialGradient id="torqLabRightGrad" cx="30%" cy="30%">
+                <stop offset="0%" stopColor="#86efac" />
+                <stop offset="50%" stopColor="#22c55e" />
+                <stop offset="100%" stopColor="#15803d" />
+              </radialGradient>
+
+              {/* Ground gradient */}
+              <linearGradient id="torqLabGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1e1e2e" />
+                <stop offset="100%" stopColor="#0f0f1a" />
+              </linearGradient>
+
+              {/* Shadow filters */}
+              <filter id="torqLabWeightShadow" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000" floodOpacity="0.5" />
+              </filter>
+
+              <filter id="torqLabFulcrumShadow" x="-50%" y="-50%" width="200%" height="200%">
+                <feDropShadow dx="0" dy="3" stdDeviation="4" floodColor="#000" floodOpacity="0.4" />
+              </filter>
+
+              {/* Balance glow */}
+              <filter id="torqLabBalanceGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feFlood floodColor={isBalanced ? '#22c55e' : '#f97316'} floodOpacity="0.5" />
+                <feComposite in2="blur" operator="in" />
+                <feMerge><feMergeNode /><feMergeNode in="SourceGraphic" /></feMerge>
+              </filter>
+            </defs>
+
+            {/* Background */}
+            <rect width={360} height={160} fill="#08050c" />
+
+            {/* Ground with gradient */}
+            <rect x={0} y={130} width={360} height={30} fill="url(#torqLabGroundGrad)" />
+            <line x1={0} y1={130} x2={360} y2={130} stroke="#27272a" strokeWidth={1} />
+
+            {/* Fulcrum shadow on ground */}
+            <ellipse cx={180} cy={135} rx={35} ry={8} fill="#000" opacity={0.3} />
+
+            {/* Fulcrum (triangle) with 3D effect */}
+            <g filter="url(#torqLabFulcrumShadow)">
+              <polygon points="180,105 150,130 210,130" fill="url(#torqLabFulcrumGrad)" stroke="#9ca3af" strokeWidth={1.5} />
+              <line x1={180} y1={107} x2={154} y2={128} stroke="#9ca3af" strokeWidth={1} opacity={0.5} />
+            </g>
 
             {/* Seesaw board - tilts based on balance */}
-            <g transform={`rotate(${(rightTorque - leftTorque) * 3}, 180, 115)`}>
-              <rect x={30} y={108} width={300} height={14} rx={4} fill="#8b7355" />
+            <g transform={`rotate(${(rightTorque - leftTorque) * 3}, 180, 98)`}>
+              {/* Board with premium wood grain */}
+              <rect x={30} y={92} width={300} height={12} rx={4} fill="url(#torqLabBoardGrad)" />
+              {/* Wood grain lines */}
+              {[-0.35, -0.15, 0.05, 0.25, 0.45].map((pos, i) => (
+                <line key={i} x1={180 + 150 * pos} y1={94} x2={180 + 150 * pos} y2={102}
+                      stroke="#6b4d38" strokeWidth={0.5} opacity={0.3} />
+              ))}
+              {/* Board highlight */}
+              <line x1={35} y1={94} x2={325} y2={94} stroke="#c9a07a" strokeWidth={1} opacity={0.4} />
 
-              {/* Left weight */}
-              <g transform={`translate(${30 + leftPosition * 150}, 80)`}>
-                <circle r={18 + leftWeight * 2} fill="#ef4444" stroke="#dc2626" strokeWidth={2} />
-                <text y={5} textAnchor="middle" fill="#fff" fontSize={12} fontWeight="700">{leftWeight}kg</text>
+              {/* Left weight with premium gradient */}
+              <g transform={`translate(${30 + leftPosition * 150}, 68)`} filter="url(#torqLabWeightShadow)">
+                <circle r={18 + leftWeight * 2} fill="url(#torqLabLeftGrad)" stroke="#dc2626" strokeWidth={2} />
+                {/* Highlight */}
+                <circle cx={-(5 + leftWeight * 0.5)} cy={-(5 + leftWeight * 0.5)} r={4 + leftWeight * 0.5} fill="#fca5a5" opacity={0.5} />
               </g>
 
-              {/* Right weight */}
-              <g transform={`translate(${180 + rightPosition * 150}, 80)`}>
-                <circle r={18 + rightWeight * 2} fill="#22c55e" stroke="#16a34a" strokeWidth={2} />
-                <text y={5} textAnchor="middle" fill="#fff" fontSize={12} fontWeight="700">{rightWeight}kg</text>
+              {/* Right weight with premium gradient */}
+              <g transform={`translate(${180 + rightPosition * 150}, 68)`} filter="url(#torqLabWeightShadow)">
+                <circle r={18 + rightWeight * 2} fill="url(#torqLabRightGrad)" stroke="#16a34a" strokeWidth={2} />
+                {/* Highlight */}
+                <circle cx={-(4 + rightWeight * 0.4)} cy={-(4 + rightWeight * 0.4)} r={3 + rightWeight * 0.4} fill="#86efac" opacity={0.5} />
               </g>
             </g>
 
-            {/* Balance indicator */}
-            <text x={180} y={175} textAnchor="middle" fill={isBalanced ? '#22c55e' : '#f97316'} fontSize={14} fontWeight="700">
-              {isBalanced ? 'BALANCED!' : `Tilting ${leftTorque > rightTorque ? 'Left' : 'Right'}`}
-            </text>
+            {/* Pivot point marker with glow */}
+            <circle cx={180} cy={105} r={5} fill="#a855f7" stroke="#c084fc" strokeWidth={1.5} filter="url(#torqLabBalanceGlow)" />
           </svg>
+
+          {/* Balance indicator outside SVG */}
+          <div style={{ textAlign: 'center', marginTop: typo.elementGap }}>
+            <span style={{
+              fontSize: typo.body,
+              fontWeight: 700,
+              color: isBalanced ? '#22c55e' : '#f97316',
+              background: isBalanced ? '#052e16' : '#451a03',
+              padding: '6px 16px',
+              borderRadius: '12px',
+              border: `1px solid ${isBalanced ? '#22c55e40' : '#f9731640'}`
+            }}>
+              {isBalanced ? 'BALANCED!' : `Tilting ${leftTorque > rightTorque ? 'Left' : 'Right'}`}
+            </span>
+          </div>
         </div>
 
         {/* Controls */}
@@ -972,13 +1412,18 @@ const TorqueRenderer: React.FC<TorqueRendererProps> = ({
           </div>
         </div>
 
-        {/* Torque display */}
+        {/* Torque display - moved outside SVG with typo system */}
         <div className="bg-purple-500/10 border border-purple-500/30 rounded-xl p-4 max-w-md w-full mb-6">
-          <p className="text-center text-slate-300">
-            Left: <span className="text-red-400 font-semibold">{leftTorque.toFixed(1)}</span> N-m |
-            Right: <span className="text-green-400 font-semibold">{rightTorque.toFixed(1)}</span> N-m
-          </p>
-          <p className="text-center text-purple-400 text-sm mt-2">
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', fontSize: typo.body }}>
+            <span style={{ color: '#cbd5e1' }}>
+              Left: <span style={{ color: '#ef4444', fontWeight: 600 }}>{leftTorque.toFixed(1)}</span> N-m
+            </span>
+            <span style={{ color: '#6b7280' }}>|</span>
+            <span style={{ color: '#cbd5e1' }}>
+              Right: <span style={{ color: '#22c55e', fontWeight: 600 }}>{rightTorque.toFixed(1)}</span> N-m
+            </span>
+          </div>
+          <p style={{ textAlign: 'center', color: '#a855f7', fontSize: typo.small, marginTop: '8px', fontWeight: 600 }}>
             {'\u03A3\u03C4'} = {(leftTorque - rightTorque).toFixed(1)} N-m
           </p>
         </div>

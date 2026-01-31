@@ -343,138 +343,259 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
     const emissionColor = fluorophore.color;
 
     return (
-      <svg viewBox="0 0 300 200" className="w-full h-40">
-        <defs>
-          <marker id="arrowUp" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
-            <path d="M0,8 L4,0 L8,8" fill="none" stroke={excitationColor} strokeWidth="1.5" />
-          </marker>
-          <marker id="arrowDown" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
-            <path d="M0,0 L4,8 L8,0" fill="none" stroke={emissionColor} strokeWidth="1.5" />
-          </marker>
-          <filter id="jabGlow">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+      <div className="relative">
+        <svg viewBox="0 0 300 180" className="w-full h-40">
+          <defs>
+            {/* Background gradient */}
+            <linearGradient id="fluorJabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e1b4b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect width="300" height="200" fill="#0f172a" rx="8" />
+            {/* Ground state gradient */}
+            <linearGradient id="fluorS0Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
 
-        {/* Title */}
-        <text x="150" y="20" textAnchor="middle" className="fill-violet-300 text-xs font-bold">Jablonski Diagram</text>
+            {/* Excited state gradient */}
+            <linearGradient id="fluorS1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6366f1" />
+              <stop offset="30%" stopColor="#818cf8" />
+              <stop offset="70%" stopColor="#818cf8" />
+              <stop offset="100%" stopColor="#6366f1" />
+            </linearGradient>
 
-        {/* Ground state S0 */}
-        <rect x="40" y="160" width="80" height="8" fill="#374151" rx="2" />
-        <text x="80" y="180" textAnchor="middle" className="fill-gray-400 text-xs">S0 (Ground)</text>
+            {/* Triplet state gradient */}
+            <linearGradient id="fluorT1Grad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7c3aed" />
+              <stop offset="50%" stopColor="#a78bfa" />
+              <stop offset="100%" stopColor="#7c3aed" />
+            </linearGradient>
 
-        {/* Excited vibrational levels */}
-        <rect x="40" y="80" width="80" height="4" fill="#4b5563" rx="1" />
-        <rect x="40" y="70" width="80" height="4" fill="#4b5563" rx="1" />
-        <rect x="40" y="60" width="80" height="4" fill="#6b7280" rx="1" />
-        <text x="80" y="50" textAnchor="middle" className="fill-gray-400 text-xs">S1 (Excited)</text>
+            {/* Absorption arrow gradient */}
+            <linearGradient id="fluorAbsorbGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor={excitationColor} stopOpacity="0.6" />
+              <stop offset="50%" stopColor={excitationColor} />
+              <stop offset="100%" stopColor="#e9d5ff" />
+            </linearGradient>
 
-        {/* Triplet state (for phosphorescence) */}
+            {/* Emission arrow gradient */}
+            <linearGradient id="fluorEmitArrowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.8" />
+              <stop offset="50%" stopColor={emissionColor} />
+              <stop offset="100%" stopColor={emissionColor} stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* Markers */}
+            <marker id="fluorArrowUp" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+              <path d="M0,10 L5,0 L10,10" fill="none" stroke="url(#fluorAbsorbGrad)" strokeWidth="2" />
+            </marker>
+            <marker id="fluorArrowDown" markerWidth="10" markerHeight="10" refX="5" refY="5" orient="auto">
+              <path d="M0,0 L5,10 L10,0" fill="none" stroke={emissionColor} strokeWidth="2" />
+            </marker>
+
+            {/* Glow filters */}
+            <filter id="fluorJabGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur1" />
+              <feGaussianBlur stdDeviation="1.5" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="fluorEnergyLevelGlow" x="-20%" y="-50%" width="140%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="levelBlur" />
+              <feMerge>
+                <feMergeNode in="levelBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width="300" height="180" fill="url(#fluorJabBg)" rx="8" />
+
+          {/* Subtle grid pattern */}
+          <g opacity="0.1">
+            {[...Array(10)].map((_, i) => (
+              <line key={`v${i}`} x1={30 * i} y1="0" x2={30 * i} y2="180" stroke="#6366f1" strokeWidth="0.5" />
+            ))}
+            {[...Array(6)].map((_, i) => (
+              <line key={`h${i}`} x1="0" y1={30 * i} x2="300" y2={30 * i} stroke="#6366f1" strokeWidth="0.5" />
+            ))}
+          </g>
+
+          {/* Energy axis */}
+          <line x1="20" y1="25" x2="20" y2="155" stroke="#475569" strokeWidth="1.5" />
+          <polygon points="20,20 16,30 24,30" fill="#475569" />
+
+          {/* Ground state S0 */}
+          <rect x="40" y="145" width="90" height="10" fill="url(#fluorS0Grad)" rx="3" filter="url(#fluorEnergyLevelGlow)" />
+          {/* Vibrational levels in ground state */}
+          <rect x="45" y="135" width="80" height="3" fill="#4b5563" rx="1" opacity="0.5" />
+
+          {/* Excited vibrational levels S1 */}
+          <rect x="40" y="72" width="90" height="5" fill="url(#fluorS1Grad)" rx="2" filter="url(#fluorEnergyLevelGlow)" />
+          <rect x="40" y="62" width="90" height="4" fill="#818cf8" rx="1" opacity="0.7" />
+          <rect x="40" y="53" width="90" height="4" fill="#a5b4fc" rx="1" opacity="0.5" />
+          <rect x="40" y="45" width="90" height="3" fill="#c7d2fe" rx="1" opacity="0.3" />
+
+          {/* Triplet state (for phosphorescence) */}
+          {showPhosphorescence && (
+            <g>
+              <rect x="170" y="95" width="90" height="6" fill="url(#fluorT1Grad)" rx="2" filter="url(#fluorEnergyLevelGlow)" />
+              <rect x="175" y="87" width="80" height="3" fill="#a78bfa" rx="1" opacity="0.5" />
+            </g>
+          )}
+
+          {/* Absorption arrow */}
+          {uvOn && (jablonskiStep === 0 || jablonskiStep === 1) && (
+            <g filter="url(#fluorJabGlow)">
+              <line
+                x1="60"
+                y1="140"
+                x2="60"
+                y2="52"
+                stroke="url(#fluorAbsorbGrad)"
+                strokeWidth="4"
+                strokeLinecap="round"
+                opacity={jablonskiStep === 0 ? 1 : 0.5}
+              />
+              <polygon points="60,48 55,58 65,58" fill={excitationColor} />
+              {/* Photon wave symbols */}
+              <path d="M 48 100 Q 52 95 48 90 Q 44 85 48 80" stroke={excitationColor} strokeWidth="1.5" fill="none" opacity="0.7" />
+            </g>
+          )}
+
+          {/* Vibrational relaxation (heat loss) */}
+          {uvOn && jablonskiStep === 1 && (
+            <g>
+              <path
+                d="M 90 50 Q 100 55 95 62 Q 90 69 95 75"
+                fill="none"
+                stroke="#fbbf24"
+                strokeWidth="2.5"
+                strokeDasharray="5,3"
+                strokeLinecap="round"
+              />
+              {/* Heat wave symbols */}
+              <path d="M 100 58 Q 106 55 104 62" stroke="#fcd34d" strokeWidth="1.5" fill="none" />
+              <path d="M 103 65 Q 109 62 107 69" stroke="#fcd34d" strokeWidth="1.5" fill="none" />
+            </g>
+          )}
+
+          {/* Emission arrow (fluorescence) */}
+          {uvOn && (jablonskiStep === 2 || jablonskiStep === 3) && !showPhosphorescence && (
+            <g filter="url(#fluorJabGlow)">
+              <line
+                x1="110"
+                y1="77"
+                x2="110"
+                y2="138"
+                stroke="url(#fluorEmitArrowGrad)"
+                strokeWidth="4"
+                strokeLinecap="round"
+                opacity={jablonskiStep === 2 ? 1 : 0.5}
+              />
+              <polygon points="110,142 105,132 115,132" fill={emissionColor} />
+              {/* Emission photon wave */}
+              <path d="M 122 110 Q 126 105 122 100 Q 118 95 122 90" stroke={emissionColor} strokeWidth="1.5" fill="none" opacity="0.7" />
+            </g>
+          )}
+
+          {/* ISC and Phosphorescence for triplet state */}
+          {uvOn && showPhosphorescence && jablonskiStep >= 1 && (
+            <>
+              {/* Intersystem crossing */}
+              <path
+                d="M 130 70 C 145 75, 160 85, 175 95"
+                fill="none"
+                stroke="#9333ea"
+                strokeWidth="2.5"
+                strokeDasharray="6,4"
+                strokeLinecap="round"
+              />
+              {/* ISC indicator */}
+              <circle cx="150" cy="82" r="3" fill="#9333ea" opacity="0.8" />
+
+              {/* Phosphorescence emission (slower, from T1) */}
+              {jablonskiStep >= 2 && (
+                <g filter="url(#fluorJabGlow)" opacity={phosphorescenceDecay / 100}>
+                  <line
+                    x1="220"
+                    y1="100"
+                    x2="220"
+                    y2="140"
+                    stroke="#c084fc"
+                    strokeWidth="3.5"
+                    strokeLinecap="round"
+                  />
+                  <polygon points="220,145 215,135 225,135" fill="#c084fc" />
+                  {/* Slow emission wave */}
+                  <path d="M 232 120 Q 236 115 232 110" stroke="#c084fc" strokeWidth="1.5" fill="none" opacity="0.6" />
+                </g>
+              )}
+            </>
+          )}
+
+          {/* Stokes shift indicator box */}
+          <rect x="200" y="148" width="90" height="28" rx="4" fill="#1e293b" opacity="0.8" />
+          <rect x="200" y="148" width="90" height="28" rx="4" stroke="#10b981" strokeWidth="1" fill="none" opacity="0.5" />
+        </svg>
+
+        {/* Labels moved outside SVG */}
+        <div className="absolute top-1 left-8" style={{ fontSize: typo.small }}>
+          <span className="text-gray-500">High E</span>
+        </div>
+        <div className="absolute bottom-10 left-8" style={{ fontSize: typo.small }}>
+          <span className="text-gray-500">Low E</span>
+        </div>
+        <div className="absolute bottom-12 left-14" style={{ fontSize: typo.label }}>
+          <span className="text-gray-400">S0 (Ground)</span>
+        </div>
+        <div className="absolute top-8 left-14" style={{ fontSize: typo.label }}>
+          <span className="text-indigo-300">S1 (Excited)</span>
+        </div>
         {showPhosphorescence && (
-          <>
-            <rect x="180" y="100" width="80" height="4" fill="#9333ea" rx="1" />
-            <text x="220" y="120" textAnchor="middle" className="fill-purple-400 text-xs">T1 (Triplet)</text>
-          </>
+          <div className="absolute top-14 right-8" style={{ fontSize: typo.label }}>
+            <span className="text-purple-400">T1 (Triplet)</span>
+          </div>
         )}
-
-        {/* Absorption arrow */}
         {uvOn && (jablonskiStep === 0 || jablonskiStep === 1) && (
-          <g filter="url(#jabGlow)">
-            <line
-              x1="60"
-              y1="155"
-              x2="60"
-              y2="65"
-              stroke={excitationColor}
-              strokeWidth="3"
-              markerEnd="url(#arrowUp)"
-              opacity={jablonskiStep === 0 ? 1 : 0.5}
-            />
-            <text x="30" y="110" className="fill-violet-400 text-xs font-semibold" transform="rotate(-90, 30, 110)">Absorb</text>
-          </g>
+          <div className="absolute top-16 left-6" style={{ fontSize: typo.label }}>
+            <span className="text-violet-400 font-semibold">Absorb</span>
+          </div>
         )}
-
-        {/* Vibrational relaxation (heat loss) */}
         {uvOn && jablonskiStep === 1 && (
-          <g>
-            <path
-              d="M 80 65 Q 90 72 80 80"
-              fill="none"
-              stroke="#fbbf24"
-              strokeWidth="2"
-              strokeDasharray="4,2"
-            />
-            <text x="95" y="75" className="fill-yellow-400 text-xs">Heat</text>
-          </g>
+          <div className="absolute top-12 left-28" style={{ fontSize: typo.label }}>
+            <span className="text-yellow-400">Heat</span>
+          </div>
         )}
-
-        {/* Emission arrow (fluorescence) */}
         {uvOn && (jablonskiStep === 2 || jablonskiStep === 3) && !showPhosphorescence && (
-          <g filter="url(#jabGlow)">
-            <line
-              x1="100"
-              y1="85"
-              x2="100"
-              y2="155"
-              stroke={emissionColor}
-              strokeWidth="3"
-              markerEnd="url(#arrowDown)"
-              opacity={jablonskiStep === 2 ? 1 : 0.5}
-            />
-            <text x="130" y="120" className="text-xs font-semibold" style={{ fill: emissionColor }}>Emit</text>
-          </g>
+          <div className="absolute top-20 left-32" style={{ fontSize: typo.label }}>
+            <span style={{ color: emissionColor }} className="font-semibold">Emit</span>
+          </div>
         )}
-
-        {/* ISC and Phosphorescence for triplet state */}
         {uvOn && showPhosphorescence && jablonskiStep >= 1 && (
-          <>
-            {/* Intersystem crossing */}
-            <path
-              d="M 120 80 Q 150 90 180 100"
-              fill="none"
-              stroke="#9333ea"
-              strokeWidth="2"
-              strokeDasharray="4,2"
-            />
-            <text x="145" y="85" className="fill-purple-400 text-xs">ISC</text>
-
-            {/* Phosphorescence emission (slower, from T1) */}
-            {jablonskiStep >= 2 && (
-              <g filter="url(#jabGlow)" opacity={phosphorescenceDecay / 100}>
-                <line
-                  x1="220"
-                  y1="105"
-                  x2="220"
-                  y2="155"
-                  stroke="#c084fc"
-                  strokeWidth="3"
-                  markerEnd="url(#arrowDown)"
-                />
-                <text x="240" y="130" className="fill-purple-400 text-xs">Phos.</text>
-              </g>
-            )}
-          </>
+          <div className="absolute top-12 left-1/2" style={{ fontSize: typo.label }}>
+            <span className="text-purple-400">ISC</span>
+          </div>
         )}
-
-        {/* Energy labels */}
-        <text x="10" y="60" className="fill-gray-500 text-xs">High E</text>
-        <text x="10" y="165" className="fill-gray-500 text-xs">Low E</text>
-
-        {/* Stokes shift indicator */}
-        <g transform="translate(200, 160)">
-          <text x="0" y="0" className="fill-gray-400 text-xs">Stokes Shift:</text>
-          <text x="0" y="15" className="fill-emerald-400 text-xs font-bold">
-            {fluorophore.emission - fluorophore.excitation}nm
-          </text>
-        </g>
-      </svg>
+        {uvOn && showPhosphorescence && jablonskiStep >= 2 && (
+          <div className="absolute top-24 right-12" style={{ fontSize: typo.label, opacity: phosphorescenceDecay / 100 }}>
+            <span className="text-purple-300">Phos.</span>
+          </div>
+        )}
+        <div className="absolute bottom-1 right-4" style={{ fontSize: typo.small }}>
+          <span className="text-gray-400">Stokes Shift: </span>
+          <span className="text-emerald-400 font-bold">{fluorophore.emission - fluorophore.excitation}nm</span>
+        </div>
+      </div>
     );
   };
 
@@ -485,76 +606,173 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
     const intensityFactor = (lightIntensity / 100) * (fluorophoreConcentration / 100);
 
     return (
-      <svg viewBox="0 0 300 120" className="w-full h-28">
-        <defs>
-          <linearGradient id="spectrumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#8b5cf6" />
-            <stop offset="20%" stopColor="#3b82f6" />
-            <stop offset="35%" stopColor="#06b6d4" />
-            <stop offset="50%" stopColor="#22c55e" />
-            <stop offset="65%" stopColor="#eab308" />
-            <stop offset="80%" stopColor="#f97316" />
-            <stop offset="100%" stopColor="#ef4444" />
-          </linearGradient>
-        </defs>
+      <div className="relative">
+        <svg viewBox="0 0 300 100" className="w-full h-24">
+          <defs>
+            {/* Premium spectrum gradient with more color stops */}
+            <linearGradient id="fluorSpectrumGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7c3aed" />
+              <stop offset="12%" stopColor="#8b5cf6" />
+              <stop offset="22%" stopColor="#3b82f6" />
+              <stop offset="32%" stopColor="#0ea5e9" />
+              <stop offset="42%" stopColor="#06b6d4" />
+              <stop offset="52%" stopColor="#10b981" />
+              <stop offset="62%" stopColor="#22c55e" />
+              <stop offset="72%" stopColor="#84cc16" />
+              <stop offset="80%" stopColor="#eab308" />
+              <stop offset="88%" stopColor="#f97316" />
+              <stop offset="95%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
 
-        <rect width="300" height="120" fill="#0f172a" rx="8" />
+            {/* Background gradient */}
+            <linearGradient id="fluorSpecBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e1b4b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        {/* Spectrum bar */}
-        <rect x="20" y="80" width="260" height="15" fill="url(#spectrumGrad)" rx="2" />
+            {/* Excitation peak gradient */}
+            <linearGradient id="fluorExcitePeakGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor={wavelengthToColor(excitationWavelength)} stopOpacity="0.3" />
+              <stop offset="50%" stopColor={wavelengthToColor(excitationWavelength)} stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#e9d5ff" stopOpacity="0.9" />
+            </linearGradient>
 
-        {/* Wavelength labels */}
-        <text x="20" y="108" className="fill-gray-500 text-xs">380nm</text>
-        <text x="145" y="108" textAnchor="middle" className="fill-gray-500 text-xs">550nm</text>
-        <text x="270" y="108" textAnchor="end" className="fill-gray-500 text-xs">700nm</text>
+            {/* Emission peak gradient */}
+            <linearGradient id="fluorEmitPeakGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor={matProps.emitColor} stopOpacity="0.3" />
+              <stop offset="50%" stopColor={matProps.emitColor} stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.9" />
+            </linearGradient>
 
-        {/* Excitation marker */}
+            {/* Peak glow filter */}
+            <filter id="fluorPeakGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="peakBlur" />
+              <feMerge>
+                <feMergeNode in="peakBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Stokes shift arrow marker */}
+            <marker id="fluorStokesArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
+              <path d="M0,0 L0,8 L8,4 z" fill="#10b981" />
+            </marker>
+          </defs>
+
+          {/* Background */}
+          <rect width="300" height="100" fill="url(#fluorSpecBg)" rx="8" />
+
+          {/* Grid lines */}
+          <g opacity="0.15">
+            {[...Array(5)].map((_, i) => (
+              <line key={i} x1={60 * i + 20} y1="15" x2={60 * i + 20} y2="70" stroke="#6366f1" strokeWidth="0.5" strokeDasharray="2,3" />
+            ))}
+          </g>
+
+          {/* Spectrum bar with enhanced styling */}
+          <rect x="20" y="70" width="260" height="18" fill="url(#fluorSpectrumGrad)" rx="4" />
+          <rect x="20" y="70" width="260" height="18" rx="4" stroke="#ffffff" strokeWidth="0.5" fill="none" opacity="0.2" />
+
+          {/* UV region indicator */}
+          <rect x="8" y="70" width="14" height="18" fill="#581c87" rx="2" opacity="0.6" />
+
+          {/* Excitation peak */}
+          {uvOn && (
+            <g transform={`translate(${20 + ((excitationWavelength - 300) / 500) * 260}, 0)`} filter="url(#fluorPeakGlow)">
+              {/* Peak curve */}
+              <path
+                d={`M -15 68 Q 0 ${35} 15 68`}
+                fill="url(#fluorExcitePeakGrad)"
+                opacity="0.8"
+              />
+              {/* Peak line */}
+              <line x1="0" y1="20" x2="0" y2="68" stroke={wavelengthToColor(excitationWavelength)} strokeWidth="3" strokeLinecap="round" />
+              {/* Peak dot */}
+              <circle cx="0" cy="20" r="4" fill={wavelengthToColor(excitationWavelength)} />
+              <circle cx="0" cy="20" r="2" fill="#ffffff" opacity="0.7" />
+            </g>
+          )}
+
+          {/* Emission peak */}
+          {uvOn && matProps.fluorescent && (
+            <g transform={`translate(${20 + ((emissionWl - 300) / 500) * 260}, 0)`} filter="url(#fluorPeakGlow)">
+              {/* Emission curve - wider base for higher intensity */}
+              <path
+                d={`M ${-25 * intensityFactor - 10} 68 Q 0 ${30 - 15 * intensityFactor} ${25 * intensityFactor + 10} 68`}
+                fill="url(#fluorEmitPeakGrad)"
+                opacity={0.7 * intensityFactor + 0.3}
+              />
+              {/* Peak line */}
+              <line x1="0" y1="20" x2="0" y2="68" stroke={matProps.emitColor} strokeWidth="3.5" strokeLinecap="round" />
+              {/* Peak dot with glow */}
+              <circle cx="0" cy="20" r="5" fill={matProps.emitGlow} />
+              <circle cx="0" cy="20" r="2.5" fill="#ffffff" opacity="0.8" />
+            </g>
+          )}
+
+          {/* Stokes shift arrow */}
+          {uvOn && matProps.fluorescent && (
+            <g>
+              <line
+                x1={20 + ((excitationWavelength - 300) / 500) * 260 + 8}
+                y1="50"
+                x2={20 + ((emissionWl - 300) / 500) * 260 - 8}
+                y2="50"
+                stroke="#10b981"
+                strokeWidth="2"
+                strokeDasharray="4,2"
+                markerEnd="url(#fluorStokesArrow)"
+              />
+              {/* Shift distance indicator */}
+              <rect
+                x={(20 + ((excitationWavelength - 300) / 500) * 260 + 20 + ((emissionWl - 300) / 500) * 260) / 2 - 25}
+                y="40"
+                width="50"
+                height="16"
+                rx="3"
+                fill="#064e3b"
+                opacity="0.8"
+              />
+            </g>
+          )}
+        </svg>
+
+        {/* Labels outside SVG */}
+        <div className="absolute bottom-1 left-5" style={{ fontSize: typo.label }}>
+          <span className="text-gray-500">380nm</span>
+        </div>
+        <div className="absolute bottom-1 left-1/2 transform -translate-x-1/2" style={{ fontSize: typo.label }}>
+          <span className="text-gray-500">550nm</span>
+        </div>
+        <div className="absolute bottom-1 right-3" style={{ fontSize: typo.label }}>
+          <span className="text-gray-500">700nm</span>
+        </div>
         {uvOn && (
-          <g transform={`translate(${20 + ((excitationWavelength - 300) / 500) * 260}, 0)`}>
-            <line x1="0" y1="25" x2="0" y2="78" stroke={wavelengthToColor(excitationWavelength)} strokeWidth="3" />
-            <text x="0" y="20" textAnchor="middle" className="fill-violet-400 text-xs font-bold">Excitation</text>
-            <text x="0" y="35" textAnchor="middle" className="fill-violet-300 text-xs">{excitationWavelength}nm</text>
-          </g>
+          <div className="absolute top-0 text-center" style={{ left: `${7 + ((excitationWavelength - 300) / 500) * 87}%`, fontSize: typo.label }}>
+            <span className="text-violet-400 font-bold">Excitation</span>
+            <br />
+            <span className="text-violet-300">{excitationWavelength}nm</span>
+          </div>
         )}
-
-        {/* Emission peak */}
         {uvOn && matProps.fluorescent && (
-          <g transform={`translate(${20 + ((emissionWl - 300) / 500) * 260}, 0)`}>
-            {/* Emission curve */}
-            <path
-              d={`M -30 75 Q 0 ${75 - 40 * intensityFactor} 30 75`}
-              fill={matProps.emitColor}
-              opacity={0.5}
-            />
-            <line x1="0" y1="25" x2="0" y2="78" stroke={matProps.emitColor} strokeWidth="3" />
-            <text x="0" y="20" textAnchor="middle" style={{ fill: matProps.emitColor }} className="text-xs font-bold">Emission</text>
-            <text x="0" y="35" textAnchor="middle" style={{ fill: matProps.emitColor }} className="text-xs">{Math.round(emissionWl)}nm</text>
-          </g>
+          <div className="absolute top-0 text-center" style={{ left: `${7 + ((emissionWl - 300) / 500) * 87}%`, fontSize: typo.label }}>
+            <span style={{ color: matProps.emitColor }} className="font-bold">Emission</span>
+            <br />
+            <span style={{ color: matProps.emitColor }}>{Math.round(emissionWl)}nm</span>
+          </div>
         )}
-
-        {/* Stokes shift arrow */}
         {uvOn && matProps.fluorescent && (
-          <g>
-            <line
-              x1={20 + ((excitationWavelength - 300) / 500) * 260 + 5}
-              y1="55"
-              x2={20 + ((emissionWl - 300) / 500) * 260 - 5}
-              y2="55"
-              stroke="#22c55e"
-              strokeWidth="2"
-              markerEnd="url(#arrow)"
-            />
-            <text
-              x={(20 + ((excitationWavelength - 300) / 500) * 260 + 20 + ((emissionWl - 300) / 500) * 260) / 2}
-              y="50"
-              textAnchor="middle"
-              className="fill-emerald-400 text-xs"
-            >
-              Stokes Shift
-            </text>
-          </g>
+          <div className="absolute text-center" style={{
+            left: `${7 + ((excitationWavelength - 300) / 500) * 87 / 2 + ((emissionWl - 300) / 500) * 87 / 2 + 3.5}%`,
+            top: '38%',
+            fontSize: typo.label
+          }}>
+            <span className="text-emerald-400 font-semibold">Stokes Shift</span>
+          </div>
         )}
-      </svg>
+      </div>
     );
   };
 
@@ -565,156 +783,398 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
     const glowIntensity = (lightIntensity / 100) * (fluorophoreConcentration / 100);
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
-        {/* Background - dark room when UV only */}
-        <rect width="400" height="280" fill={regularLight ? '#1e293b' : '#0a0a15'} />
+      <div className="relative">
+        <svg viewBox="0 0 400 280" className="w-full h-56">
+          {/* Premium defs section with comprehensive gradients and filters */}
+          <defs>
+            {/* Lab background gradient */}
+            <linearGradient id="fluorLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={regularLight ? '#1e293b' : '#050510'} />
+              <stop offset="30%" stopColor={regularLight ? '#1a2536' : '#0a0a18'} />
+              <stop offset="70%" stopColor={regularLight ? '#162032' : '#08081a'} />
+              <stop offset="100%" stopColor={regularLight ? '#0f172a' : '#030308'} />
+            </linearGradient>
 
-        {/* UV Light Source */}
-        <g transform="translate(320, 30)">
-          <rect x="-25" y="0" width="50" height="80" rx="5" fill="#1f2937" />
-          <rect x="-20" y="70" width="40" height="30" rx="3" fill={uvActive ? '#7c3aed' : '#374151'} />
-          {uvActive && (
-            <>
-              {/* UV beam cone */}
-              <path
-                d="M -20 100 L -60 260 L 60 260 L 20 100 Z"
-                fill="url(#uvGradient)"
-                opacity={0.4 * (lightIntensity / 100)}
-              />
-              {/* UV rays */}
-              {[...Array(Math.ceil(lightIntensity / 20))].map((_, i) => (
-                <line
-                  key={i}
-                  x1={-15 + i * 8}
-                  y1="100"
-                  x2={-45 + i * 25}
-                  y2="250"
-                  stroke={wavelengthToColor(excitationWavelength)}
-                  strokeWidth="2"
-                  opacity={0.3 + Math.sin(animPhase + i) * 0.2}
-                />
-              ))}
-            </>
+            {/* UV Light housing metal gradient */}
+            <linearGradient id="fluorUvHousingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="25%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#1f2937" />
+              <stop offset="75%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* UV bulb gradient when active */}
+            <radialGradient id="fluorUvBulbGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#c4b5fd" />
+              <stop offset="30%" stopColor="#a78bfa" />
+              <stop offset="60%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#6d28d9" />
+            </radialGradient>
+
+            {/* UV beam cone gradient */}
+            <linearGradient id="fluorUvBeamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a78bfa" stopOpacity="0.7" />
+              <stop offset="30%" stopColor="#8b5cf6" stopOpacity="0.5" />
+              <stop offset="60%" stopColor="#7c3aed" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Emission glow radial gradient */}
+            <radialGradient id="fluorEmissionGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={props.emitGlow} stopOpacity={0.95 * glowIntensity} />
+              <stop offset="25%" stopColor={props.emitGlow} stopOpacity={0.7 * glowIntensity} />
+              <stop offset="50%" stopColor={props.emitColor} stopOpacity={0.4 * glowIntensity} />
+              <stop offset="75%" stopColor={props.emitColor} stopOpacity={0.15 * glowIntensity} />
+              <stop offset="100%" stopColor={props.emitColor} stopOpacity="0" />
+            </radialGradient>
+
+            {/* Highlighter paper gradient */}
+            <linearGradient id="fluorHighlighterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={isGlowing ? props.emitColor : '#fef9c3'} />
+              <stop offset="30%" stopColor={isGlowing ? props.emitGlow : '#fef08a'} />
+              <stop offset="70%" stopColor={isGlowing ? props.emitColor : '#fde047'} />
+              <stop offset="100%" stopColor={isGlowing ? props.emitGlow : '#facc15'} />
+            </linearGradient>
+
+            {/* Glass bottle gradient for tonic */}
+            <linearGradient id="fluorGlassGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="20%" stopColor="#6b7280" />
+              <stop offset="50%" stopColor="#9ca3af" />
+              <stop offset="80%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+
+            {/* Liquid gradient for tonic water */}
+            <linearGradient id="fluorLiquidGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={isGlowing ? props.emitColor : '#e0f2fe'} stopOpacity="0.9" />
+              <stop offset="50%" stopColor={isGlowing ? props.emitGlow : '#bae6fd'} stopOpacity="0.85" />
+              <stop offset="100%" stopColor={isGlowing ? props.emitColor : '#7dd3fc'} stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Crystal/mineral gradient */}
+            <linearGradient id="fluorCrystalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={isGlowing ? props.emitColor : '#a78bfa'} />
+              <stop offset="25%" stopColor={isGlowing ? props.emitGlow : '#8b7355'} />
+              <stop offset="50%" stopColor={isGlowing ? props.emitColor : '#a0896b'} />
+              <stop offset="75%" stopColor={isGlowing ? props.emitGlow : '#8b7355'} />
+              <stop offset="100%" stopColor={isGlowing ? props.emitColor : '#7c6945'} />
+            </linearGradient>
+
+            {/* Crystal facet highlight */}
+            <linearGradient id="fluorCrystalFacet" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={isGlowing ? '#ffffff' : '#d4c4a8'} stopOpacity="0.8" />
+              <stop offset="50%" stopColor={isGlowing ? props.emitGlow : '#b8a688'} stopOpacity="0.6" />
+              <stop offset="100%" stopColor={isGlowing ? props.emitColor : '#a0896b'} stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Detergent bottle gradient */}
+            <linearGradient id="fluorDetergentGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="30%" stopColor="#2563eb" />
+              <stop offset="70%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* Room light indicator gradient */}
+            <radialGradient id="fluorRoomLightGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="40%" stopColor="#fbbf24" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </radialGradient>
+
+            {/* Paper texture gradient */}
+            <linearGradient id="fluorPaperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#faf5e8" />
+              <stop offset="25%" stopColor="#f5f0dc" />
+              <stop offset="50%" stopColor="#f0ebd0" />
+              <stop offset="75%" stopColor="#ebe6c4" />
+              <stop offset="100%" stopColor="#e6e1b8" />
+            </linearGradient>
+
+            {/* Premium glow filter */}
+            <filter id="fluorGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur1" />
+              <feGaussianBlur stdDeviation="3" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* UV source glow filter */}
+            <filter id="fluorUvGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="uvBlur" />
+              <feMerge>
+                <feMergeNode in="uvBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Emission glow filter */}
+            <filter id="fluorEmitGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="emitBlur1" />
+              <feGaussianBlur stdDeviation="4" result="emitBlur2" />
+              <feMerge>
+                <feMergeNode in="emitBlur1" />
+                <feMergeNode in="emitBlur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft shadow filter */}
+            <filter id="fluorShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000000" floodOpacity="0.4" />
+            </filter>
+
+            {/* Arrow marker */}
+            <marker id="fluorArrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L9,3 z" fill={wavelengthToColor(excitationWavelength)} />
+            </marker>
+          </defs>
+
+          {/* Background - dark room when UV only */}
+          <rect width="400" height="280" fill="url(#fluorLabBg)" />
+
+          {/* Subtle ambient glow when room light is on */}
+          {regularLight && (
+            <ellipse cx="200" cy="140" rx="180" ry="120" fill="#fef3c7" opacity="0.03" />
           )}
-        </g>
 
-        {/* Gradient definitions */}
-        <defs>
-          <radialGradient id="uvGradient" cx="50%" cy="0%" r="100%">
-            <stop offset="0%" stopColor={wavelengthToColor(excitationWavelength)} stopOpacity="0.6" />
-            <stop offset="100%" stopColor={wavelengthToColor(excitationWavelength)} stopOpacity="0" />
-          </radialGradient>
-          <radialGradient id="glowGradient" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={props.emitGlow} stopOpacity={0.9 * glowIntensity} />
-            <stop offset="50%" stopColor={props.emitGlow} stopOpacity={0.4 * glowIntensity} />
-            <stop offset="100%" stopColor={props.emitGlow} stopOpacity="0" />
-          </radialGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+          {/* UV Light Source */}
+          <g transform="translate(320, 30)">
+            {/* Housing body */}
+            <rect x="-25" y="0" width="50" height="80" rx="6" fill="url(#fluorUvHousingGrad)" filter="url(#fluorShadow)" />
+            {/* Housing details/vents */}
+            <rect x="-20" y="10" width="40" height="3" rx="1" fill="#1f2937" opacity="0.5" />
+            <rect x="-20" y="18" width="40" height="3" rx="1" fill="#1f2937" opacity="0.5" />
+            <rect x="-20" y="26" width="40" height="3" rx="1" fill="#1f2937" opacity="0.5" />
 
-        {/* Material/Object */}
-        <g transform="translate(120, 140)">
-          {/* Glow effect when fluorescent and UV active */}
-          {isGlowing && (
-            <ellipse
-              cx="50"
-              cy="60"
-              rx={70 + Math.sin(animPhase) * 5 * glowIntensity}
-              ry={50 + Math.sin(animPhase) * 5 * glowIntensity}
-              fill="url(#glowGradient)"
-              className="animate-pulse"
+            {/* UV bulb */}
+            <rect
+              x="-20"
+              y="70"
+              width="40"
+              height="30"
+              rx="4"
+              fill={uvActive ? 'url(#fluorUvBulbGrad)' : '#374151'}
+              filter={uvActive ? 'url(#fluorUvGlow)' : ''}
             />
-          )}
 
-          {/* Object base */}
-          {material.includes('highlighter') && (
-            <g>
-              <rect x="20" y="30" width="60" height="60" rx="4" fill={isGlowing ? props.emitColor : '#fef08a'} filter={isGlowing ? 'url(#glow)' : ''} opacity={ambientLight} />
-              <text x="50" y="70" textAnchor="middle" className="fill-gray-800 text-xs font-bold">TEXT</text>
-            </g>
-          )}
-          {material === 'paper' && (
-            <rect x="10" y="20" width="80" height="80" rx="2" fill={`rgba(245, 245, 220, ${ambientLight})`} />
-          )}
-          {material === 'tonic' && (
-            <g>
-              <rect x="30" y="10" width="40" height="90" rx="3" fill="#374151" />
-              <rect x="35" y="25" width="30" height="70" rx="2" fill={isGlowing ? props.emitColor : `rgba(200, 230, 255, ${ambientLight})`} filter={isGlowing ? 'url(#glow)' : ''} />
-              {/* Bubbles */}
-              {[...Array(5)].map((_, i) => (
-                <circle
-                  key={i}
-                  cx={40 + (i % 3) * 10}
-                  cy={80 - ((animPhase * 10 + i * 15) % 50)}
-                  r={2}
-                  fill={isGlowing ? '#00ffff' : '#ffffff'}
-                  opacity={0.5}
+            {uvActive && (
+              <>
+                {/* UV beam cone with gradient */}
+                <path
+                  d="M -20 100 L -70 260 L 70 260 L 20 100 Z"
+                  fill="url(#fluorUvBeamGrad)"
+                  opacity={0.5 * (lightIntensity / 100)}
                 />
-              ))}
-            </g>
-          )}
-          {material === 'mineral' && (
-            <g>
-              {/* Crystal shape */}
-              <polygon
-                points="50,10 80,40 70,90 30,90 20,40"
-                fill={isGlowing ? props.emitColor : '#8b7355'}
-                filter={isGlowing ? 'url(#glow)' : ''}
-                opacity={ambientLight}
-              />
-              <polygon
-                points="50,10 65,35 50,50 35,35"
-                fill={isGlowing ? '#ff8888' : '#a0896b'}
-                opacity={ambientLight * 0.8}
-              />
-            </g>
-          )}
-          {material === 'laundry_detergent' && (
-            <g>
-              <rect x="25" y="20" width="50" height="70" rx="5" fill="#2563eb" />
-              <rect x="30" y="30" width="40" height="20" rx="2" fill={isGlowing ? props.emitColor : '#60a5fa'} filter={isGlowing ? 'url(#glow)' : ''} />
-              <text x="50" y="75" textAnchor="middle" className="fill-white text-xs">SOAP</text>
-            </g>
-          )}
-        </g>
-
-        {/* Energy diagram (small) */}
-        {uvActive && props.fluorescent && (
-          <g transform="translate(20, 180)">
-            <text x="0" y="0" className="fill-violet-400 text-xs">UV ({excitationWavelength}nm)</text>
-            <line x1="0" y1="10" x2="30" y2="10" stroke={wavelengthToColor(excitationWavelength)} strokeWidth="2" markerEnd="url(#arrow)" />
-            <text x="0" y="40" className="fill-gray-400 text-xs">-&gt;</text>
-            <text x="15" y="55" style={{ fill: props.emitColor }} className="text-xs">Visible ({props.emissionWavelength}nm)</text>
-            <line x1="0" y1="65" x2="30" y2="65" stroke={props.emitColor} strokeWidth="2" />
+                {/* UV rays with animation */}
+                {[...Array(Math.ceil(lightIntensity / 15))].map((_, i) => (
+                  <line
+                    key={i}
+                    x1={-18 + i * 6}
+                    y1="100"
+                    x2={-55 + i * 20}
+                    y2="250"
+                    stroke={wavelengthToColor(excitationWavelength)}
+                    strokeWidth="2.5"
+                    strokeLinecap="round"
+                    opacity={0.25 + Math.sin(animPhase + i * 0.8) * 0.25}
+                  />
+                ))}
+                {/* Central bright beam */}
+                <line x1="0" y1="100" x2="0" y2="220" stroke="#c4b5fd" strokeWidth="3" opacity={0.4 * (lightIntensity / 100)} />
+              </>
+            )}
           </g>
-        )}
 
-        {/* Labels */}
-        <text x="200" y="270" textAnchor="middle" className="fill-gray-300 text-sm font-medium">
-          {props.name}
-        </text>
+          {/* Material/Object */}
+          <g transform="translate(120, 140)">
+            {/* Glow effect when fluorescent and UV active */}
+            {isGlowing && (
+              <>
+                {/* Outer glow */}
+                <ellipse
+                  cx="50"
+                  cy="60"
+                  rx={90 + Math.sin(animPhase) * 8 * glowIntensity}
+                  ry={70 + Math.sin(animPhase) * 8 * glowIntensity}
+                  fill="url(#fluorEmissionGlow)"
+                  filter="url(#fluorEmitGlow)"
+                />
+                {/* Inner bright glow */}
+                <ellipse
+                  cx="50"
+                  cy="60"
+                  rx={50 + Math.sin(animPhase + 1) * 4 * glowIntensity}
+                  ry={35 + Math.sin(animPhase + 1) * 4 * glowIntensity}
+                  fill={props.emitGlow}
+                  opacity={0.3 * glowIntensity}
+                />
+              </>
+            )}
 
-        {/* Light status */}
-        <g transform="translate(10, 20)">
-          <circle cx="10" cy="10" r="8" fill={regularLight ? '#fbbf24' : '#374151'} />
-          <text x="25" y="14" className="fill-gray-400 text-xs">Room Light</text>
-          <circle cx="10" cy="35" r="8" fill={uvActive ? wavelengthToColor(excitationWavelength) : '#374151'} />
-          <text x="25" y="39" className="fill-gray-400 text-xs">UV Light ({excitationWavelength}nm)</text>
-        </g>
+            {/* Object base */}
+            {material.includes('highlighter') && (
+              <g filter={isGlowing ? 'url(#fluorGlow)' : 'url(#fluorShadow)'}>
+                <rect x="20" y="30" width="60" height="60" rx="5" fill="url(#fluorHighlighterGrad)" opacity={ambientLight} />
+                {/* Paper lines */}
+                <line x1="28" y1="45" x2="72" y2="45" stroke="#374151" strokeWidth="1" opacity={0.3 * ambientLight} />
+                <line x1="28" y1="55" x2="72" y2="55" stroke="#374151" strokeWidth="1" opacity={0.3 * ambientLight} />
+                <line x1="28" y1="65" x2="72" y2="65" stroke="#374151" strokeWidth="1" opacity={0.3 * ambientLight} />
+                <line x1="28" y1="75" x2="72" y2="75" stroke="#374151" strokeWidth="1" opacity={0.3 * ambientLight} />
+              </g>
+            )}
+            {material === 'paper' && (
+              <g filter="url(#fluorShadow)">
+                <rect x="10" y="20" width="80" height="80" rx="3" fill="url(#fluorPaperGrad)" opacity={ambientLight} />
+                {/* Paper texture lines */}
+                {[...Array(6)].map((_, i) => (
+                  <line key={i} x1="18" y1={30 + i * 12} x2="82" y2={30 + i * 12} stroke="#d4d4d4" strokeWidth="0.5" opacity={0.4 * ambientLight} />
+                ))}
+              </g>
+            )}
+            {material === 'tonic' && (
+              <g>
+                {/* Glass bottle */}
+                <rect x="30" y="10" width="40" height="90" rx="4" fill="url(#fluorGlassGrad)" filter="url(#fluorShadow)" />
+                {/* Bottle neck */}
+                <rect x="38" y="2" width="24" height="12" rx="2" fill="url(#fluorGlassGrad)" />
+                {/* Liquid */}
+                <rect
+                  x="35"
+                  y="25"
+                  width="30"
+                  height="70"
+                  rx="3"
+                  fill="url(#fluorLiquidGrad)"
+                  filter={isGlowing ? 'url(#fluorGlow)' : ''}
+                  opacity={ambientLight}
+                />
+                {/* Bubbles */}
+                {[...Array(7)].map((_, i) => (
+                  <circle
+                    key={i}
+                    cx={40 + (i % 4) * 7}
+                    cy={85 - ((animPhase * 12 + i * 12) % 55)}
+                    r={1.5 + (i % 2)}
+                    fill={isGlowing ? props.emitGlow : '#ffffff'}
+                    opacity={0.4 + (i % 3) * 0.2}
+                  />
+                ))}
+                {/* Glass reflection */}
+                <rect x="32" y="30" width="3" height="50" rx="1" fill="#ffffff" opacity="0.15" />
+              </g>
+            )}
+            {material === 'mineral' && (
+              <g filter={isGlowing ? 'url(#fluorGlow)' : 'url(#fluorShadow)'}>
+                {/* Crystal main body */}
+                <polygon
+                  points="50,5 85,40 75,95 25,95 15,40"
+                  fill="url(#fluorCrystalGrad)"
+                  opacity={ambientLight}
+                />
+                {/* Crystal facets */}
+                <polygon
+                  points="50,5 70,35 50,55 30,35"
+                  fill="url(#fluorCrystalFacet)"
+                  opacity={ambientLight * 0.9}
+                />
+                <polygon
+                  points="50,55 70,35 75,60 60,75"
+                  fill={isGlowing ? props.emitColor : '#9a8a6a'}
+                  opacity={ambientLight * 0.7}
+                />
+                <polygon
+                  points="50,55 30,35 25,60 40,75"
+                  fill={isGlowing ? props.emitGlow : '#8a7a5a'}
+                  opacity={ambientLight * 0.6}
+                />
+                {/* Crystalline highlights */}
+                <line x1="50" y1="5" x2="50" y2="55" stroke="#ffffff" strokeWidth="1" opacity={0.2 * ambientLight} />
+                <line x1="30" y1="35" x2="70" y2="35" stroke="#ffffff" strokeWidth="0.5" opacity={0.15 * ambientLight} />
+              </g>
+            )}
+            {material === 'laundry_detergent' && (
+              <g filter="url(#fluorShadow)">
+                {/* Bottle body */}
+                <rect x="25" y="20" width="50" height="70" rx="6" fill="url(#fluorDetergentGrad)" />
+                {/* Bottle cap */}
+                <rect x="35" y="12" width="30" height="12" rx="3" fill="#1e40af" />
+                {/* Label area */}
+                <rect
+                  x="30"
+                  y="35"
+                  width="40"
+                  height="25"
+                  rx="3"
+                  fill={isGlowing ? props.emitColor : '#93c5fd'}
+                  filter={isGlowing ? 'url(#fluorGlow)' : ''}
+                  opacity={ambientLight}
+                />
+                {/* Label lines */}
+                <line x1="35" y1="42" x2="65" y2="42" stroke="#1e40af" strokeWidth="1" opacity="0.5" />
+                <line x1="35" y1="48" x2="55" y2="48" stroke="#1e40af" strokeWidth="1" opacity="0.4" />
+                <line x1="35" y1="54" x2="60" y2="54" stroke="#1e40af" strokeWidth="1" opacity="0.3" />
+              </g>
+            )}
+          </g>
 
-        {/* Arrow marker */}
-        <defs>
-          <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill={wavelengthToColor(excitationWavelength)} />
-          </marker>
-        </defs>
-      </svg>
+          {/* Energy level transition visualization */}
+          {uvActive && props.fluorescent && (
+            <g transform="translate(15, 175)">
+              {/* Energy level diagram */}
+              <rect x="0" y="0" width="80" height="75" rx="4" fill="#0f172a" opacity="0.8" />
+
+              {/* Ground state */}
+              <line x1="10" y1="60" x2="70" y2="60" stroke="#64748b" strokeWidth="2" />
+
+              {/* Excited state */}
+              <line x1="10" y1="15" x2="70" y2="15" stroke="#a78bfa" strokeWidth="2" />
+
+              {/* Absorption arrow (up) */}
+              <line x1="25" y1="55" x2="25" y2="20" stroke={wavelengthToColor(excitationWavelength)} strokeWidth="2.5" markerEnd="url(#fluorArrow)" />
+
+              {/* Emission arrow (down) */}
+              <line x1="55" y1="20" x2="55" y2="55" stroke={props.emitColor} strokeWidth="2.5" />
+              <polygon points="55,55 51,48 59,48" fill={props.emitColor} />
+
+              {/* Heat loss wavy line */}
+              <path d="M 35 20 Q 40 25 35 30 Q 30 35 35 40" stroke="#fbbf24" strokeWidth="1.5" fill="none" strokeDasharray="2,2" opacity={0.7} />
+            </g>
+          )}
+
+          {/* Light status indicators */}
+          <g transform="translate(10, 15)">
+            {/* Room light indicator */}
+            <circle cx="10" cy="10" r="9" fill={regularLight ? 'url(#fluorRoomLightGrad)' : '#374151'} filter={regularLight ? 'url(#fluorUvGlow)' : ''} />
+            <circle cx="10" cy="10" r="5" fill={regularLight ? '#fef9c3' : '#1f2937'} opacity="0.6" />
+
+            {/* UV light indicator */}
+            <circle cx="10" cy="38" r="9" fill={uvActive ? 'url(#fluorUvBulbGrad)' : '#374151'} filter={uvActive ? 'url(#fluorUvGlow)' : ''} />
+            <circle cx="10" cy="38" r="5" fill={uvActive ? '#e9d5ff' : '#1f2937'} opacity="0.6" />
+          </g>
+        </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div className="absolute bottom-2 left-1/2 transform -translate-x-1/2">
+          <span style={{ fontSize: typo.body }} className="text-gray-300 font-medium">
+            {props.name}
+          </span>
+        </div>
+        <div className="absolute top-3 left-8" style={{ fontSize: typo.small }}>
+          <div className="flex items-center gap-2 mb-1">
+            <span className="text-gray-400">Room Light</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="text-gray-400">UV Light ({excitationWavelength}nm)</span>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -724,112 +1184,265 @@ const FluorescenceRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete }
     const decayOpacity = showPhosphorescence && !uvOn ? phosphorescenceDecay / 100 : 1;
 
     return (
-      <svg viewBox="0 0 400 300" className="w-full h-64">
-        <rect width="400" height="300" fill="#0a0a15" />
+      <div className="relative">
+        <svg viewBox="0 0 400 280" className="w-full h-64">
+          <defs>
+            {/* Dark lab background gradient */}
+            <linearGradient id="fluorTwistBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#050510" />
+              <stop offset="30%" stopColor="#0a0a1a" />
+              <stop offset="70%" stopColor="#0a0818" />
+              <stop offset="100%" stopColor="#050508" />
+            </linearGradient>
 
-        {/* UV light indicator */}
-        {uvOn && (
-          <rect x="0" y="0" width="400" height="300" fill="#1a0a2e" opacity="0.5" />
+            {/* UV ambient overlay */}
+            <radialGradient id="fluorUvAmbient" cx="50%" cy="0%" r="80%">
+              <stop offset="0%" stopColor="#7c3aed" stopOpacity="0.15" />
+              <stop offset="50%" stopColor="#6d28d9" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#1e1b4b" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Sample container gradient */}
+            <linearGradient id="fluorContainerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="25%" stopColor="#1f2937" />
+              <stop offset="75%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
+
+            {/* Sample liquid gradient when glowing */}
+            <radialGradient id="fluorSampleGlow" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor={currentFluorophore.color} stopOpacity={0.95 * decayOpacity * (lightIntensity / 100)} />
+              <stop offset="40%" stopColor={currentFluorophore.color} stopOpacity={0.7 * decayOpacity * (lightIntensity / 100)} />
+              <stop offset="70%" stopColor={currentFluorophore.color} stopOpacity={0.4 * decayOpacity * (lightIntensity / 100)} />
+              <stop offset="100%" stopColor={currentFluorophore.color} stopOpacity="0" />
+            </radialGradient>
+
+            {/* Info panel gradient */}
+            <linearGradient id="fluorInfoPanelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
+
+            {/* Mode panel gradients */}
+            <linearGradient id="fluorFluorModeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#164e63" />
+              <stop offset="50%" stopColor="#0e7490" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#155e75" />
+            </linearGradient>
+
+            <linearGradient id="fluorPhosModeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4c1d95" />
+              <stop offset="50%" stopColor="#6d28d9" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#3b0764" />
+            </linearGradient>
+
+            {/* Decay bar gradient */}
+            <linearGradient id="fluorDecayGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#9333ea" />
+              <stop offset="50%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#c084fc" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="fluorTwistGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur1" />
+              <feGaussianBlur stdDeviation="4" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="fluorContainerShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.5" />
+            </filter>
+
+            <filter id="fluorInnerGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="innerBlur" />
+              <feMerge>
+                <feMergeNode in="innerBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width="400" height="280" fill="url(#fluorTwistBg)" />
+
+          {/* UV light ambient when on */}
+          {uvOn && (
+            <rect x="0" y="0" width="400" height="280" fill="url(#fluorUvAmbient)" />
+          )}
+
+          {/* Fluorophore sample container */}
+          <g transform="translate(40, 35)">
+            {/* Container outer */}
+            <rect x="0" y="0" width="130" height="160" rx="10" fill="url(#fluorContainerGrad)" filter="url(#fluorContainerShadow)" />
+            {/* Container inner edge highlight */}
+            <rect x="2" y="2" width="126" height="156" rx="9" stroke="#4b5563" strokeWidth="1" fill="none" opacity="0.5" />
+
+            {/* Sample area background */}
+            <rect x="12" y="15" width="106" height="125" rx="6" fill="#111827" />
+
+            {/* Fluorescent sample when glowing */}
+            {(uvOn || (showPhosphorescence && phosphorescenceDecay > 0)) && (
+              <g>
+                {/* Outer glow */}
+                <ellipse
+                  cx="65"
+                  cy="77"
+                  rx={60 + Math.sin(animPhase) * 6 * decayOpacity}
+                  ry={50 + Math.sin(animPhase) * 6 * decayOpacity}
+                  fill="url(#fluorSampleGlow)"
+                  filter="url(#fluorTwistGlow)"
+                />
+                {/* Main sample */}
+                <rect
+                  x="15"
+                  y="20"
+                  width="100"
+                  height="115"
+                  rx="5"
+                  fill={currentFluorophore.color}
+                  opacity={decayOpacity * (lightIntensity / 100) * 0.9}
+                  filter="url(#fluorInnerGlow)"
+                />
+                {/* Bright center */}
+                <ellipse
+                  cx="65"
+                  cy="77"
+                  rx="35"
+                  ry="30"
+                  fill="#ffffff"
+                  opacity={0.2 * decayOpacity * (lightIntensity / 100)}
+                />
+              </g>
+            )}
+
+            {/* Sample when off */}
+            {!uvOn && (!showPhosphorescence || phosphorescenceDecay === 0) && (
+              <rect x="15" y="20" width="100" height="115" rx="5" fill="#1f2937" />
+            )}
+
+            {/* Container label strip */}
+            <rect x="0" y="145" width="130" height="15" rx="0" fill="#0f172a" opacity="0.8" />
+          </g>
+
+          {/* Info panel */}
+          <g transform="translate(200, 35)">
+            <rect x="0" y="0" width="180" height="160" rx="10" fill="url(#fluorInfoPanelGrad)" filter="url(#fluorContainerShadow)" />
+            <rect x="2" y="2" width="176" height="156" rx="9" stroke="#374151" strokeWidth="1" fill="none" opacity="0.5" />
+
+            {/* Panel header */}
+            <rect x="10" y="10" width="160" height="24" rx="5" fill="#0f172a" opacity="0.6" />
+
+            {/* Property rows */}
+            <rect x="10" y="42" width="160" height="22" rx="4" fill="#0f172a" opacity="0.3" />
+            <rect x="10" y="68" width="160" height="22" rx="4" fill="#0f172a" opacity="0.3" />
+            <rect x="10" y="94" width="160" height="22" rx="4" fill="#0f172a" opacity="0.3" />
+
+            {/* Decay indicator for phosphorescence */}
+            {showPhosphorescence && (
+              <g transform="translate(10, 125)">
+                <rect x="0" y="0" width="160" height="25" rx="4" fill="#3b0764" opacity="0.5" />
+                {/* Progress bar background */}
+                <rect x="60" y="8" width="95" height="10" fill="#1f2937" rx="3" />
+                {/* Progress bar fill */}
+                <rect x="60" y="8" width={phosphorescenceDecay * 0.95} height="10" fill="url(#fluorDecayGrad)" rx="3" />
+                {/* Progress bar shine */}
+                <rect x="60" y="8" width={phosphorescenceDecay * 0.95} height="4" fill="#ffffff" opacity="0.15" rx="2" />
+              </g>
+            )}
+          </g>
+
+          {/* Mode comparison panel */}
+          <g transform="translate(40, 210)">
+            <rect
+              x="0"
+              y="0"
+              width="340"
+              height="60"
+              rx="10"
+              fill={showPhosphorescence ? 'url(#fluorPhosModeGrad)' : 'url(#fluorFluorModeGrad)'}
+              filter="url(#fluorContainerShadow)"
+            />
+            <rect
+              x="2"
+              y="2"
+              width="336"
+              height="56"
+              rx="9"
+              stroke={showPhosphorescence ? '#9333ea' : '#0891b2'}
+              strokeWidth="1.5"
+              fill="none"
+              opacity="0.6"
+            />
+
+            {/* Mode indicator dot */}
+            <circle cx="20" cy="30" r="6" fill={showPhosphorescence ? '#c084fc' : '#22d3ee'} />
+            <circle cx="20" cy="30" r="3" fill="#ffffff" opacity="0.7" />
+          </g>
+        </svg>
+
+        {/* Labels moved outside SVG */}
+        <div className="absolute bottom-28 left-14" style={{ fontSize: typo.small }}>
+          <span className="text-gray-300 font-semibold">
+            {currentFluorophore.name.split('(')[0]}
+          </span>
+        </div>
+
+        {/* Info panel labels */}
+        <div className="absolute top-12 right-20" style={{ fontSize: typo.body }}>
+          <span className="text-white font-bold">Properties</span>
+        </div>
+        <div className="absolute top-20 right-8" style={{ fontSize: typo.small }}>
+          <div className="flex justify-between w-40 mb-1">
+            <span className="text-gray-400">Excitation:</span>
+            <span className="text-violet-400 font-semibold">{currentFluorophore.excitation}nm</span>
+          </div>
+          <div className="flex justify-between w-40 mb-1">
+            <span className="text-gray-400">Emission:</span>
+            <span style={{ color: currentFluorophore.color }} className="font-semibold">{currentFluorophore.emission}nm</span>
+          </div>
+          <div className="flex justify-between w-40 mb-1">
+            <span className="text-gray-400">Stokes Shift:</span>
+            <span className="text-emerald-400 font-semibold">{currentFluorophore.emission - currentFluorophore.excitation}nm</span>
+          </div>
+          <div className="mt-2 text-gray-500" style={{ fontSize: typo.label, maxWidth: '160px' }}>
+            {currentFluorophore.description}
+          </div>
+        </div>
+
+        {showPhosphorescence && (
+          <div className="absolute bottom-28 right-16" style={{ fontSize: typo.small }}>
+            <span className="text-purple-400">Decay: {phosphorescenceDecay}%</span>
+          </div>
         )}
 
-        {/* Fluorophore display */}
-        <g transform="translate(50, 50)">
-          {/* Sample container */}
-          <rect x="0" y="0" width="120" height="150" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-
-          {/* Fluorescent sample */}
-          {(uvOn || (showPhosphorescence && phosphorescenceDecay > 0)) && (
-            <g>
-              <rect
-                x="15"
-                y="20"
-                width="90"
-                height="110"
-                rx="4"
-                fill={currentFluorophore.color}
-                opacity={decayOpacity * (lightIntensity / 100)}
-                filter="url(#glow)"
-              />
-              {/* Glow effect */}
-              <ellipse
-                cx="60"
-                cy="75"
-                rx={50 + Math.sin(animPhase) * 5}
-                ry={40 + Math.sin(animPhase) * 5}
-                fill={currentFluorophore.color}
-                opacity={0.3 * decayOpacity}
-              />
-            </g>
-          )}
-
-          {/* Sample when off */}
-          {!uvOn && (!showPhosphorescence || phosphorescenceDecay === 0) && (
-            <rect x="15" y="20" width="90" height="110" rx="4" fill="#374151" />
-          )}
-
-          <text x="60" y="180" textAnchor="middle" className="fill-gray-300 text-xs font-semibold">
-            {currentFluorophore.name.split('(')[0]}
-          </text>
-        </g>
-
-        {/* Info panel */}
-        <g transform="translate(200, 50)">
-          <rect x="0" y="0" width="180" height="150" rx="8" fill="#1f2937" stroke="#374151" />
-
-          <text x="90" y="25" textAnchor="middle" className="fill-white text-sm font-bold">Properties</text>
-
-          <text x="15" y="50" className="fill-gray-400 text-xs">Excitation:</text>
-          <text x="165" y="50" textAnchor="end" className="fill-violet-400 text-xs font-semibold">{currentFluorophore.excitation}nm</text>
-
-          <text x="15" y="70" className="fill-gray-400 text-xs">Emission:</text>
-          <text x="165" y="70" textAnchor="end" style={{ fill: currentFluorophore.color }} className="text-xs font-semibold">{currentFluorophore.emission}nm</text>
-
-          <text x="15" y="90" className="fill-gray-400 text-xs">Stokes Shift:</text>
-          <text x="165" y="90" textAnchor="end" className="fill-emerald-400 text-xs font-semibold">{currentFluorophore.emission - currentFluorophore.excitation}nm</text>
-
-          <text x="15" y="115" className="fill-gray-500 text-xs" style={{ fontSize: '9px' }}>
-            {currentFluorophore.description}
-          </text>
-
-          {/* Decay indicator for phosphorescence */}
-          {showPhosphorescence && (
-            <g transform="translate(15, 130)">
-              <text x="0" y="0" className="fill-purple-400 text-xs">Decay: {phosphorescenceDecay}%</text>
-              <rect x="60" y="-8" width="100" height="8" fill="#374151" rx="2" />
-              <rect x="60" y="-8" width={phosphorescenceDecay} height="8" fill="#9333ea" rx="2" />
-            </g>
-          )}
-        </g>
-
-        {/* Fluorescence vs Phosphorescence comparison */}
-        <g transform="translate(50, 220)">
-          <rect x="0" y="0" width="300" height="60" rx="8" fill={showPhosphorescence ? '#3b0764' : '#1f2937'} stroke={showPhosphorescence ? '#9333ea' : '#374151'} />
-
-          <text x="150" y="20" textAnchor="middle" className="fill-white text-xs font-bold">
+        {/* Mode panel labels */}
+        <div className="absolute bottom-8 left-20" style={{ fontSize: typo.body }}>
+          <span className="text-white font-bold">
             {showPhosphorescence ? 'Phosphorescence Mode' : 'Fluorescence Mode'}
-          </text>
-          <text x="150" y="38" textAnchor="middle" className="fill-gray-400 text-xs">
+          </span>
+        </div>
+        <div className="absolute bottom-3 left-20" style={{ fontSize: typo.small }}>
+          <span className="text-gray-400">
             {showPhosphorescence
               ? 'Triplet state - slow decay (ms to hours)'
               : 'Singlet state - instant emission (ns)'}
-          </text>
-          <text x="150" y="52" textAnchor="middle" className={showPhosphorescence ? 'fill-purple-400' : 'fill-cyan-400'} style={{ fontSize: '9px' }}>
+          </span>
+        </div>
+        <div className="absolute bottom-3 right-16" style={{ fontSize: typo.label }}>
+          <span className={showPhosphorescence ? 'text-purple-400' : 'text-cyan-400'}>
             {showPhosphorescence
               ? 'Turn off UV to see glow-in-dark effect'
               : 'Emission stops instantly when UV stops'}
-          </text>
-        </g>
-
-        <defs>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-      </svg>
+          </span>
+        </div>
+      </div>
     );
   };
 

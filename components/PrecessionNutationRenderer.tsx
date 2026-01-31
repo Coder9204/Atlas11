@@ -298,138 +298,370 @@ const PrecessionNutationRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
     }, 0);
   }, [testAnswers]);
 
+  // Premium SVG definitions for spinning top visualization
+  const renderSvgDefs = () => (
+    <defs>
+      {/* Premium spinning top disk gradient with 3D depth */}
+      <linearGradient id="precTopDisk" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#818cf8" />
+        <stop offset="25%" stopColor="#6366f1" />
+        <stop offset="50%" stopColor="#4f46e5" />
+        <stop offset="75%" stopColor="#6366f1" />
+        <stop offset="100%" stopColor="#a5b4fc" />
+      </linearGradient>
+
+      {/* Metallic cone body with brushed metal effect */}
+      <linearGradient id="precConeMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#cbd5e1" />
+        <stop offset="20%" stopColor="#94a3b8" />
+        <stop offset="40%" stopColor="#64748b" />
+        <stop offset="60%" stopColor="#94a3b8" />
+        <stop offset="80%" stopColor="#64748b" />
+        <stop offset="100%" stopColor="#475569" />
+      </linearGradient>
+
+      {/* Wooden handle with grain effect */}
+      <linearGradient id="precHandleWood" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#92400e" />
+        <stop offset="25%" stopColor="#b45309" />
+        <stop offset="50%" stopColor="#a16207" />
+        <stop offset="75%" stopColor="#b45309" />
+        <stop offset="100%" stopColor="#78350f" />
+      </linearGradient>
+
+      {/* Golden knob with premium shine */}
+      <radialGradient id="precKnobGold" cx="35%" cy="35%" r="65%">
+        <stop offset="0%" stopColor="#fde047" />
+        <stop offset="30%" stopColor="#facc15" />
+        <stop offset="60%" stopColor="#eab308" />
+        <stop offset="100%" stopColor="#ca8a04" />
+      </radialGradient>
+
+      {/* Angular momentum vector gradient (green) */}
+      <linearGradient id="precVectorL" x1="0%" y1="100%" x2="0%" y2="0%">
+        <stop offset="0%" stopColor="#059669" />
+        <stop offset="50%" stopColor="#10b981" />
+        <stop offset="100%" stopColor="#34d399" />
+      </linearGradient>
+
+      {/* Torque vector gradient (orange) */}
+      <linearGradient id="precVectorTau" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#d97706" />
+        <stop offset="50%" stopColor="#f59e0b" />
+        <stop offset="100%" stopColor="#fbbf24" />
+      </linearGradient>
+
+      {/* Gravity vector gradient (red) */}
+      <linearGradient id="precVectorG" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#dc2626" />
+        <stop offset="50%" stopColor="#ef4444" />
+        <stop offset="100%" stopColor="#f87171" />
+      </linearGradient>
+
+      {/* Precession path gradient */}
+      <linearGradient id="precPathGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
+        <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.6" />
+        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
+      </linearGradient>
+
+      {/* Nutation wobble effect gradient */}
+      <radialGradient id="precNutationGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.8" />
+        <stop offset="50%" stopColor="#0891b2" stopOpacity="0.4" />
+        <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Ground surface gradient */}
+      <linearGradient id="precGroundSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#334155" />
+        <stop offset="50%" stopColor="#1e293b" />
+        <stop offset="100%" stopColor="#0f172a" />
+      </linearGradient>
+
+      {/* Spin stripe gradients */}
+      <linearGradient id="precStripeRed" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fca5a5" />
+        <stop offset="50%" stopColor="#ef4444" />
+        <stop offset="100%" stopColor="#dc2626" />
+      </linearGradient>
+      <linearGradient id="precStripeBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#93c5fd" />
+        <stop offset="50%" stopColor="#3b82f6" />
+        <stop offset="100%" stopColor="#2563eb" />
+      </linearGradient>
+
+      {/* Glow filters using feGaussianBlur + feMerge pattern */}
+      <filter id="precVectorGlow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="precPathBlur" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="precTopGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="4" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="precKnobShine" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="1.5" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Arrow markers with gradient fills */}
+      <marker id="precArrowGreen" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
+        <path d="M0,0 L0,8 L12,4 z" fill="url(#precVectorL)" />
+      </marker>
+      <marker id="precArrowOrange" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
+        <path d="M0,0 L0,8 L12,4 z" fill="url(#precVectorTau)" />
+      </marker>
+      <marker id="precArrowRed" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
+        <path d="M0,0 L0,8 L12,4 z" fill="url(#precVectorG)" />
+      </marker>
+    </defs>
+  );
+
   const renderTop = (showLabels: boolean = true, size: number = 200) => {
     const nutationOffset = hasGravity ? Math.sin(nutationPhase) * 2 : 0;
     const effectiveTilt = hasGravity ? tiltAngle + nutationOffset : 0;
     const centerX = size / 2;
     const centerY = size / 2;
+    const scale = size / 200; // Scale factor for responsive sizing
 
     return (
-      <svg width={size} height={size} className="overflow-visible">
-        <ellipse
-          cx={centerX}
-          cy={centerY + 40}
-          rx={60}
-          ry={15}
-          fill="none"
-          stroke="rgba(100, 116, 139, 0.3)"
-          strokeWidth="1"
-          strokeDasharray="4 2"
-        />
+      <div className="relative">
+        <svg width={size} height={size} className="overflow-visible">
+          {renderSvgDefs()}
 
-        {hasGravity && effectiveTilt > 0 && (
+          {/* Ground/surface with gradient and shadow */}
           <ellipse
             cx={centerX}
-            cy={centerY - 20}
-            rx={Math.sin(effectiveTilt * Math.PI / 180) * 50}
-            ry={Math.sin(effectiveTilt * Math.PI / 180) * 15}
-            fill="none"
-            stroke="rgba(59, 130, 246, 0.4)"
-            strokeWidth="2"
-            strokeDasharray="6 3"
+            cy={centerY + 40 * scale}
+            rx={65 * scale}
+            ry={18 * scale}
+            fill="url(#precGroundSurface)"
+            opacity="0.6"
           />
-        )}
+          <ellipse
+            cx={centerX}
+            cy={centerY + 40 * scale}
+            rx={60 * scale}
+            ry={15 * scale}
+            fill="none"
+            stroke="rgba(148, 163, 184, 0.4)"
+            strokeWidth="1.5"
+            strokeDasharray="4 2"
+          />
 
-        <g transform={`rotate(${effectiveTilt}, ${centerX}, ${centerY + 40})`}>
-          <g transform={`translate(${centerX}, ${centerY})`}>
-            <g transform={`rotate(${topAngle})`}>
-              <ellipse cx="0" cy="0" rx="35" ry="10" fill="url(#topGradient)" />
-              {[0, 60, 120, 180, 240, 300].map((angle, i) => (
-                <line
-                  key={i}
-                  x1="0" y1="0"
-                  x2={Math.cos(angle * Math.PI / 180) * 32}
-                  y2={Math.sin(angle * Math.PI / 180) * 8}
-                  stroke={i % 2 === 0 ? '#ef4444' : '#3b82f6'}
-                  strokeWidth="3"
-                />
-              ))}
-            </g>
-
-            <polygon
-              points="0,40 -25,-5 25,-5"
-              fill="url(#coneGradient)"
-            />
-
-            <rect x="-6" y="-30" width="12" height="25" rx="3" fill="url(#handleGradient)" />
-            <circle cx="0" cy="-30" r="8" fill="#f59e0b" stroke="#d97706" strokeWidth="2" />
-          </g>
-
-          {showVectors && (
-            <g transform={`translate(${centerX}, ${centerY - 10})`}>
-              <line
-                x1="0" y1="0"
-                x2="0" y2={-50 - spinSpeed * 3}
-                stroke="#10b981"
-                strokeWidth="3"
-                markerEnd="url(#arrowGreen)"
+          {/* Precession path visualization with glow */}
+          {hasGravity && effectiveTilt > 0 && (
+            <g filter="url(#precPathBlur)">
+              <ellipse
+                cx={centerX}
+                cy={centerY - 20 * scale}
+                rx={Math.sin(effectiveTilt * Math.PI / 180) * 55 * scale}
+                ry={Math.sin(effectiveTilt * Math.PI / 180) * 18 * scale}
+                fill="none"
+                stroke="url(#precPathGlow)"
+                strokeWidth={3 * scale}
               />
-              {showLabels && (
-                <text x="10" y={-40 - spinSpeed * 2} fill="#10b981" fontSize="14" fontWeight="bold">L</text>
-              )}
+              {/* Animated dot showing precession position */}
+              <circle
+                cx={centerX + Math.cos(precessionAngle * Math.PI / 180) * Math.sin(effectiveTilt * Math.PI / 180) * 55 * scale}
+                cy={centerY - 20 * scale + Math.sin(precessionAngle * Math.PI / 180) * Math.sin(effectiveTilt * Math.PI / 180) * 18 * scale}
+                r={4 * scale}
+                fill="#60a5fa"
+                filter="url(#precVectorGlow)"
+              />
             </g>
           )}
-        </g>
 
-        {showVectors && hasGravity && effectiveTilt > 0 && (
-          <g transform={`translate(${centerX}, ${centerY - 10})`}>
-            <line
-              x1="0" y1="0"
-              x2={Math.cos(precessionAngle * Math.PI / 180 + Math.PI/2) * 40}
-              y2={Math.sin(precessionAngle * Math.PI / 180 + Math.PI/2) * 12}
-              stroke="#f59e0b"
-              strokeWidth="3"
-              markerEnd="url(#arrowOrange)"
+          {/* Nutation wobble effect indicator */}
+          {hasGravity && effectiveTilt > 0 && nutationOffset !== 0 && (
+            <circle
+              cx={centerX}
+              cy={centerY - 30 * scale}
+              r={8 * scale + Math.abs(nutationOffset) * 2 * scale}
+              fill="url(#precNutationGlow)"
+              opacity={0.5 + Math.abs(nutationOffset) * 0.1}
             />
-            {showLabels && (
-              <text
-                x={Math.cos(precessionAngle * Math.PI / 180 + Math.PI/2) * 50}
-                y={Math.sin(precessionAngle * Math.PI / 180 + Math.PI/2) * 15}
-                fill="#f59e0b" fontSize="14" fontWeight="bold"
-              >t</text>
+          )}
+
+          {/* Main spinning top group */}
+          <g transform={`rotate(${effectiveTilt}, ${centerX}, ${centerY + 40 * scale})`}>
+            <g transform={`translate(${centerX}, ${centerY})`}>
+              {/* Spinning disk with rotation */}
+              <g transform={`rotate(${topAngle})`} filter="url(#precTopGlow)">
+                {/* Main disk with 3D gradient */}
+                <ellipse cx="0" cy="0" rx={38 * scale} ry={12 * scale} fill="url(#precTopDisk)" />
+
+                {/* Disk rim highlight */}
+                <ellipse cx="0" cy={-2 * scale} rx={36 * scale} ry={10 * scale} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+
+                {/* Spinning stripes with gradients */}
+                {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+                  <line
+                    key={i}
+                    x1="0" y1="0"
+                    x2={Math.cos(angle * Math.PI / 180) * 35 * scale}
+                    y2={Math.sin(angle * Math.PI / 180) * 10 * scale}
+                    stroke={i % 2 === 0 ? 'url(#precStripeRed)' : 'url(#precStripeBlue)'}
+                    strokeWidth={3.5 * scale}
+                    strokeLinecap="round"
+                  />
+                ))}
+
+                {/* Center hub */}
+                <circle cx="0" cy="0" r={6 * scale} fill="#4f46e5" stroke="#6366f1" strokeWidth="1" />
+              </g>
+
+              {/* Cone body with metallic gradient */}
+              <polygon
+                points={`0,${42 * scale} ${-28 * scale},${-6 * scale} ${28 * scale},${-6 * scale}`}
+                fill="url(#precConeMetal)"
+                stroke="#64748b"
+                strokeWidth="1"
+              />
+
+              {/* Cone highlight edge */}
+              <line
+                x1="0" y1={42 * scale}
+                x2={-14 * scale} y2={-6 * scale}
+                stroke="rgba(255,255,255,0.2)"
+                strokeWidth="1"
+              />
+
+              {/* Handle with wood grain */}
+              <rect
+                x={-7 * scale} y={-32 * scale}
+                width={14 * scale} height={28 * scale}
+                rx={4 * scale}
+                fill="url(#precHandleWood)"
+                stroke="#78350f"
+                strokeWidth="1"
+              />
+
+              {/* Wood grain lines */}
+              <line x1={-4 * scale} y1={-30 * scale} x2={-4 * scale} y2={-6 * scale} stroke="rgba(120,53,15,0.3)" strokeWidth="1" />
+              <line x1={4 * scale} y1={-28 * scale} x2={4 * scale} y2={-8 * scale} stroke="rgba(120,53,15,0.3)" strokeWidth="1" />
+
+              {/* Golden knob with shine */}
+              <circle
+                cx="0" cy={-32 * scale}
+                r={10 * scale}
+                fill="url(#precKnobGold)"
+                stroke="#b45309"
+                strokeWidth="1.5"
+                filter="url(#precKnobShine)"
+              />
+
+              {/* Knob highlight */}
+              <circle cx={-3 * scale} cy={-35 * scale} r={3 * scale} fill="rgba(255,255,255,0.4)" />
+            </g>
+
+            {/* Angular momentum vector (L) with glow */}
+            {showVectors && (
+              <g transform={`translate(${centerX}, ${centerY - 10 * scale})`} filter="url(#precVectorGlow)">
+                <line
+                  x1="0" y1="0"
+                  x2="0" y2={(-55 - spinSpeed * 3) * scale}
+                  stroke="url(#precVectorL)"
+                  strokeWidth={4 * scale}
+                  markerEnd="url(#precArrowGreen)"
+                />
+              </g>
             )}
           </g>
-        )}
 
-        {showVectors && hasGravity && (
-          <g>
-            <line
-              x1={centerX + 60} y1={centerY - 20}
-              x2={centerX + 60} y2={centerY + 30}
-              stroke="#ef4444"
-              strokeWidth="2"
-              markerEnd="url(#arrowRed)"
-            />
-            {showLabels && (
-              <text x={centerX + 68} y={centerY + 10} fill="#ef4444" fontSize="12" fontWeight="bold">g</text>
+          {/* Torque vector (tau) with glow - outside rotation group */}
+          {showVectors && hasGravity && effectiveTilt > 0 && (
+            <g transform={`translate(${centerX}, ${centerY - 10 * scale})`} filter="url(#precVectorGlow)">
+              <line
+                x1="0" y1="0"
+                x2={Math.cos(precessionAngle * Math.PI / 180 + Math.PI/2) * 45 * scale}
+                y2={Math.sin(precessionAngle * Math.PI / 180 + Math.PI/2) * 15 * scale}
+                stroke="url(#precVectorTau)"
+                strokeWidth={4 * scale}
+                markerEnd="url(#precArrowOrange)"
+              />
+            </g>
+          )}
+
+          {/* Gravity vector (g) with glow */}
+          {showVectors && hasGravity && (
+            <g filter="url(#precVectorGlow)">
+              <line
+                x1={centerX + 65 * scale} y1={centerY - 25 * scale}
+                x2={centerX + 65 * scale} y2={centerY + 35 * scale}
+                stroke="url(#precVectorG)"
+                strokeWidth={3 * scale}
+                markerEnd="url(#precArrowRed)"
+              />
+            </g>
+          )}
+        </svg>
+
+        {/* Text labels rendered outside SVG using typo system */}
+        {showLabels && showVectors && (
+          <div className="absolute inset-0 pointer-events-none" style={{ fontSize: typo.small }}>
+            {/* Angular momentum label */}
+            <div
+              className="absolute font-bold text-emerald-400"
+              style={{
+                left: `${centerX + 12 * scale}px`,
+                top: `${centerY - 50 * scale - spinSpeed * 2 * scale}px`,
+                textShadow: '0 0 8px rgba(16, 185, 129, 0.6)'
+              }}
+            >
+              L
+            </div>
+
+            {/* Torque label */}
+            {hasGravity && effectiveTilt > 0 && (
+              <div
+                className="absolute font-bold text-amber-400"
+                style={{
+                  left: `${centerX + Math.cos(precessionAngle * Math.PI / 180 + Math.PI/2) * 55 * scale}px`,
+                  top: `${centerY - 10 * scale + Math.sin(precessionAngle * Math.PI / 180 + Math.PI/2) * 18 * scale}px`,
+                  textShadow: '0 0 8px rgba(245, 158, 11, 0.6)'
+                }}
+              >
+                {'\u03C4'}
+              </div>
             )}
-          </g>
-        )}
 
-        <defs>
-          <linearGradient id="topGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#6366f1" />
-            <stop offset="100%" stopColor="#8b5cf6" />
-          </linearGradient>
-          <linearGradient id="coneGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#94a3b8" />
-            <stop offset="100%" stopColor="#64748b" />
-          </linearGradient>
-          <linearGradient id="handleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#78716c" />
-            <stop offset="100%" stopColor="#a8a29e" />
-          </linearGradient>
-          <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#10b981" />
-          </marker>
-          <marker id="arrowOrange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#f59e0b" />
-          </marker>
-          <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#ef4444" />
-          </marker>
-        </defs>
-      </svg>
+            {/* Gravity label */}
+            {hasGravity && (
+              <div
+                className="absolute font-bold text-red-400"
+                style={{
+                  left: `${centerX + 72 * scale}px`,
+                  top: `${centerY + 8 * scale}px`,
+                  textShadow: '0 0 8px rgba(239, 68, 68, 0.6)'
+                }}
+              >
+                g
+              </div>
+            )}
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -762,43 +994,195 @@ const PrecessionNutationRenderer: React.FC<Props> = ({ onGameEvent, gamePhase })
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-amber-400 mb-4">Earth's Axial Precession</h2>
 
-      <div className="bg-slate-800/50 rounded-2xl p-6 mb-6">
+      <div className="bg-slate-800/50 rounded-2xl p-6 mb-6 relative">
         <svg width="300" height="250" className="mx-auto">
-          {/* Stars background */}
-          {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15].map(i => (
-            <circle key={i} cx={10 + (i * 19) % 290} cy={10 + (i * 17) % 100} r="1.5" fill="white" opacity="0.6" />
+          {/* Premium defs for Earth visualization */}
+          <defs>
+            {/* Space background gradient */}
+            <radialGradient id="precSpaceBg" cx="50%" cy="50%" r="70%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#020617" />
+              <stop offset="100%" stopColor="#000000" />
+            </radialGradient>
+
+            {/* Premium Earth gradient with atmosphere */}
+            <radialGradient id="precEarthBody" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="30%" stopColor="#60a5fa" />
+              <stop offset="60%" stopColor="#3b82f6" />
+              <stop offset="85%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </radialGradient>
+
+            {/* Atmosphere glow */}
+            <radialGradient id="precAtmosphere" cx="50%" cy="50%" r="50%">
+              <stop offset="70%" stopColor="#60a5fa" stopOpacity="0" />
+              <stop offset="85%" stopColor="#38bdf8" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.1" />
+            </radialGradient>
+
+            {/* Land mass gradient */}
+            <linearGradient id="precLandMass" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+
+            {/* Precession path with amber glow */}
+            <linearGradient id="precEarthPath" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Star glow */}
+            <radialGradient id="precStarGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="40%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Axis pole gradient */}
+            <linearGradient id="precAxisPole" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#fca5a5" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="precStarBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="precEarthGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="precAxisGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Space background */}
+          <rect width="300" height="250" fill="url(#precSpaceBg)" rx="8" />
+
+          {/* Stars background with varied sizes and twinkling */}
+          {[1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16,17,18,19,20].map(i => (
+            <circle
+              key={i}
+              cx={10 + (i * 19) % 290}
+              cy={10 + (i * 17) % 100}
+              r={0.8 + (i % 3) * 0.5}
+              fill="white"
+              opacity={0.4 + (i % 5) * 0.15}
+            >
+              <animate
+                attributeName="opacity"
+                values={`${0.4 + (i % 5) * 0.15};${0.7 + (i % 3) * 0.1};${0.4 + (i % 5) * 0.15}`}
+                dur={`${2 + (i % 3)}s`}
+                repeatCount="indefinite"
+              />
+            </circle>
           ))}
 
-          {/* Precession circle path */}
-          <ellipse cx="150" cy="50" rx="40" ry="12" fill="none" stroke="#f59e0b" strokeWidth="2" strokeDasharray="6 3" />
+          {/* Precession circle path with glow */}
+          <ellipse
+            cx="150" cy="50" rx="42" ry="14"
+            fill="none"
+            stroke="url(#precEarthPath)"
+            strokeWidth="3"
+            strokeDasharray="6 3"
+            filter="url(#precStarBlur)"
+          />
 
-          {/* Current North Star position indicator */}
-          <circle cx={150 + Math.cos(earthPrecessionAngle * Math.PI / 180) * 40} cy={50 + Math.sin(earthPrecessionAngle * Math.PI / 180) * 12} r="4" fill="#fbbf24" />
-          <text x={150 + Math.cos(earthPrecessionAngle * Math.PI / 180) * 40 + 10} y={50 + Math.sin(earthPrecessionAngle * Math.PI / 180) * 12 - 5} fill="#fbbf24" fontSize="10">North Star</text>
+          {/* Current North Star position indicator with glow */}
+          <circle
+            cx={150 + Math.cos(earthPrecessionAngle * Math.PI / 180) * 42}
+            cy={50 + Math.sin(earthPrecessionAngle * Math.PI / 180) * 14}
+            r="8"
+            fill="url(#precStarGlow)"
+            filter="url(#precStarBlur)"
+          />
+          <circle
+            cx={150 + Math.cos(earthPrecessionAngle * Math.PI / 180) * 42}
+            cy={50 + Math.sin(earthPrecessionAngle * Math.PI / 180) * 14}
+            r="3"
+            fill="#fef3c7"
+          />
 
-          {/* Earth */}
+          {/* Earth with atmosphere */}
           <g transform={`rotate(${Math.sin(earthPrecessionAngle * Math.PI / 180) * 5}, 150, 150)`}>
-            <defs>
-              <radialGradient id="earthGrad2" cx="40%" cy="40%" r="60%">
-                <stop offset="0%" stopColor="#60a5fa" />
-                <stop offset="50%" stopColor="#3b82f6" />
-                <stop offset="100%" stopColor="#1e40af" />
-              </radialGradient>
-            </defs>
-            <circle cx="150" cy="150" r="50" fill="url(#earthGrad2)" />
-            {/* Continents hint */}
-            <ellipse cx="135" cy="140" rx="15" ry="20" fill="#22c55e" opacity="0.5" />
-            <ellipse cx="170" cy="155" rx="12" ry="10" fill="#22c55e" opacity="0.5" />
-            {/* Equator */}
-            <ellipse cx="150" cy="150" rx="50" ry="15" fill="none" stroke="#94a3b8" strokeWidth="1" strokeDasharray="3 3" />
-            {/* Axis */}
-            <line x1="150" y1="150" x2={150 + Math.sin(earthPrecessionAngle * Math.PI / 180) * 10} y2="70" stroke="#ef4444" strokeWidth="3" />
-            <circle cx={150 + Math.sin(earthPrecessionAngle * Math.PI / 180) * 10} cy="70" r="5" fill="#ef4444" />
-          </g>
+            {/* Atmosphere outer glow */}
+            <circle cx="150" cy="150" r="56" fill="url(#precAtmosphere)" filter="url(#precEarthGlow)" />
 
-          {/* Labels */}
-          <text x="150" y="235" textAnchor="middle" fill="#94a3b8" fontSize="12">26,000 year precession cycle</text>
+            {/* Earth body */}
+            <circle cx="150" cy="150" r="50" fill="url(#precEarthBody)" />
+
+            {/* Continents with gradient */}
+            <ellipse cx="135" cy="140" rx="16" ry="22" fill="url(#precLandMass)" opacity="0.7" />
+            <ellipse cx="172" cy="155" rx="13" ry="11" fill="url(#precLandMass)" opacity="0.7" />
+            <ellipse cx="145" cy="170" rx="8" ry="6" fill="url(#precLandMass)" opacity="0.5" />
+
+            {/* Ice caps */}
+            <ellipse cx="150" cy="105" rx="18" ry="6" fill="white" opacity="0.6" />
+            <ellipse cx="150" cy="195" rx="15" ry="5" fill="white" opacity="0.5" />
+
+            {/* Equator line */}
+            <ellipse cx="150" cy="150" rx="50" ry="16" fill="none" stroke="rgba(148, 163, 184, 0.5)" strokeWidth="1" strokeDasharray="4 3" />
+
+            {/* Axis with premium gradient and glow */}
+            <line
+              x1="150" y1="150"
+              x2={150 + Math.sin(earthPrecessionAngle * Math.PI / 180) * 10}
+              y2="68"
+              stroke="url(#precAxisPole)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              filter="url(#precAxisGlow)"
+            />
+            <circle
+              cx={150 + Math.sin(earthPrecessionAngle * Math.PI / 180) * 10}
+              cy="68"
+              r="6"
+              fill="#ef4444"
+              stroke="#fca5a5"
+              strokeWidth="2"
+              filter="url(#precAxisGlow)"
+            />
+          </g>
         </svg>
+
+        {/* Labels rendered outside SVG using typo system */}
+        <div
+          className="absolute font-semibold text-amber-300"
+          style={{
+            fontSize: typo.label,
+            left: `${150 + Math.cos(earthPrecessionAngle * Math.PI / 180) * 42 + 65}px`,
+            top: `${50 + Math.sin(earthPrecessionAngle * Math.PI / 180) * 14 + 20}px`,
+            textShadow: '0 0 8px rgba(251, 191, 36, 0.6)',
+            whiteSpace: 'nowrap'
+          }}
+        >
+          North Star
+        </div>
+        <div
+          className="text-center text-slate-400 mt-2"
+          style={{ fontSize: typo.small }}
+        >
+          26,000 year precession cycle
+        </div>
       </div>
 
       <div className="grid md:grid-cols-2 gap-4 max-w-2xl mb-6">

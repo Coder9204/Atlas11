@@ -498,46 +498,155 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        {/* Title labels moved outside SVG */}
+        <div style={{ textAlign: 'center', marginBottom: '4px' }}>
+          <div style={{ color: colors.textPrimary, fontSize: typo.bodyLarge, fontWeight: 'bold' }}>
+            Hard Drive Read Physics
+          </div>
+          <div style={{ color: colors.textSecondary, fontSize: typo.small }}>
+            {drive.name} - {drive.rpm} RPM
+          </div>
+        </div>
+
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#1e293b', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', borderRadius: '12px', maxWidth: '500px' }}
         >
           <defs>
-            <linearGradient id="platterGrad" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#64748b" />
-              <stop offset="70%" stopColor="#475569" />
-              <stop offset="100%" stopColor="#334155" />
+            {/* Premium metallic platter gradient with multiple color stops */}
+            <radialGradient id="hddPlatterGrad" cx="35%" cy="35%" r="70%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="20%" stopColor="#64748b" />
+              <stop offset="45%" stopColor="#475569" />
+              <stop offset="70%" stopColor="#334155" />
+              <stop offset="90%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </radialGradient>
+
+            {/* Platter surface reflection */}
+            <linearGradient id="hddPlatterShine" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.15" />
+              <stop offset="30%" stopColor="#94a3b8" stopOpacity="0.08" />
+              <stop offset="50%" stopColor="#64748b" stopOpacity="0.05" />
+              <stop offset="70%" stopColor="#475569" stopOpacity="0.08" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.1" />
             </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+
+            {/* Drive casing brushed metal gradient */}
+            <linearGradient id="hddCasingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="25%" stopColor="#1f2937" />
+              <stop offset="50%" stopColor="#374151" />
+              <stop offset="75%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Head arm metallic gradient */}
+            <linearGradient id="hddArmGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="25%" stopColor="#4b5563" />
+              <stop offset="50%" stopColor="#6b7280" />
+              <stop offset="75%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Read/write head gradient */}
+            <linearGradient id="hddHeadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#d1d5db" />
+              <stop offset="30%" stopColor="#9ca3af" />
+              <stop offset="60%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+
+            {/* Spindle hub gradient */}
+            <radialGradient id="hddSpindleGrad" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="40%" stopColor="#374151" />
+              <stop offset="80%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </radialGradient>
+
+            {/* Data track gradient for visualization */}
+            <linearGradient id="hddTrackGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* Active read glow gradient */}
+            <radialGradient id="hddReadGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="1" />
+              <stop offset="40%" stopColor="#fb923c" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#fdba74" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#fed7aa" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Metrics panel background gradient */}
+            <linearGradient id="hddMetricsBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#000000" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.5" />
+            </linearGradient>
+
+            {/* SSD comparison panel gradient */}
+            <linearGradient id="hddSsdBg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.05" />
+              <stop offset="50%" stopColor="#22c55e" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.05" />
+            </linearGradient>
+
+            {/* Glow filter for active reading */}
+            <filter id="hddGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
               </feMerge>
+            </filter>
+
+            {/* Soft glow for components */}
+            <filter id="hddSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow for depth */}
+            <filter id="hddInnerShadow">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Drop shadow for casing */}
+            <filter id="hddDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.5" />
             </filter>
           </defs>
 
-          {/* Title */}
-          <text x={200} y={20} textAnchor="middle" fill={colors.textPrimary} fontSize={14} fontWeight="bold">
-            Hard Drive Read Physics
-          </text>
-          <text x={200} y={38} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
-            {drive.name} - {drive.rpm} RPM
-          </text>
+          {/* Drive casing with premium gradient and shadow */}
+          <rect x={40} y={30} width={240} height={220} rx={12} fill="url(#hddCasingGrad)" stroke="#4b5563" strokeWidth={2} filter="url(#hddDropShadow)" />
 
-          {/* Drive casing */}
-          <rect x={40} y={60} width={240} height={220} rx={12} fill="#1f2937" stroke="#374151" strokeWidth={2} />
+          {/* Inner casing bevel */}
+          <rect x={45} y={35} width={230} height={210} rx={10} fill="none" stroke="#1f2937" strokeWidth={1} />
 
-          {/* Platter stack visualization */}
+          {/* Platter stack visualization with rotation */}
           <g transform={`rotate(${rotationAngle}, ${centerX}, ${centerY})`}>
-            {/* Main platter */}
-            <ellipse cx={centerX} cy={centerY} rx={platterRadius} ry={platterRadius * 0.9} fill="url(#platterGrad)" />
+            {/* Platter shadow/depth layer */}
+            <ellipse cx={centerX + 2} cy={centerY + 3} rx={platterRadius} ry={platterRadius * 0.9} fill="#0f172a" opacity={0.5} />
 
-            {/* Track circles */}
-            {[0.2, 0.4, 0.6, 0.8].map((r, i) => (
+            {/* Main platter with metallic gradient */}
+            <ellipse cx={centerX} cy={centerY} rx={platterRadius} ry={platterRadius * 0.9} fill="url(#hddPlatterGrad)" />
+
+            {/* Platter surface shine overlay */}
+            <ellipse cx={centerX} cy={centerY} rx={platterRadius} ry={platterRadius * 0.9} fill="url(#hddPlatterShine)" />
+
+            {/* Data tracks with subtle coloring */}
+            {[0.15, 0.3, 0.45, 0.6, 0.75, 0.9].map((r, i) => (
               <ellipse
                 key={i}
                 cx={centerX}
@@ -545,105 +654,239 @@ const HDDPhysicsRenderer: React.FC<HDDPhysicsRendererProps> = ({
                 rx={platterRadius * r}
                 ry={platterRadius * r * 0.9}
                 fill="none"
-                stroke="#334155"
-                strokeWidth={0.5}
+                stroke={i % 2 === 0 ? '#475569' : '#334155'}
+                strokeWidth={i === Math.floor((headPosition / 100) * 5) ? 2 : 0.5}
+                opacity={i === Math.floor((headPosition / 100) * 5) ? 0.8 : 0.4}
               />
             ))}
 
-            {/* Data sectors (visual representation) */}
-            {Array.from({ length: 12 }).map((_, i) => (
+            {/* Data sectors visualization */}
+            {Array.from({ length: 24 }).map((_, i) => (
               <line
                 key={i}
-                x1={centerX}
-                y1={centerY}
-                x2={centerX + platterRadius * Math.cos(i * 30 * Math.PI / 180)}
-                y2={centerY + platterRadius * 0.9 * Math.sin(i * 30 * Math.PI / 180)}
+                x1={centerX + 20 * Math.cos(i * 15 * Math.PI / 180)}
+                y1={centerY + 20 * 0.9 * Math.sin(i * 15 * Math.PI / 180)}
+                x2={centerX + platterRadius * Math.cos(i * 15 * Math.PI / 180)}
+                y2={centerY + platterRadius * 0.9 * Math.sin(i * 15 * Math.PI / 180)}
                 stroke="#334155"
-                strokeWidth={0.5}
-                opacity={0.5}
+                strokeWidth={0.3}
+                opacity={0.3}
               />
             ))}
 
-            {/* Spindle */}
-            <circle cx={centerX} cy={centerY} r={15} fill="#1f2937" stroke="#475569" strokeWidth={2} />
+            {/* Animated data bits visualization */}
+            {Array.from({ length: 8 }).map((_, i) => {
+              const trackRadius = platterRadius * (0.3 + (i / 8) * 0.6);
+              const bitAngle = (animationFrame * 2 + i * 45) % 360;
+              return (
+                <circle
+                  key={`bit-${i}`}
+                  cx={centerX + trackRadius * Math.cos(bitAngle * Math.PI / 180)}
+                  cy={centerY + trackRadius * 0.9 * Math.sin(bitAngle * Math.PI / 180)}
+                  r={2}
+                  fill={colors.primary}
+                  opacity={0.6}
+                />
+              );
+            })}
+
+            {/* Spindle hub with premium gradient */}
+            <circle cx={centerX} cy={centerY} r={18} fill="url(#hddSpindleGrad)" stroke="#4b5563" strokeWidth={2} />
+            <circle cx={centerX} cy={centerY} r={8} fill="#111827" stroke="#374151" strokeWidth={1} />
+            {/* Spindle center dot */}
+            <circle cx={centerX} cy={centerY} r={3} fill="#4b5563" />
           </g>
 
-          {/* Head arm */}
+          {/* Head arm assembly */}
           <g>
+            {/* Arm shadow */}
             <line
               x1={280}
-              y1={180}
+              y1={145}
+              x2={headX + 2}
+              y2={headY + 2}
+              stroke="#0f172a"
+              strokeWidth={10}
+              strokeLinecap="round"
+              opacity={0.3}
+            />
+
+            {/* Main arm with metallic gradient */}
+            <line
+              x1={280}
+              y1={142}
               x2={headX}
               y2={headY}
-              stroke={colors.arm}
+              stroke="url(#hddArmGrad)"
               strokeWidth={8}
               strokeLinecap="round"
             />
-            {/* Arm pivot */}
-            <circle cx={280} cy={180} r={12} fill="#1f2937" stroke={colors.arm} strokeWidth={3} />
 
-            {/* Read/write head */}
+            {/* Arm edge highlight */}
+            <line
+              x1={280}
+              y1={140}
+              x2={headX}
+              y2={headY - 2}
+              stroke="#9ca3af"
+              strokeWidth={1}
+              strokeLinecap="round"
+              opacity={0.5}
+            />
+
+            {/* Arm pivot mechanism */}
+            <circle cx={280} cy={142} r={14} fill="url(#hddSpindleGrad)" stroke="#4b5563" strokeWidth={2} />
+            <circle cx={280} cy={142} r={6} fill="#374151" stroke="#4b5563" strokeWidth={1} />
+
+            {/* Read/write head assembly */}
             <g transform={`translate(${headX}, ${headY})`}>
-              <rect x={-10} y={-5} width={20} height={10} rx={2} fill={colors.head} />
+              {/* Head slider body */}
+              <rect x={-12} y={-6} width={24} height={12} rx={3} fill="url(#hddHeadGrad)" stroke="#6b7280" strokeWidth={1} />
+
+              {/* Head coil detail */}
+              <rect x={-8} y={-3} width={6} height={6} rx={1} fill="#ef4444" opacity={0.8} />
+
+              {/* Read element */}
+              <rect x={2} y={-2} width={4} height={4} rx={0.5} fill="#06b6d4" opacity={0.9} />
+
+              {/* Active reading glow effect */}
               {isReading && (
-                <circle r={8} fill={colors.accent} opacity={0.6} filter="url(#glow)">
-                  <animate attributeName="opacity" values="0.3;0.8;0.3" dur="0.2s" repeatCount="indefinite" />
-                </circle>
+                <>
+                  <circle r={12} fill="url(#hddReadGlow)" filter="url(#hddGlow)">
+                    <animate attributeName="opacity" values="0.4;0.9;0.4" dur="0.15s" repeatCount="indefinite" />
+                  </circle>
+                  <circle r={6} fill="#f97316" opacity={0.8}>
+                    <animate attributeName="r" values="4;8;4" dur="0.2s" repeatCount="indefinite" />
+                  </circle>
+                </>
               )}
             </g>
           </g>
 
-          {/* Fly height visualization */}
-          <g transform={`translate(${headX}, ${headY + 20})`}>
-            <line x1={0} y1={0} x2={0} y2={15} stroke={colors.warning} strokeWidth={1} strokeDasharray="2,2" />
-            <text x={5} y={12} fill={colors.warning} fontSize={8}>{flyHeight}nm gap</text>
+          {/* Fly height indicator */}
+          <g transform={`translate(${headX}, ${headY + 18})`}>
+            <line x1={0} y1={0} x2={0} y2={18} stroke={flyHeight < 5 ? colors.error : colors.warning} strokeWidth={1} strokeDasharray="3,2" />
+            <circle cx={0} cy={18} r={2} fill={flyHeight < 5 ? colors.error : colors.warning} />
           </g>
 
           {/* Performance metrics panel */}
-          <rect x={290} y={60} width={100} height={160} rx={8} fill="rgba(0,0,0,0.3)" />
-          <text x={340} y={80} textAnchor="middle" fill={colors.textPrimary} fontSize={10} fontWeight="bold">Metrics</text>
+          <rect x={290} y={30} width={100} height={190} rx={8} fill="url(#hddMetricsBg)" stroke="#374151" strokeWidth={1} />
 
-          <text x={300} y={100} fill={colors.textMuted} fontSize={9}>Seek Time:</text>
-          <text x={380} y={100} textAnchor="end" fill={colors.accent} fontSize={9}>{effectiveSeekTime.toFixed(1)} ms</text>
+          {/* Metrics content - minimal text in SVG */}
+          <line x1={300} y1={50} x2={380} y2={50} stroke="#374151" strokeWidth={0.5} />
 
-          <text x={300} y={118} fill={colors.textMuted} fontSize={9}>Rotation Latency:</text>
-          <text x={380} y={118} textAnchor="end" fill={colors.accent} fontSize={9}>{rotationLatency.toFixed(1)} ms</text>
+          {/* Metric bars visualization */}
+          <g transform="translate(300, 60)">
+            {/* Seek time bar */}
+            <rect x={0} y={0} width={70 * (effectiveSeekTime / 15)} height={8} rx={2} fill={colors.accent} opacity={0.8} />
 
-          <text x={300} y={136} fill={colors.textMuted} fontSize={9}>Total Access:</text>
-          <text x={380} y={136} textAnchor="end" fill={colors.warning} fontSize={9}>{totalAccessTime.toFixed(1)} ms</text>
+            {/* Rotation latency bar */}
+            <rect x={0} y={22} width={70 * (rotationLatency / 10)} height={8} rx={2} fill={colors.accent} opacity={0.8} />
 
-          <text x={300} y={160} fill={colors.textMuted} fontSize={9}>Random IOPS:</text>
-          <text x={380} y={160} textAnchor="end" fill={colors.success} fontSize={9}>{randomIOPS.toFixed(0)}</text>
+            {/* Total access bar */}
+            <rect x={0} y={44} width={70 * Math.min(totalAccessTime / 20, 1)} height={8} rx={2} fill={colors.warning} opacity={0.8} />
 
-          <text x={300} y={178} fill={colors.textMuted} fontSize={9}>Sequential:</text>
-          <text x={380} y={178} textAnchor="end" fill={colors.success} fontSize={9}>{drive.throughput} MB/s</text>
+            {/* IOPS indicator */}
+            <rect x={0} y={66} width={70 * Math.min(randomIOPS / 250, 1)} height={8} rx={2} fill={colors.success} opacity={0.8} />
 
-          <text x={300} y={200} fill={colors.textMuted} fontSize={9}>Access Type:</text>
-          <text x={380} y={200} textAnchor="end" fill={isSequential ? colors.success : colors.error} fontSize={9}>
-            {isSequential ? 'Sequential' : 'Random'}
-          </text>
+            {/* Sequential throughput */}
+            <rect x={0} y={88} width={70 * (drive.throughput / 300)} height={8} rx={2} fill={colors.success} opacity={0.8} />
 
-          {/* SSD comparison */}
-          <rect x={40} y={290} width={350} height={50} rx={8} fill="rgba(34, 197, 94, 0.1)" />
-          <text x={60} y={310} fill={colors.ssd} fontSize={11} fontWeight="bold">SSD Comparison:</text>
-          <text x={60} y={328} fill={colors.textSecondary} fontSize={10}>
-            Random: ~0.1ms access | IOPS: 50,000-500,000 | No moving parts!
-          </text>
+            {/* Access type indicator */}
+            <rect x={0} y={110} width={70} height={8} rx={2} fill={isSequential ? colors.success : colors.error} opacity={0.6} />
+          </g>
+
+          {/* SSD comparison panel */}
+          <rect x={40} y={258} width={350} height={45} rx={8} fill="url(#hddSsdBg)" stroke="#22c55e" strokeWidth={1} strokeOpacity={0.3} />
+
+          {/* SSD indicator icon */}
+          <rect x={50} y={268} width={24} height={16} rx={3} fill="#22c55e" opacity={0.8} />
+          <rect x={54} y={271} width={4} height={10} rx={1} fill="#166534" />
+          <rect x={60} y={271} width={4} height={10} rx={1} fill="#166534" />
+          <rect x={66} y={271} width={4} height={10} rx={1} fill="#166534" />
         </svg>
+
+        {/* Metrics labels moved outside SVG */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '8px',
+          width: '100%',
+          maxWidth: '500px',
+          padding: '0 8px'
+        }}>
+          <div style={{ background: colors.bgCard, padding: '8px', borderRadius: '8px', textAlign: 'center' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>Seek Time</div>
+            <div style={{ color: colors.accent, fontSize: typo.body, fontWeight: 'bold' }}>{effectiveSeekTime.toFixed(1)}ms</div>
+          </div>
+          <div style={{ background: colors.bgCard, padding: '8px', borderRadius: '8px', textAlign: 'center' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>Rotation</div>
+            <div style={{ color: colors.accent, fontSize: typo.body, fontWeight: 'bold' }}>{rotationLatency.toFixed(1)}ms</div>
+          </div>
+          <div style={{ background: colors.bgCard, padding: '8px', borderRadius: '8px', textAlign: 'center' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>Total Access</div>
+            <div style={{ color: colors.warning, fontSize: typo.body, fontWeight: 'bold' }}>{totalAccessTime.toFixed(1)}ms</div>
+          </div>
+          <div style={{ background: colors.bgCard, padding: '8px', borderRadius: '8px', textAlign: 'center' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>Random IOPS</div>
+            <div style={{ color: colors.success, fontSize: typo.body, fontWeight: 'bold' }}>{randomIOPS.toFixed(0)}</div>
+          </div>
+          <div style={{ background: colors.bgCard, padding: '8px', borderRadius: '8px', textAlign: 'center' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>Sequential</div>
+            <div style={{ color: colors.success, fontSize: typo.body, fontWeight: 'bold' }}>{drive.throughput}MB/s</div>
+          </div>
+          <div style={{ background: colors.bgCard, padding: '8px', borderRadius: '8px', textAlign: 'center' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>Access Type</div>
+            <div style={{ color: isSequential ? colors.success : colors.error, fontSize: typo.body, fontWeight: 'bold' }}>
+              {isSequential ? 'Sequential' : 'Random'}
+            </div>
+          </div>
+        </div>
+
+        {/* Fly height warning */}
+        {flyHeight < 5 && (
+          <div style={{
+            color: colors.error,
+            fontSize: typo.small,
+            padding: '8px 16px',
+            background: 'rgba(239, 68, 68, 0.15)',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.error}`
+          }}>
+            WARNING: Head fly height {flyHeight}nm - High crash risk!
+          </div>
+        )}
+
+        {/* SSD comparison labels */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: '12px',
+          padding: '8px 16px',
+          background: 'rgba(34, 197, 94, 0.1)',
+          borderRadius: '8px',
+          width: '100%',
+          maxWidth: '500px'
+        }}>
+          <div style={{ color: colors.ssd, fontSize: typo.body, fontWeight: 'bold' }}>SSD:</div>
+          <div style={{ color: colors.textSecondary, fontSize: typo.small }}>
+            ~0.1ms access | 50K-500K IOPS | No moving parts
+          </div>
+        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
             <div style={{ background: colors.bgCard, padding: '8px 12px', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ color: colors.textMuted, fontSize: '9px' }}>HDD IOPS</div>
-              <div style={{ color: colors.warning, fontSize: '16px', fontWeight: 'bold' }}>{randomIOPS.toFixed(0)}</div>
+              <div style={{ color: colors.textMuted, fontSize: typo.label }}>HDD IOPS</div>
+              <div style={{ color: colors.warning, fontSize: typo.bodyLarge, fontWeight: 'bold' }}>{randomIOPS.toFixed(0)}</div>
             </div>
             <div style={{ background: colors.bgCard, padding: '8px 12px', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ color: colors.textMuted, fontSize: '9px' }}>SSD IOPS</div>
-              <div style={{ color: colors.ssd, fontSize: '16px', fontWeight: 'bold' }}>100,000+</div>
+              <div style={{ color: colors.textMuted, fontSize: typo.label }}>SSD IOPS</div>
+              <div style={{ color: colors.ssd, fontSize: typo.bodyLarge, fontWeight: 'bold' }}>100,000+</div>
             </div>
             <div style={{ background: colors.bgCard, padding: '8px 12px', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ color: colors.textMuted, fontSize: '9px' }}>ADVANTAGE</div>
-              <div style={{ color: colors.success, fontSize: '16px', fontWeight: 'bold' }}>{Math.round(100000 / randomIOPS)}x</div>
+              <div style={{ color: colors.textMuted, fontSize: typo.label }}>ADVANTAGE</div>
+              <div style={{ color: colors.success, fontSize: typo.bodyLarge, fontWeight: 'bold' }}>{Math.round(100000 / randomIOPS)}x</div>
             </div>
           </div>
         )}

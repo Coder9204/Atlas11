@@ -455,124 +455,361 @@ const PhotoelectricEffectRenderer: React.FC<PhotoelectricEffectRendererProps> = 
     const numElectrons = emissionOccurs ? numPhotons : 0;
 
     return (
-      <svg viewBox="0 0 600 320" style={{ width: '100%', height: '100%', maxHeight: isMobile ? '200px' : '280px' }}>
-        <defs>
-          <linearGradient id="metalPlate" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#78716c" />
-            <stop offset="30%" stopColor="#a8a29e" />
-            <stop offset="60%" stopColor="#78716c" />
-            <stop offset="100%" stopColor="#57534e" />
-          </linearGradient>
-          <radialGradient id="photonGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={lightColor} stopOpacity="1" />
-            <stop offset="100%" stopColor={lightColor} stopOpacity="0" />
-          </radialGradient>
-          <radialGradient id="electronGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#38bdf8" stopOpacity="1" />
-            <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
-          </radialGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+      <div style={{ position: 'relative', width: '100%', height: '100%' }}>
+        <svg viewBox="0 0 600 320" style={{ width: '100%', height: '100%', maxHeight: isMobile ? '200px' : '280px' }}>
+          <defs>
+            {/* === PREMIUM GRADIENTS === */}
 
-        <rect width="600" height="320" fill="#0a0a12" />
-        <text x="300" y="28" textAnchor="middle" style={{ fontSize: '14px', fontWeight: 'bold', fill: 'white' }}>Photoelectric Effect Simulator</text>
+            {/* Lab background gradient */}
+            <linearGradient id="photoLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-        {/* Vacuum chamber */}
-        <rect x="60" y="50" width="480" height="220" rx="16" fill="#0f172a" stroke="#334155" strokeWidth="2" />
-        <text x="300" y="68" textAnchor="middle" style={{ fontSize: '10px', fontWeight: 600, fill: '#64748b', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Vacuum Chamber</text>
+            {/* Premium metal plate gradient with brushed steel effect */}
+            <linearGradient id="photoMetalGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#9ca3af" />
+              <stop offset="20%" stopColor="#d1d5db" />
+              <stop offset="40%" stopColor="#9ca3af" />
+              <stop offset="60%" stopColor="#6b7280" />
+              <stop offset="80%" stopColor="#9ca3af" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
 
-        {/* Light source */}
-        <g transform="translate(100, 160)">
-          <rect x="-20" y="-50" width="40" height="100" rx="6" fill="#374151" stroke="#4b5563" strokeWidth="2" />
-          <circle cx="0" cy="0" r="18" fill={lightColor} filter="url(#glow)" opacity="0.9">
-            <animate attributeName="r" values="16;20;16" dur="1.5s" repeatCount="indefinite" />
-          </circle>
-          <circle cx="0" cy="0" r="8" fill="white" />
-          <text x="0" y="70" textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: '#94a3b8' }}>Light Source</text>
-          <text x="0" y="85" textAnchor="middle" style={{ fontSize: '11px', fontWeight: 700, fill: lightColor }}>{wavelength} nm</text>
-        </g>
+            {/* Metal plate side gradient for 3D effect */}
+            <linearGradient id="photoMetalSide" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
 
-        {/* Photon beam */}
-        <g opacity={intensity / 100}>
-          {Array.from({ length: numPhotons }).map((_, i) => {
-            const progress = ((timeRef.current * 50 + i * 30) % 240) / 240;
-            const x = 140 + progress * 240;
-            const y = 130 + i * 10 + Math.sin(progress * Math.PI * 3) * 5;
-            return (
-              <g key={i}>
-                <circle cx={x} cy={y} r="6" fill="url(#photonGlow)" />
-                <circle cx={x} cy={y} r="3" fill={lightColor} />
-              </g>
-            );
-          })}
-        </g>
+            {/* Light source housing gradient */}
+            <linearGradient id="photoLightHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="30%" stopColor="#374151" />
+              <stop offset="70%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
 
-        {/* Metal plate */}
-        <g transform="translate(390, 90)">
-          <rect x="0" y="0" width="30" height="140" rx="4" fill="url(#metalPlate)" stroke="#a8a29e" strokeWidth="1" />
-          {Array.from({ length: 10 }).map((_, i) => (
-            <circle key={i} cx="15" cy={10 + i * 13} r="4" fill="#57534e" opacity="0.5" />
-          ))}
-          <text x="15" y="160" textAnchor="middle" style={{ fontSize: '11px', fontWeight: 600, fill: '#94a3b8' }}>{metals.find(m => m.workFunction === workFunction)?.name}</text>
-          <text x="15" y="175" textAnchor="middle" style={{ fontSize: '11px', fill: colors.primary }}>Φ = {workFunction} eV</text>
-        </g>
+            {/* Light beam gradient with dynamic color */}
+            <linearGradient id="photoLightGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={lightColor} stopOpacity="0.9" />
+              <stop offset="30%" stopColor={lightColor} stopOpacity="0.6" />
+              <stop offset="70%" stopColor={lightColor} stopOpacity="0.3" />
+              <stop offset="100%" stopColor={lightColor} stopOpacity="0" />
+            </linearGradient>
 
-        {/* Ejected electrons */}
-        {emissionOccurs && (
-          <g filter="url(#glow)">
-            {Array.from({ length: numElectrons }).map((_, i) => {
-              const baseProgress = ((timeRef.current * 40 + i * 25) % 180) / 180;
-              const delay = 0.55;
-              if (baseProgress < delay) return null;
-              const progress = (baseProgress - delay) / (1 - delay);
-              const speed = Math.sqrt(maxKE) * 0.7 + 0.3;
-              const x = 430 + progress * speed * 100;
-              const y = 130 + i * 10 + Math.sin(progress * Math.PI * 2) * 8;
-              if (x > 530) return null;
+            {/* Photon core glow - radial */}
+            <radialGradient id="photoPhotonGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="white" stopOpacity="1" />
+              <stop offset="20%" stopColor={lightColor} stopOpacity="1" />
+              <stop offset="50%" stopColor={lightColor} stopOpacity="0.6" />
+              <stop offset="80%" stopColor={lightColor} stopOpacity="0.2" />
+              <stop offset="100%" stopColor={lightColor} stopOpacity="0" />
+            </radialGradient>
+
+            {/* Electron glow gradient - blue */}
+            <radialGradient id="photoElectronGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f0f9ff" stopOpacity="1" />
+              <stop offset="20%" stopColor="#7dd3fc" stopOpacity="1" />
+              <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.8" />
+              <stop offset="75%" stopColor="#0ea5e9" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#0284c7" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Electron trail gradient */}
+            <linearGradient id="photoElectronTrail" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0" />
+              <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Vacuum chamber gradient */}
+            <linearGradient id="photoVacuumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Vacuum chamber glass effect */}
+            <radialGradient id="photoVacuumGlass" cx="30%" cy="20%" r="80%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.05" />
+              <stop offset="50%" stopColor="#0ea5e9" stopOpacity="0.02" />
+              <stop offset="100%" stopColor="#0284c7" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Energy bar gradient */}
+            <linearGradient id="photoEnergyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+
+            {/* Success indicator gradient */}
+            <linearGradient id="photoSuccessGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#34d399" />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+
+            {/* Danger/warning gradient */}
+            <linearGradient id="photoDangerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#f87171" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* Panel background gradient */}
+            <linearGradient id="photoPanelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="50%" stopColor="#111827" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* === PREMIUM FILTERS === */}
+
+            {/* Light source glow filter */}
+            <filter id="photoLightGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur1" />
+              <feGaussianBlur stdDeviation="12" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Photon glow filter */}
+            <filter id="photoPhotonFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Electron glow filter */}
+            <filter id="photoElectronFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur1" />
+              <feGaussianBlur stdDeviation="6" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft shadow filter */}
+            <filter id="photoShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.5" />
+            </filter>
+
+            {/* Inner glow for panels */}
+            <filter id="photoInnerGlow">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* === PATTERNS === */}
+
+            {/* Grid pattern for lab background */}
+            <pattern id="photoGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+
+            {/* Metal texture pattern */}
+            <pattern id="photoMetalTexture" width="4" height="4" patternUnits="userSpaceOnUse">
+              <rect width="4" height="4" fill="transparent" />
+              <line x1="0" y1="0" x2="4" y2="4" stroke="#ffffff" strokeWidth="0.2" strokeOpacity="0.1" />
+            </pattern>
+          </defs>
+
+          {/* Premium lab background */}
+          <rect width="600" height="320" fill="url(#photoLabBg)" />
+          <rect width="600" height="320" fill="url(#photoGridPattern)" />
+
+          {/* Vacuum chamber with premium styling */}
+          <g filter="url(#photoShadow)">
+            <rect x="60" y="50" width="480" height="220" rx="16" fill="url(#photoVacuumGrad)" stroke="#475569" strokeWidth="2" />
+            <rect x="60" y="50" width="480" height="220" rx="16" fill="url(#photoVacuumGlass)" />
+            {/* Chamber rim highlight */}
+            <rect x="60" y="50" width="480" height="4" rx="2" fill="#334155" opacity="0.5" />
+          </g>
+
+          {/* Light source with premium housing */}
+          <g transform="translate(100, 160)" filter="url(#photoShadow)">
+            {/* Housing body */}
+            <rect x="-24" y="-55" width="48" height="110" rx="8" fill="url(#photoLightHousing)" stroke="#4b5563" strokeWidth="1.5" />
+            {/* Housing rim */}
+            <rect x="-20" y="-51" width="40" height="4" rx="2" fill="#6b7280" opacity="0.5" />
+            {/* Lens aperture */}
+            <circle cx="0" cy="0" r="22" fill="#1f2937" stroke="#374151" strokeWidth="1" />
+            {/* Light emission glow */}
+            <circle cx="0" cy="0" r="18" fill={lightColor} filter="url(#photoLightGlow)" opacity="0.95">
+              <animate attributeName="r" values="16;20;16" dur="1.5s" repeatCount="indefinite" />
+            </circle>
+            {/* Light core */}
+            <circle cx="0" cy="0" r="10" fill="white" opacity="0.9" />
+            <circle cx="0" cy="0" r="6" fill={lightColor} />
+            {/* Lens ring */}
+            <circle cx="0" cy="0" r="20" fill="none" stroke="#6b7280" strokeWidth="2" opacity="0.5" />
+          </g>
+
+          {/* Light beam with gradient */}
+          <rect x="130" y="140" width="250" height="40" fill="url(#photoLightGrad)" opacity={intensity / 100} />
+
+          {/* Photon beam with premium particles */}
+          <g opacity={intensity / 100}>
+            {Array.from({ length: numPhotons }).map((_, i) => {
+              const progress = ((timeRef.current * 50 + i * 30) % 240) / 240;
+              const x = 140 + progress * 240;
+              const y = 130 + i * 10 + Math.sin(progress * Math.PI * 3) * 5;
               return (
-                <g key={`e-${i}`}>
-                  <circle cx={x} cy={y} r="7" fill="url(#electronGlow)" />
-                  <circle cx={x} cy={y} r="3" fill="#38bdf8" />
-                  <text x={x} y={y + 2} textAnchor="middle" style={{ fontSize: '6px', fontWeight: 'bold', fill: '#0f172a' }}>e-</text>
+                <g key={i} filter="url(#photoPhotonFilter)">
+                  {/* Photon trail */}
+                  <ellipse cx={x - 8} cy={y} rx="12" ry="3" fill="url(#photoLightGrad)" opacity="0.4" />
+                  {/* Outer glow */}
+                  <circle cx={x} cy={y} r="8" fill="url(#photoPhotonGlow)" />
+                  {/* Photon core */}
+                  <circle cx={x} cy={y} r="4" fill={lightColor} />
+                  <circle cx={x} cy={y} r="2" fill="white" opacity="0.8" />
                 </g>
               );
             })}
           </g>
-        )}
 
-        {/* No emission indicator */}
-        {!emissionOccurs && (
-          <g transform="translate(480, 160)">
-            <rect x="-45" y="-25" width="90" height="50" rx="8" fill="#450a0a" stroke="#ef4444" strokeWidth="1" />
-            <text x="0" y="-5" textAnchor="middle" style={{ fontSize: '11px', fontWeight: 'bold', fill: '#ef4444' }}>NO EMISSION</text>
-            <text x="0" y="12" textAnchor="middle" style={{ fontSize: '9px', fill: '#fca5a5' }}>E_photon &lt; Φ</text>
+          {/* Metal plate with premium 3D effect */}
+          <g transform="translate(390, 90)">
+            {/* Plate shadow */}
+            <rect x="4" y="4" width="30" height="140" rx="4" fill="#000000" opacity="0.3" />
+            {/* Plate side (3D depth) */}
+            <rect x="28" y="2" width="6" height="140" rx="2" fill="url(#photoMetalSide)" />
+            {/* Main plate body */}
+            <rect x="0" y="0" width="30" height="140" rx="4" fill="url(#photoMetalGrad)" stroke="#9ca3af" strokeWidth="1" />
+            {/* Metal texture overlay */}
+            <rect x="0" y="0" width="30" height="140" rx="4" fill="url(#photoMetalTexture)" />
+            {/* Highlight edge */}
+            <rect x="0" y="0" width="30" height="3" rx="2" fill="#ffffff" opacity="0.2" />
+            {/* Electron sites on metal */}
+            {Array.from({ length: 10 }).map((_, i) => (
+              <g key={i}>
+                <circle cx="15" cy={10 + i * 13} r="5" fill="#374151" opacity="0.6" />
+                <circle cx="15" cy={10 + i * 13} r="3" fill="#0ea5e9" opacity="0.3">
+                  <animate attributeName="opacity" values="0.2;0.5;0.2" dur="2s" begin={`${i * 0.2}s`} repeatCount="indefinite" />
+                </circle>
+              </g>
+            ))}
           </g>
-        )}
 
-        {/* Energy panel */}
-        <g transform="translate(80, 280)">
-          <rect x="-15" y="-15" width="240" height="50" rx="8" fill="#18181b" stroke="#3f3f46" strokeWidth="1" />
-          <rect x="0" y="0" width={Math.min(photonEnergy * 20, 100)} height="12" rx="2" fill={colors.primary} />
-          <text x="105" y="10" style={{ fontSize: '11px', fontWeight: 600, fill: colors.primary }}>E = {photonEnergy.toFixed(2)} eV</text>
-          <line x1={workFunction * 20} y1="-5" x2={workFunction * 20} y2="20" stroke={colors.danger} strokeWidth="2" strokeDasharray="3,2" />
-          <text x={workFunction * 20 + 3} y="26" style={{ fontSize: '8px', fill: colors.danger }}>Φ = {workFunction} eV</text>
-        </g>
+          {/* Ejected electrons with premium effects */}
+          {emissionOccurs && (
+            <g>
+              {Array.from({ length: numElectrons }).map((_, i) => {
+                const baseProgress = ((timeRef.current * 40 + i * 25) % 180) / 180;
+                const delay = 0.55;
+                if (baseProgress < delay) return null;
+                const progress = (baseProgress - delay) / (1 - delay);
+                const speed = Math.sqrt(maxKE) * 0.7 + 0.3;
+                const x = 430 + progress * speed * 100;
+                const y = 130 + i * 10 + Math.sin(progress * Math.PI * 2) * 8;
+                if (x > 530) return null;
+                return (
+                  <g key={`e-${i}`} filter="url(#photoElectronFilter)">
+                    {/* Electron trail */}
+                    <ellipse cx={x - 10} cy={y} rx="15" ry="2" fill="url(#photoElectronTrail)" />
+                    {/* Outer glow */}
+                    <circle cx={x} cy={y} r="10" fill="url(#photoElectronGrad)" />
+                    {/* Electron body */}
+                    <circle cx={x} cy={y} r="4" fill="#38bdf8" />
+                    {/* Electron highlight */}
+                    <circle cx={x - 1} cy={y - 1} r="2" fill="#ffffff" opacity="0.6" />
+                  </g>
+                );
+              })}
+            </g>
+          )}
 
-        {/* KE indicator */}
+          {/* No emission indicator with premium styling */}
+          {!emissionOccurs && (
+            <g transform="translate(480, 160)">
+              <rect x="-50" y="-30" width="100" height="60" rx="10" fill="url(#photoPanelGrad)" stroke="url(#photoDangerGrad)" strokeWidth="2" filter="url(#photoShadow)" />
+              {/* Warning icon background */}
+              <circle cx="0" cy="-8" r="10" fill="#450a0a" />
+              <text x="0" y="-4" textAnchor="middle" style={{ fontSize: '12px', fill: '#ef4444' }}>!</text>
+            </g>
+          )}
+
+          {/* Energy panel with premium design */}
+          <g transform="translate(80, 280)">
+            <rect x="-15" y="-15" width="240" height="50" rx="10" fill="url(#photoPanelGrad)" stroke="#374151" strokeWidth="1" filter="url(#photoInnerGlow)" />
+            {/* Energy bar background */}
+            <rect x="0" y="0" width="100" height="14" rx="4" fill="#1f2937" />
+            {/* Energy bar fill */}
+            <rect x="0" y="0" width={Math.min(photonEnergy * 20, 100)} height="14" rx="4" fill="url(#photoEnergyGrad)" />
+            {/* Energy bar shine */}
+            <rect x="0" y="0" width={Math.min(photonEnergy * 20, 100)} height="4" rx="2" fill="#ffffff" opacity="0.2" />
+            {/* Work function threshold line */}
+            <line x1={workFunction * 20} y1="-8" x2={workFunction * 20} y2="22" stroke="url(#photoDangerGrad)" strokeWidth="2" strokeDasharray="4,2" />
+          </g>
+
+          {/* KE indicator with premium styling */}
+          {emissionOccurs && (
+            <g transform="translate(480, 280)">
+              <rect x="-55" y="-18" width="110" height="55" rx="10" fill="url(#photoPanelGrad)" stroke="url(#photoSuccessGrad)" strokeWidth="2" filter="url(#photoShadow)" />
+              {/* Success glow effect */}
+              <rect x="-50" y="-13" width="100" height="45" rx="8" fill="#10b981" opacity="0.1" />
+            </g>
+          )}
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        <div style={{ position: 'absolute', top: isMobile ? '6px' : '8px', left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
+          <span style={{ fontSize: typo.body, fontWeight: 700, color: colors.textPrimary }}>Photoelectric Effect Simulator</span>
+        </div>
+
+        <div style={{ position: 'absolute', top: isMobile ? '18px' : '22px', left: '50%', transform: 'translateX(-50%)', textAlign: 'center' }}>
+          <span style={{ fontSize: typo.label, fontWeight: 600, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.1em' }}>Vacuum Chamber</span>
+        </div>
+
+        {/* Light source labels */}
+        <div style={{ position: 'absolute', bottom: isMobile ? '32%' : '28%', left: isMobile ? '12%' : '14%', textAlign: 'center', transform: 'translateX(-50%)' }}>
+          <div style={{ fontSize: typo.small, fontWeight: 600, color: colors.textSecondary }}>Light Source</div>
+          <div style={{ fontSize: typo.small, fontWeight: 700, color: wavelengthToColor(wavelength) }}>{wavelength} nm</div>
+        </div>
+
+        {/* Metal plate labels */}
+        <div style={{ position: 'absolute', bottom: isMobile ? '32%' : '28%', right: isMobile ? '18%' : '20%', textAlign: 'center' }}>
+          <div style={{ fontSize: typo.small, fontWeight: 600, color: colors.textSecondary }}>{metals.find(m => m.workFunction === workFunction)?.name}</div>
+          <div style={{ fontSize: typo.small, fontWeight: 700, color: colors.primary }}>{'\u03A6'} = {workFunction} eV</div>
+        </div>
+
+        {/* Energy display labels */}
+        <div style={{ position: 'absolute', bottom: isMobile ? '8%' : '10%', left: isMobile ? '28%' : '30%', textAlign: 'center' }}>
+          <span style={{ fontSize: typo.small, fontWeight: 600, color: colors.primary }}>E = {photonEnergy.toFixed(2)} eV</span>
+        </div>
+
+        <div style={{ position: 'absolute', bottom: isMobile ? '4%' : '6%', left: isMobile ? '18%' : '20%', textAlign: 'center' }}>
+          <span style={{ fontSize: typo.label, fontWeight: 600, color: colors.danger }}>{'\u03A6'} = {workFunction} eV</span>
+        </div>
+
+        {/* KE display label */}
         {emissionOccurs && (
-          <g transform="translate(480, 280)">
-            <rect x="-50" y="-15" width="100" height="50" rx="8" fill="#052e16" stroke={colors.success} strokeWidth="1" />
-            <text x="0" y="2" textAnchor="middle" style={{ fontSize: '11px', fontWeight: 'bold', fill: colors.success }}>KE_max</text>
-            <text x="0" y="18" textAnchor="middle" style={{ fontSize: '14px', fontWeight: 800, fill: colors.success }}>{maxKE.toFixed(2)} eV</text>
-          </g>
+          <div style={{ position: 'absolute', bottom: isMobile ? '8%' : '10%', right: isMobile ? '12%' : '14%', textAlign: 'center' }}>
+            <div style={{ fontSize: typo.small, fontWeight: 700, color: colors.success }}>KE_max</div>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: 800, color: colors.success }}>{maxKE.toFixed(2)} eV</div>
+          </div>
         )}
-      </svg>
+
+        {/* No emission label */}
+        {!emissionOccurs && (
+          <div style={{ position: 'absolute', top: '45%', right: isMobile ? '8%' : '10%', textAlign: 'center' }}>
+            <div style={{ fontSize: typo.small, fontWeight: 700, color: colors.danger }}>NO EMISSION</div>
+            <div style={{ fontSize: typo.label, color: '#fca5a5' }}>E &lt; Work Function</div>
+          </div>
+        )}
+      </div>
     );
   };
 

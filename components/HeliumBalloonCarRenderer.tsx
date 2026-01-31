@@ -531,6 +531,183 @@ export default function HeliumBalloonCarRenderer({
     }
   ];
 
+  // Premium SVG defs for all phases - centralized for consistency
+  const renderPremiumDefs = () => (
+    <defs>
+      {/* === CAR BODY GRADIENTS === */}
+      <linearGradient id="hbcCarBody" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#64748b" />
+        <stop offset="25%" stopColor="#475569" />
+        <stop offset="50%" stopColor="#3b4a5c" />
+        <stop offset="75%" stopColor="#334155" />
+        <stop offset="100%" stopColor="#1e293b" />
+      </linearGradient>
+
+      <linearGradient id="hbcCarRoof" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#475569" />
+        <stop offset="30%" stopColor="#334155" />
+        <stop offset="70%" stopColor="#2d3a4a" />
+        <stop offset="100%" stopColor="#1e293b" />
+      </linearGradient>
+
+      <linearGradient id="hbcCarBodyBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#60a5fa" />
+        <stop offset="25%" stopColor="#3b82f6" />
+        <stop offset="50%" stopColor="#2563eb" />
+        <stop offset="75%" stopColor="#1d4ed8" />
+        <stop offset="100%" stopColor="#1e40af" />
+      </linearGradient>
+
+      <linearGradient id="hbcCarRoofBlue" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#3b82f6" />
+        <stop offset="30%" stopColor="#2563eb" />
+        <stop offset="70%" stopColor="#1d4ed8" />
+        <stop offset="100%" stopColor="#1e40af" />
+      </linearGradient>
+
+      {/* === WINDOW GRADIENTS === */}
+      <linearGradient id="hbcWindowGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
+        <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.8" />
+        <stop offset="60%" stopColor="#3b82f6" stopOpacity="0.7" />
+        <stop offset="100%" stopColor="#2563eb" stopOpacity="0.6" />
+      </linearGradient>
+
+      <radialGradient id="hbcWindowShine" cx="20%" cy="20%" r="80%">
+        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.4" />
+        <stop offset="50%" stopColor="#ffffff" stopOpacity="0.1" />
+        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+      </radialGradient>
+
+      {/* === BALLOON GRADIENTS === */}
+      <radialGradient id="hbcBalloonGloss" cx="30%" cy="25%" r="70%">
+        <stop offset="0%" stopColor="#e879f9" stopOpacity="1" />
+        <stop offset="20%" stopColor="#d946ef" stopOpacity="0.95" />
+        <stop offset="50%" stopColor="#a855f7" stopOpacity="0.9" />
+        <stop offset="80%" stopColor="#9333ea" stopOpacity="0.85" />
+        <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.8" />
+      </radialGradient>
+
+      <radialGradient id="hbcBalloonHighlight" cx="25%" cy="20%" r="50%">
+        <stop offset="0%" stopColor="#ffffff" stopOpacity="0.6" />
+        <stop offset="40%" stopColor="#ffffff" stopOpacity="0.2" />
+        <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+      </radialGradient>
+
+      {/* === PENDULUM/WEIGHT GRADIENTS === */}
+      <radialGradient id="hbcWeightGradient" cx="35%" cy="30%" r="65%">
+        <stop offset="0%" stopColor="#f87171" />
+        <stop offset="30%" stopColor="#ef4444" />
+        <stop offset="60%" stopColor="#dc2626" />
+        <stop offset="100%" stopColor="#b91c1c" />
+      </radialGradient>
+
+      {/* === WHEEL GRADIENTS === */}
+      <radialGradient id="hbcWheelTire" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#374151" />
+        <stop offset="60%" stopColor="#1f2937" />
+        <stop offset="100%" stopColor="#111827" />
+      </radialGradient>
+
+      <radialGradient id="hbcWheelHub" cx="40%" cy="40%" r="60%">
+        <stop offset="0%" stopColor="#d1d5db" />
+        <stop offset="40%" stopColor="#9ca3af" />
+        <stop offset="100%" stopColor="#6b7280" />
+      </radialGradient>
+
+      {/* === PRESSURE GRADIENT === */}
+      <linearGradient id="hbcPressureGradAccel" x1="100%" y1="0%" x2="0%" y2="0%">
+        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+        <stop offset="30%" stopColor="#f97316" stopOpacity="0.4" />
+        <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.3" />
+        <stop offset="70%" stopColor="#84cc16" stopOpacity="0.4" />
+        <stop offset="100%" stopColor="#22c55e" stopOpacity="0.6" />
+      </linearGradient>
+
+      <linearGradient id="hbcPressureGradBrake" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+        <stop offset="30%" stopColor="#f97316" stopOpacity="0.4" />
+        <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.3" />
+        <stop offset="70%" stopColor="#84cc16" stopOpacity="0.4" />
+        <stop offset="100%" stopColor="#22c55e" stopOpacity="0.6" />
+      </linearGradient>
+
+      {/* === ROAD GRADIENT === */}
+      <linearGradient id="hbcRoadSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#475569" />
+        <stop offset="50%" stopColor="#334155" />
+        <stop offset="100%" stopColor="#1e293b" />
+      </linearGradient>
+
+      {/* === WATER/BUBBLE GRADIENTS === */}
+      <linearGradient id="hbcWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+        <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.95" />
+        <stop offset="70%" stopColor="#2563eb" stopOpacity="0.95" />
+        <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.9" />
+      </linearGradient>
+
+      <radialGradient id="hbcBubbleGloss" cx="30%" cy="25%" r="70%">
+        <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+        <stop offset="30%" stopColor="#f0f9ff" stopOpacity="0.95" />
+        <stop offset="60%" stopColor="#e0f2fe" stopOpacity="0.9" />
+        <stop offset="100%" stopColor="#bae6fd" stopOpacity="0.8" />
+      </radialGradient>
+
+      {/* === GLOW FILTERS === */}
+      <filter id="hbcBalloonGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="hbcAccelGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="hbcWeightGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="hbcWindowReflection" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="1" result="blur" />
+        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      </filter>
+
+      {/* === ARROW MARKERS === */}
+      <marker id="hbcArrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
+      </marker>
+      <marker id="hbcArrowRed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
+      </marker>
+      <marker id="hbcArrowPurple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#a855f7" />
+      </marker>
+      <marker id="hbcArrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
+      </marker>
+      <marker id="hbcArrowYellow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+        <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" />
+      </marker>
+
+      {/* === MOTION BLUR === */}
+      <filter id="hbcMotionBlur" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur in="SourceGraphic" stdDeviation="2,0" />
+      </filter>
+    </defs>
+  );
+
   const renderPhase = () => {
     switch (phase) {
       // ───────────────────────────────────────────────────
@@ -539,50 +716,76 @@ export default function HeliumBalloonCarRenderer({
       case 'hook':
         return (
           <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.8rem', marginBottom: '0.5rem', color: '#1e293b' }}>
+            <h2 style={{ fontSize: typo.heading, marginBottom: '0.5rem', color: '#e2e8f0', fontWeight: 700 }}>
               The Backward Balloon
             </h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500 }}>
+            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500, fontSize: typo.body }}>
               Everything slides backward when a car accelerates... but what about a helium balloon?
             </p>
 
             <svg viewBox="0 0 400 250" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
-              {/* Car body */}
-              <rect x="80" y="130" width="240" height="80" fill="#475569" rx="10" />
-              <rect x="100" y="100" width="200" height="50" fill="#334155" rx="8" />
+              {renderPremiumDefs()}
 
-              {/* Windows */}
-              <rect x="115" y="108" width="70" height="35" fill="#60a5fa" rx="5" />
-              <rect x="195" y="108" width="90" height="35" fill="#60a5fa" rx="5" />
+              {/* Road surface with gradient */}
+              <rect x="0" y="215" width="400" height="35" fill="url(#hbcRoadSurface)" />
+              <line x1="0" y1="232" x2="400" y2="232" stroke="#fbbf24" strokeWidth="2" strokeDasharray="20,15" />
 
-              {/* Wheels */}
-              <circle cx="130" cy="210" r="25" fill="#1e293b" />
-              <circle cx="130" cy="210" r="12" fill="#94a3b8" />
-              <circle cx="270" cy="210" r="25" fill="#1e293b" />
-              <circle cx="270" cy="210" r="12" fill="#94a3b8" />
+              {/* Car body with 3D gradient */}
+              <rect x="80" y="130" width="240" height="80" fill="url(#hbcCarBody)" rx="12" />
+              {/* Car body shine */}
+              <rect x="80" y="130" width="240" height="15" fill="url(#hbcWindowShine)" rx="12" opacity="0.3" />
 
-              {/* Inside car - balloon and pendulum */}
-              {/* Pendulum (heavy ball) */}
-              <line x1="250" y1="115" x2="270" y2="145" stroke="#64748b" strokeWidth="2" />
-              <circle cx="270" cy="145" r="8" fill="#ef4444" />
-              <text x="285" y="148" fill="#ef4444" fontSize="9">Heavy</text>
+              {/* Car roof/cabin with gradient */}
+              <rect x="100" y="100" width="200" height="50" fill="url(#hbcCarRoof)" rx="10" />
 
-              {/* Helium balloon */}
-              <line x1="170" y1="140" x2="150" y2="115" stroke="#94a3b8" strokeWidth="1" />
-              <ellipse cx="150" cy="95" rx="20" ry="22" fill="#a855f7" opacity="0.8" />
-              <text x="150" y="99" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">He</text>
+              {/* Windows with glass effect */}
+              <rect x="115" y="108" width="70" height="35" fill="url(#hbcWindowGlass)" rx="6" filter="url(#hbcWindowReflection)" />
+              <rect x="115" y="108" width="70" height="12" fill="url(#hbcWindowShine)" rx="6" opacity="0.4" />
+              <rect x="195" y="108" width="90" height="35" fill="url(#hbcWindowGlass)" rx="6" filter="url(#hbcWindowReflection)" />
+              <rect x="195" y="108" width="90" height="12" fill="url(#hbcWindowShine)" rx="6" opacity="0.4" />
 
-              {/* Direction arrow */}
-              <path d="M 340,170 L 380,170" fill="none" stroke="#22c55e" strokeWidth="4" />
-              <polygon points="385,170 375,163 375,177" fill="#22c55e" />
-              <text x="350" y="195" fill="#22c55e" fontSize="12" fontWeight="bold">ACCELERATE</text>
+              {/* Wheels with premium gradients */}
+              <circle cx="130" cy="210" r="25" fill="url(#hbcWheelTire)" />
+              <circle cx="130" cy="210" r="12" fill="url(#hbcWheelHub)" />
+              <circle cx="130" cy="210" r="4" fill="#374151" />
+              <circle cx="270" cy="210" r="25" fill="url(#hbcWheelTire)" />
+              <circle cx="270" cy="210" r="12" fill="url(#hbcWheelHub)" />
+              <circle cx="270" cy="210" r="4" fill="#374151" />
 
-              {/* Question */}
-              <text x="200" y="45" textAnchor="middle" fill="#1e293b" fontSize="14" fontWeight="bold">
-                Which way does the balloon move?
+              {/* Pendulum (heavy ball) with gradient */}
+              <line x1="250" y1="115" x2="270" y2="145" stroke="#94a3b8" strokeWidth="2" />
+              <circle cx="270" cy="150" r="10" fill="url(#hbcWeightGradient)" filter="url(#hbcWeightGlow)" />
+
+              {/* Helium balloon with glossy gradient */}
+              <line x1="170" y1="140" x2="150" y2="115" stroke="#d8b4fe" strokeWidth="1.5" />
+              <ellipse cx="150" cy="92" rx="22" ry="25" fill="url(#hbcBalloonGloss)" filter="url(#hbcBalloonGlow)" />
+              <ellipse cx="143" cy="82" rx="8" ry="10" fill="url(#hbcBalloonHighlight)" />
+              <text x="150" y="97" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">He</text>
+
+              {/* Direction arrow with glow */}
+              <g filter="url(#hbcAccelGlow)">
+                <path d="M 335,170 L 375,170" fill="none" stroke="#22c55e" strokeWidth="4" markerEnd="url(#hbcArrowGreen)">
+                  <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
+                </path>
+              </g>
+
+              {/* Question mark with glow */}
+              <text x="150" y="60" textAnchor="middle" fill="#fbbf24" fontSize="28" fontWeight="bold" filter="url(#hbcAccelGlow)">
+                ?
+                <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
               </text>
-              <text x="150" y="70" textAnchor="middle" fill="#f59e0b" fontSize="24">?</text>
+
+              {/* Labels outside SVG handled by text elements */}
             </svg>
+
+            {/* Labels moved outside SVG using typo system */}
+            <div style={{ display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: 400, marginBottom: '1rem' }}>
+              <span style={{ fontSize: typo.small, color: '#a855f7', fontWeight: 600 }}>Balloon</span>
+              <span style={{ fontSize: typo.small, color: '#ef4444', fontWeight: 600 }}>Heavy Weight</span>
+            </div>
+            <p style={{ fontSize: typo.body, color: '#22c55e', fontWeight: 600, marginBottom: '1rem' }}>
+              ACCELERATE →
+            </p>
 
             <button
               onClick={() => goToPhase('predict')}
@@ -611,34 +814,48 @@ export default function HeliumBalloonCarRenderer({
       case 'predict':
         return (
           <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
+            <h2 style={{ fontSize: typo.heading, marginBottom: '1rem', color: '#e2e8f0', fontWeight: 700 }}>
               Make Your Prediction
             </h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500 }}>
+            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500, fontSize: typo.body }}>
               A helium balloon is tied to the floor of a car. When the car
-              <strong> accelerates forward</strong>, which way does the balloon tilt?
+              <strong style={{ color: '#22c55e' }}> accelerates forward</strong>, which way does the balloon tilt?
             </p>
 
-            <svg viewBox="0 0 400 140" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
-              {/* Simplified car interior */}
-              <rect x="50" y="40" width="300" height="80" fill="#334155" rx="8" />
+            <svg viewBox="0 0 400 150" style={{ width: '100%', maxWidth: 400, marginBottom: '1rem' }}>
+              {renderPremiumDefs()}
 
-              {/* Floor */}
-              <rect x="50" y="110" width="300" height="10" fill="#475569" />
+              {/* Car interior with premium gradient */}
+              <rect x="50" y="40" width="300" height="85" fill="url(#hbcCarRoof)" rx="10" />
+              {/* Interior ceiling highlight */}
+              <rect x="50" y="40" width="300" height="8" fill="url(#hbcWindowShine)" rx="10" opacity="0.2" />
 
-              {/* Balloon */}
-              <line x1="200" y1="110" x2="200" y2="70" stroke="#94a3b8" strokeWidth="1" />
-              <ellipse cx="200" cy="55" rx="18" ry="20" fill="#a855f7" opacity="0.8" />
-              <text x="200" y="59" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">He</text>
+              {/* Floor with gradient */}
+              <rect x="50" y="115" width="300" height="15" fill="url(#hbcCarBody)" rx="3" />
 
-              {/* Direction labels */}
-              <text x="80" y="140" fill="#64748b" fontSize="10">← BACK</text>
-              <text x="300" y="140" fill="#22c55e" fontSize="10" fontWeight="bold">FRONT →</text>
+              {/* Balloon with glossy effect */}
+              <line x1="200" y1="115" x2="200" y2="72" stroke="#d8b4fe" strokeWidth="1.5" />
+              <ellipse cx="200" cy="52" rx="20" ry="23" fill="url(#hbcBalloonGloss)" filter="url(#hbcBalloonGlow)" />
+              <ellipse cx="193" cy="43" rx="7" ry="9" fill="url(#hbcBalloonHighlight)" />
+              <text x="200" y="57" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">He</text>
 
-              {/* Acceleration arrow */}
-              <path d="M 350,75 L 380,75" fill="none" stroke="#22c55e" strokeWidth="3" />
-              <polygon points="385,75 378,70 378,80" fill="#22c55e" />
+              {/* Question marks showing uncertainty */}
+              <text x="145" y="80" fill="#fbbf24" fontSize="16" fontWeight="bold" opacity="0.7">?</text>
+              <text x="250" y="80" fill="#fbbf24" fontSize="16" fontWeight="bold" opacity="0.7">?</text>
+
+              {/* Acceleration arrow with glow */}
+              <g filter="url(#hbcAccelGlow)">
+                <path d="M 355,80 L 390,80" fill="none" stroke="#22c55e" strokeWidth="4" markerEnd="url(#hbcArrowGreen)">
+                  <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
+                </path>
+              </g>
             </svg>
+
+            {/* Direction labels outside SVG */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: 400, marginBottom: '1.5rem', padding: '0 50px' }}>
+              <span style={{ fontSize: typo.small, color: '#94a3b8' }}>← BACK</span>
+              <span style={{ fontSize: typo.small, color: '#22c55e', fontWeight: 600 }}>FRONT →</span>
+            </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', maxWidth: 400 }}>
               {[
@@ -796,108 +1013,82 @@ export default function HeliumBalloonCarRenderer({
             </div>
 
             <svg viewBox="0 0 450 280" style={{ width: '100%', maxWidth: 500, marginBottom: '1rem' }}>
-              {/* Definitions for gradients and markers */}
+              {renderPremiumDefs()}
+              {/* Dynamic pressure gradient based on current state */}
               <defs>
-                <linearGradient id="pressureGradPlay" x1="100%" y1="0%" x2="0%" y2="0%">
-                  <stop offset="0%" stopColor="#ef4444" stopOpacity={pressureIntensity * 0.6} />
+                <linearGradient id="hbcPressureDynamic" x1={carState === 'braking' ? '0%' : '100%'} y1="0%" x2={carState === 'braking' ? '100%' : '0%'} y2="0%">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity={pressureIntensity * 0.7} />
+                  <stop offset="25%" stopColor="#f97316" stopOpacity={pressureIntensity * 0.5} />
                   <stop offset="50%" stopColor="#fbbf24" stopOpacity={pressureIntensity * 0.3} />
-                  <stop offset="100%" stopColor="#22c55e" stopOpacity={pressureIntensity * 0.6} />
+                  <stop offset="75%" stopColor="#84cc16" stopOpacity={pressureIntensity * 0.5} />
+                  <stop offset="100%" stopColor="#22c55e" stopOpacity={pressureIntensity * 0.7} />
                 </linearGradient>
-                <marker id="arrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
-                </marker>
-                <marker id="arrowRed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
-                </marker>
-                <marker id="arrowPurple" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#a855f7" />
-                </marker>
-                <marker id="arrowBlue" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#3b82f6" />
-                </marker>
               </defs>
 
-              {/* Road */}
-              <rect x="0" y="230" width="450" height="50" fill="#334155" />
-              <line x1="0" y1="255" x2="450" y2="255" stroke="#fbbf24" strokeWidth="3" strokeDasharray="20,10" />
-
-              {/* Status display */}
-              <text x="225" y="25" textAnchor="middle" fill="#e2e8f0" fontSize="14" fontWeight="bold">
-                {carState === 'stopped' && 'Ready - Press Accelerate'}
-                {carState === 'accelerating' && `ACCELERATING at ${carAcceleration.toFixed(1)} m/s²`}
-                {carState === 'constant' && 'Constant Speed - Press Brake'}
-                {carState === 'braking' && `BRAKING at ${carAcceleration.toFixed(1)} m/s²`}
-              </text>
+              {/* Road with premium gradient */}
+              <rect x="0" y="230" width="450" height="50" fill="url(#hbcRoadSurface)" />
+              <line x1="0" y1="255" x2="450" y2="255" stroke="#fbbf24" strokeWidth="3" strokeDasharray="20,15" />
 
               {/* Car body - animated position */}
               <g transform={`translate(${Math.min(carPosition, 200)}, 0)`}>
-                {/* Car shell */}
-                <rect x="30" y="140" width="200" height="70" fill="#3b82f6" rx="10" />
-                <rect x="50" y="105" width="160" height="50" fill="#1d4ed8" rx="8" />
+                {/* Car shell with 3D gradient */}
+                <rect x="30" y="140" width="200" height="70" fill="url(#hbcCarBodyBlue)" rx="12" />
+                {/* Body highlight */}
+                <rect x="30" y="140" width="200" height="12" fill="url(#hbcWindowShine)" rx="12" opacity="0.3" />
 
-                {/* Windows with pressure gradient visualization */}
-                <rect x="60" y="112" width="60" height="38" fill="#93c5fd" rx="5" />
-                <rect x="130" y="112" width="70" height="38" fill="#93c5fd" rx="5" />
+                {/* Car roof with gradient */}
+                <rect x="50" y="105" width="160" height="50" fill="url(#hbcCarRoofBlue)" rx="10" />
+
+                {/* Windows with glass effect */}
+                <rect x="60" y="112" width="60" height="38" fill="url(#hbcWindowGlass)" rx="6" filter="url(#hbcWindowReflection)" />
+                <rect x="60" y="112" width="60" height="12" fill="url(#hbcWindowShine)" rx="6" opacity="0.4" />
+                <rect x="130" y="112" width="70" height="38" fill="url(#hbcWindowGlass)" rx="6" filter="url(#hbcWindowReflection)" />
+                <rect x="130" y="112" width="70" height="12" fill="url(#hbcWindowShine)" rx="6" opacity="0.4" />
 
                 {/* Pressure gradient overlay inside car */}
                 {showPressureGradient && (carState === 'accelerating' || carState === 'braking') && (
                   <rect
                     x="55" y="107"
                     width="150" height="48"
-                    fill={carState === 'accelerating' ? 'url(#pressureGradPlay)' : 'url(#pressureGradPlay)'}
-                    rx="5"
-                    style={{ transform: carState === 'braking' ? 'scaleX(-1)' : 'none', transformOrigin: '130px 131px' }}
-                  />
-                )}
-
-                {/* Pressure labels */}
-                {showPressureGradient && (carState === 'accelerating' || carState === 'braking') && (
-                  <>
-                    <text
-                      x={carState === 'accelerating' ? 70 : 185}
-                      y="100"
-                      fill="#22c55e"
-                      fontSize="9"
-                      fontWeight="bold"
-                    >
-                      LOW P
-                    </text>
-                    <text
-                      x={carState === 'accelerating' ? 175 : 75}
-                      y="100"
-                      fill="#ef4444"
-                      fontSize="9"
-                      fontWeight="bold"
-                    >
-                      HIGH P
-                    </text>
-                  </>
+                    fill="url(#hbcPressureDynamic)"
+                    rx="6"
+                  >
+                    <animate attributeName="opacity" values="0.8;1;0.8" dur="0.8s" repeatCount="indefinite" />
+                  </rect>
                 )}
 
                 {/* Interior ceiling line */}
                 <line x1="55" y1="110" x2="205" y2="110" stroke="#1e40af" strokeWidth="2" />
 
-                {/* Helium Balloon - dynamic size and tilt */}
+                {/* Helium Balloon - dynamic size and tilt with premium gradient */}
                 <g transform={`rotate(${balloonAngle}, 100, 150)`}>
-                  <line x1="100" y1="150" x2="100" y2={150 - 25 - balloonSize} stroke="#94a3b8" strokeWidth="1.5" />
+                  <line x1="100" y1="150" x2="100" y2={150 - 25 - balloonSize} stroke="#d8b4fe" strokeWidth="1.5" />
                   <ellipse
                     cx="100"
                     cy={150 - 30 - balloonSize}
                     rx={balloonSize}
                     ry={balloonSize * 1.15}
-                    fill="#a855f7"
-                    opacity="0.85"
+                    fill="url(#hbcBalloonGloss)"
+                    filter="url(#hbcBalloonGlow)"
                   >
                     {/* Pulsing animation when accelerating */}
                     {(carState === 'accelerating' || carState === 'braking') && (
-                      <animate attributeName="opacity" values="0.85;0.95;0.85" dur="0.5s" repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0.9;1;0.9" dur="0.5s" repeatCount="indefinite" />
                     )}
                   </ellipse>
+                  {/* Balloon highlight */}
+                  <ellipse
+                    cx={100 - balloonSize * 0.25}
+                    cy={150 - 35 - balloonSize}
+                    rx={balloonSize * 0.4}
+                    ry={balloonSize * 0.5}
+                    fill="url(#hbcBalloonHighlight)"
+                  />
                   <text x="100" y={150 - 27 - balloonSize} textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">He</text>
 
-                  {/* Force vectors on balloon */}
+                  {/* Force vectors on balloon with glow */}
                   {showForceVectors && (carState === 'accelerating' || carState === 'braking') && (
-                    <>
+                    <g filter="url(#hbcAccelGlow)">
                       {/* Buoyancy force - forward during acceleration */}
                       <line
                         x1="100"
@@ -906,28 +1097,20 @@ export default function HeliumBalloonCarRenderer({
                         y2={150 - 30 - balloonSize}
                         stroke="#22c55e"
                         strokeWidth="3"
-                        markerEnd="url(#arrowGreen)"
+                        markerEnd="url(#hbcArrowGreen)"
                       />
-                      <text
-                        x={100 + (carState === 'accelerating' ? buoyancyForce * 2 + 5 : -buoyancyForce * 2 - 25)}
-                        y={150 - 35 - balloonSize}
-                        fill="#22c55e"
-                        fontSize="7"
-                      >
-                        Fbuoy
-                      </text>
-                    </>
+                    </g>
                   )}
                 </g>
 
-                {/* Pendulum - tilts opposite direction */}
+                {/* Pendulum - tilts opposite direction with premium gradient */}
                 <g transform={`rotate(${pendulumAngle}, 160, 110)`}>
-                  <line x1="160" y1="110" x2="160" y2="145" stroke="#64748b" strokeWidth="2.5" />
-                  <circle cx="160" cy="150" r="10" fill="#ef4444" />
+                  <line x1="160" y1="110" x2="160" y2="143" stroke="#94a3b8" strokeWidth="2.5" />
+                  <circle cx="160" cy="150" r="12" fill="url(#hbcWeightGradient)" filter="url(#hbcWeightGlow)" />
 
                   {/* Force vectors on pendulum */}
                   {showForceVectors && (carState === 'accelerating' || carState === 'braking') && (
-                    <>
+                    <g filter="url(#hbcAccelGlow)">
                       {/* Inertia force - backward during acceleration */}
                       <line
                         x1="160"
@@ -936,55 +1119,55 @@ export default function HeliumBalloonCarRenderer({
                         y2="150"
                         stroke="#ef4444"
                         strokeWidth="3"
-                        markerEnd="url(#arrowRed)"
+                        markerEnd="url(#hbcArrowRed)"
                       />
-                      <text
-                        x={160 + (carState === 'accelerating' ? -inertiaForce * 1.5 - 25 : inertiaForce * 1.5 + 5)}
-                        y="145"
-                        fill="#ef4444"
-                        fontSize="7"
-                      >
-                        Finertia
-                      </text>
-                    </>
+                    </g>
                   )}
                 </g>
 
-                {/* Labels */}
-                <text x="100" y="175" textAnchor="middle" fill="white" fontSize="9">Balloon</text>
-                <text x="160" y="175" textAnchor="middle" fill="white" fontSize="9">Weight</text>
-
-                {/* Wheels with rotation animation */}
+                {/* Wheels with premium gradients and rotation animation */}
                 <g>
-                  <circle cx="75" cy="210" r="22" fill="#1e293b" />
-                  <circle cx="75" cy="210" r="10" fill="#64748b" />
+                  <circle cx="75" cy="210" r="22" fill="url(#hbcWheelTire)" />
+                  <circle cx="75" cy="210" r="10" fill="url(#hbcWheelHub)" />
+                  <circle cx="75" cy="210" r="3" fill="#374151" />
                   {carState !== 'stopped' && (
-                    <line x1="75" y1="195" x2="75" y2="225" stroke="#94a3b8" strokeWidth="2">
-                      <animateTransform attributeName="transform" type="rotate" from="0 75 210" to="360 75 210" dur="0.5s" repeatCount="indefinite" />
-                    </line>
+                    <g>
+                      <line x1="75" y1="195" x2="75" y2="225" stroke="#d1d5db" strokeWidth="2">
+                        <animateTransform attributeName="transform" type="rotate" from="0 75 210" to="360 75 210" dur="0.4s" repeatCount="indefinite" />
+                      </line>
+                      <line x1="60" y1="210" x2="90" y2="210" stroke="#d1d5db" strokeWidth="2">
+                        <animateTransform attributeName="transform" type="rotate" from="0 75 210" to="360 75 210" dur="0.4s" repeatCount="indefinite" />
+                      </line>
+                    </g>
                   )}
                 </g>
                 <g>
-                  <circle cx="185" cy="210" r="22" fill="#1e293b" />
-                  <circle cx="185" cy="210" r="10" fill="#64748b" />
+                  <circle cx="185" cy="210" r="22" fill="url(#hbcWheelTire)" />
+                  <circle cx="185" cy="210" r="10" fill="url(#hbcWheelHub)" />
+                  <circle cx="185" cy="210" r="3" fill="#374151" />
                   {carState !== 'stopped' && (
-                    <line x1="185" y1="195" x2="185" y2="225" stroke="#94a3b8" strokeWidth="2">
-                      <animateTransform attributeName="transform" type="rotate" from="0 185 210" to="360 185 210" dur="0.5s" repeatCount="indefinite" />
-                    </line>
+                    <g>
+                      <line x1="185" y1="195" x2="185" y2="225" stroke="#d1d5db" strokeWidth="2">
+                        <animateTransform attributeName="transform" type="rotate" from="0 185 210" to="360 185 210" dur="0.4s" repeatCount="indefinite" />
+                      </line>
+                      <line x1="170" y1="210" x2="200" y2="210" stroke="#d1d5db" strokeWidth="2">
+                        <animateTransform attributeName="transform" type="rotate" from="0 185 210" to="360 185 210" dur="0.4s" repeatCount="indefinite" />
+                      </line>
+                    </g>
                   )}
                 </g>
 
-                {/* Direction indicator arrow */}
+                {/* Direction indicator arrow with glow */}
                 {carState === 'accelerating' && (
-                  <g>
-                    <path d="M 230,140 L 260,140" stroke="#22c55e" strokeWidth="4" markerEnd="url(#arrowGreen)">
+                  <g filter="url(#hbcAccelGlow)">
+                    <path d="M 230,140 L 265,140" stroke="#22c55e" strokeWidth="4" markerEnd="url(#hbcArrowGreen)">
                       <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
                     </path>
                   </g>
                 )}
                 {carState === 'braking' && (
-                  <g>
-                    <path d="M 30,140 L 0,140" stroke="#ef4444" strokeWidth="4" markerEnd="url(#arrowRed)">
+                  <g filter="url(#hbcAccelGlow)">
+                    <path d="M 30,140 L -5,140" stroke="#ef4444" strokeWidth="4" markerEnd="url(#hbcArrowRed)">
                       <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
                     </path>
                   </g>
@@ -1146,69 +1329,72 @@ export default function HeliumBalloonCarRenderer({
       case 'review':
         return (
           <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
+            <h2 style={{ fontSize: typo.heading, marginBottom: '1rem', color: '#e2e8f0', fontWeight: 700 }}>
               The Physics: Buoyancy in Acceleration
             </h2>
 
             <div style={{
-              background: 'linear-gradient(135deg, #eff6ff, #dbeafe)',
+              background: 'linear-gradient(135deg, rgba(30, 58, 138, 0.3), rgba(30, 64, 175, 0.2))',
               borderRadius: 16,
               padding: '1.5rem',
               maxWidth: 500,
-              marginBottom: '1.5rem'
+              marginBottom: '1.5rem',
+              border: '1px solid rgba(59, 130, 246, 0.3)'
             }}>
-              <h3 style={{ color: '#1d4ed8', marginBottom: '0.75rem' }}>Why It Happens</h3>
+              <h3 style={{ color: '#60a5fa', marginBottom: '0.75rem', fontSize: typo.bodyLarge }}>Why It Happens</h3>
 
               <svg viewBox="0 0 300 150" style={{ width: '100%', marginBottom: '1rem' }}>
-                {/* Car interior box */}
-                <rect x="30" y="20" width="240" height="110" fill="#334155" rx="5" />
+                {renderPremiumDefs()}
+                {/* Additional local defs for review arrows */}
+                <defs>
+                  <marker id="hbcReviewBlueArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                    <polygon points="0 0, 8 3, 0 6" fill="#3b82f6" />
+                  </marker>
+                  <marker id="hbcReviewGreenArrow" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
+                    <polygon points="8 0, 0 3, 8 6" fill="#22c55e" />
+                  </marker>
+                </defs>
+
+                {/* Car interior box with gradient */}
+                <rect x="30" y="20" width="240" height="110" fill="url(#hbcCarRoof)" rx="8" />
 
                 {/* Pressure gradient visualization */}
-                <defs>
-                  <linearGradient id="pressureGrad" x1="100%" y1="0%" x2="0%" y2="0%">
-                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
-                    <stop offset="100%" stopColor="#22c55e" stopOpacity="0.5" />
-                  </linearGradient>
-                </defs>
-                <rect x="35" y="25" width="230" height="100" fill="url(#pressureGrad)" rx="3" />
+                <rect x="35" y="25" width="230" height="100" fill="url(#hbcPressureGradAccel)" rx="6">
+                  <animate attributeName="opacity" values="0.7;0.9;0.7" dur="2s" repeatCount="indefinite" />
+                </rect>
 
-                {/* Pressure labels */}
-                <text x="60" y="45" fill="#22c55e" fontSize="9" fontWeight="bold">LOW P</text>
-                <text x="220" y="45" fill="#ef4444" fontSize="9" fontWeight="bold">HIGH P</text>
-
-                {/* Air molecules moving backward */}
+                {/* Air molecules moving backward with animation */}
                 {[0, 1, 2].map(i => (
                   <g key={i}>
-                    <circle cx={200 - i * 40} cy={75 + (i % 2) * 20} r="6" fill="#60a5fa" opacity="0.6" />
+                    <circle cx={200 - i * 40} cy={75 + (i % 2) * 20} r="7" fill="#60a5fa" opacity="0.7">
+                      <animate attributeName="cx" values={`${200 - i * 40};${210 - i * 40};${200 - i * 40}`} dur="1.5s" repeatCount="indefinite" />
+                    </circle>
                     <path
-                      d={`M ${180 - i * 40},${75 + (i % 2) * 20} L ${210 - i * 40},${75 + (i % 2) * 20}`}
+                      d={`M ${180 - i * 40},${75 + (i % 2) * 20} L ${215 - i * 40},${75 + (i % 2) * 20}`}
                       fill="none"
                       stroke="#3b82f6"
                       strokeWidth="2"
-                      markerEnd="url(#blueArrow)"
+                      markerEnd="url(#hbcReviewBlueArrow)"
+                      opacity="0.8"
                     />
                   </g>
                 ))}
 
-                {/* Balloon moving forward */}
-                <ellipse cx="80" cy="75" rx="20" ry="22" fill="#a855f7" opacity="0.8" />
-                <text x="80" y="79" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">He</text>
-                <path d="M 55,75 L 35,75" fill="none" stroke="#22c55e" strokeWidth="3" markerEnd="url(#greenArr)" />
-
-                {/* Acceleration arrow */}
-                <text x="150" y="145" textAnchor="middle" fill="#64748b" fontSize="10">
-                  ← Balloon | Air →
-                </text>
-
-                <defs>
-                  <marker id="blueArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-                    <polygon points="0 0, 8 3, 0 6" fill="#3b82f6" />
-                  </marker>
-                  <marker id="greenArr" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-                    <polygon points="8 0, 0 3, 8 6" fill="#22c55e" />
-                  </marker>
-                </defs>
+                {/* Balloon moving forward with premium gradient */}
+                <ellipse cx="80" cy="75" rx="22" ry="25" fill="url(#hbcBalloonGloss)" filter="url(#hbcBalloonGlow)" />
+                <ellipse cx="73" cy="65" rx="8" ry="10" fill="url(#hbcBalloonHighlight)" />
+                <text x="80" y="80" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">He</text>
+                <g filter="url(#hbcAccelGlow)">
+                  <path d="M 55,75 L 30,75" fill="none" stroke="#22c55e" strokeWidth="3" markerEnd="url(#hbcReviewGreenArrow)" />
+                </g>
               </svg>
+
+              {/* Labels moved outside SVG */}
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.75rem', padding: '0 35px' }}>
+                <span style={{ fontSize: typo.small, color: '#22c55e', fontWeight: 600 }}>LOW P</span>
+                <span style={{ fontSize: typo.small, color: '#94a3b8' }}>← Balloon | Air →</span>
+                <span style={{ fontSize: typo.small, color: '#ef4444', fontWeight: 600 }}>HIGH P</span>
+              </div>
 
               <div style={{ fontSize: '0.9rem', color: '#1e293b' }}>
                 <ol style={{ paddingLeft: '1.25rem', lineHeight: 1.8 }}>
@@ -1275,35 +1461,55 @@ export default function HeliumBalloonCarRenderer({
       case 'twist_predict':
         return (
           <div className="flex flex-col items-center">
-            <h2 style={{ fontSize: '1.5rem', marginBottom: '1rem', color: '#1e293b' }}>
+            <h2 style={{ fontSize: typo.heading, marginBottom: '1rem', color: '#e2e8f0', fontWeight: 700 }}>
               Bubble in Water
             </h2>
-            <p style={{ color: '#64748b', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500 }}>
-              Now imagine a <strong>sealed bottle of water with an air bubble inside</strong>.
+            <p style={{ color: '#94a3b8', marginBottom: '1.5rem', textAlign: 'center', maxWidth: 500, fontSize: typo.body }}>
+              Now imagine a <strong style={{ color: '#60a5fa' }}>sealed bottle of water with an air bubble inside</strong>.
               When the car accelerates forward, which way does the bubble move?
             </p>
 
-            <svg viewBox="0 0 400 150" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
-              {/* Car interior */}
-              <rect x="50" y="30" width="300" height="80" fill="#334155" rx="8" />
+            <svg viewBox="0 0 400 150" style={{ width: '100%', maxWidth: 400, marginBottom: '1rem' }}>
+              {renderPremiumDefs()}
 
-              {/* Water bottle */}
-              <rect x="170" y="45" width="60" height="50" fill="#3b82f6" rx="5" />
-              <rect x="185" y="35" width="30" height="15" fill="#64748b" rx="3" />
+              {/* Car interior with gradient */}
+              <rect x="50" y="30" width="300" height="85" fill="url(#hbcCarRoof)" rx="10" />
+              <rect x="50" y="30" width="300" height="8" fill="url(#hbcWindowShine)" rx="10" opacity="0.2" />
 
-              {/* Air bubble */}
-              <ellipse cx="200" cy="65" rx="10" ry="8" fill="white" opacity="0.8" />
-              <text x="200" y="68" textAnchor="middle" fill="#3b82f6" fontSize="7">air</text>
+              {/* Water bottle with premium gradient */}
+              <rect x="165" y="42" width="70" height="60" fill="url(#hbcWaterGradient)" rx="8" />
+              {/* Bottle cap */}
+              <rect x="182" y="32" width="36" height="15" fill="url(#hbcWheelHub)" rx="4" />
+              {/* Bottle shine */}
+              <rect x="168" y="42" width="8" height="55" fill="url(#hbcWindowShine)" rx="4" opacity="0.3" />
 
-              {/* Direction arrow */}
-              <path d="M 350,70 L 380,70" fill="none" stroke="#22c55e" strokeWidth="3" />
-              <polygon points="385,70 378,65 378,75" fill="#22c55e" />
-              <text x="365" y="95" fill="#22c55e" fontSize="10">Accel</text>
+              {/* Air bubble with glossy effect */}
+              <ellipse cx="200" cy="68" rx="12" ry="10" fill="url(#hbcBubbleGloss)" filter="url(#hbcBalloonGlow)">
+                <animate attributeName="cy" values="68;65;68" dur="2s" repeatCount="indefinite" />
+              </ellipse>
 
-              {/* Question mark */}
-              <text x="145" y="70" fill="#f59e0b" fontSize="20">?</text>
-              <text x="255" y="70" fill="#f59e0b" fontSize="20">?</text>
+              {/* Question marks with glow */}
+              <text x="140" y="75" fill="#fbbf24" fontSize="22" fontWeight="bold" filter="url(#hbcAccelGlow)">
+                ?
+                <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" />
+              </text>
+              <text x="260" y="75" fill="#fbbf24" fontSize="22" fontWeight="bold" filter="url(#hbcAccelGlow)">
+                ?
+                <animate attributeName="opacity" values="1;0.5;1" dur="2s" repeatCount="indefinite" begin="0.5s" />
+              </text>
+
+              {/* Direction arrow with glow */}
+              <g filter="url(#hbcAccelGlow)">
+                <path d="M 355,70 L 390,70" fill="none" stroke="#22c55e" strokeWidth="4" markerEnd="url(#hbcArrowGreen)">
+                  <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
+                </path>
+              </g>
             </svg>
+
+            {/* Labels outside SVG */}
+            <p style={{ fontSize: typo.small, color: '#22c55e', fontWeight: 600, marginBottom: '1.5rem' }}>
+              ACCELERATE →
+            </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', maxWidth: 400 }}>
               {[
@@ -1475,40 +1681,29 @@ export default function HeliumBalloonCarRenderer({
             </div>
 
             <svg viewBox="0 0 500 320" style={{ width: '100%', maxWidth: 550, marginBottom: '1rem' }}>
-              <defs>
-                <marker id="twistArrowGreen" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#22c55e" />
-                </marker>
-                <marker id="twistArrowRed" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#ef4444" />
-                </marker>
-              </defs>
-
-              {/* Status display */}
-              <text x="250" y="25" textAnchor="middle" fill={getModeColor()} fontSize="14" fontWeight="bold">
-                {twistCarState === 'stopped' ? `Ready - ${getModeLabel()}` : getModeLabel()}
-              </text>
+              {renderPremiumDefs()}
 
               {/* Car interior - top view for turning */}
               {(twistMode === 'turn_left' || twistMode === 'turn_right') ? (
                 // Top-down view for turning
                 <g transform="translate(50, 50)">
-                  <rect x="0" y="0" width="400" height="180" fill="#334155" rx="10" stroke="#475569" />
-                  <text x="200" y="20" textAnchor="middle" fill="#94a3b8" fontSize="10">TOP VIEW</text>
+                  <rect x="0" y="0" width="400" height="180" fill="url(#hbcCarRoof)" rx="12" stroke="#475569" />
 
-                  {/* Car outline from top */}
-                  <rect x="150" y="50" width="100" height="120" fill="#1d4ed8" rx="8" stroke="#3b82f6" />
+                  {/* Car outline from top with gradient */}
+                  <rect x="150" y="50" width="100" height="120" fill="url(#hbcCarBodyBlue)" rx="10" stroke="#3b82f6" />
+                  {/* Car shine */}
+                  <rect x="150" y="50" width="100" height="15" fill="url(#hbcWindowShine)" rx="10" opacity="0.3" />
 
-                  {/* Balloon from top - moves into turn */}
+                  {/* Balloon from top - moves into turn with premium gradient */}
                   <circle
                     cx={200 + (twistMode === 'turn_left' ? -twistBalloonAngle : twistBalloonAngle)}
                     cy={90}
-                    r="18"
-                    fill="#a855f7"
-                    opacity="0.85"
+                    r="20"
+                    fill="url(#hbcBalloonGloss)"
+                    filter="url(#hbcBalloonGlow)"
                   >
                     {twistCarState === 'accelerating' && (
-                      <animate attributeName="opacity" values="0.85;0.95;0.85" dur="0.5s" repeatCount="indefinite" />
+                      <animate attributeName="opacity" values="0.9;1;0.9" dur="0.5s" repeatCount="indefinite" />
                     )}
                   </circle>
                   <text
@@ -1516,22 +1711,23 @@ export default function HeliumBalloonCarRenderer({
                     y="94"
                     textAnchor="middle"
                     fill="white"
-                    fontSize="9"
+                    fontSize="10"
                     fontWeight="bold"
                   >
                     He
                   </text>
 
-                  {/* Heavy pendulum from top - swings away from turn */}
+                  {/* Heavy pendulum from top - swings away from turn with gradient */}
                   <circle
                     cx={200 + (twistMode === 'turn_left' ? twistPendulumAngle * 0.8 : -twistPendulumAngle * 0.8)}
                     cy={140}
-                    r="12"
-                    fill="#ef4444"
+                    r="14"
+                    fill="url(#hbcWeightGradient)"
+                    filter="url(#hbcWeightGlow)"
                   />
 
-                  {/* Turn direction indicator */}
-                  <g transform={`translate(${twistMode === 'turn_left' ? 50 : 350}, 110)`}>
+                  {/* Turn direction indicator with glow */}
+                  <g transform={`translate(${twistMode === 'turn_left' ? 50 : 350}, 110)`} filter="url(#hbcAccelGlow)">
                     <path
                       d={twistMode === 'turn_left'
                         ? "M 0,0 A 30,30 0 0,0 -25,-25"
@@ -1539,164 +1735,137 @@ export default function HeliumBalloonCarRenderer({
                       fill="none"
                       stroke={getModeColor()}
                       strokeWidth="3"
-                    />
-                    <text x={twistMode === 'turn_left' ? -35 : 35} y="-15" fill={getModeColor()} fontSize="10" fontWeight="bold">
-                      TURN
-                    </text>
+                    >
+                      <animate attributeName="opacity" values="1;0.6;1" dur="1s" repeatCount="indefinite" />
+                    </path>
                   </g>
-
-                  {/* Labels */}
-                  <text x={200 + (twistMode === 'turn_left' ? -30 : 30)} y="70" fill="#a855f7" fontSize="9">
-                    Balloon moves {twistMode === 'turn_left' ? 'LEFT' : 'RIGHT'}
-                  </text>
-                  <text x={200 + (twistMode === 'turn_left' ? 30 : -30)} y="165" fill="#ef4444" fontSize="9">
-                    Weight swings {twistMode === 'turn_left' ? 'RIGHT' : 'LEFT'}
-                  </text>
                 </g>
               ) : (
                 // Side view for accelerate/brake
                 <g transform="translate(25, 45)">
-                  <rect x="0" y="0" width="450" height="160" fill="#334155" rx="10" stroke="#475569" />
+                  <rect x="0" y="0" width="450" height="160" fill="url(#hbcCarRoof)" rx="12" stroke="#475569" />
 
                   {/* Sections */}
                   {/* Left: Helium balloon */}
                   <g transform="translate(30, 15)">
-                    <text x="50" y="12" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="bold">
-                      Balloon
-                    </text>
-                    <rect x="10" y="22" width="80" height="90" fill="rgba(30, 64, 175, 0.3)" rx="5" />
+                    <rect x="10" y="22" width="80" height="90" fill="rgba(30, 64, 175, 0.4)" rx="8" />
 
                     <g transform={`rotate(${twistBalloonAngle}, 50, 100)`}>
-                      <line x1="50" y1="100" x2="50" y2="60" stroke="#94a3b8" strokeWidth="1.5" />
-                      <ellipse cx="50" cy="45" rx="16" ry="18" fill="#a855f7" opacity="0.9">
+                      <line x1="50" y1="100" x2="50" y2="58" stroke="#d8b4fe" strokeWidth="1.5" />
+                      <ellipse cx="50" cy="42" rx="18" ry="20" fill="url(#hbcBalloonGloss)" filter="url(#hbcBalloonGlow)">
                         {twistCarState === 'accelerating' && (
                           <animate attributeName="opacity" values="0.9;1;0.9" dur="0.5s" repeatCount="indefinite" />
                         )}
                       </ellipse>
-                      <text x="50" y="49" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">He</text>
+                      <ellipse cx="45" cy="35" rx="6" ry="8" fill="url(#hbcBalloonHighlight)" />
+                      <text x="50" y="47" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">He</text>
                     </g>
-                    <text x="50" y="130" textAnchor="middle" fill="#a855f7" fontSize="9">
-                      {twistBalloonAngle > 0 ? 'Forward' : twistBalloonAngle < 0 ? 'Backward' : 'Neutral'}
-                    </text>
                   </g>
 
                   {/* Middle: Water bottle with bubble */}
                   <g transform="translate(150, 15)">
-                    <text x="50" y="12" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="bold">
-                      Bubble in Water
-                    </text>
-                    <rect x="15" y="25" width="70" height="85" fill="#3b82f6" rx="5" />
-                    <rect x="30" y="18" width="40" height="12" fill="#64748b" rx="3" />
+                    <rect x="15" y="25" width="70" height="85" fill="url(#hbcWaterGradient)" rx="8" />
+                    <rect x="30" y="18" width="40" height="12" fill="url(#hbcWheelHub)" rx="4" />
+                    {/* Bottle shine */}
+                    <rect x="18" y="25" width="8" height="80" fill="url(#hbcWindowShine)" rx="4" opacity="0.3" />
 
-                    {/* Bubble moves same direction as balloon */}
+                    {/* Bubble moves same direction as balloon with glossy effect */}
                     <ellipse
                       cx={50 + twistBalloonAngle * 0.7}
                       cy={60}
-                      rx="14"
-                      ry="12"
-                      fill="white"
-                      opacity="0.9"
+                      rx="15"
+                      ry="13"
+                      fill="url(#hbcBubbleGloss)"
+                      filter="url(#hbcBalloonGlow)"
                     >
                       {twistCarState === 'accelerating' && (
                         <animate attributeName="opacity" values="0.9;1;0.9" dur="0.5s" repeatCount="indefinite" />
                       )}
                     </ellipse>
-                    <text x="50" y="130" textAnchor="middle" fill="#3b82f6" fontSize="9">
-                      {twistBalloonAngle > 0 ? 'Forward' : twistBalloonAngle < 0 ? 'Backward' : 'Neutral'}
-                    </text>
                   </g>
 
-                  {/* Water bucket on string (optional) */}
+                  {/* Water bucket on string (optional) with premium styling */}
                   {showWaterBucket && (
                     <g transform="translate(270, 15)">
-                      <text x="40" y="12" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="bold">
-                        Water Bucket
-                      </text>
-
                       <g transform={`rotate(${bucketAngle}, 40, 25)`}>
-                        <line x1="40" y1="25" x2="40" y2="75" stroke="#94a3b8" strokeWidth="2" />
-                        {/* Bucket shape */}
-                        <path d="M 25,75 L 25,100 L 55,100 L 55,75 Z" fill="#64748b" />
-                        {/* Water inside - sloshes opposite to bucket tilt */}
+                        <line x1="40" y1="25" x2="40" y2="75" stroke="#d1d5db" strokeWidth="2" />
+                        {/* Bucket shape with gradient */}
+                        <path d="M 23,75 L 23,102 L 57,102 L 57,75 Z" fill="url(#hbcWheelHub)" />
+                        <path d="M 23,75 L 23,78 L 57,78 L 57,75 Z" fill="#9ca3af" />
+                        {/* Water inside with gradient - sloshes opposite to bucket tilt */}
                         <path
-                          d={`M 27,${80 - bucketAngle * 0.3} L 53,${80 + bucketAngle * 0.3} L 53,97 L 27,97 Z`}
-                          fill="#3b82f6"
-                          opacity="0.8"
-                        />
+                          d={`M 26,${80 - bucketAngle * 0.3} L 54,${80 + bucketAngle * 0.3} L 54,99 L 26,99 Z`}
+                          fill="url(#hbcWaterGradient)"
+                        >
+                          {twistCarState === 'accelerating' && (
+                            <animate attributeName="opacity" values="0.8;1;0.8" dur="0.5s" repeatCount="indefinite" />
+                          )}
+                        </path>
                       </g>
-                      <text x="40" y="130" textAnchor="middle" fill="#64748b" fontSize="9">
-                        {bucketAngle > 0 ? 'Forward' : bucketAngle < 0 ? 'Backward' : 'Neutral'}
-                      </text>
                     </g>
                   )}
 
-                  {/* Heavy weight pendulum (optional) */}
+                  {/* Heavy weight pendulum (optional) with premium gradient */}
                   {showWeightComparison && (
                     <g transform={`translate(${showWaterBucket ? 370 : 300}, 15)`}>
-                      <text x="40" y="12" textAnchor="middle" fill="#e2e8f0" fontSize="10" fontWeight="bold">
-                        Heavy Weight
-                      </text>
-
                       <g transform={`rotate(${weightAngle}, 40, 25)`}>
-                        <line x1="40" y1="25" x2="40" y2="80" stroke="#64748b" strokeWidth="2" />
-                        <circle cx="40" cy="90" r="15" fill="#ef4444" />
+                        <line x1="40" y1="25" x2="40" y2="78" stroke="#94a3b8" strokeWidth="2.5" />
+                        <circle cx="40" cy="90" r="16" fill="url(#hbcWeightGradient)" filter="url(#hbcWeightGlow)" />
                         <text x="40" y="94" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">5kg</text>
                       </g>
-                      <text x="40" y="130" textAnchor="middle" fill="#ef4444" fontSize="9">
-                        {weightAngle > 0 ? 'Forward' : weightAngle < 0 ? 'Backward' : 'Neutral'}
-                      </text>
                     </g>
                   )}
                 </g>
               )}
 
-              {/* Direction indicator */}
+              {/* Direction indicator with glow */}
               <g transform="translate(175, 240)">
                 {twistMode === 'accelerate' && (
-                  <>
-                    <path d="M 0,15 L 80,15" stroke="#22c55e" strokeWidth="4" markerEnd="url(#twistArrowGreen)">
+                  <g filter="url(#hbcAccelGlow)">
+                    <path d="M 0,15 L 85,15" stroke="#22c55e" strokeWidth="4" markerEnd="url(#hbcArrowGreen)">
                       {twistCarState === 'accelerating' && (
                         <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
                       )}
                     </path>
-                    <text x="40" y="40" textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold">
-                      ACCELERATE
-                    </text>
-                  </>
+                  </g>
                 )}
                 {twistMode === 'brake' && (
-                  <>
-                    <path d="M 80,15 L 0,15" stroke="#ef4444" strokeWidth="4" markerEnd="url(#twistArrowRed)">
+                  <g filter="url(#hbcAccelGlow)">
+                    <path d="M 85,15 L 0,15" stroke="#ef4444" strokeWidth="4" markerEnd="url(#hbcArrowRed)">
                       {twistCarState === 'accelerating' && (
                         <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
                       )}
                     </path>
-                    <text x="40" y="40" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">
-                      BRAKING
-                    </text>
-                  </>
+                  </g>
                 )}
               </g>
 
-              {/* Result message */}
+              {/* Result message with glow effect */}
               {twistCarState === 'accelerating' && Math.abs(twistBalloonAngle) > 20 && (
                 <g>
-                  <rect x="125" y="270" width="250" height="35" fill="rgba(34, 197, 94, 0.15)" rx="8" stroke="rgba(34, 197, 94, 0.3)" />
-                  <text x="250" y="292" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">
-                    Balloon & Bubble: OPPOSITE to Weight!
-                  </text>
+                  <rect x="125" y="270" width="250" height="35" fill="rgba(34, 197, 94, 0.2)" rx="10" stroke="rgba(34, 197, 94, 0.4)" strokeWidth="1.5">
+                    <animate attributeName="opacity" values="0.8;1;0.8" dur="1s" repeatCount="indefinite" />
+                  </rect>
                 </g>
               )}
 
-              {/* Physics explanation box */}
+              {/* Physics explanation box with enhanced styling */}
               <g transform="translate(350, 240)">
-                <rect x="0" y="0" width="140" height="70" fill="rgba(30, 41, 59, 0.9)" rx="8" stroke="#475569" />
-                <text x="70" y="18" textAnchor="middle" fill="#e2e8f0" fontSize="9" fontWeight="bold">Key Insight</text>
-                <text x="10" y="35" fill="#a855f7" fontSize="8">Less dense: moves INTO accel</text>
-                <text x="10" y="50" fill="#ef4444" fontSize="8">More dense: moves AWAY</text>
-                <text x="10" y="65" fill="#94a3b8" fontSize="7">Same physics, opposite motion!</text>
+                <rect x="0" y="0" width="140" height="70" fill="rgba(15, 23, 42, 0.95)" rx="10" stroke="#334155" />
+                <rect x="0" y="0" width="140" height="18" fill="rgba(59, 130, 246, 0.2)" rx="10" />
               </g>
             </svg>
+
+            {/* Labels moved outside SVG */}
+            <div style={{ display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: 550, marginBottom: '0.5rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+              <span style={{ fontSize: typo.small, color: '#a855f7', fontWeight: 600 }}>Balloon: {twistBalloonAngle > 0 ? 'Forward' : twistBalloonAngle < 0 ? 'Backward' : 'Neutral'}</span>
+              <span style={{ fontSize: typo.small, color: '#60a5fa', fontWeight: 600 }}>Bubble: {twistBalloonAngle > 0 ? 'Forward' : twistBalloonAngle < 0 ? 'Backward' : 'Neutral'}</span>
+              {showWaterBucket && <span style={{ fontSize: typo.small, color: '#94a3b8', fontWeight: 600 }}>Bucket: {bucketAngle > 0 ? 'Forward' : bucketAngle < 0 ? 'Backward' : 'Neutral'}</span>}
+              {showWeightComparison && <span style={{ fontSize: typo.small, color: '#ef4444', fontWeight: 600 }}>Weight: {weightAngle > 0 ? 'Forward' : weightAngle < 0 ? 'Backward' : 'Neutral'}</span>}
+            </div>
+            <p style={{ fontSize: typo.body, color: getModeColor(), fontWeight: 600, marginBottom: '0.5rem' }}>
+              {twistMode === 'accelerate' ? 'ACCELERATE →' : twistMode === 'brake' ? '← BRAKING' : twistMode === 'turn_left' ? '← TURNING LEFT' : 'TURNING RIGHT →'}
+            </p>
 
             {/* Action buttons */}
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem', flexWrap: 'wrap', justifyContent: 'center' }}>

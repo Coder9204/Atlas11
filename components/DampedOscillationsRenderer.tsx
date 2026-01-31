@@ -652,52 +652,162 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
       <div className="bg-gradient-to-br from-slate-800/80 to-slate-900/80 backdrop-blur-xl rounded-3xl p-8 max-w-2xl border border-slate-700/50 shadow-2xl shadow-cyan-500/5 mb-8">
         <svg width={isMobile ? 280 : 400} height={isMobile ? 180 : 220} className="mx-auto">
           <defs>
-            <linearGradient id="roadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#374151"/>
-              <stop offset="100%" stopColor="#1f2937"/>
+            {/* Premium road gradient */}
+            <linearGradient id="dampHookRoadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4b5563"/>
+              <stop offset="30%" stopColor="#374151"/>
+              <stop offset="70%" stopColor="#1f2937"/>
+              <stop offset="100%" stopColor="#111827"/>
             </linearGradient>
-            <linearGradient id="carGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#3b82f6"/>
+
+            {/* Premium car body gradient */}
+            <linearGradient id="dampHookCarGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa"/>
+              <stop offset="30%" stopColor="#3b82f6"/>
+              <stop offset="70%" stopColor="#2563eb"/>
               <stop offset="100%" stopColor="#1d4ed8"/>
             </linearGradient>
-          </defs>
 
-          {/* Road */}
-          <rect x="0" y={isMobile ? 160 : 200} width={isMobile ? 280 : 400} height="20" fill="url(#roadGrad)"/>
-          <rect x="0" y={isMobile ? 160 : 200} width={isMobile ? 280 : 400} height="3" fill="#fbbf24"/>
+            {/* Car roof/cabin gradient */}
+            <linearGradient id="dampHookCabinGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd"/>
+              <stop offset="50%" stopColor="#60a5fa"/>
+              <stop offset="100%" stopColor="#3b82f6"/>
+            </linearGradient>
 
-          {/* Bump */}
-          <ellipse cx={isMobile ? 140 : 200} cy={isMobile ? 160 : 200} rx="30" ry="10" fill="#4b5563"/>
+            {/* Window glass gradient */}
+            <linearGradient id="dampHookGlassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#e0f2fe"/>
+              <stop offset="30%" stopColor="#bae6fd"/>
+              <stop offset="100%" stopColor="#7dd3fc"/>
+            </linearGradient>
 
-          {/* Car body */}
-          <g transform={`translate(${isMobile ? 100 : 150}, ${isMobile ? 100 : 120})`}>
-            {/* Body */}
-            <rect x="0" y="20" width="80" height="30" rx="5" fill="url(#carGrad)"/>
-            <rect x="15" y="0" width="50" height="25" rx="5" fill="#60a5fa"/>
+            {/* Wheel gradient */}
+            <radialGradient id="dampHookWheelGrad" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#374151"/>
+              <stop offset="50%" stopColor="#1f2937"/>
+              <stop offset="100%" stopColor="#111827"/>
+            </radialGradient>
 
-            {/* Windows */}
-            <rect x="20" y="5" width="18" height="15" rx="2" fill="#bfdbfe"/>
-            <rect x="42" y="5" width="18" height="15" rx="2" fill="#bfdbfe"/>
+            {/* Hub cap gradient */}
+            <radialGradient id="dampHookHubGrad" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#9ca3af"/>
+              <stop offset="50%" stopColor="#6b7280"/>
+              <stop offset="100%" stopColor="#4b5563"/>
+            </radialGradient>
 
-            {/* Wheels */}
-            <circle cx="15" cy="50" r="12" fill="#1f2937"/>
-            <circle cx="15" cy="50" r="6" fill="#64748b"/>
-            <circle cx="65" cy="50" r="12" fill="#1f2937"/>
-            <circle cx="65" cy="50" r="6" fill="#64748b"/>
+            {/* Spring gradient */}
+            <linearGradient id="dampHookSpringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fcd34d"/>
+              <stop offset="50%" stopColor="#f59e0b"/>
+              <stop offset="100%" stopColor="#d97706"/>
+            </linearGradient>
 
-            {/* Suspension springs */}
-            <path d="M15 35 Q10 40, 15 45 Q20 40, 15 35" stroke="#f59e0b" strokeWidth="2" fill="none"/>
-            <path d="M65 35 Q60 40, 65 45 Q70 40, 65 35" stroke="#f59e0b" strokeWidth="2" fill="none"/>
-          </g>
+            {/* Damper gradient */}
+            <linearGradient id="dampHookDamperGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569"/>
+              <stop offset="50%" stopColor="#64748b"/>
+              <stop offset="100%" stopColor="#475569"/>
+            </linearGradient>
 
-          {/* Motion arrows */}
-          <path d={`M${isMobile ? 60 : 80} ${isMobile ? 130 : 160} L${isMobile ? 80 : 110} ${isMobile ? 130 : 160}`} stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowGreen)"/>
+            {/* Bump gradient */}
+            <radialGradient id="dampHookBumpGrad" cx="50%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#6b7280"/>
+              <stop offset="50%" stopColor="#4b5563"/>
+              <stop offset="100%" stopColor="#374151"/>
+            </radialGradient>
 
-          <defs>
-            <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            {/* Road marking gradient */}
+            <linearGradient id="dampHookMarkingGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3"/>
+              <stop offset="50%" stopColor="#fcd34d"/>
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.3"/>
+            </linearGradient>
+
+            {/* Glow filter for springs */}
+            <filter id="dampHookSpringGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            {/* Glow filter for car */}
+            <filter id="dampHookCarGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            {/* Arrow marker */}
+            <marker id="dampHookArrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
               <path d="M0,0 L0,6 L9,3 z" fill="#22c55e"/>
             </marker>
           </defs>
+
+          {/* Background gradient */}
+          <rect width={isMobile ? 280 : 400} height={isMobile ? 180 : 220} fill="#0a0f1a"/>
+
+          {/* Road */}
+          <rect x="0" y={isMobile ? 160 : 200} width={isMobile ? 280 : 400} height="20" fill="url(#dampHookRoadGrad)"/>
+          <rect x="0" y={isMobile ? 160 : 200} width={isMobile ? 280 : 400} height="3" fill="url(#dampHookMarkingGrad)"/>
+
+          {/* Road texture lines */}
+          <line x1="0" y1={isMobile ? 170 : 210} x2={isMobile ? 280 : 400} y2={isMobile ? 170 : 210} stroke="#1f2937" strokeWidth="1" strokeDasharray="8,4"/>
+
+          {/* Bump with gradient */}
+          <ellipse cx={isMobile ? 140 : 200} cy={isMobile ? 160 : 200} rx="30" ry="10" fill="url(#dampHookBumpGrad)"/>
+          <ellipse cx={isMobile ? 140 : 200} cy={isMobile ? 158 : 198} rx="25" ry="6" fill="#6b7280" opacity="0.3"/>
+
+          {/* Car body */}
+          <g transform={`translate(${isMobile ? 100 : 150}, ${isMobile ? 100 : 120})`} filter="url(#dampHookCarGlow)">
+            {/* Car shadow */}
+            <ellipse cx="40" cy="58" rx="35" ry="5" fill="#000" opacity="0.3"/>
+
+            {/* Main body */}
+            <rect x="0" y="20" width="80" height="30" rx="5" fill="url(#dampHookCarGrad)"/>
+
+            {/* Body highlight */}
+            <rect x="3" y="22" width="74" height="8" rx="3" fill="white" opacity="0.15"/>
+
+            {/* Cabin */}
+            <rect x="15" y="0" width="50" height="25" rx="5" fill="url(#dampHookCabinGrad)"/>
+
+            {/* Windows */}
+            <rect x="20" y="5" width="18" height="15" rx="2" fill="url(#dampHookGlassGrad)"/>
+            <rect x="42" y="5" width="18" height="15" rx="2" fill="url(#dampHookGlassGrad)"/>
+
+            {/* Window reflection */}
+            <rect x="21" y="6" width="5" height="8" rx="1" fill="white" opacity="0.4"/>
+            <rect x="43" y="6" width="5" height="8" rx="1" fill="white" opacity="0.4"/>
+
+            {/* Headlight */}
+            <circle cx="75" cy="35" r="4" fill="#fef3c7"/>
+            <circle cx="75" cy="35" r="2" fill="#fcd34d"/>
+
+            {/* Wheels with gradient */}
+            <circle cx="15" cy="50" r="12" fill="url(#dampHookWheelGrad)"/>
+            <circle cx="15" cy="50" r="6" fill="url(#dampHookHubGrad)"/>
+            <circle cx="15" cy="50" r="2" fill="#374151"/>
+            <circle cx="65" cy="50" r="12" fill="url(#dampHookWheelGrad)"/>
+            <circle cx="65" cy="50" r="6" fill="url(#dampHookHubGrad)"/>
+            <circle cx="65" cy="50" r="2" fill="#374151"/>
+
+            {/* Suspension - Spring and Damper combination */}
+            {/* Front suspension */}
+            <rect x="11" y="38" width="8" height="12" rx="2" fill="url(#dampHookDamperGrad)"/>
+            <path d="M15 38 Q11 42, 15 46 Q19 42, 15 38" stroke="url(#dampHookSpringGrad)" strokeWidth="2.5" fill="none" filter="url(#dampHookSpringGlow)"/>
+
+            {/* Rear suspension */}
+            <rect x="61" y="38" width="8" height="12" rx="2" fill="url(#dampHookDamperGrad)"/>
+            <path d="M65 38 Q61 42, 65 46 Q69 42, 65 38" stroke="url(#dampHookSpringGrad)" strokeWidth="2.5" fill="none" filter="url(#dampHookSpringGlow)"/>
+          </g>
+
+          {/* Motion arrows */}
+          <path d={`M${isMobile ? 60 : 80} ${isMobile ? 130 : 160} L${isMobile ? 80 : 110} ${isMobile ? 130 : 160}`} stroke="#22c55e" strokeWidth="3" markerEnd="url(#dampHookArrowGreen)"/>
         </svg>
 
         <p className="text-lg text-slate-300 mt-6 mb-4">
@@ -783,72 +893,293 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
     </div>
   );
 
-  const renderPlay = () => (
+  const renderPlay = () => {
+    // Calculate amplitude envelope for visualization
+    const envelopeHeight = Math.abs(displacement) * 0.4;
+    const energyPercent = Math.max(0, Math.min(100, (Math.abs(displacement) / 100) * 100));
+
+    return (
     <div className="flex flex-col items-center p-6">
       <h2 className="text-2xl font-bold text-white mb-4">Damped Oscillation Lab</h2>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 mb-4 w-full max-w-2xl">
         {/* Visualization */}
-        <svg width="100%" height="200" viewBox="0 0 400 200" className="mb-4">
-          {/* Ceiling */}
-          <rect x="0" y="0" width="400" height="20" fill="#374151"/>
-          <pattern id="ceilingPattern" width="20" height="20" patternUnits="userSpaceOnUse">
-            <line x1="0" y1="20" x2="20" y2="0" stroke="#4b5563" strokeWidth="2"/>
-          </pattern>
-          <rect x="0" y="0" width="400" height="20" fill="url(#ceilingPattern)"/>
+        <svg width="100%" height="220" viewBox="0 0 400 220" className="mb-4">
+          <defs>
+            {/* Premium ceiling gradient */}
+            <linearGradient id="dampCeilingGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="30%" stopColor="#475569" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
 
-          {/* Spring */}
+            {/* Premium spring gradient */}
+            <linearGradient id="dampSpringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="75%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fcd34d" />
+            </linearGradient>
+
+            {/* Damper cylinder gradient */}
+            <linearGradient id="dampCylinderGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="20%" stopColor="#4b5563" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="80%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Damper piston gradient */}
+            <linearGradient id="dampPistonGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="30%" stopColor="#9ca3af" />
+              <stop offset="50%" stopColor="#d1d5db" />
+              <stop offset="70%" stopColor="#9ca3af" />
+              <stop offset="100%" stopColor="#6b7280" />
+            </linearGradient>
+
+            {/* Mass gradient - underdamped (cyan) */}
+            <linearGradient id="dampMassUnder" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#22d3ee" />
+              <stop offset="30%" stopColor="#06b6d4" />
+              <stop offset="70%" stopColor="#0891b2" />
+              <stop offset="100%" stopColor="#0e7490" />
+            </linearGradient>
+
+            {/* Mass gradient - critical (emerald) */}
+            <linearGradient id="dampMassCritical" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#6ee7b7" />
+              <stop offset="30%" stopColor="#34d399" />
+              <stop offset="70%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+
+            {/* Mass gradient - overdamped (amber) */}
+            <linearGradient id="dampMassOver" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="30%" stopColor="#fbbf24" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Envelope gradient */}
+            <linearGradient id="dampEnvelopeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Energy bar gradient */}
+            <linearGradient id="dampEnergyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+
+            {/* Graph background gradient */}
+            <linearGradient id="dampGraphBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#020617" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Glow filter for mass */}
+            <filter id="dampMassGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glow filter for spring */}
+            <filter id="dampSpringGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft glow for energy indicator */}
+            <filter id="dampEnergyGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Ceiling hatching pattern */}
+            <pattern id="dampCeilingPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <line x1="0" y1="20" x2="20" y2="0" stroke="#4b5563" strokeWidth="2"/>
+            </pattern>
+          </defs>
+
+          {/* Background gradient */}
+          <rect width="400" height="220" fill="#0a0f1a" />
+
+          {/* Ceiling with premium gradient */}
+          <rect x="0" y="0" width="400" height="20" fill="url(#dampCeilingGrad)"/>
+          <rect x="0" y="0" width="400" height="20" fill="url(#dampCeilingPattern)" opacity="0.5"/>
+
+          {/* Mounting bracket */}
+          <rect x="190" y="15" width="20" height="10" rx="2" fill="#475569" />
+
+          {/* Amplitude envelope visualization (fades with damping) */}
+          {regime === 'under' && (
+            <>
+              <path
+                d={`M200 ${100 - envelopeHeight} L200 ${100 + envelopeHeight}`}
+                stroke="url(#dampEnvelopeGrad)"
+                strokeWidth="60"
+                strokeLinecap="round"
+                opacity="0.3"
+              />
+              <line
+                x1="130"
+                y1={100 - envelopeHeight}
+                x2="170"
+                y2={100 - envelopeHeight}
+                stroke="#a855f7"
+                strokeWidth="1"
+                strokeDasharray="4"
+                opacity="0.6"
+              />
+              <line
+                x1="130"
+                y1={100 + envelopeHeight}
+                x2="170"
+                y2={100 + envelopeHeight}
+                stroke="#a855f7"
+                strokeWidth="1"
+                strokeDasharray="4"
+                opacity="0.6"
+              />
+            </>
+          )}
+
+          {/* Spring with premium gradient and glow */}
           <path
-            d={`M200 20 ${Array.from({length: 10}, (_, i) =>
-              `Q ${180 + (i % 2) * 40} ${25 + i * (100 - displacement * 0.4) / 10}, 200 ${30 + (i + 1) * (100 - displacement * 0.4) / 10}`
+            d={`M200 25 ${Array.from({length: 10}, (_, i) =>
+              `Q ${180 + (i % 2) * 40} ${30 + i * (100 - displacement * 0.4) / 10}, 200 ${35 + (i + 1) * (100 - displacement * 0.4) / 10}`
             ).join(' ')}`}
-            stroke="#f59e0b"
-            strokeWidth="3"
+            stroke="url(#dampSpringGrad)"
+            strokeWidth="4"
             fill="none"
+            filter="url(#dampSpringGlow)"
           />
 
-          {/* Damper */}
-          <rect x="230" y="20" width="20" height={60 - displacement * 0.3} fill="#64748b"/>
-          <rect x="225" y={60 - displacement * 0.3} width="30" height="20" fill="#94a3b8"/>
+          {/* Damper - cylinder */}
+          <rect
+            x="230"
+            y="25"
+            width="20"
+            height={55 - displacement * 0.3}
+            rx="3"
+            fill="url(#dampCylinderGrad)"
+          />
 
-          {/* Mass */}
+          {/* Damper - piston */}
+          <rect
+            x="225"
+            y={60 - displacement * 0.3}
+            width="30"
+            height="18"
+            rx="3"
+            fill="url(#dampPistonGrad)"
+          />
+
+          {/* Damper fluid indicator lines */}
+          <line x1="233" y1="30" x2="233" y2={55 - displacement * 0.3} stroke="#1e293b" strokeWidth="1" opacity="0.5" />
+          <line x1="240" y1="30" x2="240" y2={55 - displacement * 0.3} stroke="#1e293b" strokeWidth="1" opacity="0.5" />
+          <line x1="247" y1="30" x2="247" y2={55 - displacement * 0.3} stroke="#1e293b" strokeWidth="1" opacity="0.5" />
+
+          {/* Mass with 3D gradient and glow */}
           <rect
             x="170"
             y={100 - displacement * 0.4}
             width="60"
             height="40"
-            rx="5"
-            fill={regime === 'under' ? '#06b6d4' : regime === 'critical' ? '#22c55e' : '#f59e0b'}
+            rx="6"
+            fill={regime === 'under' ? 'url(#dampMassUnder)' : regime === 'critical' ? 'url(#dampMassCritical)' : 'url(#dampMassOver)'}
+            filter="url(#dampMassGlow)"
           />
-          <text x="200" y={125 - displacement * 0.4} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
-            {displacement.toFixed(0)}
-          </text>
+
+          {/* Mass highlight (3D effect) */}
+          <rect
+            x="173"
+            y={103 - displacement * 0.4}
+            width="54"
+            height="8"
+            rx="4"
+            fill="white"
+            opacity="0.2"
+          />
 
           {/* Equilibrium line */}
-          <line x1="140" y1="100" x2="260" y2="100" stroke="#64748b" strokeWidth="1" strokeDasharray="4"/>
-          <text x="270" y="104" fill="#64748b" fontSize="10">Equilibrium</text>
+          <line x1="130" y1="100" x2="270" y2="100" stroke="#64748b" strokeWidth="1" strokeDasharray="6,3"/>
+          <circle cx="130" cy="100" r="3" fill="#64748b" />
 
-          {/* Graph */}
-          <rect x="300" y="40" width="90" height="120" fill="#0f172a" rx="5"/>
-          <line x1="310" y1="100" x2="380" y2="100" stroke="#374151" strokeWidth="1"/>
-          <line x1="345" y1="50" x2="345" y2="150" stroke="#374151" strokeWidth="1"/>
+          {/* Energy decay indicator */}
+          <rect x="15" y="40" width="20" height="140" rx="10" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+          <rect
+            x="18"
+            y={180 - energyPercent * 1.35}
+            width="14"
+            height={energyPercent * 1.35}
+            rx="7"
+            fill="url(#dampEnergyGrad)"
+            filter="url(#dampEnergyGlow)"
+          />
 
-          {/* Graph curve based on regime */}
+          {/* Energy label indicator dots */}
+          <circle cx="25" cy="50" r="2" fill="#22c55e" opacity="0.8" />
+          <circle cx="25" cy="175" r="2" fill="#374151" />
+
+          {/* Graph with premium background */}
+          <rect x="300" y="40" width="90" height="120" fill="url(#dampGraphBg)" rx="8" stroke="#334155" strokeWidth="1"/>
+          <line x1="310" y1="100" x2="385" y2="100" stroke="#475569" strokeWidth="1"/>
+          <line x1="345" y1="50" x2="345" y2="150" stroke="#475569" strokeWidth="1"/>
+
+          {/* Graph grid lines */}
+          <line x1="310" y1="70" x2="385" y2="70" stroke="#374151" strokeWidth="0.5" strokeDasharray="2"/>
+          <line x1="310" y1="130" x2="385" y2="130" stroke="#374151" strokeWidth="0.5" strokeDasharray="2"/>
+
+          {/* Graph curve based on regime with glow */}
           {regime === 'under' && (
-            <path d="M310 70 Q320 130, 330 70 Q340 100, 350 70 Q360 90, 370 80 Q375 95, 380 90"
-                  stroke="#06b6d4" strokeWidth="2" fill="none"/>
+            <path d="M310 70 Q320 130, 330 70 Q340 100, 350 70 Q360 90, 370 80 Q378 95, 385 92"
+                  stroke="#22d3ee" strokeWidth="2.5" fill="none" filter="url(#dampSpringGlow)"/>
           )}
           {regime === 'critical' && (
-            <path d="M310 70 Q340 85, 370 95 Q380 98, 380 100"
-                  stroke="#22c55e" strokeWidth="2" fill="none"/>
+            <path d="M310 70 Q340 85, 370 97 Q380 99, 385 100"
+                  stroke="#34d399" strokeWidth="2.5" fill="none" filter="url(#dampSpringGlow)"/>
           )}
           {regime === 'over' && (
-            <path d="M310 70 Q330 75, 350 85 Q370 93, 380 98"
-                  stroke="#f59e0b" strokeWidth="2" fill="none"/>
+            <path d="M310 70 Q330 78, 350 88 Q370 95, 385 99"
+                  stroke="#fbbf24" strokeWidth="2.5" fill="none" filter="url(#dampSpringGlow)"/>
           )}
-
-          <text x="345" y="170" textAnchor="middle" fill="#64748b" fontSize="8">Time</text>
         </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div className="flex justify-between items-center mb-4 px-2">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-emerald-500" />
+            <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Energy</span>
+          </div>
+          <div className="flex items-center gap-4">
+            <span style={{ fontSize: typo.body, color: colors.textPrimary, fontWeight: 600 }}>
+              x = {displacement.toFixed(1)}
+            </span>
+            <span style={{ fontSize: typo.small, color: colors.textMuted }}>Equilibrium</span>
+          </div>
+          <div className="text-right">
+            <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Response Graph</span>
+          </div>
+        </div>
 
         {/* Controls */}
         <div className="flex flex-col gap-4">
@@ -919,6 +1250,7 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
       </button>
     </div>
   );
+  };
 
   const renderReview = () => (
     <div className="flex flex-col items-center p-6">
@@ -1043,47 +1375,140 @@ const DampedOscillationsRenderer: React.FC<Props> = ({
       <div className="grid md:grid-cols-2 gap-6 mb-6 max-w-3xl">
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-emerald-400 mb-2 text-center">Critical Damping (zeta = 1)</h3>
-          <svg width="200" height="150" className="mx-auto">
-            {/* Graph background */}
-            <rect x="20" y="10" width="160" height="120" fill="#0f172a" rx="5"/>
-            <line x1="30" y1="70" x2="170" y2="70" stroke="#374151" strokeWidth="1"/>
+          <svg width="200" height="130" className="mx-auto" viewBox="0 0 200 130">
+            <defs>
+              {/* Graph background gradient */}
+              <linearGradient id="dampTwistGraphBg1" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0f172a"/>
+                <stop offset="50%" stopColor="#020617"/>
+                <stop offset="100%" stopColor="#0f172a"/>
+              </linearGradient>
+
+              {/* Critical damping curve gradient */}
+              <linearGradient id="dampTwistCriticalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#4ade80"/>
+                <stop offset="50%" stopColor="#22c55e"/>
+                <stop offset="100%" stopColor="#16a34a"/>
+              </linearGradient>
+
+              {/* Glow filter for curve */}
+              <filter id="dampTwistCurveGlow1" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+
+              {/* Point glow */}
+              <radialGradient id="dampTwistPointGlow1" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#4ade80"/>
+                <stop offset="50%" stopColor="#22c55e"/>
+                <stop offset="100%" stopColor="#16a34a" stopOpacity="0"/>
+              </radialGradient>
+            </defs>
+
+            {/* Graph background with gradient */}
+            <rect x="20" y="10" width="160" height="100" fill="url(#dampTwistGraphBg1)" rx="8" stroke="#334155" strokeWidth="1"/>
+
+            {/* Grid lines */}
+            <line x1="30" y1="35" x2="170" y2="35" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4"/>
+            <line x1="30" y1="55" x2="170" y2="55" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4"/>
+            <line x1="30" y1="75" x2="170" y2="75" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4"/>
+            <line x1="30" y1="95" x2="170" y2="95" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4"/>
+
+            {/* Axis */}
+            <line x1="30" y1="55" x2="170" y2="55" stroke="#475569" strokeWidth="1"/>
 
             {/* Target value line */}
-            <line x1="30" y1="40" x2="170" y2="40" stroke="#22c55e" strokeWidth="1" strokeDasharray="4"/>
-            <text x="175" y="44" fill="#22c55e" fontSize="8">Target</text>
+            <line x1="30" y1="35" x2="170" y2="35" stroke="#22c55e" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.7"/>
 
-            {/* Response curve - critical damping */}
-            <path d="M30 100 Q60 60, 90 45 Q120 42, 150 40 L170 40"
-                  stroke="#22c55e" strokeWidth="2" fill="none"/>
+            {/* Response curve - critical damping with glow */}
+            <path d="M30 90 Q55 55, 85 40 Q115 36, 145 35 L170 35"
+                  stroke="url(#dampTwistCriticalGrad)" strokeWidth="2.5" fill="none" filter="url(#dampTwistCurveGlow1)"/>
 
-            {/* Needle indicator */}
-            <circle cx="170" cy="40" r="4" fill="#22c55e"/>
-
-            <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">Approaches smoothly, hard to see when it stops</text>
+            {/* Needle indicator with glow */}
+            <circle cx="170" cy="35" r="6" fill="url(#dampTwistPointGlow1)"/>
+            <circle cx="170" cy="35" r="3" fill="#22c55e"/>
           </svg>
+          <p style={{ fontSize: typo.small, color: colors.textSecondary, textAlign: 'center', marginTop: '8px' }}>
+            Approaches smoothly, hard to see when it stops
+          </p>
         </div>
 
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-cyan-400 mb-2 text-center">Optimal Damping (zeta ~ 0.7)</h3>
-          <svg width="200" height="150" className="mx-auto">
-            {/* Graph background */}
-            <rect x="20" y="10" width="160" height="120" fill="#0f172a" rx="5"/>
-            <line x1="30" y1="70" x2="170" y2="70" stroke="#374151" strokeWidth="1"/>
+          <svg width="200" height="130" className="mx-auto" viewBox="0 0 200 130">
+            <defs>
+              {/* Graph background gradient */}
+              <linearGradient id="dampTwistGraphBg2" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0f172a"/>
+                <stop offset="50%" stopColor="#020617"/>
+                <stop offset="100%" stopColor="#0f172a"/>
+              </linearGradient>
+
+              {/* Optimal damping curve gradient */}
+              <linearGradient id="dampTwistOptimalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#67e8f9"/>
+                <stop offset="50%" stopColor="#22d3ee"/>
+                <stop offset="100%" stopColor="#06b6d4"/>
+              </linearGradient>
+
+              {/* Overshoot indicator gradient */}
+              <radialGradient id="dampTwistOvershootGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#fcd34d"/>
+                <stop offset="50%" stopColor="#f59e0b"/>
+                <stop offset="100%" stopColor="#d97706" stopOpacity="0"/>
+              </radialGradient>
+
+              {/* Glow filter for curve */}
+              <filter id="dampTwistCurveGlow2" x="-30%" y="-30%" width="160%" height="160%">
+                <feGaussianBlur stdDeviation="2" result="blur"/>
+                <feMerge>
+                  <feMergeNode in="blur"/>
+                  <feMergeNode in="SourceGraphic"/>
+                </feMerge>
+              </filter>
+
+              {/* Point glow */}
+              <radialGradient id="dampTwistPointGlow2" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#67e8f9"/>
+                <stop offset="50%" stopColor="#22d3ee"/>
+                <stop offset="100%" stopColor="#06b6d4" stopOpacity="0"/>
+              </radialGradient>
+            </defs>
+
+            {/* Graph background with gradient */}
+            <rect x="20" y="10" width="160" height="100" fill="url(#dampTwistGraphBg2)" rx="8" stroke="#334155" strokeWidth="1"/>
+
+            {/* Grid lines */}
+            <line x1="30" y1="35" x2="170" y2="35" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4"/>
+            <line x1="30" y1="55" x2="170" y2="55" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4"/>
+            <line x1="30" y1="75" x2="170" y2="75" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4"/>
+            <line x1="30" y1="95" x2="170" y2="95" stroke="#1e293b" strokeWidth="0.5" strokeDasharray="4"/>
+
+            {/* Axis */}
+            <line x1="30" y1="55" x2="170" y2="55" stroke="#475569" strokeWidth="1"/>
 
             {/* Target value line */}
-            <line x1="30" y1="40" x2="170" y2="40" stroke="#06b6d4" strokeWidth="1" strokeDasharray="4"/>
-            <text x="175" y="44" fill="#06b6d4" fontSize="8">Target</text>
+            <line x1="30" y1="35" x2="170" y2="35" stroke="#06b6d4" strokeWidth="1.5" strokeDasharray="6,3" opacity="0.7"/>
 
-            {/* Response curve - slight overshoot */}
-            <path d="M30 100 Q50 55, 80 35 Q100 30, 120 38 Q140 42, 160 40 L170 40"
-                  stroke="#06b6d4" strokeWidth="2" fill="none"/>
+            {/* Response curve - slight overshoot with glow */}
+            <path d="M30 90 Q50 50, 75 28 Q95 22, 115 32 Q135 37, 155 35 L170 35"
+                  stroke="url(#dampTwistOptimalGrad)" strokeWidth="2.5" fill="none" filter="url(#dampTwistCurveGlow2)"/>
 
-            {/* Overshoot indicator */}
-            <circle cx="95" cy="33" r="3" fill="#f59e0b"/>
-            <text x="95" y="25" textAnchor="middle" fill="#f59e0b" fontSize="8">Overshoot!</text>
+            {/* Overshoot indicator with glow */}
+            <circle cx="88" cy="25" r="8" fill="url(#dampTwistOvershootGrad)"/>
+            <circle cx="88" cy="25" r="4" fill="#f59e0b"/>
 
-            <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">Overshoot helps eye track final position</text>
+            {/* End point indicator */}
+            <circle cx="170" cy="35" r="6" fill="url(#dampTwistPointGlow2)"/>
+            <circle cx="170" cy="35" r="3" fill="#06b6d4"/>
           </svg>
+          <div className="flex items-center justify-center gap-2 mt-2">
+            <div className="w-3 h-3 rounded-full bg-amber-500" />
+            <span style={{ fontSize: typo.small, color: colors.warning }}>Overshoot helps eye track final position</span>
+          </div>
         </div>
       </div>
 

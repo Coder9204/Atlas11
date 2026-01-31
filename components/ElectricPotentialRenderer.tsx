@@ -702,43 +702,112 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       {/* Premium Card */}
       <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 max-w-2xl shadow-2xl">
         <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto mb-6">
-          {/* Background gradient showing potential */}
           <defs>
-            <radialGradient id="potentialGrad" cx="30%" cy="50%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
-              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.2" />
+            {/* Premium background gradient showing potential field */}
+            <radialGradient id="epotHookBg" cx="25%" cy="50%" r="80%">
+              <stop offset="0%" stopColor="#dc2626" stopOpacity="0.7" />
+              <stop offset="25%" stopColor="#f97316" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.3" />
+              <stop offset="75%" stopColor="#22c55e" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity="0.1" />
             </radialGradient>
-          </defs>
-          <rect x="0" y="0" width="400" height="300" fill="url(#potentialGrad)" rx="15" />
 
-          {/* Positive charge */}
-          <circle cx="100" cy="150" r="25" fill="#ef4444" stroke="#fff" strokeWidth="3" />
-          <text x="100" y="158" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">+</text>
+            {/* Source charge gradient with glow */}
+            <radialGradient id="epotHookSource" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="30%" stopColor="#f97316" />
+              <stop offset="60%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </radialGradient>
 
-          {/* Equipotential lines (circles) */}
-          <circle cx="100" cy="150" r="60" fill="none" stroke="#fff" strokeWidth="1" strokeDasharray="5,5" opacity="0.6" />
-          <circle cx="100" cy="150" r="100" fill="none" stroke="#fff" strokeWidth="1" strokeDasharray="5,5" opacity="0.4" />
-          <circle cx="100" cy="150" r="140" fill="none" stroke="#fff" strokeWidth="1" strokeDasharray="5,5" opacity="0.2" />
+            {/* Test charge gradient */}
+            <radialGradient id="epotHookTest" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="40%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </radialGradient>
 
-          {/* Test charge showing potential energy */}
-          <circle cx="260" cy="150" r="15" fill="#3b82f6" stroke="#fff" strokeWidth="2" />
-          <text x="260" y="156" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">q</text>
+            {/* Equipotential line gradient */}
+            <linearGradient id="epotHookEqui" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fff" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#fff" stopOpacity="0.1" />
+            </linearGradient>
 
-          {/* Work arrow */}
-          <path d="M240,150 L140,150" fill="none" stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowHead)" />
-          <text x="190" y="135" textAnchor="middle" fill="#22c55e" fontSize="14" fontWeight="bold">Work = qΔV</text>
+            {/* Work arrow gradient */}
+            <linearGradient id="epotHookArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
 
-          {/* Labels */}
-          <text x="100" y="200" textAnchor="middle" fill="#f59e0b" fontSize="12">High V</text>
-          <text x="320" y="200" textAnchor="middle" fill="#22c55e" fontSize="12">Low V</text>
+            {/* Source charge glow filter */}
+            <filter id="epotHookGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feFlood floodColor="#f97316" floodOpacity="0.5" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-          <defs>
-            <marker id="arrowHead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+            {/* Test charge glow */}
+            <filter id="epotHookTestGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor="#3b82f6" floodOpacity="0.4" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow marker */}
+            <marker id="epotHookArrowHead" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
               <path d="M0,0 L0,6 L9,3 z" fill="#22c55e" />
             </marker>
           </defs>
+
+          {/* Premium background */}
+          <rect x="0" y="0" width="400" height="300" fill="#0f172a" rx="15" />
+          <rect x="0" y="0" width="400" height="300" fill="url(#epotHookBg)" rx="15" />
+
+          {/* Equipotential lines with gradient glow */}
+          <circle cx="100" cy="150" r="55" fill="none" stroke="url(#epotHookEqui)" strokeWidth="2" strokeDasharray="6,4" opacity="0.7" />
+          <circle cx="100" cy="150" r="90" fill="none" stroke="url(#epotHookEqui)" strokeWidth="1.5" strokeDasharray="6,4" opacity="0.5" />
+          <circle cx="100" cy="150" r="130" fill="none" stroke="url(#epotHookEqui)" strokeWidth="1" strokeDasharray="6,4" opacity="0.3" />
+
+          {/* Positive source charge with glow */}
+          <g filter="url(#epotHookGlow)">
+            <circle cx="100" cy="150" r="28" fill="url(#epotHookSource)" stroke="#fff" strokeWidth="3" />
+            <circle cx="92" cy="142" r="7" fill="#fff" opacity="0.25" />
+          </g>
+
+          {/* Test charge with glow */}
+          <g filter="url(#epotHookTestGlow)">
+            <circle cx="260" cy="150" r="17" fill="url(#epotHookTest)" stroke="#fff" strokeWidth="2" />
+            <circle cx="254" cy="144" r="4" fill="#fff" opacity="0.3" />
+          </g>
+
+          {/* Work arrow with gradient */}
+          <path d="M238,150 L145,150" fill="none" stroke="url(#epotHookArrow)" strokeWidth="4" markerEnd="url(#epotHookArrowHead)" />
         </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div className="flex justify-between items-center mb-4 px-8">
+          <div className="text-center">
+            <span style={{ fontSize: typo.label }} className="text-red-400 font-bold block">+Q Source</span>
+            <span style={{ fontSize: typo.label }} className="text-amber-400">High V</span>
+          </div>
+          <div className="text-center">
+            <span style={{ fontSize: typo.small }} className="text-emerald-400 font-semibold">Work = qDelta V</span>
+          </div>
+          <div className="text-center">
+            <span style={{ fontSize: typo.label }} className="text-blue-400 font-bold block">Test q</span>
+            <span style={{ fontSize: typo.label }} className="text-emerald-400">Low V</span>
+          </div>
+        </div>
 
         <p className="text-xl text-slate-300 mb-4">
           Why does a ball roll downhill? Gravity creates a potential energy landscape!
@@ -859,6 +928,30 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
     </div>
   );
 
+  // Generate electric field vectors for visualization
+  const generateFieldVectors = useCallback(() => {
+    const vectors: { x: number; y: number; Ex: number; Ey: number; E: number }[] = [];
+    const spacing = 40;
+    for (let i = 1; i < 10; i++) {
+      for (let j = 1; j < 10; j++) {
+        const x = i * spacing;
+        const y = j * spacing;
+        // Skip if too close to source charges
+        let tooClose = false;
+        sourceCharges.forEach(charge => {
+          const dx = x - charge.x;
+          const dy = y - charge.y;
+          if (Math.sqrt(dx * dx + dy * dy) < 35) tooClose = true;
+        });
+        if (!tooClose) {
+          const field = calculateField(x, y);
+          vectors.push({ x, y, ...field });
+        }
+      }
+    }
+    return vectors;
+  }, [sourceCharges, calculateField]);
+
   const renderPlay = () => (
     <div className="flex flex-col items-center p-4">
       <h2 className={`${isMobile ? 'text-xl' : 'text-2xl'} font-bold text-white mb-4`}>
@@ -899,10 +992,178 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
           onTouchMove={handleTouchMove}
           onTouchEnd={() => setIsDragging(false)}
         >
-          {/* Background with potential coloring */}
-          <rect x="0" y="0" width="400" height="400" fill="#1e293b" rx="15" />
+          {/* ============ PREMIUM DEFS SECTION ============ */}
+          <defs>
+            {/* Premium lab background gradient */}
+            <linearGradient id="epotLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0a0f1a" />
+              <stop offset="25%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="75%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#0a0f1a" />
+            </linearGradient>
 
-          {/* Potential heat map */}
+            {/* Positive charge radial gradient (red/orange glow) */}
+            <radialGradient id="epotPositiveCharge" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </radialGradient>
+
+            {/* Negative charge radial gradient (blue glow) */}
+            <radialGradient id="epotNegativeCharge" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#67e8f9" />
+              <stop offset="25%" stopColor="#22d3ee" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </radialGradient>
+
+            {/* Test charge gradient (green) */}
+            <radialGradient id="epotTestCharge" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="30%" stopColor="#4ade80" />
+              <stop offset="60%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#15803d" />
+            </radialGradient>
+
+            {/* Positive plate gradient for parallel plates */}
+            <linearGradient id="epotPositivePlate" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#991b1b" />
+              <stop offset="25%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            {/* Negative plate gradient for parallel plates */}
+            <linearGradient id="epotNegativePlate" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="25%" stopColor="#2563eb" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* High potential equipotential gradient */}
+            <linearGradient id="epotEquipotentialHigh" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.2" />
+              <stop offset="25%" stopColor="#f97316" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="75%" stopColor="#f97316" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Low potential equipotential gradient */}
+            <linearGradient id="epotEquipotentialLow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
+              <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="75%" stopColor="#06b6d4" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Neutral equipotential gradient */}
+            <linearGradient id="epotEquipotentialNeutral" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#64748b" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#f8fafc" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#64748b" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Field vector gradient (arrow) */}
+            <linearGradient id="epotFieldVector" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#c084fc" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#e879f9" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Voltage contour heat gradient */}
+            <linearGradient id="epotHeatGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="25%" stopColor="#06b6d4" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="75%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Positive charge glow filter */}
+            <filter id="epotPositiveGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#f97316" floodOpacity="0.6" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Negative charge glow filter */}
+            <filter id="epotNegativeGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#3b82f6" floodOpacity="0.6" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Test charge glow filter */}
+            <filter id="epotTestGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor="#22c55e" floodOpacity="0.5" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Equipotential line glow */}
+            <filter id="epotLineGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Plate glow filter */}
+            <filter id="epotPlateGlow" x="-50%" y="-10%" width="200%" height="120%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Readout box shadow */}
+            <filter id="epotReadoutShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.5" />
+            </filter>
+
+            {/* Arrow marker for field vectors */}
+            <marker id="epotArrowHead" markerWidth="8" markerHeight="8" refX="6" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L8,3 z" fill="url(#epotFieldVector)" />
+            </marker>
+          </defs>
+
+          {/* Premium dark lab background */}
+          <rect x="0" y="0" width="400" height="400" fill="url(#epotLabBg)" rx="15" />
+
+          {/* Subtle grid overlay */}
+          <g opacity="0.1">
+            {Array.from({ length: 11 }).map((_, i) => (
+              <React.Fragment key={`grid-${i}`}>
+                <line x1={i * 40} y1="0" x2={i * 40} y2="400" stroke="#64748b" strokeWidth="0.5" />
+                <line x1="0" y1={i * 40} x2="400" y2={i * 40} stroke="#64748b" strokeWidth="0.5" />
+              </React.Fragment>
+            ))}
+          </g>
+
+          {/* Potential heat map with premium coloring */}
           {Array.from({ length: 20 }).map((_, i) =>
             Array.from({ length: 20 }).map((_, j) => {
               const x = 10 + i * 20;
@@ -916,25 +1177,71 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
                   width="20"
                   height="20"
                   fill={getPotentialColor(V)}
-                  opacity="0.3"
+                  opacity="0.25"
                 />
               );
             })
           )}
 
-          {/* Parallel plates */}
+          {/* Parallel plates with premium styling */}
           {selectedConfig === 'parallel' && (
             <>
-              <rect x="95" y="50" width="10" height="300" fill="#ef4444" rx="2" />
-              <rect x="295" y="50" width="10" height="300" fill="#3b82f6" rx="2" />
-              <text x="100" y="40" textAnchor="middle" fill="#ef4444" fontSize="12">+{plateVoltage}V</text>
-              <text x="300" y="40" textAnchor="middle" fill="#3b82f6" fontSize="12">0V</text>
+              {/* Positive plate with glow */}
+              <g filter="url(#epotPlateGlow)">
+                <rect x="93" y="50" width="14" height="300" fill="url(#epotPositivePlate)" rx="3" />
+                <rect x="95" y="52" width="10" height="296" fill="none" stroke="#fbbf24" strokeWidth="1" strokeOpacity="0.5" rx="2" />
+              </g>
+              {/* Negative plate with glow */}
+              <g filter="url(#epotPlateGlow)">
+                <rect x="293" y="50" width="14" height="300" fill="url(#epotNegativePlate)" rx="3" />
+                <rect x="295" y="52" width="10" height="296" fill="none" stroke="#67e8f9" strokeWidth="1" strokeOpacity="0.5" rx="2" />
+              </g>
+              {/* Uniform field arrows between plates */}
+              {Array.from({ length: 7 }).map((_, i) => {
+                const y = 80 + i * 40;
+                return (
+                  <line
+                    key={`field-${i}`}
+                    x1="130"
+                    y1={y}
+                    x2="270"
+                    y2={y}
+                    stroke="url(#epotFieldVector)"
+                    strokeWidth="2"
+                    markerEnd="url(#epotArrowHead)"
+                    opacity="0.6"
+                  />
+                );
+              })}
             </>
           )}
 
-          {/* Equipotential lines */}
+          {/* Electric field vectors for point charges */}
+          {selectedConfig !== 'parallel' && generateFieldVectors().map((vec, i) => {
+            const maxLen = 25;
+            const len = Math.min(maxLen, Math.log10(vec.E + 1) * 5);
+            if (len < 3) return null;
+            const angle = Math.atan2(vec.Ey, vec.Ex);
+            const endX = vec.x + len * Math.cos(angle);
+            const endY = vec.y + len * Math.sin(angle);
+            return (
+              <line
+                key={`vec-${i}`}
+                x1={vec.x}
+                y1={vec.y}
+                x2={endX}
+                y2={endY}
+                stroke="url(#epotFieldVector)"
+                strokeWidth="1.5"
+                markerEnd="url(#epotArrowHead)"
+                opacity="0.5"
+              />
+            );
+          })}
+
+          {/* Equipotential lines with premium gradients */}
           {showEquipotentials && generateEquipotentials().map((line, i) => (
-            <g key={i}>
+            <g key={i} filter="url(#epotLineGlow)">
               {line.points.length >= 2 && (
                 <path
                   d={selectedConfig === 'parallel'
@@ -942,88 +1249,148 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
                     : `M${line.points.map(p => `${p.x},${p.y}`).join(' L')}`
                   }
                   fill="none"
-                  stroke={line.V > 0 ? '#ef4444' : line.V < 0 ? '#3b82f6' : '#fff'}
-                  strokeWidth="1"
-                  strokeDasharray="4,4"
-                  opacity="0.6"
+                  stroke={line.V > 0 ? 'url(#epotEquipotentialHigh)' : line.V < 0 ? 'url(#epotEquipotentialLow)' : 'url(#epotEquipotentialNeutral)'}
+                  strokeWidth="2"
+                  strokeDasharray="6,4"
+                  opacity="0.8"
                 />
               )}
             </g>
           ))}
 
-          {/* Source charges */}
+          {/* Source charges with premium glow effects */}
           {sourceCharges.map(charge => (
-            <g key={charge.id}>
+            <g key={charge.id} filter={charge.q > 0 ? 'url(#epotPositiveGlow)' : 'url(#epotNegativeGlow)'}>
+              {/* Outer glow ring */}
               <circle
                 cx={charge.x}
                 cy={charge.y}
-                r="20"
-                fill={charge.q > 0 ? '#ef4444' : '#3b82f6'}
+                r="28"
+                fill="none"
+                stroke={charge.q > 0 ? '#f97316' : '#3b82f6'}
+                strokeWidth="1"
+                opacity="0.3"
+              />
+              {/* Main charge circle with gradient */}
+              <circle
+                cx={charge.x}
+                cy={charge.y}
+                r="22"
+                fill={charge.q > 0 ? 'url(#epotPositiveCharge)' : 'url(#epotNegativeCharge)'}
                 stroke="#fff"
                 strokeWidth="2"
               />
-              <text
-                x={charge.x}
-                y={charge.y + 6}
-                textAnchor="middle"
-                fill="white"
-                fontSize="18"
-                fontWeight="bold"
-              >
-                {charge.q > 0 ? '+' : '-'}
-              </text>
+              {/* Inner highlight */}
+              <circle
+                cx={charge.x - 5}
+                cy={charge.y - 5}
+                r="6"
+                fill="#fff"
+                opacity="0.2"
+              />
             </g>
           ))}
 
-          {/* Test charge - draggable */}
+          {/* Test charge with premium styling */}
           <g
             style={{ cursor: 'grab' }}
             onMouseDown={(e) => { e.preventDefault(); setIsDragging(true); }}
             onTouchStart={(e) => { e.preventDefault(); setIsDragging(true); }}
+            filter="url(#epotTestGlow)"
           >
+            {/* Outer pulse ring */}
             <circle
               cx={testChargePos.x}
               cy={testChargePos.y}
-              r="15"
-              fill="#22c55e"
+              r="22"
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth="1"
+              opacity="0.4"
+            >
+              <animate attributeName="r" values="18;25;18" dur="2s" repeatCount="indefinite" />
+              <animate attributeName="opacity" values="0.4;0.1;0.4" dur="2s" repeatCount="indefinite" />
+            </circle>
+            {/* Main test charge with gradient */}
+            <circle
+              cx={testChargePos.x}
+              cy={testChargePos.y}
+              r="16"
+              fill="url(#epotTestCharge)"
               stroke="#fff"
               strokeWidth="2"
-              opacity="0.9"
             />
-            <text
-              x={testChargePos.x}
-              y={testChargePos.y + 5}
-              textAnchor="middle"
-              fill="white"
-              fontSize="12"
-              fontWeight="bold"
-            >
-              +q
-            </text>
+            {/* Inner highlight */}
+            <circle
+              cx={testChargePos.x - 4}
+              cy={testChargePos.y - 4}
+              r="4"
+              fill="#fff"
+              opacity="0.3"
+            />
           </g>
 
-          {/* Potential readout at test charge */}
-          <rect
-            x={testChargePos.x + 20}
-            y={testChargePos.y - 30}
-            width="90"
-            height="25"
-            fill="#1e293b"
-            stroke="#64748b"
-            rx="5"
-            opacity="0.9"
-          />
-          <text
-            x={testChargePos.x + 65}
-            y={testChargePos.y - 12}
-            textAnchor="middle"
-            fill="#f59e0b"
-            fontSize="11"
-            fontWeight="bold"
-          >
-            V = {formatVoltage(currentPotential)}
-          </text>
+          {/* Premium readout box at test charge */}
+          <g filter="url(#epotReadoutShadow)">
+            <rect
+              x={testChargePos.x + 22}
+              y={testChargePos.y - 32}
+              width="95"
+              height="28"
+              fill="#0f172a"
+              stroke="#f59e0b"
+              strokeWidth="1"
+              rx="6"
+              opacity="0.95"
+            />
+            <rect
+              x={testChargePos.x + 23}
+              y={testChargePos.y - 31}
+              width="93"
+              height="26"
+              fill="none"
+              stroke="#fbbf24"
+              strokeWidth="0.5"
+              strokeOpacity="0.3"
+              rx="5"
+            />
+          </g>
         </svg>
+
+        {/* External text labels using typo system */}
+        <div className="flex justify-between items-center mt-2 px-2">
+          {selectedConfig === 'parallel' && (
+            <>
+              <span style={{ fontSize: typo.small }} className="text-red-400 font-semibold">+{plateVoltage}V</span>
+              <span style={{ fontSize: typo.label }} className="text-slate-400">Uniform Field</span>
+              <span style={{ fontSize: typo.small }} className="text-blue-400 font-semibold">0V (Ground)</span>
+            </>
+          )}
+          {selectedConfig === 'single' && (
+            <>
+              <span style={{ fontSize: typo.small }} className="text-amber-400 font-semibold">+{sourceCharges[0]?.q}μC Source</span>
+              <span style={{ fontSize: typo.label }} className="text-slate-400">Radial Field</span>
+              <span style={{ fontSize: typo.small }} className="text-emerald-400 font-semibold">V = {formatVoltage(currentPotential)}</span>
+            </>
+          )}
+          {selectedConfig === 'dipole' && (
+            <>
+              <span style={{ fontSize: typo.small }} className="text-red-400 font-semibold">+{Math.abs(sourceCharges[0]?.q || 5)}μC</span>
+              <span style={{ fontSize: typo.label }} className="text-slate-400">Dipole Field</span>
+              <span style={{ fontSize: typo.small }} className="text-blue-400 font-semibold">-{Math.abs(sourceCharges[1]?.q || 5)}μC</span>
+            </>
+          )}
+        </div>
+
+        {/* Charge indicator labels */}
+        <div className="flex justify-center gap-4 mt-2">
+          {sourceCharges.map(charge => (
+            <span key={charge.id} style={{ fontSize: typo.label }} className={`${charge.q > 0 ? 'text-red-400' : 'text-blue-400'}`}>
+              {charge.q > 0 ? '+' : ''}{charge.q}μC
+            </span>
+          ))}
+          <span style={{ fontSize: typo.label }} className="text-emerald-400">Test: +q</span>
+        </div>
 
         {/* Controls */}
         <div className="mt-4 flex flex-wrap gap-2 justify-center">
@@ -1056,31 +1423,31 @@ const ElectricPotentialRenderer: React.FC<Props> = ({
       {/* Data display */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 max-w-2xl mb-4">
         <div className="bg-slate-800/70 rounded-xl p-3 text-center">
-          <div className="text-xl font-bold text-amber-400">{formatVoltage(currentPotential)}</div>
-          <div className="text-xs text-slate-400">Potential at test charge</div>
+          <div style={{ fontSize: typo.heading }} className="font-bold text-amber-400">{formatVoltage(currentPotential)}</div>
+          <div style={{ fontSize: typo.label }} className="text-slate-400">Potential at test charge</div>
         </div>
         <div className="bg-slate-800/70 rounded-xl p-3 text-center">
-          <div className="text-xl font-bold text-cyan-400">{(currentField.E / 1000).toFixed(0)} kV/m</div>
-          <div className="text-xs text-slate-400">Field strength</div>
+          <div style={{ fontSize: typo.heading }} className="font-bold text-cyan-400">{(currentField.E / 1000).toFixed(0)} kV/m</div>
+          <div style={{ fontSize: typo.label }} className="text-slate-400">Field strength</div>
         </div>
         <div className="bg-slate-800/70 rounded-xl p-3 text-center">
-          <div className="text-xl font-bold text-emerald-400">{testChargePos.x.toFixed(0)}, {testChargePos.y.toFixed(0)}</div>
-          <div className="text-xs text-slate-400">Position (px)</div>
+          <div style={{ fontSize: typo.heading }} className="font-bold text-emerald-400">{testChargePos.x.toFixed(0)}, {testChargePos.y.toFixed(0)}</div>
+          <div style={{ fontSize: typo.label }} className="text-slate-400">Position (px)</div>
         </div>
         <div className="bg-slate-800/70 rounded-xl p-3 text-center">
-          <div className="text-xl font-bold text-purple-400">+1 μC</div>
-          <div className="text-xs text-slate-400">Test charge</div>
+          <div style={{ fontSize: typo.heading }} className="font-bold text-purple-400">+1 μC</div>
+          <div style={{ fontSize: typo.label }} className="text-slate-400">Test charge</div>
         </div>
       </div>
 
       {/* Key insight */}
       <div className="bg-gradient-to-r from-amber-900/40 to-orange-900/40 rounded-xl p-4 max-w-2xl">
-        <h3 className="text-lg font-bold text-amber-400 mb-2">Key Insight</h3>
-        <p className="text-slate-300 text-sm">
+        <h3 style={{ fontSize: typo.bodyLarge }} className="font-bold text-amber-400 mb-2">Key Insight</h3>
+        <p style={{ fontSize: typo.body }} className="text-slate-300">
           <strong>Equipotential surfaces</strong> are always perpendicular to electric field lines.
           Moving along an equipotential requires <strong>no work</strong> because Delta V = 0!
         </p>
-        <p className="text-cyan-400 text-sm mt-2">
+        <p style={{ fontSize: typo.body }} className="text-cyan-400 mt-2">
           V = kq/r for a point charge. Potential decreases as 1/r (slower than field's 1/r squared).
         </p>
       </div>

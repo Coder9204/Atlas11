@@ -575,143 +575,402 @@ const ConvectionRenderer: React.FC<ConvectionRendererProps> = ({
   // RENDER HELPER FUNCTIONS
   // ============================================================================
 
-  // Render convection tank visualization
+  // Render convection tank visualization - Premium quality
   const renderConvectionTank = (): React.ReactNode => {
     return (
-      <svg viewBox="0 0 300 280" className="w-full h-56">
-        <defs>
-          <linearGradient id="tempGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#3b82f6" />
-          </linearGradient>
-          <marker id="arrowDown" markerWidth="8" markerHeight="6" refX="4" refY="3" orient="auto">
-            <path d="M0,0 L8,3 L0,6 z" fill="#3b82f6" />
-          </marker>
-          <marker id="arrowUp" markerWidth="8" markerHeight="6" refX="4" refY="3" orient="auto">
-            <path d="M8,0 L0,3 L8,6 z" fill="#ef4444" />
-          </marker>
-          <marker id="arrowRight" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L8,3 L0,6 z" fill="#ef4444" />
-          </marker>
-          <marker id="arrowLeft" markerWidth="8" markerHeight="6" refX="0" refY="3" orient="auto">
-            <path d="M8,0 L0,3 L8,6 z" fill="#3b82f6" />
-          </marker>
-        </defs>
+      <div className="relative">
+        <svg viewBox="0 0 300 260" className="w-full h-56">
+          <defs>
+            {/* Premium temperature gradient */}
+            <linearGradient id="convTempGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="30%" stopColor="#f97316" />
+              <stop offset="70%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect x="0" y="0" width="300" height="280" fill="#1e293b" rx="12" />
+            {/* Fluid gradient based on temperature zones */}
+            <linearGradient id="convFluidGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="25%" stopColor="#f97316" stopOpacity="0.25" />
+              <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.15" />
+              <stop offset="75%" stopColor="#3b82f6" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0.35" />
+            </linearGradient>
 
-        {/* Tank walls */}
-        <rect x="30" y="30" width="240" height="200" fill="#0f172a" stroke="#64748b" strokeWidth="3" rx="5" />
+            {/* Heat source glow gradient */}
+            <linearGradient id="convHeatGlow" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#ff6b35" stopOpacity={0.3 + heatIntensity * 0.007} />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </linearGradient>
 
-        {/* Heat source at bottom */}
-        <rect
-          x="35"
-          y="225"
-          width="230"
-          height="15"
-          fill={`rgb(${Math.floor(heatIntensity * 2.5)}, ${Math.floor(heatIntensity * 0.5)}, 0)`}
-          rx="3"
-        />
+            {/* Tank metallic gradient */}
+            <linearGradient id="convTankEdge" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="15%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="85%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
 
-        {/* Heat waves */}
-        {isHeating && [0, 1, 2, 3, 4].map(i => (
-          <path
-            key={i}
-            d={`M${60 + i * 45},225 Q${65 + i * 45},${210 - heatIntensity * 0.3} ${70 + i * 45},225`}
-            fill="none"
-            stroke="#ef4444"
-            strokeWidth="2"
-            opacity={0.5 + (heatIntensity / 200)}
-          >
-            <animate
-              attributeName="d"
-              values={`M${60 + i * 45},225 Q${65 + i * 45},${210 - heatIntensity * 0.3} ${70 + i * 45},225;M${60 + i * 45},225 Q${65 + i * 45},${200 - heatIntensity * 0.3} ${70 + i * 45},225;M${60 + i * 45},225 Q${65 + i * 45},${210 - heatIntensity * 0.3} ${70 + i * 45},225`}
-              dur="1s"
-              repeatCount="indefinite"
-            />
-          </path>
-        ))}
+            {/* Heat source gradient */}
+            <linearGradient id="convHeatSource" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={`rgb(${Math.floor(180 + heatIntensity * 0.75)}, ${Math.floor(80 + heatIntensity * 0.4)}, 30)`} />
+              <stop offset="50%" stopColor={`rgb(${Math.floor(220 + heatIntensity * 0.35)}, ${Math.floor(50 + heatIntensity * 0.3)}, 10)`} />
+              <stop offset="100%" stopColor="#7c2d12" />
+            </linearGradient>
 
-        {/* Flow arrows showing convection pattern */}
-        {showFlowLines && (
-          <g opacity="0.5">
-            <path d="M50,80 L50,180" stroke="#3b82f6" strokeWidth="2" markerEnd="url(#arrowDown)" />
-            <path d="M70,80 L70,180" stroke="#3b82f6" strokeWidth="2" strokeDasharray="4 2" />
-            <path d="M80,210 L220,210" stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrowRight)" />
-            <path d="M250,180 L250,80" stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrowUp)" />
-            <path d="M230,180 L230,80" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4 2" />
-            <path d="M220,50 L80,50" stroke="#3b82f6" strokeWidth="2" markerEnd="url(#arrowLeft)" />
-          </g>
-        )}
+            {/* Glow filters */}
+            <filter id="convHeatGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation={3 + heatIntensity * 0.04} result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
 
-        {/* Particles */}
-        {particles.map(p => (
-          <circle
-            key={p.id}
-            cx={p.x}
-            cy={p.y}
-            r="6"
-            fill={getParticleColor(p.temp)}
-            opacity="0.85"
-          >
-            {isHeating && (
+            <filter id="convParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            <filter id="convFlowGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Flow arrow markers with glow */}
+            <marker id="convArrowDown" markerWidth="10" markerHeight="8" refX="5" refY="4" orient="auto">
+              <path d="M0,0 L10,4 L0,8 L2,4 z" fill="#60a5fa" />
+            </marker>
+            <marker id="convArrowUp" markerWidth="10" markerHeight="8" refX="5" refY="4" orient="auto">
+              <path d="M10,0 L0,4 L10,8 L8,4 z" fill="#f97316" />
+            </marker>
+            <marker id="convArrowRight" markerWidth="10" markerHeight="8" refX="10" refY="4" orient="auto">
+              <path d="M0,0 L10,4 L0,8 L2,4 z" fill="#ef4444" />
+            </marker>
+            <marker id="convArrowLeft" markerWidth="10" markerHeight="8" refX="0" refY="4" orient="auto">
+              <path d="M10,0 L0,4 L10,8 L8,4 z" fill="#3b82f6" />
+            </marker>
+          </defs>
+
+          {/* Background with subtle gradient */}
+          <rect x="0" y="0" width="300" height="260" fill="#0f172a" rx="16" />
+          <rect x="0" y="0" width="300" height="260" fill="url(#convHeatGlow)" rx="16" opacity={isHeating ? 1 : 0.3} />
+
+          {/* Tank outer frame with metallic look */}
+          <rect x="28" y="28" width="244" height="184" fill="none" stroke="url(#convTankEdge)" strokeWidth="4" rx="8" />
+
+          {/* Tank interior */}
+          <rect x="32" y="32" width="236" height="176" fill="#020617" rx="6" />
+
+          {/* Fluid with temperature gradient */}
+          <rect x="35" y="35" width="230" height="170" fill="url(#convFluidGradient)" rx="4" />
+
+          {/* Heat glow from bottom */}
+          {isHeating && (
+            <ellipse
+              cx="150"
+              cy="210"
+              rx={100 + heatIntensity * 0.5}
+              ry={40 + heatIntensity * 0.3}
+              fill={`rgba(239, 68, 68, ${0.1 + heatIntensity * 0.003})`}
+              filter="url(#convHeatGlowFilter)"
+            >
               <animate
-                attributeName="r"
-                values="5;7;5"
-                dur={`${1 + p.temp}s`}
+                attributeName="ry"
+                values={`${35 + heatIntensity * 0.3};${45 + heatIntensity * 0.3};${35 + heatIntensity * 0.3}`}
+                dur="2s"
                 repeatCount="indefinite"
               />
-            )}
-          </circle>
-        ))}
+            </ellipse>
+          )}
 
-        {/* Fan indicator for forced convection */}
-        {fanSpeed > 0 && (
-          <g transform="translate(10, 130)">
-            <rect x="0" y="-20" width="20" height="40" fill="#475569" rx="3" />
-            <circle cx="10" cy="0" r="8" fill="#22c55e" />
-            <g>
-              <line x1="10" y1="-6" x2="10" y2="6" stroke="white" strokeWidth="2">
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  from="0 10 0"
-                  to="360 10 0"
-                  dur={`${1 / (fanSpeed / 50)}s`}
+          {/* Heat source with premium gradient */}
+          <rect
+            x="35"
+            y="210"
+            width="230"
+            height="18"
+            fill="url(#convHeatSource)"
+            rx="4"
+            filter={isHeating ? "url(#convHeatGlowFilter)" : undefined}
+          />
+
+          {/* Heat source glowing coils */}
+          {isHeating && [0, 1, 2, 3].map(i => (
+            <g key={`coil-${i}`}>
+              <line
+                x1={55 + i * 55}
+                y1="213"
+                x2={85 + i * 55}
+                y2="213"
+                stroke={`rgba(255, ${180 + heatIntensity * 0.7}, 100, ${0.6 + heatIntensity * 0.004})`}
+                strokeWidth="3"
+                strokeLinecap="round"
+              >
+                <animate
+                  attributeName="stroke"
+                  values={`rgba(255, ${180 + heatIntensity * 0.7}, 100, ${0.6 + heatIntensity * 0.004});rgba(255, ${220 + heatIntensity * 0.3}, 150, ${0.8 + heatIntensity * 0.002});rgba(255, ${180 + heatIntensity * 0.7}, 100, ${0.6 + heatIntensity * 0.004})`}
+                  dur="0.8s"
                   repeatCount="indefinite"
                 />
               </line>
-              <line x1="4" y1="0" x2="16" y2="0" stroke="white" strokeWidth="2">
-                <animateTransform
-                  attributeName="transform"
-                  type="rotate"
-                  from="0 10 0"
-                  to="360 10 0"
-                  dur={`${1 / (fanSpeed / 50)}s`}
-                  repeatCount="indefinite"
-                />
-              </line>
+              <line
+                x1={55 + i * 55}
+                y1="221"
+                x2={85 + i * 55}
+                y2="221"
+                stroke={`rgba(255, ${150 + heatIntensity * 0.5}, 80, ${0.5 + heatIntensity * 0.003})`}
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
             </g>
-            <text x="10" y="35" textAnchor="middle" fill="#94a3b8" fontSize="8">FAN</text>
+          ))}
+
+          {/* Rising heat waves with animation */}
+          {isHeating && [0, 1, 2, 3, 4, 5].map(i => (
+            <path
+              key={`wave-${i}`}
+              d={`M${50 + i * 40},205 Q${55 + i * 40},${185 - heatIntensity * 0.2} ${60 + i * 40},205`}
+              fill="none"
+              stroke={`rgba(249, 115, 22, ${0.3 + heatIntensity * 0.004})`}
+              strokeWidth="2"
+              strokeLinecap="round"
+            >
+              <animate
+                attributeName="d"
+                values={`M${50 + i * 40},205 Q${55 + i * 40},${190 - heatIntensity * 0.2} ${60 + i * 40},205;M${50 + i * 40},205 Q${55 + i * 40},${175 - heatIntensity * 0.3} ${60 + i * 40},205;M${50 + i * 40},205 Q${55 + i * 40},${190 - heatIntensity * 0.2} ${60 + i * 40},205`}
+                dur={`${0.8 + i * 0.1}s`}
+                repeatCount="indefinite"
+              />
+              <animate
+                attributeName="opacity"
+                values="0.4;0.7;0.4"
+                dur={`${0.8 + i * 0.1}s`}
+                repeatCount="indefinite"
+              />
+            </path>
+          ))}
+
+          {/* Convection current flow arrows - premium animated */}
+          {showFlowLines && (
+            <g filter="url(#convFlowGlow)">
+              {/* Left side - cold sinking */}
+              <path
+                d="M55,60 C55,80 55,160 55,180"
+                stroke="url(#convTempGradient)"
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+                markerEnd="url(#convArrowDown)"
+                opacity="0.7"
+              >
+                <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite" />
+              </path>
+
+              {/* Bottom - heating and moving right */}
+              <path
+                d="M70,195 C120,195 180,195 230,195"
+                stroke="#ef4444"
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+                markerEnd="url(#convArrowRight)"
+                opacity="0.7"
+              >
+                <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite" />
+              </path>
+
+              {/* Right side - hot rising */}
+              <path
+                d="M245,180 C245,160 245,80 245,60"
+                stroke="#f97316"
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+                markerEnd="url(#convArrowUp)"
+                opacity="0.7"
+              >
+                <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite" />
+              </path>
+
+              {/* Top - cooling and moving left */}
+              <path
+                d="M230,45 C180,45 120,45 70,45"
+                stroke="#3b82f6"
+                strokeWidth="3"
+                fill="none"
+                strokeLinecap="round"
+                markerEnd="url(#convArrowLeft)"
+                opacity="0.7"
+              >
+                <animate attributeName="stroke-dasharray" values="0,200;200,0" dur="2s" repeatCount="indefinite" />
+              </path>
+
+              {/* Central circulation indicator */}
+              <ellipse
+                cx="150"
+                cy="120"
+                rx="60"
+                ry="50"
+                fill="none"
+                stroke="#a78bfa"
+                strokeWidth="1.5"
+                strokeDasharray="8 4"
+                opacity="0.4"
+              >
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="0 150 120"
+                  to="-360 150 120"
+                  dur="8s"
+                  repeatCount="indefinite"
+                />
+              </ellipse>
+            </g>
+          )}
+
+          {/* Particles with glow effect */}
+          {particles.map(p => (
+            <g key={p.id} filter="url(#convParticleGlow)">
+              {/* Particle glow halo */}
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r={8 + p.temp * 3}
+                fill={getParticleColor(p.temp)}
+                opacity={0.15 + p.temp * 0.1}
+              />
+              {/* Main particle */}
+              <circle
+                cx={p.x}
+                cy={p.y}
+                r="5"
+                fill={getParticleColor(p.temp)}
+                stroke={p.temp > 0.6 ? 'rgba(255,255,255,0.3)' : 'rgba(100,150,255,0.3)'}
+                strokeWidth="1"
+              >
+                {isHeating && (
+                  <animate
+                    attributeName="r"
+                    values={`${4 + p.temp};${6 + p.temp * 2};${4 + p.temp}`}
+                    dur={`${1.5 - p.temp * 0.5}s`}
+                    repeatCount="indefinite"
+                  />
+                )}
+              </circle>
+              {/* Hot particle inner glow */}
+              {p.temp > 0.7 && (
+                <circle
+                  cx={p.x}
+                  cy={p.y}
+                  r="2"
+                  fill="rgba(255,255,200,0.6)"
+                >
+                  <animate
+                    attributeName="opacity"
+                    values="0.4;0.8;0.4"
+                    dur="0.5s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+              )}
+            </g>
+          ))}
+
+          {/* Fan indicator for forced convection - premium design */}
+          {fanSpeed > 0 && (
+            <g transform="translate(8, 100)">
+              {/* Fan housing */}
+              <rect x="0" y="0" width="22" height="50" fill="#334155" rx="4" stroke="#475569" strokeWidth="1" />
+              <rect x="2" y="2" width="18" height="46" fill="#1e293b" rx="3" />
+
+              {/* Fan motor housing */}
+              <circle cx="11" cy="25" r="12" fill="#475569" stroke="#64748b" strokeWidth="1" />
+              <circle cx="11" cy="25" r="9" fill="#22c55e" opacity={0.3 + fanSpeed * 0.007}>
+                <animate
+                  attributeName="opacity"
+                  values={`${0.3 + fanSpeed * 0.005};${0.5 + fanSpeed * 0.005};${0.3 + fanSpeed * 0.005}`}
+                  dur="0.5s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+
+              {/* Fan blades */}
+              <g>
+                {[0, 90, 180, 270].map(angle => (
+                  <line
+                    key={angle}
+                    x1="11"
+                    y1="18"
+                    x2="11"
+                    y2="32"
+                    stroke="#22c55e"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    transform={`rotate(${angle} 11 25)`}
+                  >
+                    <animateTransform
+                      attributeName="transform"
+                      type="rotate"
+                      from={`${angle} 11 25`}
+                      to={`${angle + 360} 11 25`}
+                      dur={`${Math.max(0.1, 1 - fanSpeed * 0.009)}s`}
+                      repeatCount="indefinite"
+                    />
+                  </line>
+                ))}
+              </g>
+
+              {/* Air flow indicators */}
+              {[0, 1, 2].map(i => (
+                <path
+                  key={`airflow-${i}`}
+                  d={`M22,${18 + i * 7} L${35 + fanSpeed * 0.1},${18 + i * 7}`}
+                  stroke="#60a5fa"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  opacity={0.4 + fanSpeed * 0.005}
+                >
+                  <animate
+                    attributeName="d"
+                    values={`M22,${18 + i * 7} L${30},${18 + i * 7};M22,${18 + i * 7} L${40 + fanSpeed * 0.15},${18 + i * 7};M22,${18 + i * 7} L${30},${18 + i * 7}`}
+                    dur={`${0.3 + i * 0.1}s`}
+                    repeatCount="indefinite"
+                  />
+                </path>
+              ))}
+            </g>
+          )}
+
+          {/* Temperature legend bar */}
+          <g transform="translate(272, 45)">
+            <rect x="0" y="0" width="10" height="60" fill="url(#convTempGradient)" rx="3" stroke="#475569" strokeWidth="1" />
+            <rect x="0" y="0" width="10" height="60" fill="none" rx="3" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
           </g>
+        </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div className="flex justify-between items-center mt-2 px-2">
+          <div className="flex items-center gap-2">
+            <div className="w-3 h-3 rounded-full bg-gradient-to-b from-red-500 to-orange-500" />
+            <span style={{ fontSize: typo.small }} className="text-red-400 font-medium">Hot</span>
+          </div>
+          <span style={{ fontSize: typo.small }} className="text-orange-400 font-semibold">
+            Heat Source: {heatIntensity}%
+          </span>
+          <div className="flex items-center gap-2">
+            <span style={{ fontSize: typo.small }} className="text-blue-400 font-medium">Cold</span>
+            <div className="w-3 h-3 rounded-full bg-gradient-to-b from-blue-500 to-blue-700" />
+          </div>
+        </div>
+        {fanSpeed > 0 && (
+          <div className="text-center mt-1">
+            <span style={{ fontSize: typo.label }} className="text-green-400 font-medium">
+              Fan: {fanSpeed}% (Forced Convection)
+            </span>
+          </div>
         )}
-
-        {/* Labels */}
-        <text x="150" y="250" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="bold">
-          HEAT SOURCE ({heatIntensity}%)
-        </text>
-        <text x="150" y="22" textAnchor="middle" fill="#3b82f6" fontSize="10" fontWeight="bold">
-          COOLING ZONE
-        </text>
-
-        {/* Legend */}
-        <g transform="translate(268, 50)">
-          <rect x="0" y="0" width="8" height="40" fill="url(#tempGradient)" rx="2" />
-          <text x="12" y="8" fill="#ef4444" fontSize="8">Hot</text>
-          <text x="12" y="45" fill="#3b82f6" fontSize="8">Cold</text>
-        </g>
-      </svg>
+      </div>
     );
   };
 

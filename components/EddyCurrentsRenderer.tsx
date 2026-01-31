@@ -715,7 +715,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.sm,
           }}>
-            🧲 Magnetic Braking Simulator
+            Magnetic Braking Simulator
           </h2>
           <p style={{ color: premiumDesign.colors.text.secondary }}>
             Drop the magnet through different materials and observe the braking effect
@@ -737,85 +737,311 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
             <svg viewBox="0 0 280 300" style={{ width: '100%', maxHeight: 350 }}>
-              {/* Tube */}
-              <rect x="100" y="40" width="80" height="220" rx="5"
-                fill={conductorType === 'air' ? 'transparent' : conductorType === 'copper' ? 'rgba(184, 115, 51, 0.3)' : 'rgba(192, 192, 192, 0.3)'}
-                stroke={conductorType === 'air' ? '#666' : conductorType === 'copper' ? '#B87333' : '#C0C0C0'}
-                strokeWidth="3"
-                strokeDasharray={conductorType === 'air' ? '10,5' : 'none'}
-              />
+              <defs>
+                {/* Premium lab background gradient */}
+                <linearGradient id="eddyLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#030712" />
+                  <stop offset="30%" stopColor="#0a0f1a" />
+                  <stop offset="70%" stopColor="#0f172a" />
+                  <stop offset="100%" stopColor="#030712" />
+                </linearGradient>
 
-              {/* Tube label */}
-              <text x="140" y="275" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
-                {conductorType.charAt(0).toUpperCase() + conductorType.slice(1)} {conductorType !== 'air' ? 'Tube' : '(No tube)'}
-              </text>
+                {/* Copper tube metallic gradient */}
+                <linearGradient id="eddyCopperTube" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#92400e" />
+                  <stop offset="20%" stopColor="#b45309" />
+                  <stop offset="40%" stopColor="#d97706" />
+                  <stop offset="60%" stopColor="#b45309" />
+                  <stop offset="80%" stopColor="#92400e" />
+                  <stop offset="100%" stopColor="#78350f" />
+                </linearGradient>
 
-              {/* Eddy current visualization */}
+                {/* Aluminum tube metallic gradient */}
+                <linearGradient id="eddyAluminumTube" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#64748b" />
+                  <stop offset="20%" stopColor="#94a3b8" />
+                  <stop offset="40%" stopColor="#cbd5e1" />
+                  <stop offset="60%" stopColor="#94a3b8" />
+                  <stop offset="80%" stopColor="#64748b" />
+                  <stop offset="100%" stopColor="#475569" />
+                </linearGradient>
+
+                {/* North pole magnet gradient */}
+                <linearGradient id="eddyNorthPole" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#f87171" />
+                  <stop offset="30%" stopColor="#ef4444" />
+                  <stop offset="70%" stopColor="#dc2626" />
+                  <stop offset="100%" stopColor="#b91c1c" />
+                </linearGradient>
+
+                {/* South pole magnet gradient */}
+                <linearGradient id="eddySouthPole" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="30%" stopColor="#3b82f6" />
+                  <stop offset="70%" stopColor="#2563eb" />
+                  <stop offset="100%" stopColor="#1d4ed8" />
+                </linearGradient>
+
+                {/* Eddy current swirl gradient */}
+                <linearGradient id="eddyCurrentGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#06b6d4" stopOpacity="0" />
+                  <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.8" />
+                  <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
+                  <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+                </linearGradient>
+
+                {/* Magnetic field glow gradient */}
+                <radialGradient id="eddyMagnetGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#a855f7" stopOpacity="0.6" />
+                  <stop offset="40%" stopColor="#7c3aed" stopOpacity="0.3" />
+                  <stop offset="70%" stopColor="#6d28d9" stopOpacity="0.1" />
+                  <stop offset="100%" stopColor="#5b21b6" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Braking force indicator gradient */}
+                <linearGradient id="eddyBrakeForce" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.1" />
+                  <stop offset="50%" stopColor="#34d399" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#6ee7b7" stopOpacity="0.9" />
+                </linearGradient>
+
+                {/* Magnet glow filter */}
+                <filter id="eddyMagnetBlur" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Eddy current glow filter */}
+                <filter id="eddyCurrentGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Tube inner shadow */}
+                <filter id="eddyTubeInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+
+                {/* Field line glow */}
+                <filter id="eddyFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Premium dark lab background */}
+              <rect width="280" height="300" fill="url(#eddyLabBg)" />
+
+              {/* Tube with premium gradients */}
+              {conductorType !== 'air' && (
+                <>
+                  {/* Tube outer glow */}
+                  <rect x="98" y="38" width="84" height="224" rx="6"
+                    fill={conductorType === 'copper' ? 'rgba(217, 119, 6, 0.2)' : 'rgba(148, 163, 184, 0.2)'}
+                    filter="url(#eddyTubeInnerShadow)"
+                  />
+                  {/* Main tube body */}
+                  <rect x="100" y="40" width="80" height="220" rx="5"
+                    fill={conductorType === 'copper' ? 'url(#eddyCopperTube)' : 'url(#eddyAluminumTube)'}
+                    stroke={conductorType === 'copper' ? '#b45309' : '#94a3b8'}
+                    strokeWidth="2"
+                    filter="url(#eddyTubeInnerShadow)"
+                  />
+                  {/* Tube inner hollow */}
+                  <rect x="110" y="40" width="60" height="220" rx="3"
+                    fill="rgba(0,0,0,0.6)"
+                  />
+                  {/* Tube highlight */}
+                  <rect x="102" y="45" width="8" height="210" rx="2"
+                    fill="rgba(255,255,255,0.15)"
+                  />
+                </>
+              )}
+              {conductorType === 'air' && (
+                <rect x="100" y="40" width="80" height="220" rx="5"
+                  fill="transparent"
+                  stroke="#475569"
+                  strokeWidth="2"
+                  strokeDasharray="10,5"
+                  opacity="0.5"
+                />
+              )}
+
+              {/* Swirling eddy current visualization */}
               {conductorType !== 'air' && eddyStrength > 0 && (
-                <g>
-                  {[0, 1, 2].map(i => (
-                    <ellipse
-                      key={i}
-                      cx="140"
-                      cy={magnetY + 10}
-                      rx={30 + i * 8}
-                      ry={5 + i * 2}
-                      fill="none"
-                      stroke={premiumDesign.colors.eddy}
-                      strokeWidth="2"
-                      opacity={Math.max(0, 0.7 - i * 0.2) * Math.min(1, eddyStrength / 5)}
-                    >
-                      <animate
-                        attributeName="stroke-dasharray"
-                        values="0,200;100,100;200,0"
-                        dur="0.5s"
-                        repeatCount="indefinite"
-                      />
-                    </ellipse>
+                <g filter="url(#eddyCurrentGlow)">
+                  {[0, 1, 2, 3].map(i => {
+                    const baseOpacity = Math.max(0, 0.8 - i * 0.2) * Math.min(1, eddyStrength / 5);
+                    return (
+                      <ellipse
+                        key={i}
+                        cx="140"
+                        cy={magnetY + 12}
+                        rx={25 + i * 10}
+                        ry={4 + i * 2}
+                        fill="none"
+                        stroke="url(#eddyCurrentGrad)"
+                        strokeWidth={3 - i * 0.5}
+                        opacity={baseOpacity}
+                      >
+                        <animate
+                          attributeName="stroke-dasharray"
+                          values="0,300;150,150;300,0"
+                          dur={`${0.4 + i * 0.1}s`}
+                          repeatCount="indefinite"
+                        />
+                        <animate
+                          attributeName="ry"
+                          values={`${4 + i * 2};${6 + i * 2};${4 + i * 2}`}
+                          dur="0.8s"
+                          repeatCount="indefinite"
+                        />
+                      </ellipse>
+                    );
+                  })}
+                  {/* Eddy current directional arrows */}
+                  {[0, 1].map(i => (
+                    <g key={`arrow-${i}`} opacity={Math.min(1, eddyStrength / 4)}>
+                      <path
+                        d={`M ${115 - i * 5} ${magnetY + 12} L ${108 - i * 5} ${magnetY + 8} L ${108 - i * 5} ${magnetY + 16} Z`}
+                        fill="#22d3ee"
+                      >
+                        <animate
+                          attributeName="opacity"
+                          values="0.8;0.3;0.8"
+                          dur="0.5s"
+                          repeatCount="indefinite"
+                        />
+                      </path>
+                      <path
+                        d={`M ${165 + i * 5} ${magnetY + 12} L ${172 + i * 5} ${magnetY + 16} L ${172 + i * 5} ${magnetY + 8} Z`}
+                        fill="#22d3ee"
+                      >
+                        <animate
+                          attributeName="opacity"
+                          values="0.3;0.8;0.3"
+                          dur="0.5s"
+                          repeatCount="indefinite"
+                        />
+                      </path>
+                    </g>
                   ))}
                 </g>
               )}
 
-              {/* Magnet */}
-              <g transform={`translate(140, ${magnetY})`}>
-                {/* North pole */}
-                <rect x="-15" y="-15" width="30" height="15" fill="#EF4444" stroke="#B91C1C" strokeWidth="1" rx="3" />
+              {/* Magnet with premium gradients and glow */}
+              <g transform={`translate(140, ${magnetY})`} filter="url(#eddyMagnetBlur)">
+                {/* Magnetic field aura */}
+                <ellipse cx="0" cy="0" rx="35" ry="25" fill="url(#eddyMagnetGlow)" />
+
+                {/* North pole with gradient */}
+                <rect x="-15" y="-15" width="30" height="15" fill="url(#eddyNorthPole)" stroke="#991b1b" strokeWidth="1" rx="3" />
                 <text x="0" y="-4" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">N</text>
-                {/* South pole */}
-                <rect x="-15" y="0" width="30" height="15" fill="#3B82F6" stroke="#1D4ED8" strokeWidth="1" rx="3" />
+
+                {/* South pole with gradient */}
+                <rect x="-15" y="0" width="30" height="15" fill="url(#eddySouthPole)" stroke="#1e40af" strokeWidth="1" rx="3" />
                 <text x="0" y="11" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">S</text>
 
-                {/* Magnetic field lines */}
-                <path
-                  d="M -20 -15 Q -35 0 -20 15"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.3)"
-                  strokeWidth="1"
-                />
-                <path
-                  d="M 20 -15 Q 35 0 20 15"
-                  fill="none"
-                  stroke="rgba(255,255,255,0.3)"
-                  strokeWidth="1"
-                />
+                {/* Premium magnetic field lines with glow */}
+                <g filter="url(#eddyFieldGlow)" opacity="0.7">
+                  <path d="M -18 -15 Q -40 0 -18 15" fill="none" stroke="#c4b5fd" strokeWidth="1.5" />
+                  <path d="M -22 -12 Q -48 0 -22 12" fill="none" stroke="#a78bfa" strokeWidth="1" opacity="0.6" />
+                  <path d="M 18 -15 Q 40 0 18 15" fill="none" stroke="#c4b5fd" strokeWidth="1.5" />
+                  <path d="M 22 -12 Q 48 0 22 12" fill="none" stroke="#a78bfa" strokeWidth="1" opacity="0.6" />
+                  {/* Top field lines */}
+                  <path d="M -10 -17 Q -10 -30 0 -30 Q 10 -30 10 -17" fill="none" stroke="#ddd6fe" strokeWidth="1" opacity="0.5" />
+                  {/* Bottom field lines */}
+                  <path d="M -10 17 Q -10 30 0 30 Q 10 30 10 17" fill="none" stroke="#ddd6fe" strokeWidth="1" opacity="0.5" />
+                </g>
               </g>
 
-              {/* Velocity indicator */}
-              <g transform="translate(220, 150)">
-                <text x="0" y="0" fill="white" fontSize="11">Speed:</text>
-                <text x="0" y="16" fill={premiumDesign.colors.magnet} fontSize="14" fontWeight="bold">
-                  {magnetVelocity.toFixed(1)} m/s
-                </text>
-                <text x="0" y="40" fill="white" fontSize="11">Eddy Force:</text>
-                <text x="0" y="56" fill={premiumDesign.colors.eddy} fontSize="14" fontWeight="bold">
-                  {(eddyStrength * conductivity[conductorType]).toFixed(1)} N
-                </text>
-              </g>
+              {/* Braking effect visualization (upward force arrow) */}
+              {conductorType !== 'air' && eddyStrength > 0.5 && (
+                <g opacity={Math.min(1, eddyStrength / 3)}>
+                  <path
+                    d={`M 140 ${magnetY + 25} L 140 ${magnetY + 45}`}
+                    stroke="url(#eddyBrakeForce)"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                  />
+                  <path
+                    d={`M 134 ${magnetY + 33} L 140 ${magnetY + 25} L 146 ${magnetY + 33}`}
+                    fill="none"
+                    stroke="#6ee7b7"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  >
+                    <animate
+                      attributeName="opacity"
+                      values="1;0.5;1"
+                      dur="0.4s"
+                      repeatCount="indefinite"
+                    />
+                  </path>
+                </g>
+              )}
 
               {/* Start position marker */}
-              <line x1="80" y1="50" x2="95" y2="50" stroke="#666" strokeWidth="1" />
-              <text x="75" y="54" textAnchor="end" fill="#666" fontSize="10">Start</text>
+              <line x1="80" y1="50" x2="95" y2="50" stroke="#64748b" strokeWidth="1.5" />
             </svg>
+
+            {/* Labels outside SVG using typo system */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginTop: typo.elementGap,
+              padding: `0 ${typo.cardPadding}`
+            }}>
+              <span style={{
+                fontSize: typo.small,
+                color: premiumDesign.colors.text.muted
+              }}>
+                Start
+              </span>
+              <span style={{
+                fontSize: typo.body,
+                color: premiumDesign.colors.text.primary,
+                fontWeight: 600
+              }}>
+                {conductorType.charAt(0).toUpperCase() + conductorType.slice(1)} {conductorType !== 'air' ? 'Tube' : '(No tube)'}
+              </span>
+            </div>
+
+            {/* Data display outside SVG */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-around',
+              marginTop: typo.elementGap,
+              padding: typo.cardPadding,
+              background: premiumDesign.colors.background.tertiary,
+              borderRadius: premiumDesign.radius.md,
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: typo.small, color: premiumDesign.colors.text.muted }}>Speed</div>
+                <div style={{ fontSize: typo.bodyLarge, color: premiumDesign.colors.magnet, fontWeight: 700 }}>
+                  {magnetVelocity.toFixed(1)} m/s
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: typo.small, color: premiumDesign.colors.text.muted }}>Eddy Force</div>
+                <div style={{ fontSize: typo.bodyLarge, color: premiumDesign.colors.eddy, fontWeight: 700 }}>
+                  {(eddyStrength * conductivity[conductorType]).toFixed(1)} N
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Controls */}
@@ -1124,7 +1350,7 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.sm,
           }}>
-            🔄 Electromagnetic Damping
+            Electromagnetic Damping
           </h2>
           <p style={{ color: premiumDesign.colors.text.secondary }}>
             Compare pendulum motion with and without magnetic damping
@@ -1146,73 +1372,258 @@ export default function EddyCurrentsRenderer({ onGameEvent, gamePhase, onPhaseCo
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
             <svg viewBox="0 0 280 250" style={{ width: '100%', maxHeight: 280 }}>
-              {/* Support structure */}
-              <rect x="100" y="20" width="80" height="10" fill="#666" rx="2" />
-              <rect x="135" y="30" width="10" height="35" fill="#666" />
+              <defs>
+                {/* Pendulum lab background */}
+                <linearGradient id="eddyPendulumBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#030712" />
+                  <stop offset="30%" stopColor="#0a0f1a" />
+                  <stop offset="70%" stopColor="#0f172a" />
+                  <stop offset="100%" stopColor="#030712" />
+                </linearGradient>
 
-              {/* Magnet (optional) */}
+                {/* Support beam metallic gradient */}
+                <linearGradient id="eddySupportBeam" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#374151" />
+                  <stop offset="25%" stopColor="#4b5563" />
+                  <stop offset="50%" stopColor="#6b7280" />
+                  <stop offset="75%" stopColor="#4b5563" />
+                  <stop offset="100%" stopColor="#374151" />
+                </linearGradient>
+
+                {/* Pendulum rod gradient */}
+                <linearGradient id="eddyPendulumRod" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#6b7280" />
+                  <stop offset="50%" stopColor="#9ca3af" />
+                  <stop offset="100%" stopColor="#6b7280" />
+                </linearGradient>
+
+                {/* Copper bob gradient */}
+                <linearGradient id="eddyCopperBob" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#d97706" />
+                  <stop offset="25%" stopColor="#f59e0b" />
+                  <stop offset="50%" stopColor="#fbbf24" />
+                  <stop offset="75%" stopColor="#f59e0b" />
+                  <stop offset="100%" stopColor="#b45309" />
+                </linearGradient>
+
+                {/* Magnet housing gradient */}
+                <linearGradient id="eddyMagnetHousing" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#374151" />
+                  <stop offset="20%" stopColor="#4b5563" />
+                  <stop offset="50%" stopColor="#6b7280" />
+                  <stop offset="80%" stopColor="#4b5563" />
+                  <stop offset="100%" stopColor="#374151" />
+                </linearGradient>
+
+                {/* North pole gradient for pendulum magnet */}
+                <linearGradient id="eddyPendNorth" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#f87171" />
+                  <stop offset="50%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#dc2626" />
+                </linearGradient>
+
+                {/* South pole gradient for pendulum magnet */}
+                <linearGradient id="eddyPendSouth" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="50%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#2563eb" />
+                </linearGradient>
+
+                {/* Eddy current swirl in bob */}
+                <radialGradient id="eddyBobSwirl" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.9" />
+                  <stop offset="40%" stopColor="#06b6d4" stopOpacity="0.6" />
+                  <stop offset="70%" stopColor="#0891b2" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Magnetic field between poles */}
+                <linearGradient id="eddyFieldBetween" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+                  <stop offset="50%" stopColor="#a855f7" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.3" />
+                </linearGradient>
+
+                {/* Pivot glow */}
+                <radialGradient id="eddyPivotGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#9ca3af" />
+                  <stop offset="60%" stopColor="#6b7280" />
+                  <stop offset="100%" stopColor="#4b5563" />
+                </radialGradient>
+
+                {/* Pendulum eddy glow filter */}
+                <filter id="eddyPendulumGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Bob metallic filter */}
+                <filter id="eddyBobShine" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="1" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+
+                {/* Magnet field glow */}
+                <filter id="eddyMagnetFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Premium dark lab background */}
+              <rect width="280" height="250" fill="url(#eddyPendulumBg)" />
+
+              {/* Support structure with premium metallic look */}
+              <rect x="100" y="20" width="80" height="12" fill="url(#eddySupportBeam)" rx="3" />
+              <rect x="101" y="21" width="78" height="3" fill="rgba(255,255,255,0.1)" rx="1" />
+              <rect x="133" y="32" width="14" height="33" fill="url(#eddySupportBeam)" rx="2" />
+              <rect x="134" y="33" width="4" height="30" fill="rgba(255,255,255,0.08)" rx="1" />
+
+              {/* Magnet assembly (optional) with premium gradients */}
               {dampingEnabled && (
-                <g transform="translate(120, 150)">
-                  <rect x="0" y="0" width="40" height="60" fill="#666" stroke="#888" strokeWidth="2" rx="3" />
-                  <rect x="5" y="5" width="12" height="50" fill="#EF4444" />
-                  <rect x="23" y="5" width="12" height="50" fill="#3B82F6" />
-                  <text x="20" y="75" textAnchor="middle" fill="white" fontSize="9">Magnet</text>
+                <g transform="translate(120, 145)">
+                  {/* Magnetic field visualization between poles */}
+                  <rect x="17" y="5" width="6" height="50" fill="url(#eddyFieldBetween)" filter="url(#eddyMagnetFieldGlow)" opacity="0.6">
+                    <animate
+                      attributeName="opacity"
+                      values="0.4;0.7;0.4"
+                      dur="1.5s"
+                      repeatCount="indefinite"
+                    />
+                  </rect>
+
+                  {/* Magnet housing */}
+                  <rect x="0" y="0" width="40" height="60" fill="url(#eddyMagnetHousing)" stroke="#6b7280" strokeWidth="1.5" rx="4" />
+                  <rect x="1" y="1" width="38" height="8" fill="rgba(255,255,255,0.1)" rx="3" />
+
+                  {/* North pole with gradient */}
+                  <rect x="5" y="5" width="12" height="50" fill="url(#eddyPendNorth)" rx="2" />
+                  <rect x="6" y="6" width="3" height="48" fill="rgba(255,255,255,0.2)" rx="1" />
+
+                  {/* South pole with gradient */}
+                  <rect x="23" y="5" width="12" height="50" fill="url(#eddyPendSouth)" rx="2" />
+                  <rect x="24" y="6" width="3" height="48" fill="rgba(255,255,255,0.2)" rx="1" />
+
+                  {/* Pole labels */}
+                  <text x="11" y="32" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">N</text>
+                  <text x="29" y="32" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">S</text>
                 </g>
               )}
 
-              {/* Pendulum rod */}
+              {/* Pendulum rod with gradient */}
               <line
                 x1={pivotX}
                 y1={pivotY}
                 x2={bobX}
                 y2={bobY}
-                stroke="#888"
-                strokeWidth="3"
+                stroke="url(#eddyPendulumRod)"
+                strokeWidth="4"
+                strokeLinecap="round"
               />
 
-              {/* Pivot */}
-              <circle cx={pivotX} cy={pivotY} r="5" fill="#666" />
+              {/* Pivot point with premium look */}
+              <circle cx={pivotX} cy={pivotY} r="7" fill="url(#eddyPivotGlow)" stroke="#9ca3af" strokeWidth="1" />
+              <circle cx={pivotX - 2} cy={pivotY - 2} r="2" fill="rgba(255,255,255,0.3)" />
 
-              {/* Bob (copper plate) */}
-              <rect
-                x={bobX - 15}
-                y={bobY - 5}
-                width="30"
-                height="35"
-                fill="rgba(184, 115, 51, 0.8)"
-                stroke="#B87333"
-                strokeWidth="2"
-                rx="3"
-                transform={`rotate(${pendulumAngle}, ${bobX}, ${bobY})`}
-              />
+              {/* Copper bob with premium metallic gradient */}
+              <g transform={`rotate(${pendulumAngle}, ${bobX}, ${bobY})`} filter="url(#eddyBobShine)">
+                <rect
+                  x={bobX - 15}
+                  y={bobY - 5}
+                  width="30"
+                  height="35"
+                  fill="url(#eddyCopperBob)"
+                  stroke="#92400e"
+                  strokeWidth="1.5"
+                  rx="4"
+                />
+                {/* Highlight on copper */}
+                <rect
+                  x={bobX - 13}
+                  y={bobY - 3}
+                  width="6"
+                  height="31"
+                  fill="rgba(255,255,255,0.15)"
+                  rx="2"
+                />
+              </g>
 
-              {/* Eddy current visualization when passing through magnet */}
+              {/* Premium eddy current visualization when passing through magnet */}
               {dampingEnabled && Math.abs(pendulumAngle) < 30 && Math.abs(pendulumVelocity) > 0.5 && (
-                <g>
-                  {[0, 1].map(i => (
-                    <ellipse
-                      key={i}
-                      cx={bobX}
-                      cy={bobY + 10}
-                      rx={10 + i * 5}
-                      ry={3 + i}
-                      fill="none"
-                      stroke={premiumDesign.colors.eddy}
-                      strokeWidth="2"
-                      opacity={0.7 - i * 0.3}
+                <g filter="url(#eddyPendulumGlow)">
+                  {/* Glowing eddy swirls in the bob */}
+                  {[0, 1, 2].map(i => {
+                    const intensity = Math.min(1, Math.abs(pendulumVelocity) / 3);
+                    return (
+                      <ellipse
+                        key={i}
+                        cx={bobX}
+                        cy={bobY + 12}
+                        rx={8 + i * 6}
+                        ry={3 + i * 1.5}
+                        fill="none"
+                        stroke="#22d3ee"
+                        strokeWidth={2.5 - i * 0.5}
+                        opacity={(0.9 - i * 0.25) * intensity}
+                      >
+                        <animate
+                          attributeName="stroke-dasharray"
+                          values="0,100;50,50;100,0"
+                          dur={`${0.3 + i * 0.1}s`}
+                          repeatCount="indefinite"
+                        />
+                      </ellipse>
+                    );
+                  })}
+
+                  {/* Central glow spot */}
+                  <circle
+                    cx={bobX}
+                    cy={bobY + 12}
+                    r="5"
+                    fill="url(#eddyBobSwirl)"
+                    opacity={Math.min(1, Math.abs(pendulumVelocity) / 2)}
+                  >
+                    <animate
+                      attributeName="r"
+                      values="4;6;4"
+                      dur="0.4s"
+                      repeatCount="indefinite"
                     />
-                  ))}
+                  </circle>
                 </g>
               )}
-
-              {/* Info display */}
-              <text x="20" y="230" fill="white" fontSize="12">
-                Swings: {swingCount}
-              </text>
-              <text x="200" y="230" fill="white" fontSize="12">
-                Angle: {pendulumAngle.toFixed(1)}°
-              </text>
             </svg>
+
+            {/* Labels outside SVG using typo system */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-around',
+              marginTop: typo.elementGap,
+              padding: typo.cardPadding,
+              background: premiumDesign.colors.background.tertiary,
+              borderRadius: premiumDesign.radius.md,
+            }}>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: typo.small, color: premiumDesign.colors.text.muted }}>Swings</div>
+                <div style={{ fontSize: typo.heading, color: premiumDesign.colors.secondary, fontWeight: 700 }}>
+                  {swingCount}
+                </div>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <div style={{ fontSize: typo.small, color: premiumDesign.colors.text.muted }}>Angle</div>
+                <div style={{ fontSize: typo.bodyLarge, color: premiumDesign.colors.text.primary, fontWeight: 600 }}>
+                  {pendulumAngle.toFixed(1)}°
+                </div>
+              </div>
+            </div>
           </div>
 
           {/* Controls */}

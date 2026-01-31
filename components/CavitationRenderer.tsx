@@ -524,54 +524,153 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
             </p>
 
             <svg width="300" height="180" viewBox="0 0 300 180" style={{ margin: '0 auto', display: 'block' }}>
-              {/* Water background */}
-              <rect x="0" y="0" width="300" height="180" fill="#1a3a5c" rx="10" />
+              <defs>
+                {/* Premium water gradient with depth */}
+                <linearGradient id="cavWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#0c4a6e" />
+                  <stop offset="30%" stopColor="#0369a1" />
+                  <stop offset="60%" stopColor="#0284c7" />
+                  <stop offset="100%" stopColor="#0c4a6e" />
+                </linearGradient>
+
+                {/* Bubble gradient with glass effect */}
+                <radialGradient id="cavBubbleGradient" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
+                  <stop offset="40%" stopColor="#60a5fa" stopOpacity="0.6" />
+                  <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.2" />
+                </radialGradient>
+
+                {/* Bubble inner glow */}
+                <radialGradient id="cavBubbleInner" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#bfdbfe" stopOpacity="0.8" />
+                  <stop offset="60%" stopColor="#60a5fa" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#2563eb" stopOpacity="0.3" />
+                </radialGradient>
+
+                {/* Collapse flash gradient */}
+                <radialGradient id="cavCollapseFlash" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#fef3c7" />
+                  <stop offset="30%" stopColor="#fbbf24" />
+                  <stop offset="60%" stopColor="#f97316" />
+                  <stop offset="100%" stopColor="#ef4444" />
+                </radialGradient>
+
+                {/* Shock wave gradient */}
+                <radialGradient id="cavShockWave" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
+                  <stop offset="50%" stopColor="#f97316" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Bubble glow filter */}
+                <filter id="cavBubbleGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Collapse glow filter */}
+                <filter id="cavCollapseGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="6" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Water background with gradient */}
+              <rect x="0" y="0" width="300" height="180" fill="url(#cavWaterGradient)" rx="10" />
+
+              {/* Subtle water caustics */}
+              <g opacity="0.15">
+                {[0, 1, 2].map(i => (
+                  <ellipse key={i} cx={80 + i * 70} cy={30 + i * 15} rx={40} ry={15} fill="#7dd3fc">
+                    <animate attributeName="opacity" values="0.1;0.3;0.1" dur={`${2 + i * 0.5}s`} repeatCount="indefinite" />
+                  </ellipse>
+                ))}
+              </g>
 
               {/* Bubble */}
               <g transform="translate(150, 90)">
                 {bubbleSize > 0 ? (
                   <>
+                    {/* Outer glow */}
+                    <circle
+                      r={bubbleSize * 1.2}
+                      fill="url(#cavBubbleGradient)"
+                      opacity="0.3"
+                      filter="url(#cavBubbleGlow)"
+                    />
+                    {/* Main bubble with gradient */}
                     <circle
                       r={bubbleSize}
-                      fill={colors.bubble}
-                      opacity="0.4"
+                      fill="url(#cavBubbleGradient)"
+                      stroke="#93c5fd"
+                      strokeWidth="1"
+                      strokeOpacity="0.5"
                     />
+                    {/* Inner bubble layer */}
                     <circle
                       r={bubbleSize * 0.7}
-                      fill={colors.bubble}
-                      opacity="0.6"
+                      fill="url(#cavBubbleInner)"
                     />
-                    {/* Shine */}
-                    <ellipse cx={-bubbleSize * 0.3} cy={-bubbleSize * 0.3} rx={bubbleSize * 0.2} ry={bubbleSize * 0.15} fill="#fff" opacity="0.5" />
+                    {/* Highlight shine */}
+                    <ellipse
+                      cx={-bubbleSize * 0.25}
+                      cy={-bubbleSize * 0.25}
+                      rx={bubbleSize * 0.25}
+                      ry={bubbleSize * 0.15}
+                      fill="#fff"
+                      opacity="0.7"
+                    />
+                    {/* Secondary shine */}
+                    <ellipse
+                      cx={bubbleSize * 0.15}
+                      cy={bubbleSize * 0.2}
+                      rx={bubbleSize * 0.1}
+                      ry={bubbleSize * 0.06}
+                      fill="#fff"
+                      opacity="0.4"
+                    />
                   </>
                 ) : (
                   <>
-                    {/* Collapse flash */}
-                    <circle r="3" fill={colors.collapse}>
-                      <animate attributeName="r" values="3;40;0" dur="0.5s" fill="freeze" />
-                      <animate attributeName="opacity" values="1;0.5;0" dur="0.5s" fill="freeze" />
+                    {/* Collapse flash with gradient */}
+                    <circle r="5" fill="url(#cavCollapseFlash)" filter="url(#cavCollapseGlow)">
+                      <animate attributeName="r" values="5;50;0" dur="0.5s" fill="freeze" />
+                      <animate attributeName="opacity" values="1;0.6;0" dur="0.5s" fill="freeze" />
                     </circle>
-                    {/* Shock waves */}
-                    {[1, 2, 3].map(i => (
-                      <circle key={i} r={10 * i} fill="none" stroke={colors.collapse} strokeWidth="2" opacity={0.5 / i}>
-                        <animate attributeName="r" values={`${10*i};${40+10*i}`} dur="0.3s" fill="freeze" />
-                        <animate attributeName="opacity" values={`${0.5/i};0`} dur="0.3s" fill="freeze" />
+                    {/* Shock waves with gradient */}
+                    {[1, 2, 3, 4].map(i => (
+                      <circle key={i} r={8 * i} fill="none" stroke={`rgba(251, 191, 36, ${0.6 / i})`} strokeWidth={3 - i * 0.5}>
+                        <animate attributeName="r" values={`${8*i};${50+12*i}`} dur="0.4s" fill="freeze" />
+                        <animate attributeName="opacity" values={`${0.7/i};0`} dur="0.4s" fill="freeze" />
                       </circle>
                     ))}
-                    <text y="60" fill={colors.collapse} fontSize="14" textAnchor="middle" fontWeight="600">
-                      5,000°C!
-                    </text>
+                    {/* Central bright flash */}
+                    <circle r="3" fill="#fef3c7">
+                      <animate attributeName="r" values="3;0" dur="0.3s" fill="freeze" />
+                    </circle>
                   </>
                 )}
               </g>
-
-              {/* Labels */}
-              {bubbleSize > 20 && !showCollapse && (
-                <text x="150" y="160" fill={colors.textSecondary} fontSize="12" textAnchor="middle">
-                  Vapor bubble (low pressure zone)
-                </text>
-              )}
             </svg>
+            {/* Labels outside SVG */}
+            {bubbleSize > 20 && !showCollapse && (
+              <p style={{ textAlign: 'center', color: colors.textSecondary, fontSize: typo.small, margin: '8px 0 0 0' }}>
+                Vapor bubble (low pressure zone)
+              </p>
+            )}
+            {bubbleSize === 0 && (
+              <p style={{ textAlign: 'center', color: colors.collapse, fontSize: typo.bodyLarge, fontWeight: 600, margin: '8px 0 0 0' }}>
+                5,000°C!
+              </p>
+            )}
 
             <button
               onMouseDown={() => {
@@ -661,31 +760,63 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
         </p>
 
         <svg width="100%" height="100" viewBox="0 0 400 100" style={{ marginBottom: '20px' }}>
+          <defs>
+            {/* Bubble gradient for collapse sequence */}
+            <radialGradient id="cavSeqBubble" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.3" />
+            </radialGradient>
+            {/* Collapse gradient */}
+            <radialGradient id="cavSeqCollapse" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="40%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </radialGradient>
+            {/* Collapse glow */}
+            <filter id="cavSeqGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
           {/* Sequence of collapse */}
           {[0, 1, 2, 3, 4].map((i) => {
             const x = 50 + i * 75;
             const size = 25 - i * 5;
             return (
               <g key={i} transform={`translate(${x}, 50)`}>
-                <circle
-                  r={Math.max(3, size)}
-                  fill={i < 4 ? colors.bubble : colors.collapse}
-                  opacity={i < 4 ? 0.6 : 1}
-                />
-                {i === 4 && (
+                {i < 4 ? (
                   <>
-                    <circle r="20" fill="none" stroke={colors.collapse} strokeWidth="2" opacity="0.5" />
-                    <circle r="30" fill="none" stroke={colors.collapse} strokeWidth="1" opacity="0.3" />
+                    {/* Bubble with gradient */}
+                    <circle r={size} fill="url(#cavSeqBubble)" />
+                    {/* Highlight */}
+                    <ellipse cx={-size * 0.2} cy={-size * 0.2} rx={size * 0.2} ry={size * 0.12} fill="#fff" opacity="0.6" />
+                  </>
+                ) : (
+                  <>
+                    {/* Collapse with glow */}
+                    <circle r={3} fill="url(#cavSeqCollapse)" filter="url(#cavSeqGlow)" />
+                    {/* Shock waves */}
+                    <circle r="15" fill="none" stroke="#fbbf24" strokeWidth="2" opacity="0.6" />
+                    <circle r="25" fill="none" stroke="#f97316" strokeWidth="1.5" opacity="0.4" />
+                    <circle r="35" fill="none" stroke="#ef4444" strokeWidth="1" opacity="0.2" />
                   </>
                 )}
-                <text y="45" fill={colors.textSecondary} fontSize="10" textAnchor="middle">
-                  {i === 0 ? 't=0' : i === 4 ? 'Collapse!' : ''}
-                </text>
               </g>
             );
           })}
-          <text x="200" y="90" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Time →</text>
+          {/* Arrow line showing progression */}
+          <line x1="40" y1="85" x2="360" y2="85" stroke={colors.textMuted} strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
         </svg>
+        {/* Labels outside SVG */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 30px', marginBottom: '16px' }}>
+          <span style={{ color: colors.textSecondary, fontSize: typo.small }}>t=0</span>
+          <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Time →</span>
+          <span style={{ color: colors.collapse, fontSize: typo.small, fontWeight: 600 }}>Collapse!</span>
+        </div>
 
         <p style={{ color: colors.text, fontSize: '18px', fontWeight: '600', marginBottom: '16px', textAlign: 'center' }}>
           What extreme condition is created at the collapse center?
@@ -793,75 +924,241 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
         marginBottom: '20px'
       }}>
         {/* Propeller visualization */}
-        <div style={{ background: '#1a3a5c', borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
+        <div style={{ background: 'linear-gradient(180deg, #0c4a6e 0%, #1e3a5f 100%)', borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
           <svg width="100%" height="240" viewBox="0 0 400 240">
-            {/* Water */}
-            <rect x="0" y="0" width="400" height="240" fill="#1a3a5c" rx="10" />
+            <defs>
+              {/* Premium water gradient */}
+              <linearGradient id="cavPlayWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#0c4a6e" />
+                <stop offset="40%" stopColor="#0369a1" />
+                <stop offset="70%" stopColor="#0284c7" />
+                <stop offset="100%" stopColor="#0c4a6e" />
+              </linearGradient>
 
-            {/* Propeller hub */}
+              {/* Metallic hub gradient */}
+              <radialGradient id="cavHubMetal" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#94a3b8" />
+                <stop offset="40%" stopColor="#64748b" />
+                <stop offset="70%" stopColor="#475569" />
+                <stop offset="100%" stopColor="#334155" />
+              </radialGradient>
+
+              {/* Propeller blade metallic gradient */}
+              <linearGradient id="cavBladeMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#cbd5e1" />
+                <stop offset="25%" stopColor="#94a3b8" />
+                <stop offset="50%" stopColor="#64748b" />
+                <stop offset="75%" stopColor="#94a3b8" />
+                <stop offset="100%" stopColor="#475569" />
+              </linearGradient>
+
+              {/* Low pressure zone gradient */}
+              <radialGradient id="cavLowPressure" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Cavitation bubble gradient */}
+              <radialGradient id="cavPlayBubble" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#bfdbfe" stopOpacity="0.9" />
+                <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.3" />
+              </radialGradient>
+
+              {/* Collapsing bubble gradient */}
+              <radialGradient id="cavPlayCollapse" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#fef3c7" />
+                <stop offset="40%" stopColor="#fbbf24" />
+                <stop offset="100%" stopColor="#f97316" />
+              </radialGradient>
+
+              {/* Damage bar gradient */}
+              <linearGradient id="cavDamageBar" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#fbbf24" />
+                <stop offset="50%" stopColor="#f97316" />
+                <stop offset="100%" stopColor="#ef4444" />
+              </linearGradient>
+
+              {/* Bubble glow filter */}
+              <filter id="cavPlayBubbleGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Collapse glow filter */}
+              <filter id="cavPlayCollapseGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Metal shine filter */}
+              <filter id="cavMetalShine" x="-10%" y="-10%" width="120%" height="120%">
+                <feGaussianBlur stdDeviation="1" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Water background */}
+            <rect x="0" y="0" width="400" height="240" fill="url(#cavPlayWater)" rx="10" />
+
+            {/* Subtle water caustics */}
+            <g opacity="0.1">
+              {[0, 1, 2, 3].map(i => (
+                <ellipse key={i} cx={50 + i * 100} cy={30 + (i % 2) * 20} rx={35} ry={12} fill="#7dd3fc">
+                  <animate attributeName="opacity" values="0.05;0.15;0.05" dur={`${2 + i * 0.3}s`} repeatCount="indefinite" />
+                </ellipse>
+              ))}
+            </g>
+
+            {/* Pressure zones visualization */}
+            {propellerSpeed > 20 && (
+              <g transform="translate(200, 120)" opacity={Math.min(propellerSpeed / 100, 0.6)}>
+                {/* High pressure (downstream) */}
+                <ellipse cx="100" cy="0" rx="40" ry="60" fill="#22c55e" opacity="0.2" />
+                {/* Low pressure (upstream/suction side) */}
+                <ellipse cx="-20" cy="0" rx="50" ry="70" fill="#3b82f6" opacity="0.3" />
+              </g>
+            )}
+
+            {/* Propeller hub with metallic finish */}
             <g transform={`translate(200, 120) rotate(${propellerAngle})`}>
-              <circle r="20" fill="#666" />
-              {/* Blades */}
+              {/* Hub shadow */}
+              <circle r="22" fill="#1e293b" opacity="0.5" transform="translate(2, 2)" />
+              {/* Hub body */}
+              <circle r="20" fill="url(#cavHubMetal)" stroke="#475569" strokeWidth="1" filter="url(#cavMetalShine)" />
+              {/* Hub highlight */}
+              <ellipse cx="-5" cy="-5" rx="8" ry="6" fill="#cbd5e1" opacity="0.4" />
+              {/* Center bolt */}
+              <circle r="5" fill="#334155" stroke="#1e293b" strokeWidth="1" />
+
+              {/* Premium blades with metallic gradient */}
               {[0, 120, 240].map((angle, i) => (
                 <g key={i} transform={`rotate(${angle})`}>
+                  {/* Blade shadow */}
+                  <path
+                    d="M 15 -8 Q 60 -22 82 -5 Q 67 7 15 10 Z"
+                    fill="#0f172a"
+                    opacity="0.4"
+                    transform="translate(2, 2)"
+                  />
+                  {/* Blade body */}
                   <path
                     d="M 15 -8 Q 60 -20 80 -5 Q 65 5 15 8 Z"
-                    fill="#888"
-                    stroke="#555"
-                    strokeWidth="1"
+                    fill="url(#cavBladeMetal)"
+                    stroke="#64748b"
+                    strokeWidth="0.5"
+                    filter="url(#cavMetalShine)"
                   />
-                  {/* Low pressure zone indicator */}
+                  {/* Blade edge highlight */}
+                  <path
+                    d="M 20 -6 Q 55 -15 75 -5"
+                    fill="none"
+                    stroke="#e2e8f0"
+                    strokeWidth="1"
+                    opacity="0.5"
+                  />
+                  {/* Low pressure zone indicator with gradient */}
                   {propellerSpeed > 30 && (
                     <ellipse
                       cx="50"
-                      cy="-12"
-                      rx="20"
-                      ry="8"
-                      fill={colors.bubble}
-                      opacity={propellerSpeed / 200}
+                      cy="-14"
+                      rx={15 + propellerSpeed / 10}
+                      ry={6 + propellerSpeed / 25}
+                      fill="url(#cavLowPressure)"
+                      opacity={Math.min(propellerSpeed / 150, 0.8)}
                     />
                   )}
                 </g>
               ))}
             </g>
 
-            {/* Cavitation bubbles */}
+            {/* Cavitation bubbles with premium styling */}
             {bubbles.map(b => (
-              <circle
-                key={b.id}
-                cx={b.x}
-                cy={b.y}
-                r={b.radius}
-                fill={b.collapsing ? colors.collapse : colors.bubble}
-                opacity={b.collapsing ? 0.8 : 0.5}
-              />
+              <g key={b.id}>
+                {b.collapsing ? (
+                  <>
+                    {/* Collapsing bubble with glow */}
+                    <circle
+                      cx={b.x}
+                      cy={b.y}
+                      r={b.radius}
+                      fill="url(#cavPlayCollapse)"
+                      filter="url(#cavPlayCollapseGlow)"
+                    />
+                    {/* Shock ring */}
+                    <circle
+                      cx={b.x}
+                      cy={b.y}
+                      r={b.radius * 1.5}
+                      fill="none"
+                      stroke="#fbbf24"
+                      strokeWidth="1"
+                      opacity="0.5"
+                    />
+                  </>
+                ) : (
+                  <>
+                    {/* Growing bubble with glow */}
+                    <circle
+                      cx={b.x}
+                      cy={b.y}
+                      r={b.radius}
+                      fill="url(#cavPlayBubble)"
+                      filter="url(#cavPlayBubbleGlow)"
+                    />
+                    {/* Bubble highlight */}
+                    <ellipse
+                      cx={b.x - b.radius * 0.2}
+                      cy={b.y - b.radius * 0.2}
+                      rx={b.radius * 0.25}
+                      ry={b.radius * 0.15}
+                      fill="#fff"
+                      opacity="0.6"
+                    />
+                  </>
+                )}
+              </g>
             ))}
 
-            {/* Speed indicator */}
-            <text x="20" y="25" fill={colors.text} fontSize="12">
-              Speed: {propellerSpeed} RPM
-            </text>
-
-            {/* Cavitation status */}
-            <g transform="translate(20, 215)">
-              <text fill={propellerSpeed > 50 ? colors.warning : colors.success} fontSize="11">
-                {propellerSpeed < 30 ? 'No cavitation' :
-                 propellerSpeed < 70 ? 'Minor cavitation' :
-                 'Severe cavitation!'}
-              </text>
-            </g>
-
-            {/* Damage indicator */}
+            {/* Damage indicator with gradient */}
             {damageLevel > 0 && (
-              <g transform="translate(280, 20)">
-                <rect x="0" y="0" width="100" height="15" fill="#333" rx="3" />
-                <rect x="0" y="0" width={damageLevel} height="15" fill={colors.accent} rx="3" />
-                <text x="50" y="11" fill={colors.text} fontSize="9" textAnchor="middle">
-                  Damage: {damageLevel.toFixed(0)}%
-                </text>
+              <g transform="translate(280, 15)">
+                <rect x="0" y="0" width="105" height="20" fill="#1e293b" rx="4" stroke="#334155" strokeWidth="1" />
+                <rect x="2" y="2" width={damageLevel} height="16" fill="url(#cavDamageBar)" rx="3" />
               </g>
             )}
           </svg>
+          {/* Labels outside SVG */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 12px 0', alignItems: 'center' }}>
+            <span style={{ color: colors.textPrimary, fontSize: typo.small, fontWeight: 600 }}>
+              Speed: {propellerSpeed} RPM
+            </span>
+            <span style={{
+              color: propellerSpeed > 70 ? colors.accent : propellerSpeed > 50 ? colors.warning : colors.success,
+              fontSize: typo.small,
+              fontWeight: 600
+            }}>
+              {propellerSpeed < 30 ? 'No cavitation' :
+               propellerSpeed < 70 ? 'Minor cavitation' :
+               'Severe cavitation!'}
+            </span>
+            {damageLevel > 0 && (
+              <span style={{ color: colors.accent, fontSize: typo.small, fontWeight: 600 }}>
+                Damage: {damageLevel.toFixed(0)}%
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Controls */}
@@ -1036,31 +1333,99 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
         </p>
 
         <svg width="100%" height="140" viewBox="0 0 400 140" style={{ marginBottom: '20px' }}>
-          {/* Shrimp claw */}
-          <g transform="translate(80, 70)">
-            <ellipse cx="0" cy="0" rx="30" ry="15" fill="#ff6b6b" />
-            <path d="M 25 0 L 70 -10 L 65 0 L 70 10 Z" fill="#ff8888" />
-            <text y="40" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Mantis shrimp claw</text>
-          </g>
-
-          {/* Target */}
-          <g transform="translate(280, 70)">
-            <ellipse cx="0" cy="0" rx="35" ry="30" fill="#8b7355" stroke="#5c4a37" strokeWidth="2" />
-            <text y="50" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Prey (snail)</text>
-          </g>
-
-          {/* Strike arrow */}
-          <line x1="130" y1="70" x2="220" y2="70" stroke={colors.warning} strokeWidth="3" markerEnd="url(#strikeArrow)" />
           <defs>
-            <marker id="strikeArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill={colors.warning} />
+            {/* Shrimp body gradient */}
+            <linearGradient id="cavShrimpBody" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fb7185" />
+              <stop offset="30%" stopColor="#f43f5e" />
+              <stop offset="70%" stopColor="#e11d48" />
+              <stop offset="100%" stopColor="#be123c" />
+            </linearGradient>
+            {/* Shrimp claw gradient */}
+            <linearGradient id="cavShrimpClaw" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fda4af" />
+              <stop offset="50%" stopColor="#fb7185" />
+              <stop offset="100%" stopColor="#f43f5e" />
+            </linearGradient>
+            {/* Snail shell gradient */}
+            <radialGradient id="cavSnailShell" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#d6d3d1" />
+              <stop offset="30%" stopColor="#a8a29e" />
+              <stop offset="60%" stopColor="#78716c" />
+              <stop offset="100%" stopColor="#57534e" />
+            </radialGradient>
+            {/* Strike energy gradient */}
+            <linearGradient id="cavStrikeEnergy" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0" />
+              <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+            </linearGradient>
+            {/* Question glow filter */}
+            <filter id="cavQuestionGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Strike arrow marker */}
+            <marker id="cavStrikeArrow" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
+              <polygon points="0 0, 12 4, 0 8" fill="#fbbf24" />
             </marker>
           </defs>
-          <text x="175" y="55" fill={colors.warning} fontSize="11" textAnchor="middle">23 m/s strike!</text>
 
-          {/* Question mark where bubble would be */}
-          <text x="200" y="100" fill={colors.primary} fontSize="24" textAnchor="middle">?</text>
+          {/* Water background subtle */}
+          <rect x="0" y="0" width="400" height="140" fill="#0c4a6e" opacity="0.3" rx="8" />
+
+          {/* Shrimp claw */}
+          <g transform="translate(80, 70)">
+            {/* Body shadow */}
+            <ellipse cx="2" cy="2" rx="30" ry="15" fill="#1e293b" opacity="0.4" />
+            {/* Body */}
+            <ellipse cx="0" cy="0" rx="30" ry="15" fill="url(#cavShrimpBody)" stroke="#be123c" strokeWidth="1" />
+            {/* Body highlight */}
+            <ellipse cx="-8" cy="-5" rx="10" ry="5" fill="#fda4af" opacity="0.5" />
+            {/* Claw */}
+            <path d="M 25 0 L 70 -12 L 66 0 L 70 12 L 25 0 Z" fill="url(#cavShrimpClaw)" stroke="#f43f5e" strokeWidth="1" />
+            {/* Claw highlight */}
+            <path d="M 30 -2 L 60 -8" stroke="#fecdd3" strokeWidth="2" opacity="0.6" />
+          </g>
+
+          {/* Target snail */}
+          <g transform="translate(280, 70)">
+            {/* Shell shadow */}
+            <ellipse cx="3" cy="3" rx="35" ry="30" fill="#1e293b" opacity="0.4" />
+            {/* Shell body */}
+            <ellipse cx="0" cy="0" rx="35" ry="30" fill="url(#cavSnailShell)" stroke="#57534e" strokeWidth="2" />
+            {/* Shell spiral pattern */}
+            <path d="M 0 -15 Q 15 -10 10 0 Q 5 10 -5 5 Q -12 0 -8 -8" fill="none" stroke="#44403c" strokeWidth="2" opacity="0.5" />
+            {/* Shell highlight */}
+            <ellipse cx="-10" cy="-10" rx="12" ry="8" fill="#e7e5e4" opacity="0.4" />
+          </g>
+
+          {/* Strike energy beam */}
+          <line x1="125" y1="70" x2="230" y2="70" stroke="url(#cavStrikeEnergy)" strokeWidth="6" />
+          <line x1="130" y1="70" x2="225" y2="70" stroke="#fbbf24" strokeWidth="3" markerEnd="url(#cavStrikeArrow)" />
+
+          {/* Speed lines */}
+          {[0, 1, 2].map(i => (
+            <line key={i} x1={140 + i * 25} y1={60 - i * 5} x2={155 + i * 25} y2={60 - i * 5} stroke="#fbbf24" strokeWidth="2" opacity={0.5 - i * 0.1} />
+          ))}
+          {[0, 1, 2].map(i => (
+            <line key={i} x1={140 + i * 25} y1={80 + i * 5} x2={155 + i * 25} y2={80 + i * 5} stroke="#fbbf24" strokeWidth="2" opacity={0.5 - i * 0.1} />
+          ))}
+
+          {/* Question mark with glow */}
+          <text x="200" y="115" fill="#06b6d4" fontSize="28" textAnchor="middle" fontWeight="bold" filter="url(#cavQuestionGlow)">?</text>
         </svg>
+        {/* Labels outside SVG */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 40px', marginBottom: '16px' }}>
+          <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Mantis shrimp claw</span>
+          <span style={{ color: colors.warning, fontSize: typo.small, fontWeight: 600 }}>23 m/s strike!</span>
+          <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Prey (snail)</span>
+        </div>
 
         <p style={{ color: colors.text, fontSize: '18px', fontWeight: '600', marginBottom: '16px', textAlign: 'center' }}>
           If the initial punch misses, what does the cavitation bubble collapse do?
@@ -1156,77 +1521,205 @@ const CavitationRenderer: React.FC<CavitationRendererProps> = ({ currentPhase, o
         marginBottom: '20px'
       }}>
         {/* Strike animation */}
-        <div style={{ background: '#1a3a5c', borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
+        <div style={{ background: 'linear-gradient(180deg, #0c4a6e 0%, #1e3a5f 100%)', borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
           <svg width="100%" height="200" viewBox="0 0 400 200">
+            <defs>
+              {/* Water gradient */}
+              <linearGradient id="cavTwistWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#0c4a6e" />
+                <stop offset="50%" stopColor="#0369a1" />
+                <stop offset="100%" stopColor="#0c4a6e" />
+              </linearGradient>
+              {/* Shrimp body gradient */}
+              <linearGradient id="cavTwistShrimpBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fb7185" />
+                <stop offset="40%" stopColor="#f43f5e" />
+                <stop offset="100%" stopColor="#be123c" />
+              </linearGradient>
+              {/* Shrimp claw gradient */}
+              <linearGradient id="cavTwistClaw" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#fda4af" />
+                <stop offset="50%" stopColor="#fb7185" />
+                <stop offset="100%" stopColor="#e11d48" />
+              </linearGradient>
+              {/* Snail gradient */}
+              <radialGradient id="cavTwistSnail" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#d6d3d1" />
+                <stop offset="40%" stopColor="#a8a29e" />
+                <stop offset="100%" stopColor="#57534e" />
+              </radialGradient>
+              {/* Impact flash gradient */}
+              <radialGradient id="cavImpactFlash" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#fef3c7" />
+                <stop offset="40%" stopColor="#fbbf24" />
+                <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+              </radialGradient>
+              {/* Cavitation collapse gradient */}
+              <radialGradient id="cavTwistCollapse" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#fef3c7" />
+                <stop offset="30%" stopColor="#fbbf24" />
+                <stop offset="60%" stopColor="#f97316" />
+                <stop offset="100%" stopColor="#ef4444" />
+              </radialGradient>
+              {/* Eye glow */}
+              <radialGradient id="cavEyeGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#4ade80" />
+                <stop offset="60%" stopColor="#22c55e" />
+                <stop offset="100%" stopColor="#15803d" />
+              </radialGradient>
+              {/* Impact glow filter */}
+              <filter id="cavImpactGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Cavitation glow filter */}
+              <filter id="cavTwistGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
             {/* Water background */}
-            <rect x="0" y="0" width="400" height="200" fill="#1a3a5c" rx="10" />
+            <rect x="0" y="0" width="400" height="200" fill="url(#cavTwistWater)" rx="10" />
+
+            {/* Water caustics */}
+            <g opacity="0.1">
+              {[0, 1, 2].map(i => (
+                <ellipse key={i} cx={60 + i * 120} cy={25} rx={40} ry={12} fill="#7dd3fc">
+                  <animate attributeName="opacity" values="0.05;0.15;0.05" dur={`${2 + i * 0.4}s`} repeatCount="indefinite" />
+                </ellipse>
+              ))}
+            </g>
+
+            {/* Motion blur lines when striking */}
+            {shrimpStrike && (
+              <g opacity="0.6">
+                {[0, 1, 2, 3].map(i => (
+                  <line key={i} x1={90 + i * 15} y1={90 + (i % 2) * 20} x2={120 + i * 15} y2={90 + (i % 2) * 20}
+                    stroke="#fbbf24" strokeWidth="2" opacity={0.5 - i * 0.1} />
+                ))}
+              </g>
+            )}
 
             {/* Mantis shrimp */}
             <g transform={`translate(${shrimpStrike ? 140 : 80}, 100)`}>
-              {/* Body */}
-              <ellipse cx="-30" cy="0" rx="40" ry="20" fill="#ff6b6b" />
-              {/* Eyes */}
-              <circle cx="-50" cy="-15" r="8" fill="#333" />
-              <circle cx="-50" cy="-15" r="4" fill="#00ff00" />
-              {/* Club/claw */}
+              {/* Body shadow */}
+              <ellipse cx="-28" cy="3" rx="40" ry="20" fill="#1e293b" opacity="0.4" />
+              {/* Body with gradient */}
+              <ellipse cx="-30" cy="0" rx="40" ry="20" fill="url(#cavTwistShrimpBody)" stroke="#be123c" strokeWidth="1" />
+              {/* Body highlight */}
+              <ellipse cx="-40" cy="-8" rx="15" ry="7" fill="#fda4af" opacity="0.5" />
+              {/* Eyes with glow */}
+              <circle cx="-50" cy="-15" r="8" fill="#1e293b" stroke="#0f172a" strokeWidth="1" />
+              <circle cx="-50" cy="-15" r="5" fill="url(#cavEyeGlow)" />
+              <circle cx="-51" cy="-16" r="2" fill="#fff" opacity="0.8" />
+              {/* Club/claw with gradient */}
               <g transform={shrimpStrike ? 'translate(60, 0)' : ''}>
-                <path d="M 0 -10 L 60 -15 L 70 0 L 60 15 L 0 10 Z" fill="#ff8888" stroke="#cc5555" strokeWidth="2" />
+                {/* Claw shadow */}
+                <path d="M 2 -8 L 62 -13 L 72 2 L 62 17 L 2 12 Z" fill="#1e293b" opacity="0.4" />
+                {/* Claw body */}
+                <path d="M 0 -10 L 60 -15 L 70 0 L 60 15 L 0 10 Z" fill="url(#cavTwistClaw)" stroke="#e11d48" strokeWidth="1.5" />
+                {/* Claw highlight */}
+                <path d="M 5 -6 L 55 -10" stroke="#fecdd3" strokeWidth="2" opacity="0.6" />
               </g>
             </g>
 
             {/* Prey (snail) */}
             <g transform="translate(280, 100)">
-              <ellipse cx="0" cy="0" rx="35" ry="30" fill="#8b7355" stroke="#5c4a37" strokeWidth="3" />
-              <path d="M -10 -20 Q 0 -35 10 -20" fill="none" stroke="#5c4a37" strokeWidth="2" />
-              {/* Damage indicator */}
+              {/* Shell shadow */}
+              <ellipse cx="3" cy="3" rx="35" ry="30" fill="#1e293b" opacity="0.4" />
+              {/* Shell with gradient */}
+              <ellipse cx="0" cy="0" rx="35" ry="30" fill="url(#cavTwistSnail)" stroke="#57534e" strokeWidth="2" />
+              {/* Shell spiral */}
+              <path d="M 0 -15 Q 15 -10 10 0 Q 5 10 -5 5 Q -12 0 -8 -8" fill="none" stroke="#44403c" strokeWidth="2" opacity="0.5" />
+              {/* Shell highlight */}
+              <ellipse cx="-10" cy="-10" rx="12" ry="8" fill="#e7e5e4" opacity="0.4" />
+              {/* Antenna */}
+              <path d="M -10 -20 Q 0 -35 10 -20" fill="none" stroke="#78716c" strokeWidth="2" />
+              {/* Crack effect when hit */}
               {showSecondBubble && (
-                <text x="50" y="0" fill={colors.accent} fontSize="12" fontWeight="600">CRACK!</text>
+                <g>
+                  <path d="M 15 -10 L 25 -5 L 20 5 L 30 10" stroke="#ef4444" strokeWidth="2" fill="none" />
+                  <path d="M 18 -15 L 22 -8" stroke="#ef4444" strokeWidth="1.5" fill="none" />
+                </g>
               )}
             </g>
 
-            {/* First impact */}
+            {/* First impact flash */}
             {shrimpStrike && !showSecondBubble && (
               <g transform="translate(210, 100)">
-                <circle r="15" fill={colors.warning} opacity="0.6">
-                  <animate attributeName="r" values="5;20" dur="0.1s" fill="freeze" />
+                <circle r="20" fill="url(#cavImpactFlash)" filter="url(#cavImpactGlow)">
+                  <animate attributeName="r" values="5;25" dur="0.15s" fill="freeze" />
                 </circle>
-                <text y="-25" fill={colors.warning} fontSize="11" textAnchor="middle">PUNCH!</text>
+                {/* Impact rays */}
+                {[0, 45, 90, 135, 180, 225, 270, 315].map(angle => (
+                  <line key={angle}
+                    x1={Math.cos(angle * Math.PI / 180) * 10}
+                    y1={Math.sin(angle * Math.PI / 180) * 10}
+                    x2={Math.cos(angle * Math.PI / 180) * 30}
+                    y2={Math.sin(angle * Math.PI / 180) * 30}
+                    stroke="#fbbf24"
+                    strokeWidth="2"
+                    opacity="0.7"
+                  >
+                    <animate attributeName="opacity" values="0.8;0" dur="0.2s" fill="freeze" />
+                  </line>
+                ))}
               </g>
             )}
 
             {/* Cavitation bubble formation and collapse */}
             {showSecondBubble && (
-              <g transform="translate(230, 100)">
-                {/* Bubble collapse */}
-                <circle r="5" fill={colors.collapse}>
-                  <animate attributeName="r" values="20;5" dur="0.3s" fill="freeze" />
+              <g transform="translate(235, 100)">
+                {/* Collapsing bubble with gradient */}
+                <circle r="8" fill="url(#cavTwistCollapse)" filter="url(#cavTwistGlow)">
+                  <animate attributeName="r" values="25;8" dur="0.3s" fill="freeze" />
                 </circle>
-                {/* Shock waves */}
-                <circle r="25" fill="none" stroke={colors.collapse} strokeWidth="2" opacity="0.5">
-                  <animate attributeName="r" values="5;40" dur="0.3s" fill="freeze" />
-                  <animate attributeName="opacity" values="0.8;0" dur="0.3s" fill="freeze" />
+                {/* Multiple shock waves */}
+                {[1, 2, 3].map(i => (
+                  <circle key={i} r={10 * i} fill="none" stroke={i === 1 ? '#fbbf24' : i === 2 ? '#f97316' : '#ef4444'} strokeWidth={3 - i * 0.7} opacity={0.7 / i}>
+                    <animate attributeName="r" values={`${5*i};${35+10*i}`} dur="0.35s" fill="freeze" />
+                    <animate attributeName="opacity" values={`${0.8/i};0`} dur="0.35s" fill="freeze" />
+                  </circle>
+                ))}
+                {/* Central flash */}
+                <circle r="3" fill="#fef3c7">
+                  <animate attributeName="r" values="5;0" dur="0.2s" fill="freeze" />
                 </circle>
-                <text y="-35" fill={colors.collapse} fontSize="11" textAnchor="middle" fontWeight="600">
-                  CAVITATION!
-                </text>
               </g>
             )}
 
-            {/* Labels */}
-            <text x="80" y="150" fill={colors.textSecondary} fontSize="10" textAnchor="middle">
-              Mantis Shrimp
-            </text>
-            <text x="280" y="150" fill={colors.textSecondary} fontSize="10" textAnchor="middle">
-              Prey
-            </text>
-
             {/* Speed indicator */}
             {shrimpStrike && (
-              <text x="150" y="60" fill={colors.warning} fontSize="12">
-                23 m/s • 10,000 g
-              </text>
+              <g transform="translate(100, 50)">
+                <rect x="0" y="0" width="100" height="24" rx="12" fill="#1e293b" opacity="0.8" />
+                <text x="50" y="16" fill="#fbbf24" fontSize="11" textAnchor="middle" fontWeight="600">
+                  23 m/s • 10,000 g
+                </text>
+              </g>
             )}
           </svg>
+          {/* Labels outside SVG */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 40px 0' }}>
+            <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Mantis Shrimp</span>
+            {shrimpStrike && !showSecondBubble && (
+              <span style={{ color: colors.warning, fontSize: typo.body, fontWeight: 700 }}>PUNCH!</span>
+            )}
+            {showSecondBubble && (
+              <span style={{ color: colors.collapse, fontSize: typo.body, fontWeight: 700 }}>CAVITATION!</span>
+            )}
+            <span style={{ color: colors.textSecondary, fontSize: typo.small }}>
+              Prey {showSecondBubble && <span style={{ color: colors.accent, fontWeight: 600 }}>CRACK!</span>}
+            </span>
+          </div>
         </div>
 
         <button

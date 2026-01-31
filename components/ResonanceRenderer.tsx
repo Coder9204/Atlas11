@@ -390,116 +390,350 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
     const springY = 80;
     const massY = springY + 80 + (responseAmplitude / 2) * Math.sin(time * (drivingFrequency / 50));
     const massSize = 30 + addedMass * 0.3;
+    const motionBlurAmount = isAtResonance ? 4 + responseAmplitude * 0.03 : 0;
 
     return (
-      <svg viewBox="0 0 500 280" style={{ width: '100%', height: '100%', maxHeight: '280px' }}>
-        <defs>
-          <linearGradient id="resSpringGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={design.colors.violet} />
-            <stop offset="100%" stopColor={design.colors.accentPrimary} />
-          </linearGradient>
-          <radialGradient id="resMassGrad">
-            <stop offset="0%" stopColor={design.colors.accentSecondary} />
-            <stop offset="70%" stopColor={design.colors.accentPrimary} />
-            <stop offset="100%" stopColor={design.colors.accentMuted} />
-          </radialGradient>
-          <filter id="resGlow">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feComposite in="SourceGraphic" in2="blur" operator="over" />
-          </filter>
-        </defs>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px', width: '100%' }}>
+        <svg viewBox="0 0 500 280" style={{ width: '100%', height: '100%', maxHeight: '280px' }}>
+          <defs>
+            {/* Premium spring gradient - 5 stops */}
+            <linearGradient id="resSpringGradPremium" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#c084fc" />
+              <stop offset="25%" stopColor={design.colors.violet} />
+              <stop offset="50%" stopColor="#d946ef" />
+              <stop offset="75%" stopColor={design.colors.accentPrimary} />
+              <stop offset="100%" stopColor="#f472b6" />
+            </linearGradient>
 
-        <rect x="0" y="0" width="500" height="280" fill={design.colors.bgDeep} rx="12" />
+            {/* Premium mass 3D radial gradient - 6 stops */}
+            <radialGradient id="resMassGrad3D" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fdf4ff" />
+              <stop offset="15%" stopColor="#f5d0fe" />
+              <stop offset="35%" stopColor={design.colors.accentSecondary} />
+              <stop offset="60%" stopColor={design.colors.accentPrimary} />
+              <stop offset="85%" stopColor="#9d174d" />
+              <stop offset="100%" stopColor={design.colors.accentMuted} />
+            </radialGradient>
 
-        {/* Grid background */}
-        <g opacity="0.1">
-          {[...Array(7)].map((_, i) => (
-            <line key={`h${i}`} x1="50" y1={40 + i * 35} x2="450" y2={40 + i * 35} stroke={design.colors.textMuted} />
-          ))}
-        </g>
+            {/* Anchor metallic gradient */}
+            <linearGradient id="resAnchorGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4a5568" />
+              <stop offset="30%" stopColor="#2d3748" />
+              <stop offset="50%" stopColor="#4a5568" />
+              <stop offset="70%" stopColor="#1a202c" />
+              <stop offset="100%" stopColor="#171923" />
+            </linearGradient>
 
-        {/* Fixed anchor */}
-        <rect x="115" y="30" width="70" height="20" rx="4" fill={design.colors.bgElevated} stroke={design.colors.border} />
-        <rect x="125" y="15" width="50" height="20" rx="4" fill={design.colors.bgTertiary} />
+            {/* Premium glow filter with merge */}
+            <filter id="resGlowPremium" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur1" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="12" result="blur2" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="20" result="blur3" />
+              <feMerge>
+                <feMergeNode in="blur3" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* Spring */}
-        <path
-          d={`M 150 50 ${[...Array(8)].map((_, i) => {
-            const y = 50 + (i + 0.5) * ((massY - 50) / 8);
-            const x = 150 + (i % 2 === 0 ? 20 : -20);
-            return `L ${x} ${y}`;
-          }).join(' ')} L 150 ${massY - massSize/2}`}
-          fill="none"
-          stroke="url(#resSpringGrad)"
-          strokeWidth="4"
-          strokeLinecap="round"
-        />
+            {/* Motion blur filter for resonance */}
+            <filter id="resMotionBlur" x="-20%" y="-50%" width="140%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation={`0 ${motionBlurAmount}`} />
+            </filter>
 
-        {/* Mass */}
-        <circle
-          cx="150"
-          cy={massY}
-          r={massSize}
-          fill="url(#resMassGrad)"
-          filter={isAtResonance ? "url(#resGlow)" : undefined}
-          stroke={isAtResonance ? design.colors.accentSecondary : 'none'}
-          strokeWidth="3"
-        />
-        <text x="150" y={massY + 5} textAnchor="middle" fill="#fff" fontSize="14" fontWeight="700">
-          {Math.round(100 + addedMass)}g
-        </text>
+            {/* Amplitude bar glow */}
+            <filter id="resAmplitudeGlow" x="-100%" y="-20%" width="300%" height="140%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur1" />
+              <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* Driving force indicator */}
-        <g transform="translate(300, 80)">
-          <rect x="0" y="0" width="140" height="140" rx="12" fill={design.colors.bgCard} stroke={design.colors.border} />
-          <text x="70" y="25" textAnchor="middle" fill={design.colors.textMuted} fontSize="10" fontWeight="600">DRIVING FORCE</text>
+            {/* Driving force arrow gradient */}
+            <linearGradient id="resDrivingArrowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#c084fc" />
+              <stop offset="50%" stopColor={design.colors.violet} />
+              <stop offset="100%" stopColor="#7c3aed" />
+            </linearGradient>
 
-          {/* Oscillating arrow */}
-          <g transform={`translate(70, 85)`}>
-            <circle cx="0" cy="0" r="40" fill="none" stroke={design.colors.border} strokeDasharray="4,4" />
-            <line
-              x1="0" y1="0"
-              x2={35 * Math.cos(time * (drivingFrequency / 50))}
-              y2={35 * Math.sin(time * (drivingFrequency / 50))}
-              stroke={design.colors.violet}
-              strokeWidth="3"
-              strokeLinecap="round"
-            />
-            <circle cx="0" cy="0" r="5" fill={design.colors.violet} />
+            {/* Amplitude bar gradient */}
+            <linearGradient id="resAmplitudeGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor={isAtResonance ? '#059669' : design.colors.accentMuted} />
+              <stop offset="30%" stopColor={isAtResonance ? '#10b981' : design.colors.accentPrimary} />
+              <stop offset="70%" stopColor={isAtResonance ? '#34d399' : design.colors.accentSecondary} />
+              <stop offset="100%" stopColor={isAtResonance ? '#6ee7b7' : '#f9a8d4'} />
+            </linearGradient>
+
+            {/* Frequency marker gradient */}
+            <linearGradient id="resFreqMarkerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="transparent" />
+              <stop offset="50%" stopColor={design.colors.violet} stopOpacity="0.6" />
+              <stop offset="100%" stopColor="transparent" />
+            </linearGradient>
+          </defs>
+
+          <rect x="0" y="0" width="500" height="280" fill={design.colors.bgDeep} rx="12" />
+
+          {/* Premium grid background with gradient */}
+          <g opacity="0.08">
+            {[...Array(7)].map((_, i) => (
+              <line
+                key={`h${i}`}
+                x1="50"
+                y1={40 + i * 35}
+                x2="450"
+                y2={40 + i * 35}
+                stroke="url(#resFreqMarkerGrad)"
+                strokeWidth="1"
+              />
+            ))}
+            {[...Array(9)].map((_, i) => (
+              <line
+                key={`v${i}`}
+                x1={50 + i * 50}
+                y1="40"
+                x2={50 + i * 50}
+                y2="250"
+                stroke={design.colors.textMuted}
+                strokeWidth="0.5"
+                strokeDasharray="2,4"
+              />
+            ))}
           </g>
 
-          <text x="70" y="135" textAnchor="middle" fill={design.colors.accentPrimary} fontSize="16" fontWeight="800">
-            {drivingFrequency} Hz
-          </text>
-        </g>
+          {/* Fixed anchor - 3D metallic look */}
+          <rect x="115" y="30" width="70" height="20" rx="4" fill="url(#resAnchorGrad)" stroke={design.colors.border} strokeWidth="1" />
+          <rect x="117" y="32" width="66" height="4" rx="2" fill="#4a5568" opacity="0.5" />
+          <rect x="125" y="15" width="50" height="20" rx="4" fill={design.colors.bgTertiary} stroke={design.colors.border} />
+          <rect x="127" y="17" width="46" height="6" rx="2" fill="#2d3748" opacity="0.3" />
 
-        {/* Response amplitude bar */}
-        <g transform="translate(50, 140)">
-          <text x="0" y="-5" fill={design.colors.textMuted} fontSize="10" fontWeight="600">AMPLITUDE</text>
-          <rect x="0" y="0" width="30" height="100" rx="4" fill={design.colors.bgElevated} />
-          <rect
-            x="0" y={100 - responseAmplitude}
-            width="30" height={responseAmplitude}
-            rx="4"
-            fill={isAtResonance ? design.colors.success : design.colors.accentPrimary}
-            style={{ transition: 'all 0.1s ease' }}
+          {/* Spring with premium gradient */}
+          <path
+            d={`M 150 50 ${[...Array(8)].map((_, i) => {
+              const y = 50 + (i + 0.5) * ((massY - 50) / 8);
+              const x = 150 + (i % 2 === 0 ? 20 : -20);
+              return `L ${x} ${y}`;
+            }).join(' ')} L 150 ${massY - massSize/2}`}
+            fill="none"
+            stroke="url(#resSpringGradPremium)"
+            strokeWidth="5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter={isAtResonance ? "url(#resMotionBlur)" : undefined}
           />
-          {isAtResonance && (
-            <text x="15" y={100 - responseAmplitude - 8} textAnchor="middle" fill={design.colors.success} fontSize="11" fontWeight="700">
-              MAX!
-            </text>
-          )}
-        </g>
 
-        {/* Info panel */}
-        <g transform="translate(300, 230)">
-          <rect x="0" y="0" width="140" height="40" rx="8" fill={design.colors.bgCard} stroke={design.colors.border} />
-          <text x="10" y="16" fill={design.colors.textMuted} fontSize="9">NATURAL FREQ</text>
-          <text x="10" y="32" fill={isAtResonance ? design.colors.success : design.colors.textSecondary} fontSize="14" fontWeight="700">
-            {resonantFreq} Hz {isAtResonance ? '✓ RESONANCE!' : ''}
-          </text>
-        </g>
-      </svg>
+          {/* Spring highlight */}
+          <path
+            d={`M 150 50 ${[...Array(8)].map((_, i) => {
+              const y = 50 + (i + 0.5) * ((massY - 50) / 8);
+              const x = 150 + (i % 2 === 0 ? 18 : -18);
+              return `L ${x} ${y}`;
+            }).join(' ')} L 150 ${massY - massSize/2}`}
+            fill="none"
+            stroke="rgba(255,255,255,0.15)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+
+          {/* Mass with 3D gradient and premium glow */}
+          <g filter={isAtResonance ? "url(#resMotionBlur)" : undefined}>
+            {/* Outer glow ring at resonance */}
+            {isAtResonance && (
+              <circle
+                cx="150"
+                cy={massY}
+                r={massSize + 12}
+                fill="none"
+                stroke={design.colors.accentSecondary}
+                strokeWidth="2"
+                opacity={0.3 + 0.2 * Math.sin(time * 8)}
+                filter="url(#resGlowPremium)"
+              />
+            )}
+
+            {/* Mass shadow */}
+            <ellipse
+              cx="155"
+              cy={massY + massSize + 5}
+              rx={massSize * 0.8}
+              ry={8}
+              fill="rgba(0,0,0,0.3)"
+              filter="url(#resGlowPremium)"
+            />
+
+            {/* Main mass */}
+            <circle
+              cx="150"
+              cy={massY}
+              r={massSize}
+              fill="url(#resMassGrad3D)"
+              filter={isAtResonance ? "url(#resGlowPremium)" : undefined}
+              stroke={isAtResonance ? design.colors.accentSecondary : 'rgba(255,255,255,0.1)'}
+              strokeWidth={isAtResonance ? 3 : 1}
+            />
+
+            {/* Mass highlight */}
+            <ellipse
+              cx={150 - massSize * 0.3}
+              cy={massY - massSize * 0.3}
+              rx={massSize * 0.3}
+              ry={massSize * 0.2}
+              fill="rgba(255,255,255,0.3)"
+            />
+          </g>
+
+          {/* Driving force indicator - enhanced */}
+          <g transform="translate(300, 80)">
+            <rect x="0" y="0" width="140" height="140" rx="12" fill={design.colors.bgCard} stroke={design.colors.border} />
+            <rect x="2" y="2" width="136" height="20" rx="10" fill="rgba(255,255,255,0.02)" />
+
+            {/* Oscillating arrow with glow */}
+            <g transform="translate(70, 85)">
+              <circle cx="0" cy="0" r="40" fill="none" stroke={design.colors.border} strokeDasharray="4,4" />
+
+              {/* Frequency markers */}
+              {[0, 90, 180, 270].map((angle) => (
+                <circle
+                  key={angle}
+                  cx={40 * Math.cos(angle * Math.PI / 180)}
+                  cy={40 * Math.sin(angle * Math.PI / 180)}
+                  r="3"
+                  fill={design.colors.bgElevated}
+                  stroke={design.colors.border}
+                />
+              ))}
+
+              {/* Arrow with glow */}
+              <line
+                x1="0" y1="0"
+                x2={35 * Math.cos(time * (drivingFrequency / 50))}
+                y2={35 * Math.sin(time * (drivingFrequency / 50))}
+                stroke="url(#resDrivingArrowGrad)"
+                strokeWidth="4"
+                strokeLinecap="round"
+                filter="url(#resGlowPremium)"
+              />
+
+              {/* Arrow tip */}
+              <circle
+                cx={35 * Math.cos(time * (drivingFrequency / 50))}
+                cy={35 * Math.sin(time * (drivingFrequency / 50))}
+                r="6"
+                fill={design.colors.violet}
+                filter="url(#resGlowPremium)"
+              />
+
+              <circle cx="0" cy="0" r="6" fill={design.colors.violet} />
+              <circle cx="0" cy="0" r="3" fill="#c084fc" />
+            </g>
+          </g>
+
+          {/* Response amplitude bar - premium with glow */}
+          <g transform="translate(50, 140)">
+            {/* Bar background */}
+            <rect x="0" y="0" width="30" height="100" rx="6" fill={design.colors.bgElevated} stroke={design.colors.border} />
+
+            {/* Amplitude envelope glow */}
+            {isAtResonance && (
+              <rect
+                x="-4" y={100 - responseAmplitude - 4}
+                width="38" height={responseAmplitude + 8}
+                rx="8"
+                fill="none"
+                stroke={design.colors.success}
+                strokeWidth="2"
+                opacity={0.4 + 0.3 * Math.sin(time * 6)}
+                filter="url(#resAmplitudeGlow)"
+              />
+            )}
+
+            {/* Amplitude fill with gradient */}
+            <rect
+              x="2" y={102 - responseAmplitude}
+              width="26" height={responseAmplitude - 4}
+              rx="4"
+              fill="url(#resAmplitudeGrad)"
+              filter={isAtResonance ? "url(#resAmplitudeGlow)" : undefined}
+              style={{ transition: 'all 0.1s ease' }}
+            />
+
+            {/* Frequency markers on bar */}
+            {[25, 50, 75].map((level) => (
+              <line
+                key={level}
+                x1="32" y1={100 - level} x2="38" y2={100 - level}
+                stroke={design.colors.textMuted}
+                strokeWidth="1"
+                opacity="0.5"
+              />
+            ))}
+          </g>
+
+          {/* Info panel - enhanced */}
+          <g transform="translate(300, 230)">
+            <rect x="0" y="0" width="140" height="40" rx="8" fill={design.colors.bgCard} stroke={design.colors.border} />
+            {isAtResonance && (
+              <rect x="0" y="0" width="140" height="40" rx="8" fill="none" stroke={design.colors.success} strokeWidth="2" opacity="0.5" filter="url(#resGlowPremium)" />
+            )}
+          </g>
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '500px',
+          padding: '0 12px'
+        }}>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ fontSize: typo.label, color: design.colors.textMuted, fontWeight: 600, marginBottom: '2px' }}>
+              AMPLITUDE
+            </div>
+            {isAtResonance && (
+              <div style={{ fontSize: typo.small, color: design.colors.success, fontWeight: 700 }}>
+                MAX!
+              </div>
+            )}
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.label, color: design.colors.textMuted, fontWeight: 600, marginBottom: '2px' }}>
+              MASS
+            </div>
+            <div style={{ fontSize: typo.body, color: design.colors.textPrimary, fontWeight: 700 }}>
+              {Math.round(100 + addedMass)}g
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.label, color: design.colors.textMuted, fontWeight: 600, marginBottom: '2px' }}>
+              DRIVING FORCE
+            </div>
+            <div style={{ fontSize: typo.body, color: design.colors.accentPrimary, fontWeight: 800 }}>
+              {drivingFrequency} Hz
+            </div>
+          </div>
+
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: typo.label, color: design.colors.textMuted, fontWeight: 600, marginBottom: '2px' }}>
+              NATURAL FREQ
+            </div>
+            <div style={{
+              fontSize: typo.body,
+              color: isAtResonance ? design.colors.success : design.colors.textSecondary,
+              fontWeight: 700
+            }}>
+              {resonantFreq} Hz {isAtResonance ? ' RESONANCE!' : ''}
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -509,236 +743,615 @@ const ResonanceRenderer: React.FC<ResonanceRendererProps> = ({ onGameEvent, game
 
     if (app.id === 'mri') {
       return (
-        <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }}>
-          <defs>
-            <linearGradient id="mriGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor={design.colors.accentPrimary} />
-              <stop offset="100%" stopColor={design.colors.violet} />
-            </linearGradient>
-            <filter id="mriGlow">
-              <feGaussianBlur stdDeviation="3" />
-            </filter>
-          </defs>
-          <rect x="0" y="0" width="300" height="200" fill={design.colors.bgDeep} rx="12" />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+          <svg viewBox="0 0 300 180" style={{ width: '100%', height: '140px' }}>
+            <defs>
+              {/* Premium MRI machine gradient - 5 stops */}
+              <linearGradient id="resMriMachineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#374151" />
+                <stop offset="25%" stopColor="#1f2937" />
+                <stop offset="50%" stopColor="#374151" />
+                <stop offset="75%" stopColor="#1f2937" />
+                <stop offset="100%" stopColor="#111827" />
+              </linearGradient>
 
-          {/* MRI machine */}
-          <ellipse cx="150" cy="100" rx="100" ry="80" fill={design.colors.bgElevated} stroke={design.colors.border} strokeWidth="3" />
-          <ellipse cx="150" cy="100" rx="60" ry="50" fill={design.colors.bgDeep} />
+              {/* Magnetic field gradient */}
+              <linearGradient id="resMriFieldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="transparent" />
+                <stop offset="20%" stopColor={design.colors.violet} stopOpacity="0.3" />
+                <stop offset="50%" stopColor={design.colors.violet} stopOpacity="0.8" />
+                <stop offset="80%" stopColor={design.colors.violet} stopOpacity="0.3" />
+                <stop offset="100%" stopColor="transparent" />
+              </linearGradient>
 
-          {/* Magnetic field lines */}
-          {[0, 1, 2, 3, 4].map((i) => (
-            <path
-              key={i}
-              d={`M 50 ${80 + i * 10} Q 150 ${70 + i * 10 + 5 * Math.sin(time * 2 + i)} 250 ${80 + i * 10}`}
-              fill="none"
-              stroke={design.colors.violet}
-              strokeWidth="1.5"
-              opacity={0.3 + i * 0.1}
-            />
-          ))}
+              {/* Patient body gradient */}
+              <radialGradient id="resMriPatientGrad" cx="40%" cy="40%">
+                <stop offset="0%" stopColor="#fef3c7" />
+                <stop offset="40%" stopColor="#fde68a" />
+                <stop offset="70%" stopColor="#d97706" />
+                <stop offset="100%" stopColor="#92400e" />
+              </radialGradient>
 
-          {/* Patient */}
-          <ellipse cx="150" cy="100" rx="25" ry="35" fill={design.colors.bgCard} />
+              {/* Nuclei glow gradient */}
+              <radialGradient id="resMriNucleiGrad">
+                <stop offset="0%" stopColor="#fff" />
+                <stop offset="40%" stopColor={design.colors.accentSecondary} />
+                <stop offset="100%" stopColor={design.colors.accentPrimary} />
+              </radialGradient>
 
-          {/* Resonating nuclei */}
-          {[...Array(8)].map((_, i) => {
-            const angle = (i / 8) * Math.PI * 2 + time * 3;
-            const r = 15;
-            return (
-              <circle
+              {/* Premium glow filter */}
+              <filter id="resMriGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur1" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur2" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="10" result="blur3" />
+                <feMerge>
+                  <feMergeNode in="blur3" />
+                  <feMergeNode in="blur2" />
+                  <feMergeNode in="blur1" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Inner machine glow */}
+              <filter id="resMriInnerGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="8" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+            </defs>
+
+            <rect x="0" y="0" width="300" height="180" fill={design.colors.bgDeep} rx="12" />
+
+            {/* MRI machine outer ring - 3D metallic */}
+            <ellipse cx="150" cy="90" rx="110" ry="75" fill="url(#resMriMachineGrad)" stroke="#4b5563" strokeWidth="2" />
+            <ellipse cx="150" cy="90" rx="105" ry="70" fill="none" stroke="#6b7280" strokeWidth="1" opacity="0.3" />
+
+            {/* Inner bore with glow */}
+            <ellipse cx="150" cy="90" rx="65" ry="45" fill={design.colors.bgDeep} stroke="#1e293b" strokeWidth="3" />
+            <ellipse cx="150" cy="90" rx="60" ry="40" fill="none" stroke={design.colors.violet} strokeWidth="1" opacity="0.3" filter="url(#resMriInnerGlow)" />
+
+            {/* Magnetic field lines - animated */}
+            {[0, 1, 2, 3, 4].map((i) => (
+              <path
                 key={i}
-                cx={150 + r * Math.cos(angle)}
-                cy={100 + r * Math.sin(angle)}
-                r="3"
-                fill={design.colors.accentPrimary}
-                filter="url(#mriGlow)"
-              >
-                <animate attributeName="opacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" begin={`${i * 0.1}s`} />
-              </circle>
-            );
-          })}
+                d={`M 40 ${75 + i * 8} Q 150 ${65 + i * 8 + 8 * Math.sin(time * 2 + i * 0.5)} 260 ${75 + i * 8}`}
+                fill="none"
+                stroke="url(#resMriFieldGrad)"
+                strokeWidth="2"
+                opacity={0.4 + i * 0.12}
+              />
+            ))}
 
-          <text x="150" y="180" textAnchor="middle" fill={design.colors.textSecondary} fontSize="11">
+            {/* Patient silhouette - 3D */}
+            <ellipse cx="150" cy="90" rx="28" ry="38" fill="url(#resMriPatientGrad)" opacity="0.9" />
+            <ellipse cx="143" cy="82" rx="8" ry="5" fill="rgba(255,255,255,0.2)" />
+
+            {/* Resonating hydrogen nuclei with premium glow */}
+            {[...Array(12)].map((_, i) => {
+              const angle = (i / 12) * Math.PI * 2 + time * 3;
+              const r = 18 + 4 * Math.sin(time * 2 + i);
+              return (
+                <circle
+                  key={i}
+                  cx={150 + r * Math.cos(angle)}
+                  cy={90 + r * 0.7 * Math.sin(angle)}
+                  r={3 + Math.sin(time * 4 + i) * 1}
+                  fill="url(#resMriNucleiGrad)"
+                  filter="url(#resMriGlow)"
+                  opacity={0.7 + 0.3 * Math.sin(time * 4 + i)}
+                />
+              );
+            })}
+
+            {/* Central resonance pulse */}
+            <circle
+              cx="150"
+              cy="90"
+              r={12 + 8 * Math.sin(time * 4)}
+              fill="none"
+              stroke={design.colors.accentPrimary}
+              strokeWidth="2"
+              opacity={0.5 + 0.3 * Math.sin(time * 4)}
+              filter="url(#resMriGlow)"
+            />
+          </svg>
+
+          {/* Caption outside SVG */}
+          <p style={{ fontSize: typo.small, color: design.colors.textSecondary, textAlign: 'center', margin: 0 }}>
             Hydrogen nuclei resonate at specific frequencies
-          </text>
-        </svg>
+          </p>
+        </div>
       );
     }
 
     if (app.id === 'glass') {
       return (
-        <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }}>
-          <defs>
-            <linearGradient id="glassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#e0e7ff" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#818cf8" stopOpacity="0.3" />
-            </linearGradient>
-          </defs>
-          <rect x="0" y="0" width="300" height="200" fill={design.colors.bgDeep} rx="12" />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+          <svg viewBox="0 0 300 180" style={{ width: '100%', height: '140px' }}>
+            <defs>
+              {/* Premium glass gradient - 6 stops for crystal effect */}
+              <linearGradient id="resGlassGradPremium" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f0f9ff" stopOpacity="0.95" />
+                <stop offset="20%" stopColor="#e0e7ff" stopOpacity="0.85" />
+                <stop offset="40%" stopColor="#c7d2fe" stopOpacity="0.7" />
+                <stop offset="60%" stopColor="#a5b4fc" stopOpacity="0.6" />
+                <stop offset="80%" stopColor="#818cf8" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#6366f1" stopOpacity="0.3" />
+              </linearGradient>
 
-          {/* Wine glass */}
-          <path
-            d={`M 130 50 Q 120 80 125 110 Q 130 130 150 135 Q 170 130 175 110 Q 180 80 170 50 Z`}
-            fill="url(#glassGrad)"
-            stroke="#a5b4fc"
-            strokeWidth="2"
-          />
-          <rect x="147" y="135" width="6" height="30" fill="#a5b4fc" />
-          <ellipse cx="150" cy="170" rx="25" ry="5" fill="#a5b4fc" />
+              {/* Glass stem gradient */}
+              <linearGradient id="resGlassStemGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#a5b4fc" stopOpacity="0.6" />
+                <stop offset="50%" stopColor="#c7d2fe" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#a5b4fc" stopOpacity="0.6" />
+              </linearGradient>
 
-          {/* Vibration waves */}
-          {[0, 1, 2].map((i) => (
+              {/* Sound wave gradient */}
+              <linearGradient id="resGlassSoundGrad" x1="100%" y1="0%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor={design.colors.accentPrimary} />
+                <stop offset="50%" stopColor={design.colors.accentSecondary} />
+                <stop offset="100%" stopColor="#f9a8d4" />
+              </linearGradient>
+
+              {/* Vibration glow */}
+              <filter id="resGlassVibrationGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur1" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur2" />
+                <feMerge>
+                  <feMergeNode in="blur2" />
+                  <feMergeNode in="blur1" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Sound wave glow */}
+              <filter id="resGlassSoundGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur1" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur2" />
+                <feMerge>
+                  <feMergeNode in="blur2" />
+                  <feMergeNode in="blur1" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Glass highlight */}
+              <linearGradient id="resGlassHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fff" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#fff" stopOpacity="0" />
+              </linearGradient>
+            </defs>
+
+            <rect x="0" y="0" width="300" height="180" fill={design.colors.bgDeep} rx="12" />
+
+            {/* Wine glass bowl with premium gradient */}
             <path
-              key={i}
-              d={`M ${130 - i * 15} ${80 + 10 * Math.sin(time * 5)} Q ${150} ${80 - 10 * Math.sin(time * 5)} ${170 + i * 15} ${80 + 10 * Math.sin(time * 5)}`}
-              fill="none"
-              stroke={design.colors.violet}
-              strokeWidth="2"
-              opacity={0.8 - i * 0.2}
+              d={`M 125 45 Q 112 75 118 105 Q 125 125 145 130 Q 165 125 172 105 Q 178 75 165 45 Z`}
+              fill="url(#resGlassGradPremium)"
+              stroke="#a5b4fc"
+              strokeWidth="1.5"
             />
-          ))}
 
-          {/* Sound waves from singer */}
-          <g transform="translate(230, 100)">
-            {[0, 1, 2, 3].map((i) => (
-              <path
-                key={i}
-                d={`M 0 0 Q ${-15 - i * 10} ${-20} ${-30 - i * 15} 0 Q ${-15 - i * 10} ${20} 0 0`}
-                fill="none"
-                stroke={design.colors.accentPrimary}
-                strokeWidth="2"
-                opacity={1 - i * 0.2}
-              >
-                <animate attributeName="opacity" values={`${1 - i * 0.2};${0.3 - i * 0.05};${1 - i * 0.2}`} dur="0.5s" repeatCount="indefinite" />
-              </path>
-            ))}
-            <circle cx="20" cy="0" r="15" fill={design.colors.accentMuted} />
-            <text x="20" y="5" textAnchor="middle" fontSize="14">🎤</text>
-          </g>
+            {/* Glass highlight reflection */}
+            <path
+              d={`M 130 50 Q 125 70 128 90`}
+              fill="none"
+              stroke="url(#resGlassHighlight)"
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
 
-          <text x="150" y="185" textAnchor="middle" fill={design.colors.textSecondary} fontSize="11">
+            {/* Wine inside glass */}
+            <path
+              d={`M 128 70 Q 122 85 127 100 Q 133 110 145 112 Q 157 110 163 100 Q 168 85 162 70 Z`}
+              fill="rgba(127, 29, 29, 0.6)"
+              stroke="none"
+            />
+
+            {/* Glass stem with gradient */}
+            <rect x="142" y="130" width="6" height="25" rx="1" fill="url(#resGlassStemGrad)" />
+
+            {/* Glass base */}
+            <ellipse cx="145" cy="158" rx="22" ry="4" fill="url(#resGlassStemGrad)" />
+            <ellipse cx="145" cy="157" rx="18" ry="2" fill="rgba(255,255,255,0.1)" />
+
+            {/* Vibration waves on glass - premium animated */}
+            {[0, 1, 2].map((i) => {
+              const vibrationIntensity = 8 + i * 3;
+              return (
+                <path
+                  key={i}
+                  d={`M ${125 - i * 12} ${80 + vibrationIntensity * Math.sin(time * 6)}
+                      Q ${145} ${80 - vibrationIntensity * Math.sin(time * 6)}
+                      ${165 + i * 12} ${80 + vibrationIntensity * Math.sin(time * 6)}`}
+                  fill="none"
+                  stroke={design.colors.violet}
+                  strokeWidth={2.5 - i * 0.5}
+                  opacity={0.9 - i * 0.25}
+                  filter="url(#resGlassVibrationGlow)"
+                />
+              );
+            })}
+
+            {/* Stress fracture lines (subtle) */}
+            <g opacity={0.3 + 0.2 * Math.sin(time * 6)}>
+              <line x1="135" y1="65" x2="140" y2="85" stroke="#ef4444" strokeWidth="0.5" />
+              <line x1="155" y1="70" x2="150" y2="90" stroke="#ef4444" strokeWidth="0.5" />
+              <line x1="140" y1="95" x2="150" y2="100" stroke="#ef4444" strokeWidth="0.5" />
+            </g>
+
+            {/* Sound waves from singer - premium with glow */}
+            <g transform="translate(235, 90)">
+              {[0, 1, 2, 3, 4].map((i) => (
+                <path
+                  key={i}
+                  d={`M 0 0
+                      Q ${-12 - i * 8} ${-18 - i * 3} ${-28 - i * 14} 0
+                      Q ${-12 - i * 8} ${18 + i * 3} 0 0`}
+                  fill="none"
+                  stroke="url(#resGlassSoundGrad)"
+                  strokeWidth={2.5 - i * 0.3}
+                  opacity={0.9 - i * 0.18}
+                  filter="url(#resGlassSoundGlow)"
+                >
+                  <animate
+                    attributeName="opacity"
+                    values={`${0.9 - i * 0.18};${0.4 - i * 0.08};${0.9 - i * 0.18}`}
+                    dur="0.4s"
+                    repeatCount="indefinite"
+                  />
+                </path>
+              ))}
+
+              {/* Singer icon with glow */}
+              <circle cx="20" cy="0" r="16" fill={design.colors.accentMuted} stroke={design.colors.accentPrimary} strokeWidth="2" />
+              <circle cx="20" cy="0" r="20" fill="none" stroke={design.colors.accentPrimary} strokeWidth="1" opacity="0.3" filter="url(#resGlassSoundGlow)" />
+            </g>
+          </svg>
+
+          {/* Caption outside SVG */}
+          <p style={{ fontSize: typo.small, color: design.colors.textSecondary, textAlign: 'center', margin: 0 }}>
             Sound at natural frequency shatters glass
-          </text>
-        </svg>
+          </p>
+        </div>
       );
     }
 
     if (app.id === 'bridge') {
       return (
-        <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }}>
-          <rect x="0" y="0" width="300" height="200" fill={design.colors.bgDeep} rx="12" />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+          <svg viewBox="0 0 300 180" style={{ width: '100%', height: '140px' }}>
+            <defs>
+              {/* Tower gradient - 3D steel look */}
+              <linearGradient id="resBridgeTowerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#374151" />
+                <stop offset="25%" stopColor="#4b5563" />
+                <stop offset="50%" stopColor="#6b7280" />
+                <stop offset="75%" stopColor="#4b5563" />
+                <stop offset="100%" stopColor="#374151" />
+              </linearGradient>
 
-          {/* Bridge towers */}
-          <rect x="60" y="60" width="20" height="100" fill={design.colors.bgElevated} stroke={design.colors.border} />
-          <rect x="220" y="60" width="20" height="100" fill={design.colors.bgElevated} stroke={design.colors.border} />
+              {/* Bridge deck gradient */}
+              <linearGradient id="resBridgeDeckGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#059669" />
+                <stop offset="30%" stopColor="#10b981" />
+                <stop offset="70%" stopColor="#059669" />
+                <stop offset="100%" stopColor="#047857" />
+              </linearGradient>
 
-          {/* Cables */}
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <line
-              key={i}
-              x1="70" y1="60"
-              x2={80 + i * 25} y2={100 + 10 * Math.sin(time * 2 + i * 0.5)}
-              stroke={design.colors.textMuted}
-              strokeWidth="1.5"
+              {/* Cable gradient */}
+              <linearGradient id="resBridgeCableGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#9ca3af" />
+                <stop offset="50%" stopColor="#d1d5db" />
+                <stop offset="100%" stopColor="#9ca3af" />
+              </linearGradient>
+
+              {/* Wind gradient */}
+              <linearGradient id="resBridgeWindGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="transparent" />
+                <stop offset="30%" stopColor={design.colors.violet} stopOpacity="0.5" />
+                <stop offset="100%" stopColor={design.colors.violet} />
+              </linearGradient>
+
+              {/* Damper gradient */}
+              <radialGradient id="resBridgeDamperGrad" cx="30%" cy="30%">
+                <stop offset="0%" stopColor="#fcd34d" />
+                <stop offset="50%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#b45309" />
+              </radialGradient>
+
+              {/* Motion blur for deck */}
+              <filter id="resBridgeMotionBlur" x="-20%" y="-50%" width="140%" height="200%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="0 3" />
+              </filter>
+
+              {/* Glow filter */}
+              <filter id="resBridgeGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur1" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur2" />
+                <feMerge>
+                  <feMergeNode in="blur2" />
+                  <feMergeNode in="blur1" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Water reflection gradient */}
+              <linearGradient id="resBridgeWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#0c4a6e" stopOpacity="0.3" />
+                <stop offset="50%" stopColor="#0369a1" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0.1" />
+              </linearGradient>
+            </defs>
+
+            <rect x="0" y="0" width="300" height="180" fill={design.colors.bgDeep} rx="12" />
+
+            {/* Water/ground */}
+            <rect x="0" y="145" width="300" height="35" rx="0 0 12 12" fill="url(#resBridgeWaterGrad)" />
+
+            {/* Bridge towers - 3D metallic */}
+            <g>
+              {/* Left tower */}
+              <rect x="55" y="50" width="25" height="100" rx="2" fill="url(#resBridgeTowerGrad)" stroke="#4b5563" />
+              <rect x="57" y="52" width="5" height="96" fill="rgba(255,255,255,0.1)" />
+              <rect x="55" y="45" width="25" height="8" rx="2" fill="#6b7280" />
+
+              {/* Right tower */}
+              <rect x="220" y="50" width="25" height="100" rx="2" fill="url(#resBridgeTowerGrad)" stroke="#4b5563" />
+              <rect x="222" y="52" width="5" height="96" fill="rgba(255,255,255,0.1)" />
+              <rect x="220" y="45" width="25" height="8" rx="2" fill="#6b7280" />
+            </g>
+
+            {/* Main cables */}
+            <path
+              d={`M 67 50 Q 150 20 233 50`}
+              fill="none"
+              stroke="url(#resBridgeCableGrad)"
+              strokeWidth="4"
             />
-          ))}
-          {[0, 1, 2, 3, 4, 5].map((i) => (
-            <line
-              key={`r${i}`}
-              x1="230" y1="60"
-              x2={220 - i * 25} y2={100 + 10 * Math.sin(time * 2 + i * 0.5)}
-              stroke={design.colors.textMuted}
-              strokeWidth="1.5"
+
+            {/* Suspension cables - animated */}
+            {[0, 1, 2, 3, 4, 5, 6].map((i) => {
+              const deckY = 100 + 12 * Math.sin(time * 2 + i * 0.4);
+              const cableTopY = 50 - 30 * Math.sin((i / 6) * Math.PI);
+              return (
+                <line
+                  key={i}
+                  x1={75 + i * 22}
+                  y1={cableTopY + 25}
+                  x2={75 + i * 22}
+                  y2={deckY}
+                  stroke="url(#resBridgeCableGrad)"
+                  strokeWidth="1.5"
+                />
+              );
+            })}
+
+            {/* Bridge deck (oscillating with motion blur) */}
+            <path
+              d={`M 25 ${100 + 12 * Math.sin(time * 2)}
+                  Q 150 ${100 - 12 * Math.sin(time * 2)} 275 ${100 + 12 * Math.sin(time * 2)}`}
+              fill="none"
+              stroke="url(#resBridgeDeckGrad)"
+              strokeWidth="8"
+              strokeLinecap="round"
+              filter="url(#resBridgeMotionBlur)"
             />
-          ))}
 
-          {/* Bridge deck (oscillating) */}
-          <path
-            d={`M 30 ${110 + 15 * Math.sin(time * 2)} Q 150 ${110 - 15 * Math.sin(time * 2)} 270 ${110 + 15 * Math.sin(time * 2)}`}
-            fill="none"
-            stroke={design.colors.success}
-            strokeWidth="6"
-            strokeLinecap="round"
-          />
+            {/* Deck highlight */}
+            <path
+              d={`M 25 ${98 + 12 * Math.sin(time * 2)}
+                  Q 150 ${98 - 12 * Math.sin(time * 2)} 275 ${98 + 12 * Math.sin(time * 2)}`}
+              fill="none"
+              stroke="rgba(255,255,255,0.2)"
+              strokeWidth="2"
+              strokeLinecap="round"
+            />
 
-          {/* Wind arrows */}
-          <g transform="translate(20, 80)">
+            {/* Wind arrows - premium animated */}
+            <g transform="translate(10, 70)">
+              {[0, 1, 2, 3].map((i) => {
+                const windOffset = (time * 50 + i * 20) % 80;
+                return (
+                  <g key={i} transform={`translate(${windOffset - 20}, ${i * 18})`} opacity={0.6 + 0.3 * Math.sin(time * 3 + i)}>
+                    <line x1="0" y1="0" x2="35" y2="0" stroke="url(#resBridgeWindGrad)" strokeWidth="2.5" strokeLinecap="round" />
+                    <polygon points="35,0 25,-4 25,4" fill={design.colors.violet} />
+                  </g>
+                );
+              })}
+            </g>
+
+            {/* Tuned mass damper - 3D with glow */}
+            <g transform={`translate(${145 + 6 * Math.sin(time * 2 + Math.PI)}, 115)`}>
+              <rect x="-2" y="-2" width="24" height="24" rx="4" fill="none" stroke={design.colors.warning} strokeWidth="1" opacity="0.4" filter="url(#resBridgeGlow)" />
+              <rect x="0" y="0" width="20" height="20" rx="4" fill="url(#resBridgeDamperGrad)" stroke="#92400e" strokeWidth="1" />
+              <rect x="3" y="3" width="6" height="6" rx="1" fill="rgba(255,255,255,0.3)" />
+            </g>
+
+            {/* Frequency markers - showing resonance danger zone */}
             {[0, 1, 2].map((i) => (
-              <g key={i} transform={`translate(0, ${i * 25})`}>
-                <line x1="0" y1="0" x2="30" y2="0" stroke={design.colors.violet} strokeWidth="2" />
-                <polygon points="30,0 20,-5 20,5" fill={design.colors.violet} />
-              </g>
+              <circle
+                key={i}
+                cx="150"
+                cy="100"
+                r={30 + i * 15 + (time * 10) % 45}
+                fill="none"
+                stroke={design.colors.error}
+                strokeWidth="1"
+                opacity={0.3 - ((time * 10) % 45) / 150 - i * 0.08}
+                strokeDasharray="4,4"
+              />
             ))}
-          </g>
+          </svg>
 
-          {/* Tuned mass damper indicator */}
-          <g transform="translate(140, 130)">
-            <rect x="0" y="0" width="20" height="20" rx="4" fill={design.colors.warning}>
-              <animate attributeName="x" values="0;5;0;-5;0" dur="1s" repeatCount="indefinite" />
-            </rect>
-          </g>
-
-          <text x="150" y="185" textAnchor="middle" fill={design.colors.textSecondary} fontSize="11">
+          {/* Caption outside SVG */}
+          <p style={{ fontSize: typo.small, color: design.colors.textSecondary, textAlign: 'center', margin: 0 }}>
             Wind resonance can destroy bridges
-          </text>
-        </svg>
+          </p>
+        </div>
       );
     }
 
     if (app.id === 'music') {
       return (
-        <svg viewBox="0 0 300 200" style={{ width: '100%', height: '160px' }}>
-          <defs>
-            <linearGradient id="guitarBodyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#b45309" />
-              <stop offset="100%" stopColor="#78350f" />
-            </linearGradient>
-          </defs>
-          <rect x="0" y="0" width="300" height="200" fill={design.colors.bgDeep} rx="12" />
+        <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+          <svg viewBox="0 0 300 180" style={{ width: '100%', height: '140px' }}>
+            <defs>
+              {/* Premium guitar body gradient - 6 stops for wood grain */}
+              <linearGradient id="resMusicBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#d97706" />
+                <stop offset="20%" stopColor="#b45309" />
+                <stop offset="40%" stopColor="#92400e" />
+                <stop offset="60%" stopColor="#78350f" />
+                <stop offset="80%" stopColor="#92400e" />
+                <stop offset="100%" stopColor="#78350f" />
+              </linearGradient>
 
-          {/* Guitar body */}
-          <ellipse cx="200" cy="110" rx="70" ry="65" fill="url(#guitarBodyGrad)" />
-          <ellipse cx="200" cy="110" rx="25" ry="25" fill="#1c1917" />
+              {/* Body highlight gradient */}
+              <radialGradient id="resMusicBodyHighlight" cx="30%" cy="30%" r="50%">
+                <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+              </radialGradient>
 
-          {/* Neck */}
-          <rect x="40" y="95" width="130" height="30" rx="3" fill="#44403c" />
+              {/* Neck gradient */}
+              <linearGradient id="resMusicNeckGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#57534e" />
+                <stop offset="30%" stopColor="#44403c" />
+                <stop offset="70%" stopColor="#292524" />
+                <stop offset="100%" stopColor="#1c1917" />
+              </linearGradient>
 
-          {/* Frets */}
-          {[60, 90, 115, 135, 150].map((x, i) => (
-            <line key={i} x1={x} y1="98" x2={x} y2="122" stroke="#a8a29e" strokeWidth="2" />
-          ))}
+              {/* Sound hole gradient */}
+              <radialGradient id="resMusicHoleGrad">
+                <stop offset="0%" stopColor="#0c0a09" />
+                <stop offset="70%" stopColor="#1c1917" />
+                <stop offset="100%" stopColor="#292524" />
+              </radialGradient>
 
-          {/* Strings with resonance waves */}
-          {[100, 105, 110, 115, 120].map((y, i) => (
-            <g key={i}>
-              <path
-                d={`M 40 ${y} Q 100 ${y + 6 * Math.sin(time * 4 + i)} 150 ${y} Q 200 ${y - 6 * Math.sin(time * 4 + i)} 270 ${y}`}
-                fill="none"
-                stroke={design.colors.warning}
-                strokeWidth={i === 2 ? "2.5" : "1.5"}
-                opacity={i === 2 ? 1 : 0.6}
-              />
-            </g>
-          ))}
+              {/* String gradient - gold/bronze */}
+              <linearGradient id="resMusicStringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#d4a017" />
+                <stop offset="25%" stopColor="#fcd34d" />
+                <stop offset="50%" stopColor="#f59e0b" />
+                <stop offset="75%" stopColor="#fcd34d" />
+                <stop offset="100%" stopColor="#d4a017" />
+              </linearGradient>
 
-          {/* Sound waves from body */}
-          {[0, 1, 2].map((i) => (
-            <circle
-              key={i}
-              cx="200"
-              cy="110"
-              r={30 + i * 20 + (time * 20) % 60}
-              fill="none"
-              stroke={design.colors.warning}
-              strokeWidth="1.5"
-              opacity={0.5 - ((time * 20) % 60) / 120 - i * 0.1}
-            />
-          ))}
+              {/* Sound wave gradient */}
+              <radialGradient id="resMusicWaveGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor={design.colors.warning} stopOpacity="0.6" />
+                <stop offset="100%" stopColor={design.colors.warning} stopOpacity="0" />
+              </radialGradient>
 
-          <text x="150" y="185" textAnchor="middle" fill={design.colors.textSecondary} fontSize="11">
+              {/* String vibration glow */}
+              <filter id="resMusicStringGlow" x="-20%" y="-100%" width="140%" height="300%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur1" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur2" />
+                <feMerge>
+                  <feMergeNode in="blur2" />
+                  <feMergeNode in="blur1" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Sound wave glow */}
+              <filter id="resMusicSoundGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur1" />
+                <feGaussianBlur in="SourceGraphic" stdDeviation="8" result="blur2" />
+                <feMerge>
+                  <feMergeNode in="blur2" />
+                  <feMergeNode in="blur1" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            <rect x="0" y="0" width="300" height="180" fill={design.colors.bgDeep} rx="12" />
+
+            {/* Guitar body - 3D with highlight */}
+            <ellipse cx="200" cy="100" rx="72" ry="62" fill="url(#resMusicBodyGrad)" stroke="#92400e" strokeWidth="2" />
+            <ellipse cx="200" cy="100" rx="70" ry="60" fill="url(#resMusicBodyHighlight)" />
+
+            {/* Body edge highlight */}
+            <ellipse cx="200" cy="100" rx="68" ry="58" fill="none" stroke="rgba(251,191,36,0.1)" strokeWidth="2" />
+
+            {/* Sound hole with decorative ring */}
+            <ellipse cx="200" cy="100" rx="26" ry="24" fill="url(#resMusicHoleGrad)" />
+            <ellipse cx="200" cy="100" rx="30" ry="28" fill="none" stroke="#d4a017" strokeWidth="2" opacity="0.6" />
+            <ellipse cx="200" cy="100" rx="34" ry="32" fill="none" stroke="#fcd34d" strokeWidth="1" opacity="0.3" />
+
+            {/* Neck - 3D with frets */}
+            <rect x="35" y="88" width="135" height="24" rx="2" fill="url(#resMusicNeckGrad)" />
+            <rect x="35" y="88" width="135" height="3" fill="rgba(255,255,255,0.05)" />
+
+            {/* Frets with metallic look */}
+            {[55, 80, 102, 120, 135, 148].map((x, i) => (
+              <g key={i}>
+                <line x1={x} y1="89" x2={x} y2="111" stroke="#d6d3d1" strokeWidth="2.5" />
+                <line x1={x + 1} y1="89" x2={x + 1} y2="111" stroke="rgba(255,255,255,0.3)" strokeWidth="0.5" />
+              </g>
+            ))}
+
+            {/* Fret markers */}
+            {[80, 120].map((x, i) => (
+              <circle key={i} cx={x} cy="100" r="3" fill="#fafaf9" opacity="0.8" />
+            ))}
+
+            {/* Strings with premium vibration animation */}
+            {[91, 95, 99, 103, 107, 111].map((y, i) => {
+              const amplitude = i === 2 || i === 3 ? 5 : 3;
+              const thickness = i === 0 ? 0.8 : i === 5 ? 2 : 1 + i * 0.2;
+              return (
+                <path
+                  key={i}
+                  d={`M 35 ${y}
+                      Q 80 ${y + amplitude * Math.sin(time * 5 + i * 0.8)}
+                      135 ${y}
+                      Q 190 ${y - amplitude * Math.sin(time * 5 + i * 0.8)}
+                      270 ${y}`}
+                  fill="none"
+                  stroke="url(#resMusicStringGrad)"
+                  strokeWidth={thickness}
+                  opacity={0.6 + (i === 2 || i === 3 ? 0.4 : 0.2)}
+                  filter={i === 2 || i === 3 ? "url(#resMusicStringGlow)" : undefined}
+                />
+              );
+            })}
+
+            {/* Sound waves emanating from body - premium with glow */}
+            {[0, 1, 2, 3].map((i) => {
+              const baseRadius = 35;
+              const maxExpand = 50;
+              const expandProgress = ((time * 15 + i * 12) % maxExpand);
+              return (
+                <circle
+                  key={i}
+                  cx="200"
+                  cy="100"
+                  r={baseRadius + expandProgress}
+                  fill="none"
+                  stroke={design.colors.warning}
+                  strokeWidth={2 - expandProgress / 30}
+                  opacity={0.6 - expandProgress / maxExpand * 0.6}
+                  filter="url(#resMusicSoundGlow)"
+                />
+              );
+            })}
+
+            {/* Bridge */}
+            <rect x="225" y="95" width="35" height="10" rx="2" fill="#292524" stroke="#44403c" />
+
+            {/* Headstock hint */}
+            <rect x="20" y="92" width="18" height="16" rx="3" fill="#292524" stroke="#44403c" />
+            {[94, 98, 102, 106].map((y, i) => (
+              <circle key={i} cx="28" cy={y} r="2" fill="#d4a017" />
+            ))}
+          </svg>
+
+          {/* Caption outside SVG */}
+          <p style={{ fontSize: typo.small, color: design.colors.textSecondary, textAlign: 'center', margin: 0 }}>
             Guitar body resonates to amplify sound
-          </text>
-        </svg>
+          </p>
+        </div>
       );
     }
 

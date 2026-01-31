@@ -47,6 +47,166 @@ const liquidProperties: Record<string, { gamma: number; color: string; name: str
 };
 
 // ─────────────────────────────────────────────────────────────
+// Premium SVG Definitions Component
+// ─────────────────────────────────────────────────────────────
+const PremiumSVGDefs: React.FC = () => (
+  <defs>
+    {/* === WATER SURFACE GRADIENTS === */}
+    {/* Deep water gradient with realistic depth */}
+    <linearGradient id="clipWaterDepth" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+      <stop offset="15%" stopColor="#3b82f6" stopOpacity="0.95" />
+      <stop offset="40%" stopColor="#2563eb" stopOpacity="1" />
+      <stop offset="70%" stopColor="#1d4ed8" stopOpacity="1" />
+      <stop offset="90%" stopColor="#1e40af" stopOpacity="1" />
+      <stop offset="100%" stopColor="#1e3a8a" stopOpacity="1" />
+    </linearGradient>
+
+    {/* Water surface with tension effect - shimmering highlight */}
+    <linearGradient id="clipWaterSurface" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.3" />
+      <stop offset="25%" stopColor="#60a5fa" stopOpacity="0.6" />
+      <stop offset="50%" stopColor="#bfdbfe" stopOpacity="0.8" />
+      <stop offset="75%" stopColor="#60a5fa" stopOpacity="0.6" />
+      <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.3" />
+    </linearGradient>
+
+    {/* Surface tension membrane - elastic skin visualization */}
+    <linearGradient id="clipTensionMembrane" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.9" />
+      <stop offset="30%" stopColor="#bae6fd" stopOpacity="0.7" />
+      <stop offset="60%" stopColor="#7dd3fc" stopOpacity="0.5" />
+      <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.2" />
+    </linearGradient>
+
+    {/* === PAPERCLIP METALLIC GRADIENTS === */}
+    {/* Premium brushed steel gradient */}
+    <linearGradient id="clipMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#e2e8f0" />
+      <stop offset="20%" stopColor="#cbd5e1" />
+      <stop offset="40%" stopColor="#94a3b8" />
+      <stop offset="60%" stopColor="#cbd5e1" />
+      <stop offset="80%" stopColor="#e2e8f0" />
+      <stop offset="100%" stopColor="#94a3b8" />
+    </linearGradient>
+
+    {/* Paperclip highlight for 3D depth */}
+    <linearGradient id="clipHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+      <stop offset="30%" stopColor="#f1f5f9" stopOpacity="0.6" />
+      <stop offset="70%" stopColor="#e2e8f0" stopOpacity="0.3" />
+      <stop offset="100%" stopColor="#cbd5e1" stopOpacity="0.1" />
+    </linearGradient>
+
+    {/* Paperclip shadow gradient */}
+    <linearGradient id="clipShadow" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stopColor="#64748b" stopOpacity="0.3" />
+      <stop offset="50%" stopColor="#475569" stopOpacity="0.5" />
+      <stop offset="100%" stopColor="#334155" stopOpacity="0.7" />
+    </linearGradient>
+
+    {/* === CONTAINER GRADIENTS === */}
+    {/* Glass container with depth */}
+    <linearGradient id="clipContainerGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stopColor="#334155" stopOpacity="0.9" />
+      <stop offset="25%" stopColor="#1e293b" stopOpacity="0.95" />
+      <stop offset="50%" stopColor="#0f172a" stopOpacity="1" />
+      <stop offset="75%" stopColor="#1e293b" stopOpacity="0.95" />
+      <stop offset="100%" stopColor="#334155" stopOpacity="0.9" />
+    </linearGradient>
+
+    {/* Container rim highlight */}
+    <linearGradient id="clipContainerRim" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stopColor="#64748b" />
+      <stop offset="50%" stopColor="#475569" />
+      <stop offset="100%" stopColor="#334155" />
+    </linearGradient>
+
+    {/* === FORCE ARROW GRADIENTS === */}
+    {/* Weight force gradient (red) */}
+    <linearGradient id="clipForceWeight" x1="0%" y1="0%" x2="0%" y2="100%">
+      <stop offset="0%" stopColor="#fca5a5" />
+      <stop offset="50%" stopColor="#ef4444" />
+      <stop offset="100%" stopColor="#dc2626" />
+    </linearGradient>
+
+    {/* Surface tension force gradient (green) */}
+    <linearGradient id="clipForceTension" x1="0%" y1="100%" x2="0%" y2="0%">
+      <stop offset="0%" stopColor="#86efac" />
+      <stop offset="50%" stopColor="#22c55e" />
+      <stop offset="100%" stopColor="#16a34a" />
+    </linearGradient>
+
+    {/* === GLOW FILTERS === */}
+    {/* Water surface glow */}
+    <filter id="clipWaterGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="3" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    {/* Paperclip metallic glow */}
+    <filter id="clipMetalGlow" x="-30%" y="-30%" width="160%" height="160%">
+      <feGaussianBlur stdDeviation="1.5" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    {/* Force arrow glow */}
+    <filter id="clipForceGlow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="2" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    {/* Dimple shadow effect */}
+    <filter id="clipDimpleShadow" x="-50%" y="-50%" width="200%" height="200%">
+      <feGaussianBlur stdDeviation="4" result="blur" />
+      <feOffset dx="0" dy="3" result="offset" />
+      <feMerge>
+        <feMergeNode in="offset" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    {/* Ripple effect filter */}
+    <filter id="clipRippleGlow" x="-100%" y="-100%" width="300%" height="300%">
+      <feGaussianBlur stdDeviation="1" result="blur" />
+      <feMerge>
+        <feMergeNode in="blur" />
+        <feMergeNode in="SourceGraphic" />
+      </feMerge>
+    </filter>
+
+    {/* === ARROW MARKERS === */}
+    <marker id="clipArrowRed" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0,1 L8,4 L0,7 Z" fill="url(#clipForceWeight)" />
+    </marker>
+    <marker id="clipArrowGreen" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+      <path d="M0,1 L8,4 L0,7 Z" fill="url(#clipForceTension)" />
+    </marker>
+
+    {/* === PATTERNS === */}
+    {/* Subtle water texture */}
+    <pattern id="clipWaterPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+      <rect width="20" height="20" fill="none" />
+      <circle cx="10" cy="10" r="0.5" fill="#93c5fd" opacity="0.2" />
+    </pattern>
+
+    {/* Surface tension lines pattern */}
+    <pattern id="clipTensionLines" width="8" height="8" patternUnits="userSpaceOnUse">
+      <line x1="0" y1="4" x2="8" y2="4" stroke="#bfdbfe" strokeWidth="0.3" opacity="0.3" />
+    </pattern>
+  </defs>
+);
+
+// ─────────────────────────────────────────────────────────────
 // Main Component
 // ─────────────────────────────────────────────────────────────
 export default function FloatingPaperclipRenderer({
@@ -195,8 +355,9 @@ export default function FloatingPaperclipRenderer({
     setHasDropped(false);
   };
 
-  // Twist - add soap to floating clip
-  const addSoapToWater = () => {
+  // Twist - add soap to floating clip (used for click-to-add-soap interaction)
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
+  const _addSoapToWater = () => {
     if (soapAdded || twistClipState !== 'floating') return;
     setSoapAdded(true);
     setTwistClipState('sinking');
@@ -385,6 +546,192 @@ export default function FloatingPaperclipRenderer({
     { title: "Microfluidics", description: "Lab-on-a-chip technology", icon: "🔬" }
   ];
 
+  // ─────────────────────────────────────────────────────────────
+  // Premium Paperclip SVG Component
+  // ─────────────────────────────────────────────────────────────
+  const renderPremiumPaperclip = (x: number, y: number, scale: number = 1) => (
+    <g transform={`translate(${x}, ${y}) scale(${scale})`} filter="url(#clipMetalGlow)">
+      {/* Shadow layer */}
+      <path
+        d="M 7,7 L 7,17 Q 7,22 12,22 L 52,22 Q 57,22 57,17 L 57,7 Q 57,2 52,2 L 17,2 Q 12,2 12,7 L 12,14"
+        fill="none"
+        stroke="url(#clipShadow)"
+        strokeWidth={4 + clipWeight * 0.5}
+        strokeLinecap="round"
+        opacity="0.4"
+      />
+      {/* Main paperclip body with metallic gradient */}
+      <path
+        d="M 5,5 L 5,15 Q 5,20 10,20 L 50,20 Q 55,20 55,15 L 55,5 Q 55,0 50,0 L 15,0 Q 10,0 10,5 L 10,12"
+        fill="none"
+        stroke="url(#clipMetallic)"
+        strokeWidth={3 + clipWeight * 0.5}
+        strokeLinecap="round"
+      />
+      {/* Highlight for 3D effect */}
+      <path
+        d="M 8,3 L 8,13 Q 8,17 12,17 L 48,17"
+        fill="none"
+        stroke="url(#clipHighlight)"
+        strokeWidth="1.5"
+        strokeLinecap="round"
+        opacity="0.7"
+      />
+      {/* Top edge highlight */}
+      <path d="M 8,3 L 12,3" fill="none" stroke="#ffffff" strokeWidth="2" strokeLinecap="round" opacity="0.9" />
+    </g>
+  );
+
+  // ─────────────────────────────────────────────────────────────
+  // Premium Water Container SVG
+  // ─────────────────────────────────────────────────────────────
+  const renderPremiumWaterContainer = (
+    clipYPos: number,
+    currentDimpleDepth: number,
+    currentClipState: 'hovering' | 'floating' | 'sinking',
+    showForces: boolean,
+    surfaceForceN: number,
+    weightForceN: number
+  ) => (
+    <svg viewBox="0 0 400 280" className="w-full h-64">
+      <PremiumSVGDefs />
+
+      {/* Container with glass effect */}
+      <rect x="50" y="100" width="300" height="150" rx="8" fill="url(#clipContainerGlass)" />
+      <rect x="50" y="100" width="300" height="4" fill="url(#clipContainerRim)" />
+
+      {/* Water body with depth gradient */}
+      <rect x="55" y="105" width="290" height="140" rx="5" fill="url(#clipWaterDepth)" />
+      <rect x="55" y="105" width="290" height="140" rx="5" fill="url(#clipWaterPattern)" />
+
+      {/* Surface tension visualization when floating */}
+      {currentClipState === 'floating' && (
+        <>
+          {/* Surface dimple with shadow */}
+          <path
+            d={`M 55,105
+                Q 120,105 ${170 - currentDimpleDepth * 2},${105 + currentDimpleDepth * 0.5}
+                Q 200,${105 + currentDimpleDepth * 1.5} ${230 + currentDimpleDepth * 2},${105 + currentDimpleDepth * 0.5}
+                Q 280,105 345,105`}
+            fill="url(#clipTensionMembrane)"
+            filter="url(#clipDimpleShadow)"
+          />
+
+          {/* Surface tension membrane highlight */}
+          <path
+            d={`M 55,105
+                Q 120,105 ${170 - currentDimpleDepth * 2},${105 + currentDimpleDepth * 0.5}
+                Q 200,${105 + currentDimpleDepth * 1.5} ${230 + currentDimpleDepth * 2},${105 + currentDimpleDepth * 0.5}
+                Q 280,105 345,105`}
+            fill="none"
+            stroke="url(#clipWaterSurface)"
+            strokeWidth="2"
+            filter="url(#clipWaterGlow)"
+          />
+
+          {/* Animated ripples */}
+          <ellipse
+            cx="200"
+            cy="105"
+            rx={50 + Math.sin(animationFrame * 0.2) * 5}
+            ry={3 + Math.sin(animationFrame * 0.2) * 1}
+            fill="none"
+            stroke="#bfdbfe"
+            strokeWidth="0.8"
+            opacity={0.6 - (animationFrame % 30) / 60}
+            filter="url(#clipRippleGlow)"
+          />
+          <ellipse
+            cx="200"
+            cy="105"
+            rx={70 + Math.sin(animationFrame * 0.15) * 8}
+            ry={4 + Math.sin(animationFrame * 0.15) * 1.5}
+            fill="none"
+            stroke="#93c5fd"
+            strokeWidth="0.5"
+            opacity={0.4 - (animationFrame % 40) / 80}
+          />
+
+          {/* Surface deformation indicators - tension lines */}
+          <line
+            x1={165 - currentDimpleDepth}
+            y1={108 + currentDimpleDepth * 0.3}
+            x2={155 - currentDimpleDepth * 1.5}
+            y2={106}
+            stroke="#7dd3fc"
+            strokeWidth="1"
+            strokeDasharray="3,2"
+            opacity="0.5"
+          />
+          <line
+            x1={235 + currentDimpleDepth}
+            y1={108 + currentDimpleDepth * 0.3}
+            x2={245 + currentDimpleDepth * 1.5}
+            y2={106}
+            stroke="#7dd3fc"
+            strokeWidth="1"
+            strokeDasharray="3,2"
+            opacity="0.5"
+          />
+        </>
+      )}
+
+      {/* Normal water surface when not floating */}
+      {currentClipState !== 'floating' && (
+        <ellipse cx="200" cy="105" rx="140" ry="5" fill="url(#clipWaterSurface)" opacity="0.6" />
+      )}
+
+      {/* Paperclip */}
+      {renderPremiumPaperclip(170, clipYPos, 1)}
+
+      {/* Force Vectors (when floating) */}
+      {showForces && currentClipState === 'floating' && (
+        <g>
+          {/* Weight arrow with gradient */}
+          <line
+            x1="200" y1={clipYPos + 25}
+            x2="200" y2={clipYPos + 25 + weightForceN * 300}
+            stroke="url(#clipForceWeight)"
+            strokeWidth="4"
+            markerEnd="url(#clipArrowRed)"
+            filter="url(#clipForceGlow)"
+          />
+
+          {/* Surface tension forces (up and outward) with gradient */}
+          <line
+            x1="175" y1={clipYPos + 20}
+            x2={175 - surfaceForceN * 200} y2={clipYPos + 20 - surfaceForceN * 300}
+            stroke="url(#clipForceTension)"
+            strokeWidth="3"
+            markerEnd="url(#clipArrowGreen)"
+            filter="url(#clipForceGlow)"
+          />
+          <line
+            x1="225" y1={clipYPos + 20}
+            x2={225 + surfaceForceN * 200} y2={clipYPos + 20 - surfaceForceN * 300}
+            stroke="url(#clipForceTension)"
+            strokeWidth="3"
+            markerEnd="url(#clipArrowGreen)"
+            filter="url(#clipForceGlow)"
+          />
+
+          {/* Contact angle arc */}
+          <path
+            d={`M 175,${clipYPos + 20} A 15 15 0 0 1 ${175 - 10},${clipYPos + 10}`}
+            fill="none"
+            stroke="#fbbf24"
+            strokeWidth="1.5"
+            strokeDasharray="2,2"
+          />
+        </g>
+      )}
+
+      {/* Physics formula display */}
+      <rect x="55" y="220" width="290" height="35" fill="#0f172a" rx="6" opacity="0.9" />
+      <rect x="55" y="220" width="290" height="1" fill="#334155" />
+    </svg>
+  );
+
   const renderPhase = () => {
     switch (phase) {
       case 'hook':
@@ -408,39 +755,61 @@ export default function FloatingPaperclipRenderer({
 
               <div className="relative">
                 <svg viewBox="0 0 400 250" className="w-full h-56 mb-4">
-                  <rect x="50" y="100" width="300" height="130" fill="#1e40af" rx="5" />
-                  <rect x="55" y="105" width="290" height="120" fill="#3b82f6" rx="3" />
-                  <ellipse cx="200" cy="105" rx="140" ry="5" fill="#60a5fa" opacity="0.5" />
+                  <PremiumSVGDefs />
 
-                  <g transform="translate(170, 95)">
-                    <ellipse cx="30" cy="12" rx="35" ry="6" fill="#1d4ed8" opacity="0.5" />
-                    <path
-                      d="M 5,5 L 5,15 Q 5,20 10,20 L 50,20 Q 55,20 55,15 L 55,5 Q 55,0 50,0 L 15,0 Q 10,0 10,5 L 10,12"
-                      fill="none"
-                      stroke="#94a3b8"
-                      strokeWidth="3"
-                      strokeLinecap="round"
-                    />
-                    <path d="M 8,3 L 12,3" fill="none" stroke="#e2e8f0" strokeWidth="2" strokeLinecap="round" />
-                  </g>
+                  {/* Premium container */}
+                  <rect x="50" y="100" width="300" height="130" fill="url(#clipContainerGlass)" rx="8" />
+                  <rect x="50" y="100" width="300" height="4" fill="url(#clipContainerRim)" />
 
-                  <text x="120" y="80" fill="#fbbf24" fontSize="24" fontWeight="bold">?</text>
-                  <text x="280" y="80" fill="#fbbf24" fontSize="24" fontWeight="bold">?</text>
+                  {/* Premium water with depth */}
+                  <rect x="55" y="105" width="290" height="120" fill="url(#clipWaterDepth)" rx="5" />
+                  <rect x="55" y="105" width="290" height="120" fill="url(#clipWaterPattern)" rx="5" />
 
-                  <text x="200" y="45" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">
-                    A steel paperclip floating on water!
-                  </text>
+                  {/* Surface tension line */}
+                  <ellipse cx="200" cy="105" rx="140" ry="5" fill="url(#clipWaterSurface)" filter="url(#clipWaterGlow)" />
 
+                  {/* Premium paperclip with dimple effect */}
+                  <path
+                    d="M 55,105 Q 140,105 165,112 Q 200,118 235,112 Q 260,105 345,105"
+                    fill="url(#clipTensionMembrane)"
+                    opacity="0.8"
+                  />
+
+                  {renderPremiumPaperclip(170, 95, 1)}
+
+                  {/* Density comparison badges */}
                   <g transform="translate(70, 175)">
-                    <rect x="0" y="0" width="60" height="20" fill="#64748b" rx="3" />
-                    <text x="30" y="14" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">Steel: 7850</text>
+                    <rect x="0" y="0" width="70" height="24" fill="#1e293b" rx="6" stroke="#475569" strokeWidth="1" />
+                    <rect x="0" y="0" width="70" height="1" fill="#64748b" />
                   </g>
-                  <g transform="translate(270, 175)">
-                    <rect x="0" y="0" width="60" height="20" fill="#3b82f6" rx="3" />
-                    <text x="30" y="14" textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">Water: 1000</text>
+                  <g transform="translate(260, 175)">
+                    <rect x="0" y="0" width="70" height="24" fill="#1e3a5f" rx="6" stroke="#3b82f6" strokeWidth="1" />
+                    <rect x="0" y="0" width="70" height="1" fill="#60a5fa" />
                   </g>
-                  <text x="200" y="208" textAnchor="middle" fill="#94a3b8" fontSize="10">kg/m³</text>
                 </svg>
+
+                {/* Labels outside SVG using typo system */}
+                <div className="flex justify-between px-8 -mt-2">
+                  <div className="text-center">
+                    <p style={{ fontSize: typo.small }} className="font-bold text-slate-300">Steel: 7850</p>
+                    <p style={{ fontSize: typo.label }} className="text-slate-500">kg/m³</p>
+                  </div>
+                  <div className="text-center">
+                    <p style={{ fontSize: typo.small }} className="font-bold text-blue-400">Water: 1000</p>
+                    <p style={{ fontSize: typo.label }} className="text-slate-500">kg/m³</p>
+                  </div>
+                </div>
+
+                {/* Question marks as labels */}
+                <div className="flex justify-center gap-40 -mt-36 mb-28">
+                  <span style={{ fontSize: typo.heading }} className="text-amber-400 font-bold animate-pulse">?</span>
+                  <span style={{ fontSize: typo.heading }} className="text-amber-400 font-bold animate-pulse">?</span>
+                </div>
+
+                {/* Caption outside SVG */}
+                <p style={{ fontSize: typo.body }} className="text-center text-white font-semibold mt-2">
+                  A steel paperclip floating on water!
+                </p>
               </div>
             </div>
 
@@ -462,8 +831,8 @@ export default function FloatingPaperclipRenderer({
       case 'predict':
         return (
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
-            <p className="text-slate-400 mb-6 text-center max-w-md">
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-6">Make Your Prediction</h2>
+            <p style={{ fontSize: typo.body }} className="text-slate-400 mb-6 text-center max-w-md">
               You have a paperclip and a bowl of water. What do you think will happen
               when you <span className="text-blue-400 font-semibold">gently place</span> the paperclip on the water?
             </p>
@@ -484,7 +853,7 @@ export default function FloatingPaperclipRenderer({
                       : 'border-slate-700 hover:border-slate-600 bg-slate-800/50'
                   }`}
                 >
-                  <span className={prediction === opt.id ? 'text-blue-300' : 'text-slate-300'}>{opt.text}</span>
+                  <span style={{ fontSize: typo.body }} className={prediction === opt.id ? 'text-blue-300' : 'text-slate-300'}>{opt.text}</span>
                 </button>
               ))}
             </div>
@@ -513,18 +882,18 @@ export default function FloatingPaperclipRenderer({
 
         return (
           <div className="flex flex-col items-center p-6">
-            <h2 className="text-2xl font-bold text-white mb-4">Floating Paperclip Experiment</h2>
-            <p className="text-slate-400 mb-4">Adjust parameters to explore surface tension physics</p>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-4">Floating Paperclip Experiment</h2>
+            <p style={{ fontSize: typo.body }} className="text-slate-400 mb-4">Adjust parameters to explore surface tension physics</p>
 
             {/* Interactive Parameter Controls */}
             <div className="bg-slate-800/60 rounded-2xl p-4 mb-4 w-full max-w-xl border border-slate-700/50">
-              <h3 className="text-sm font-semibold text-blue-400 mb-3">Experiment Controls</h3>
+              <h3 style={{ fontSize: typo.small }} className="font-semibold text-blue-400 mb-3">Experiment Controls</h3>
 
               {/* Surface Tension Slider */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs text-slate-400">Surface Tension Coefficient</label>
-                  <span className="text-xs font-mono text-blue-300">{surfaceTension.toFixed(3)} N/m</span>
+                  <label style={{ fontSize: typo.label }} className="text-slate-400">Surface Tension Coefficient</label>
+                  <span style={{ fontSize: typo.label }} className="font-mono text-blue-300">{surfaceTension.toFixed(3)} N/m</span>
                 </div>
                 <input
                   type="range"
@@ -536,17 +905,17 @@ export default function FloatingPaperclipRenderer({
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-blue-500"
                   style={{ zIndex: 10 }}
                 />
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
-                  <span>Alcohol (0.02)</span>
-                  <span>Water (0.072)</span>
+                <div className="flex justify-between mt-1">
+                  <span style={{ fontSize: typo.label }} className="text-slate-500">Alcohol (0.02)</span>
+                  <span style={{ fontSize: typo.label }} className="text-slate-500">Water (0.072)</span>
                 </div>
               </div>
 
               {/* Paperclip Weight Slider */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs text-slate-400">Paperclip Weight/Size</label>
-                  <span className="text-xs font-mono text-cyan-300">{clipWeight.toFixed(2)} g</span>
+                  <label style={{ fontSize: typo.label }} className="text-slate-400">Paperclip Weight/Size</label>
+                  <span style={{ fontSize: typo.label }} className="font-mono text-cyan-300">{clipWeight.toFixed(2)} g</span>
                 </div>
                 <input
                   type="range"
@@ -558,17 +927,17 @@ export default function FloatingPaperclipRenderer({
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-cyan-500"
                   style={{ zIndex: 10 }}
                 />
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
-                  <span>Small (0.2g)</span>
-                  <span>Large (2.0g)</span>
+                <div className="flex justify-between mt-1">
+                  <span style={{ fontSize: typo.label }} className="text-slate-500">Small (0.2g)</span>
+                  <span style={{ fontSize: typo.label }} className="text-slate-500">Large (2.0g)</span>
                 </div>
               </div>
 
               {/* Water Temperature Slider */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs text-slate-400">Water Temperature</label>
-                  <span className="text-xs font-mono text-amber-300">{waterTemperature}°C</span>
+                  <label style={{ fontSize: typo.label }} className="text-slate-400">Water Temperature</label>
+                  <span style={{ fontSize: typo.label }} className="font-mono text-amber-300">{waterTemperature}°C</span>
                 </div>
                 <input
                   type="range"
@@ -580,17 +949,17 @@ export default function FloatingPaperclipRenderer({
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
                   style={{ zIndex: 10 }}
                 />
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
-                  <span>Cold (5°C)</span>
-                  <span>Hot (80°C)</span>
+                <div className="flex justify-between mt-1">
+                  <span style={{ fontSize: typo.label }} className="text-slate-500">Cold (5°C)</span>
+                  <span style={{ fontSize: typo.label }} className="text-slate-500">Hot (80°C)</span>
                 </div>
               </div>
 
               {/* Toggle Force Vectors */}
               <button
                 onClick={() => setShowForceVectors(!showForceVectors)}
-                style={{ zIndex: 10 }}
-                className={`px-3 py-1.5 text-xs rounded-lg font-medium transition-all ${
+                style={{ zIndex: 10, fontSize: typo.label }}
+                className={`px-3 py-1.5 rounded-lg font-medium transition-all ${
                   showForceVectors ? 'bg-emerald-600 text-white' : 'bg-slate-700 text-slate-300'
                 }`}
               >
@@ -600,138 +969,56 @@ export default function FloatingPaperclipRenderer({
 
             {/* Interactive SVG Visualization */}
             <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-xl">
-              <svg viewBox="0 0 400 280" className="w-full h-64">
-                {/* Water container */}
-                <rect x="50" y="100" width="300" height="150" fill="#1e40af" rx="8" />
-                <rect x="55" y="105" width="290" height="140" fill="#3b82f6" rx="5" />
+              {renderPremiumWaterContainer(clipY, dimpleDepth, clipState, showForceVectors, surfaceForceN, weightForceN)}
 
-                {/* Animated water surface with dimple */}
-                {clipState === 'floating' && (
-                  <>
-                    {/* Surface dimple visualization */}
-                    <path
-                      d={`M 55,105
-                          Q 120,105 ${170 - dimpleDepth * 2},${105 + dimpleDepth * 0.5}
-                          Q 200,${105 + dimpleDepth * 1.5} ${230 + dimpleDepth * 2},${105 + dimpleDepth * 0.5}
-                          Q 280,105 345,105`}
-                      fill="#60a5fa"
-                      opacity="0.7"
-                    />
-                    {/* Animated ripples */}
-                    <ellipse
-                      cx="200"
-                      cy="105"
-                      rx={50 + Math.sin(animationFrame * 0.2) * 5}
-                      ry={3 + Math.sin(animationFrame * 0.2) * 1}
-                      fill="none"
-                      stroke="#93c5fd"
-                      strokeWidth="0.5"
-                      opacity={0.5 - (animationFrame % 30) / 60}
-                    />
-                  </>
-                )}
-
-                {/* Paperclip */}
-                <g transform={`translate(170, ${clipY})`}>
-                  <path
-                    d="M 5,5 L 5,15 Q 5,20 10,20 L 50,20 Q 55,20 55,15 L 55,5 Q 55,0 50,0 L 15,0 Q 10,0 10,5 L 10,12"
-                    fill="none"
-                    stroke="#94a3b8"
-                    strokeWidth={3 + clipWeight * 0.5}
-                    strokeLinecap="round"
-                  />
-                  {/* Highlight */}
-                  <path d="M 8,3 L 12,3" fill="none" stroke="#e2e8f0" strokeWidth="1.5" strokeLinecap="round" />
-                </g>
-
-                {/* Force Vectors (when floating) */}
+              {/* Labels outside SVG */}
+              <div className="mt-2 space-y-2">
+                {/* Force labels */}
                 {showForceVectors && clipState === 'floating' && (
-                  <g>
-                    {/* Weight force (down) */}
-                    <defs>
-                      <marker id="arrowRed" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-                        <path d="M0,0 L6,3 L0,6 Z" fill="#ef4444" />
-                      </marker>
-                      <marker id="arrowGreen" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-                        <path d="M0,0 L6,3 L0,6 Z" fill="#22c55e" />
-                      </marker>
-                    </defs>
-
-                    {/* Weight arrow */}
-                    <line
-                      x1="200" y1={clipY + 25}
-                      x2="200" y2={clipY + 25 + weightForceN * 300}
-                      stroke="#ef4444"
-                      strokeWidth="3"
-                      markerEnd="url(#arrowRed)"
-                    />
-                    <text x="215" y={clipY + 40} fill="#ef4444" fontSize="10" fontWeight="bold">W</text>
-
-                    {/* Surface tension forces (up and outward) */}
-                    {/* Left force */}
-                    <line
-                      x1="175" y1={clipY + 20}
-                      x2={175 - surfaceForceN * 200} y2={clipY + 20 - surfaceForceN * 300}
-                      stroke="#22c55e"
-                      strokeWidth="2"
-                      markerEnd="url(#arrowGreen)"
-                    />
-                    {/* Right force */}
-                    <line
-                      x1="225" y1={clipY + 20}
-                      x2={225 + surfaceForceN * 200} y2={clipY + 20 - surfaceForceN * 300}
-                      stroke="#22c55e"
-                      strokeWidth="2"
-                      markerEnd="url(#arrowGreen)"
-                    />
-
-                    {/* Force labels */}
-                    <text x="130" y={clipY - 5} fill="#22c55e" fontSize="9">F = {(surfaceForceN * 1000).toFixed(2)} mN</text>
-                    <text x="240" y={clipY - 5} fill="#22c55e" fontSize="9">F = {(surfaceForceN * 1000).toFixed(2)} mN</text>
-
-                    {/* Contact angle arc */}
-                    <path
-                      d={`M 175,${clipY + 20} A 15 15 0 0 1 ${175 - 10},${clipY + 10}`}
-                      fill="none"
-                      stroke="#fbbf24"
-                      strokeWidth="1"
-                      strokeDasharray="2,2"
-                    />
-                    <text x="150" y={clipY + 15} fill="#fbbf24" fontSize="8">θ={contactAngle}°</text>
-                  </g>
+                  <div className="flex justify-between px-4">
+                    <p style={{ fontSize: typo.label }} className="text-emerald-400 font-semibold">
+                      F = {(surfaceForceN * 1000).toFixed(2)} mN
+                    </p>
+                    <p style={{ fontSize: typo.label }} className="text-red-400 font-semibold">
+                      W = {(weightForceN * 1000).toFixed(2)} mN
+                    </p>
+                    <p style={{ fontSize: typo.label }} className="text-amber-400">
+                      θ = {contactAngle}°
+                    </p>
+                  </div>
                 )}
 
                 {/* Critical Point Warning */}
                 {criticalPoint && !hasDropped && (
-                  <g>
-                    <rect x="120" y="60" width="160" height="25" fill="#ef4444" opacity="0.2" rx="4" />
-                    <text x="200" y="77" textAnchor="middle" fill="#ef4444" fontSize="11" fontWeight="bold">
+                  <div className="bg-red-500/20 border border-red-500/50 rounded-lg p-2 text-center">
+                    <p style={{ fontSize: typo.small }} className="text-red-400 font-bold">
                       CRITICAL: Will sink with these settings!
-                    </text>
-                  </g>
+                    </p>
+                  </div>
                 )}
 
+                {/* Status message */}
                 {clipState === 'floating' && (
-                  <text x="200" y="75" textAnchor="middle" fill="#22c55e" fontSize="14" fontWeight="bold">
+                  <p style={{ fontSize: typo.body }} className="text-center text-emerald-400 font-bold">
                     It floats! (Force ratio: {forceRatio.toFixed(2)})
-                  </text>
+                  </p>
                 )}
-
                 {clipState === 'sinking' && clipY > 100 && (
-                  <text x="200" y="75" textAnchor="middle" fill="#ef4444" fontSize="14" fontWeight="bold">
+                  <p style={{ fontSize: typo.body }} className="text-center text-red-400 font-bold">
                     It sinks! Surface tension insufficient
-                  </text>
+                  </p>
                 )}
 
-                {/* Physics formula display */}
-                <rect x="55" y="220" width="290" height="35" fill="#1e293b" rx="4" />
-                <text x="200" y="238" textAnchor="middle" fill="#94a3b8" fontSize="10">
-                  F = γ × L × cos(θ) = {effectiveGamma.toFixed(3)} × 0.08 × cos({contactAngle}°)
-                </text>
-                <text x="200" y="250" textAnchor="middle" fill={willFloat ? '#22c55e' : '#ef4444'} fontSize="10" fontWeight="bold">
-                  = {(surfaceForceN * 1000).toFixed(2)} mN {willFloat ? '≥' : '<'} {(weightForceN * 1000).toFixed(2)} mN (Weight)
-                </text>
-              </svg>
+                {/* Physics formula */}
+                <div className="bg-slate-900/80 rounded-lg p-2 text-center">
+                  <p style={{ fontSize: typo.label }} className="text-slate-400">
+                    F = γ × L × cos(θ) = {effectiveGamma.toFixed(3)} × 0.08 × cos({contactAngle}°)
+                  </p>
+                  <p style={{ fontSize: typo.label }} className={`font-bold ${willFloat ? 'text-emerald-400' : 'text-red-400'}`}>
+                    = {(surfaceForceN * 1000).toFixed(2)} mN {willFloat ? '≥' : '<'} {(weightForceN * 1000).toFixed(2)} mN (Weight)
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Drop Method Selection */}
@@ -797,10 +1084,10 @@ export default function FloatingPaperclipRenderer({
 
             {showResult && (
               <div className={`mt-4 p-4 rounded-xl max-w-md ${prediction === 'b' ? 'bg-emerald-500/20 border border-emerald-500' : 'bg-amber-500/20 border border-amber-500'}`}>
-                <p className={`font-semibold ${prediction === 'b' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                <p style={{ fontSize: typo.body }} className={`font-semibold ${prediction === 'b' ? 'text-emerald-400' : 'text-amber-400'}`}>
                   {prediction === 'b' ? 'Correct!' : 'Surprising, right?'}
                 </p>
-                <p className="text-slate-300 text-sm mt-2">
+                <p style={{ fontSize: typo.small }} className="text-slate-300 mt-2">
                   When gently placed, the paperclip <strong>floats</strong>! Surface tension creates
                   an invisible "skin" on the water that supports the paperclip despite steel being
                   8× denser than water.
@@ -820,46 +1107,56 @@ export default function FloatingPaperclipRenderer({
       case 'review':
         return (
           <div className="flex flex-col items-center p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">The Physics of Surface Support</h2>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-6">The Physics of Surface Support</h2>
 
             <div className="bg-gradient-to-br from-blue-900/50 to-cyan-900/50 rounded-2xl p-6 max-w-xl mb-6">
-              <h3 className="text-xl font-bold text-blue-400 mb-4">Why It Floats</h3>
+              <h3 style={{ fontSize: typo.bodyLarge }} className="font-bold text-blue-400 mb-4">Why It Floats</h3>
 
               <svg viewBox="0 0 300 140" className="w-full h-32 mb-4">
-                <rect x="20" y="70" width="260" height="60" fill="#3b82f6" opacity="0.3" />
-                <path d="M 20,70 Q 100,70 150,85 Q 200,70 280,70" fill="#60a5fa" opacity="0.5" />
-                <path d="M 20,70 Q 100,70 150,85 Q 200,70 280,70" fill="none" stroke="#1d4ed8" strokeWidth="2" />
+                <PremiumSVGDefs />
 
-                <g transform="translate(125, 75)">
-                  <rect x="0" y="0" width="50" height="8" fill="#64748b" rx="2" />
+                {/* Water body */}
+                <rect x="20" y="70" width="260" height="60" fill="url(#clipWaterDepth)" opacity="0.5" rx="4" />
+
+                {/* Surface with dimple */}
+                <path d="M 20,70 Q 100,70 150,85 Q 200,70 280,70" fill="url(#clipTensionMembrane)" opacity="0.7" />
+                <path d="M 20,70 Q 100,70 150,85 Q 200,70 280,70" fill="none" stroke="url(#clipWaterSurface)" strokeWidth="2" filter="url(#clipWaterGlow)" />
+
+                {/* Premium paperclip */}
+                <g transform="translate(125, 72)">
+                  <rect x="0" y="0" width="50" height="8" fill="url(#clipMetallic)" rx="2" filter="url(#clipMetalGlow)" />
+                  <rect x="2" y="1" width="46" height="2" fill="url(#clipHighlight)" rx="1" opacity="0.6" />
                 </g>
 
-                <path d="M 150,95 L 150,120" stroke="#ef4444" strokeWidth="3" />
-                <polygon points="150,125 145,118 155,118" fill="#ef4444" />
-                <text x="165" y="120" fill="#ef4444" fontSize="10" fontWeight="bold">W</text>
-
-                <path d="M 125,80 L 95,60" stroke="#22c55e" strokeWidth="2" />
-                <path d="M 175,80 L 205,60" stroke="#22c55e" strokeWidth="2" />
-
-                <text x="75" y="55" fill="#22c55e" fontSize="9">F = γL sin(θ)</text>
-                <text x="150" y="25" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
-                  Vertical components balance weight!
-                </text>
+                {/* Force arrows with gradients */}
+                <line x1="150" y1="95" x2="150" y2="120" stroke="url(#clipForceWeight)" strokeWidth="4" markerEnd="url(#clipArrowRed)" filter="url(#clipForceGlow)" />
+                <line x1="125" y1="80" x2="95" y2="60" stroke="url(#clipForceTension)" strokeWidth="3" markerEnd="url(#clipArrowGreen)" filter="url(#clipForceGlow)" />
+                <line x1="175" y1="80" x2="205" y2="60" stroke="url(#clipForceTension)" strokeWidth="3" markerEnd="url(#clipArrowGreen)" filter="url(#clipForceGlow)" />
               </svg>
 
-              <div className="bg-slate-800 rounded-lg p-3 mb-3">
-                <p className="text-center font-bold text-blue-400">F<sub>vertical</sub> = γ × L × sin(θ)</p>
-                <p className="text-center text-xs text-slate-400 mt-1">γ = surface tension, L = perimeter, θ = contact angle</p>
+              {/* Labels outside SVG */}
+              <div className="flex justify-between px-8 -mt-2 mb-4">
+                <p style={{ fontSize: typo.label }} className="text-emerald-400 font-semibold">F = γL sin(θ)</p>
+                <p style={{ fontSize: typo.label }} className="text-red-400 font-semibold">W</p>
               </div>
 
-              <p className="text-slate-300 text-sm">
+              <p style={{ fontSize: typo.small }} className="text-center text-white font-semibold mb-4">
+                Vertical components balance weight!
+              </p>
+
+              <div className="bg-slate-800 rounded-lg p-3 mb-3">
+                <p style={{ fontSize: typo.body }} className="text-center font-bold text-blue-400">F<sub>vertical</sub> = γ × L × sin(θ)</p>
+                <p style={{ fontSize: typo.label }} className="text-center text-slate-400 mt-1">γ = surface tension, L = perimeter, θ = contact angle</p>
+              </div>
+
+              <p style={{ fontSize: typo.small }} className="text-slate-300">
                 When F<sub>vertical</sub> ≥ Weight, the object floats!
               </p>
             </div>
 
             <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4 max-w-xl mb-6">
-              <h4 className="font-bold text-amber-400 mb-2">Why Dropping Fails</h4>
-              <p className="text-slate-300 text-sm">
+              <h4 style={{ fontSize: typo.body }} className="font-bold text-amber-400 mb-2">Why Dropping Fails</h4>
+              <p style={{ fontSize: typo.small }} className="text-slate-300">
                 When dropped, the paperclip hits with enough momentum to
                 <strong> punch through</strong> the surface tension barrier before it can
                 deform and support the weight.
@@ -879,8 +1176,8 @@ export default function FloatingPaperclipRenderer({
       case 'twist_predict':
         return (
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
-            <h2 className="text-2xl font-bold text-amber-400 mb-6">The Soap Test</h2>
-            <p className="text-slate-400 mb-6 text-center max-w-md">
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-amber-400 mb-6">The Soap Test</h2>
+            <p style={{ fontSize: typo.body }} className="text-slate-400 mb-6 text-center max-w-md">
               A paperclip is floating on water. What happens if you add a drop of
               dish soap to the water?
             </p>
@@ -901,7 +1198,7 @@ export default function FloatingPaperclipRenderer({
                       : 'border-slate-700 hover:border-slate-600 bg-slate-800/50'
                   }`}
                 >
-                  <span className={twistPrediction === opt.id ? 'text-amber-300' : 'text-slate-300'}>{opt.text}</span>
+                  <span style={{ fontSize: typo.body }} className={twistPrediction === opt.id ? 'text-amber-300' : 'text-slate-300'}>{opt.text}</span>
                 </button>
               ))}
             </div>
@@ -925,18 +1222,18 @@ export default function FloatingPaperclipRenderer({
 
         return (
           <div className="flex flex-col items-center p-6">
-            <h2 className="text-2xl font-bold text-amber-400 mb-4">Surface Tension Laboratory</h2>
-            <p className="text-slate-400 mb-4">Explore how soap and different liquids affect surface tension</p>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-amber-400 mb-4">Surface Tension Laboratory</h2>
+            <p style={{ fontSize: typo.body }} className="text-slate-400 mb-4">Explore how soap and different liquids affect surface tension</p>
 
             {/* Interactive Controls for Twist Phase */}
             <div className="bg-slate-800/60 rounded-2xl p-4 mb-4 w-full max-w-xl border border-amber-500/30">
-              <h3 className="text-sm font-semibold text-amber-400 mb-3">Experiment Variables</h3>
+              <h3 style={{ fontSize: typo.small }} className="font-semibold text-amber-400 mb-3">Experiment Variables</h3>
 
               {/* Soap/Detergent Slider */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs text-slate-400">Soap/Detergent Amount</label>
-                  <span className="text-xs font-mono text-purple-300">{soapAmount}%</span>
+                  <label style={{ fontSize: typo.label }} className="text-slate-400">Soap/Detergent Amount</label>
+                  <span style={{ fontSize: typo.label }} className="font-mono text-purple-300">{soapAmount}%</span>
                 </div>
                 <input
                   type="range"
@@ -966,18 +1263,18 @@ export default function FloatingPaperclipRenderer({
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-purple-500"
                   style={{ zIndex: 10 }}
                 />
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
-                  <span>None</span>
-                  <span>Max detergent</span>
+                <div className="flex justify-between mt-1">
+                  <span style={{ fontSize: typo.label }} className="text-slate-500">None</span>
+                  <span style={{ fontSize: typo.label }} className="text-slate-500">Max detergent</span>
                 </div>
-                <p className="text-xs text-purple-400 mt-1">
+                <p style={{ fontSize: typo.label }} className="text-purple-400 mt-1">
                   Effective γ: {twistEffectiveGamma.toFixed(3)} N/m ({((1 - twistEffectiveGamma / liquidProperties[selectedLiquid].gamma) * 100).toFixed(0)}% reduction)
                 </p>
               </div>
 
               {/* Liquid Selection */}
               <div className="mb-4">
-                <label className="text-xs text-slate-400 block mb-2">Compare Different Liquids</label>
+                <label style={{ fontSize: typo.label }} className="text-slate-400 block mb-2">Compare Different Liquids</label>
                 <div className="flex gap-2">
                   {(Object.keys(liquidProperties) as Array<'water' | 'oil' | 'alcohol'>).map((liquid) => (
                     <button
@@ -987,14 +1284,14 @@ export default function FloatingPaperclipRenderer({
                         resetTwist();
                       }}
                       style={{ zIndex: 10 }}
-                      className={`px-3 py-2 rounded-lg text-xs font-medium transition-all flex flex-col items-center ${
+                      className={`px-3 py-2 rounded-lg font-medium transition-all flex flex-col items-center ${
                         selectedLiquid === liquid
                           ? 'bg-gradient-to-r from-amber-600 to-orange-600 text-white'
                           : 'bg-slate-700 text-slate-300 hover:bg-slate-600'
                       }`}
                     >
-                      <span className="capitalize">{liquidProperties[liquid].name}</span>
-                      <span className="text-xs opacity-70">γ = {liquidProperties[liquid].gamma}</span>
+                      <span style={{ fontSize: typo.label }} className="capitalize">{liquidProperties[liquid].name}</span>
+                      <span style={{ fontSize: typo.label }} className="opacity-70">γ = {liquidProperties[liquid].gamma}</span>
                     </button>
                   ))}
                 </div>
@@ -1003,8 +1300,8 @@ export default function FloatingPaperclipRenderer({
               {/* Contact Angle Slider */}
               <div className="mb-4">
                 <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs text-slate-400">Contact Angle (θ)</label>
-                  <span className="text-xs font-mono text-amber-300">{contactAngle}°</span>
+                  <label style={{ fontSize: typo.label }} className="text-slate-400">Contact Angle (θ)</label>
+                  <span style={{ fontSize: typo.label }} className="font-mono text-amber-300">{contactAngle}°</span>
                 </div>
                 <input
                   type="range"
@@ -1016,18 +1313,18 @@ export default function FloatingPaperclipRenderer({
                   className="w-full h-2 bg-slate-700 rounded-lg appearance-none cursor-pointer accent-amber-500"
                   style={{ zIndex: 10 }}
                 />
-                <div className="flex justify-between text-xs text-slate-500 mt-1">
-                  <span>0° (Flat)</span>
-                  <span>90° (Steep)</span>
+                <div className="flex justify-between mt-1">
+                  <span style={{ fontSize: typo.label }} className="text-slate-500">0° (Flat)</span>
+                  <span style={{ fontSize: typo.label }} className="text-slate-500">90° (Steep)</span>
                 </div>
-                <p className="text-xs text-amber-400 mt-1">
+                <p style={{ fontSize: typo.label }} className="text-amber-400 mt-1">
                   cos(θ) = {Math.cos(contactAngle * Math.PI / 180).toFixed(3)} — affects vertical force component
                 </p>
               </div>
 
               {/* Float Prediction Display */}
               <div className={`p-2 rounded-lg text-center ${twistWillFloat ? 'bg-emerald-500/20 border border-emerald-500/30' : 'bg-red-500/20 border border-red-500/30'}`}>
-                <p className={`text-sm font-semibold ${twistWillFloat ? 'text-emerald-400' : 'text-red-400'}`}>
+                <p style={{ fontSize: typo.small }} className={`font-semibold ${twistWillFloat ? 'text-emerald-400' : 'text-red-400'}`}>
                   {twistWillFloat ? 'Paperclip WILL float' : 'Paperclip WILL SINK'}
                 </p>
               </div>
@@ -1036,31 +1333,48 @@ export default function FloatingPaperclipRenderer({
             {/* Animated SVG Visualization */}
             <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-xl">
               <svg viewBox="0 0 400 280" className="w-full h-60">
+                <PremiumSVGDefs />
+
+                {/* Dynamic liquid gradient based on selection */}
+                <defs>
+                  <linearGradient id="clipDynamicLiquid" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor={liquidColor} stopOpacity="0.7" />
+                    <stop offset="50%" stopColor={liquidColor} stopOpacity="0.9" />
+                    <stop offset="100%" stopColor={liquidColor} stopOpacity="1" />
+                  </linearGradient>
+                </defs>
+
                 {/* Container */}
-                <rect x="50" y="80" width="300" height="160" fill="#1e40af" rx="8" />
+                <rect x="50" y="80" width="300" height="160" fill="url(#clipContainerGlass)" rx="8" />
+                <rect x="50" y="80" width="300" height="4" fill="url(#clipContainerRim)" />
+
+                {/* Liquid with dynamic color */}
                 <rect
                   x="55"
                   y="85"
                   width="290"
                   height="150"
-                  fill={soapAmount > 0 ? `${liquidColor}88` : liquidColor}
+                  fill={soapAmount > 0 ? `${liquidColor}88` : "url(#clipDynamicLiquid)"}
                   style={{ transition: 'fill 0.5s' }}
                   rx="5"
                 />
-
-                {/* Liquid label */}
-                <text x="320" y="130" fill="white" fontSize="10" fontWeight="bold" opacity="0.7">
-                  {liquidProperties[selectedLiquid].name}
-                </text>
 
                 {/* Surface dimple when floating */}
                 {twistClipState === 'floating' && (
                   <>
                     <path
                       d={`M 55,85 Q 140,85 ${180 - 10},${85 + 8} Q 200,${85 + 12} ${220 + 10},${85 + 8} Q 260,85 345,85`}
-                      fill={`${liquidColor}aa`}
+                      fill="url(#clipTensionMembrane)"
                       style={{ transition: 'all 0.3s' }}
                     />
+                    <path
+                      d={`M 55,85 Q 140,85 ${180 - 10},${85 + 8} Q 200,${85 + 12} ${220 + 10},${85 + 8} Q 260,85 345,85`}
+                      fill="none"
+                      stroke="url(#clipWaterSurface)"
+                      strokeWidth="2"
+                      filter="url(#clipWaterGlow)"
+                    />
+
                     {/* Contact angle visualization */}
                     <line
                       x1="175" y1="93"
@@ -1076,7 +1390,6 @@ export default function FloatingPaperclipRenderer({
                       stroke="#fbbf24"
                       strokeWidth="1"
                     />
-                    <text x="155" y="80" fill="#fbbf24" fontSize="9">θ={contactAngle}°</text>
                   </>
                 )}
 
@@ -1097,66 +1410,61 @@ export default function FloatingPaperclipRenderer({
                 )}
 
                 {/* Paperclip */}
-                <g transform={`translate(170, ${twistClipY})`}>
-                  <path
-                    d="M 5,5 L 5,15 Q 5,20 10,20 L 50,20 Q 55,20 55,15 L 55,5 Q 55,0 50,0 L 15,0 Q 10,0 10,5 L 10,12"
-                    fill="none"
-                    stroke="#94a3b8"
-                    strokeWidth="3"
-                    strokeLinecap="round"
-                  />
-                  <path d="M 8,3 L 12,3" fill="none" stroke="#e2e8f0" strokeWidth="1.5" strokeLinecap="round" />
-                </g>
+                {renderPremiumPaperclip(170, twistClipY, 1)}
 
                 {/* Force vectors when floating */}
                 {twistClipState === 'floating' && showForceVectors && (
                   <g>
-                    <defs>
-                      <marker id="arrowRedTwist" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-                        <path d="M0,0 L6,3 L0,6 Z" fill="#ef4444" />
-                      </marker>
-                      <marker id="arrowGreenTwist" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-                        <path d="M0,0 L6,3 L0,6 Z" fill="#22c55e" />
-                      </marker>
-                    </defs>
                     {/* Weight */}
-                    <line x1="200" y1="85" x2="200" y2="115" stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrowRedTwist)" />
-                    <text x="208" y="105" fill="#ef4444" fontSize="9">W</text>
+                    <line x1="200" y1="85" x2="200" y2="115" stroke="url(#clipForceWeight)" strokeWidth="3" markerEnd="url(#clipArrowRed)" filter="url(#clipForceGlow)" />
                     {/* Surface tension */}
-                    <line x1="175" y1="85" x2="155" y2="65" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowGreenTwist)" />
-                    <line x1="225" y1="85" x2="245" y2="65" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowGreenTwist)" />
+                    <line x1="175" y1="85" x2="155" y2="65" stroke="url(#clipForceTension)" strokeWidth="2" markerEnd="url(#clipArrowGreen)" filter="url(#clipForceGlow)" />
+                    <line x1="225" y1="85" x2="245" y2="65" stroke="url(#clipForceTension)" strokeWidth="2" markerEnd="url(#clipArrowGreen)" filter="url(#clipForceGlow)" />
                   </g>
                 )}
+              </svg>
 
-                {/* Status text */}
-                {twistClipState === 'sunk' && (
-                  <text x="200" y="60" textAnchor="middle" fill="#ef4444" fontSize="14" fontWeight="bold">
-                    SUNK! Surface tension broken
-                  </text>
+              {/* Labels outside SVG */}
+              <div className="mt-2 space-y-2">
+                {/* Liquid label */}
+                <p style={{ fontSize: typo.label }} className="text-right text-white/70 font-semibold">
+                  {liquidProperties[selectedLiquid].name}
+                </p>
+
+                {/* Contact angle label */}
+                {twistClipState === 'floating' && (
+                  <p style={{ fontSize: typo.label }} className="text-amber-400">θ = {contactAngle}°</p>
                 )}
 
+                {/* Status */}
+                {twistClipState === 'sunk' && (
+                  <p style={{ fontSize: typo.body }} className="text-center text-red-400 font-bold">
+                    SUNK! Surface tension broken
+                  </p>
+                )}
                 {twistClipState === 'floating' && (
-                  <text x="200" y="60" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">
+                  <p style={{ fontSize: typo.body }} className="text-center text-emerald-400 font-semibold">
                     Floating on {liquidProperties[selectedLiquid].name}
-                  </text>
+                  </p>
                 )}
 
                 {/* Physics display */}
-                <rect x="55" y="220" width="290" height="40" fill="#1e293b" rx="4" />
-                <text x="200" y="237" textAnchor="middle" fill="#94a3b8" fontSize="10">
-                  Effective γ = {twistEffectiveGamma.toFixed(3)} N/m (Soap reduces by {(soapAmount * 0.65).toFixed(0)}%)
-                </text>
-                <text x="200" y="252" textAnchor="middle" fill={twistWillFloat ? '#22c55e' : '#ef4444'} fontSize="10" fontWeight="bold">
-                  F_surface = {(twistEffectiveGamma * 0.08 * Math.cos(contactAngle * Math.PI / 180) * 1000).toFixed(2)} mN
-                  {twistWillFloat ? ' ≥ ' : ' < '}
-                  {((clipWeight / 1000) * 9.81 * 1000).toFixed(2)} mN (Weight)
-                </text>
-              </svg>
+                <div className="bg-slate-900/80 rounded-lg p-2 text-center">
+                  <p style={{ fontSize: typo.label }} className="text-slate-400">
+                    Effective γ = {twistEffectiveGamma.toFixed(3)} N/m (Soap reduces by {(soapAmount * 0.65).toFixed(0)}%)
+                  </p>
+                  <p style={{ fontSize: typo.label }} className={`font-bold ${twistWillFloat ? 'text-emerald-400' : 'text-red-400'}`}>
+                    F_surface = {(twistEffectiveGamma * 0.08 * Math.cos(contactAngle * Math.PI / 180) * 1000).toFixed(2)} mN
+                    {twistWillFloat ? ' ≥ ' : ' < '}
+                    {((clipWeight / 1000) * 9.81 * 1000).toFixed(2)} mN (Weight)
+                  </p>
+                </div>
+              </div>
             </div>
 
             {/* Soap bottle click area (traditional method) */}
             {!soapAdded && soapAmount === 0 && (
-              <p className="text-slate-500 text-sm mb-4">
+              <p style={{ fontSize: typo.small }} className="text-slate-500 mb-4">
                 Use the slider above OR click the soap bottle in the visualization to add soap
               </p>
             )}
@@ -1201,10 +1509,10 @@ export default function FloatingPaperclipRenderer({
 
             {showTwistResult && (
               <div className={`mt-4 p-4 rounded-xl max-w-md ${twistPrediction === 'c' ? 'bg-emerald-500/20 border border-emerald-500' : 'bg-amber-500/20 border border-amber-500'}`}>
-                <p className={`font-semibold ${twistPrediction === 'c' ? 'text-emerald-400' : 'text-amber-400'}`}>
+                <p style={{ fontSize: typo.body }} className={`font-semibold ${twistPrediction === 'c' ? 'text-emerald-400' : 'text-amber-400'}`}>
                   {twistPrediction === 'c' ? 'Correct!' : "Dramatic, isn't it?"}
                 </p>
-                <p className="text-slate-300 text-sm mt-2">
+                <p style={{ fontSize: typo.small }} className="text-slate-300 mt-2">
                   The paperclip <strong>sinks immediately</strong>! Soap is a surfactant that
                   breaks the hydrogen bonds creating surface tension. Different liquids have
                   different base surface tensions — alcohol has the lowest, which is why it
@@ -1225,27 +1533,27 @@ export default function FloatingPaperclipRenderer({
       case 'twist_review':
         return (
           <div className="flex flex-col items-center p-6">
-            <h2 className="text-2xl font-bold text-amber-400 mb-6">Surface Tension: The Make-or-Break Force</h2>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-amber-400 mb-6">Surface Tension: The Make-or-Break Force</h2>
 
             <div className="bg-gradient-to-br from-amber-900/50 to-orange-900/50 rounded-2xl p-6 max-w-xl mb-6">
-              <h3 className="text-lg font-bold text-amber-400 mb-4">Before vs After Soap</h3>
+              <h3 style={{ fontSize: typo.bodyLarge }} className="font-bold text-amber-400 mb-4">Before vs After Soap</h3>
 
               <div className="grid grid-cols-2 gap-4 mb-4">
                 <div className="bg-emerald-500/20 rounded-lg p-3 text-center">
-                  <p className="font-bold text-emerald-400">Clean Water</p>
-                  <p className="text-2xl font-bold text-emerald-300">γ = 0.072 N/m</p>
-                  <p className="text-xs text-emerald-300">Strong surface tension</p>
+                  <p style={{ fontSize: typo.body }} className="font-bold text-emerald-400">Clean Water</p>
+                  <p style={{ fontSize: typo.heading }} className="font-bold text-emerald-300">γ = 0.072 N/m</p>
+                  <p style={{ fontSize: typo.label }} className="text-emerald-300">Strong surface tension</p>
                 </div>
                 <div className="bg-red-500/20 rounded-lg p-3 text-center">
-                  <p className="font-bold text-red-400">Soapy Water</p>
-                  <p className="text-2xl font-bold text-red-300">γ ≈ 0.025 N/m</p>
-                  <p className="text-xs text-red-300">~65% reduction!</p>
+                  <p style={{ fontSize: typo.body }} className="font-bold text-red-400">Soapy Water</p>
+                  <p style={{ fontSize: typo.heading }} className="font-bold text-red-300">γ ≈ 0.025 N/m</p>
+                  <p style={{ fontSize: typo.label }} className="text-red-300">~65% reduction!</p>
                 </div>
               </div>
 
               <div className="bg-slate-800 rounded-lg p-3">
-                <p className="text-center text-red-400">γ<sub>soap</sub> × L × sin(θ) &lt; Weight</p>
-                <p className="text-center text-xs text-slate-400 mt-1">Surface tension force can no longer support the clip</p>
+                <p style={{ fontSize: typo.body }} className="text-center text-red-400">γ<sub>soap</sub> × L × sin(θ) &lt; Weight</p>
+                <p style={{ fontSize: typo.label }} className="text-center text-slate-400 mt-1">Surface tension force can no longer support the clip</p>
               </div>
             </div>
 
@@ -1262,8 +1570,8 @@ export default function FloatingPaperclipRenderer({
       case 'transfer':
         return (
           <div className="flex flex-col items-center p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Surface Tension in Nature & Technology</h2>
-            <p className="text-slate-400 mb-6">Explore each application to unlock the test</p>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-6">Surface Tension in Nature & Technology</h2>
+            <p style={{ fontSize: typo.body }} className="text-slate-400 mb-6">Explore each application to unlock the test</p>
 
             <div className="grid grid-cols-2 gap-4 w-full max-w-lg mb-6">
               {applications.map((app, index) => (
@@ -1281,13 +1589,13 @@ export default function FloatingPaperclipRenderer({
                   }`}
                 >
                   <span className="text-3xl">{app.icon}</span>
-                  <p className="text-sm font-medium mt-2 text-slate-300">{app.title}</p>
-                  {completedApps.has(index) && <span className="text-emerald-400 text-xs">Explored</span>}
+                  <p style={{ fontSize: typo.small }} className="font-medium mt-2 text-slate-300">{app.title}</p>
+                  {completedApps.has(index) && <span style={{ fontSize: typo.label }} className="text-emerald-400">Explored</span>}
                 </button>
               ))}
             </div>
 
-            <p className="text-slate-400 mb-4">{completedApps.size} / {applications.length} applications explored</p>
+            <p style={{ fontSize: typo.body }} className="text-slate-400 mb-4">{completedApps.size} / {applications.length} applications explored</p>
 
             {completedApps.size >= applications.length && (
               <button
@@ -1313,8 +1621,8 @@ export default function FloatingPaperclipRenderer({
           return (
             <div className="flex flex-col items-center p-6 text-center">
               <div className="text-6xl mb-4">{score >= 7 ? '🏆' : '📚'}</div>
-              <h2 className="text-3xl font-bold text-white mb-2">Score: {score}/{testQuestions.length}</h2>
-              <p className="text-slate-400 mb-6">{score >= 7 ? 'Excellent! Surface tension mastered!' : 'Keep studying!'}</p>
+              <h2 style={{ fontSize: typo.title }} className="font-bold text-white mb-2">Score: {score}/{testQuestions.length}</h2>
+              <p style={{ fontSize: typo.body }} className="text-slate-400 mb-6">{score >= 7 ? 'Excellent! Surface tension mastered!' : 'Keep studying!'}</p>
 
               {score >= 7 ? (
                 <button
@@ -1343,19 +1651,19 @@ export default function FloatingPaperclipRenderer({
 
         return (
           <div className="flex flex-col items-center p-6">
-            <h2 className="text-2xl font-bold text-white mb-6">Surface Tension Mastery Test</h2>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-6">Surface Tension Mastery Test</h2>
 
             <div className="space-y-4 w-full max-w-2xl max-h-96 overflow-y-auto mb-4">
               {testQuestions.map((tq, qi) => (
                 <div key={qi} className="bg-slate-800/50 rounded-xl p-4">
-                  <p className="font-semibold text-white mb-3">{qi + 1}. {tq.question}</p>
+                  <p style={{ fontSize: typo.body }} className="font-semibold text-white mb-3">{qi + 1}. {tq.question}</p>
                   <div className="grid grid-cols-1 gap-2">
                     {tq.options.map((opt, oi) => (
                       <button
                         key={oi}
                         onClick={() => handleTestAnswer(qi, oi)}
-                        style={{ zIndex: 10 }}
-                        className={`p-2 rounded-lg text-left text-sm transition-all ${
+                        style={{ zIndex: 10, fontSize: typo.small }}
+                        className={`p-2 rounded-lg text-left transition-all ${
                           testAnswers[qi] === oi ? 'bg-blue-600 text-white' : 'bg-slate-700/50 text-slate-300 hover:bg-slate-600/50'
                         }`}
                       >
@@ -1394,26 +1702,26 @@ export default function FloatingPaperclipRenderer({
           <div className="flex flex-col items-center justify-center min-h-[500px] p-6 text-center">
             <div className="bg-gradient-to-br from-blue-900/50 via-cyan-900/50 to-teal-900/50 rounded-3xl p-8 max-w-2xl">
               <div className="text-8xl mb-6">📎💧</div>
-              <h1 className="text-3xl font-bold text-white mb-4">Surface Tension Master!</h1>
-              <p className="text-xl text-slate-300 mb-6">
+              <h1 style={{ fontSize: typo.title }} className="font-bold text-white mb-4">Surface Tension Master!</h1>
+              <p style={{ fontSize: typo.bodyLarge }} className="text-slate-300 mb-6">
                 You now understand how water's invisible "skin" can support
                 objects much denser than water itself!
               </p>
 
               <div className="grid grid-cols-2 gap-4 mb-6">
                 <div className="bg-slate-800/50 rounded-xl p-4">
-                  <div className="text-2xl font-bold text-blue-400">{finalScore}/{testQuestions.length}</div>
-                  <p className="text-sm text-slate-400">Test Score</p>
+                  <div style={{ fontSize: typo.heading }} className="font-bold text-blue-400">{finalScore}/{testQuestions.length}</div>
+                  <p style={{ fontSize: typo.small }} className="text-slate-400">Test Score</p>
                 </div>
                 <div className="bg-slate-800/50 rounded-xl p-4">
-                  <div className="text-2xl font-bold text-blue-400">4</div>
-                  <p className="text-sm text-slate-400">Applications</p>
+                  <div style={{ fontSize: typo.heading }} className="font-bold text-blue-400">4</div>
+                  <p style={{ fontSize: typo.small }} className="text-slate-400">Applications</p>
                 </div>
               </div>
 
               <div className="bg-slate-800/50 rounded-xl p-4 text-left mb-6">
-                <p className="font-semibold text-white mb-2">Key Takeaways:</p>
-                <ul className="text-sm text-slate-400 space-y-1">
+                <p style={{ fontSize: typo.body }} className="font-semibold text-white mb-2">Key Takeaways:</p>
+                <ul style={{ fontSize: typo.small }} className="text-slate-400 space-y-1">
                   <li>• Surface tension creates a supportive "skin"</li>
                   <li>• F = γ × L × sin(θ) for vertical force</li>
                   <li>• Gentle placement allows surface to deform</li>
@@ -1453,7 +1761,7 @@ export default function FloatingPaperclipRenderer({
       {/* Header */}
       <div className="fixed top-0 left-0 right-0 z-50 bg-slate-900/80 backdrop-blur-xl border-b border-slate-800/50">
         <div className="flex items-center justify-between px-6 py-3 max-w-4xl mx-auto">
-          <span className="text-sm font-semibold text-white/80 tracking-wide">Floating Paperclip</span>
+          <span style={{ fontSize: typo.small }} className="font-semibold text-white/80 tracking-wide">Floating Paperclip</span>
           <div className="flex items-center gap-1.5">
             {phaseOrder.map((p, i) => (
               <button
@@ -1471,7 +1779,7 @@ export default function FloatingPaperclipRenderer({
               />
             ))}
           </div>
-          <span className="text-sm font-medium text-blue-400">{phaseLabels[phase]}</span>
+          <span style={{ fontSize: typo.small }} className="font-medium text-blue-400">{phaseLabels[phase]}</span>
         </div>
       </div>
 

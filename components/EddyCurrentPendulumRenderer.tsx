@@ -348,14 +348,14 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
   );
 
   // ============================================================================
-  // PENDULUM VISUALIZATION (Enhanced with realistic graphics)
+  // PENDULUM VISUALIZATION (Premium SVG Graphics)
   // ============================================================================
 
   const PendulumVisualization: React.FC<{
     showLabels?: boolean;
     showEddyCurrents?: boolean;
     animated?: boolean;
-  }> = ({ showLabels = true, showEddyCurrents = true, animated = true }) => {
+  }> = ({ showLabels = true, showEddyCurrents = true }) => {
     const svgWidth = isMobile ? 340 : 500;
     const svgHeight = isMobile ? 350 : 420;
     const pivotX = svgWidth / 2;
@@ -370,357 +370,627 @@ const EddyCurrentPendulumRenderer: React.FC<EddyCurrentPendulumRendererProps> = 
     // Magnet gap position (where pendulum passes through)
     const magnetY = pivotY + pendulumLength - 30;
 
+    // Sheet dimensions
+    const sheetWidth = isMobile ? 50 : 65;
+    const sheetHeight = isMobile ? 70 : 90;
+
     return (
-      <svg
-        width="100%"
-        height="100%"
-        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-        style={{ maxWidth: svgWidth, margin: '0 auto', display: 'block' }}
-      >
-        {/* === DEFINITIONS === */}
-        <defs>
-          {/* Magnet gradients */}
-          <linearGradient id="eddyMagnetNorth" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="50%" stopColor="#dc2626" />
-            <stop offset="100%" stopColor="#991b1b" />
-          </linearGradient>
-          <linearGradient id="eddyMagnetSouth" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="50%" stopColor="#2563eb" />
-            <stop offset="100%" stopColor="#1d4ed8" />
-          </linearGradient>
+      <>
+        <svg
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+          style={{ maxWidth: svgWidth, margin: '0 auto', display: 'block' }}
+        >
+          {/* === COMPREHENSIVE DEFINITIONS === */}
+          <defs>
+            {/* Premium Lab Background Gradient */}
+            <linearGradient id="ecpLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-          {/* Metal sheet gradients */}
-          <linearGradient id="aluminumGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#e2e8f0" />
-            <stop offset="30%" stopColor="#cbd5e1" />
-            <stop offset="50%" stopColor="#94a3b8" />
-            <stop offset="70%" stopColor="#64748b" />
-            <stop offset="100%" stopColor="#475569" />
-          </linearGradient>
-          <linearGradient id="copperGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#fed7aa" />
-            <stop offset="30%" stopColor="#fdba74" />
-            <stop offset="50%" stopColor="#fb923c" />
-            <stop offset="70%" stopColor="#ea580c" />
-            <stop offset="100%" stopColor="#c2410c" />
-          </linearGradient>
-          <linearGradient id="plasticGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#bef264" />
-            <stop offset="50%" stopColor="#84cc16" />
-            <stop offset="100%" stopColor="#65a30d" />
-          </linearGradient>
-          <linearGradient id="woodGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#d4a574" />
-            <stop offset="25%" stopColor="#b8860b" />
-            <stop offset="50%" stopColor="#a16207" />
-            <stop offset="75%" stopColor="#92400e" />
-            <stop offset="100%" stopColor="#78350f" />
-          </linearGradient>
+            {/* Premium Magnet North Pole Gradient */}
+            <linearGradient id="ecpMagnetNorth" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="20%" stopColor="#f87171" />
+              <stop offset="40%" stopColor="#ef4444" />
+              <stop offset="60%" stopColor="#dc2626" />
+              <stop offset="80%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </linearGradient>
 
-          {/* Eddy current glow */}
-          <radialGradient id="eddyGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.8" />
-            <stop offset="70%" stopColor="#8b5cf6" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0" />
-          </radialGradient>
+            {/* Premium Magnet South Pole Gradient */}
+            <linearGradient id="ecpMagnetSouth" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="20%" stopColor="#60a5fa" />
+              <stop offset="40%" stopColor="#3b82f6" />
+              <stop offset="60%" stopColor="#2563eb" />
+              <stop offset="80%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e3a8a" />
+            </linearGradient>
 
-          {/* Magnetic field lines */}
-          <linearGradient id="fieldLineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#dc2626" stopOpacity="0.6" />
-            <stop offset="50%" stopColor="#a855f7" stopOpacity="0.4" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.6" />
-          </linearGradient>
+            {/* Premium Aluminum Gradient (brushed metal effect) */}
+            <linearGradient id="ecpAluminum" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f1f5f9" />
+              <stop offset="15%" stopColor="#e2e8f0" />
+              <stop offset="30%" stopColor="#cbd5e1" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="70%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
 
-          {/* Filters */}
-          <filter id="eddyShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="2" dy="4" stdDeviation="4" floodOpacity="0.4" />
-          </filter>
-          <filter id="eddyGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="4" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+            {/* Premium Copper Gradient (polished metal) */}
+            <linearGradient id="ecpCopper" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="15%" stopColor="#fed7aa" />
+              <stop offset="30%" stopColor="#fdba74" />
+              <stop offset="50%" stopColor="#fb923c" />
+              <stop offset="70%" stopColor="#ea580c" />
+              <stop offset="100%" stopColor="#9a3412" />
+            </linearGradient>
 
-        {/* === BACKGROUND === */}
-        <rect width={svgWidth} height={svgHeight} fill={colors.bgSurface} rx="12" />
+            {/* Premium Plastic Gradient (glossy) */}
+            <linearGradient id="ecpPlastic" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ecfccb" />
+              <stop offset="20%" stopColor="#d9f99d" />
+              <stop offset="40%" stopColor="#bef264" />
+              <stop offset="60%" stopColor="#a3e635" />
+              <stop offset="80%" stopColor="#84cc16" />
+              <stop offset="100%" stopColor="#4d7c0f" />
+            </linearGradient>
 
-        {/* Subtle grid */}
-        <pattern id="eddyGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-          <path d="M 20 0 L 0 0 0 20" fill="none" stroke={colors.bgElevated} strokeWidth="0.5" opacity="0.4" />
-        </pattern>
-        <rect width={svgWidth} height={svgHeight} fill="url(#eddyGrid)" rx="12" />
+            {/* Premium Wood Gradient (grain effect) */}
+            <linearGradient id="ecpWood" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="20%" stopColor="#d4a574" />
+              <stop offset="40%" stopColor="#b8860b" />
+              <stop offset="60%" stopColor="#a16207" />
+              <stop offset="80%" stopColor="#854d0e" />
+              <stop offset="100%" stopColor="#713f12" />
+            </linearGradient>
 
-        {/* === SUPPORT FRAME === */}
-        <g filter="url(#eddyShadow)">
-          {/* Top bar */}
-          <rect x={pivotX - 80} y={30} width={160} height={12} rx="3" fill="#374151" />
-          <rect x={pivotX - 75} y={32} width={150} height={3} rx="1" fill="#4b5563" />
+            {/* Pendulum Rod Gradient (metallic) */}
+            <linearGradient id="ecpRod" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="25%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="75%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
 
-          {/* Support posts */}
-          <rect x={pivotX - 85} y={30} width={14} height={svgHeight - 60} rx="3" fill="#374151" />
-          <rect x={pivotX + 71} y={30} width={14} height={svgHeight - 60} rx="3" fill="#374151" />
+            {/* Pivot Point Gradient */}
+            <radialGradient id="ecpPivot" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </radialGradient>
 
-          {/* Base */}
-          <rect x={pivotX - 100} y={svgHeight - 35} width={200} height={20} rx="4" fill="#1f2937" />
-        </g>
+            {/* Support Frame Gradient (brushed steel) */}
+            <linearGradient id="ecpFrame" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="20%" stopColor="#374151" />
+              <stop offset="40%" stopColor="#4b5563" />
+              <stop offset="60%" stopColor="#374151" />
+              <stop offset="80%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
 
-        {/* === MAGNET ASSEMBLY === */}
-        <g filter="url(#eddyShadow)">
-          {/* Left magnet (North) */}
-          <rect
-            x={pivotX - 70}
-            y={magnetY - 40}
-            width={25}
-            height={80}
-            rx="4"
-            fill="url(#eddyMagnetNorth)"
-          />
-          <text x={pivotX - 57} y={magnetY + 5} textAnchor="middle" fill="white" fontSize="16" fontWeight="700">N</text>
+            {/* Eddy Current Core Glow */}
+            <radialGradient id="ecpEddyCore" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#c4b5fd" stopOpacity="1" />
+              <stop offset="30%" stopColor="#a78bfa" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#8b5cf6" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+            </radialGradient>
 
-          {/* Right magnet (South) */}
-          <rect
-            x={pivotX + 45}
-            y={magnetY - 40}
-            width={25}
-            height={80}
-            rx="4"
-            fill="url(#eddyMagnetSouth)"
-          />
-          <text x={pivotX + 58} y={magnetY + 5} textAnchor="middle" fill="white" fontSize="16" fontWeight="700">S</text>
+            {/* Eddy Current Swirl Gradient */}
+            <linearGradient id="ecpEddySwirl" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#c4b5fd" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#a78bfa" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.5" />
+              <stop offset="75%" stopColor="#7c3aed" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#6d28d9" stopOpacity="0.1" />
+            </linearGradient>
 
-          {/* Magnet yoke (connects them) */}
-          <rect
-            x={pivotX - 70}
-            y={magnetY + 45}
-            width={140}
-            height={12}
-            rx="3"
-            fill="#374151"
-          />
-        </g>
+            {/* Magnetic Field Gradient (N to S) */}
+            <linearGradient id="ecpFieldLines" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="25%" stopColor="#f87171" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.5" />
+              <stop offset="75%" stopColor="#60a5fa" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8" />
+            </linearGradient>
 
-        {/* === MAGNETIC FIELD LINES === */}
-        <g opacity={magnetStrength / 150 + 0.3}>
-          {[-20, -10, 0, 10, 20].map((offset, i) => (
-            <line
-              key={i}
-              x1={pivotX - 42}
-              y1={magnetY + offset}
-              x2={pivotX + 42}
-              y2={magnetY + offset}
-              stroke="#a855f7"
-              strokeWidth="1.5"
-              strokeDasharray="6,4"
-              opacity="0.5"
-            />
-          ))}
-        </g>
+            {/* Magnetic Braking Effect Gradient */}
+            <radialGradient id="ecpBrakeEffect" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f87171" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#a855f7" stopOpacity="0.4" />
+              <stop offset="60%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
+            </radialGradient>
 
-        {/* === PENDULUM === */}
-        <g>
-          {/* Pivot point */}
-          <circle cx={pivotX} cy={pivotY} r="8" fill="#64748b" stroke="#94a3b8" strokeWidth="2" />
-          <circle cx={pivotX} cy={pivotY} r="3" fill="#1e293b" />
+            {/* Surface Highlight Gradient */}
+            <linearGradient id="ecpHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
+              <stop offset="50%" stopColor="rgba(255,255,255,0.1)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+            </linearGradient>
 
-          {/* String/rod */}
-          <line
-            x1={pivotX}
-            y1={pivotY}
-            x2={bobX}
-            y2={bobY}
-            stroke="#94a3b8"
-            strokeWidth="3"
-            strokeLinecap="round"
-          />
+            {/* Lab Grid Pattern */}
+            <pattern id="ecpGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+              <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
+            </pattern>
 
-          {/* Pendulum bob (metal/plastic sheet) */}
-          <g transform={`translate(${bobX}, ${bobY}) rotate(${pendulumAngle})`}>
-            {/* Get the right gradient based on material */}
-            {(() => {
-              const gradientId = `${materialType}Gradient`;
-              const sheetWidth = isMobile ? 50 : 65;
-              const sheetHeight = isMobile ? 70 : 90;
+            {/* === PREMIUM FILTERS === */}
 
-              return (
-                <>
-                  {/* Sheet body */}
-                  <rect
-                    x={-sheetWidth / 2}
-                    y={-10}
-                    width={sheetWidth}
-                    height={sheetHeight}
-                    rx="4"
-                    fill={`url(#${gradientId})`}
-                    stroke={getMaterialColor(materialType)}
-                    strokeWidth="2"
-                    filter="url(#eddyShadow)"
-                  />
+            {/* Drop Shadow Filter */}
+            <filter id="ecpShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.5" />
+            </filter>
 
-                  {/* Slits (if enabled) */}
-                  {hasSlits && materialConductivity > 0 && (
-                    <>
-                      {[0, 1, 2, 3].map(i => (
-                        <rect
-                          key={i}
-                          x={-sheetWidth / 2 + 8 + i * 12}
-                          y={5}
-                          width={3}
-                          height={sheetHeight - 20}
-                          rx="1"
-                          fill={colors.bgDeep}
-                        />
-                      ))}
-                    </>
-                  )}
+            {/* Deep Shadow for Frame */}
+            <filter id="ecpDeepShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="3" dy="6" stdDeviation="6" floodColor="#000000" floodOpacity="0.6" />
+            </filter>
 
-                  {/* Surface highlight */}
-                  <rect
-                    x={-sheetWidth / 2 + 3}
-                    y={-7}
-                    width={sheetWidth - 6}
-                    height={8}
-                    rx="2"
-                    fill="rgba(255,255,255,0.2)"
-                  />
-                </>
-              );
-            })()}
+            {/* Eddy Current Glow Filter */}
+            <filter id="ecpEddyGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur1" />
+              <feGaussianBlur stdDeviation="3" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Magnet Glow Filter */}
+            <filter id="ecpMagnetGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Braking Effect Filter */}
+            <filter id="ecpBrakeGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur1" />
+              <feGaussianBlur stdDeviation="4" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner Glow for Metal */}
+            <filter id="ecpMetalShine" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Field Line Animation Blur */}
+            <filter id="ecpFieldBlur" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* === PREMIUM BACKGROUND === */}
+          <rect width={svgWidth} height={svgHeight} fill="url(#ecpLabBg)" rx="12" />
+          <rect width={svgWidth} height={svgHeight} fill="url(#ecpGrid)" rx="12" />
+
+          {/* === SUPPORT FRAME (Premium Metal) === */}
+          <g filter="url(#ecpDeepShadow)">
+            {/* Top bar with metallic finish */}
+            <rect x={pivotX - 80} y={30} width={160} height={14} rx="4" fill="url(#ecpFrame)" />
+            <rect x={pivotX - 78} y={31} width={156} height={4} rx="2" fill="#6b7280" opacity="0.5" />
+
+            {/* Support posts with depth */}
+            <rect x={pivotX - 87} y={30} width={16} height={svgHeight - 58} rx="4" fill="url(#ecpFrame)" />
+            <rect x={pivotX - 85} y={32} width={4} height={svgHeight - 64} rx="2" fill="#6b7280" opacity="0.3" />
+
+            <rect x={pivotX + 71} y={30} width={16} height={svgHeight - 58} rx="4" fill="url(#ecpFrame)" />
+            <rect x={pivotX + 83} y={32} width={4} height={svgHeight - 64} rx="2" fill="#6b7280" opacity="0.3" />
+
+            {/* Base platform with texture */}
+            <rect x={pivotX - 105} y={svgHeight - 38} width={210} height={24} rx="5" fill="#111827" />
+            <rect x={pivotX - 103} y={svgHeight - 36} width={206} height={4} rx="2" fill="#1f2937" />
+            <rect x={pivotX - 103} y={svgHeight - 18} width={206} height={4} rx="2" fill="#0a0a0a" />
           </g>
 
-          {/* Eddy current visualization (swirling loops) */}
-          {showEddyCurrents && eddyCurrentIntensity > 5 && materialConductivity > 0 && (
-            <g transform={`translate(${bobX}, ${bobY + 30}) rotate(${pendulumAngle})`} filter="url(#eddyGlowFilter)">
-              {/* Current loops */}
-              {[0, 1, 2].map(i => {
-                const loopRadius = 12 + i * 8;
-                const opacity = (eddyCurrentIntensity / 100) * (1 - i * 0.25);
-                return (
-                  <circle
-                    key={i}
-                    cx={0}
-                    cy={0}
-                    r={loopRadius}
-                    fill="none"
-                    stroke={colors.eddy}
-                    strokeWidth="2"
-                    strokeDasharray={`${loopRadius * 0.5},${loopRadius * 0.3}`}
-                    opacity={opacity}
-                  >
-                    <animateTransform
-                      attributeName="transform"
-                      type="rotate"
-                      from={angularVelocity > 0 ? "0" : "360"}
-                      to={angularVelocity > 0 ? "360" : "0"}
-                      dur="1s"
-                      repeatCount="indefinite"
-                    />
-                  </circle>
-                );
-              })}
+          {/* === PREMIUM MAGNET ASSEMBLY === */}
+          <g filter="url(#ecpMagnetGlow)">
+            {/* Left magnet (North) with 3D effect */}
+            <rect
+              x={pivotX - 72}
+              y={magnetY - 42}
+              width={28}
+              height={84}
+              rx="5"
+              fill="url(#ecpMagnetNorth)"
+            />
+            {/* Highlight edge */}
+            <rect
+              x={pivotX - 70}
+              y={magnetY - 40}
+              width={4}
+              height={80}
+              rx="2"
+              fill="rgba(255,255,255,0.2)"
+            />
 
-              {/* Induced magnetic field indicator */}
-              <circle
-                cx={0}
-                cy={0}
-                r={8}
-                fill="url(#eddyGlow)"
-              />
+            {/* Right magnet (South) with 3D effect */}
+            <rect
+              x={pivotX + 44}
+              y={magnetY - 42}
+              width={28}
+              height={84}
+              rx="5"
+              fill="url(#ecpMagnetSouth)"
+            />
+            {/* Highlight edge */}
+            <rect
+              x={pivotX + 46}
+              y={magnetY - 40}
+              width={4}
+              height={80}
+              rx="2"
+              fill="rgba(255,255,255,0.2)"
+            />
+
+            {/* Magnet yoke (base connection) */}
+            <rect
+              x={pivotX - 72}
+              y={magnetY + 47}
+              width={144}
+              height={14}
+              rx="4"
+              fill="url(#ecpFrame)"
+            />
+          </g>
+
+          {/* === MAGNETIC FIELD VISUALIZATION === */}
+          <g opacity={magnetStrength / 120 + 0.3} filter="url(#ecpFieldBlur)">
+            {/* Curved field lines between poles */}
+            {[-25, -15, -5, 5, 15, 25].map((offset, i) => (
+              <path
+                key={i}
+                d={`M ${pivotX - 42} ${magnetY + offset} Q ${pivotX} ${magnetY + offset + (offset > 0 ? 8 : -8)} ${pivotX + 42} ${magnetY + offset}`}
+                fill="none"
+                stroke="url(#ecpFieldLines)"
+                strokeWidth="2"
+                strokeDasharray="8,5"
+                opacity={0.6 - Math.abs(offset) * 0.015}
+              >
+                <animate
+                  attributeName="stroke-dashoffset"
+                  values="0;26"
+                  dur="1.5s"
+                  repeatCount="indefinite"
+                />
+              </path>
+            ))}
+          </g>
+
+          {/* === MAGNETIC BRAKING EFFECT (when pendulum near center) === */}
+          {showEddyCurrents && eddyCurrentIntensity > 10 && materialConductivity > 0 && Math.abs(pendulumAngle) < 30 && (
+            <g filter="url(#ecpBrakeGlow)">
+              <ellipse
+                cx={pivotX}
+                cy={magnetY}
+                rx={45 + eddyCurrentIntensity * 0.3}
+                ry={30 + eddyCurrentIntensity * 0.2}
+                fill="url(#ecpBrakeEffect)"
+                opacity={eddyCurrentIntensity / 150}
+              >
+                <animate
+                  attributeName="opacity"
+                  values={`${eddyCurrentIntensity / 200};${eddyCurrentIntensity / 120};${eddyCurrentIntensity / 200}`}
+                  dur="0.5s"
+                  repeatCount="indefinite"
+                />
+              </ellipse>
             </g>
           )}
-        </g>
 
-        {/* === INFO PANELS === */}
+          {/* === PREMIUM PENDULUM === */}
+          <g>
+            {/* Pivot point with metallic finish */}
+            <circle cx={pivotX} cy={pivotY} r="10" fill="url(#ecpPivot)" filter="url(#ecpShadow)" />
+            <circle cx={pivotX - 2} cy={pivotY - 2} r="3" fill="rgba(255,255,255,0.3)" />
+            <circle cx={pivotX} cy={pivotY} r="4" fill="#1e293b" />
 
-        {/* Material indicator - Top left */}
-        {showLabels && (
-          <g transform="translate(10, 10)">
-            <rect x={0} y={0} width={90} height={50} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
-            <text x={45} y={16} textAnchor="middle" fill={colors.textSecondary} fontSize="9" fontWeight="600">
-              MATERIAL
-            </text>
-            <circle cx={20} cy={34} r="8" fill={getMaterialColor(materialType)} />
-            <text x={55} y={38} textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="600" style={{ textTransform: 'capitalize' }}>
-              {materialType}
-            </text>
-          </g>
-        )}
-
-        {/* Damping indicator - Top right */}
-        {showLabels && (
-          <g transform={`translate(${svgWidth - 100}, 10)`}>
-            <rect x={0} y={0} width={90} height={50} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
-            <text x={45} y={16} textAnchor="middle" fill={colors.textSecondary} fontSize="9" fontWeight="600">
-              DAMPING
-            </text>
-            <text x={45} y={38} textAnchor="middle" fill={dampingCoefficient > 0.05 ? colors.success : colors.textMuted} fontSize="14" fontWeight="700">
-              {dampingCoefficient > 0.05 ? 'STRONG' : dampingCoefficient > 0.01 ? 'WEAK' : 'NONE'}
-            </text>
-          </g>
-        )}
-
-        {/* Eddy current intensity - Bottom left */}
-        {showLabels && (
-          <g transform={`translate(10, ${svgHeight - 70})`}>
-            <rect x={0} y={0} width={110} height={60} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
-            <text x={55} y={16} textAnchor="middle" fill={colors.textSecondary} fontSize="9" fontWeight="600">
-              EDDY CURRENTS
-            </text>
-
-            {/* Intensity bar */}
-            <rect x={10} y={26} width={90} height={8} rx="4" fill={colors.bgElevated} />
-            <rect
-              x={10}
-              y={26}
-              width={Math.min(90, eddyCurrentIntensity * 0.9)}
-              height={8}
-              rx="4"
-              fill={colors.eddy}
+            {/* Premium rod with gradient */}
+            <line
+              x1={pivotX}
+              y1={pivotY}
+              x2={bobX}
+              y2={bobY}
+              stroke="url(#ecpRod)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              filter="url(#ecpMetalShine)"
             />
 
-            <text x={55} y={52} textAnchor="middle" fill={colors.eddy} fontSize="12" fontWeight="700">
-              {Math.round(eddyCurrentIntensity)}%
-            </text>
-          </g>
-        )}
+            {/* Pendulum bob (metal/plastic sheet) with premium materials */}
+            <g transform={`translate(${bobX}, ${bobY}) rotate(${pendulumAngle})`} filter="url(#ecpShadow)">
+              {/* Get the right gradient based on material */}
+              {(() => {
+                const gradientMap: Record<string, string> = {
+                  aluminum: 'ecpAluminum',
+                  copper: 'ecpCopper',
+                  plastic: 'ecpPlastic',
+                  wood: 'ecpWood'
+                };
+                const gradientId = gradientMap[materialType];
 
-        {/* Angle indicator - Bottom right */}
+                return (
+                  <>
+                    {/* Sheet body with premium gradient */}
+                    <rect
+                      x={-sheetWidth / 2}
+                      y={-10}
+                      width={sheetWidth}
+                      height={sheetHeight}
+                      rx="5"
+                      fill={`url(#${gradientId})`}
+                      stroke={getMaterialColor(materialType)}
+                      strokeWidth="1.5"
+                    />
+
+                    {/* Surface highlight for 3D effect */}
+                    <rect
+                      x={-sheetWidth / 2 + 2}
+                      y={-8}
+                      width={sheetWidth - 4}
+                      height={12}
+                      rx="3"
+                      fill="url(#ecpHighlight)"
+                    />
+
+                    {/* Slits (if enabled) */}
+                    {hasSlits && materialConductivity > 0 && (
+                      <>
+                        {[0, 1, 2, 3].map(i => (
+                          <rect
+                            key={i}
+                            x={-sheetWidth / 2 + 8 + i * 12}
+                            y={8}
+                            width={4}
+                            height={sheetHeight - 24}
+                            rx="2"
+                            fill="#030712"
+                          />
+                        ))}
+                      </>
+                    )}
+
+                    {/* Bottom edge shadow */}
+                    <rect
+                      x={-sheetWidth / 2 + 2}
+                      y={sheetHeight - 16}
+                      width={sheetWidth - 4}
+                      height={4}
+                      rx="2"
+                      fill="rgba(0,0,0,0.3)"
+                    />
+                  </>
+                );
+              })()}
+            </g>
+
+            {/* === PREMIUM EDDY CURRENT VISUALIZATION === */}
+            {showEddyCurrents && eddyCurrentIntensity > 5 && materialConductivity > 0 && (
+              <g transform={`translate(${bobX}, ${bobY + 25}) rotate(${pendulumAngle})`} filter="url(#ecpEddyGlow)">
+                {/* Multiple swirling current loops */}
+                {[0, 1, 2, 3].map(i => {
+                  const loopRadius = 10 + i * 7;
+                  const opacity = (eddyCurrentIntensity / 100) * (1 - i * 0.2);
+                  const duration = 0.8 + i * 0.2;
+                  return (
+                    <circle
+                      key={i}
+                      cx={0}
+                      cy={0}
+                      r={loopRadius}
+                      fill="none"
+                      stroke="url(#ecpEddySwirl)"
+                      strokeWidth={2.5 - i * 0.3}
+                      strokeDasharray={`${loopRadius * 0.6},${loopRadius * 0.4}`}
+                      opacity={opacity}
+                    >
+                      <animateTransform
+                        attributeName="transform"
+                        type="rotate"
+                        from={angularVelocity > 0 ? "0" : "360"}
+                        to={angularVelocity > 0 ? "360" : "0"}
+                        dur={`${duration}s`}
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  );
+                })}
+
+                {/* Central eddy current core glow */}
+                <circle
+                  cx={0}
+                  cy={0}
+                  r={12}
+                  fill="url(#ecpEddyCore)"
+                >
+                  <animate
+                    attributeName="r"
+                    values="10;14;10"
+                    dur="0.6s"
+                    repeatCount="indefinite"
+                  />
+                </circle>
+
+                {/* Induced field direction indicators */}
+                {angularVelocity !== 0 && (
+                  <>
+                    <circle cx={0} cy={-18} r="3" fill="#c4b5fd" opacity={eddyCurrentIntensity / 100}>
+                      <animate attributeName="opacity" values="0.3;0.8;0.3" dur="0.5s" repeatCount="indefinite" />
+                    </circle>
+                    <circle cx={0} cy={18} r="3" fill="#c4b5fd" opacity={eddyCurrentIntensity / 100}>
+                      <animate attributeName="opacity" values="0.8;0.3;0.8" dur="0.5s" repeatCount="indefinite" />
+                    </circle>
+                  </>
+                )}
+              </g>
+            )}
+
+            {/* Damping visualization trail (motion blur effect) */}
+            {isSwinging && dampingCoefficient > 0.03 && Math.abs(angularVelocity) > 5 && (
+              <g opacity={0.3}>
+                {[1, 2, 3].map(i => {
+                  const trailAngle = pendulumAngle - angularVelocity * 0.02 * i;
+                  const trailRad = (trailAngle * Math.PI) / 180;
+                  const trailX = pivotX + Math.sin(trailRad) * pendulumLength;
+                  const trailY = pivotY + Math.cos(trailRad) * pendulumLength;
+                  return (
+                    <ellipse
+                      key={i}
+                      cx={trailX}
+                      cy={trailY + 25}
+                      rx={sheetWidth / 2 - i * 3}
+                      ry={sheetHeight / 2 - i * 5}
+                      fill={colors.eddy}
+                      opacity={0.15 - i * 0.04}
+                      transform={`rotate(${trailAngle}, ${trailX}, ${trailY + 25})`}
+                    />
+                  );
+                })}
+              </g>
+            )}
+          </g>
+        </svg>
+
+        {/* === TEXT LABELS OUTSIDE SVG (using typo system) === */}
         {showLabels && (
-          <g transform={`translate(${svgWidth - 100}, ${svgHeight - 70})`}>
-            <rect x={0} y={0} width={90} height={60} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
-            <text x={45} y={16} textAnchor="middle" fill={colors.textSecondary} fontSize="9" fontWeight="600">
-              ANGLE
-            </text>
-            <text x={45} y={42} textAnchor="middle" fill={colors.textPrimary} fontSize="20" fontWeight="700">
-              {Math.round(pendulumAngle)}°
-            </text>
-          </g>
-        )}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'flex-start',
+            padding: `${typo.elementGap} ${typo.cardPadding}`,
+            marginTop: typo.elementGap,
+            flexWrap: 'wrap',
+            gap: typo.elementGap
+          }}>
+            {/* Material indicator */}
+            <div style={{
+              display: 'flex',
+              alignItems: 'center',
+              gap: '8px',
+              padding: '8px 12px',
+              backgroundColor: 'rgba(15,23,42,0.95)',
+              borderRadius: '8px',
+              border: `1px solid ${colors.bgElevated}`
+            }}>
+              <div style={{
+                width: '16px',
+                height: '16px',
+                borderRadius: '4px',
+                backgroundColor: getMaterialColor(materialType)
+              }} />
+              <div>
+                <div style={{ fontSize: typo.label, color: colors.textMuted, fontWeight: 600 }}>MATERIAL</div>
+                <div style={{ fontSize: typo.body, color: colors.textPrimary, fontWeight: 600, textTransform: 'capitalize' }}>
+                  {materialType}
+                </div>
+              </div>
+            </div>
 
-        {/* Slits indicator */}
-        {showLabels && hasSlits && materialConductivity > 0 && (
-          <g transform={`translate(${svgWidth / 2 - 40}, ${svgHeight - 35})`}>
-            <rect x={0} y={0} width={80} height={25} rx="6" fill="rgba(245,158,11,0.2)" stroke={colors.warning} strokeWidth="1" />
-            <text x={40} y={17} textAnchor="middle" fill={colors.warning} fontSize="10" fontWeight="600">
-              SLITS ACTIVE
-            </text>
-          </g>
-        )}
+            {/* Damping indicator */}
+            <div style={{
+              padding: '8px 12px',
+              backgroundColor: 'rgba(15,23,42,0.95)',
+              borderRadius: '8px',
+              border: `1px solid ${dampingCoefficient > 0.05 ? colors.success : colors.bgElevated}`,
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: typo.label, color: colors.textMuted, fontWeight: 600 }}>DAMPING</div>
+              <div style={{
+                fontSize: typo.body,
+                color: dampingCoefficient > 0.05 ? colors.success : colors.textMuted,
+                fontWeight: 700
+              }}>
+                {dampingCoefficient > 0.05 ? 'STRONG' : dampingCoefficient > 0.01 ? 'WEAK' : 'NONE'}
+              </div>
+            </div>
 
-        {/* Lenz's Law label - Bottom center */}
-        {showLabels && (
-          <g transform={`translate(${svgWidth / 2 - 55}, 10)`}>
-            <rect x={0} y={0} width={110} height={25} rx="6" fill="rgba(139,92,246,0.15)" stroke={colors.eddy} strokeWidth="1" />
-            <text x={55} y={17} textAnchor="middle" fill={colors.textPrimary} fontSize="10" fontWeight="600">
-              Lenz's Law Braking
-            </text>
-          </g>
+            {/* Eddy current intensity */}
+            <div style={{
+              padding: '8px 12px',
+              backgroundColor: 'rgba(15,23,42,0.95)',
+              borderRadius: '8px',
+              border: `1px solid ${colors.bgElevated}`,
+              minWidth: '100px'
+            }}>
+              <div style={{ fontSize: typo.label, color: colors.textMuted, fontWeight: 600, marginBottom: '4px' }}>
+                EDDY CURRENTS
+              </div>
+              <div style={{
+                height: '6px',
+                backgroundColor: colors.bgElevated,
+                borderRadius: '3px',
+                overflow: 'hidden',
+                marginBottom: '4px'
+              }}>
+                <div style={{
+                  height: '100%',
+                  width: `${Math.min(100, eddyCurrentIntensity)}%`,
+                  backgroundColor: colors.eddy,
+                  borderRadius: '3px',
+                  transition: 'width 0.1s'
+                }} />
+              </div>
+              <div style={{ fontSize: typo.body, color: colors.eddy, fontWeight: 700, textAlign: 'center' }}>
+                {Math.round(eddyCurrentIntensity)}%
+              </div>
+            </div>
+
+            {/* Angle indicator */}
+            <div style={{
+              padding: '8px 12px',
+              backgroundColor: 'rgba(15,23,42,0.95)',
+              borderRadius: '8px',
+              border: `1px solid ${colors.bgElevated}`,
+              textAlign: 'center'
+            }}>
+              <div style={{ fontSize: typo.label, color: colors.textMuted, fontWeight: 600 }}>ANGLE</div>
+              <div style={{ fontSize: typo.heading, color: colors.textPrimary, fontWeight: 700 }}>
+                {Math.round(pendulumAngle)}°
+              </div>
+            </div>
+
+            {/* Slits indicator */}
+            {hasSlits && materialConductivity > 0 && (
+              <div style={{
+                padding: '8px 16px',
+                backgroundColor: `${colors.warning}20`,
+                borderRadius: '8px',
+                border: `1px solid ${colors.warning}`,
+                textAlign: 'center'
+              }}>
+                <div style={{ fontSize: typo.small, color: colors.warning, fontWeight: 600 }}>
+                  SLITS ACTIVE
+                </div>
+              </div>
+            )}
+          </div>
         )}
-      </svg>
+      </>
     );
   };
 

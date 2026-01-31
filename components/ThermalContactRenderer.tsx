@@ -441,254 +441,546 @@ export default function ThermalContactRenderer({
     return "#ef4444";
   };
 
-  // Render heat transfer visualization
+  // Render heat transfer visualization with premium SVG graphics
   const renderHeatTransfer = () => {
     const currentInterface = interfaceOptions.find(o => o.type === interfaceType);
 
     return (
-      <svg viewBox="0 0 400 350" className="w-full max-w-md mx-auto">
-        {/* Background */}
-        <rect width="400" height="350" fill="#1e293b" />
+      <div className="flex flex-col items-center">
+        <svg viewBox="0 0 400 320" className="w-full max-w-md mx-auto">
+          {/* Premium SVG Definitions */}
+          <defs>
+            {/* Hot block gradient - warm reds/oranges with 5 color stops */}
+            <linearGradient id="thermHotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="25%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="75%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
 
-        {/* Hot block (left) */}
-        <g transform="translate(50, 100)">
-          <rect
-            width="120"
-            height="150"
-            fill={getTempColor(hotBlockTemp)}
-            stroke="#475569"
-            strokeWidth={2}
-            rx={5}
-          />
-          <text x="60" y="75" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">
-            {hotBlockTemp.toFixed(1)}C
-          </text>
-          <text x="60" y="100" textAnchor="middle" fill="white" fontSize="12">
-            HOT
-          </text>
+            {/* Cold block gradient - cool blues with 5 color stops */}
+            <linearGradient id="thermColdGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#e0f2fe" />
+              <stop offset="25%" stopColor="#7dd3fc" />
+              <stop offset="50%" stopColor="#38bdf8" />
+              <stop offset="75%" stopColor="#0ea5e9" />
+              <stop offset="100%" stopColor="#0284c7" />
+            </linearGradient>
 
-          {/* Heat energy visualization */}
-          {simRunning && hotBlockTemp > coldBlockTemp + 5 && (
-            <g>
-              {[0, 1, 2, 3, 4].map((i) => (
-                <circle
-                  key={i}
-                  cx={90 + (animationFrame / 5 + i * 20) % 100}
-                  cy={30 + i * 25}
-                  r={4}
-                  fill="white"
-                  opacity={0.6}
-                />
-              ))}
-            </g>
-          )}
-        </g>
+            {/* Heat transfer/flow gradient - orange to red */}
+            <linearGradient id="thermTransferGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
 
-        {/* Interface gap */}
-        <g transform="translate(170, 100)">
-          <rect
-            width="60"
-            height="150"
-            fill={currentInterface?.color || "#e0e0e0"}
-            stroke="#475569"
-            strokeWidth={2}
-          />
+            {/* Interface gradients */}
+            <linearGradient id="thermAirGapGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#dbeafe" />
+              <stop offset="50%" stopColor="#bfdbfe" />
+              <stop offset="100%" stopColor="#93c5fd" />
+            </linearGradient>
 
-          {/* Show microscopic detail if enabled */}
-          {showMicroscopic && interfaceType !== "thermal_paste" && (
-            <g>
-              {/* Rough surface representation */}
-              {[...Array(10)].map((_, i) => (
-                <g key={i}>
-                  {/* Left surface bumps */}
-                  <rect
-                    x={0}
-                    y={15 + i * 14}
-                    width={5 + Math.random() * 10}
-                    height={10}
-                    fill="#78909c"
+            <linearGradient id="thermBareContactGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#cbd5e1" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
+
+            <linearGradient id="thermPasteGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#e5e7eb" />
+              <stop offset="50%" stopColor="#9ca3af" />
+              <stop offset="100%" stopColor="#6b7280" />
+            </linearGradient>
+
+            {/* Premium background gradient */}
+            <linearGradient id="thermBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Hot glow filter */}
+            <filter id="thermHotGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Cold glow filter */}
+            <filter id="thermColdGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Heat particle glow */}
+            <filter id="thermParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Radial heat glow for hot block */}
+            <radialGradient id="thermHotRadial" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#f97316" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Radial cool glow for cold block */}
+            <radialGradient id="thermColdRadial" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+
+          {/* Premium dark lab background */}
+          <rect width="400" height="320" fill="url(#thermBgGrad)" />
+
+          {/* Hot block (left) with premium gradient */}
+          <g transform="translate(50, 80)">
+            {/* Hot glow effect behind block */}
+            <ellipse cx="60" cy="75" rx="80" ry="90" fill="url(#thermHotRadial)" />
+
+            <rect
+              width="120"
+              height="150"
+              fill="url(#thermHotGrad)"
+              stroke="#fbbf24"
+              strokeWidth={2}
+              rx={8}
+              filter="url(#thermHotGlow)"
+            />
+
+            {/* Inner highlight */}
+            <rect
+              x="5"
+              y="5"
+              width="110"
+              height="140"
+              fill="none"
+              stroke="rgba(255,255,255,0.2)"
+              strokeWidth={1}
+              rx={6}
+            />
+
+            {/* Heat energy visualization - animated particles */}
+            {simRunning && hotBlockTemp > coldBlockTemp + 5 && (
+              <g filter="url(#thermParticleGlow)">
+                {[0, 1, 2, 3, 4].map((i) => (
+                  <circle
+                    key={i}
+                    cx={90 + (animationFrame / 5 + i * 20) % 100}
+                    cy={30 + i * 25}
+                    r={5}
+                    fill="url(#thermTransferGrad)"
+                    opacity={0.8}
                   />
-                  {/* Right surface bumps */}
-                  <rect
-                    x={45 - Math.random() * 10}
-                    y={15 + i * 14}
-                    width={5 + Math.random() * 10}
-                    height={10}
-                    fill="#78909c"
-                  />
-                  {/* Air pocket */}
-                  {interfaceType === "air_gap" && (
-                    <circle
-                      cx={30}
-                      cy={20 + i * 14}
-                      r={3}
-                      fill="rgba(100,149,237,0.3)"
-                    />
-                  )}
-                </g>
-              ))}
-            </g>
-          )}
-
-          {/* Thermal paste fills gaps */}
-          {interfaceType === "thermal_paste" && (
-            <rect x={5} y={5} width={50} height={140} fill="#9e9e9e" rx={2} />
-          )}
-
-          <text x="30" y="-10" textAnchor="middle" fontSize="10" fill="#94a3b8">
-            {currentInterface?.name}
-          </text>
-          <text x="30" y="170" textAnchor="middle" fontSize="9" fill="#64748b">
-            k = {currentInterface?.conductivity} W/m-K
-          </text>
-        </g>
-
-        {/* Cold block (right) */}
-        <g transform="translate(230, 100)">
-          <rect
-            width="120"
-            height="150"
-            fill={getTempColor(coldBlockTemp)}
-            stroke="#475569"
-            strokeWidth={2}
-            rx={5}
-          />
-          <text x="60" y="75" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">
-            {coldBlockTemp.toFixed(1)}C
-          </text>
-          <text x="60" y="100" textAnchor="middle" fill="white" fontSize="12">
-            COLD
-          </text>
-        </g>
-
-        {/* Heat flow arrows */}
-        {simRunning && hotBlockTemp > coldBlockTemp + 2 && (
-          <g transform="translate(200, 175)">
-            {[0, 1, 2].map((i) => {
-              const offset = (animationFrame / 3 + i * 15) % 50;
-              const conductivity = currentInterface?.conductivity || 1;
-              const opacity = Math.min(1, conductivity / 5);
-              return (
-                <polygon
-                  key={i}
-                  points={`${-15 + offset},0 ${-5 + offset},-8 ${-5 + offset},-3 ${10 + offset},-3 ${10 + offset},-8 ${20 + offset},0 ${10 + offset},8 ${10 + offset},3 ${-5 + offset},3 ${-5 + offset},8`}
-                  fill="#ff5722"
-                  opacity={opacity * (1 - offset / 50)}
-                />
-              );
-            })}
+                ))}
+              </g>
+            )}
           </g>
-        )}
 
-        {/* Info */}
-        <text x="200" y="30" textAnchor="middle" fontSize="14" fill="#e2e8f0" fontWeight="bold">
-          Heat Transfer Through Interface
-        </text>
-        <text x="200" y="290" textAnchor="middle" fontSize="11" fill="#94a3b8">
-          Temperature Difference: {(hotBlockTemp - coldBlockTemp).toFixed(1)}C
-        </text>
-        <text x="200" y="310" textAnchor="middle" fontSize="11" fill="#94a3b8">
-          Time: {(simTime / 10).toFixed(1)}s | Heat Flow Rate: {((hotBlockTemp - coldBlockTemp) * (currentInterface?.conductivity || 1) * 0.1).toFixed(1)} W
-        </text>
-      </svg>
+          {/* Interface gap with gradient */}
+          <g transform="translate(170, 80)">
+            <rect
+              width="60"
+              height="150"
+              fill={
+                interfaceType === "air_gap" ? "url(#thermAirGapGrad)" :
+                interfaceType === "bare_contact" ? "url(#thermBareContactGrad)" :
+                "url(#thermPasteGrad)"
+              }
+              stroke="#475569"
+              strokeWidth={2}
+              rx={2}
+            />
+
+            {/* Show microscopic detail if enabled */}
+            {showMicroscopic && interfaceType !== "thermal_paste" && (
+              <g>
+                {/* Rough surface representation */}
+                {[...Array(10)].map((_, i) => (
+                  <g key={i}>
+                    {/* Left surface bumps */}
+                    <rect
+                      x={0}
+                      y={15 + i * 14}
+                      width={5 + Math.random() * 10}
+                      height={10}
+                      fill="#64748b"
+                      rx={1}
+                    />
+                    {/* Right surface bumps */}
+                    <rect
+                      x={45 - Math.random() * 10}
+                      y={15 + i * 14}
+                      width={5 + Math.random() * 10}
+                      height={10}
+                      fill="#64748b"
+                      rx={1}
+                    />
+                    {/* Air pocket */}
+                    {interfaceType === "air_gap" && (
+                      <circle
+                        cx={30}
+                        cy={20 + i * 14}
+                        r={4}
+                        fill="rgba(96,165,250,0.4)"
+                        stroke="rgba(96,165,250,0.6)"
+                        strokeWidth={0.5}
+                      />
+                    )}
+                  </g>
+                ))}
+              </g>
+            )}
+
+            {/* Thermal paste fills gaps - premium look */}
+            {interfaceType === "thermal_paste" && (
+              <rect x={5} y={5} width={50} height={140} fill="url(#thermPasteGrad)" rx={3} />
+            )}
+          </g>
+
+          {/* Cold block (right) with premium gradient */}
+          <g transform="translate(230, 80)">
+            {/* Cold glow effect behind block */}
+            <ellipse cx="60" cy="75" rx="80" ry="90" fill="url(#thermColdRadial)" />
+
+            <rect
+              width="120"
+              height="150"
+              fill="url(#thermColdGrad)"
+              stroke="#38bdf8"
+              strokeWidth={2}
+              rx={8}
+              filter="url(#thermColdGlow)"
+            />
+
+            {/* Inner highlight */}
+            <rect
+              x="5"
+              y="5"
+              width="110"
+              height="140"
+              fill="none"
+              stroke="rgba(255,255,255,0.2)"
+              strokeWidth={1}
+              rx={6}
+            />
+          </g>
+
+          {/* Heat flow arrows with gradient */}
+          {simRunning && hotBlockTemp > coldBlockTemp + 2 && (
+            <g transform="translate(200, 155)" filter="url(#thermParticleGlow)">
+              {[0, 1, 2].map((i) => {
+                const offset = (animationFrame / 3 + i * 15) % 50;
+                const conductivity = currentInterface?.conductivity || 1;
+                const opacity = Math.min(1, conductivity / 5);
+                return (
+                  <polygon
+                    key={i}
+                    points={`${-15 + offset},0 ${-5 + offset},-8 ${-5 + offset},-3 ${10 + offset},-3 ${10 + offset},-8 ${20 + offset},0 ${10 + offset},8 ${10 + offset},3 ${-5 + offset},3 ${-5 + offset},8`}
+                    fill="url(#thermTransferGrad)"
+                    opacity={opacity * (1 - offset / 50)}
+                  />
+                );
+              })}
+            </g>
+          )}
+
+          {/* Temperature display boxes */}
+          <g transform="translate(110, 145)">
+            <rect x="-35" y="-18" width="70" height="36" rx="6" fill="rgba(0,0,0,0.5)" stroke="#fbbf24" strokeWidth="1" />
+            <text x="0" y="6" textAnchor="middle" fill="#fef3c7" fontSize="18" fontWeight="bold">
+              {hotBlockTemp.toFixed(1)}°
+            </text>
+          </g>
+          <g transform="translate(290, 145)">
+            <rect x="-35" y="-18" width="70" height="36" rx="6" fill="rgba(0,0,0,0.5)" stroke="#38bdf8" strokeWidth="1" />
+            <text x="0" y="6" textAnchor="middle" fill="#e0f2fe" fontSize="18" fontWeight="bold">
+              {coldBlockTemp.toFixed(1)}°
+            </text>
+          </g>
+        </svg>
+
+        {/* Labels outside SVG using typo system for responsive typography */}
+        <div className="w-full max-w-md mx-auto mt-2 px-2">
+          <div className="flex justify-between items-center mb-2">
+            <span style={{ fontSize: typo.small, color: colors.primary }} className="font-semibold">
+              HOT BLOCK
+            </span>
+            <span style={{ fontSize: typo.label, color: colors.textSecondary }}>
+              {currentInterface?.name}
+            </span>
+            <span style={{ fontSize: typo.small, color: colors.accent }} className="font-semibold">
+              COLD BLOCK
+            </span>
+          </div>
+          <div className="text-center space-y-1">
+            <p style={{ fontSize: typo.small, color: colors.textSecondary }}>
+              Temperature Difference: <span style={{ color: colors.textPrimary, fontWeight: 600 }}>{(hotBlockTemp - coldBlockTemp).toFixed(1)}°C</span>
+            </p>
+            <p style={{ fontSize: typo.label, color: colors.textMuted }}>
+              Time: {(simTime / 10).toFixed(1)}s | Heat Flow: {((hotBlockTemp - coldBlockTemp) * (currentInterface?.conductivity || 1) * 0.1).toFixed(1)} W | k = {currentInterface?.conductivity} W/m-K
+            </p>
+          </div>
+        </div>
+      </div>
     );
   };
 
-  // Render CPU cooling visualization
+  // Render CPU cooling visualization with premium SVG graphics
   const renderCPUCooling = () => {
     return (
-      <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto">
-        {/* Background */}
-        <rect width="400" height="300" fill="#1e293b" />
+      <div className="flex flex-col items-center">
+        <svg viewBox="0 0 400 270" className="w-full max-w-md mx-auto">
+          {/* Premium SVG Definitions for CPU Cooling */}
+          <defs>
+            {/* CPU gradient based on temperature */}
+            <linearGradient id="thermCpuHotGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="25%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="75%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
 
-        {/* Motherboard */}
-        <rect x="50" y="200" width="300" height="80" fill="#1b5e20" stroke="#475569" strokeWidth={2} />
-        <text x="200" y="250" textAnchor="middle" fill="#a5d6a7" fontSize="10">
-          MOTHERBOARD
-        </text>
+            <linearGradient id="thermCpuCoolGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#d9f99d" />
+              <stop offset="50%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
 
-        {/* CPU */}
-        <rect x="150" y="160" width="100" height="40" fill={getTempColor(cpuTemp)} stroke="#475569" strokeWidth={2} />
-        <text x="200" y="185" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">
-          CPU {cpuTemp.toFixed(0)}C
-        </text>
+            {/* Motherboard gradient - premium PCB look */}
+            <linearGradient id="thermPcbGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#166534" />
+              <stop offset="50%" stopColor="#15803d" />
+              <stop offset="100%" stopColor="#14532d" />
+            </linearGradient>
 
-        {/* Thermal interface */}
-        <rect
-          x="155"
-          y="155"
-          width="90"
-          height="5"
-          fill={coolerType === "with_paste" ? "#bdbdbd" : "#e3f2fd"}
-          stroke="#475569"
-        />
-        {coolerType === "no_paste" && (
-          <text x="200" y="152" textAnchor="middle" fontSize="8" fill="#f44336">
-            AIR GAPS!
-          </text>
-        )}
+            {/* Heat sink metal gradient */}
+            <linearGradient id="thermHeatsinkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="30%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
 
-        {/* Heat sink */}
-        <rect x="140" y="70" width="120" height="85" fill="#78909c" stroke="#475569" strokeWidth={2} />
-        {/* Heat sink fins */}
-        {[...Array(8)].map((_, i) => (
-          <rect
-            key={i}
-            x={145 + i * 14}
-            y="20"
-            width="10"
-            height="50"
-            fill="#90a4ae"
-            stroke="#475569"
-          />
-        ))}
+            {/* Heat sink fin gradient */}
+            <linearGradient id="thermFinGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#cbd5e1" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
 
-        {/* Heat flow visualization */}
-        {cpuSimRunning && (
-          <g>
-            {[0, 1, 2].map((i) => {
-              const y = 150 - (animationFrame / 2 + i * 20) % 80;
-              const opacity = coolerType === "with_paste" ? 0.8 : 0.3;
-              return (
-                <circle
-                  key={i}
-                  cx={170 + i * 30}
-                  cy={y}
-                  r={5}
-                  fill="#ff5722"
-                  opacity={opacity * (1 - (150 - y) / 80)}
-                />
-              );
-            })}
+            {/* Thermal paste gradient */}
+            <linearGradient id="thermPasteInterfaceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#d1d5db" />
+              <stop offset="50%" stopColor="#9ca3af" />
+              <stop offset="100%" stopColor="#d1d5db" />
+            </linearGradient>
+
+            {/* Air gap gradient */}
+            <linearGradient id="thermAirInterfaceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#dbeafe" />
+              <stop offset="50%" stopColor="#bfdbfe" />
+              <stop offset="100%" stopColor="#dbeafe" />
+            </linearGradient>
+
+            {/* Heat flow particle gradient */}
+            <radialGradient id="thermHeatParticle" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.5" />
+            </radialGradient>
+
+            {/* CPU glow filter */}
+            <filter id="thermCpuGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Heat particle glow */}
+            <filter id="thermHeatFlowGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Temperature bar gradient */}
+            <linearGradient id="thermTempBarGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="40%" stopColor="#eab308" />
+              <stop offset="70%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Background gradient */}
+            <linearGradient id="thermCpuBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+          </defs>
+
+          {/* Premium background */}
+          <rect width="400" height="270" fill="url(#thermCpuBgGrad)" />
+
+          {/* Motherboard with premium PCB look */}
+          <g transform="translate(50, 180)">
+            <rect width="300" height="70" fill="url(#thermPcbGrad)" stroke="#22c55e" strokeWidth={1} rx={4} />
+            {/* PCB traces */}
+            {[...Array(6)].map((_, i) => (
+              <line
+                key={i}
+                x1={20 + i * 50}
+                y1="10"
+                x2={20 + i * 50}
+                y2="60"
+                stroke="#4ade80"
+                strokeWidth="1"
+                opacity="0.3"
+              />
+            ))}
           </g>
-        )}
 
-        {/* Labels */}
-        <text x="200" y="15" textAnchor="middle" fill="white" fontSize="12">
-          {coolerType === "with_paste" ? "WITH Thermal Paste" : "WITHOUT Thermal Paste"}
-        </text>
+          {/* CPU with dynamic gradient based on temperature */}
+          <g transform="translate(150, 140)">
+            <rect
+              width="100"
+              height="40"
+              fill={cpuTemp > 60 ? "url(#thermCpuHotGrad)" : "url(#thermCpuCoolGrad)"}
+              stroke={cpuTemp > 80 ? "#ef4444" : cpuTemp > 60 ? "#f97316" : "#22c55e"}
+              strokeWidth={2}
+              rx={4}
+              filter="url(#thermCpuGlow)"
+            />
+            {/* CPU die highlight */}
+            <rect x="35" y="10" width="30" height="20" fill="rgba(255,255,255,0.1)" rx={2} />
+          </g>
 
-        {/* Temperature indicator */}
-        <g transform="translate(330, 80)">
-          <rect x={0} y={0} width={40} height={120} fill="#1f2937" stroke="#374151" rx={5} />
-          <rect
-            x={5}
-            y={115 - (cpuTemp - 30) * 1.5}
-            width={30}
-            height={(cpuTemp - 30) * 1.5}
-            fill={getTempColor(cpuTemp)}
-            rx={3}
-          />
-          <text x={20} y={-10} textAnchor="middle" fontSize="10" fill="white">
-            {cpuTemp.toFixed(0)}C
-          </text>
-        </g>
+          {/* Thermal interface */}
+          <g transform="translate(155, 135)">
+            <rect
+              width="90"
+              height="5"
+              fill={coolerType === "with_paste" ? "url(#thermPasteInterfaceGrad)" : "url(#thermAirInterfaceGrad)"}
+              stroke={coolerType === "with_paste" ? "#9ca3af" : "#60a5fa"}
+              strokeWidth={0.5}
+              rx={1}
+            />
+          </g>
 
-        {/* Status */}
-        <text x="200" y="290" textAnchor="middle" fontSize="11" fill={cpuTemp > 80 ? "#f44336" : cpuTemp > 60 ? "#ff9800" : "#4caf50"}>
-          {cpuTemp > 80 ? "THROTTLING! Too Hot!" : cpuTemp > 60 ? "Warm - Reduced Performance" : "Cool - Full Performance"}
-        </text>
-      </svg>
+          {/* Heat sink base */}
+          <g transform="translate(140, 55)">
+            <rect width="120" height="80" fill="url(#thermHeatsinkGrad)" stroke="#64748b" strokeWidth={1} rx={4} />
+          </g>
+
+          {/* Heat sink fins with premium gradient */}
+          {[...Array(8)].map((_, i) => (
+            <rect
+              key={i}
+              x={145 + i * 14}
+              y="15"
+              width="10"
+              height="40"
+              fill="url(#thermFinGrad)"
+              stroke="#475569"
+              strokeWidth={0.5}
+              rx={2}
+            />
+          ))}
+
+          {/* Heat flow visualization */}
+          {cpuSimRunning && (
+            <g filter="url(#thermHeatFlowGlow)">
+              {[0, 1, 2].map((i) => {
+                const y = 130 - (animationFrame / 2 + i * 20) % 80;
+                const baseOpacity = coolerType === "with_paste" ? 0.9 : 0.35;
+                const opacity = baseOpacity * (1 - (130 - y) / 80);
+                return (
+                  <circle
+                    key={i}
+                    cx={170 + i * 30}
+                    cy={y}
+                    r={6}
+                    fill="url(#thermHeatParticle)"
+                    opacity={opacity}
+                  />
+                );
+              })}
+            </g>
+          )}
+
+          {/* Temperature indicator bar */}
+          <g transform="translate(330, 60)">
+            <rect x={0} y={0} width={40} height={130} fill="#0f172a" stroke="#334155" strokeWidth={1} rx={6} />
+            {/* Temperature fill */}
+            <rect
+              x={5}
+              y={125 - Math.min(120, (cpuTemp - 30) * 2)}
+              width={30}
+              height={Math.min(120, (cpuTemp - 30) * 2)}
+              fill="url(#thermTempBarGrad)"
+              rx={4}
+            />
+            {/* Temperature markers */}
+            <line x1="2" y1="5" x2="8" y2="5" stroke="#64748b" strokeWidth="1" />
+            <line x1="2" y1="65" x2="8" y2="65" stroke="#64748b" strokeWidth="1" />
+            <line x1="2" y1="125" x2="8" y2="125" stroke="#64748b" strokeWidth="1" />
+          </g>
+        </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div className="w-full max-w-md mx-auto mt-2 px-2">
+          <div className="flex justify-between items-center mb-2">
+            <span style={{
+              fontSize: typo.body,
+              color: coolerType === "with_paste" ? colors.success : colors.danger,
+              fontWeight: 600
+            }}>
+              {coolerType === "with_paste" ? "WITH Thermal Paste" : "WITHOUT Thermal Paste"}
+            </span>
+            <span style={{
+              fontSize: typo.heading,
+              color: cpuTemp > 80 ? colors.danger : cpuTemp > 60 ? colors.warning : colors.success,
+              fontWeight: 700
+            }}>
+              {cpuTemp.toFixed(0)}°C
+            </span>
+          </div>
+          {coolerType === "no_paste" && (
+            <p style={{ fontSize: typo.small, color: colors.danger }} className="text-center mb-1 font-semibold animate-pulse">
+              AIR GAPS BLOCKING HEAT TRANSFER!
+            </p>
+          )}
+          <p style={{
+            fontSize: typo.body,
+            color: cpuTemp > 80 ? colors.danger : cpuTemp > 60 ? colors.warning : colors.success,
+            textAlign: 'center',
+            fontWeight: 500
+          }}>
+            {cpuTemp > 80 ? "THROTTLING! Too Hot!" : cpuTemp > 60 ? "Warm - Reduced Performance" : "Cool - Full Performance"}
+          </p>
+        </div>
+      </div>
     );
   };
 

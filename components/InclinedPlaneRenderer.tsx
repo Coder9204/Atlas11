@@ -667,7 +667,7 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
   }, [currentQuestion, answeredQuestions, emit, testQuestions]);
 
   // ============================================================================
-  // VISUALIZATION
+  // VISUALIZATION - Premium SVG Graphics
   // ============================================================================
   const renderVisualization = () => {
     const rampLength = width - 100;
@@ -680,124 +680,488 @@ const InclinedPlaneRenderer: React.FC<InclinedPlaneRendererProps> = ({
     const ballProgress = ballPosition / 100;
     const ballX = rampStartX + ballProgress * rampLength;
     const ballY = rampStartY + ballProgress * rampHeight;
-    const ballRadius = 15;
+    const ballRadius = 18;
 
     const vectorScale = 3;
+    const svgHeight = height * 0.55;
 
     return (
-      <svg width={width} height={height * 0.55} viewBox={`0 0 ${width} ${height * 0.55}`} style={{ display: 'block' }}>
-        <defs>
-          <linearGradient id="rampGradMain" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={design.colors.rampLight} />
-            <stop offset="100%" stopColor={design.colors.ramp} />
-          </linearGradient>
-          <radialGradient id="ballGradMain" cx="30%" cy="30%">
-            <stop offset="0%" stopColor={design.colors.ballHighlight} />
-            <stop offset="100%" stopColor={design.colors.ball} />
-          </radialGradient>
-          <filter id="ballShadowMain">
-            <feDropShadow dx="2" dy="3" stdDeviation="4" floodOpacity="0.5" />
-          </filter>
-        </defs>
+      <div style={{ position: 'relative' }}>
+        <svg width={width} height={svgHeight} viewBox={`0 0 ${width} ${svgHeight}`} style={{ display: 'block' }}>
+          <defs>
+            {/* === PREMIUM GRADIENTS === */}
 
-        <rect width={width} height={height * 0.55} fill={design.colors.bgDeep} />
+            {/* Background gradient */}
+            <linearGradient id="inclBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0a0c14" />
+              <stop offset="100%" stopColor="#060810" />
+            </linearGradient>
 
-        {/* Ground */}
-        <line x1={0} y1={rampEndY + 8} x2={width} y2={rampEndY + 8} stroke={design.colors.textTertiary} strokeWidth={2} />
+            {/* Incline - Wood/Metal hybrid gradient */}
+            <linearGradient id="inclRampGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#78716c" />
+              <stop offset="60%" stopColor="#a8a29e" />
+              <stop offset="80%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
 
-        {/* Ramp */}
-        <polygon
-          points={`${rampStartX},${rampStartY} ${rampEndX},${rampEndY} ${rampEndX},${rampEndY + 18} ${rampStartX},${rampStartY + 18}`}
-          fill="url(#rampGradMain)"
-          stroke={design.colors.rampLight}
-          strokeWidth={2}
-        />
+            {/* Incline top surface highlight */}
+            <linearGradient id="inclRampTop" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#cbd5e1" />
+              <stop offset="100%" stopColor="#94a3b8" />
+            </linearGradient>
 
-        {/* Ramp surface indicator */}
-        {hasFriction && (
-          <text x={rampStartX + rampLength/2} y={rampStartY + rampHeight/2 + 35} textAnchor="middle"
-                fill={design.colors.friction} fontSize="10" fontFamily={design.font.sans} fontWeight="500"
-                transform={`rotate(${angle}, ${rampStartX + rampLength/2}, ${rampStartY + rampHeight/2 + 35})`}>
-            ~ Rough Surface ~
+            {/* 3D Block gradient */}
+            <linearGradient id="inclBlockGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="30%" stopColor="#ef4444" />
+              <stop offset="70%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            {/* Block highlight */}
+            <radialGradient id="inclBlockHighlight" cx="25%" cy="25%">
+              <stop offset="0%" stopColor="#fef2f2" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#fca5a5" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Ground gradient */}
+            <linearGradient id="inclGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* Force arrow gradients with glow */}
+            <linearGradient id="inclGravityGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#c084fc" />
+              <stop offset="50%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#7c3aed" />
+            </linearGradient>
+
+            <linearGradient id="inclNormalGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#86efac" />
+            </linearGradient>
+
+            <linearGradient id="inclParallelGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#fcd34d" />
+            </linearGradient>
+
+            <linearGradient id="inclFrictionGrad" x1="100%" y1="0%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#f87171" />
+              <stop offset="100%" stopColor="#fca5a5" />
+            </linearGradient>
+
+            {/* Angle arc gradient */}
+            <linearGradient id="inclAngleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" />
+              <stop offset="100%" stopColor="#22d3ee" />
+            </linearGradient>
+
+            {/* === GLOW FILTERS === */}
+
+            {/* Block shadow */}
+            <filter id="inclBlockShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceAlpha" stdDeviation="4" result="blur" />
+              <feOffset in="blur" dx="3" dy="4" result="offsetBlur" />
+              <feFlood floodColor="#000000" floodOpacity="0.5" result="color" />
+              <feComposite in="color" in2="offsetBlur" operator="in" result="shadow" />
+              <feMerge>
+                <feMergeNode in="shadow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Gravity glow (purple) */}
+            <filter id="inclGravityGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+              <feFlood floodColor="#a855f7" floodOpacity="0.6" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Normal glow (green) */}
+            <filter id="inclNormalGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+              <feFlood floodColor="#22c55e" floodOpacity="0.6" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Parallel glow (amber) */}
+            <filter id="inclParallelGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+              <feFlood floodColor="#f59e0b" floodOpacity="0.6" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Friction glow (red) */}
+            <filter id="inclFrictionGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur" />
+              <feFlood floodColor="#ef4444" floodOpacity="0.6" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Angle arc glow */}
+            <filter id="inclAngleGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur" />
+              <feFlood floodColor="#06b6d4" floodOpacity="0.5" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Ramp edge highlight */}
+            <filter id="inclRampGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="-2" stdDeviation="2" floodColor="#cbd5e1" floodOpacity="0.3" />
+            </filter>
+
+            {/* Surface texture pattern for rough surface */}
+            <pattern id="inclRoughTexture" patternUnits="userSpaceOnUse" width="8" height="8">
+              <circle cx="2" cy="2" r="1" fill="#78716c" opacity="0.4" />
+              <circle cx="6" cy="6" r="1" fill="#78716c" opacity="0.4" />
+              <circle cx="6" cy="2" r="0.5" fill="#a8a29e" opacity="0.3" />
+              <circle cx="2" cy="6" r="0.5" fill="#a8a29e" opacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* Background */}
+          <rect width={width} height={svgHeight} fill="url(#inclBgGrad)" />
+
+          {/* Ground with gradient */}
+          <rect x={0} y={rampEndY + 6} width={width} height={svgHeight - rampEndY - 6} fill="url(#inclGroundGrad)" />
+          <line x1={0} y1={rampEndY + 6} x2={width} y2={rampEndY + 6} stroke="#4b5563" strokeWidth={2} />
+
+          {/* Incline/Ramp with 3D effect */}
+          <g filter="url(#inclRampGlow)">
+            {/* Ramp body */}
+            <polygon
+              points={`${rampStartX},${rampStartY} ${rampEndX},${rampEndY} ${rampEndX},${rampEndY + 20} ${rampStartX},${rampStartY + 20}`}
+              fill="url(#inclRampGrad)"
+              stroke="#475569"
+              strokeWidth={1}
+            />
+            {/* Ramp top surface (lighter) */}
+            <polygon
+              points={`${rampStartX},${rampStartY} ${rampEndX},${rampEndY} ${rampEndX},${rampEndY + 4} ${rampStartX},${rampStartY + 4}`}
+              fill="url(#inclRampTop)"
+            />
+            {/* Surface texture overlay for friction */}
+            {hasFriction && (
+              <polygon
+                points={`${rampStartX},${rampStartY} ${rampEndX},${rampEndY} ${rampEndX},${rampEndY + 20} ${rampStartX},${rampStartY + 20}`}
+                fill="url(#inclRoughTexture)"
+                opacity="0.8"
+              />
+            )}
+            {/* Left edge highlight */}
+            <line
+              x1={rampStartX} y1={rampStartY}
+              x2={rampStartX} y2={rampStartY + 20}
+              stroke="#e2e8f0"
+              strokeWidth={2}
+            />
+          </g>
+
+          {/* Angle arc with glow */}
+          <g filter="url(#inclAngleGlow)">
+            <path
+              d={`M${rampEndX - 50} ${rampEndY} A 50 50 0 0 0 ${rampEndX - 50 * Math.cos(angleRad)} ${rampEndY - 50 * Math.sin(angleRad)}`}
+              fill="none"
+              stroke="url(#inclAngleGrad)"
+              strokeWidth={3}
+              strokeLinecap="round"
+            />
+            {/* Angle tick marks */}
+            <line
+              x1={rampEndX - 45} y1={rampEndY}
+              x2={rampEndX - 55} y2={rampEndY}
+              stroke="#22d3ee"
+              strokeWidth={2}
+            />
+            <line
+              x1={rampEndX - 45 * Math.cos(angleRad)} y1={rampEndY - 45 * Math.sin(angleRad)}
+              x2={rampEndX - 55 * Math.cos(angleRad)} y2={rampEndY - 55 * Math.sin(angleRad)}
+              stroke="#22d3ee"
+              strokeWidth={2}
+            />
+          </g>
+          {/* Angle label */}
+          <text
+            x={rampEndX - 70}
+            y={rampEndY - 25}
+            fill="#22d3ee"
+            fontSize="16"
+            fontWeight="700"
+            fontFamily={design.font.mono}
+            style={{ textShadow: '0 0 10px rgba(6, 182, 212, 0.5)' }}
+          >
+            {angle}°
           </text>
-        )}
 
-        {/* Angle arc */}
-        <path
-          d={`M${rampEndX - 45} ${rampEndY} A 45 45 0 0 0 ${rampEndX - 45 * Math.cos(angleRad)} ${rampEndY - 45 * Math.sin(angleRad)}`}
-          fill="none"
-          stroke={design.colors.accentPrimary}
-          strokeWidth={2}
-        />
-        <text x={rampEndX - 60} y={rampEndY - 18} fill={design.colors.accentPrimary} fontSize="15" fontWeight="bold" fontFamily={design.font.sans}>
-          {angle}°
-        </text>
+          {/* 3D Block/Ball with shadow */}
+          <g filter="url(#inclBlockShadow)">
+            {/* Block body - rectangular for better 3D effect */}
+            <rect
+              x={ballX - ballRadius}
+              y={ballY - ballRadius * 2 - 8}
+              width={ballRadius * 2}
+              height={ballRadius * 1.8}
+              rx={4}
+              fill="url(#inclBlockGrad)"
+              transform={`rotate(${angle}, ${ballX}, ${ballY - ballRadius - 8})`}
+            />
+            {/* Block highlight overlay */}
+            <rect
+              x={ballX - ballRadius}
+              y={ballY - ballRadius * 2 - 8}
+              width={ballRadius * 2}
+              height={ballRadius * 1.8}
+              rx={4}
+              fill="url(#inclBlockHighlight)"
+              transform={`rotate(${angle}, ${ballX}, ${ballY - ballRadius - 8})`}
+            />
+            {/* Block edge highlight */}
+            <line
+              x1={ballX - ballRadius + 3}
+              y1={ballY - ballRadius * 2 - 5}
+              x2={ballX + ballRadius - 3}
+              y2={ballY - ballRadius * 2 - 5}
+              stroke="rgba(255,255,255,0.4)"
+              strokeWidth={2}
+              strokeLinecap="round"
+              transform={`rotate(${angle}, ${ballX}, ${ballY - ballRadius - 8})`}
+            />
+          </g>
 
-        {/* Ball */}
-        <g filter="url(#ballShadowMain)">
-          <circle cx={ballX} cy={ballY - ballRadius - 9} r={ballRadius} fill="url(#ballGradMain)" />
-          <circle cx={ballX - 5} cy={ballY - ballRadius - 13} r={5} fill="rgba(255,255,255,0.4)" />
-        </g>
+          {/* Force vectors with glowing effects */}
+          {showVectors && (
+            <g transform={`translate(${ballX}, ${ballY - ballRadius - 8})`}>
+              {/* Gravity (straight down) - purple glow */}
+              <g filter="url(#inclGravityGlow)">
+                <line
+                  x1={0} y1={0}
+                  x2={0} y2={mass * g * vectorScale}
+                  stroke="url(#inclGravityGrad)"
+                  strokeWidth={4}
+                  strokeLinecap="round"
+                />
+                <polygon
+                  points={`0,${mass * g * vectorScale + 10} -6,${mass * g * vectorScale} 6,${mass * g * vectorScale}`}
+                  fill="#a855f7"
+                />
+              </g>
 
-        {/* Force vectors */}
-        {showVectors && (
-          <g transform={`translate(${ballX}, ${ballY - ballRadius - 9})`}>
-            {/* Gravity (straight down) */}
-            <line x1={0} y1={0} x2={0} y2={mass * g * vectorScale} stroke={design.colors.gravity} strokeWidth={3} />
-            <polygon points={`0,${mass * g * vectorScale + 8} -5,${mass * g * vectorScale} 5,${mass * g * vectorScale}`} fill={design.colors.gravity} />
-            <text x={10} y={mass * g * vectorScale / 2} fill={design.colors.gravity} fontSize="11" fontFamily={design.font.sans} fontWeight="500">mg</text>
+              {/* Normal force (perpendicular to ramp) - green glow */}
+              <g transform={`rotate(${-angle})`} filter="url(#inclNormalGlow)">
+                <line
+                  x1={0} y1={0}
+                  x2={0} y2={-normalForce * vectorScale}
+                  stroke="url(#inclNormalGrad)"
+                  strokeWidth={4}
+                  strokeLinecap="round"
+                />
+                <polygon
+                  points={`0,${-normalForce * vectorScale - 10} -6,${-normalForce * vectorScale} 6,${-normalForce * vectorScale}`}
+                  fill="#22c55e"
+                />
+              </g>
 
-            {/* Normal force (perpendicular to ramp) */}
-            <g transform={`rotate(${-angle})`}>
-              <line x1={0} y1={0} x2={0} y2={-normalForce * vectorScale} stroke={design.colors.normal} strokeWidth={3} />
-              <polygon points={`0,${-normalForce * vectorScale - 8} -5,${-normalForce * vectorScale} 5,${-normalForce * vectorScale}`} fill={design.colors.normal} />
-              <text x={10} y={-normalForce * vectorScale / 2} fill={design.colors.normal} fontSize="11" fontFamily={design.font.sans} fontWeight="500">N</text>
+              {/* Parallel component (along ramp) - amber glow */}
+              <g transform={`rotate(${angle})`}>
+                <g filter="url(#inclParallelGlow)">
+                  <line
+                    x1={0} y1={0}
+                    x2={gravityParallel * vectorScale} y2={0}
+                    stroke="url(#inclParallelGrad)"
+                    strokeWidth={4}
+                    strokeLinecap="round"
+                  />
+                  <polygon
+                    points={`${gravityParallel * vectorScale + 10},0 ${gravityParallel * vectorScale},-6 ${gravityParallel * vectorScale},6`}
+                    fill="#f59e0b"
+                  />
+                </g>
+
+                {/* Friction - red glow */}
+                {hasFriction && frictionForce > 0 && (
+                  <g filter="url(#inclFrictionGlow)">
+                    <line
+                      x1={0} y1={0}
+                      x2={-frictionForce * vectorScale} y2={0}
+                      stroke="url(#inclFrictionGrad)"
+                      strokeWidth={4}
+                      strokeLinecap="round"
+                    />
+                    <polygon
+                      points={`${-frictionForce * vectorScale - 10},0 ${-frictionForce * vectorScale},-6 ${-frictionForce * vectorScale},6`}
+                      fill="#ef4444"
+                    />
+                  </g>
+                )}
+              </g>
             </g>
+          )}
 
-            {/* Parallel component (along ramp) */}
-            <g transform={`rotate(${angle})`}>
-              <line x1={0} y1={0} x2={gravityParallel * vectorScale} y2={0} stroke={design.colors.parallel} strokeWidth={3} />
-              <polygon points={`${gravityParallel * vectorScale + 8},0 ${gravityParallel * vectorScale},-5 ${gravityParallel * vectorScale},5`} fill={design.colors.parallel} />
-              <text x={gravityParallel * vectorScale / 2} y={-14} fill={design.colors.parallel} fontSize="10" fontFamily={design.font.sans} fontWeight="500">mg·sinθ</text>
+          {/* Info panel with premium styling */}
+          <g transform={`translate(${width - 120}, 12)`}>
+            <rect
+              x={0} y={0}
+              width={108} height={88}
+              rx={10}
+              fill={design.colors.bgSecondary}
+              stroke={design.colors.border}
+              strokeWidth={1}
+            />
+            <rect
+              x={0} y={0}
+              width={108} height={24}
+              rx={10}
+              fill={design.colors.bgTertiary}
+            />
+            <rect x={0} y={14} width={108} height={10} fill={design.colors.bgTertiary} />
+            <text
+              x={54} y={17}
+              textAnchor="middle"
+              fill={design.colors.textSecondary}
+              fontSize="11"
+              fontFamily={design.font.sans}
+              fontWeight="600"
+            >
+              Acceleration
+            </text>
+            <text
+              x={54} y={48}
+              textAnchor="middle"
+              fill={design.colors.success}
+              fontSize="22"
+              fontWeight="bold"
+              fontFamily={design.font.mono}
+            >
+              {netAcceleration.toFixed(2)}
+            </text>
+            <text
+              x={54} y={62}
+              textAnchor="middle"
+              fill={design.colors.textTertiary}
+              fontSize="10"
+              fontFamily={design.font.sans}
+            >
+              m/s²
+            </text>
+            <line x1={10} y1={70} x2={98} y2={70} stroke={design.colors.border} strokeWidth={1} />
+            <text
+              x={54} y={82}
+              textAnchor="middle"
+              fill={design.colors.textTertiary}
+              fontSize="10"
+              fontFamily={design.font.sans}
+            >
+              v: {ballVelocity.toFixed(1)} m/s
+            </text>
+          </g>
+        </svg>
 
-              {/* Friction */}
-              {hasFriction && frictionForce > 0 && (
-                <>
-                  <line x1={0} y1={0} x2={-frictionForce * vectorScale} y2={0} stroke={design.colors.friction} strokeWidth={3} />
-                  <polygon points={`${-frictionForce * vectorScale - 8},0 ${-frictionForce * vectorScale},-5 ${-frictionForce * vectorScale},5`} fill={design.colors.friction} />
-                  <text x={-frictionForce * vectorScale / 2} y={14} fill={design.colors.friction} fontSize="10" fontFamily={design.font.sans} fontWeight="500">f</text>
-                </>
+        {/* Force labels outside SVG using typo system */}
+        {showVectors && (
+          <div style={{
+            position: 'absolute',
+            top: 0,
+            left: 0,
+            width: '100%',
+            height: '100%',
+            pointerEvents: 'none'
+          }}>
+            {/* Legend panel */}
+            <div style={{
+              position: 'absolute',
+              bottom: 12,
+              left: 12,
+              background: design.colors.bgSecondary,
+              border: `1px solid ${design.colors.border}`,
+              borderRadius: design.radius.md,
+              padding: `${design.spacing.sm}px ${design.spacing.md}px`,
+              display: 'flex',
+              flexDirection: 'column',
+              gap: 6
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 12, height: 12, borderRadius: '50%', background: design.colors.gravity, boxShadow: `0 0 8px ${design.colors.gravity}` }} />
+                <span style={{ fontSize: typo.label, color: design.colors.textSecondary, fontFamily: design.font.sans }}>
+                  Weight (mg)
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 12, height: 12, borderRadius: '50%', background: design.colors.normal, boxShadow: `0 0 8px ${design.colors.normal}` }} />
+                <span style={{ fontSize: typo.label, color: design.colors.textSecondary, fontFamily: design.font.sans }}>
+                  Normal (N)
+                </span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                <div style={{ width: 12, height: 12, borderRadius: '50%', background: design.colors.parallel, boxShadow: `0 0 8px ${design.colors.parallel}` }} />
+                <span style={{ fontSize: typo.label, color: design.colors.textSecondary, fontFamily: design.font.sans }}>
+                  Parallel (mg sin{'\u03B8'})
+                </span>
+              </div>
+              {hasFriction && (
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                  <div style={{ width: 12, height: 12, borderRadius: '50%', background: design.colors.friction, boxShadow: `0 0 8px ${design.colors.friction}` }} />
+                  <span style={{ fontSize: typo.label, color: design.colors.textSecondary, fontFamily: design.font.sans }}>
+                    Friction (f)
+                  </span>
+                </div>
               )}
-            </g>
-          </g>
-        )}
+            </div>
 
-        {/* Info panel */}
-        <g transform={`translate(${width - 115}, 15)`}>
-          <rect x={0} y={0} width={100} height={80} rx={8} fill={design.colors.bgSecondary} stroke={design.colors.border} strokeWidth={1} />
-          <text x={50} y={20} textAnchor="middle" fill={design.colors.textSecondary} fontSize="10" fontFamily={design.font.sans}>Acceleration</text>
-          <text x={50} y={42} textAnchor="middle" fill={design.colors.success} fontSize="18" fontWeight="bold" fontFamily={design.font.mono}>
-            {netAcceleration.toFixed(2)}
-          </text>
-          <text x={50} y={55} textAnchor="middle" fill={design.colors.textTertiary} fontSize="10" fontFamily={design.font.sans}>m/s²</text>
-          <text x={50} y={72} textAnchor="middle" fill={design.colors.textTertiary} fontSize="9" fontFamily={design.font.sans}>
-            v: {ballVelocity.toFixed(1)} m/s
-          </text>
-        </g>
-
-        {/* Legend */}
-        {showVectors && (
-          <g transform={`translate(15, ${height * 0.55 - 75})`}>
-            <rect x={0} y={0} width={125} height={60} rx={8} fill={design.colors.bgSecondary} stroke={design.colors.border} strokeWidth={1} />
-            <circle cx={15} cy={16} r={5} fill={design.colors.gravity} />
-            <text x={28} y={20} fill={design.colors.textSecondary} fontSize="9" fontFamily={design.font.sans}>Gravity (mg)</text>
-            <circle cx={15} cy={32} r={5} fill={design.colors.normal} />
-            <text x={28} y={36} fill={design.colors.textSecondary} fontSize="9" fontFamily={design.font.sans}>Normal (N)</text>
-            <circle cx={15} cy={48} r={5} fill={design.colors.parallel} />
-            <text x={28} y={52} fill={design.colors.textSecondary} fontSize="9" fontFamily={design.font.sans}>Parallel (mg·sinθ)</text>
-          </g>
+            {/* Rough surface indicator */}
+            {hasFriction && (
+              <div style={{
+                position: 'absolute',
+                top: svgHeight * 0.4,
+                left: '50%',
+                transform: 'translateX(-50%)',
+                background: `${design.colors.friction}20`,
+                border: `1px solid ${design.colors.friction}40`,
+                borderRadius: design.radius.sm,
+                padding: `4px 12px`,
+                display: 'flex',
+                alignItems: 'center',
+                gap: 6
+              }}>
+                <span style={{ fontSize: typo.label, color: design.colors.friction, fontFamily: design.font.sans, fontWeight: 600 }}>
+                  Rough Surface
+                </span>
+                <span style={{ fontSize: typo.label, color: design.colors.textTertiary, fontFamily: design.font.mono }}>
+                  {'\u03BC'} = 0.3
+                </span>
+              </div>
+            )}
+          </div>
         )}
-      </svg>
+      </div>
     );
   };
 

@@ -597,7 +597,7 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   }, [currentQuestion, answeredQuestions, emit, testQuestions]);
 
   // ============================================================================
-  // VISUALIZATION
+  // VISUALIZATION - Premium Quality SVG Graphics
   // ============================================================================
   const renderVisualization = () => {
     const surfaceY = height * 0.32;
@@ -608,128 +608,574 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
     const graphHeight = 90;
     const graphWidth = width - 60;
 
+    // Surface-specific texture patterns
+    const surfaceTextures = {
+      wood: { roughness: 0.5, pattern: 'grain', lineSpacing: 4 },
+      rubber: { roughness: 0.9, pattern: 'stipple', lineSpacing: 3 },
+      ice: { roughness: 0.1, pattern: 'smooth', lineSpacing: 8 }
+    };
+
+    const currentTexture = surfaceTextures[surface];
+
     return (
-      <svg width={width} height={height * 0.58} viewBox={`0 0 ${width} ${height * 0.58}`} style={{ display: 'block' }}>
-        <defs>
-          <linearGradient id="blockGradFric" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={design.colors.blockHighlight} />
-            <stop offset="100%" stopColor={design.colors.block} />
-          </linearGradient>
-          <linearGradient id="surfaceGradFric" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={surfaceProperties[surface].color} />
-            <stop offset="100%" stopColor={`${surfaceProperties[surface].color}cc`} />
-          </linearGradient>
-          <filter id="blockShadowFric">
-            <feDropShadow dx="2" dy="4" stdDeviation="4" floodOpacity="0.5" />
-          </filter>
-          <filter id="graphGlow">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+      <div style={{ position: 'relative' }}>
+        <svg width={width} height={height * 0.58} viewBox={`0 0 ${width} ${height * 0.58}`} style={{ display: 'block' }}>
+          <defs>
+            {/* === PREMIUM GRADIENTS === */}
 
-        <rect width={width} height={height * 0.58} fill={design.colors.bgDeep} />
+            {/* Block 3D gradient with highlight */}
+            <linearGradient id="fricBlockGrad3D" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#a5b4fc" />
+              <stop offset="25%" stopColor={design.colors.blockHighlight} />
+              <stop offset="50%" stopColor={design.colors.block} />
+              <stop offset="100%" stopColor="#3730a3" />
+            </linearGradient>
 
-        {/* Surface */}
-        <rect x={20} y={surfaceY} width={width - 40} height={18} rx={3} fill="url(#surfaceGradFric)" />
-        <text x={width - 30} y={surfaceY + 32} textAnchor="end" fill={design.colors.textTertiary} fontSize="11" fontFamily={design.font.sans} fontWeight="500">
-          {surfaceProperties[surface].name}
-        </text>
+            {/* Block top face gradient */}
+            <linearGradient id="fricBlockTop" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#c7d2fe" />
+              <stop offset="100%" stopColor={design.colors.blockHighlight} />
+            </linearGradient>
 
-        {/* Block */}
-        <g filter="url(#blockShadowFric)">
-          <rect x={blockX} y={surfaceY - blockHeight} width={blockWidth} height={blockHeight} rx={6} fill="url(#blockGradFric)" />
-          <text x={blockX + blockWidth/2} y={surfaceY - blockHeight/2 + 5} textAnchor="middle" fill="white" fontSize="13" fontWeight="bold" fontFamily={design.font.sans}>
-            1 kg
-          </text>
-        </g>
+            {/* Block side face gradient */}
+            <linearGradient id="fricBlockSide" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={design.colors.block} />
+              <stop offset="100%" stopColor="#312e81" />
+            </linearGradient>
 
-        {/* Spring/Pull mechanism */}
-        <g transform={`translate(${blockX + blockWidth}, ${surfaceY - blockHeight/2})`}>
-          <path
-            d={`M0 0 ${Array.from({length: 8}, (_, i) => `L${10 + i*6} ${i % 2 === 0 ? -8 : 8}`).join(' ')} L${60 + currentForce * 2} 0`}
-            stroke={design.colors.spring} strokeWidth={3} fill="none"
-          />
-          <circle cx={65 + currentForce * 2} cy={0} r={14} fill={design.colors.accentPrimary} stroke="#fff" strokeWidth={2} />
-          <text x={65 + currentForce * 2} y={-22} textAnchor="middle" fill={design.colors.accentPrimary} fontSize="13" fontWeight="bold" fontFamily={design.font.sans}>
-            {currentForce.toFixed(1)}N
-          </text>
-        </g>
+            {/* Surface texture gradient */}
+            <linearGradient id="fricSurfaceGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={surfaceProperties[surface].color} />
+              <stop offset="30%" stopColor={`${surfaceProperties[surface].color}ee`} />
+              <stop offset="70%" stopColor={`${surfaceProperties[surface].color}dd`} />
+              <stop offset="100%" stopColor={`${surfaceProperties[surface].color}99`} />
+            </linearGradient>
 
-        {/* Friction arrows */}
-        {currentForce > 0 && (
-          <g transform={`translate(${blockX}, ${surfaceY - 5})`}>
-            <path
-              d={`M0 0 L${-Math.min(currentForce * 3, 45)} 0 L${-Math.min(currentForce * 3, 45) + 8} -5 M${-Math.min(currentForce * 3, 45)} 0 L${-Math.min(currentForce * 3, 45) + 8} 5`}
-              stroke={hasSlipped ? design.colors.kineticFriction : design.colors.staticFriction} strokeWidth={3} fill="none"
+            {/* Surface highlight */}
+            <linearGradient id="fricSurfaceHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.15)" />
+              <stop offset="50%" stopColor="rgba(255,255,255,0.05)" />
+              <stop offset="100%" stopColor="rgba(0,0,0,0.1)" />
+            </linearGradient>
+
+            {/* Spring metallic gradient */}
+            <linearGradient id="fricSpringGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="50%" stopColor={design.colors.spring} />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+
+            {/* Pull handle gradient */}
+            <radialGradient id="fricHandleGrad" cx="30%" cy="30%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="50%" stopColor={design.colors.accentPrimary} />
+              <stop offset="100%" stopColor="#b45309" />
+            </radialGradient>
+
+            {/* Static friction arrow gradient */}
+            <linearGradient id="fricStaticArrowGrad" x1="100%" y1="0%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor={design.colors.staticFriction} />
+              <stop offset="100%" stopColor="#fca5a5" />
+            </linearGradient>
+
+            {/* Kinetic friction arrow gradient */}
+            <linearGradient id="fricKineticArrowGrad" x1="100%" y1="0%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor={design.colors.kineticFriction} />
+              <stop offset="100%" stopColor="#fcd34d" />
+            </linearGradient>
+
+            {/* Applied force arrow gradient */}
+            <linearGradient id="fricAppliedArrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="100%" stopColor={design.colors.spring} />
+            </linearGradient>
+
+            {/* Graph background gradient */}
+            <linearGradient id="fricGraphBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={design.colors.bgSecondary} />
+              <stop offset="100%" stopColor={design.colors.bgTertiary} />
+            </linearGradient>
+
+            {/* Force trace gradient */}
+            <linearGradient id="fricTraceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="50%" stopColor={design.colors.success} />
+              <stop offset="100%" stopColor="#10b981" />
+            </linearGradient>
+
+            {/* === GLOW FILTERS === */}
+
+            {/* Block shadow with ambient glow */}
+            <filter id="fricBlockShadow" x="-30%" y="-30%" width="160%" height="160%">
+              <feDropShadow dx="3" dy="5" stdDeviation="5" floodColor="#000" floodOpacity="0.4" />
+              <feDropShadow dx="0" dy="0" stdDeviation="8" floodColor={design.colors.block} floodOpacity="0.2" />
+            </filter>
+
+            {/* Static friction glow (red) */}
+            <filter id="fricStaticGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor={design.colors.staticFriction} floodOpacity="0.6" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Kinetic friction glow (amber) */}
+            <filter id="fricKineticGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor={design.colors.kineticFriction} floodOpacity="0.6" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Applied force glow (green) */}
+            <filter id="fricAppliedGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feFlood floodColor={design.colors.spring} floodOpacity="0.5" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Graph line glow */}
+            <filter id="fricGraphGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Peak marker pulse */}
+            <filter id="fricPeakGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor={design.colors.staticFriction} floodOpacity="0.8" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Handle highlight glow */}
+            <filter id="fricHandleGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor={design.colors.accentPrimary} floodOpacity="0.4" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Surface roughness pattern */}
+            <pattern id="fricRoughnessPattern" width={currentTexture.lineSpacing * 2} height={currentTexture.lineSpacing * 2} patternUnits="userSpaceOnUse">
+              {surface === 'wood' && (
+                <>
+                  <line x1="0" y1="0" x2={currentTexture.lineSpacing * 2} y2="0" stroke="rgba(0,0,0,0.1)" strokeWidth="0.5" />
+                  <line x1="0" y1={currentTexture.lineSpacing} x2={currentTexture.lineSpacing * 2} y2={currentTexture.lineSpacing} stroke="rgba(0,0,0,0.08)" strokeWidth="0.3" />
+                </>
+              )}
+              {surface === 'rubber' && (
+                <>
+                  <circle cx={currentTexture.lineSpacing / 2} cy={currentTexture.lineSpacing / 2} r="0.8" fill="rgba(0,0,0,0.15)" />
+                  <circle cx={currentTexture.lineSpacing * 1.5} cy={currentTexture.lineSpacing * 1.5} r="0.6" fill="rgba(0,0,0,0.12)" />
+                </>
+              )}
+              {surface === 'ice' && (
+                <line x1="0" y1="0" x2={currentTexture.lineSpacing * 2} y2={currentTexture.lineSpacing * 2} stroke="rgba(255,255,255,0.1)" strokeWidth="0.3" />
+              )}
+            </pattern>
+          </defs>
+
+          {/* Background */}
+          <rect width={width} height={height * 0.58} fill={design.colors.bgDeep} />
+
+          {/* === SURFACE WITH TEXTURE === */}
+          <g>
+            {/* Main surface body */}
+            <rect
+              x={20}
+              y={surfaceY}
+              width={width - 40}
+              height={18}
+              rx={3}
+              fill="url(#fricSurfaceGrad)"
             />
-            <text x={-28} y={-12} textAnchor="middle" fill={hasSlipped ? design.colors.kineticFriction : design.colors.staticFriction} fontSize="10" fontWeight="600" fontFamily={design.font.sans}>
-              {hasSlipped ? 'Kinetic' : 'Static'}
-            </text>
+            {/* Roughness texture overlay */}
+            <rect
+              x={20}
+              y={surfaceY}
+              width={width - 40}
+              height={18}
+              rx={3}
+              fill="url(#fricRoughnessPattern)"
+            />
+            {/* Highlight overlay */}
+            <rect
+              x={20}
+              y={surfaceY}
+              width={width - 40}
+              height={18}
+              rx={3}
+              fill="url(#fricSurfaceHighlight)"
+            />
+            {/* Surface edge highlight */}
+            <line
+              x1={20}
+              y1={surfaceY + 1}
+              x2={width - 20}
+              y2={surfaceY + 1}
+              stroke="rgba(255,255,255,0.2)"
+              strokeWidth="1"
+            />
           </g>
+
+          {/* === FRICTION COEFFICIENT INDICATOR (visual roughness hint) === */}
+          <g transform={`translate(25, ${surfaceY + 25})`}>
+            <rect x={0} y={0} width={60} height={16} rx={4} fill={design.colors.bgSecondary} stroke={design.colors.border} strokeWidth={1} />
+            <rect x={2} y={2} width={56 * currentTexture.roughness} height={12} rx={3} fill={hasSlipped ? design.colors.kineticFriction : design.colors.staticFriction} opacity={0.7} />
+          </g>
+
+          {/* === 3D BLOCK WITH DEPTH === */}
+          <g filter="url(#fricBlockShadow)">
+            {/* Block top face (3D effect) */}
+            <path
+              d={`M${blockX + 4} ${surfaceY - blockHeight - 4} L${blockX + blockWidth + 4} ${surfaceY - blockHeight - 4} L${blockX + blockWidth} ${surfaceY - blockHeight} L${blockX} ${surfaceY - blockHeight} Z`}
+              fill="url(#fricBlockTop)"
+            />
+            {/* Block right face (3D effect) */}
+            <path
+              d={`M${blockX + blockWidth} ${surfaceY - blockHeight} L${blockX + blockWidth + 4} ${surfaceY - blockHeight - 4} L${blockX + blockWidth + 4} ${surfaceY - 4} L${blockX + blockWidth} ${surfaceY} Z`}
+              fill="url(#fricBlockSide)"
+            />
+            {/* Block front face */}
+            <rect
+              x={blockX}
+              y={surfaceY - blockHeight}
+              width={blockWidth}
+              height={blockHeight}
+              rx={4}
+              fill="url(#fricBlockGrad3D)"
+            />
+            {/* Block inner highlight */}
+            <rect
+              x={blockX + 3}
+              y={surfaceY - blockHeight + 3}
+              width={blockWidth - 6}
+              height={blockHeight - 6}
+              rx={3}
+              fill="none"
+              stroke="rgba(255,255,255,0.15)"
+              strokeWidth="1"
+            />
+          </g>
+
+          {/* === SPRING/PULL MECHANISM WITH GLOW === */}
+          <g transform={`translate(${blockX + blockWidth}, ${surfaceY - blockHeight/2})`}>
+            {/* Spring coil with metallic gradient */}
+            <path
+              d={`M0 0 ${Array.from({length: 8}, (_, i) => `L${10 + i*6} ${i % 2 === 0 ? -8 : 8}`).join(' ')} L${60 + currentForce * 2} 0`}
+              stroke="url(#fricSpringGrad)"
+              strokeWidth={4}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Spring shadow */}
+            <path
+              d={`M0 2 ${Array.from({length: 8}, (_, i) => `L${10 + i*6} ${(i % 2 === 0 ? -8 : 8) + 2}`).join(' ')} L${60 + currentForce * 2} 2`}
+              stroke="rgba(0,0,0,0.2)"
+              strokeWidth={4}
+              fill="none"
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+
+            {/* Pull handle with glow */}
+            <g filter="url(#fricHandleGlow)">
+              <circle cx={65 + currentForce * 2} cy={0} r={16} fill="url(#fricHandleGrad)" />
+              <circle cx={65 + currentForce * 2} cy={0} r={16} fill="none" stroke="rgba(255,255,255,0.3)" strokeWidth={2} />
+              {/* Inner highlight */}
+              <circle cx={62 + currentForce * 2} cy={-3} r={5} fill="rgba(255,255,255,0.25)" />
+            </g>
+          </g>
+
+          {/* === APPLIED FORCE ARROW (pointing right) === */}
+          {currentForce > 0 && (
+            <g transform={`translate(${blockX + blockWidth + 10}, ${surfaceY - blockHeight/2 - 30})`} filter="url(#fricAppliedGlow)">
+              <path
+                d={`M0 0 L${Math.min(currentForce * 4, 60)} 0 L${Math.min(currentForce * 4, 60) - 8} -6 M${Math.min(currentForce * 4, 60)} 0 L${Math.min(currentForce * 4, 60) - 8} 6`}
+                stroke="url(#fricAppliedArrowGrad)"
+                strokeWidth={4}
+                fill="none"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
+          )}
+
+          {/* === FRICTION ARROWS WITH GLOW === */}
+          {currentForce > 0 && (
+            <g transform={`translate(${blockX}, ${surfaceY - 5})`}>
+              <g filter={hasSlipped ? "url(#fricKineticGlow)" : "url(#fricStaticGlow)"}>
+                <path
+                  d={`M0 0 L${-Math.min(currentForce * 3.5, 50)} 0 L${-Math.min(currentForce * 3.5, 50) + 10} -7 M${-Math.min(currentForce * 3.5, 50)} 0 L${-Math.min(currentForce * 3.5, 50) + 10} 7`}
+                  stroke={hasSlipped ? "url(#fricKineticArrowGrad)" : "url(#fricStaticArrowGrad)"}
+                  strokeWidth={4}
+                  fill="none"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+            </g>
+          )}
+
+          {/* === FORCE COMPARISON INDICATOR === */}
+          {currentForce > 0 && (
+            <g transform={`translate(${width - 90}, 20)`}>
+              <rect x={0} y={0} width={70} height={45} rx={6} fill={design.colors.bgSecondary} stroke={design.colors.border} strokeWidth={1} />
+              {/* Applied force bar */}
+              <rect x={5} y={8} width={Math.min(currentForce / staticFrictionMax * 55, 55)} height={8} rx={2} fill={design.colors.spring} />
+              {/* Friction force bar */}
+              <rect x={5} y={28} width={Math.min((hasSlipped ? kineticFriction : Math.min(currentForce, staticFrictionMax)) / staticFrictionMax * 55, 55)} height={8} rx={2} fill={hasSlipped ? design.colors.kineticFriction : design.colors.staticFriction} />
+              {/* Max static line */}
+              <line x1={60} y1={5} x2={60} y2={40} stroke={design.colors.staticFriction} strokeWidth={1} strokeDasharray="2,2" opacity={0.5} />
+            </g>
+          )}
+
+          {/* === FORCE-TIME GRAPH WITH PREMIUM STYLING === */}
+          <g transform={`translate(30, ${graphY})`}>
+            {/* Graph background with gradient */}
+            <rect x={0} y={0} width={graphWidth} height={graphHeight} rx={10} fill="url(#fricGraphBg)" stroke={design.colors.border} strokeWidth={1} />
+
+            {/* Grid lines */}
+            {[0.25, 0.5, 0.75].map((ratio, i) => (
+              <line
+                key={i}
+                x1={8}
+                y1={graphHeight * ratio}
+                x2={graphWidth - 8}
+                y2={graphHeight * ratio}
+                stroke={design.colors.border}
+                strokeWidth={0.5}
+                opacity={0.3}
+              />
+            ))}
+
+            {/* Static friction threshold line */}
+            <line
+              x1={8}
+              y1={graphHeight - (staticFrictionMax / 10) * (graphHeight - 24) - 12}
+              x2={graphWidth - 8}
+              y2={graphHeight - (staticFrictionMax / 10) * (graphHeight - 24) - 12}
+              stroke={design.colors.staticFriction}
+              strokeWidth={1.5}
+              strokeDasharray="6,4"
+              opacity={0.7}
+            />
+
+            {/* Kinetic friction threshold line */}
+            <line
+              x1={8}
+              y1={graphHeight - (kineticFriction / 10) * (graphHeight - 24) - 12}
+              x2={graphWidth - 8}
+              y2={graphHeight - (kineticFriction / 10) * (graphHeight - 24) - 12}
+              stroke={design.colors.kineticFriction}
+              strokeWidth={1.5}
+              strokeDasharray="6,4"
+              opacity={0.7}
+            />
+
+            {/* Force trace with gradient and glow */}
+            {forceHistory.length > 1 && (
+              <g filter="url(#fricGraphGlow)">
+                <polyline
+                  points={forceHistory.map((f, i) => `${8 + (i / forceHistory.length) * (graphWidth - 16)},${graphHeight - (f / 10) * (graphHeight - 24) - 12}`).join(' ')}
+                  fill="none"
+                  stroke="url(#fricTraceGrad)"
+                  strokeWidth={3}
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+            )}
+
+            {/* Peak marker with enhanced glow */}
+            {peakForce > 0 && forceHistory.length > 0 && (
+              <g filter="url(#fricPeakGlow)">
+                <circle
+                  cx={8 + (forceHistory.indexOf(Math.max(...forceHistory)) / forceHistory.length) * (graphWidth - 16)}
+                  cy={graphHeight - (peakForce / 10) * (graphHeight - 24) - 12}
+                  r={8}
+                  fill={design.colors.staticFriction}
+                />
+                <circle
+                  cx={8 + (forceHistory.indexOf(Math.max(...forceHistory)) / forceHistory.length) * (graphWidth - 16)}
+                  cy={graphHeight - (peakForce / 10) * (graphHeight - 24) - 12}
+                  r={4}
+                  fill="#fff"
+                />
+              </g>
+            )}
+          </g>
+        </svg>
+
+        {/* === LABELS OUTSIDE SVG (using typo system) === */}
+        <div style={{
+          position: 'absolute',
+          right: 30,
+          top: surfaceY + 26,
+          fontSize: typo.label,
+          fontFamily: design.font.sans,
+          fontWeight: 500,
+          color: design.colors.textTertiary
+        }}>
+          {surfaceProperties[surface].name} (u={surfaceProperties[surface].staticCoef.toFixed(2)})
+        </div>
+
+        {/* Friction coefficient indicator label */}
+        <div style={{
+          position: 'absolute',
+          left: 90,
+          top: surfaceY + 26,
+          fontSize: typo.label,
+          fontFamily: design.font.sans,
+          fontWeight: 500,
+          color: design.colors.textTertiary
+        }}>
+          Roughness
+        </div>
+
+        {/* Force comparison labels */}
+        {currentForce > 0 && (
+          <>
+            <div style={{
+              position: 'absolute',
+              right: 95,
+              top: 26,
+              fontSize: typo.label,
+              fontFamily: design.font.sans,
+              fontWeight: 600,
+              color: design.colors.spring
+            }}>
+              F
+            </div>
+            <div style={{
+              position: 'absolute',
+              right: 95,
+              top: 46,
+              fontSize: typo.label,
+              fontFamily: design.font.sans,
+              fontWeight: 600,
+              color: hasSlipped ? design.colors.kineticFriction : design.colors.staticFriction
+            }}>
+              f
+            </div>
+          </>
         )}
 
-        {/* Force-Time Graph */}
-        <g transform={`translate(30, ${graphY})`}>
-          <rect x={0} y={0} width={graphWidth} height={graphHeight} rx={8} fill={design.colors.bgSecondary} stroke={design.colors.border} strokeWidth={1} />
+        {/* Applied force label */}
+        {currentForce > 0 && (
+          <div style={{
+            position: 'absolute',
+            left: blockX + blockWidth + 15 + Math.min(currentForce * 4, 60) + 5,
+            top: surfaceY - blockHeight/2 - 38,
+            fontSize: typo.small,
+            fontFamily: design.font.sans,
+            fontWeight: 700,
+            color: design.colors.spring
+          }}>
+            {currentForce.toFixed(1)}N
+          </div>
+        )}
 
-          {/* Graph labels */}
-          <text x={8} y={16} fill={design.colors.textSecondary} fontSize="10" fontFamily={design.font.sans} fontWeight="500">Force (N)</text>
-          <text x={graphWidth - 8} y={graphHeight - 8} textAnchor="end" fill={design.colors.textSecondary} fontSize="10" fontFamily={design.font.sans} fontWeight="500">Time</text>
+        {/* Friction type label */}
+        {currentForce > 0 && (
+          <div style={{
+            position: 'absolute',
+            left: blockX - Math.min(currentForce * 3.5, 50) - 45,
+            top: surfaceY - 20,
+            fontSize: typo.small,
+            fontFamily: design.font.sans,
+            fontWeight: 700,
+            color: hasSlipped ? design.colors.kineticFriction : design.colors.staticFriction
+          }}>
+            {hasSlipped ? 'Kinetic' : 'Static'}
+          </div>
+        )}
 
-          {/* Static friction line */}
-          <line x1={8} y1={graphHeight - (staticFrictionMax / 10) * (graphHeight - 24) - 12} x2={graphWidth - 8} y2={graphHeight - (staticFrictionMax / 10) * (graphHeight - 24) - 12}
-                stroke={design.colors.staticFriction} strokeWidth={1} strokeDasharray="5,5" opacity={0.6} />
-          <text x={graphWidth - 10} y={graphHeight - (staticFrictionMax / 10) * (graphHeight - 24) - 16} textAnchor="end" fill={design.colors.staticFriction} fontSize="9" fontFamily={design.font.sans} fontWeight="500">
-            \u03bcs max
-          </text>
+        {/* Graph axis labels */}
+        <div style={{
+          position: 'absolute',
+          left: 38,
+          top: graphY + 10,
+          fontSize: typo.label,
+          fontFamily: design.font.sans,
+          fontWeight: 500,
+          color: design.colors.textSecondary
+        }}>
+          Force (N)
+        </div>
+        <div style={{
+          position: 'absolute',
+          right: 40,
+          top: graphY + graphHeight - 18,
+          fontSize: typo.label,
+          fontFamily: design.font.sans,
+          fontWeight: 500,
+          color: design.colors.textSecondary
+        }}>
+          Time
+        </div>
 
-          {/* Kinetic friction line */}
-          <line x1={8} y1={graphHeight - (kineticFriction / 10) * (graphHeight - 24) - 12} x2={graphWidth - 8} y2={graphHeight - (kineticFriction / 10) * (graphHeight - 24) - 12}
-                stroke={design.colors.kineticFriction} strokeWidth={1} strokeDasharray="5,5" opacity={0.6} />
-          <text x={graphWidth - 10} y={graphHeight - (kineticFriction / 10) * (graphHeight - 24) - 16} textAnchor="end" fill={design.colors.kineticFriction} fontSize="9" fontFamily={design.font.sans} fontWeight="500">
-            \u03bck
-          </text>
+        {/* Threshold line labels */}
+        <div style={{
+          position: 'absolute',
+          right: 40,
+          top: graphY + graphHeight - (staticFrictionMax / 10) * (graphHeight - 24) - 20,
+          fontSize: typo.label,
+          fontFamily: design.font.sans,
+          fontWeight: 600,
+          color: design.colors.staticFriction
+        }}>
+          fs max
+        </div>
+        <div style={{
+          position: 'absolute',
+          right: 40,
+          top: graphY + graphHeight - (kineticFriction / 10) * (graphHeight - 24) - 20,
+          fontSize: typo.label,
+          fontFamily: design.font.sans,
+          fontWeight: 600,
+          color: design.colors.kineticFriction
+        }}>
+          fk
+        </div>
 
-          {/* Force trace */}
-          {forceHistory.length > 1 && (
-            <g filter="url(#graphGlow)">
-              <polyline
-                points={forceHistory.map((f, i) => `${8 + (i / forceHistory.length) * (graphWidth - 16)},${graphHeight - (f / 10) * (graphHeight - 24) - 12}`).join(' ')}
-                fill="none"
-                stroke={design.colors.success}
-                strokeWidth={2.5}
-              />
-            </g>
-          )}
-
-          {/* Peak marker */}
-          {peakForce > 0 && forceHistory.length > 0 && (
-            <g>
-              <circle
-                cx={8 + (forceHistory.indexOf(Math.max(...forceHistory)) / forceHistory.length) * (graphWidth - 16)}
-                cy={graphHeight - (peakForce / 10) * (graphHeight - 24) - 12}
-                r={6}
-                fill={design.colors.staticFriction}
-              />
-              <text
-                x={8 + (forceHistory.indexOf(Math.max(...forceHistory)) / forceHistory.length) * (graphWidth - 16)}
-                y={graphHeight - (peakForce / 10) * (graphHeight - 24) - 22}
-                textAnchor="middle"
-                fill={design.colors.staticFriction}
-                fontSize="10"
-                fontWeight="bold"
-                fontFamily={design.font.sans}
-              >
-                Peak!
-              </text>
-            </g>
-          )}
-        </g>
-      </svg>
+        {/* Peak label */}
+        {peakForce > 0 && forceHistory.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            left: 38 + (forceHistory.indexOf(Math.max(...forceHistory)) / forceHistory.length) * (graphWidth - 16),
+            top: graphY + graphHeight - (peakForce / 10) * (graphHeight - 24) - 35,
+            fontSize: typo.small,
+            fontFamily: design.font.sans,
+            fontWeight: 700,
+            color: design.colors.staticFriction,
+            transform: 'translateX(-50%)'
+          }}>
+            SLIP!
+          </div>
+        )}
+      </div>
     );
   };
 

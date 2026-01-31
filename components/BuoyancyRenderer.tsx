@@ -412,111 +412,226 @@ export default function BuoyancyRenderer({ onComplete, onGameEvent, gamePhase, o
     };
   }, []);
 
-  // Water tank visualization
+  // Water tank visualization - Premium graphics
   const WaterTankVisualization = ({ isStatic = false }: { isStatic?: boolean }) => {
     const values = calculateBuoyancy();
     const displaySubmersion = isStatic ? values.equilibriumSubmersion : submersionDepth;
     const objectTop = 20 + (100 - displaySubmersion) * 0.6;
     const waterTop = 80;
+    const buoyancyScale = Math.min(1, values.currentBuoyancy / Math.max(values.weight, 1));
 
     return (
-      <div className="bg-slate-800/60 rounded-xl p-4 border border-slate-700/50">
+      <div style={{
+        background: `linear-gradient(135deg, ${colors.bgCard} 0%, ${colors.bgDark} 100%)`,
+        borderRadius: '16px',
+        padding: typo.cardPadding,
+        border: `1px solid ${colors.border}`,
+      }}>
         <svg
           viewBox="0 0 300 200"
-          className="w-full rounded-lg"
           style={{
-            height: isMobile ? 180 : 220,
-            background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f13 100%)',
+            width: '100%',
+            height: isMobile ? 200 : 260,
+            borderRadius: '12px',
           }}
         >
-          {/* Tank walls */}
-          <rect x="50" y="20" width="200" height="160" fill="none" stroke="#374151" strokeWidth="3" rx="5" />
+          {/* Premium gradients and filters */}
+          <defs>
+            {/* Water gradient - realistic depth effect */}
+            <linearGradient id="buoyWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#0284c7" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="#0369a1" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#075985" stopOpacity="0.6" />
+            </linearGradient>
 
-          {/* Water */}
-          <rect x="52" y={waterTop} width="196" height="98" fill="rgba(59, 130, 246, 0.2)" />
+            {/* Tank glass effect */}
+            <linearGradient id="buoyTankGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" stopOpacity="0.8" />
+              <stop offset="10%" stopColor="#64748b" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#94a3b8" stopOpacity="0.1" />
+              <stop offset="90%" stopColor="#64748b" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#475569" stopOpacity="0.8" />
+            </linearGradient>
 
-          {/* Water surface line */}
-          <line x1="52" y1={waterTop} x2="248" y2={waterTop} stroke="#3B82F6" strokeWidth="2" strokeDasharray="4,2" />
+            {/* Object gradient - 3D effect */}
+            <linearGradient id="buoyObjectFloat" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+            <linearGradient id="buoyObjectSink" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
 
-          {/* Object (box) */}
-          <g transform={`translate(125, ${objectTop})`}>
+            {/* Force arrow gradients */}
+            <linearGradient id="buoyWeightArrow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+            <linearGradient id="buoyBuoyancyArrow" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#67e8f9" />
+              <stop offset="100%" stopColor="#06b6d4" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="buoyGlowCyan" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="buoyGlowRed" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            <filter id="buoyObjectGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Water surface shimmer */}
+            <linearGradient id="buoyWaterSurface" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.8" />
+              <stop offset="25%" stopColor="#7dd3fc" stopOpacity="1" />
+              <stop offset="50%" stopColor="#38bdf8" stopOpacity="0.8" />
+              <stop offset="75%" stopColor="#7dd3fc" stopOpacity="1" />
+              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.8" />
+            </linearGradient>
+          </defs>
+
+          {/* Background */}
+          <rect x="0" y="0" width="300" height="200" fill="#0f172a" rx="8" />
+
+          {/* Subtle grid pattern */}
+          <g opacity="0.1">
+            {[60, 90, 120, 150].map(y => (
+              <line key={y} x1="52" y1={y} x2="248" y2={y} stroke="#64748b" strokeWidth="0.5" strokeDasharray="2,4" />
+            ))}
+          </g>
+
+          {/* Tank - glass effect */}
+          <rect x="50" y="20" width="200" height="160" fill="url(#buoyTankGrad)" rx="6" />
+          <rect x="50" y="20" width="200" height="160" fill="none" stroke="#64748b" strokeWidth="2" rx="6" />
+
+          {/* Water body */}
+          <rect x="52" y={waterTop} width="196" height="98" fill="url(#buoyWaterGrad)" rx="2" />
+
+          {/* Water surface with shimmer */}
+          <line x1="52" y1={waterTop} x2="248" y2={waterTop} stroke="url(#buoyWaterSurface)" strokeWidth="3" />
+
+          {/* Depth markers */}
+          <g opacity="0.6">
+            <text x="46" y={waterTop + 25} textAnchor="end" fill="#64748b" fontSize="8">25%</text>
+            <text x="46" y={waterTop + 50} textAnchor="end" fill="#64748b" fontSize="8">50%</text>
+            <text x="46" y={waterTop + 75} textAnchor="end" fill="#64748b" fontSize="8">75%</text>
+          </g>
+
+          {/* Object with 3D effect and glow */}
+          <g transform={`translate(125, ${objectTop})`} filter="url(#buoyObjectGlow)">
             <rect
-              x="0"
-              y="0"
-              width="50"
-              height="50"
-              rx="5"
-              fill={values.floats ? '#10B981' : '#EF4444'}
-              opacity="0.8"
+              x="0" y="0" width="50" height="50" rx="6"
+              fill={values.floats ? 'url(#buoyObjectFloat)' : 'url(#buoyObjectSink)'}
             />
-            <text x="25" y="30" textAnchor="middle" fill="#FFFFFF" fontSize="12" fontWeight="bold">
-              {values.objectMass.toFixed(1)}kg
+            {/* Object highlight */}
+            <rect x="5" y="5" width="20" height="8" rx="2" fill="rgba(255,255,255,0.3)" />
+            {/* Mass label on object */}
+            <text x="25" y="32" textAnchor="middle" fill="#FFFFFF" fontSize="14" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+              {values.objectMass.toFixed(1)}
+            </text>
+            <text x="25" y="44" textAnchor="middle" fill="rgba(255,255,255,0.8)" fontSize="10">
+              kg
             </text>
           </g>
 
-          {/* Force arrows */}
-          {/* Weight (down) */}
-          <g transform={`translate(200, ${objectTop + 25})`}>
-            <line x1="0" y1="0" x2="0" y2="30" stroke="#EF4444" strokeWidth="3" />
-            <polygon points="-5,25 5,25 0,35" fill="#EF4444" />
-            <text x="15" y="20" fill="#EF4444" fontSize="10">W={values.weight.toFixed(0)}N</text>
+          {/* Weight arrow (down) with glow */}
+          <g transform={`translate(195, ${objectTop + 25})`} filter="url(#buoyGlowRed)">
+            <line x1="0" y1="0" x2="0" y2={Math.min(40, values.weight / 3)} stroke="url(#buoyWeightArrow)" strokeWidth="4" strokeLinecap="round" />
+            <polygon points="-6,32 6,32 0,42" fill="#ef4444" />
           </g>
 
-          {/* Buoyancy (up) - only show when in water */}
+          {/* Buoyancy arrow (up) with glow - only when in water */}
           {displaySubmersion > 0 && (
-            <g transform={`translate(100, ${objectTop + 25})`}>
-              <line x1="0" y1="30" x2="0" y2="0" stroke="#06B6D4" strokeWidth="3" />
-              <polygon points="-5,5 5,5 0,-5" fill="#06B6D4" />
-              <text x="-40" y="20" fill="#06B6D4" fontSize="10">F_b={values.currentBuoyancy.toFixed(0)}N</text>
+            <g transform={`translate(105, ${objectTop + 25})`} filter="url(#buoyGlowCyan)">
+              <line x1="0" y1={Math.min(40, values.currentBuoyancy / 3)} x2="0" y2="0" stroke="url(#buoyBuoyancyArrow)" strokeWidth="4" strokeLinecap="round" />
+              <polygon points="-6,8 6,8 0,-2" fill="#06b6d4" />
             </g>
           )}
 
-          {/* Labels */}
-          <text x="150" y="15" textAnchor="middle" fill="#9CA3AF" fontSize="11">
-            {values.floats ? 'Floats' : 'Sinks'} | Object: {objectDensity.toFixed(2)} kg/L
-          </text>
-          <text x="260" y={waterTop + 5} fill="#3B82F6" fontSize="10">Fluid: {fluidDensity.toFixed(2)}</text>
+          {/* Status indicator - moved outside SVG clutter zone */}
+          <g transform="translate(150, 12)">
+            <rect x="-45" y="-8" width="90" height="16" rx="8" fill={values.floats ? 'rgba(16,185,129,0.2)' : 'rgba(239,68,68,0.2)'} />
+            <text x="0" y="4" textAnchor="middle" fill={values.floats ? '#34d399' : '#f87171'} fontSize="11" fontWeight="600">
+              {values.floats ? '● FLOATS' : '● SINKS'}
+            </text>
+          </g>
         </svg>
 
-        {/* Force comparison bars */}
+        {/* Force labels - moved outside SVG for better readability */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginTop: typo.elementGap,
+          padding: `0 ${typo.elementGap}`,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#06b6d4', boxShadow: '0 0 8px #06b6d4' }} />
+            <span style={{ fontSize: typo.small, color: '#67e8f9', fontWeight: 600 }}>
+              F_b = {values.currentBuoyancy.toFixed(0)} N
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <span style={{ fontSize: typo.small, color: '#fca5a5', fontWeight: 600 }}>
+              W = {values.weight.toFixed(0)} N
+            </span>
+            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: '#ef4444', boxShadow: '0 0 8px #ef4444' }} />
+          </div>
+        </div>
+
+        {/* Force comparison bars - Premium design */}
         {!isStatic && (
-          <div className="grid grid-cols-3 gap-3 mt-4">
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-xs font-medium text-red-400">Weight</span>
-                <span className="text-xs font-medium text-red-400">{values.weight.toFixed(0)}N</span>
+          <div style={{
+            display: 'grid',
+            gridTemplateColumns: 'repeat(3, 1fr)',
+            gap: typo.elementGap,
+            marginTop: typo.sectionGap,
+          }}>
+            {[
+              { label: 'Weight', value: values.weight, max: Math.max(values.weight, values.maxBuoyancy), color: '#ef4444', glow: '#fca5a5' },
+              { label: 'Buoyancy', value: values.currentBuoyancy, max: Math.max(values.weight, values.maxBuoyancy), color: '#06b6d4', glow: '#67e8f9' },
+              { label: 'Apparent', value: Math.max(0, values.apparentWeight), max: values.weight, color: '#3b82f6', glow: '#93c5fd' },
+            ].map((item) => (
+              <div key={item.label}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '4px' }}>
+                  <span style={{ fontSize: typo.label, fontWeight: 600, color: item.glow }}>{item.label}</span>
+                  <span style={{ fontSize: typo.label, fontWeight: 600, color: item.glow }}>{item.value.toFixed(0)}N</span>
+                </div>
+                <div style={{
+                  height: '8px',
+                  background: colors.bgCardLight,
+                  borderRadius: '4px',
+                  overflow: 'hidden',
+                }}>
+                  <div style={{
+                    height: '100%',
+                    width: `${(item.value / item.max) * 100}%`,
+                    background: `linear-gradient(90deg, ${item.color}, ${item.glow})`,
+                    borderRadius: '4px',
+                    transition: 'width 0.15s ease-out',
+                    boxShadow: `0 0 8px ${item.color}40`,
+                  }} />
+                </div>
               </div>
-              <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-red-500 rounded-full"
-                  style={{ width: `${(values.weight / Math.max(values.weight, values.maxBuoyancy)) * 100}%` }}
-                />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-xs font-medium text-cyan-400">Buoyancy</span>
-                <span className="text-xs font-medium text-cyan-400">{values.currentBuoyancy.toFixed(0)}N</span>
-              </div>
-              <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-cyan-500 rounded-full transition-all duration-100"
-                  style={{ width: `${(values.currentBuoyancy / Math.max(values.weight, values.maxBuoyancy)) * 100}%` }}
-                />
-              </div>
-            </div>
-            <div>
-              <div className="flex justify-between mb-1">
-                <span className="text-xs font-medium text-blue-400">Apparent</span>
-                <span className="text-xs font-medium text-blue-400">{values.apparentWeight.toFixed(0)}N</span>
-              </div>
-              <div className="h-2 bg-slate-700 rounded-full overflow-hidden">
-                <div
-                  className="h-full bg-blue-500 rounded-full transition-all duration-100"
-                  style={{ width: `${Math.max(0, (values.apparentWeight / values.weight) * 100)}%` }}
-                />
-              </div>
-            </div>
+            ))}
           </div>
         )}
       </div>

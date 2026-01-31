@@ -218,133 +218,382 @@ const RefractionRenderer: React.FC<RefractionRendererProps> = ({
     const glassWidth = 120;
     const glassHeight = 200;
     const waterHeight = (waterLevel / 100) * glassHeight * 0.8;
+    const waterSurfaceY = 40 + glassHeight - waterHeight - 3;
+    const glassLeft = (300 - glassWidth) / 2;
+    const glassRight = glassLeft + glassWidth;
+
+    // Calculate angle for arc markers
+    const incidentAngle = Math.abs(viewingAngle);
+    const refractedAngle = Math.abs(Math.asin(Math.sin(viewingAngle * Math.PI / 180) / refractiveIndex) * 180 / Math.PI) || 0;
 
     return (
-      <svg width="300" height="280" viewBox="0 0 300 280">
-        {/* Background */}
-        <rect x="0" y="0" width="300" height="280" fill={colors.bgPrimary} />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
+        <svg width="300" height="260" viewBox="0 0 300 260">
+          {/* Definitions for gradients and filters */}
+          <defs>
+            {/* Background gradient */}
+            <linearGradient id="refrBgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
 
-        {/* Grid pattern behind */}
-        {Array.from({ length: 15 }).map((_, i) => (
-          <React.Fragment key={i}>
-            <line x1={i * 20} y1="0" x2={i * 20} y2="280" stroke="#1e3a5f" strokeWidth="1" />
-            <line x1="0" y1={i * 20} x2="300" y2={i * 20} stroke="#1e3a5f" strokeWidth="1" />
-          </React.Fragment>
-        ))}
+            {/* Water depth gradient */}
+            <linearGradient id="refrWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.6" />
+            </linearGradient>
 
-        {/* Glass container */}
-        <rect
-          x={(300 - glassWidth) / 2}
-          y="40"
-          width={glassWidth}
-          height={glassHeight}
-          fill="none"
-          stroke={colors.glass}
-          strokeWidth="3"
-          rx="5"
-        />
+            {/* Glass container gradient */}
+            <linearGradient id="refrGlassGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.1)" />
+              <stop offset="50%" stopColor="rgba(255,255,255,0.3)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
+            </linearGradient>
 
-        {/* Water */}
-        <rect
-          x={(300 - glassWidth) / 2 + 3}
-          y={40 + glassHeight - waterHeight - 3}
-          width={glassWidth - 6}
-          height={waterHeight}
-          fill={colors.water}
-          opacity="0.4"
-        />
+            {/* Straw gradient */}
+            <linearGradient id="refrStrawGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
 
-        {/* Water surface line */}
-        <line
-          x1={(300 - glassWidth) / 2 + 3}
-          y1={40 + glassHeight - waterHeight - 3}
-          x2={(300 - glassWidth) / 2 + glassWidth - 3}
-          y2={40 + glassHeight - waterHeight - 3}
-          stroke={colors.water}
-          strokeWidth="2"
-        />
+            {/* Light ray gradient - actual path */}
+            <linearGradient id="refrRayActualGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f97316" />
+            </linearGradient>
 
-        {/* Straw - above water (actual position) */}
-        <line
-          x1="150"
-          y1="20"
-          x2="150"
-          y2={40 + glassHeight - waterHeight - 3}
-          stroke={colors.straw}
-          strokeWidth="8"
-          strokeLinecap="round"
-        />
+            {/* Light ray gradient - perceived path */}
+            <linearGradient id="refrRayPerceivedGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#34d399" />
+            </linearGradient>
 
-        {/* Straw - underwater (actual position, dashed) */}
-        <line
-          x1="150"
-          y1={40 + glassHeight - waterHeight - 3}
-          x2="150"
-          y2={40 + glassHeight - 10}
-          stroke={colors.straw}
-          strokeWidth="8"
-          strokeLinecap="round"
-          strokeDasharray="4,4"
-          opacity="0.4"
-        />
+            {/* Water surface glow filter */}
+            <filter id="refrSurfaceGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* Straw - underwater (apparent position) */}
-        <line
-          x1="150"
-          y1={40 + glassHeight - waterHeight - 3}
-          x2={150 + apparentShift}
-          y2={40 + glassHeight - 10}
-          stroke={colors.straw}
-          strokeWidth="8"
-          strokeLinecap="round"
-        />
+            {/* Straw glow filter */}
+            <filter id="refrStrawGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* Ray paths if enabled */}
-        {showRayPaths && (
-          <>
-            {/* Light ray from underwater straw to eye */}
-            <line
-              x1={150 + apparentShift}
-              y1={40 + glassHeight - 50}
-              x2={150}
-              y2={40 + glassHeight - waterHeight - 3}
-              stroke={colors.error}
-              strokeWidth="2"
-              strokeDasharray="5,5"
-            />
+            {/* Ray glow filter */}
+            <filter id="refrRayGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Eye glow filter */}
+            <filter id="refrEyeGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background with gradient */}
+          <rect x="0" y="0" width="300" height="260" fill="url(#refrBgGradient)" />
+
+          {/* Grid pattern behind */}
+          {Array.from({ length: 15 }).map((_, i) => (
+            <React.Fragment key={i}>
+              <line x1={i * 20} y1="0" x2={i * 20} y2="260" stroke="#1e3a5f" strokeWidth="1" opacity="0.5" />
+              <line x1="0" y1={i * 20} x2="300" y2={i * 20} stroke="#1e3a5f" strokeWidth="1" opacity="0.5" />
+            </React.Fragment>
+          ))}
+
+          {/* Air medium label background */}
+          <rect x="220" y="50" width="50" height="20" rx="4" fill="rgba(30, 41, 59, 0.8)" />
+          <text x="245" y="64" textAnchor="middle" fill={colors.textMuted} fontSize="11" fontWeight="500">
+            AIR
+          </text>
+
+          {/* Glass container with gradient */}
+          <rect
+            x={glassLeft}
+            y="40"
+            width={glassWidth}
+            height={glassHeight}
+            fill="none"
+            stroke="url(#refrGlassGradient)"
+            strokeWidth="3"
+            rx="5"
+          />
+
+          {/* Glass shine effect */}
+          <line
+            x1={glassLeft + 5}
+            y1="45"
+            x2={glassLeft + 5}
+            y2={40 + glassHeight - 5}
+            stroke="rgba(255,255,255,0.15)"
+            strokeWidth="2"
+            strokeLinecap="round"
+          />
+
+          {/* Water with depth gradient */}
+          <rect
+            x={glassLeft + 3}
+            y={waterSurfaceY}
+            width={glassWidth - 6}
+            height={waterHeight}
+            fill="url(#refrWaterGradient)"
+            rx="2"
+          />
+
+          {/* Water medium label background */}
+          <rect x="220" y={waterSurfaceY + waterHeight / 2 - 10} width="60" height="20" rx="4" fill="rgba(30, 41, 59, 0.8)" />
+          <text x="250" y={waterSurfaceY + waterHeight / 2 + 4} textAnchor="middle" fill={colors.water} fontSize="11" fontWeight="500">
+            {refractiveIndex < 1.4 ? 'WATER' : refractiveIndex < 1.5 ? 'SUGAR' : 'GLASS'}
+          </text>
+          <text x="250" y={waterSurfaceY + waterHeight / 2 + 16} textAnchor="middle" fill={colors.textMuted} fontSize="9">
+            n={refractiveIndex.toFixed(2)}
+          </text>
+
+          {/* Water surface line with glow */}
+          <line
+            x1={glassLeft + 3}
+            y1={waterSurfaceY}
+            x2={glassRight - 3}
+            y2={waterSurfaceY}
+            stroke={colors.water}
+            strokeWidth="2"
+            filter="url(#refrSurfaceGlow)"
+          />
+
+          {/* Surface ripple effects */}
+          <ellipse
+            cx="150"
+            cy={waterSurfaceY}
+            rx="40"
+            ry="2"
+            fill="none"
+            stroke="rgba(96, 165, 250, 0.3)"
+            strokeWidth="1"
+          />
+
+          {/* Normal line (perpendicular to surface) */}
+          {showRayPaths && (
             <line
               x1="150"
-              y1={40 + glassHeight - waterHeight - 3}
-              x2={200 + viewingAngle}
-              y2="10"
-              stroke={colors.error}
-              strokeWidth="2"
-              strokeDasharray="5,5"
+              y1={waterSurfaceY - 40}
+              x2="150"
+              y2={waterSurfaceY + 40}
+              stroke="rgba(148, 163, 184, 0.5)"
+              strokeWidth="1"
+              strokeDasharray="4,4"
             />
-            {/* Apparent path (what brain thinks) */}
-            <line
-              x1={150 + apparentShift}
-              y1={40 + glassHeight - 50}
-              x2={200 + viewingAngle}
-              y2="10"
-              stroke={colors.success}
-              strokeWidth="2"
-              opacity="0.5"
-            />
-          </>
-        )}
+          )}
 
-        {/* Eye icon */}
-        <g transform={`translate(${200 + viewingAngle}, 5)`}>
-          <ellipse cx="0" cy="8" rx="10" ry="6" fill="white" stroke={colors.textPrimary} strokeWidth="2" />
-          <circle cx="0" cy="8" r="3" fill={colors.accent} />
-        </g>
+          {/* Angle arc markers when ray paths shown */}
+          {showRayPaths && viewingAngle !== 0 && (
+            <>
+              {/* Incident angle arc (in air) */}
+              <path
+                d={`M 150 ${waterSurfaceY - 25} A 25 25 0 0 ${viewingAngle > 0 ? 1 : 0} ${150 + 25 * Math.sin(viewingAngle * Math.PI / 180)} ${waterSurfaceY - 25 * Math.cos(viewingAngle * Math.PI / 180)}`}
+                fill="none"
+                stroke={colors.warning}
+                strokeWidth="2"
+                opacity="0.7"
+              />
+              {/* Refracted angle arc (in water) */}
+              <path
+                d={`M 150 ${waterSurfaceY + 20} A 20 20 0 0 ${apparentShift > 0 ? 1 : 0} ${150 + 20 * Math.sin(Math.atan(apparentShift / 60))} ${waterSurfaceY + 20 * Math.cos(Math.atan(apparentShift / 60))}`}
+                fill="none"
+                stroke={colors.accent}
+                strokeWidth="2"
+                opacity="0.7"
+              />
+            </>
+          )}
 
-        {/* Labels */}
-        <text x="150" y="270" textAnchor="middle" fill={colors.textSecondary} fontSize="12">
-          Apparent shift: {apparentShift.toFixed(1)}px
-        </text>
-      </svg>
+          {/* Straw - above water (actual position) with glow */}
+          <line
+            x1="150"
+            y1="20"
+            x2="150"
+            y2={waterSurfaceY}
+            stroke="url(#refrStrawGradient)"
+            strokeWidth="8"
+            strokeLinecap="round"
+            filter="url(#refrStrawGlow)"
+          />
+
+          {/* Straw stripe detail */}
+          <line
+            x1="148"
+            y1="25"
+            x2="148"
+            y2={waterSurfaceY - 5}
+            stroke="rgba(255,255,255,0.3)"
+            strokeWidth="1"
+          />
+
+          {/* Straw - underwater (actual position, ghost) */}
+          <line
+            x1="150"
+            y1={waterSurfaceY}
+            x2="150"
+            y2={40 + glassHeight - 10}
+            stroke={colors.straw}
+            strokeWidth="8"
+            strokeLinecap="round"
+            strokeDasharray="4,4"
+            opacity="0.25"
+          />
+
+          {/* Straw - underwater (apparent position) with glow */}
+          <line
+            x1="150"
+            y1={waterSurfaceY}
+            x2={150 + apparentShift}
+            y2={40 + glassHeight - 10}
+            stroke="url(#refrStrawGradient)"
+            strokeWidth="8"
+            strokeLinecap="round"
+            filter="url(#refrStrawGlow)"
+          />
+
+          {/* Underwater straw stripe detail */}
+          <line
+            x1={148 + apparentShift * 0.1}
+            y1={waterSurfaceY + 5}
+            x2={148 + apparentShift * 0.9}
+            y2={40 + glassHeight - 15}
+            stroke="rgba(255,255,255,0.2)"
+            strokeWidth="1"
+          />
+
+          {/* Ray paths if enabled */}
+          {showRayPaths && (
+            <>
+              {/* Bending indicator at surface */}
+              <circle
+                cx="150"
+                cy={waterSurfaceY}
+                r="6"
+                fill={colors.accent}
+                opacity="0.6"
+                filter="url(#refrRayGlow)"
+              />
+
+              {/* Light ray from underwater straw - in water */}
+              <line
+                x1={150 + apparentShift * 0.8}
+                y1={40 + glassHeight - 50}
+                x2="150"
+                y2={waterSurfaceY}
+                stroke="url(#refrRayActualGradient)"
+                strokeWidth="2.5"
+                strokeDasharray="6,4"
+                filter="url(#refrRayGlow)"
+              />
+
+              {/* Light ray from surface to eye - in air */}
+              <line
+                x1="150"
+                y1={waterSurfaceY}
+                x2={200 + viewingAngle}
+                y2="10"
+                stroke="url(#refrRayActualGradient)"
+                strokeWidth="2.5"
+                strokeDasharray="6,4"
+                filter="url(#refrRayGlow)"
+              />
+
+              {/* Apparent path (what brain thinks) */}
+              <line
+                x1={150 + apparentShift * 0.8}
+                y1={40 + glassHeight - 50}
+                x2={200 + viewingAngle}
+                y2="10"
+                stroke="url(#refrRayPerceivedGradient)"
+                strokeWidth="2"
+                opacity="0.6"
+                filter="url(#refrRayGlow)"
+              />
+
+              {/* Arrow heads on rays */}
+              <polygon
+                points={`${195 + viewingAngle},15 ${200 + viewingAngle},10 ${205 + viewingAngle},18`}
+                fill={colors.error}
+                opacity="0.8"
+              />
+            </>
+          )}
+
+          {/* Eye icon with glow */}
+          <g transform={`translate(${200 + viewingAngle}, 5)`} filter="url(#refrEyeGlow)">
+            <ellipse cx="0" cy="8" rx="12" ry="7" fill="white" stroke={colors.textPrimary} strokeWidth="2" />
+            <circle cx="0" cy="8" r="4" fill={colors.accent} />
+            <circle cx="1" cy="7" r="1.5" fill="white" opacity="0.8" />
+          </g>
+
+          {/* Viewing angle indicator */}
+          {viewingAngle !== 0 && (
+            <text x={200 + viewingAngle} y="28" textAnchor="middle" fill={colors.textMuted} fontSize="10">
+              {viewingAngle > 0 ? '+' : ''}{viewingAngle}°
+            </text>
+          )}
+
+          {/* Legend when rays are shown */}
+          {showRayPaths && (
+            <g transform="translate(15, 220)">
+              <rect x="0" y="0" width="85" height="35" rx="4" fill="rgba(30, 41, 59, 0.9)" />
+              <line x1="8" y1="12" x2="25" y2="12" stroke={colors.error} strokeWidth="2" strokeDasharray="4,2" />
+              <text x="30" y="15" fill={colors.textMuted} fontSize="9">Actual ray</text>
+              <line x1="8" y1="26" x2="25" y2="26" stroke={colors.success} strokeWidth="2" />
+              <text x="30" y="29" fill={colors.textMuted} fontSize="9">Perceived</text>
+            </g>
+          )}
+        </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          alignItems: 'center',
+          gap: typo.elementGap,
+          fontSize: typo.small,
+          color: colors.textSecondary,
+        }}>
+          <span style={{ color: colors.textMuted }}>Apparent shift:</span>
+          <span style={{
+            color: apparentShift === 0 ? colors.textMuted : colors.accent,
+            fontWeight: 600,
+            fontVariantNumeric: 'tabular-nums',
+          }}>
+            {apparentShift > 0 ? '+' : ''}{apparentShift.toFixed(1)}px
+          </span>
+          {Math.abs(apparentShift) > 15 && (
+            <span style={{
+              color: colors.warning,
+              fontSize: typo.label,
+              padding: '2px 6px',
+              background: 'rgba(245, 158, 11, 0.15)',
+              borderRadius: '4px',
+            }}>
+              Strong bending
+            </span>
+          )}
+        </div>
+      </div>
     );
   };
 

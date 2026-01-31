@@ -825,48 +825,208 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
                 border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
-              {/* Beaker */}
+              <defs>
+                {/* Premium beaker glass gradient */}
+                <linearGradient id="diffBeakerGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#1e293b" stopOpacity="0.3" />
+                  <stop offset="25%" stopColor="#334155" stopOpacity="0.2" />
+                  <stop offset="50%" stopColor="#475569" stopOpacity="0.15" />
+                  <stop offset="75%" stopColor="#334155" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="#1e293b" stopOpacity="0.3" />
+                </linearGradient>
+
+                {/* Cold water gradient */}
+                <linearGradient id="diffColdWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.1" />
+                  <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.2" />
+                  <stop offset="60%" stopColor="#2563eb" stopOpacity="0.25" />
+                  <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.3" />
+                </linearGradient>
+
+                {/* Hot water gradient */}
+                <linearGradient id="diffHotWater" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.35" />
+                  <stop offset="30%" stopColor="#f97316" stopOpacity="0.25" />
+                  <stop offset="60%" stopColor="#fbbf24" stopOpacity="0.15" />
+                  <stop offset="100%" stopColor="#fef3c7" stopOpacity="0.1" />
+                </linearGradient>
+
+                {/* Room temp water gradient */}
+                <linearGradient id="diffRoomWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.05" />
+                  <stop offset="50%" stopColor="#64748b" stopOpacity="0.08" />
+                  <stop offset="100%" stopColor="#475569" stopOpacity="0.1" />
+                </linearGradient>
+
+                {/* Dye particle gradient */}
+                <radialGradient id="diffDyeParticle" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#f0abfc" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#d946ef" stopOpacity="0.9" />
+                  <stop offset="70%" stopColor="#a855f7" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#7c3aed" stopOpacity="0.4" />
+                </radialGradient>
+
+                {/* Dye drop gradient */}
+                <radialGradient id="diffDyeDrop" cx="50%" cy="30%" r="60%">
+                  <stop offset="0%" stopColor="#f5d0fe" stopOpacity="1" />
+                  <stop offset="50%" stopColor="#e879f9" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#c026d3" stopOpacity="0.8" />
+                </radialGradient>
+
+                {/* Particle glow filter */}
+                <filter id="diffParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Soft inner glow for beaker */}
+                <filter id="diffBeakerGlow" x="-10%" y="-10%" width="120%" height="120%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+
+                {/* Drop shadow filter */}
+                <filter id="diffDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Concentration gradient overlay */}
+                <radialGradient id="diffConcentration" cx="50%" cy="35%" r="60%">
+                  <stop offset="0%" stopColor="#d946ef" stopOpacity={dyeDropped ? 0.15 : 0} />
+                  <stop offset="50%" stopColor="#a855f7" stopOpacity={dyeDropped ? 0.08 : 0} />
+                  <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+
+              {/* Background with subtle pattern */}
+              <rect width="300" height="250" fill="#0c0a09" />
+              <pattern id="diffLabGrid" width="15" height="15" patternUnits="userSpaceOnUse">
+                <rect width="15" height="15" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
+              </pattern>
+              <rect width="300" height="250" fill="url(#diffLabGrid)" />
+
+              {/* Beaker with premium glass effect */}
               <rect
                 x="30" y="30" width="240" height="190"
-                fill={waterTemp === 'cold' ? 'rgba(59, 130, 246, 0.2)' : waterTemp === 'hot' ? 'rgba(239, 68, 68, 0.15)' : 'rgba(255, 255, 255, 0.05)'}
-                stroke="rgba(255,255,255,0.3)"
-                strokeWidth="2"
+                fill={waterTemp === 'cold' ? 'url(#diffColdWater)' : waterTemp === 'hot' ? 'url(#diffHotWater)' : 'url(#diffRoomWater)'}
+                stroke="url(#diffBeakerGlass)"
+                strokeWidth="3"
                 rx="8"
               />
 
-              {/* Temperature indicator */}
-              <text
-                x="150" y="235"
-                textAnchor="middle"
-                fill={waterTemp === 'cold' ? premiumDesign.colors.cold : waterTemp === 'hot' ? premiumDesign.colors.hot : premiumDesign.colors.text.secondary}
-                fontSize="12"
-              >
-                {waterTemp === 'cold' ? '❄️ Cold (5°C)' : waterTemp === 'hot' ? '🔥 Hot (80°C)' : '🌡️ Room Temp (20°C)'}
-              </text>
+              {/* Beaker highlight for glass effect */}
+              <rect
+                x="32" y="32" width="8" height="186"
+                fill="rgba(255,255,255,0.08)"
+                rx="4"
+              />
 
-              {/* Dye particles */}
+              {/* Concentration gradient visualization when dye is dropped */}
+              {dyeDropped && (
+                <rect
+                  x="30" y="30" width="240" height="190"
+                  fill="url(#diffConcentration)"
+                  rx="8"
+                  style={{ transition: 'opacity 0.5s ease' }}
+                />
+              )}
+
+              {/* Heat indicator waves for hot water */}
+              {waterTemp === 'hot' && (
+                <g opacity="0.4">
+                  <path d="M60 210 Q75 200, 90 210 Q105 220, 120 210" stroke="#ef4444" strokeWidth="1.5" fill="none" opacity="0.6">
+                    <animate attributeName="d" dur="2s" repeatCount="indefinite"
+                      values="M60 210 Q75 200, 90 210 Q105 220, 120 210;M60 210 Q75 220, 90 210 Q105 200, 120 210;M60 210 Q75 200, 90 210 Q105 220, 120 210" />
+                  </path>
+                  <path d="M140 210 Q155 200, 170 210 Q185 220, 200 210" stroke="#f97316" strokeWidth="1.5" fill="none" opacity="0.5">
+                    <animate attributeName="d" dur="2.3s" repeatCount="indefinite"
+                      values="M140 210 Q155 220, 170 210 Q185 200, 200 210;M140 210 Q155 200, 170 210 Q185 220, 200 210;M140 210 Q155 220, 170 210 Q185 200, 200 210" />
+                  </path>
+                  <path d="M180 210 Q195 200, 210 210 Q225 220, 240 210" stroke="#fbbf24" strokeWidth="1.5" fill="none" opacity="0.4">
+                    <animate attributeName="d" dur="1.8s" repeatCount="indefinite"
+                      values="M180 210 Q195 200, 210 210 Q225 220, 240 210;M180 210 Q195 220, 210 210 Q225 200, 240 210;M180 210 Q195 200, 210 210 Q225 220, 240 210" />
+                  </path>
+                </g>
+              )}
+
+              {/* Cold indicator crystals for cold water */}
+              {waterTemp === 'cold' && (
+                <g opacity="0.5">
+                  <polygon points="45,200 50,190 55,200" fill="#60a5fa" opacity="0.4" />
+                  <polygon points="245,195 250,185 255,195" fill="#3b82f6" opacity="0.3" />
+                  <polygon points="70,205 73,198 76,205" fill="#93c5fd" opacity="0.35" />
+                </g>
+              )}
+
+              {/* Dye particles with gradient and glow */}
               {dyeParticles.map(p => (
                 <circle
                   key={p.id}
                   cx={p.x}
                   cy={p.y}
                   r={p.size}
-                  fill={p.color}
-                  opacity={0.8}
+                  fill="url(#diffDyeParticle)"
+                  filter="url(#diffParticleGlow)"
+                  opacity={0.85}
                 />
               ))}
 
-              {/* Drop indicator */}
+              {/* Drop indicator with premium styling */}
               {!dyeDropped && (
-                <g>
-                  <circle cx="150" cy="20" r="8" fill={premiumDesign.colors.dye} />
-                  <path d="M150 28 L150 45" stroke={premiumDesign.colors.dye} strokeWidth="2" strokeDasharray="4" />
-                  <text x="150" y="55" textAnchor="middle" fill={premiumDesign.colors.text.muted} fontSize="10">
-                    Click to drop
-                  </text>
+                <g filter="url(#diffDropShadow)">
+                  <ellipse cx="150" cy="20" rx="10" ry="12" fill="url(#diffDyeDrop)" />
+                  <ellipse cx="147" cy="16" rx="3" ry="4" fill="rgba(255,255,255,0.4)" />
+                  <path d="M150 32 L150 50" stroke="url(#diffDyeDrop)" strokeWidth="2" strokeDasharray="4,3" strokeLinecap="round" />
+                  <circle cx="150" cy="56" r="3" fill="url(#diffDyeDrop)" opacity="0.5">
+                    <animate attributeName="opacity" dur="1s" repeatCount="indefinite" values="0.5;0.8;0.5" />
+                  </circle>
+                </g>
+              )}
+
+              {/* Mixing effect swirls when hot */}
+              {waterTemp === 'hot' && dyeDropped && elapsedTime > 0.5 && (
+                <g opacity="0.2">
+                  <path d="M100 120 Q130 100, 160 120 Q190 140, 200 110" stroke="#d946ef" strokeWidth="1" fill="none">
+                    <animate attributeName="d" dur="3s" repeatCount="indefinite"
+                      values="M100 120 Q130 100, 160 120 Q190 140, 200 110;M100 130 Q130 150, 160 130 Q190 110, 200 140;M100 120 Q130 100, 160 120 Q190 140, 200 110" />
+                  </path>
+                  <path d="M80 160 Q120 180, 150 150 Q180 120, 220 160" stroke="#a855f7" strokeWidth="1" fill="none">
+                    <animate attributeName="d" dur="4s" repeatCount="indefinite"
+                      values="M80 160 Q120 180, 150 150 Q180 120, 220 160;M80 140 Q120 120, 150 160 Q180 200, 220 140;M80 160 Q120 180, 150 150 Q180 120, 220 160" />
+                  </path>
                 </g>
               )}
             </svg>
+
+            {/* Temperature label outside SVG */}
+            <div style={{
+              textAlign: 'center',
+              marginTop: '8px',
+              fontSize: typo.small,
+              color: waterTemp === 'cold' ? premiumDesign.colors.cold : waterTemp === 'hot' ? premiumDesign.colors.hot : premiumDesign.colors.text.secondary,
+              fontWeight: 500,
+            }}>
+              {waterTemp === 'cold' ? '❄️ Cold (5°C)' : waterTemp === 'hot' ? '🔥 Hot (80°C)' : '🌡️ Room Temp (20°C)'}
+            </div>
+
+            {/* Drop instruction outside SVG */}
+            {!dyeDropped && (
+              <div style={{
+                textAlign: 'center',
+                marginTop: '4px',
+                fontSize: typo.label,
+                color: premiumDesign.colors.text.muted,
+              }}>
+                Click &quot;Drop Dye&quot; to start
+              </div>
+            )}
           </div>
 
           {/* Controls */}
@@ -1208,68 +1368,249 @@ export default function DiffusionConvectionRenderer({ onGameEvent, gamePhase, on
                 border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
-              {/* Container */}
-              <rect
-                x="25" y="25" width="250" height="200"
-                fill="rgba(255, 255, 255, 0.02)"
-                stroke="rgba(255,255,255,0.3)"
-                strokeWidth="2"
-                rx="8"
-              />
-
-              {/* Heat source indicator */}
-              {heatSource === 'bottom' && (
-                <rect x="25" y="220" width="250" height="8" fill={premiumDesign.colors.hot} rx="2" opacity={0.8} />
-              )}
-              {heatSource === 'side' && (
-                <rect x="20" y="25" width="8" height="200" fill={premiumDesign.colors.hot} rx="2" opacity={0.8} />
-              )}
-
-              {/* Convection particles */}
-              {convectionParticles.map(p => (
-                <circle
-                  key={p.id}
-                  cx={p.x}
-                  cy={p.y}
-                  r={4}
-                  fill={getTempColor(p.temp)}
-                  opacity={0.7}
-                />
-              ))}
-
-              {/* Current arrows */}
-              {showCurrents && heatSource === 'bottom' && (
-                <g opacity={0.4}>
-                  <path d="M150 200 L150 50" stroke="white" strokeWidth="2" markerEnd="url(#arrow)" />
-                  <path d="M80 50 L80 150" stroke="white" strokeWidth="1.5" strokeDasharray="4" />
-                  <path d="M220 50 L220 150" stroke="white" strokeWidth="1.5" strokeDasharray="4" />
-                  <path d="M100 50 L200 50" stroke="white" strokeWidth="1.5" strokeDasharray="4" />
-                </g>
-              )}
-              {showCurrents && heatSource === 'side' && (
-                <g opacity={0.4}>
-                  <path d="M50 180 L50 50" stroke="white" strokeWidth="2" />
-                  <path d="M50 50 L250 50" stroke="white" strokeWidth="1.5" strokeDasharray="4" />
-                  <path d="M250 50 L250 180" stroke="white" strokeWidth="1.5" strokeDasharray="4" />
-                </g>
-              )}
-
               <defs>
-                <marker id="arrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-                  <path d="M0,0 L0,6 L9,3 z" fill="white" />
+                {/* Container glass gradient */}
+                <linearGradient id="diffConvContainerGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#374151" stopOpacity="0.4" />
+                  <stop offset="25%" stopColor="#4b5563" stopOpacity="0.3" />
+                  <stop offset="50%" stopColor="#6b7280" stopOpacity="0.25" />
+                  <stop offset="75%" stopColor="#4b5563" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#374151" stopOpacity="0.4" />
+                </linearGradient>
+
+                {/* Fluid background gradient */}
+                <linearGradient id="diffConvFluid" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#0f172a" stopOpacity="0.6" />
+                  <stop offset="50%" stopColor="#1e293b" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#334155" stopOpacity="0.5" />
+                </linearGradient>
+
+                {/* Heat source gradient - bottom */}
+                <linearGradient id="diffHeatBottom" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.9" />
+                  <stop offset="30%" stopColor="#f97316" stopOpacity="0.95" />
+                  <stop offset="60%" stopColor="#ef4444" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0.9" />
+                </linearGradient>
+
+                {/* Heat source gradient - side */}
+                <linearGradient id="diffHeatSide" x1="100%" y1="0%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.9" />
+                  <stop offset="30%" stopColor="#f97316" stopOpacity="0.95" />
+                  <stop offset="60%" stopColor="#ef4444" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0.9" />
+                </linearGradient>
+
+                {/* Cold particle gradient */}
+                <radialGradient id="diffConvColdParticle" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#60a5fa" stopOpacity="0.9" />
+                  <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#2563eb" stopOpacity="0.5" />
+                </radialGradient>
+
+                {/* Warm particle gradient */}
+                <radialGradient id="diffConvWarmParticle" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#fdba74" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#fb923c" stopOpacity="0.9" />
+                  <stop offset="70%" stopColor="#f97316" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#ea580c" stopOpacity="0.5" />
+                </radialGradient>
+
+                {/* Hot particle gradient */}
+                <radialGradient id="diffConvHotParticle" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#f87171" stopOpacity="0.9" />
+                  <stop offset="70%" stopColor="#ef4444" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0.5" />
+                </radialGradient>
+
+                {/* Arrow gradient for flow */}
+                <linearGradient id="diffFlowArrow" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
+                  <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#67e8f9" stopOpacity="0.8" />
+                </linearGradient>
+
+                {/* Particle glow filter */}
+                <filter id="diffConvParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="1.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Heat source glow filter */}
+                <filter id="diffHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Arrow marker with gradient */}
+                <marker id="diffConvArrow" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
+                  <path d="M0,0 L0,8 L12,4 z" fill="url(#diffFlowArrow)" opacity="0.8" />
+                </marker>
+
+                {/* Arrow marker for secondary flows */}
+                <marker id="diffConvArrowSmall" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+                  <path d="M0,0 L0,6 L8,3 z" fill="#67e8f9" opacity="0.5" />
                 </marker>
               </defs>
 
-              {/* Legend */}
-              <g transform="translate(30, 235)">
-                <circle cx="5" cy="0" r="4" fill={premiumDesign.colors.cold} />
-                <text x="15" y="4" fill={premiumDesign.colors.text.muted} fontSize="10">Cold</text>
-                <circle cx="60" cy="0" r="4" fill={premiumDesign.colors.warm} />
-                <text x="70" y="4" fill={premiumDesign.colors.text.muted} fontSize="10">Warm</text>
-                <circle cx="120" cy="0" r="4" fill={premiumDesign.colors.hot} />
-                <text x="130" y="4" fill={premiumDesign.colors.text.muted} fontSize="10">Hot</text>
-              </g>
+              {/* Background with subtle pattern */}
+              <rect width="300" height="250" fill="#0c0a09" />
+              <pattern id="diffConvLabGrid" width="15" height="15" patternUnits="userSpaceOnUse">
+                <rect width="15" height="15" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
+              </pattern>
+              <rect width="300" height="250" fill="url(#diffConvLabGrid)" />
+
+              {/* Container with premium glass effect */}
+              <rect
+                x="25" y="25" width="250" height="200"
+                fill="url(#diffConvFluid)"
+                stroke="url(#diffConvContainerGlass)"
+                strokeWidth="3"
+                rx="8"
+              />
+
+              {/* Glass highlight */}
+              <rect
+                x="27" y="27" width="6" height="196"
+                fill="rgba(255,255,255,0.06)"
+                rx="3"
+              />
+
+              {/* Heat source indicator - bottom */}
+              {heatSource === 'bottom' && (
+                <g filter="url(#diffHeatGlow)">
+                  <rect x="25" y="220" width="250" height="10" fill="url(#diffHeatBottom)" rx="3" />
+                  {/* Animated heat waves */}
+                  <g opacity="0.6">
+                    <path d="M50 218 Q65 210, 80 218" stroke="#fbbf24" strokeWidth="1.5" fill="none">
+                      <animate attributeName="d" dur="1.5s" repeatCount="indefinite"
+                        values="M50 218 Q65 210, 80 218;M50 215 Q65 207, 80 215;M50 218 Q65 210, 80 218" />
+                    </path>
+                    <path d="M130 218 Q145 210, 160 218" stroke="#f97316" strokeWidth="1.5" fill="none">
+                      <animate attributeName="d" dur="1.8s" repeatCount="indefinite"
+                        values="M130 218 Q145 208, 160 218;M130 213 Q145 203, 160 213;M130 218 Q145 208, 160 218" />
+                    </path>
+                    <path d="M200 218 Q215 210, 230 218" stroke="#fbbf24" strokeWidth="1.5" fill="none">
+                      <animate attributeName="d" dur="1.3s" repeatCount="indefinite"
+                        values="M200 218 Q215 210, 230 218;M200 214 Q215 206, 230 214;M200 218 Q215 210, 230 218" />
+                    </path>
+                  </g>
+                </g>
+              )}
+
+              {/* Heat source indicator - side */}
+              {heatSource === 'side' && (
+                <g filter="url(#diffHeatGlow)">
+                  <rect x="15" y="25" width="10" height="200" fill="url(#diffHeatSide)" rx="3" />
+                  {/* Animated heat waves */}
+                  <g opacity="0.6">
+                    <path d="M27 50 Q35 65, 27 80" stroke="#fbbf24" strokeWidth="1.5" fill="none">
+                      <animate attributeName="d" dur="1.5s" repeatCount="indefinite"
+                        values="M27 50 Q35 65, 27 80;M30 50 Q38 65, 30 80;M27 50 Q35 65, 27 80" />
+                    </path>
+                    <path d="M27 120 Q35 135, 27 150" stroke="#f97316" strokeWidth="1.5" fill="none">
+                      <animate attributeName="d" dur="1.8s" repeatCount="indefinite"
+                        values="M27 120 Q33 135, 27 150;M30 120 Q36 135, 30 150;M27 120 Q33 135, 27 150" />
+                    </path>
+                    <path d="M27 180 Q35 195, 27 210" stroke="#fbbf24" strokeWidth="1.5" fill="none">
+                      <animate attributeName="d" dur="1.3s" repeatCount="indefinite"
+                        values="M27 180 Q35 195, 27 210;M30 180 Q38 195, 30 210;M27 180 Q35 195, 27 210" />
+                    </path>
+                  </g>
+                </g>
+              )}
+
+              {/* Convection particles with temperature-based gradients */}
+              {convectionParticles.map(p => {
+                const particleGradient = p.temp < 40 ? 'url(#diffConvColdParticle)'
+                  : p.temp > 70 ? 'url(#diffConvHotParticle)'
+                  : 'url(#diffConvWarmParticle)';
+                return (
+                  <circle
+                    key={p.id}
+                    cx={p.x}
+                    cy={p.y}
+                    r={4}
+                    fill={particleGradient}
+                    filter="url(#diffConvParticleGlow)"
+                    opacity={0.8}
+                  />
+                );
+              })}
+
+              {/* Convection flow arrows - bottom heating */}
+              {showCurrents && heatSource === 'bottom' && (
+                <g>
+                  {/* Main upward current */}
+                  <path d="M150 195 L150 55" stroke="url(#diffFlowArrow)" strokeWidth="3" fill="none"
+                    markerEnd="url(#diffConvArrow)" opacity="0.7" />
+                  {/* Side currents going down */}
+                  <path d="M70 55 C70 90, 70 130, 75 170" stroke="#67e8f9" strokeWidth="2" strokeDasharray="6,4"
+                    fill="none" markerEnd="url(#diffConvArrowSmall)" opacity="0.4" />
+                  <path d="M230 55 C230 90, 230 130, 225 170" stroke="#67e8f9" strokeWidth="2" strokeDasharray="6,4"
+                    fill="none" markerEnd="url(#diffConvArrowSmall)" opacity="0.4" />
+                  {/* Top horizontal spread */}
+                  <path d="M155 50 Q190 45, 220 55" stroke="#67e8f9" strokeWidth="1.5" strokeDasharray="4,3"
+                    fill="none" opacity="0.35" />
+                  <path d="M145 50 Q110 45, 80 55" stroke="#67e8f9" strokeWidth="1.5" strokeDasharray="4,3"
+                    fill="none" opacity="0.35" />
+                  {/* Bottom convergence */}
+                  <path d="M80 190 Q115 200, 145 195" stroke="#67e8f9" strokeWidth="1.5" strokeDasharray="4,3"
+                    fill="none" opacity="0.35" />
+                  <path d="M220 190 Q185 200, 155 195" stroke="#67e8f9" strokeWidth="1.5" strokeDasharray="4,3"
+                    fill="none" opacity="0.35" />
+                </g>
+              )}
+
+              {/* Convection flow arrows - side heating */}
+              {showCurrents && heatSource === 'side' && (
+                <g>
+                  {/* Rising current on heated side */}
+                  <path d="M50 190 L50 50" stroke="url(#diffFlowArrow)" strokeWidth="3" fill="none"
+                    markerEnd="url(#diffConvArrow)" opacity="0.7" />
+                  {/* Top horizontal flow */}
+                  <path d="M55 50 Q150 40, 250 55" stroke="#67e8f9" strokeWidth="2" strokeDasharray="6,4"
+                    fill="none" markerEnd="url(#diffConvArrowSmall)" opacity="0.4" />
+                  {/* Descending current on cold side */}
+                  <path d="M250 60 L250 185" stroke="#67e8f9" strokeWidth="2" strokeDasharray="6,4"
+                    fill="none" markerEnd="url(#diffConvArrowSmall)" opacity="0.4" />
+                  {/* Bottom return flow */}
+                  <path d="M245 190 Q150 200, 55 190" stroke="#67e8f9" strokeWidth="1.5" strokeDasharray="4,3"
+                    fill="none" opacity="0.35" />
+                </g>
+              )}
             </svg>
+
+            {/* Legend outside SVG using typo system */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              alignItems: 'center',
+              gap: '16px',
+              marginTop: '8px',
+              fontSize: typo.label,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'linear-gradient(135deg, #93c5fd 0%, #3b82f6 100%)' }} />
+                <span style={{ color: premiumDesign.colors.text.muted }}>Cold</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'linear-gradient(135deg, #fdba74 0%, #f97316 100%)' }} />
+                <span style={{ color: premiumDesign.colors.text.muted }}>Warm</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+                <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'linear-gradient(135deg, #fca5a5 0%, #ef4444 100%)' }} />
+                <span style={{ color: premiumDesign.colors.text.muted }}>Hot</span>
+              </div>
+            </div>
           </div>
 
           {/* Controls */}

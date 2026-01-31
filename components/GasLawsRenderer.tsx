@@ -233,138 +233,486 @@ const GasLawsRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCompl
 
   const calculateScore = () => testAnswers.reduce((score, answer, index) => score + (testQuestions[index].options[answer]?.correct ? 1 : 0), 0);
 
-  // Piston visualization for Boyle's Law
+  // Piston visualization for Boyle's Law - Premium SVG Graphics
   const renderPistonViz = () => {
     const containerHeight = (volume / 100) * 150;
+    // Calculate pressure color - higher pressure = more red/orange
+    const pressureIntensity = Math.min(1, (pressure - 0.5) / 3.5);
+    const pressureHue = 270 - pressureIntensity * 30; // violet to purple-red
 
     return (
-      <svg viewBox="0 0 250 220" className="w-full h-full">
-        <defs>
-          <linearGradient id="glPiston" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#64748b" />
-            <stop offset="50%" stopColor="#94a3b8" />
-            <stop offset="100%" stopColor="#64748b" />
-          </linearGradient>
-          <linearGradient id="glCylinder" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#1e293b" />
-            <stop offset="30%" stopColor="#334155" />
-            <stop offset="70%" stopColor="#334155" />
-            <stop offset="100%" stopColor="#1e293b" />
-          </linearGradient>
-        </defs>
+      <>
+        <svg viewBox="0 0 250 200" className="w-full h-full">
+          <defs>
+            {/* Premium cylinder container gradient - metallic appearance */}
+            <linearGradient id="gasContainerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="15%" stopColor="#1e293b" />
+              <stop offset="40%" stopColor="#334155" />
+              <stop offset="60%" stopColor="#334155" />
+              <stop offset="85%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        <rect width="250" height="220" fill="#020617" rx="8" />
+            {/* Piston 3D metallic gradient */}
+            <linearGradient id="gasPistonGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="15%" stopColor="#cbd5e1" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="85%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
 
-        {/* Cylinder walls */}
-        <rect x="25" y="10" width="200" height="180" rx="5" fill="url(#glCylinder)" stroke="#475569" strokeWidth="2" />
+            {/* Piston handle metallic gradient */}
+            <linearGradient id="gasPistonHandleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="30%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="70%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
 
-        {/* Piston */}
-        <rect x="30" y={15 + (150 - containerHeight)} width="190" height="20" rx="4" fill="url(#glPiston)" stroke="#64748b" strokeWidth="1" />
+            {/* Gas particle gradient with glow */}
+            <radialGradient id="gasParticleGrad" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#c4b5fd" />
+              <stop offset="40%" stopColor="#a78bfa" />
+              <stop offset="70%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#7c3aed" />
+            </radialGradient>
 
-        {/* Piston handle */}
-        <rect x="115" y={0} width="20" height={20 + (150 - containerHeight)} fill="#64748b" />
+            {/* High pressure particle gradient (warmer) */}
+            <radialGradient id="gasParticleHighPressure" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="40%" stopColor="#f59e0b" />
+              <stop offset="70%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </radialGradient>
 
-        {/* Gas molecules */}
-        {molecules.map((mol, i) => {
-          const adjustedY = mol.y - (150 - containerHeight) + 25;
-          if (adjustedY > 35 + (150 - containerHeight) && adjustedY < 185) {
-            return (
-              <circle
+            {/* Cylinder inner wall reflection */}
+            <linearGradient id="gasCylinderInner" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#1e293b" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Pressure zone gradient - dynamic based on pressure */}
+            <linearGradient id="gasPressureZone" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#8b5cf6" stopOpacity={0.1 + pressureIntensity * 0.2} />
+              <stop offset="50%" stopColor="#7c3aed" stopOpacity={0.05 + pressureIntensity * 0.15} />
+              <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Particle glow filter */}
+            <filter id="gasParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Piston shadow filter */}
+            <filter id="gasPistonShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="shadow" />
+              <feOffset dx="0" dy="4" in="shadow" result="offsetShadow" />
+              <feMerge>
+                <feMergeNode in="offsetShadow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Ambient pressure glow */}
+            <filter id="gasPressureGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="8" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Metallic highlight filter */}
+            <filter id="gasMetallicSheen">
+              <feGaussianBlur stdDeviation="0.5" />
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width="250" height="200" fill="#020617" rx="8" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="gasLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect width="250" height="200" fill="url(#gasLabGrid)" rx="8" />
+
+          {/* Cylinder outer shell */}
+          <rect x="25" y="10" width="200" height="180" rx="6" fill="url(#gasContainerGrad)" stroke="#475569" strokeWidth="2" />
+
+          {/* Cylinder inner wall */}
+          <rect x="30" y="15" width="190" height="170" rx="4" fill="url(#gasCylinderInner)" />
+
+          {/* Pressure zone visualization */}
+          <rect
+            x="30"
+            y={20 + (150 - containerHeight)}
+            width="190"
+            height={containerHeight + 10}
+            fill="url(#gasPressureZone)"
+            rx="3"
+          />
+
+          {/* Gas molecules with glow */}
+          {molecules.map((mol, i) => {
+            const adjustedY = mol.y - (150 - containerHeight) + 25;
+            if (adjustedY > 35 + (150 - containerHeight) && adjustedY < 180) {
+              return (
+                <g key={i} filter="url(#gasParticleGlow)">
+                  <circle
+                    cx={mol.x + 25}
+                    cy={adjustedY}
+                    r="6"
+                    fill={pressure > 2 ? "url(#gasParticleHighPressure)" : "url(#gasParticleGrad)"}
+                    opacity={0.9}
+                  />
+                  {/* Specular highlight */}
+                  <circle
+                    cx={mol.x + 23}
+                    cy={adjustedY - 2}
+                    r="2"
+                    fill="white"
+                    opacity="0.4"
+                  />
+                </g>
+              );
+            }
+            return null;
+          })}
+
+          {/* Piston with 3D effect */}
+          <g filter="url(#gasPistonShadow)">
+            {/* Piston handle */}
+            <rect
+              x="110"
+              y={0}
+              width="30"
+              height={20 + (150 - containerHeight)}
+              fill="url(#gasPistonHandleGrad)"
+              rx="2"
+            />
+            {/* Handle grip lines */}
+            {[0, 8, 16].map((offset, i) => (
+              <rect
                 key={i}
-                cx={mol.x + 25}
-                cy={adjustedY}
-                r="5"
-                fill="#8b5cf6"
-                className="animate-pulse"
-                style={{ animationDelay: `${i * 0.05}s` }}
+                x="112"
+                y={4 + offset}
+                width="26"
+                height="2"
+                fill="#334155"
+                opacity="0.5"
+                rx="1"
               />
-            );
-          }
-          return null;
-        })}
+            ))}
 
-        {/* Pressure indicator */}
-        <g transform="translate(125, 200)">
-          <text x="0" y="0" textAnchor="middle" fontSize="14" fontWeight="bold" fill="#8b5cf6">
-            P = {pressure.toFixed(2)} atm
-          </text>
-        </g>
+            {/* Piston head */}
+            <rect
+              x="30"
+              y={15 + (150 - containerHeight)}
+              width="190"
+              height="20"
+              rx="3"
+              fill="url(#gasPistonGrad)"
+              stroke="#64748b"
+              strokeWidth="1"
+            />
+            {/* Piston bevel highlight */}
+            <rect
+              x="32"
+              y={16 + (150 - containerHeight)}
+              width="186"
+              height="3"
+              fill="white"
+              opacity="0.2"
+              rx="1"
+            />
+          </g>
 
-        {/* Volume label */}
-        <g transform="translate(125, 215)">
-          <text x="0" y="0" textAnchor="middle" fontSize="11" fill="#64748b">
-            V = {volume}%
-          </text>
-        </g>
-      </svg>
+          {/* Cylinder rim highlights */}
+          <rect x="25" y="10" width="200" height="3" fill="white" opacity="0.1" rx="6" />
+          <rect x="25" y="187" width="200" height="3" fill="black" opacity="0.3" rx="6" />
+        </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div className="flex justify-center gap-6 mt-3">
+          <div className="text-center">
+            <div
+              className="font-bold"
+              style={{
+                fontSize: typo.bodyLarge,
+                color: pressure > 2 ? '#f59e0b' : '#8b5cf6'
+              }}
+            >
+              P = {pressure.toFixed(2)} atm
+            </div>
+          </div>
+          <div className="text-center">
+            <div
+              className="font-medium"
+              style={{ fontSize: typo.body, color: '#64748b' }}
+            >
+              V = {volume}%
+            </div>
+          </div>
+        </div>
+      </>
     );
   };
 
-  // Temperature effect visualization for Charles's Law
+  // Temperature effect visualization for Charles's Law - Premium SVG Graphics
   const renderTempViz = () => {
     const containerHeight = (twistVolume / 100) * 150;
+    // Temperature color interpolation
+    const tempNormalized = (twistTemp - 200) / 300; // 0 at 200K, 1 at 500K
+    const isHot = twistTemp > 350;
+    const isCold = twistTemp < 250;
 
     return (
-      <svg viewBox="0 0 250 220" className="w-full h-full">
-        <defs>
-          <linearGradient id="glBalloon" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
-            <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.3" />
-          </linearGradient>
-        </defs>
+      <>
+        <svg viewBox="0 0 250 200" className="w-full h-full">
+          <defs>
+            {/* Premium balloon gradient - changes with temperature */}
+            <radialGradient id="gasBalloonGrad" cx="40%" cy="35%" r="65%">
+              <stop offset="0%" stopColor={isHot ? '#fef3c7' : isCold ? '#cffafe' : '#ddd6fe'} stopOpacity="0.4" />
+              <stop offset="30%" stopColor={isHot ? '#fcd34d' : isCold ? '#67e8f9' : '#a78bfa'} stopOpacity="0.3" />
+              <stop offset="60%" stopColor={isHot ? '#f59e0b' : isCold ? '#22d3ee' : '#8b5cf6'} stopOpacity="0.2" />
+              <stop offset="100%" stopColor={isHot ? '#d97706' : isCold ? '#06b6d4' : '#7c3aed'} stopOpacity="0.15" />
+            </radialGradient>
 
-        <rect width="250" height="220" fill="#020617" rx="8" />
+            {/* Balloon surface gradient */}
+            <linearGradient id="gasBalloonSurface" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor={isHot ? '#fbbf24' : isCold ? '#22d3ee' : '#a78bfa'} stopOpacity="0.6" />
+              <stop offset="50%" stopColor={isHot ? '#f59e0b' : isCold ? '#06b6d4' : '#8b5cf6'} stopOpacity="0.4" />
+              <stop offset="100%" stopColor={isHot ? '#d97706' : isCold ? '#0891b2' : '#7c3aed'} stopOpacity="0.6" />
+            </linearGradient>
 
-        {/* Balloon (flexible container at constant pressure) */}
-        <ellipse
-          cx="125"
-          cy={110 - (containerHeight - 100) / 3}
-          rx={80 + (twistVolume - 100) * 0.3}
-          ry={containerHeight / 2 + 25}
-          fill="url(#glBalloon)"
-          stroke="#06b6d4"
-          strokeWidth="2"
-        />
+            {/* Hot particle gradient */}
+            <radialGradient id="gasTempParticleHot" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="40%" stopColor="#fcd34d" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </radialGradient>
 
-        {/* Molecules inside balloon */}
-        {molecules.map((mol, i) => {
-          const cx = 125 + (mol.x - 100) * 0.8;
-          const cy = 110 - (containerHeight - 100) / 3 + (mol.y - 80) * (containerHeight / 150);
-          return (
-            <circle
+            {/* Cold particle gradient */}
+            <radialGradient id="gasTempParticleCold" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#a5f3fc" />
+              <stop offset="40%" stopColor="#67e8f9" />
+              <stop offset="70%" stopColor="#22d3ee" />
+              <stop offset="100%" stopColor="#06b6d4" />
+            </radialGradient>
+
+            {/* Neutral particle gradient */}
+            <radialGradient id="gasTempParticleNeutral" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#ddd6fe" />
+              <stop offset="40%" stopColor="#c4b5fd" />
+              <stop offset="70%" stopColor="#a78bfa" />
+              <stop offset="100%" stopColor="#8b5cf6" />
+            </radialGradient>
+
+            {/* Heat source gradient */}
+            <linearGradient id="gasHeatSource" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity={tempNormalized * 0.8} />
+              <stop offset="30%" stopColor="#f97316" stopOpacity={tempNormalized * 0.6} />
+              <stop offset="70%" stopColor="#fbbf24" stopOpacity={tempNormalized * 0.4} />
+              <stop offset="100%" stopColor="#fef3c7" stopOpacity={tempNormalized * 0.2} />
+            </linearGradient>
+
+            {/* Balloon reflection/shine */}
+            <linearGradient id="gasBalloonShine" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="white" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="white" stopOpacity="0" />
+              <stop offset="100%" stopColor="white" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Temperature particle glow */}
+            <filter id="gasTempParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation={isHot ? 3 : 2} result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Balloon outer glow */}
+            <filter id="gasBalloonGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="6" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Heat shimmer effect */}
+            <filter id="gasHeatShimmer">
+              <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="2" result="turbulence" />
+              <feDisplacementMap in2="turbulence" in="SourceGraphic" scale={isHot ? 2 : 0} xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+
+            {/* Ambient temperature glow */}
+            <filter id="gasAmbientTempGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="10" />
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width="250" height="200" fill="#020617" rx="8" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="gasTempGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect width="250" height="200" fill="url(#gasTempGrid)" rx="8" />
+
+          {/* Heat source indicator at bottom */}
+          <rect
+            x="50"
+            y="175"
+            width="150"
+            height="15"
+            rx="3"
+            fill="url(#gasHeatSource)"
+          />
+          {/* Heat element coils */}
+          {[0, 1, 2, 3, 4].map((i) => (
+            <rect
               key={i}
-              cx={cx}
-              cy={cy}
-              r="4"
-              fill={twistTemp > 350 ? '#f59e0b' : twistTemp < 250 ? '#06b6d4' : '#8b5cf6'}
-              className="animate-pulse"
-              style={{ animationDelay: `${i * 0.03}s` }}
+              x={60 + i * 30}
+              y="178"
+              width="20"
+              height="8"
+              rx="2"
+              fill={isHot ? '#dc2626' : '#374151'}
+              opacity={isHot ? 0.8 : 0.3}
             />
-          );
-        })}
+          ))}
 
-        {/* Temperature indicator */}
-        <g transform="translate(125, 200)">
-          <text
-            x="0"
-            y="0"
-            textAnchor="middle"
-            fontSize="14"
-            fontWeight="bold"
-            fill={twistTemp > 350 ? '#f59e0b' : twistTemp < 250 ? '#06b6d4' : '#f8fafc'}
-          >
-            T = {twistTemp} K ({Math.round(twistTemp - 273)}C)
-          </text>
-        </g>
+          {/* Balloon with glow effect */}
+          <g filter="url(#gasBalloonGlow)">
+            {/* Balloon main body */}
+            <ellipse
+              cx="125"
+              cy={95 - (containerHeight - 100) / 4}
+              rx={70 + (twistVolume - 100) * 0.35}
+              ry={containerHeight / 2 + 20}
+              fill="url(#gasBalloonGrad)"
+              stroke="url(#gasBalloonSurface)"
+              strokeWidth="3"
+            />
+            {/* Balloon shine/reflection */}
+            <ellipse
+              cx={100 - (twistVolume - 100) * 0.1}
+              cy={70 - (containerHeight - 100) / 4}
+              rx={20 + (twistVolume - 100) * 0.1}
+              ry={30 + (twistVolume - 100) * 0.1}
+              fill="url(#gasBalloonShine)"
+            />
+          </g>
 
-        {/* Volume indicator */}
-        <g transform="translate(125, 215)">
-          <text x="0" y="0" textAnchor="middle" fontSize="11" fill="#64748b">
-            V = {twistVolume.toFixed(0)}% (P = constant)
-          </text>
-        </g>
-      </svg>
+          {/* Balloon tie/knot */}
+          <path
+            d={`M120,${95 - (containerHeight - 100) / 4 + containerHeight / 2 + 20} L125,${105 - (containerHeight - 100) / 4 + containerHeight / 2 + 20} L130,${95 - (containerHeight - 100) / 4 + containerHeight / 2 + 20}`}
+            fill="none"
+            stroke={isHot ? '#f59e0b' : isCold ? '#06b6d4' : '#8b5cf6'}
+            strokeWidth="4"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+          />
+          {/* Balloon string */}
+          <line
+            x1="125"
+            y1={105 - (containerHeight - 100) / 4 + containerHeight / 2 + 20}
+            x2="125"
+            y2="175"
+            stroke="#64748b"
+            strokeWidth="2"
+            strokeDasharray="4 2"
+          />
+
+          {/* Molecules inside balloon with glow */}
+          {molecules.map((mol, i) => {
+            const balloonRx = 70 + (twistVolume - 100) * 0.35;
+            const balloonRy = containerHeight / 2 + 20;
+            const balloonCy = 95 - (containerHeight - 100) / 4;
+
+            // Calculate position within balloon bounds
+            const normalizedX = (mol.x - 100) / 100;
+            const normalizedY = (mol.y - 80) / 80;
+
+            const cx = 125 + normalizedX * (balloonRx * 0.7);
+            const cy = balloonCy + normalizedY * (balloonRy * 0.7);
+
+            // Check if particle is within balloon ellipse
+            const dx = (cx - 125) / balloonRx;
+            const dy = (cy - balloonCy) / balloonRy;
+            if (dx * dx + dy * dy > 0.85) return null;
+
+            const particleGradient = isHot
+              ? "url(#gasTempParticleHot)"
+              : isCold
+              ? "url(#gasTempParticleCold)"
+              : "url(#gasTempParticleNeutral)";
+
+            return (
+              <g key={i} filter="url(#gasTempParticleGlow)">
+                <circle
+                  cx={cx}
+                  cy={cy}
+                  r={4 + tempNormalized}
+                  fill={particleGradient}
+                  opacity={0.9}
+                />
+                {/* Specular highlight */}
+                <circle
+                  cx={cx - 1.5}
+                  cy={cy - 1.5}
+                  r={1.5}
+                  fill="white"
+                  opacity="0.4"
+                />
+              </g>
+            );
+          })}
+
+          {/* Pressure constant indicator - small gauge */}
+          <g transform="translate(20, 20)">
+            <rect x="0" y="0" width="50" height="24" rx="4" fill="#1e293b" stroke="#475569" strokeWidth="1" />
+            <text x="25" y="10" textAnchor="middle" fontSize="8" fill="#64748b">PRESSURE</text>
+            <text x="25" y="20" textAnchor="middle" fontSize="10" fontWeight="bold" fill="#10b981">1 atm</text>
+          </g>
+        </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div className="flex justify-center gap-6 mt-3">
+          <div className="text-center">
+            <div
+              className="font-bold"
+              style={{
+                fontSize: typo.bodyLarge,
+                color: isHot ? '#f59e0b' : isCold ? '#06b6d4' : '#f8fafc'
+              }}
+            >
+              T = {twistTemp} K ({Math.round(twistTemp - 273)}°C)
+            </div>
+          </div>
+          <div className="text-center">
+            <div
+              className="font-medium"
+              style={{ fontSize: typo.body, color: '#64748b' }}
+            >
+              V = {twistVolume.toFixed(0)}%
+            </div>
+          </div>
+        </div>
+      </>
     );
   };
 

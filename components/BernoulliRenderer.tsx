@@ -395,13 +395,98 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     return (
       <svg width={simWidth} height={simHeight} className="mx-auto">
         <defs>
-          <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1e3a5f" />
+          {/* Premium sky gradient with atmospheric depth */}
+          <linearGradient id="bernSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0c1929" />
+            <stop offset="30%" stopColor="#1e3a5f" />
+            <stop offset="70%" stopColor="#0f2847" />
             <stop offset="100%" stopColor="#0a1628" />
           </linearGradient>
+
+          {/* Airfoil metal gradient with realistic depth */}
+          <linearGradient id="bernAirfoilMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#f8fafc" />
+            <stop offset="15%" stopColor="#e2e8f0" />
+            <stop offset="50%" stopColor="#cbd5e1" />
+            <stop offset="85%" stopColor="#94a3b8" />
+            <stop offset="100%" stopColor="#64748b" />
+          </linearGradient>
+
+          {/* Low pressure zone glow (blue) */}
+          <radialGradient id="bernLowPressureGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.6" />
+            <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+          </radialGradient>
+
+          {/* High pressure zone glow (amber) */}
+          <radialGradient id="bernHighPressureGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5" />
+            <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Streamline particle glow */}
+          <radialGradient id="bernStreamParticleBlue" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
+            <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+          </radialGradient>
+
+          <radialGradient id="bernStreamParticleAmber" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fde68a" stopOpacity="1" />
+            <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Lift arrow gradient */}
+          <linearGradient id="bernLiftArrow" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="50%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#6ee7b7" />
+          </linearGradient>
+
+          {/* Wind arrow gradient */}
+          <linearGradient id="bernWindArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.5" />
+            <stop offset="50%" stopColor="#f8fafc" />
+            <stop offset="100%" stopColor="#f8fafc" />
+          </linearGradient>
+
+          {/* Glow filters */}
+          <filter id="bernPressureGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="bernParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="bernLiftGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Subtle grid pattern for lab feel */}
+          <pattern id="bernLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e3a5f" strokeWidth="0.3" strokeOpacity="0.4" />
+          </pattern>
         </defs>
 
-        <rect width={simWidth} height={simHeight} fill="url(#skyGrad)" />
+        {/* Background with gradient and grid */}
+        <rect width={simWidth} height={simHeight} fill="url(#bernSkyGrad)" />
+        <rect width={simWidth} height={simHeight} fill="url(#bernLabGrid)" />
 
         {/* Streamlines */}
         {showStreamlines && (
@@ -412,14 +497,17 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               const yPos = centerY + yOffset * compression;
               return (
                 <g key={`top-${i}`}>
+                  {/* Streamline path with gradient stroke */}
                   <path
                     d={`M 0 ${yPos} Q ${centerX - 60} ${yPos} ${centerX - 20} ${yPos + yOffset * 0.3 * (lift / 100)} Q ${centerX + 20} ${yPos + yOffset * 0.5 * (lift / 100)} ${centerX + 60} ${yPos} L ${simWidth} ${yPos}`}
                     fill="none"
                     stroke="#60a5fa"
                     strokeWidth={1.5}
-                    opacity={0.4}
+                    opacity={0.5}
                   />
-                  <circle cx={animOffset} cy={yPos} r={3} fill="#60a5fa" opacity={0.8} />
+                  {/* Glowing particle */}
+                  <circle cx={animOffset} cy={yPos} r={5} fill="url(#bernStreamParticleBlue)" filter="url(#bernParticleGlow)" />
+                  <circle cx={animOffset} cy={yPos} r={2} fill="#ffffff" opacity={0.9} />
                 </g>
               );
             })}
@@ -434,56 +522,158 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
                     fill="none"
                     stroke="#fbbf24"
                     strokeWidth={1.5}
-                    opacity={0.4}
+                    opacity={0.5}
                   />
-                  <circle cx={animOffset} cy={yPos} r={3} fill="#fbbf24" opacity={0.8} />
+                  {/* Glowing particle */}
+                  <circle cx={animOffset} cy={yPos} r={5} fill="url(#bernStreamParticleAmber)" filter="url(#bernParticleGlow)" />
+                  <circle cx={animOffset} cy={yPos} r={2} fill="#ffffff" opacity={0.9} />
                 </g>
               );
             })}
           </g>
         )}
 
-        {/* Pressure regions */}
+        {/* Pressure regions with glow effects */}
         {showPressure && (
           <g>
-            <ellipse cx={centerX} cy={centerY - 25} rx={70} ry={25} fill="#60a5fa" opacity={0.2 + (lift / 200)} />
-            <text x={centerX} y={centerY - 45} fill="#60a5fa" fontSize={11} textAnchor="middle" fontWeight="600">LOW PRESSURE</text>
-            <ellipse cx={centerX} cy={centerY + 40} rx={60} ry={20} fill="#fbbf24" opacity={0.2 + (lift / 300)} />
-            <text x={centerX} y={centerY + 60} fill="#fbbf24" fontSize={11} textAnchor="middle" fontWeight="600">HIGH PRESSURE</text>
+            {/* Low pressure zone */}
+            <ellipse
+              cx={centerX}
+              cy={centerY - 25}
+              rx={70}
+              ry={25}
+              fill="url(#bernLowPressureGlow)"
+              opacity={0.4 + (lift / 150)}
+              filter="url(#bernPressureGlow)"
+            />
+            {/* High pressure zone */}
+            <ellipse
+              cx={centerX}
+              cy={centerY + 40}
+              rx={60}
+              ry={20}
+              fill="url(#bernHighPressureGlow)"
+              opacity={0.4 + (lift / 200)}
+              filter="url(#bernPressureGlow)"
+            />
           </g>
         )}
 
-        {/* Airfoil */}
+        {/* Airfoil with premium metal finish */}
         <g transform={`translate(${centerX}, ${centerY}) rotate(${-angleOfAttack})`}>
+          {/* Shadow for depth */}
+          <path
+            d={`M ${-wingLength / 2 + 2} 3 Q ${-wingLength / 4} ${-15} 0 ${-19} Q ${wingLength / 4} ${-15} ${wingLength / 2 + 2} 3 Q ${wingLength / 4} 8 0 10 Q ${-wingLength / 4} 8 ${-wingLength / 2 + 2} 3`}
+            fill="#0a1628"
+            opacity={0.4}
+          />
+          {/* Main airfoil body */}
           <path
             d={`M ${-wingLength / 2} 0 Q ${-wingLength / 4} ${-18} 0 ${-22} Q ${wingLength / 4} ${-18} ${wingLength / 2} 0 Q ${wingLength / 4} 5 0 7 Q ${-wingLength / 4} 5 ${-wingLength / 2} 0`}
-            fill="#e5e7eb"
-            stroke="#9ca3af"
-            strokeWidth={2}
+            fill="url(#bernAirfoilMetal)"
+            stroke="#64748b"
+            strokeWidth={1.5}
           />
+          {/* Highlight for 3D effect */}
+          <path
+            d={`M ${-wingLength / 2 + 15} -2 Q ${-wingLength / 4} ${-16} 0 ${-20} Q ${wingLength / 4 - 10} ${-17} ${wingLength / 2 - 20} -4`}
+            fill="none"
+            stroke="#ffffff"
+            strokeWidth={1}
+            opacity={0.4}
+          />
+          {/* Leading edge highlight */}
+          <ellipse cx={-wingLength / 2 + 5} cy={0} rx={3} ry={6} fill="#ffffff" opacity={0.2} />
         </g>
 
-        {/* Lift arrow */}
+        {/* Lift arrow with glow */}
         {lift > 5 && (
-          <g>
-            <line x1={centerX} y1={centerY} x2={centerX} y2={centerY - lift * 0.7} stroke="#34d399" strokeWidth={4} />
-            <polygon points={`${centerX},${centerY - lift * 0.7 - 12} ${centerX - 8},${centerY - lift * 0.7} ${centerX + 8},${centerY - lift * 0.7}`} fill="#34d399" />
-            <text x={centerX + 15} y={centerY - lift * 0.35} fill="#34d399" fontSize={12} fontWeight="600">LIFT</text>
+          <g filter="url(#bernLiftGlow)">
+            <line
+              x1={centerX}
+              y1={centerY}
+              x2={centerX}
+              y2={centerY - lift * 0.7}
+              stroke="url(#bernLiftArrow)"
+              strokeWidth={5}
+              strokeLinecap="round"
+            />
+            <polygon
+              points={`${centerX},${centerY - lift * 0.7 - 14} ${centerX - 10},${centerY - lift * 0.7 + 2} ${centerX + 10},${centerY - lift * 0.7 + 2}`}
+              fill="#6ee7b7"
+            />
           </g>
         )}
 
-        {/* Wind indicator */}
+        {/* Wind indicator with gradient */}
         <g>
-          <line x1={25} y1={centerY} x2={65} y2={centerY} stroke="white" strokeWidth={2} />
-          <polygon points={`65,${centerY} 55,${centerY - 5} 55,${centerY + 5}`} fill="white" />
-          <text x={10} y={centerY - 12} fill="#94a3b8" fontSize={10}>Wind</text>
-          <text x={10} y={centerY + 18} fill="#94a3b8" fontSize={10}>{airSpeed} m/s</text>
+          <line x1={20} y1={centerY} x2={65} y2={centerY} stroke="url(#bernWindArrow)" strokeWidth={3} strokeLinecap="round" />
+          <polygon points={`70,${centerY} 58,${centerY - 6} 58,${centerY + 6}`} fill="#f8fafc" />
         </g>
-
-        <text x={simWidth - 10} y={18} fill="#94a3b8" fontSize={11} textAnchor="end">Angle: {angleOfAttack}deg</text>
       </svg>
     );
   };
+
+  // Labels rendered outside SVG for better typography
+  const renderWingLabels = () => (
+    <div className="absolute inset-0 pointer-events-none" style={{ fontSize: typo.small }}>
+      {/* Pressure labels */}
+      {showPressure && (
+        <>
+          <div
+            className="absolute text-blue-400 font-semibold tracking-wide"
+            style={{
+              top: '25%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              textShadow: '0 0 8px rgba(96, 165, 250, 0.5)'
+            }}
+          >
+            LOW PRESSURE
+          </div>
+          <div
+            className="absolute text-amber-400 font-semibold tracking-wide"
+            style={{
+              top: '62%',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              textShadow: '0 0 8px rgba(251, 191, 36, 0.5)'
+            }}
+          >
+            HIGH PRESSURE
+          </div>
+        </>
+      )}
+      {/* Lift label */}
+      {lift > 5 && (
+        <div
+          className="absolute text-emerald-400 font-bold"
+          style={{
+            top: `${35 - lift * 0.15}%`,
+            left: '55%',
+            textShadow: '0 0 8px rgba(52, 211, 153, 0.5)'
+          }}
+        >
+          LIFT
+        </div>
+      )}
+      {/* Wind info */}
+      <div
+        className="absolute text-slate-400"
+        style={{ top: '42%', left: '2%', fontSize: typo.label }}
+      >
+        <div>Wind</div>
+        <div className="font-mono text-slate-300">{airSpeed} m/s</div>
+      </div>
+      {/* Angle info */}
+      <div
+        className="absolute text-slate-400 text-right"
+        style={{ top: '3%', right: '3%', fontSize: typo.label }}
+      >
+        Angle: <span className="text-slate-300 font-mono">{angleOfAttack}°</span>
+      </div>
+    </div>
+  );
 
   const renderBallSimulation = () => {
     const simWidth = isMobile ? 320 : 500;
@@ -498,55 +688,247 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     return (
       <svg width={simWidth} height={simHeight} className="mx-auto">
         <defs>
-          <linearGradient id="fieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#065f46" />
+          {/* Premium field gradient with depth */}
+          <linearGradient id="bernFieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#064e3b" />
+            <stop offset="20%" stopColor="#065f46" />
+            <stop offset="50%" stopColor="#047857" />
+            <stop offset="80%" stopColor="#065f46" />
             <stop offset="100%" stopColor="#064e3b" />
           </linearGradient>
+
+          {/* Baseball leather gradient */}
+          <radialGradient id="bernBaseballLeather" cx="35%" cy="35%" r="60%">
+            <stop offset="0%" stopColor="#ffffff" />
+            <stop offset="30%" stopColor="#fafaf9" />
+            <stop offset="70%" stopColor="#e7e5e4" />
+            <stop offset="100%" stopColor="#d6d3d1" />
+          </radialGradient>
+
+          {/* Baseball seam color */}
+          <linearGradient id="bernSeamColor" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="50%" stopColor="#dc2626" />
+            <stop offset="100%" stopColor="#b91c1c" />
+          </linearGradient>
+
+          {/* Magnus force arrow gradient (pink) */}
+          <linearGradient id="bernMagnusArrow" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#db2777" />
+            <stop offset="50%" stopColor="#f472b6" />
+            <stop offset="100%" stopColor="#fbcfe8" />
+          </linearGradient>
+
+          {/* Trajectory glow */}
+          <linearGradient id="bernTrajectoryGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.2" />
+            <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.2" />
+          </linearGradient>
+
+          {/* Fast air streamline glow */}
+          <linearGradient id="bernFastAirGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.3" />
+          </linearGradient>
+
+          {/* Slow air streamline glow */}
+          <linearGradient id="bernSlowAirGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#fde68a" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.3" />
+          </linearGradient>
+
+          {/* Filters */}
+          <filter id="bernBallShadow" x="-50%" y="-50%" width="200%" height="200%">
+            <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#0a0a0a" floodOpacity="0.4" />
+          </filter>
+
+          <filter id="bernMagnusGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="bernStreamlineGlow" x="-20%" y="-50%" width="140%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Grass texture pattern */}
+          <pattern id="bernGrassPattern" width="8" height="8" patternUnits="userSpaceOnUse">
+            <rect width="8" height="8" fill="none" />
+            <line x1="0" y1="8" x2="2" y2="0" stroke="#059669" strokeWidth="0.5" strokeOpacity="0.3" />
+            <line x1="4" y1="8" x2="6" y2="0" stroke="#059669" strokeWidth="0.5" strokeOpacity="0.2" />
+          </pattern>
         </defs>
 
-        <rect width={simWidth} height={simHeight} fill="url(#fieldGrad)" />
+        {/* Background with gradient and grass texture */}
+        <rect width={simWidth} height={simHeight} fill="url(#bernFieldGrad)" />
+        <rect width={simWidth} height={simHeight} fill="url(#bernGrassPattern)" />
 
-        {/* Trajectory path */}
+        {/* Trajectory path with glow */}
         <path
           d={`M 50 ${centerY} Q ${simWidth / 2} ${centerY + curveAmount * 3} ${simWidth - 50} ${centerY}`}
           fill="none"
-          stroke="#fbbf24"
-          strokeWidth={2}
-          strokeDasharray="10,5"
-          opacity={0.5}
+          stroke="url(#bernTrajectoryGlow)"
+          strokeWidth={4}
+          strokeDasharray="12,6"
+          opacity={0.7}
         />
 
-        {/* Streamlines around ball */}
+        {/* Streamlines around ball with glow effects */}
         {showStreamlines && ballX > 0 && ballX < simWidth && (
           <g transform={`translate(${ballX}, ${ballY})`}>
-            <path d={`M -50 ${-15 * spinDirection} Q -15 ${-35 * spinDirection} 35 ${-15 * spinDirection}`} fill="none" stroke="#60a5fa" strokeWidth={2} opacity={0.6} />
-            <text x={-8} y={-45 * spinDirection} fill="#60a5fa" fontSize={9} textAnchor="middle">Fast (Low P)</text>
-            <path d={`M -50 ${15 * spinDirection} Q -15 ${25 * spinDirection} 35 ${15 * spinDirection}`} fill="none" stroke="#fbbf24" strokeWidth={2} opacity={0.6} />
-            <text x={-8} y={50 * spinDirection} fill="#fbbf24" fontSize={9} textAnchor="middle">Slow (High P)</text>
+            {/* Fast air (top when backspin, bottom when topspin) */}
+            <path
+              d={`M -55 ${-15 * spinDirection} Q -15 ${-40 * spinDirection} 40 ${-15 * spinDirection}`}
+              fill="none"
+              stroke="url(#bernFastAirGlow)"
+              strokeWidth={3}
+              filter="url(#bernStreamlineGlow)"
+            />
+            {/* Slow air */}
+            <path
+              d={`M -55 ${15 * spinDirection} Q -15 ${30 * spinDirection} 40 ${15 * spinDirection}`}
+              fill="none"
+              stroke="url(#bernSlowAirGlow)"
+              strokeWidth={3}
+              filter="url(#bernStreamlineGlow)"
+            />
           </g>
         )}
 
-        {/* Baseball */}
-        <g transform={`translate(${ballX}, ${ballY}) rotate(${animationTime * ballSpin * 0.1})`}>
-          <circle r={22} fill="#f5f5f4" stroke="#a3a3a3" strokeWidth={2} />
-          <path d="M -18 -8 Q -8 -18, 0 -13 Q 8 -8, 18 -13" fill="none" stroke="#dc2626" strokeWidth={2} />
-          <path d="M -18 8 Q -8 18, 0 13 Q 8 8, 18 13" fill="none" stroke="#dc2626" strokeWidth={2} />
+        {/* Baseball with premium shading */}
+        <g transform={`translate(${ballX}, ${ballY}) rotate(${animationTime * ballSpin * 0.1})`} filter="url(#bernBallShadow)">
+          {/* Main ball body */}
+          <circle r={24} fill="url(#bernBaseballLeather)" />
+          {/* Outer edge darkening */}
+          <circle r={24} fill="none" stroke="#a8a29e" strokeWidth={1.5} />
+          {/* Inner highlight */}
+          <circle cx={-6} cy={-6} r={8} fill="#ffffff" opacity={0.3} />
+          {/* Seams with depth */}
+          <path
+            d="M -19 -9 Q -9 -20, 0 -14 Q 9 -9, 19 -14"
+            fill="none"
+            stroke="url(#bernSeamColor)"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+          />
+          <path
+            d="M -19 9 Q -9 20, 0 14 Q 9 9, 19 14"
+            fill="none"
+            stroke="url(#bernSeamColor)"
+            strokeWidth={2.5}
+            strokeLinecap="round"
+          />
+          {/* Seam stitches */}
+          {[-14, -7, 0, 7, 14].map((x, i) => (
+            <g key={`stitch-${i}`}>
+              <line x1={x - 1} y1={-15 + Math.abs(x) * 0.2} x2={x + 1} y2={-13 + Math.abs(x) * 0.2} stroke="#b91c1c" strokeWidth={1} />
+              <line x1={x - 1} y1={15 - Math.abs(x) * 0.2} x2={x + 1} y2={13 - Math.abs(x) * 0.2} stroke="#b91c1c" strokeWidth={1} />
+            </g>
+          ))}
         </g>
 
-        {/* Magnus force arrow */}
+        {/* Magnus force arrow with glow */}
         {Math.abs(ballSpin) > 100 && ballX > 80 && ballX < simWidth - 80 && (
-          <g transform={`translate(${ballX}, ${ballY})`}>
-            <line x1={0} y1={0} x2={0} y2={-magnusForce * 1.2} stroke="#f472b6" strokeWidth={3} />
-            <polygon points={`0,${-magnusForce * 1.2 - 8} -6,${-magnusForce * 1.2 + 3} 6,${-magnusForce * 1.2 + 3}`} fill="#f472b6" />
-            <text x={12} y={-magnusForce * 0.6} fill="#f472b6" fontSize={10} fontWeight="600">Magnus</text>
+          <g transform={`translate(${ballX}, ${ballY})`} filter="url(#bernMagnusGlow)">
+            <line
+              x1={0}
+              y1={0}
+              x2={0}
+              y2={-magnusForce * 1.2}
+              stroke="url(#bernMagnusArrow)"
+              strokeWidth={5}
+              strokeLinecap="round"
+            />
+            <polygon
+              points={`0,${-magnusForce * 1.2 - 10} -8,${-magnusForce * 1.2 + 4} 8,${-magnusForce * 1.2 + 4}`}
+              fill="#fbcfe8"
+            />
           </g>
         )}
-
-        <text x={simWidth - 10} y={18} fill="white" fontSize={11} textAnchor="end">Spin: {ballSpin} RPM</text>
-        <text x={simWidth / 2} y={simHeight - 12} fill="#94a3b8" fontSize={11} textAnchor="middle">
-          Ball curves {magnusForce > 0 ? 'UP' : magnusForce < 0 ? 'DOWN' : 'straight'} (Magnus effect)
-        </text>
       </svg>
+    );
+  };
+
+  // Ball simulation labels rendered outside SVG
+  const renderBallLabels = () => {
+    const simWidth = isMobile ? 320 : 500;
+    const ballX = (animationTime * airSpeed * 2) % (simWidth + 100) - 50;
+    const spinDirection = ballSpin > 0 ? 1 : -1;
+    const showLabelsNearBall = showStreamlines && ballX > 50 && ballX < simWidth - 50;
+
+    return (
+      <div className="absolute inset-0 pointer-events-none" style={{ fontSize: typo.small }}>
+        {/* Spin info */}
+        <div
+          className="absolute text-white font-mono text-right"
+          style={{ top: '3%', right: '3%', fontSize: typo.label }}
+        >
+          Spin: <span className="text-slate-200">{ballSpin} RPM</span>
+        </div>
+
+        {/* Fast/Slow pressure labels near ball */}
+        {showLabelsNearBall && (
+          <>
+            <div
+              className="absolute text-blue-400 font-medium"
+              style={{
+                top: spinDirection > 0 ? '25%' : '65%',
+                left: `${(ballX / simWidth) * 100}%`,
+                transform: 'translateX(-50%)',
+                fontSize: typo.label,
+                textShadow: '0 0 6px rgba(96, 165, 250, 0.6)'
+              }}
+            >
+              Fast (Low P)
+            </div>
+            <div
+              className="absolute text-amber-400 font-medium"
+              style={{
+                top: spinDirection > 0 ? '65%' : '25%',
+                left: `${(ballX / simWidth) * 100}%`,
+                transform: 'translateX(-50%)',
+                fontSize: typo.label,
+                textShadow: '0 0 6px rgba(251, 191, 36, 0.6)'
+              }}
+            >
+              Slow (High P)
+            </div>
+          </>
+        )}
+
+        {/* Magnus label */}
+        {Math.abs(ballSpin) > 100 && ballX > 80 && ballX < simWidth - 80 && (
+          <div
+            className="absolute text-pink-400 font-bold"
+            style={{
+              top: '35%',
+              left: `${(ballX / simWidth) * 100 + 5}%`,
+              fontSize: typo.small,
+              textShadow: '0 0 8px rgba(244, 114, 182, 0.6)'
+            }}
+          >
+            Magnus
+          </div>
+        )}
+
+        {/* Bottom info */}
+        <div
+          className="absolute text-slate-400 text-center w-full"
+          style={{ bottom: '3%', fontSize: typo.label }}
+        >
+          Ball curves <span className="text-slate-200">{magnusForce > 0 ? 'UP' : magnusForce < 0 ? 'DOWN' : 'straight'}</span> (Magnus effect)
+        </div>
+      </div>
     );
   };
 
@@ -607,26 +989,76 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 className="text-2xl font-bold text-white mb-6">Make Your Prediction</h2>
 
-      {/* Static simulation preview */}
-      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-slate-700/50 mb-6 opacity-75">
+      {/* Static simulation preview with premium graphics */}
+      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-slate-700/50 mb-6 opacity-90">
         <svg width={320} height={150} className="mx-auto">
           <defs>
+            {/* Premium sky gradient */}
             <linearGradient id="predictSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="0%" stopColor="#0c1929" />
+              <stop offset="40%" stopColor="#1e3a5f" />
               <stop offset="100%" stopColor="#0a1628" />
             </linearGradient>
+            {/* Airfoil metal gradient */}
+            <linearGradient id="predictAirfoilMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f8fafc" />
+              <stop offset="20%" stopColor="#e2e8f0" />
+              <stop offset="60%" stopColor="#cbd5e1" />
+              <stop offset="100%" stopColor="#94a3b8" />
+            </linearGradient>
+            {/* Subtle air flow indicators */}
+            <linearGradient id="predictFlowBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0" />
+              <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0" />
+            </linearGradient>
+            <linearGradient id="predictFlowAmber" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+            </linearGradient>
+            {/* Grid pattern */}
+            <pattern id="predictGrid" width="16" height="16" patternUnits="userSpaceOnUse">
+              <rect width="16" height="16" fill="none" stroke="#1e3a5f" strokeWidth="0.3" strokeOpacity="0.4" />
+            </pattern>
           </defs>
           <rect width={320} height={150} fill="url(#predictSkyGrad)" />
+          <rect width={320} height={150} fill="url(#predictGrid)" />
+
+          {/* Static flow lines */}
+          <path d="M 0 50 Q 120 48 160 45 Q 200 42 320 50" fill="none" stroke="url(#predictFlowBlue)" strokeWidth={2} />
+          <path d="M 0 60 Q 130 58 160 52 Q 190 48 320 60" fill="none" stroke="url(#predictFlowBlue)" strokeWidth={2} />
+          <path d="M 0 90 Q 130 92 160 98 Q 190 100 320 90" fill="none" stroke="url(#predictFlowAmber)" strokeWidth={2} />
+          <path d="M 0 100 Q 120 102 160 105 Q 200 107 320 100" fill="none" stroke="url(#predictFlowAmber)" strokeWidth={2} />
+
+          {/* Airfoil with premium finish */}
           <g transform="translate(160, 75)">
+            {/* Shadow */}
+            <path
+              d={`M -58 3 Q -28 -14 2 -18 Q 32 -14 62 3 Q 32 9 2 11 Q -28 9 -58 3`}
+              fill="#0a1628"
+              opacity={0.4}
+            />
+            {/* Main body */}
             <path
               d={`M -60 0 Q -30 -18 0 -22 Q 30 -18 60 0 Q 30 5 0 7 Q -30 5 -60 0`}
-              fill="#e5e7eb"
-              stroke="#9ca3af"
-              strokeWidth={2}
+              fill="url(#predictAirfoilMetal)"
+              stroke="#64748b"
+              strokeWidth={1.5}
+            />
+            {/* Highlight */}
+            <path
+              d={`M -45 -2 Q -20 -16 0 -20 Q 20 -17 40 -5`}
+              fill="none"
+              stroke="#ffffff"
+              strokeWidth={0.8}
+              opacity={0.4}
             />
           </g>
-          <text x={160} y={130} fill="#94a3b8" fontSize={11} textAnchor="middle">Wing cross-section</text>
         </svg>
+        <div className="text-center mt-2" style={{ fontSize: typo.label, color: colors.textSecondary }}>
+          Wing cross-section
+        </div>
       </div>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6 border border-slate-700/50">
@@ -668,8 +1100,18 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       <h2 className="text-2xl font-bold text-white mb-4">Bernoulli Lab</h2>
       <p className="text-slate-400 mb-6 text-center max-w-lg">Adjust the sliders to see how airspeed, wing angle, and pipe width affect pressure and lift.</p>
 
-      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-slate-700/50 mb-6">
-        {simulationMode === 'wing' ? renderWingSimulation() : renderBallSimulation()}
+      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-slate-700/50 mb-6 relative overflow-hidden">
+        {simulationMode === 'wing' ? (
+          <>
+            {renderWingSimulation()}
+            {renderWingLabels()}
+          </>
+        ) : (
+          <>
+            {renderBallSimulation()}
+            {renderBallLabels()}
+          </>
+        )}
       </div>
 
       {/* Data panel */}
@@ -788,14 +1230,66 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     <div className="flex flex-col items-center justify-center min-h-[500px] p-6">
       <h2 className="text-2xl font-bold text-amber-400 mb-6">New Scenario: The Curveball Challenge</h2>
 
-      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-amber-700/30 mb-6 opacity-75">
+      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-amber-700/30 mb-6 opacity-90">
         <svg width={280} height={120} className="mx-auto">
-          <rect width={280} height={120} fill="#064e3b" rx={8} />
-          <circle cx={140} cy={60} r={20} fill="#f5f5f4" stroke="#a3a3a3" strokeWidth={2} />
-          <path d="M 125 52 Q 135 42, 143 47 Q 151 52, 161 47" fill="none" stroke="#dc2626" strokeWidth={2} />
-          <path d="M 125 68 Q 135 78, 143 73 Q 151 68, 161 73" fill="none" stroke="#dc2626" strokeWidth={2} />
-          <text x={140} y={105} fill="#94a3b8" fontSize={11} textAnchor="middle">Spinning baseball</text>
+          <defs>
+            {/* Premium field gradient */}
+            <linearGradient id="twistFieldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#064e3b" />
+              <stop offset="50%" stopColor="#047857" />
+              <stop offset="100%" stopColor="#065f46" />
+            </linearGradient>
+            {/* Baseball leather */}
+            <radialGradient id="twistBallLeather" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="40%" stopColor="#fafaf9" />
+              <stop offset="100%" stopColor="#d6d3d1" />
+            </radialGradient>
+            {/* Seam gradient */}
+            <linearGradient id="twistSeamRed" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+            {/* Spin motion arrows */}
+            <linearGradient id="twistSpinArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.3" />
+            </linearGradient>
+            {/* Ball shadow filter */}
+            <filter id="twistBallShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="2" dy="3" stdDeviation="2" floodColor="#0a0a0a" floodOpacity="0.4" />
+            </filter>
+          </defs>
+
+          <rect width={280} height={120} fill="url(#twistFieldGrad)" rx={8} />
+
+          {/* Spin motion curves */}
+          <path d="M 95 45 Q 115 30 140 35" fill="none" stroke="url(#twistSpinArrow)" strokeWidth={2} strokeDasharray="4,3" />
+          <path d="M 185 45 Q 165 30 140 35" fill="none" stroke="url(#twistSpinArrow)" strokeWidth={2} strokeDasharray="4,3" />
+          <path d="M 95 75 Q 115 90 140 85" fill="none" stroke="url(#twistSpinArrow)" strokeWidth={2} strokeDasharray="4,3" />
+          <path d="M 185 75 Q 165 90 140 85" fill="none" stroke="url(#twistSpinArrow)" strokeWidth={2} strokeDasharray="4,3" />
+
+          {/* Baseball with premium shading */}
+          <g transform="translate(140, 60)" filter="url(#twistBallShadow)">
+            <circle r={22} fill="url(#twistBallLeather)" />
+            <circle r={22} fill="none" stroke="#a8a29e" strokeWidth={1.5} />
+            {/* Highlight */}
+            <circle cx={-5} cy={-5} r={7} fill="#ffffff" opacity={0.3} />
+            {/* Seams */}
+            <path d="M -17 -8 Q -7 -19, 2 -13 Q 11 -8, 19 -13" fill="none" stroke="url(#twistSeamRed)" strokeWidth={2.5} strokeLinecap="round" />
+            <path d="M -17 8 Q -7 19, 2 13 Q 11 8, 19 13" fill="none" stroke="url(#twistSeamRed)" strokeWidth={2.5} strokeLinecap="round" />
+          </g>
+
+          {/* Rotation indicator arrows */}
+          <g transform="translate(140, 60)">
+            <path d="M 32 -8 A 35 35 0 0 1 32 8" fill="none" stroke="#60a5fa" strokeWidth={2} markerEnd="url(#twistArrow)" />
+            <polygon points="34,10 28,6 30,12" fill="#60a5fa" />
+          </g>
         </svg>
+        <div className="text-center mt-2" style={{ fontSize: typo.label, color: colors.textSecondary }}>
+          Spinning baseball
+        </div>
       </div>
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6 border border-amber-700/30">
@@ -837,8 +1331,9 @@ const BernoulliRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
       <h2 className="text-2xl font-bold text-amber-400 mb-4">Magnus Effect Lab</h2>
       <p className="text-slate-400 mb-6 text-center">Adjust the angle of attack and spin to see how airflow creates lift on different shapes!</p>
 
-      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-slate-700/50 mb-6">
+      <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-slate-700/50 mb-6 relative overflow-hidden">
         {renderBallSimulation()}
+        {renderBallLabels()}
       </div>
 
       <div className="grid md:grid-cols-2 gap-4 w-full max-w-lg mb-6">

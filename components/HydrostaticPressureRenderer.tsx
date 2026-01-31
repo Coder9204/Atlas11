@@ -371,92 +371,231 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
     const objectY = tankTop + depthRatio * tankHeight;
 
     return (
-      <svg width={width} height={height} style={{ display: 'block', margin: '0 auto' }}>
-        <defs>
-          <linearGradient id="waterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#0369a1" stopOpacity="0.9" />
-          </linearGradient>
-          <marker id="pressureArrow" markerWidth="6" markerHeight="6" refX="0" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L6,3 z" fill="#22c55e" />
-          </marker>
-        </defs>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        <svg width={width} height={height - 40} style={{ display: 'block' }}>
+          <defs>
+            {/* Premium water gradient with depth effect - 6 color stops */}
+            <linearGradient id="hydroWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.4" />
+              <stop offset="15%" stopColor="#38bdf8" stopOpacity="0.55" />
+              <stop offset="35%" stopColor="#0ea5e9" stopOpacity="0.7" />
+              <stop offset="55%" stopColor="#0284c7" stopOpacity="0.8" />
+              <stop offset="80%" stopColor="#0369a1" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#075985" stopOpacity="0.95" />
+            </linearGradient>
 
-        <rect x="0" y="0" width={width} height={height} fill="#0f172a" rx="12" />
+            {/* Glass container effect gradient */}
+            <linearGradient id="hydroGlassLeft" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#64748b" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#475569" stopOpacity="0.1" />
+            </linearGradient>
+            <linearGradient id="hydroGlassRight" x1="100%" y1="0%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.5" />
+              <stop offset="30%" stopColor="#64748b" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#475569" stopOpacity="0.1" />
+            </linearGradient>
+            <linearGradient id="hydroGlassBottom" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#64748b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#475569" stopOpacity="0.1" />
+            </linearGradient>
 
-        {/* Tank */}
-        <rect x={tankLeft} y={tankTop} width={tankWidth} height={tankHeight}
-              fill="url(#waterGradient)" stroke="#64748b" strokeWidth="3" rx="8" />
+            {/* Pressure arrow gradient - green intensity */}
+            <linearGradient id="hydroPressureArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#4ade80" stopOpacity="1" />
+              <stop offset="100%" stopColor="#86efac" stopOpacity="1" />
+            </linearGradient>
 
-        {/* Surface */}
-        <line x1={tankLeft} y1={tankTop + 5} x2={tankLeft + tankWidth} y2={tankTop + 5}
-              stroke="#7dd3fc" strokeWidth="2" strokeDasharray="5,5" />
-        <text x={tankLeft - 8} y={tankTop + 8} textAnchor="end" fill="#7dd3fc" fontSize="10">0m</text>
+            {/* Diver/object glow gradient */}
+            <radialGradient id="hydroDiverGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.7" />
+            </radialGradient>
 
-        {/* Depth markers */}
-        {[10, 20, 30, 40, 50].map((d) => {
-          const y = tankTop + (d / 50) * tankHeight;
-          return (
-            <g key={d}>
-              <line x1={tankLeft - 6} y1={y} x2={tankLeft} y2={y} stroke="#64748b" strokeWidth="1" />
-              <text x={tankLeft - 8} y={y + 4} textAnchor="end" fill="#64748b" fontSize="9">{d}m</text>
-            </g>
-          );
-        })}
+            {/* Pressure readout panel gradient */}
+            <linearGradient id="hydroPanelGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
 
-        {/* Diver/Object */}
-        <g transform={`translate(${tankLeft + tankWidth/2}, ${Math.min(objectY, tankTop + tankHeight - 20)})`}>
-          <circle r="16" fill="#fbbf24" stroke="#f59e0b" strokeWidth="2" />
-          <text y="5" textAnchor="middle" fill="#1e293b" fontSize="10" fontWeight="bold">{depth}m</text>
-        </g>
+            {/* Bubble gradient */}
+            <radialGradient id="hydroBubbleGradient" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#e0f2fe" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.2" />
+            </radialGradient>
 
-        {/* Pressure arrows */}
-        {showPressureArrows && (
-          <g transform={`translate(${tankLeft + tankWidth/2}, ${Math.min(objectY, tankTop + tankHeight - 20)})`}>
-            {[0, 60, 120, 180, 240, 300].map((angle, i) => {
-              const length = 20 + (depth / 50) * 25;
-              const rad = (angle * Math.PI) / 180;
-              const x1 = Math.cos(rad) * 22;
-              const y1 = Math.sin(rad) * 22;
-              const x2 = Math.cos(rad) * (22 + length);
-              const y2 = Math.sin(rad) * (22 + length);
-              return (
-                <line key={i} x1={x2} y1={y2} x2={x1} y2={y1}
-                      stroke="#22c55e" strokeWidth="2" markerEnd="url(#pressureArrow)" opacity={0.8} />
-              );
-            })}
+            {/* Surface shimmer gradient */}
+            <linearGradient id="hydroSurfaceShimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.2" />
+              <stop offset="25%" stopColor="#bae6fd" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#e0f2fe" stopOpacity="1" />
+              <stop offset="75%" stopColor="#bae6fd" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="hydroDiverGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="hydroArrowGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="hydroBubbleGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="hydroPanelGlowFilter" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow marker with gradient */}
+            <marker id="hydroPressureArrowMarker" markerWidth="8" markerHeight="8" refX="0" refY="4" orient="auto">
+              <path d="M0,0 L0,8 L8,4 z" fill="url(#hydroPressureArrow)" />
+            </marker>
+          </defs>
+
+          {/* Background */}
+          <rect x="0" y="0" width={width} height={height - 40} fill="#0f172a" rx="12" />
+
+          {/* Tank water fill */}
+          <rect x={tankLeft} y={tankTop} width={tankWidth} height={tankHeight}
+                fill="url(#hydroWaterGradient)" rx="6" />
+
+          {/* Glass container walls */}
+          <rect x={tankLeft - 3} y={tankTop - 2} width="6" height={tankHeight + 6}
+                fill="url(#hydroGlassLeft)" rx="2" />
+          <rect x={tankLeft + tankWidth - 3} y={tankTop - 2} width="6" height={tankHeight + 6}
+                fill="url(#hydroGlassRight)" rx="2" />
+          <rect x={tankLeft - 3} y={tankTop + tankHeight - 2} width={tankWidth + 6} height="6"
+                fill="url(#hydroGlassBottom)" rx="2" />
+
+          {/* Container outline */}
+          <rect x={tankLeft} y={tankTop} width={tankWidth} height={tankHeight}
+                fill="none" stroke="#64748b" strokeWidth="2" rx="6" strokeOpacity="0.5" />
+
+          {/* Surface shimmer line */}
+          <line x1={tankLeft + 4} y1={tankTop + 4} x2={tankLeft + tankWidth - 4} y2={tankTop + 4}
+                stroke="url(#hydroSurfaceShimmer)" strokeWidth="3" strokeLinecap="round" />
+
+          {/* Depth markers with enhanced styling */}
+          {[0, 10, 20, 30, 40, 50].map((d) => {
+            const y = tankTop + (d / 50) * tankHeight;
+            const isCurrentDepth = Math.abs(d - depth) < 5;
+            return (
+              <g key={d}>
+                <line x1={tankLeft - 8} y1={y} x2={tankLeft - 2} y2={y}
+                      stroke={isCurrentDepth ? colors.primary : '#64748b'}
+                      strokeWidth={isCurrentDepth ? 2 : 1}
+                      strokeOpacity={isCurrentDepth ? 1 : 0.6} />
+                <text x={tankLeft - 12} y={y + 4} textAnchor="end"
+                      fill={isCurrentDepth ? colors.primary : '#64748b'}
+                      fontSize="9" fontWeight={isCurrentDepth ? 'bold' : 'normal'}>
+                  {d}m
+                </text>
+              </g>
+            );
+          })}
+
+          {/* Diver/Object with glow */}
+          <g transform={`translate(${tankLeft + tankWidth/2}, ${Math.min(objectY, tankTop + tankHeight - 20)})`}
+             filter="url(#hydroDiverGlowFilter)">
+            <circle r="18" fill="url(#hydroDiverGlow)" />
+            <circle r="18" fill="none" stroke="#fbbf24" strokeWidth="2" strokeOpacity="0.8" />
+            <text y="5" textAnchor="middle" fill="#1e293b" fontSize="11" fontWeight="bold">{depth}m</text>
           </g>
-        )}
 
-        {/* Bubbles */}
-        {[1, 2, 3].map(i => {
-          const bubbleY = tankTop + tankHeight - ((animationOffset * 2 + i * 40) % tankHeight);
-          const bubbleX = tankLeft + 25 + i * 35;
-          return (
-            <circle key={i} cx={bubbleX} cy={bubbleY} r={2 + i}
-                    fill="white" opacity={0.3 + (bubbleY - tankTop) / tankHeight * 0.3} />
-          );
-        })}
+          {/* Pressure arrows with glow - size increases with depth */}
+          {showPressureArrows && (
+            <g transform={`translate(${tankLeft + tankWidth/2}, ${Math.min(objectY, tankTop + tankHeight - 20)})`}>
+              {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => {
+                const baseLength = 18 + (depth / 50) * 30;
+                const rad = (angle * Math.PI) / 180;
+                const startRadius = 24;
+                const x1 = Math.cos(rad) * startRadius;
+                const y1 = Math.sin(rad) * startRadius;
+                const x2 = Math.cos(rad) * (startRadius + baseLength);
+                const y2 = Math.sin(rad) * (startRadius + baseLength);
+                return (
+                  <line key={i} x1={x2} y1={y2} x2={x1} y2={y1}
+                        stroke="url(#hydroPressureArrow)" strokeWidth={2 + depth / 25}
+                        markerEnd="url(#hydroPressureArrowMarker)"
+                        filter="url(#hydroArrowGlowFilter)"
+                        opacity={0.7 + (depth / 100)} />
+                );
+              })}
+            </g>
+          )}
 
-        {/* Pressure readout */}
-        <rect x={width - 115} y="50" width="105" height="120" fill="#1e293b" rx="8" stroke="#374151" />
-        <text x={width - 62} y="72" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold">PRESSURE</text>
+          {/* Animated bubbles with glow */}
+          {[1, 2, 3, 4, 5].map(i => {
+            const bubbleY = tankTop + tankHeight - ((animationOffset * 2 + i * 30) % tankHeight);
+            const bubbleX = tankLeft + 15 + i * 25;
+            const bubbleSize = 2 + (i % 3);
+            return (
+              <circle key={i} cx={bubbleX} cy={bubbleY} r={bubbleSize}
+                      fill="url(#hydroBubbleGradient)"
+                      filter="url(#hydroBubbleGlowFilter)"
+                      opacity={0.4 + (bubbleY - tankTop) / tankHeight * 0.4} />
+            );
+          })}
 
-        <text x={width - 62} y="98" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">
-          {(hydrostaticPressure / 1000).toFixed(1)}
-        </text>
-        <text x={width - 62} y="112" textAnchor="middle" fill="#94a3b8" fontSize="9">kPa (hydrostatic)</text>
+          {/* Pressure readout panel with glow */}
+          <g filter="url(#hydroPanelGlowFilter)">
+            <rect x={width - 120} y="35" width="110" height="130" fill="url(#hydroPanelGradient)" rx="10"
+                  stroke="#374151" strokeWidth="1" strokeOpacity="0.5" />
+          </g>
+          <text x={width - 65} y="55" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="bold"
+                letterSpacing="0.05em">PRESSURE</text>
 
-        <text x={width - 62} y="138" textAnchor="middle" fill="#3b82f6" fontSize="16" fontWeight="bold">
-          {pressureInAtm.toFixed(2)}
-        </text>
-        <text x={width - 62} y="152" textAnchor="middle" fill="#94a3b8" fontSize="9">atm (total)</text>
+          <text x={width - 65} y="82" textAnchor="middle" fill={colors.success} fontSize="18" fontWeight="bold">
+            {(hydrostaticPressure / 1000).toFixed(1)}
+          </text>
+          <text x={width - 65} y="98" textAnchor="middle" fill="#64748b" fontSize="9">kPa (hydrostatic)</text>
 
-        {/* Formula */}
-        <text x={width/2} y={height - 25} textAnchor="middle" fill="#fbbf24" fontSize="11" fontWeight="bold">
-          P = ρgh = {fluidDensity} × 9.81 × {depth} = {(hydrostaticPressure / 1000).toFixed(1)} kPa
-        </text>
-      </svg>
+          <line x1={width - 110} y1="108" x2={width - 20} y2="108" stroke="#374151" strokeWidth="1" strokeOpacity="0.5" />
+
+          <text x={width - 65} y="130" textAnchor="middle" fill={colors.secondary} fontSize="18" fontWeight="bold">
+            {pressureInAtm.toFixed(2)}
+          </text>
+          <text x={width - 65} y="146" textAnchor="middle" fill="#64748b" fontSize="9">atm (total)</text>
+        </svg>
+
+        {/* Formula moved outside SVG using typo system */}
+        <div style={{
+          padding: '10px 16px',
+          background: `linear-gradient(135deg, ${colors.bgSurface} 0%, ${colors.bgElevated} 100%)`,
+          borderRadius: '10px',
+          border: `1px solid ${colors.bgHover}`,
+          textAlign: 'center'
+        }}>
+          <span style={{ fontSize: typo.body, color: colors.warning, fontWeight: 700, fontFamily: 'monospace' }}>
+            P = rgh = {fluidDensity} x 9.81 x {depth} = {(hydrostaticPressure / 1000).toFixed(1)} kPa
+          </span>
+        </div>
+      </div>
     );
   };
 
@@ -467,53 +606,167 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
     const waterHeight = 80;
 
     return (
-      <svg width={width} height={height} style={{ display: 'block', margin: '0 auto' }}>
-        <rect width={width} height={height} fill="#0f172a" rx="12" />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        <svg width={width} height={height - 30} style={{ display: 'block' }}>
+          <defs>
+            {/* Container water gradients with depth effect */}
+            <linearGradient id="hydroContainerWater" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.4" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.6" />
+              <stop offset="60%" stopColor="#2563eb" stopOpacity="0.75" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.9" />
+            </linearGradient>
 
-        {/* Wide container */}
-        <g transform={`translate(${width * 0.17}, 30)`}>
-          <rect x="-40" y={100 - waterHeight} width="80" height={waterHeight} fill="#3b82f6" opacity="0.5" rx="4" />
-          <rect x="-40" y={100 - waterHeight} width="80" height={waterHeight} fill="none" stroke="#64748b" strokeWidth="2" rx="4" />
-          <text x="0" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">Wide</text>
-          <text x="0" y="128" textAnchor="middle" fill="#64748b" fontSize="9">1000 L</text>
-          {selectedContainer === 0 && (
-            <circle cx="0" cy={100 - waterHeight + 70} r="6" fill="#f59e0b" />
-          )}
-        </g>
+            {/* Glass container gradient */}
+            <linearGradient id="hydroContainerGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#64748b" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.5" />
+            </linearGradient>
 
-        {/* Medium container */}
-        <g transform={`translate(${width * 0.5}, 30)`}>
-          <rect x="-20" y={100 - waterHeight} width="40" height={waterHeight} fill="#3b82f6" opacity="0.5" rx="4" />
-          <rect x="-20" y={100 - waterHeight} width="40" height={waterHeight} fill="none" stroke="#64748b" strokeWidth="2" rx="4" />
-          <text x="0" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">Medium</text>
-          <text x="0" y="128" textAnchor="middle" fill="#64748b" fontSize="9">100 L</text>
-          {selectedContainer === 1 && (
-            <circle cx="0" cy={100 - waterHeight + 70} r="6" fill="#f59e0b" />
-          )}
-        </g>
+            {/* Pressure sensor glow */}
+            <radialGradient id="hydroSensorGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="1" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+            </radialGradient>
 
-        {/* Narrow container */}
-        <g transform={`translate(${width * 0.83}, 30)`}>
-          <rect x="-5" y={100 - waterHeight} width="10" height={waterHeight} fill="#3b82f6" opacity="0.5" rx="2" />
-          <rect x="-5" y={100 - waterHeight} width="10" height={waterHeight} fill="none" stroke="#64748b" strokeWidth="2" rx="2" />
-          <text x="0" y="115" textAnchor="middle" fill="#94a3b8" fontSize="10">Narrow</text>
-          <text x="0" y="128" textAnchor="middle" fill="#64748b" fontSize="9">1 L</text>
-          {selectedContainer === 2 && (
-            <circle cx="0" cy={100 - waterHeight + 70} r="6" fill="#f59e0b" />
-          )}
-        </g>
+            {/* Height indicator gradient */}
+            <linearGradient id="hydroHeightIndicator" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="1" />
+            </linearGradient>
 
-        {/* Height indicator */}
-        <line x1={width - 25} y1={30 + 100 - waterHeight} x2={width - 25} y2={30 + 100}
-              stroke="#fbbf24" strokeWidth="2" markerStart="url(#heightArrow)" markerEnd="url(#heightArrow)" />
-        <text x={width - 15} y={30 + 100 - waterHeight/2} fill="#fbbf24" fontSize="9"
-              transform={`rotate(90, ${width - 15}, ${30 + 100 - waterHeight/2})`}>Same height!</text>
+            {/* Surface shimmer */}
+            <linearGradient id="hydroContainerSurface" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#dbeafe" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.3" />
+            </linearGradient>
 
-        {/* Result text */}
-        <text x={width/2} y={height - 20} textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">
-          All have EQUAL pressure at the bottom!
-        </text>
-      </svg>
+            {/* Glow filter for containers */}
+            <filter id="hydroContainerGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Sensor glow filter */}
+            <filter id="hydroSensorGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow markers */}
+            <marker id="hydroHeightArrowUp" markerWidth="6" markerHeight="6" refX="3" refY="6" orient="auto">
+              <path d="M0,6 L3,0 L6,6 z" fill="#fbbf24" />
+            </marker>
+            <marker id="hydroHeightArrowDown" markerWidth="6" markerHeight="6" refX="3" refY="0" orient="auto">
+              <path d="M0,0 L3,6 L6,0 z" fill="#fbbf24" />
+            </marker>
+          </defs>
+
+          <rect width={width} height={height - 30} fill="#0f172a" rx="12" />
+
+          {/* Wide container */}
+          <g transform={`translate(${width * 0.17}, 25)`}>
+            <rect x="-42" y={100 - waterHeight - 2} width="84" height={waterHeight + 4}
+                  fill="url(#hydroContainerGlass)" rx="6" strokeOpacity="0" />
+            <rect x="-40" y={100 - waterHeight} width="80" height={waterHeight}
+                  fill="url(#hydroContainerWater)" rx="4" />
+            <line x1="-36" y1={100 - waterHeight + 3} x2="36" y2={100 - waterHeight + 3}
+                  stroke="url(#hydroContainerSurface)" strokeWidth="2" strokeLinecap="round" />
+            <rect x="-40" y={100 - waterHeight} width="80" height={waterHeight}
+                  fill="none" stroke="#64748b" strokeWidth="2" rx="4" strokeOpacity="0.6" />
+            {selectedContainer === 0 && (
+              <g filter="url(#hydroSensorGlowFilter)">
+                <circle cx="0" cy={100 - 12} r="8" fill="url(#hydroSensorGlow)" />
+                <circle cx="0" cy={100 - 12} r="4" fill="#fbbf24" />
+              </g>
+            )}
+          </g>
+
+          {/* Medium container */}
+          <g transform={`translate(${width * 0.5}, 25)`}>
+            <rect x="-22" y={100 - waterHeight - 2} width="44" height={waterHeight + 4}
+                  fill="url(#hydroContainerGlass)" rx="4" strokeOpacity="0" />
+            <rect x="-20" y={100 - waterHeight} width="40" height={waterHeight}
+                  fill="url(#hydroContainerWater)" rx="3" />
+            <line x1="-16" y1={100 - waterHeight + 3} x2="16" y2={100 - waterHeight + 3}
+                  stroke="url(#hydroContainerSurface)" strokeWidth="2" strokeLinecap="round" />
+            <rect x="-20" y={100 - waterHeight} width="40" height={waterHeight}
+                  fill="none" stroke="#64748b" strokeWidth="2" rx="3" strokeOpacity="0.6" />
+            {selectedContainer === 1 && (
+              <g filter="url(#hydroSensorGlowFilter)">
+                <circle cx="0" cy={100 - 12} r="8" fill="url(#hydroSensorGlow)" />
+                <circle cx="0" cy={100 - 12} r="4" fill="#fbbf24" />
+              </g>
+            )}
+          </g>
+
+          {/* Narrow container */}
+          <g transform={`translate(${width * 0.83}, 25)`}>
+            <rect x="-7" y={100 - waterHeight - 2} width="14" height={waterHeight + 4}
+                  fill="url(#hydroContainerGlass)" rx="3" strokeOpacity="0" />
+            <rect x="-5" y={100 - waterHeight} width="10" height={waterHeight}
+                  fill="url(#hydroContainerWater)" rx="2" />
+            <line x1="-3" y1={100 - waterHeight + 2} x2="3" y2={100 - waterHeight + 2}
+                  stroke="url(#hydroContainerSurface)" strokeWidth="1.5" strokeLinecap="round" />
+            <rect x="-5" y={100 - waterHeight} width="10" height={waterHeight}
+                  fill="none" stroke="#64748b" strokeWidth="2" rx="2" strokeOpacity="0.6" />
+            {selectedContainer === 2 && (
+              <g filter="url(#hydroSensorGlowFilter)">
+                <circle cx="0" cy={100 - 12} r="8" fill="url(#hydroSensorGlow)" />
+                <circle cx="0" cy={100 - 12} r="4" fill="#fbbf24" />
+              </g>
+            )}
+          </g>
+
+          {/* Height indicator with arrows */}
+          <g>
+            <line x1={width - 28} y1={25 + 100 - waterHeight + 8} x2={width - 28} y2={25 + 100 - 8}
+                  stroke="url(#hydroHeightIndicator)" strokeWidth="2"
+                  markerStart="url(#hydroHeightArrowUp)" markerEnd="url(#hydroHeightArrowDown)" />
+            <text x={width - 18} y={25 + 100 - waterHeight/2 + 4} fill="#fbbf24" fontSize="8" fontWeight="bold"
+                  writingMode="vertical-rl" textAnchor="middle">SAME h</text>
+          </g>
+        </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{ display: 'flex', justifyContent: 'space-around', width: '100%', padding: '0 20px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Wide</div>
+            <div style={{ fontSize: typo.label, color: colors.textMuted }}>1000 L</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Medium</div>
+            <div style={{ fontSize: typo.label, color: colors.textMuted }}>100 L</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Narrow</div>
+            <div style={{ fontSize: typo.label, color: colors.textMuted }}>1 L</div>
+          </div>
+        </div>
+
+        {/* Result text moved outside SVG */}
+        <div style={{
+          padding: '8px 16px',
+          background: colors.successBg,
+          border: `1px solid ${colors.success}40`,
+          borderRadius: '8px',
+          textAlign: 'center'
+        }}>
+          <span style={{ fontSize: typo.body, color: colors.success, fontWeight: 700 }}>
+            All have EQUAL pressure at the bottom!
+          </span>
+        </div>
+      </div>
     );
   };
 
@@ -543,29 +796,97 @@ const HydrostaticPressureRenderer: React.FC<HydrostaticPressureRendererProps> = 
       <div style={{ width: '100%', maxWidth: '420px', background: `linear-gradient(135deg, ${colors.bgSurface} 0%, ${colors.bgDeep} 100%)`, borderRadius: '20px', padding: '20px', border: `1px solid ${colors.bgHover}`, marginBottom: '32px' }}>
         <svg width={isMobile ? 280 : 340} height={160} style={{ display: 'block', margin: '0 auto' }}>
           <defs>
-            <linearGradient id="hookWater" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.5" />
-              <stop offset="100%" stopColor="#0369a1" stopOpacity="0.9" />
+            {/* Premium water gradient for hook */}
+            <linearGradient id="hydroHookWater" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.35" />
+              <stop offset="20%" stopColor="#38bdf8" stopOpacity="0.5" />
+              <stop offset="45%" stopColor="#0ea5e9" stopOpacity="0.65" />
+              <stop offset="70%" stopColor="#0284c7" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#075985" stopOpacity="0.95" />
             </linearGradient>
+
+            {/* Diver glow gradient */}
+            <radialGradient id="hydroHookDiverGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.5" />
+            </radialGradient>
+
+            {/* Pool glass effect */}
+            <linearGradient id="hydroHookGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.4" />
+              <stop offset="10%" stopColor="#64748b" stopOpacity="0.1" />
+              <stop offset="90%" stopColor="#64748b" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Surface shimmer */}
+            <linearGradient id="hydroHookSurface" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#bae6fd" stopOpacity="0.2" />
+              <stop offset="30%" stopColor="#e0f2fe" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#e0f2fe" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#bae6fd" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Pressure indicator gradient */}
+            <linearGradient id="hydroHookPressureGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="hydroHookDiverFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
           <rect width={isMobile ? 280 : 340} height="160" fill="#0f172a" rx="12" />
 
-          {/* Pool cross-section */}
-          <rect x="40" y="20" width={isMobile ? 200 : 260} height="120" fill="url(#hookWater)" rx="4" />
+          {/* Pool cross-section with glass effect */}
+          <rect x="38" y="18" width={isMobile ? 204 : 264} height="124" fill="url(#hydroHookGlass)" rx="6" />
+          <rect x="40" y="20" width={isMobile ? 200 : 260} height="120" fill="url(#hydroHookWater)" rx="4" />
 
-          {/* Surface diver */}
-          <circle cx="70" cy="35" r="12" fill="#fbbf24" />
-          <text x="70" y="55" textAnchor="middle" fill="#7dd3fc" fontSize="9">1 atm</text>
+          {/* Surface shimmer */}
+          <line x1="44" y1="24" x2={isMobile ? 236 : 296} y2="24"
+                stroke="url(#hydroHookSurface)" strokeWidth="3" strokeLinecap="round" />
 
-          {/* Deep diver */}
-          <circle cx={isMobile ? 200 : 240} cy="115" r="12" fill="#fbbf24" />
-          <text x={isMobile ? 200 : 240} y="100" textAnchor="middle" fill="#ef4444" fontSize="9" fontWeight="bold">2× pressure!</text>
+          {/* Pressure gradient bar on right */}
+          <rect x={isMobile ? 248 : 308} y="22" width="8" height="116"
+                fill="url(#hydroHookPressureGradient)" rx="4" />
 
-          {/* Depth indicator */}
-          <text x={isMobile ? 265 : 320} y="75" fill="#94a3b8" fontSize="9">10m</text>
+          {/* Surface diver with glow */}
+          <g filter="url(#hydroHookDiverFilter)">
+            <circle cx="70" cy="38" r="14" fill="url(#hydroHookDiverGlow)" />
+            <circle cx="70" cy="38" r="14" fill="none" stroke="#fbbf24" strokeWidth="1.5" strokeOpacity="0.6" />
+          </g>
+
+          {/* Deep diver with glow */}
+          <g filter="url(#hydroHookDiverFilter)">
+            <circle cx={isMobile ? 200 : 240} cy="118" r="14" fill="url(#hydroHookDiverGlow)" />
+            <circle cx={isMobile ? 200 : 240} r="14" cy="118" fill="none" stroke="#fbbf24" strokeWidth="1.5" strokeOpacity="0.6" />
+          </g>
+
+          {/* Depth markers */}
+          <line x1="36" y1="20" x2="36" y2="140" stroke="#64748b" strokeWidth="1" strokeOpacity="0.5" />
+          <text x="32" y="28" textAnchor="end" fill="#64748b" fontSize="8">0m</text>
+          <text x="32" y="142" textAnchor="end" fill="#64748b" fontSize="8">10m</text>
         </svg>
 
-        <p style={{ color: colors.primary, fontSize: '16px', fontWeight: 600, marginTop: '16px' }}>
+        {/* Labels moved outside SVG */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '12px 30px 0', marginBottom: '8px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: typo.small, color: colors.primary, fontWeight: 600 }}>1 atm</span>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: typo.small, color: colors.error, fontWeight: 700 }}>2x pressure!</span>
+          </div>
+        </div>
+
+        <p style={{ color: colors.primary, fontSize: '16px', fontWeight: 600, marginTop: '8px', textAlign: 'center' }}>
           At just 10 meters, pressure DOUBLES!
         </p>
       </div>

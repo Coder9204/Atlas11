@@ -460,244 +460,716 @@ export default function HumidityESDRenderer({
 
   const renderHumidityVisualization = () => {
     const waterMolecules = Math.floor(humidity / 5);
+    const chargeIntensity = humidity < 40 ? (40 - humidity) / 40 : 0;
 
     return (
-      <svg viewBox="0 0 400 300" className="w-full h-64">
-        <defs>
-          <linearGradient id="airGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#1e3a5f" />
-            <stop offset="100%" stopColor="#0f172a" />
-          </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+      <div className="relative">
+        <svg viewBox="0 0 400 300" className="w-full h-64">
+          <defs>
+            {/* Premium air atmosphere gradient */}
+            <linearGradient id="hesdAirGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="25%" stopColor="#172554" />
+              <stop offset="50%" stopColor="#1e1b4b" />
+              <stop offset="75%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
 
-        {/* Background - air */}
-        <rect width="400" height="300" fill="url(#airGrad)" rx="12" />
+            {/* Water vapor particle gradient */}
+            <radialGradient id="hesdVaporGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#60a5fa" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+            </radialGradient>
 
-        {/* Title */}
-        <text x="200" y="25" textAnchor="middle" fill="#ffffff" fontSize="14" fontWeight="bold">
-          Humidity & Static Discharge
-        </text>
+            {/* Electric spark gradient */}
+            <linearGradient id="hesdSparkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fef08a" stopOpacity="0" />
+              <stop offset="20%" stopColor="#fde047" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#ffffff" stopOpacity="1" />
+              <stop offset="80%" stopColor="#fde047" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#fef08a" stopOpacity="0" />
+            </linearGradient>
 
-        {/* Water molecules in air */}
-        {[...Array(waterMolecules)].map((_, i) => (
-          <circle
-            key={i}
-            cx={30 + (i % 10) * 35 + Math.sin(animationFrame / 20 + i) * 10}
-            cy={60 + Math.floor(i / 10) * 40 + Math.cos(animationFrame / 25 + i) * 8}
-            r={4}
-            fill="rgba(96, 165, 250, 0.5)"
-          />
-        ))}
+            {/* Charge buildup glow */}
+            <radialGradient id="hesdChargeGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#d97706" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+            </radialGradient>
 
-        {/* Person silhouette */}
-        <g transform="translate(100, 120)">
-          <ellipse cx="0" cy="0" rx="15" ry="20" fill="#6b7280" /> {/* Head */}
-          <rect x="-25" y="20" width="50" height="70" fill="#6b7280" rx="10" /> {/* Body */}
-          <rect x="-35" y="30" width="15" height="50" fill="#6b7280" rx="5" /> {/* Left arm */}
-          <rect x="20" y="30" width="15" height="50" fill="#6b7280" rx="5" /> {/* Right arm */}
+            {/* Person silhouette gradient */}
+            <linearGradient id="hesdPersonGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="30%" stopColor="#4b5563" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
 
-          {/* Static charge indicators */}
-          {humidity < 40 && (
-            <>
-              {[...Array(Math.floor((40 - humidity) / 5))].map((_, i) => (
-                <text
-                  key={i}
-                  x={-20 + i * 15}
-                  y={-30 - (animationFrame + i * 10) % 20}
-                  fill="#fbbf24"
-                  fontSize="12"
-                  opacity={0.5 + Math.sin(animationFrame / 10 + i) * 0.5}
+            {/* Metal doorknob gradient */}
+            <radialGradient id="hesdMetalGrad" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#d1d5db" />
+              <stop offset="30%" stopColor="#9ca3af" />
+              <stop offset="60%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </radialGradient>
+
+            {/* Humidity meter gradient */}
+            <linearGradient id="hesdMeterBg" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="50%" stopColor="#111827" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Humidity level gradient - dynamic based on value */}
+            <linearGradient id="hesdMeterFill" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor={humidity < 30 ? '#dc2626' : humidity < 40 ? '#ea580c' : humidity > 60 ? '#2563eb' : '#16a34a'} />
+              <stop offset="50%" stopColor={humidity < 30 ? '#ef4444' : humidity < 40 ? '#f59e0b' : humidity > 60 ? '#3b82f6' : '#22c55e'} />
+              <stop offset="100%" stopColor={humidity < 30 ? '#f87171' : humidity < 40 ? '#fbbf24' : humidity > 60 ? '#60a5fa' : '#4ade80'} />
+            </linearGradient>
+
+            {/* Stats panel gradient */}
+            <linearGradient id="hesdStatsBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#020617" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Glow filter for spark */}
+            <filter id="hesdSparkGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glow filter for charge indicators */}
+            <filter id="hesdChargeFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Vapor particle glow */}
+            <filter id="hesdVaporFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Meter glow filter */}
+            <filter id="hesdMeterGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background - premium air atmosphere */}
+          <rect width="400" height="300" fill="url(#hesdAirGrad)" rx="12" />
+
+          {/* Subtle grid pattern for depth */}
+          <g opacity="0.1">
+            {[...Array(10)].map((_, i) => (
+              <line key={`h${i}`} x1="0" y1={i * 30} x2="400" y2={i * 30} stroke="#60a5fa" strokeWidth="0.5" />
+            ))}
+            {[...Array(14)].map((_, i) => (
+              <line key={`v${i}`} x1={i * 30} y1="0" x2={i * 30} y2="300" stroke="#60a5fa" strokeWidth="0.5" />
+            ))}
+          </g>
+
+          {/* Water vapor particles with premium glow */}
+          {[...Array(waterMolecules)].map((_, i) => {
+            const baseX = 30 + (i % 10) * 30;
+            const baseY = 40 + Math.floor(i / 10) * 35;
+            const x = baseX + Math.sin(animationFrame / 20 + i) * 12;
+            const y = baseY + Math.cos(animationFrame / 25 + i) * 10;
+            const size = 3 + Math.sin(animationFrame / 15 + i * 0.5) * 1.5;
+            const opacity = 0.4 + Math.sin(animationFrame / 30 + i) * 0.3;
+
+            return (
+              <g key={i} filter="url(#hesdVaporFilter)">
+                {/* Outer glow */}
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={size * 2}
+                  fill="url(#hesdVaporGlow)"
+                  opacity={opacity * 0.5}
+                />
+                {/* Core particle */}
+                <circle
+                  cx={x}
+                  cy={y}
+                  r={size}
+                  fill="#93c5fd"
+                  opacity={opacity}
+                />
+                {/* Bright center */}
+                <circle
+                  cx={x - size * 0.3}
+                  cy={y - size * 0.3}
+                  r={size * 0.4}
+                  fill="#ffffff"
+                  opacity={opacity * 0.8}
+                />
+              </g>
+            );
+          })}
+
+          {/* Person silhouette with premium gradient */}
+          <g transform="translate(100, 120)">
+            {/* Body shadow */}
+            <ellipse cx="3" cy="95" rx="30" ry="8" fill="#000000" opacity="0.3" />
+
+            {/* Head */}
+            <ellipse cx="0" cy="0" rx="15" ry="20" fill="url(#hesdPersonGrad)" />
+            <ellipse cx="-4" cy="-5" rx="4" ry="6" fill="#9ca3af" opacity="0.3" />
+
+            {/* Body */}
+            <rect x="-25" y="20" width="50" height="70" fill="url(#hesdPersonGrad)" rx="10" />
+
+            {/* Left arm extended toward doorknob */}
+            <rect x="20" y="35" width="60" height="12" fill="url(#hesdPersonGrad)" rx="6" transform="rotate(-15, 20, 41)" />
+
+            {/* Right arm */}
+            <rect x="-35" y="30" width="15" height="50" fill="url(#hesdPersonGrad)" rx="5" />
+
+            {/* Charge buildup visualization */}
+            {humidity < 40 && (
+              <g filter="url(#hesdChargeFilter)">
+                {/* Glowing charge aura around person */}
+                <ellipse
+                  cx="0"
+                  cy="40"
+                  rx={35 + chargeIntensity * 10}
+                  ry={55 + chargeIntensity * 10}
+                  fill="none"
+                  stroke="#fbbf24"
+                  strokeWidth="2"
+                  opacity={0.2 + chargeIntensity * 0.3}
+                  strokeDasharray="4,4"
                 >
-                  +
-                </text>
-              ))}
-            </>
-          )}
-        </g>
+                  <animate attributeName="stroke-dashoffset" values="0;8" dur="0.5s" repeatCount="indefinite" />
+                </ellipse>
 
-        {/* Doorknob/metal surface */}
-        <g transform="translate(280, 170)">
-          <rect x="-5" y="-50" width="10" height="100" fill="#4b5563" /> {/* Door frame */}
-          <circle cx="0" cy="0" r="20" fill="#9ca3af" stroke="#d1d5db" strokeWidth="2" /> {/* Knob */}
-          <circle cx="0" cy="0" r="8" fill="#6b7280" />
+                {/* Floating charge symbols */}
+                {[...Array(Math.floor((40 - humidity) / 5))].map((_, i) => {
+                  const angle = (animationFrame / 20 + i * (360 / Math.max(1, Math.floor((40 - humidity) / 5)))) * (Math.PI / 180);
+                  const radius = 35 + Math.sin(animationFrame / 10 + i) * 5;
+                  const cx = Math.cos(angle) * radius;
+                  const cy = 30 + Math.sin(angle) * radius * 0.6;
 
-          {/* Spark effect */}
-          {showSpark && (
-            <g filter="url(#glow)">
-              <path
-                d="M -20 0 L -50 -20 L -35 0 L -60 20 L -20 0"
-                fill="#fbbf24"
-                opacity="0.9"
+                  return (
+                    <g key={i} transform={`translate(${cx}, ${cy})`}>
+                      <circle r="8" fill="url(#hesdChargeGlow)" opacity={0.6 + Math.sin(animationFrame / 10 + i) * 0.3} />
+                      <text
+                        textAnchor="middle"
+                        dominantBaseline="central"
+                        fill="#fef3c7"
+                        fontSize="10"
+                        fontWeight="bold"
+                      >
+                        +
+                      </text>
+                    </g>
+                  );
+                })}
+              </g>
+            )}
+          </g>
+
+          {/* Doorknob/metal surface with premium materials */}
+          <g transform="translate(280, 160)">
+            {/* Door frame with depth */}
+            <rect x="-8" y="-60" width="16" height="120" fill="#374151" rx="2" />
+            <rect x="-6" y="-58" width="12" height="116" fill="#4b5563" rx="2" />
+            <rect x="-4" y="-56" width="8" height="112" fill="#374151" rx="1" />
+
+            {/* Door panel */}
+            <rect x="8" y="-60" width="80" height="120" fill="#1f2937" rx="4" />
+            <rect x="12" y="-56" width="72" height="112" fill="#111827" rx="3" />
+
+            {/* Knob base */}
+            <circle cx="0" cy="0" r="25" fill="#4b5563" />
+
+            {/* Premium metal knob with gradient */}
+            <circle cx="0" cy="0" r="22" fill="url(#hesdMetalGrad)" />
+
+            {/* Knob highlight */}
+            <ellipse cx="-6" cy="-6" rx="8" ry="6" fill="#e5e7eb" opacity="0.4" />
+
+            {/* Center of knob */}
+            <circle cx="0" cy="0" r="10" fill="#4b5563" />
+            <circle cx="0" cy="0" r="8" fill="#374151" />
+
+            {/* ESD Spark effect */}
+            {showSpark && (
+              <g filter="url(#hesdSparkGlow)">
+                {/* Multiple spark branches */}
+                <path
+                  d="M -22 0 L -35 -8 L -30 0 L -45 -15 L -38 -5 L -55 -10"
+                  fill="none"
+                  stroke="url(#hesdSparkGrad)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M -22 0 L -40 5 L -35 0 L -50 12 L -42 5 L -58 8"
+                  fill="none"
+                  stroke="url(#hesdSparkGrad)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                />
+                <path
+                  d="M -22 0 L -38 -3 L -32 2 L -52 -2 L -45 3 L -60 0"
+                  fill="none"
+                  stroke="url(#hesdSparkGrad)"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+
+                {/* Central flash */}
+                <circle cx="-30" cy="0" r="20" fill="#fef08a" opacity="0.6">
+                  <animate attributeName="r" values="15;30;15" dur="0.2s" />
+                  <animate attributeName="opacity" values="0.8;0.3;0.8" dur="0.2s" />
+                </circle>
+                <circle cx="-30" cy="0" r="10" fill="#ffffff" opacity="0.9">
+                  <animate attributeName="r" values="8;15;8" dur="0.2s" />
+                </circle>
+              </g>
+            )}
+
+            {/* Continuous low charge spark when very dry */}
+            {humidity < 25 && !showSpark && (
+              <g opacity={0.3 + Math.sin(animationFrame / 5) * 0.2} filter="url(#hesdChargeFilter)">
+                <path
+                  d={`M -22 0 L ${-30 - Math.sin(animationFrame / 3) * 5} ${Math.cos(animationFrame / 4) * 8}`}
+                  fill="none"
+                  stroke="#fbbf24"
+                  strokeWidth="1.5"
+                  strokeLinecap="round"
+                />
+              </g>
+            )}
+          </g>
+
+          {/* Premium Humidity Meter */}
+          <g transform="translate(355, 35)">
+            {/* Meter background with depth */}
+            <rect x="-2" y="-2" width="34" height="164" fill="#374151" rx="6" />
+            <rect x="0" y="0" width="30" height="160" fill="url(#hesdMeterBg)" rx="5" />
+
+            {/* Scale markings */}
+            {[0, 20, 40, 60, 80, 100].map((val, i) => (
+              <g key={i} transform={`translate(0, ${155 - val * 1.5})`}>
+                <line x1="3" y1="0" x2="8" y2="0" stroke="#4b5563" strokeWidth="1" />
+                <text x="-2" y="3" fill="#64748b" fontSize="6" textAnchor="end">{val}</text>
+              </g>
+            ))}
+
+            {/* Danger zone indicator (below 30%) */}
+            <rect x="5" y="110" width="20" height="45" fill="#ef4444" opacity="0.15" rx="2" />
+
+            {/* Caution zone (30-40%) */}
+            <rect x="5" y="95" width="20" height="15" fill="#f59e0b" opacity="0.15" rx="2" />
+
+            {/* Safe zone (40-60%) */}
+            <rect x="5" y="65" width="20" height="30" fill="#22c55e" opacity="0.15" rx="2" />
+
+            {/* High humidity zone (>60%) */}
+            <rect x="5" y="5" width="20" height="60" fill="#3b82f6" opacity="0.15" rx="2" />
+
+            {/* Liquid fill with glow */}
+            <g filter="url(#hesdMeterGlow)">
+              <rect
+                x="5"
+                y={155 - humidity * 1.5}
+                width="20"
+                height={humidity * 1.5}
+                fill="url(#hesdMeterFill)"
+                rx="2"
               />
-              <circle cx="-30" cy="0" r="15" fill="#fef08a" opacity="0.7">
-                <animate attributeName="r" values="10;25;10" dur="0.3s" />
-              </circle>
             </g>
-          )}
-        </g>
 
-        {/* Stats panel */}
-        <rect x="20" y="220" width="360" height="70" fill="#0f172a" rx="8" />
+            {/* Current level indicator */}
+            <polygon
+              points={`30,${155 - humidity * 1.5} 38,${150 - humidity * 1.5} 38,${160 - humidity * 1.5}`}
+              fill={humidity < 30 ? '#ef4444' : humidity < 40 ? '#f59e0b' : humidity > 60 ? '#3b82f6' : '#22c55e'}
+            />
+          </g>
 
-        <g transform="translate(50, 240)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">HUMIDITY</text>
-          <text x="0" y="20" fill={esdRisk.color} fontSize="14" fontWeight="bold">{humidity}% RH</text>
-        </g>
+          {/* Stats panel with premium gradient */}
+          <rect x="15" y="220" width="320" height="70" fill="url(#hesdStatsBg)" rx="10" stroke="#334155" strokeWidth="1" />
+        </svg>
 
-        <g transform="translate(140, 240)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">ESD RISK</text>
-          <text x="0" y="20" fill={esdRisk.color} fontSize="14" fontWeight="bold">{esdRisk.risk}</text>
-        </g>
-
-        <g transform="translate(230, 240)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">MAX STATIC</text>
-          <text x="0" y="20" fill={esdRisk.color} fontSize="14" fontWeight="bold">{(esdRisk.voltage / 1000).toFixed(0)}kV</text>
-        </g>
-
-        <g transform="translate(320, 240)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">DEW POINT</text>
-          <text x="0" y="20" fill="#60a5fa" fontSize="14" fontWeight="bold">{dewPoint.toFixed(1)}C</text>
-        </g>
-
-        {/* Humidity meter */}
-        <rect x="350" y="50" width="30" height="150" fill="#1f2937" rx="4" stroke="#374151" strokeWidth="2" />
-        <rect
-          x="355"
-          y={195 - humidity * 1.4}
-          width="20"
-          height={humidity * 1.4}
-          fill={humidity < 30 ? '#ef4444' : humidity < 40 ? '#f59e0b' : humidity > 60 ? '#3b82f6' : '#22c55e'}
-          rx="2"
-        />
-        <text x="365" y="215" textAnchor="middle" fill="#94a3b8" fontSize="9">RH%</text>
-      </svg>
+        {/* Text labels outside SVG using typo system */}
+        <div className="absolute bottom-0 left-0 right-0 px-6 pb-4" style={{ pointerEvents: 'none' }}>
+          <div className="flex justify-between items-end">
+            <div className="text-center">
+              <div style={{ fontSize: typo.label, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Humidity</div>
+              <div style={{ fontSize: typo.bodyLarge, color: esdRisk.color, fontWeight: 700 }}>{humidity}% RH</div>
+            </div>
+            <div className="text-center">
+              <div style={{ fontSize: typo.label, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>ESD Risk</div>
+              <div style={{ fontSize: typo.bodyLarge, color: esdRisk.color, fontWeight: 700 }}>{esdRisk.risk}</div>
+            </div>
+            <div className="text-center">
+              <div style={{ fontSize: typo.label, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Max Static</div>
+              <div style={{ fontSize: typo.bodyLarge, color: esdRisk.color, fontWeight: 700 }}>{(esdRisk.voltage / 1000).toFixed(0)}kV</div>
+            </div>
+            <div className="text-center">
+              <div style={{ fontSize: typo.label, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Dew Point</div>
+              <div style={{ fontSize: typo.bodyLarge, color: '#60a5fa', fontWeight: 700 }}>{dewPoint.toFixed(1)}C</div>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 
   const renderCondensationVisualization = () => {
     const isCondensing = coldSurfaceTemp <= twistDewPoint;
+    const condensationIntensity = isCondensing ? Math.min(1, (twistDewPoint - coldSurfaceTemp) / 10) : 0;
 
     return (
-      <svg viewBox="0 0 400 300" className="w-full h-64">
-        <defs>
-          <linearGradient id="pipeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#64748b" />
-            <stop offset="50%" stopColor="#475569" />
-            <stop offset="100%" stopColor="#64748b" />
-          </linearGradient>
-        </defs>
+      <div className="relative">
+        <svg viewBox="0 0 400 300" className="w-full h-64">
+          <defs>
+            {/* Premium background gradient */}
+            <linearGradient id="hesdCondBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="25%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e1b4b" />
+              <stop offset="75%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect width="400" height="300" fill="#1e293b" rx="12" />
+            {/* Premium pipe/surface metal gradient */}
+            <linearGradient id="hesdPipeGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="15%" stopColor="#64748b" />
+              <stop offset="30%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="85%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#94a3b8" />
+            </linearGradient>
 
-        {/* Title */}
-        <text x="200" y="25" textAnchor="middle" fill="#ffffff" fontSize="14" fontWeight="bold">
-          Condensation Risk: Dew Point Analysis
-        </text>
+            {/* Cold pipe frost effect */}
+            <linearGradient id="hesdFrostGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#bae6fd" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.1" />
+            </linearGradient>
 
-        {/* Cold pipe/surface */}
-        <rect x="100" y="80" width="200" height="40" fill="url(#pipeGrad)" rx="20" />
-        <text x="200" y="145" textAnchor="middle" fill="#94a3b8" fontSize="11">
-          Cold Surface: {coldSurfaceTemp}C
-        </text>
+            {/* Water droplet gradient */}
+            <radialGradient id="hesdDropletGrad" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#93c5fd" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#60a5fa" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.6" />
+            </radialGradient>
 
-        {/* Condensation droplets */}
-        {isCondensing && (
-          <g>
-            {[...Array(15)].map((_, i) => {
-              const x = 110 + (i % 8) * 25;
-              const baseY = 125;
-              const dropY = baseY + ((animationFrame + i * 20) % 60);
-              const opacity = 1 - ((animationFrame + i * 20) % 60) / 60;
+            {/* Falling droplet gradient */}
+            <linearGradient id="hesdFallingDrop" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="50%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
 
-              return (
-                <g key={i}>
-                  {/* Droplet on surface */}
-                  <ellipse
-                    cx={x}
-                    cy={120}
-                    rx={4 + Math.sin(animationFrame / 10 + i) * 2}
-                    ry={3}
-                    fill="rgba(96, 165, 250, 0.7)"
+            {/* Temperature scale gradient */}
+            <linearGradient id="hesdTempScale" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="25%" stopColor="#06b6d4" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="75%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Dew point line gradient */}
+            <linearGradient id="hesdDewLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#60a5fa" stopOpacity="1" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Diagram panel gradient */}
+            <linearGradient id="hesdDiagramBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#020617" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Droplet glow filter */}
+            <filter id="hesdDropGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Frost shimmer filter */}
+            <filter id="hesdFrostFilter" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Status glow filter */}
+            <filter id="hesdStatusGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Temperature indicator glow */}
+            <filter id="hesdTempGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background with premium gradient */}
+          <rect width="400" height="300" fill="url(#hesdCondBg)" rx="12" />
+
+          {/* Ambient vapor particles in the air */}
+          {[...Array(Math.floor(twistHumidity / 8))].map((_, i) => {
+            const x = 20 + (i % 12) * 30 + Math.sin(animationFrame / 25 + i) * 8;
+            const y = 20 + Math.floor(i / 12) * 25 + Math.cos(animationFrame / 30 + i) * 6;
+            const opacity = 0.2 + Math.sin(animationFrame / 20 + i * 0.7) * 0.15;
+
+            return (
+              <circle
+                key={i}
+                cx={x}
+                cy={y}
+                r={2 + Math.sin(animationFrame / 15 + i) * 0.5}
+                fill="#93c5fd"
+                opacity={opacity}
+              />
+            );
+          })}
+
+          {/* Cold pipe/surface with premium metal look */}
+          <g transform="translate(50, 75)">
+            {/* Pipe shadow */}
+            <ellipse cx="150" cy="50" rx="105" ry="8" fill="#000000" opacity="0.3" />
+
+            {/* Main pipe body */}
+            <rect x="0" y="0" width="300" height="45" fill="url(#hesdPipeGrad)" rx="22" />
+
+            {/* Pipe highlight */}
+            <rect x="5" y="5" width="290" height="8" fill="#94a3b8" opacity="0.3" rx="4" />
+
+            {/* Frost effect when cold */}
+            {coldSurfaceTemp < 15 && (
+              <g filter="url(#hesdFrostFilter)">
+                <rect
+                  x="0"
+                  y="0"
+                  width="300"
+                  height="45"
+                  fill="url(#hesdFrostGrad)"
+                  rx="22"
+                  opacity={0.3 + (15 - coldSurfaceTemp) * 0.04}
+                />
+                {/* Ice crystals */}
+                {[...Array(10)].map((_, i) => (
+                  <polygon
+                    key={i}
+                    points={`${30 + i * 28},${5 + Math.sin(i) * 3} ${35 + i * 28},${-2} ${40 + i * 28},${5 + Math.sin(i) * 3}`}
+                    fill="#e0f2fe"
+                    opacity={0.4 + Math.sin(animationFrame / 10 + i) * 0.2}
                   />
-                  {/* Falling droplet */}
-                  {(animationFrame + i * 20) % 120 < 60 && (
-                    <ellipse
-                      cx={x}
-                      cy={dropY}
-                      rx={3}
-                      ry={5}
-                      fill={`rgba(96, 165, 250, ${opacity})`}
-                    />
-                  )}
-                </g>
-              );
-            })}
+                ))}
+              </g>
+            )}
+
+            {/* Condensation droplets */}
+            {isCondensing && (
+              <g filter="url(#hesdDropGlow)">
+                {[...Array(15)].map((_, i) => {
+                  const x = 15 + (i % 10) * 28;
+                  const baseY = 48;
+                  const dropProgress = ((animationFrame + i * 25) % 100) / 100;
+                  const isFalling = dropProgress > 0.6;
+                  const dropY = isFalling ? baseY + (dropProgress - 0.6) * 150 : baseY;
+                  const opacity = isFalling ? 1 - (dropProgress - 0.6) * 2.5 : 1;
+                  const dropSize = 3 + condensationIntensity * 3 + Math.sin(animationFrame / 12 + i) * 1.5;
+
+                  return (
+                    <g key={i}>
+                      {/* Droplet forming on surface */}
+                      {!isFalling && (
+                        <ellipse
+                          cx={x}
+                          cy={baseY}
+                          rx={dropSize}
+                          ry={dropSize * 0.7 + dropProgress * 4}
+                          fill="url(#hesdDropletGrad)"
+                        />
+                      )}
+                      {/* Falling droplet */}
+                      {isFalling && (
+                        <g opacity={opacity}>
+                          <ellipse
+                            cx={x}
+                            cy={dropY}
+                            rx={dropSize * 0.6}
+                            ry={dropSize * 1.2}
+                            fill="url(#hesdFallingDrop)"
+                          />
+                          {/* Droplet highlight */}
+                          <ellipse
+                            cx={x - dropSize * 0.2}
+                            cy={dropY - dropSize * 0.3}
+                            rx={dropSize * 0.2}
+                            ry={dropSize * 0.3}
+                            fill="#ffffff"
+                            opacity="0.6"
+                          />
+                        </g>
+                      )}
+                    </g>
+                  );
+                })}
+              </g>
+            )}
           </g>
-        )}
 
-        {/* Temperature/humidity diagram */}
-        <rect x="50" y="170" width="300" height="100" fill="#0f172a" rx="8" />
+          {/* Temperature/humidity diagram panel */}
+          <rect x="40" y="165" width="320" height="105" fill="url(#hesdDiagramBg)" rx="10" stroke="#334155" strokeWidth="1" />
 
-        {/* Dew point line */}
-        <line x1="70" y1="220" x2="330" y2="220" stroke="#60a5fa" strokeWidth="2" strokeDasharray="5,5" />
-        <text x="60" y="225" fill="#60a5fa" fontSize="10" textAnchor="end">Dew: {twistDewPoint.toFixed(1)}C</text>
+          {/* Temperature scale bar */}
+          <rect x="60" y="220" width="280" height="8" fill="url(#hesdTempScale)" rx="4" opacity="0.3" />
 
-        {/* Surface temp indicator */}
-        <circle
-          cx={70 + (coldSurfaceTemp / 30) * 260}
-          cy={220}
-          r="8"
-          fill={isCondensing ? '#ef4444' : '#22c55e'}
-          stroke="#ffffff"
-          strokeWidth="2"
-        />
-        <text
-          x={70 + (coldSurfaceTemp / 30) * 260}
-          y="250"
-          textAnchor="middle"
-          fill={isCondensing ? '#ef4444' : '#22c55e'}
-          fontSize="11"
-          fontWeight="bold"
-        >
-          {coldSurfaceTemp}C
-        </text>
+          {/* Dew point line with glow */}
+          <g filter="url(#hesdStatusGlow)">
+            <line
+              x1="60"
+              y1="224"
+              x2={60 + (twistDewPoint / 30) * 280}
+              y2="224"
+              stroke="url(#hesdDewLine)"
+              strokeWidth="3"
+              strokeDasharray="6,4"
+            />
+          </g>
 
-        {/* Status indicator */}
-        <rect
-          x="120"
-          y="175"
-          width="160"
-          height="30"
-          fill={isCondensing ? 'rgba(239, 68, 68, 0.2)' : 'rgba(34, 197, 94, 0.2)'}
-          rx="6"
-        />
-        <text
-          x="200"
-          y="195"
-          textAnchor="middle"
-          fill={isCondensing ? '#ef4444' : '#22c55e'}
-          fontSize="12"
-          fontWeight="bold"
-        >
-          {isCondensing ? 'CONDENSATION OCCURRING!' : 'No Condensation Risk'}
-        </text>
+          {/* Surface temperature indicator with premium glow */}
+          <g filter="url(#hesdTempGlow)">
+            <circle
+              cx={60 + (coldSurfaceTemp / 30) * 280}
+              cy={224}
+              r="12"
+              fill={isCondensing ? '#ef4444' : '#22c55e'}
+            />
+            <circle
+              cx={60 + (coldSurfaceTemp / 30) * 280}
+              cy={224}
+              r="8"
+              fill={isCondensing ? '#fca5a5' : '#86efac'}
+            />
+            <circle
+              cx={60 + (coldSurfaceTemp / 30) * 280}
+              cy={224}
+              r="4"
+              fill="#ffffff"
+            />
+          </g>
 
-        {/* Side info */}
-        <g transform="translate(320, 80)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">Humidity</text>
-          <text x="0" y="18" fill="#60a5fa" fontSize="14" fontWeight="bold">{twistHumidity}%</text>
-          <text x="0" y="45" fill="#94a3b8" fontSize="10">Dew Point</text>
-          <text x="0" y="63" fill="#60a5fa" fontSize="14" fontWeight="bold">{twistDewPoint.toFixed(1)}C</text>
-        </g>
-      </svg>
+          {/* Scale labels */}
+          <g opacity="0.6">
+            <text x="60" y="245" fill="#94a3b8" fontSize="8" textAnchor="middle">0C</text>
+            <text x="153" y="245" fill="#94a3b8" fontSize="8" textAnchor="middle">10C</text>
+            <text x="247" y="245" fill="#94a3b8" fontSize="8" textAnchor="middle">20C</text>
+            <text x="340" y="245" fill="#94a3b8" fontSize="8" textAnchor="middle">30C</text>
+          </g>
+
+          {/* Status indicator panel */}
+          <g filter="url(#hesdStatusGlow)">
+            <rect
+              x="100"
+              y="175"
+              width="200"
+              height="32"
+              fill={isCondensing ? 'rgba(239, 68, 68, 0.15)' : 'rgba(34, 197, 94, 0.15)'}
+              rx="8"
+              stroke={isCondensing ? '#ef4444' : '#22c55e'}
+              strokeWidth="1"
+              strokeOpacity="0.5"
+            />
+          </g>
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        <div className="absolute top-6 left-0 right-0 px-4" style={{ pointerEvents: 'none' }}>
+          <div className="flex justify-between items-start">
+            {/* Left side - pipe info */}
+            <div className="text-center bg-slate-900/60 rounded-lg px-3 py-2">
+              <div style={{ fontSize: typo.label, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Surface</div>
+              <div style={{ fontSize: typo.bodyLarge, color: coldSurfaceTemp < 10 ? '#60a5fa' : '#94a3b8', fontWeight: 700 }}>{coldSurfaceTemp}C</div>
+            </div>
+
+            {/* Right side - humidity info */}
+            <div className="text-center bg-slate-900/60 rounded-lg px-3 py-2">
+              <div style={{ fontSize: typo.label, color: '#94a3b8', textTransform: 'uppercase', letterSpacing: '0.5px' }}>Humidity</div>
+              <div style={{ fontSize: typo.bodyLarge, color: '#60a5fa', fontWeight: 700 }}>{twistHumidity}%</div>
+              <div style={{ fontSize: typo.small, color: '#64748b' }}>Dew: {twistDewPoint.toFixed(1)}C</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Status text outside SVG */}
+        <div className="absolute" style={{ top: '175px', left: '50%', transform: 'translateX(-50%)', pointerEvents: 'none' }}>
+          <div style={{
+            fontSize: typo.body,
+            color: isCondensing ? '#ef4444' : '#22c55e',
+            fontWeight: 700,
+            textAlign: 'center',
+            textShadow: isCondensing ? '0 0 10px rgba(239, 68, 68, 0.5)' : '0 0 10px rgba(34, 197, 94, 0.5)',
+          }}>
+            {isCondensing ? 'CONDENSATION OCCURRING!' : 'No Condensation Risk'}
+          </div>
+        </div>
+
+        {/* Bottom legend */}
+        <div className="absolute bottom-2 left-0 right-0 px-6" style={{ pointerEvents: 'none' }}>
+          <div className="flex justify-center gap-6">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full bg-blue-400" style={{ boxShadow: '0 0 6px rgba(96, 165, 250, 0.5)' }}></div>
+              <span style={{ fontSize: typo.small, color: '#64748b' }}>Dew Point Line</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full" style={{
+                backgroundColor: isCondensing ? '#ef4444' : '#22c55e',
+                boxShadow: isCondensing ? '0 0 6px rgba(239, 68, 68, 0.5)' : '0 0 6px rgba(34, 197, 94, 0.5)'
+              }}></div>
+              <span style={{ fontSize: typo.small, color: '#64748b' }}>Surface Temp</span>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 

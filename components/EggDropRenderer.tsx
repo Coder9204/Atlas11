@@ -379,7 +379,7 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
   );
 
   // ─────────────────────────────────────────────────────────────────────────
-  // EGG SVG VISUALIZATION
+  // EGG SVG VISUALIZATION - PREMIUM GRAPHICS
   // ─────────────────────────────────────────────────────────────────────────
 
   const renderEggDropVisualization = (
@@ -391,73 +391,301 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
   ) => {
     const heightPixels = { low: 120, medium: 200, high: 280 }[height];
     const eggY = 30 + (position / 100) * (heightPixels - 40);
+    const impactForce = complete && !survived;
 
     return (
-      <svg viewBox="0 0 200 320" className="w-full h-64 md:h-80">
-        {/* Sky background */}
-        <rect x="0" y="0" width="200" height="280" fill={colors.sky} />
+      <div className="relative">
+        <svg viewBox="0 0 200 320" className="w-full h-64 md:h-80">
+          <defs>
+            {/* Premium sky gradient */}
+            <linearGradient id="eggSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#87CEEB" />
+              <stop offset="30%" stopColor="#B0E0F6" />
+              <stop offset="60%" stopColor="#D4EFFC" />
+              <stop offset="100%" stopColor="#E8F7FE" />
+            </linearGradient>
 
-        {/* Ground */}
-        <rect x="0" y="280" width="200" height="40" fill={colors.ground} />
+            {/* Ground gradient with depth */}
+            <linearGradient id="eggGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#8B7355" />
+              <stop offset="30%" stopColor="#78716C" />
+              <stop offset="70%" stopColor="#5C534A" />
+              <stop offset="100%" stopColor="#44403C" />
+            </linearGradient>
 
-        {/* Building/platform */}
-        <rect x="70" y="10" width="60" height="25" fill="#94A3B8" rx="3" />
-        <text x="100" y="28" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
-          {height === 'low' ? '1m' : height === 'medium' ? '3m' : '5m'}
-        </text>
+            {/* Realistic egg shell gradient */}
+            <radialGradient id="eggShellGradient" cx="35%" cy="30%" r="65%">
+              <stop offset="0%" stopColor="#FFFEF5" />
+              <stop offset="25%" stopColor="#FDF8E8" />
+              <stop offset="50%" stopColor="#F5ECD8" />
+              <stop offset="75%" stopColor="#EDE4CC" />
+              <stop offset="100%" stopColor="#E8DCC0" />
+            </radialGradient>
 
-        {/* Padding on ground */}
+            {/* Egg yolk gradient */}
+            <radialGradient id="eggYolkGradient" cx="40%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#FFE082" />
+              <stop offset="30%" stopColor="#FDD835" />
+              <stop offset="60%" stopColor="#FBC02D" />
+              <stop offset="100%" stopColor="#F9A825" />
+            </radialGradient>
+
+            {/* Foam padding gradient */}
+            <linearGradient id="eggFoamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#93C5FD" />
+              <stop offset="25%" stopColor="#60A5FA" />
+              <stop offset="50%" stopColor="#3B82F6" />
+              <stop offset="75%" stopColor="#2563EB" />
+              <stop offset="100%" stopColor="#1D4ED8" />
+            </linearGradient>
+
+            {/* Thick foam gradient */}
+            <linearGradient id="eggThickFoamGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#6EE7B7" />
+              <stop offset="25%" stopColor="#34D399" />
+              <stop offset="50%" stopColor="#10B981" />
+              <stop offset="75%" stopColor="#059669" />
+              <stop offset="100%" stopColor="#047857" />
+            </linearGradient>
+
+            {/* Platform metal gradient */}
+            <linearGradient id="eggPlatformGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#CBD5E1" />
+              <stop offset="20%" stopColor="#94A3B8" />
+              <stop offset="50%" stopColor="#64748B" />
+              <stop offset="80%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Egg glow filter */}
+            <filter id="eggGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Success glow filter */}
+            <filter id="eggSuccessGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#10B981" floodOpacity="0.5" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Impact/danger glow filter */}
+            <filter id="eggImpactGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feFlood floodColor="#EF4444" floodOpacity="0.6" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Foam cushion glow */}
+            <filter id="eggFoamGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Force arrow gradient */}
+            <linearGradient id="eggForceArrowGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#8B5CF6" />
+              <stop offset="50%" stopColor="#6366F1" />
+              <stop offset="100%" stopColor="#4F46E5" />
+            </linearGradient>
+          </defs>
+
+          {/* Premium sky background */}
+          <rect x="0" y="0" width="200" height="280" fill="url(#eggSkyGradient)" />
+
+          {/* Cloud decorations */}
+          <ellipse cx="30" cy="40" rx="20" ry="10" fill="white" opacity="0.7" />
+          <ellipse cx="45" cy="38" rx="15" ry="8" fill="white" opacity="0.7" />
+          <ellipse cx="170" cy="60" rx="18" ry="9" fill="white" opacity="0.6" />
+          <ellipse cx="160" cy="55" rx="12" ry="7" fill="white" opacity="0.6" />
+
+          {/* Premium ground with grass line */}
+          <rect x="0" y="280" width="200" height="40" fill="url(#eggGroundGradient)" />
+          <rect x="0" y="278" width="200" height="4" fill="#65A30D" opacity="0.6" />
+
+          {/* Building/platform with premium metal look */}
+          <rect x="70" y="10" width="60" height="25" fill="url(#eggPlatformGradient)" rx="3" />
+          <rect x="70" y="10" width="60" height="3" fill="white" opacity="0.3" rx="3" />
+
+          {/* Padding on ground with premium gradients */}
+          {paddingType !== 'none' && (
+            <g filter="url(#eggFoamGlow)">
+              <rect
+                x="60" y={paddingType === 'thick' ? 255 : 265}
+                width="80"
+                height={paddingType === 'thick' ? 25 : 15}
+                fill={paddingType === 'thick' ? 'url(#eggThickFoamGradient)' : 'url(#eggFoamGradient)'}
+                rx="4"
+              />
+              {/* Foam texture highlights */}
+              <rect
+                x="62" y={paddingType === 'thick' ? 257 : 267}
+                width="76"
+                height="3"
+                fill="white"
+                opacity="0.3"
+                rx="2"
+              />
+              {/* Foam bubble pattern */}
+              {[0, 1, 2, 3, 4].map(i => (
+                <circle
+                  key={i}
+                  cx={70 + i * 15}
+                  cy={paddingType === 'thick' ? 268 : 273}
+                  r={paddingType === 'thick' ? 4 : 3}
+                  fill="white"
+                  opacity="0.2"
+                />
+              ))}
+            </g>
+          )}
+
+          {/* Egg - falling or landed */}
+          {!complete ? (
+            <g transform={`translate(100, ${eggY})`} filter="url(#eggGlow)">
+              {/* Egg shadow */}
+              <ellipse cx="2" cy="22" rx="12" ry="5" fill="black" opacity="0.2" />
+              {/* Main egg shell */}
+              <ellipse cx="0" cy="0" rx="15" ry="20" fill="url(#eggShellGradient)" />
+              {/* Egg highlight */}
+              <ellipse cx="-5" cy="-8" rx="6" ry="8" fill="white" opacity="0.4" />
+              {/* Egg inner glow hint */}
+              <ellipse cx="0" cy="5" rx="8" ry="10" fill="url(#eggYolkGradient)" opacity="0.15" />
+            </g>
+          ) : (
+            <g transform="translate(100, 265)">
+              {survived ? (
+                // Intact egg with success glow
+                <g filter="url(#eggSuccessGlow)">
+                  {/* Egg shadow */}
+                  <ellipse cx="2" cy="12" rx="12" ry="5" fill="black" opacity="0.2" />
+                  {/* Main egg */}
+                  <ellipse cx="0" cy="-10" rx="15" ry="20" fill="url(#eggShellGradient)" />
+                  {/* Egg highlight */}
+                  <ellipse cx="-5" cy="-18" rx="6" ry="8" fill="white" opacity="0.4" />
+                  {/* Success checkmark circle */}
+                  <circle cx="18" cy="-20" r="8" fill={colors.success} />
+                  <path d="M14,-20 L17,-17 L22,-23" stroke="white" strokeWidth="2" fill="none" strokeLinecap="round" />
+                </g>
+              ) : (
+                // Cracked egg with impact effect
+                <g filter="url(#eggImpactGlow)">
+                  {/* Splattered yolk */}
+                  <ellipse cx="0" cy="-3" rx="30" ry="12" fill="url(#eggYolkGradient)" opacity="0.9" />
+                  {/* Shell fragments */}
+                  <ellipse cx="-15" cy="-8" rx="10" ry="6" fill="url(#eggShellGradient)" transform="rotate(-15 -15 -8)" />
+                  <ellipse cx="15" cy="-5" rx="12" ry="7" fill="url(#eggShellGradient)" transform="rotate(20 15 -5)" />
+                  <ellipse cx="0" cy="-12" rx="8" ry="5" fill="url(#eggShellGradient)" transform="rotate(5 0 -12)" />
+                  {/* Crack lines */}
+                  <path d="M-12,-8 L-5,-18 L2,-10 L10,-22 L15,-8" fill="none" stroke={colors.cracked} strokeWidth="2" strokeLinecap="round" />
+                  <path d="M-8,-5 L-3,-12 L5,-7" fill="none" stroke={colors.cracked} strokeWidth="1.5" strokeLinecap="round" />
+                  {/* Impact rings */}
+                  <circle cx="0" cy="0" r="35" fill="none" stroke={colors.cracked} strokeWidth="1" opacity="0.4" strokeDasharray="4,4" />
+                  <circle cx="0" cy="0" r="45" fill="none" stroke={colors.cracked} strokeWidth="0.5" opacity="0.2" strokeDasharray="3,3" />
+                </g>
+              )}
+            </g>
+          )}
+
+          {/* Force distribution arrows during impact */}
+          {complete && (
+            <g opacity="0.8">
+              {paddingType === 'none' ? (
+                // Single concentrated force arrow
+                <g>
+                  <line x1="100" y1="230" x2="100" y2="255" stroke="url(#eggForceArrowGradient)" strokeWidth="4" />
+                  <polygon points="100,260 95,250 105,250" fill={colors.danger} />
+                </g>
+              ) : (
+                // Distributed force arrows showing padding effect
+                <>
+                  {[-20, -10, 0, 10, 20].map((offset, i) => (
+                    <g key={i}>
+                      <line
+                        x1={100 + offset}
+                        y1={paddingType === 'thick' ? 225 : 235}
+                        x2={100 + offset}
+                        y2={paddingType === 'thick' ? 248 : 258}
+                        stroke="url(#eggForceArrowGradient)"
+                        strokeWidth="2"
+                        opacity={1 - Math.abs(offset) * 0.02}
+                      />
+                      <polygon
+                        points={`${100 + offset},${paddingType === 'thick' ? 252 : 262} ${97 + offset},${paddingType === 'thick' ? 248 : 258} ${103 + offset},${paddingType === 'thick' ? 248 : 258}`}
+                        fill={colors.success}
+                        opacity={0.7 - Math.abs(offset) * 0.01}
+                      />
+                    </g>
+                  ))}
+                </>
+              )}
+            </g>
+          )}
+
+          {/* Drop trajectory indicator */}
+          {position < 100 && (
+            <g>
+              <line x1="145" y1="50" x2="145" y2="240" stroke="url(#eggForceArrowGradient)" strokeWidth="2" strokeDasharray="6,4" opacity="0.7" />
+              <polygon points="145,248 140,238 150,238" fill={colors.primary} />
+              {/* Motion lines */}
+              <line x1="85" y1={eggY - 10} x2="90" y2={eggY - 15} stroke={colors.primary} strokeWidth="1.5" opacity="0.5" />
+              <line x1="85" y1={eggY} x2="88" y2={eggY - 5} stroke={colors.primary} strokeWidth="1.5" opacity="0.4" />
+              <line x1="85" y1={eggY + 10} x2="88" y2={eggY + 5} stroke={colors.primary} strokeWidth="1.5" opacity="0.3" />
+            </g>
+          )}
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        <div className="absolute top-3 left-1/2 transform -translate-x-1/2 bg-slate-700/90 px-3 py-1 rounded-full">
+          <span style={{ fontSize: typo.small, fontWeight: 'bold', color: 'white' }}>
+            {height === 'low' ? '1m' : height === 'medium' ? '3m' : '5m'}
+          </span>
+        </div>
+
         {paddingType !== 'none' && (
-          <>
-            <rect
-              x="60" y={paddingType === 'thick' ? 255 : 265}
-              width="80"
-              height={paddingType === 'thick' ? 25 : 15}
-              fill={paddingType === 'thick' ? colors.padding : colors.foam}
-              rx="3"
-            />
-            <text x="100" y={paddingType === 'thick' ? 272 : 277} textAnchor="middle" fill="white" fontSize="9" fontWeight="bold">
+          <div
+            className="absolute left-1/2 transform -translate-x-1/2 px-2 py-0.5 rounded"
+            style={{
+              bottom: paddingType === 'thick' ? '52px' : '48px',
+              backgroundColor: paddingType === 'thick' ? colors.padding : colors.foam,
+              opacity: 0.9
+            }}
+          >
+            <span style={{ fontSize: typo.label, fontWeight: 'bold', color: 'white' }}>
               {paddingType === 'thick' ? 'THICK FOAM' : 'FOAM'}
-            </text>
-          </>
+            </span>
+          </div>
         )}
 
-        {/* Egg */}
-        {!complete ? (
-          <g transform={`translate(100, ${eggY})`}>
-            <ellipse cx="0" cy="0" rx="15" ry="20" fill={colors.eggWhite} stroke={colors.eggYellow} strokeWidth="2" />
-            <ellipse cx="0" cy="0" rx="10" ry="14" fill={colors.eggYellow} opacity="0.5" />
-          </g>
-        ) : (
-          <g transform="translate(100, 265)">
-            {survived ? (
-              // Intact egg
-              <>
-                <ellipse cx="0" cy="-10" rx="15" ry="20" fill={colors.eggWhite} stroke={colors.eggYellow} strokeWidth="2" />
-                <ellipse cx="0" cy="-10" rx="10" ry="14" fill={colors.eggYellow} opacity="0.5" />
-                <text x="0" y="20" textAnchor="middle" fill={colors.success} fontSize="12" fontWeight="bold">✓ SAFE!</text>
-              </>
-            ) : (
-              // Cracked egg
-              <>
-                <ellipse cx="0" cy="-5" rx="25" ry="10" fill={colors.eggYellow} opacity="0.8" />
-                <ellipse cx="-10" cy="-8" rx="8" ry="5" fill={colors.eggWhite} />
-                <ellipse cx="10" cy="-3" rx="10" ry="6" fill={colors.eggWhite} />
-                <path d="M-8,-5 L-2,-15 L5,-8 L12,-18 L8,-5" fill="none" stroke={colors.cracked} strokeWidth="2" />
-                <text x="0" y="20" textAnchor="middle" fill={colors.danger} fontSize="12" fontWeight="bold">✗ BROKE!</text>
-              </>
-            )}
-          </g>
+        {complete && (
+          <div
+            className="absolute bottom-4 left-1/2 transform -translate-x-1/2 px-3 py-1 rounded-full"
+            style={{
+              backgroundColor: survived ? colors.success : colors.danger,
+              boxShadow: `0 0 12px ${survived ? colors.success : colors.danger}`
+            }}
+          >
+            <span style={{ fontSize: typo.body, fontWeight: 'bold', color: 'white' }}>
+              {survived ? 'SAFE!' : 'BROKE!'}
+            </span>
+          </div>
         )}
-
-        {/* Drop arrow */}
-        {position < 100 && (
-          <g>
-            <line x1="140" y1="50" x2="140" y2="240" stroke={colors.primary} strokeWidth="2" strokeDasharray="5,5" />
-            <polygon points="140,250 135,240 145,240" fill={colors.primary} />
-          </g>
-        )}
-      </svg>
+      </div>
     );
   };
 
@@ -470,44 +698,207 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
       {renderSectionHeader('The Egg Drop Challenge', 'A physics puzzle about survival')}
 
       <div className="bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl p-6 mb-6 shadow-lg">
-        <svg viewBox="0 0 300 200" className="w-full h-48 md:h-56 mb-4">
-          {/* Scene: Two eggs being dropped */}
-          <rect x="0" y="0" width="300" height="160" fill={colors.sky} />
-          <rect x="0" y="160" width="300" height="40" fill={colors.ground} />
+        <div className="relative">
+          <svg viewBox="0 0 300 200" className="w-full h-48 md:h-56 mb-4">
+            <defs>
+              {/* Hook scene sky gradient */}
+              <linearGradient id="eggHookSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#7DD3FC" />
+                <stop offset="40%" stopColor="#BAE6FD" />
+                <stop offset="70%" stopColor="#E0F2FE" />
+                <stop offset="100%" stopColor="#F0F9FF" />
+              </linearGradient>
 
-          {/* Left building */}
-          <rect x="30" y="20" width="60" height="80" fill="#94A3B8" />
-          <text x="60" y="55" textAnchor="middle" fill="white" fontSize="10">3 FLOORS</text>
+              {/* Hook scene ground gradient */}
+              <linearGradient id="eggHookGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#84CC16" />
+                <stop offset="30%" stopColor="#65A30D" />
+                <stop offset="70%" stopColor="#4D7C0F" />
+                <stop offset="100%" stopColor="#3F6212" />
+              </linearGradient>
 
-          {/* Right building */}
-          <rect x="210" y="20" width="60" height="80" fill="#94A3B8" />
-          <text x="240" y="55" textAnchor="middle" fill="white" fontSize="10">3 FLOORS</text>
+              {/* Building gradient */}
+              <linearGradient id="eggHookBuildingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#CBD5E1" />
+                <stop offset="25%" stopColor="#94A3B8" />
+                <stop offset="50%" stopColor="#64748B" />
+                <stop offset="75%" stopColor="#475569" />
+                <stop offset="100%" stopColor="#334155" />
+              </linearGradient>
 
-          {/* Left egg (no protection) */}
-          <g transform="translate(60, 110)">
-            <ellipse cx="0" cy="0" rx="12" ry="16" fill={colors.eggWhite} stroke={colors.eggYellow} strokeWidth="2" />
-            <ellipse cx="0" cy="0" rx="8" ry="11" fill={colors.eggYellow} opacity="0.5" />
-          </g>
-          <text x="60" y="175" textAnchor="middle" fill={colors.danger} fontSize="10" fontWeight="bold">NO PADDING</text>
+              {/* Premium egg shell for hook */}
+              <radialGradient id="eggHookShellGradient" cx="35%" cy="30%" r="65%">
+                <stop offset="0%" stopColor="#FFFEF5" />
+                <stop offset="30%" stopColor="#FDF8E8" />
+                <stop offset="60%" stopColor="#F5ECD8" />
+                <stop offset="100%" stopColor="#E8DCC0" />
+              </radialGradient>
 
-          {/* Right egg (with foam) */}
-          <g transform="translate(240, 110)">
-            <rect x="-20" y="-20" width="40" height="45" fill={colors.foam} rx="5" opacity="0.7" />
-            <ellipse cx="0" cy="0" rx="12" ry="16" fill={colors.eggWhite} stroke={colors.eggYellow} strokeWidth="2" />
-            <ellipse cx="0" cy="0" rx="8" ry="11" fill={colors.eggYellow} opacity="0.5" />
-          </g>
-          <text x="240" y="175" textAnchor="middle" fill={colors.success} fontSize="10" fontWeight="bold">FOAM WRAPPED</text>
+              {/* Foam packaging gradient */}
+              <linearGradient id="eggHookFoamGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#93C5FD" />
+                <stop offset="30%" stopColor="#60A5FA" />
+                <stop offset="60%" stopColor="#3B82F6" />
+                <stop offset="100%" stopColor="#2563EB" />
+              </linearGradient>
 
-          {/* Arrows showing drop */}
-          <line x1="60" y1="100" x2="60" y2="145" stroke={colors.primary} strokeWidth="2" strokeDasharray="4,2" />
-          <polygon points="60,150 55,142 65,142" fill={colors.primary} />
+              {/* Drop arrow gradient */}
+              <linearGradient id="eggHookArrowGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#A78BFA" />
+                <stop offset="50%" stopColor="#8B5CF6" />
+                <stop offset="100%" stopColor="#7C3AED" />
+              </linearGradient>
 
-          <line x1="240" y1="100" x2="240" y2="145" stroke={colors.primary} strokeWidth="2" strokeDasharray="4,2" />
-          <polygon points="240,150 235,142 245,142" fill={colors.primary} />
+              {/* Danger zone glow */}
+              <filter id="eggHookDangerGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feFlood floodColor="#EF4444" floodOpacity="0.4" result="color" />
+                <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
 
-          {/* Question */}
-          <text x="150" y="95" textAnchor="middle" fill={colors.primary} fontSize="14" fontWeight="bold">WHICH SURVIVES?</text>
-        </svg>
+              {/* Safe zone glow */}
+              <filter id="eggHookSafeGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feFlood floodColor="#10B981" floodOpacity="0.4" result="color" />
+                <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Question mark glow */}
+              <filter id="eggHookQuestionGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Premium sky background */}
+            <rect x="0" y="0" width="300" height="160" fill="url(#eggHookSkyGradient)" />
+
+            {/* Clouds */}
+            <ellipse cx="50" cy="25" rx="25" ry="12" fill="white" opacity="0.8" />
+            <ellipse cx="70" cy="22" rx="18" ry="9" fill="white" opacity="0.8" />
+            <ellipse cx="250" cy="35" rx="22" ry="10" fill="white" opacity="0.7" />
+            <ellipse cx="235" cy="30" rx="15" ry="8" fill="white" opacity="0.7" />
+
+            {/* Premium ground */}
+            <rect x="0" y="160" width="300" height="40" fill="url(#eggHookGroundGradient)" />
+
+            {/* Left building with premium look */}
+            <rect x="30" y="20" width="60" height="80" fill="url(#eggHookBuildingGradient)" rx="2" />
+            <rect x="30" y="20" width="60" height="4" fill="white" opacity="0.2" rx="2" />
+            {/* Windows */}
+            <rect x="38" y="30" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="55" y="30" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="72" y="30" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="38" y="50" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="55" y="50" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="72" y="50" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="38" y="70" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="55" y="70" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="72" y="70" width="12" height="10" fill="#1E293B" rx="1" />
+
+            {/* Right building with premium look */}
+            <rect x="210" y="20" width="60" height="80" fill="url(#eggHookBuildingGradient)" rx="2" />
+            <rect x="210" y="20" width="60" height="4" fill="white" opacity="0.2" rx="2" />
+            {/* Windows */}
+            <rect x="218" y="30" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="235" y="30" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="252" y="30" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="218" y="50" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="235" y="50" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="252" y="50" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="218" y="70" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="235" y="70" width="12" height="10" fill="#1E293B" rx="1" />
+            <rect x="252" y="70" width="12" height="10" fill="#1E293B" rx="1" />
+
+            {/* Left egg (no protection) with danger glow */}
+            <g transform="translate(60, 115)" filter="url(#eggHookDangerGlow)">
+              <ellipse cx="0" cy="0" rx="12" ry="16" fill="url(#eggHookShellGradient)" />
+              <ellipse cx="-4" cy="-6" rx="5" ry="6" fill="white" opacity="0.4" />
+            </g>
+
+            {/* Right egg (with foam) with safe glow */}
+            <g transform="translate(240, 115)" filter="url(#eggHookSafeGlow)">
+              {/* Foam packaging with texture */}
+              <rect x="-22" y="-22" width="44" height="48" fill="url(#eggHookFoamGradient)" rx="6" />
+              <rect x="-20" y="-20" width="40" height="4" fill="white" opacity="0.3" rx="4" />
+              {/* Foam bubbles */}
+              <circle cx="-10" cy="5" r="4" fill="white" opacity="0.15" />
+              <circle cx="8" cy="-5" r="3" fill="white" opacity="0.15" />
+              <circle cx="0" cy="15" r="3.5" fill="white" opacity="0.15" />
+              {/* Egg inside */}
+              <ellipse cx="0" cy="0" rx="12" ry="16" fill="url(#eggHookShellGradient)" />
+              <ellipse cx="-4" cy="-6" rx="5" ry="6" fill="white" opacity="0.4" />
+            </g>
+
+            {/* Drop arrows with premium gradient */}
+            <g opacity="0.8">
+              <line x1="60" y1="100" x2="60" y2="140" stroke="url(#eggHookArrowGradient)" strokeWidth="3" strokeDasharray="5,3" />
+              <polygon points="60,148 54,138 66,138" fill="#7C3AED" />
+
+              <line x1="240" y1="100" x2="240" y2="140" stroke="url(#eggHookArrowGradient)" strokeWidth="3" strokeDasharray="5,3" />
+              <polygon points="240,148 234,138 246,138" fill="#7C3AED" />
+            </g>
+
+            {/* Central question with glow */}
+            <g filter="url(#eggHookQuestionGlow)">
+              <rect x="105" y="80" width="90" height="35" fill="white" rx="8" opacity="0.9" />
+              <rect x="105" y="80" width="90" height="35" fill="url(#eggHookArrowGradient)" rx="8" opacity="0.1" />
+            </g>
+          </svg>
+
+          {/* Text labels outside SVG */}
+          <div className="absolute" style={{ top: '30%', left: '16%', transform: 'translateX(-50%)' }}>
+            <span
+              className="bg-slate-700/80 px-2 py-0.5 rounded text-white"
+              style={{ fontSize: typo.label, fontWeight: 'bold' }}
+            >
+              3 FLOORS
+            </span>
+          </div>
+          <div className="absolute" style={{ top: '30%', right: '6%', transform: 'translateX(50%)' }}>
+            <span
+              className="bg-slate-700/80 px-2 py-0.5 rounded text-white"
+              style={{ fontSize: typo.label, fontWeight: 'bold' }}
+            >
+              3 FLOORS
+            </span>
+          </div>
+          <div className="absolute" style={{ bottom: '18%', left: '20%', transform: 'translateX(-50%)' }}>
+            <span
+              className="px-2 py-0.5 rounded text-white"
+              style={{ fontSize: typo.small, fontWeight: 'bold', backgroundColor: colors.danger }}
+            >
+              NO PADDING
+            </span>
+          </div>
+          <div className="absolute" style={{ bottom: '18%', right: '12%', transform: 'translateX(50%)' }}>
+            <span
+              className="px-2 py-0.5 rounded text-white"
+              style={{ fontSize: typo.small, fontWeight: 'bold', backgroundColor: colors.success }}
+            >
+              FOAM WRAPPED
+            </span>
+          </div>
+          <div className="absolute" style={{ top: '42%', left: '50%', transform: 'translate(-50%, -50%)' }}>
+            <span
+              className="px-3 py-1 rounded-lg text-white font-bold"
+              style={{ fontSize: typo.bodyLarge, background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})` }}
+            >
+              WHICH SURVIVES?
+            </span>
+          </div>
+        </div>
 
         <p className="text-lg text-amber-800">
           You're dropping eggs from a 3-story building. One has foam padding, one has nothing.
@@ -664,32 +1055,134 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
       {renderSectionHeader('The Impulse-Momentum Secret', 'Why padding works')}
 
       <div className="bg-gradient-to-br from-indigo-50 to-purple-50 rounded-2xl p-5 mb-5">
-        <svg viewBox="0 0 300 180" className="w-full h-40 mb-4">
-          {/* Force-time diagram */}
-          <rect x="0" y="0" width="300" height="180" fill="white" rx="10" />
+        <div className="relative">
+          <svg viewBox="0 0 300 180" className="w-full h-40 mb-4">
+            <defs>
+              {/* Chart background gradient */}
+              <linearGradient id="eggReviewBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FAFAFA" />
+                <stop offset="50%" stopColor="#F5F5F5" />
+                <stop offset="100%" stopColor="#EEEEEE" />
+              </linearGradient>
 
-          {/* Axes */}
-          <line x1="50" y1="150" x2="280" y2="150" stroke="#64748B" strokeWidth="2" />
-          <line x1="50" y1="150" x2="50" y2="20" stroke="#64748B" strokeWidth="2" />
+              {/* No padding danger gradient */}
+              <linearGradient id="eggReviewDangerGradient" x1="50%" y1="0%" x2="50%" y2="100%">
+                <stop offset="0%" stopColor="#FCA5A5" />
+                <stop offset="30%" stopColor="#F87171" />
+                <stop offset="60%" stopColor="#EF4444" />
+                <stop offset="100%" stopColor="#DC2626" />
+              </linearGradient>
 
-          <text x="165" y="175" textAnchor="middle" fill="#64748B" fontSize="12">Time →</text>
-          <text x="25" y="90" textAnchor="middle" fill="#64748B" fontSize="12" transform="rotate(-90, 25, 90)">Force →</text>
+              {/* Foam padding gradient */}
+              <linearGradient id="eggReviewFoamGradient" x1="50%" y1="0%" x2="50%" y2="100%">
+                <stop offset="0%" stopColor="#93C5FD" />
+                <stop offset="30%" stopColor="#60A5FA" />
+                <stop offset="60%" stopColor="#3B82F6" />
+                <stop offset="100%" stopColor="#2563EB" />
+              </linearGradient>
 
-          {/* No padding: tall narrow spike */}
-          <path d="M80,150 L90,30 L100,150" fill={colors.danger} opacity="0.6" />
-          <text x="90" y="165" textAnchor="middle" fill={colors.danger} fontSize="9">No pad</text>
+              {/* Thick padding success gradient */}
+              <linearGradient id="eggReviewSuccessGradient" x1="50%" y1="0%" x2="50%" y2="100%">
+                <stop offset="0%" stopColor="#6EE7B7" />
+                <stop offset="30%" stopColor="#34D399" />
+                <stop offset="60%" stopColor="#10B981" />
+                <stop offset="100%" stopColor="#059669" />
+              </linearGradient>
 
-          {/* Some padding: medium spike */}
-          <path d="M140,150 L150,70 L160,150 L170,150" fill={colors.foam} opacity="0.6" />
-          <text x="155" y="165" textAnchor="middle" fill={colors.foam} fontSize="9">Foam</text>
+              {/* Axis gradient */}
+              <linearGradient id="eggReviewAxisGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#94A3B8" />
+                <stop offset="50%" stopColor="#64748B" />
+                <stop offset="100%" stopColor="#94A3B8" />
+              </linearGradient>
 
-          {/* Thick padding: wide low curve */}
-          <path d="M200,150 Q210,100 230,95 Q250,100 260,150" fill={colors.success} opacity="0.6" />
-          <text x="230" y="165" textAnchor="middle" fill={colors.success} fontSize="9">Thick</text>
+              {/* Chart glow filter */}
+              <filter id="eggReviewChartGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
 
-          {/* Label */}
-          <text x="150" y="18" textAnchor="middle" fill={colors.primary} fontSize="11" fontWeight="bold">SAME AREA = SAME IMPULSE</text>
-        </svg>
+              {/* Area shadow filter */}
+              <filter id="eggReviewAreaShadow" x="-10%" y="-10%" width="120%" height="120%">
+                <feDropShadow dx="1" dy="2" stdDeviation="2" floodOpacity="0.2" />
+              </filter>
+            </defs>
+
+            {/* Premium chart background */}
+            <rect x="0" y="0" width="300" height="180" fill="url(#eggReviewBgGradient)" rx="10" />
+            <rect x="0" y="0" width="300" height="180" fill="none" stroke="#E5E7EB" strokeWidth="1" rx="10" />
+
+            {/* Grid lines */}
+            <g opacity="0.3">
+              <line x1="50" y1="50" x2="280" y2="50" stroke="#CBD5E1" strokeWidth="0.5" strokeDasharray="4,4" />
+              <line x1="50" y1="100" x2="280" y2="100" stroke="#CBD5E1" strokeWidth="0.5" strokeDasharray="4,4" />
+              <line x1="100" y1="20" x2="100" y2="150" stroke="#CBD5E1" strokeWidth="0.5" strokeDasharray="4,4" />
+              <line x1="165" y1="20" x2="165" y2="150" stroke="#CBD5E1" strokeWidth="0.5" strokeDasharray="4,4" />
+              <line x1="230" y1="20" x2="230" y2="150" stroke="#CBD5E1" strokeWidth="0.5" strokeDasharray="4,4" />
+            </g>
+
+            {/* Axes with gradient */}
+            <line x1="50" y1="150" x2="280" y2="150" stroke="url(#eggReviewAxisGradient)" strokeWidth="2" />
+            <line x1="50" y1="150" x2="50" y2="20" stroke="url(#eggReviewAxisGradient)" strokeWidth="2" />
+            {/* Arrow heads */}
+            <polygon points="280,150 272,146 272,154" fill="#64748B" />
+            <polygon points="50,20 46,28 54,28" fill="#64748B" />
+
+            {/* No padding: tall narrow spike with gradient fill */}
+            <g filter="url(#eggReviewAreaShadow)">
+              <path d="M75,150 L90,25 L105,150 Z" fill="url(#eggReviewDangerGradient)" opacity="0.85" />
+              <path d="M75,150 L90,25 L105,150" fill="none" stroke="#DC2626" strokeWidth="2" />
+            </g>
+
+            {/* Some padding: medium spike with gradient */}
+            <g filter="url(#eggReviewAreaShadow)">
+              <path d="M135,150 L155,65 L175,150 Z" fill="url(#eggReviewFoamGradient)" opacity="0.85" />
+              <path d="M135,150 L155,65 L175,150" fill="none" stroke="#2563EB" strokeWidth="2" />
+            </g>
+
+            {/* Thick padding: wide low curve with gradient */}
+            <g filter="url(#eggReviewAreaShadow)">
+              <path d="M195,150 Q210,100 230,95 Q250,100 265,150 Z" fill="url(#eggReviewSuccessGradient)" opacity="0.85" />
+              <path d="M195,150 Q210,100 230,95 Q250,100 265,150" fill="none" stroke="#059669" strokeWidth="2" />
+            </g>
+
+            {/* Force level indicators */}
+            <g opacity="0.6">
+              <line x1="45" y1="25" x2="55" y2="25" stroke={colors.danger} strokeWidth="2" />
+              <line x1="45" y1="65" x2="55" y2="65" stroke={colors.foam} strokeWidth="2" />
+              <line x1="45" y1="95" x2="55" y2="95" stroke={colors.success} strokeWidth="2" />
+            </g>
+          </svg>
+
+          {/* Text labels outside SVG */}
+          <div className="absolute" style={{ bottom: '12%', left: '50%', transform: 'translateX(-50%)' }}>
+            <span style={{ fontSize: typo.small, color: '#64748B' }}>Time</span>
+          </div>
+          <div className="absolute" style={{ top: '45%', left: '3%', transform: 'rotate(-90deg) translateX(-50%)' }}>
+            <span style={{ fontSize: typo.small, color: '#64748B' }}>Force</span>
+          </div>
+          <div className="absolute" style={{ top: '5%', left: '50%', transform: 'translateX(-50%)' }}>
+            <span
+              className="px-2 py-0.5 rounded-full"
+              style={{
+                fontSize: typo.small,
+                fontWeight: 'bold',
+                color: 'white',
+                background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`
+              }}
+            >
+              SAME AREA = SAME IMPULSE
+            </span>
+          </div>
+          <div className="flex justify-around mt-1">
+            <span style={{ fontSize: typo.label, fontWeight: 'bold', color: colors.danger }}>No pad</span>
+            <span style={{ fontSize: typo.label, fontWeight: 'bold', color: colors.foam }}>Foam</span>
+            <span style={{ fontSize: typo.label, fontWeight: 'bold', color: colors.success }}>Thick</span>
+          </div>
+        </div>
 
         <div className="text-center mb-4">
           <div className="inline-block bg-white rounded-xl p-4 shadow-inner">
@@ -861,35 +1354,146 @@ const EggDropRenderer: React.FC<EggDropRendererProps> = ({
       {renderSectionHeader('The Complete Picture', 'Height, velocity, and momentum')}
 
       <div className="bg-gradient-to-br from-purple-50 to-indigo-50 rounded-2xl p-5 mb-5">
-        <svg viewBox="0 0 300 150" className="w-full h-36 mb-4">
-          {/* Velocity and momentum diagram */}
-          <rect x="0" y="0" width="300" height="150" fill="white" rx="10" />
+        <div className="relative">
+          <svg viewBox="0 0 300 150" className="w-full h-36 mb-4">
+            <defs>
+              {/* Background gradient */}
+              <linearGradient id="eggTwistBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#FAFAFA" />
+                <stop offset="50%" stopColor="#F8F8FF" />
+                <stop offset="100%" stopColor="#F5F3FF" />
+              </linearGradient>
 
-          {/* Three scenarios */}
-          <g transform="translate(50, 75)">
-            <circle cx="0" cy="0" r="20" fill={colors.success} opacity="0.2" />
-            <text x="0" y="5" textAnchor="middle" fill={colors.success} fontSize="12" fontWeight="bold">1m</text>
-            <text x="0" y="50" textAnchor="middle" fill="#64748B" fontSize="10">v = 4.4 m/s</text>
-            <text x="0" y="65" textAnchor="middle" fill={colors.success} fontSize="10">✓ Safe</text>
-          </g>
+              {/* Success momentum gradient */}
+              <radialGradient id="eggTwistSuccessGradient" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#6EE7B7" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#34D399" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#10B981" stopOpacity="0.2" />
+              </radialGradient>
 
-          <g transform="translate(150, 75)">
-            <circle cx="0" cy="0" r="30" fill={colors.accent} opacity="0.2" />
-            <text x="0" y="5" textAnchor="middle" fill={colors.accent} fontSize="12" fontWeight="bold">3m</text>
-            <text x="0" y="50" textAnchor="middle" fill="#64748B" fontSize="10">v = 7.7 m/s</text>
-            <text x="0" y="65" textAnchor="middle" fill={colors.success} fontSize="10">✓ Safe</text>
-          </g>
+              {/* Warning momentum gradient */}
+              <radialGradient id="eggTwistWarningGradient" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#FDE68A" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#FBBF24" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#F59E0B" stopOpacity="0.2" />
+              </radialGradient>
 
-          <g transform="translate(250, 75)">
-            <circle cx="0" cy="0" r="40" fill={colors.danger} opacity="0.2" />
-            <text x="0" y="5" textAnchor="middle" fill={colors.danger} fontSize="12" fontWeight="bold">5m</text>
-            <text x="0" y="55" textAnchor="middle" fill="#64748B" fontSize="10">v = 10 m/s</text>
-            <text x="0" y="70" textAnchor="middle" fill={colors.danger} fontSize="10">✗ Breaks</text>
-          </g>
+              {/* Danger momentum gradient */}
+              <radialGradient id="eggTwistDangerGradient" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#FCA5A5" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#F87171" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#EF4444" stopOpacity="0.2" />
+              </radialGradient>
 
-          {/* Formula */}
-          <text x="150" y="15" textAnchor="middle" fill={colors.primary} fontSize="11" fontWeight="bold">v = √(2gh) — Velocity increases with height!</text>
-        </svg>
+              {/* Circle glow filters */}
+              <filter id="eggTwistSuccessGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feFlood floodColor="#10B981" floodOpacity="0.3" result="color" />
+                <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <filter id="eggTwistWarningGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feFlood floodColor="#F59E0B" floodOpacity="0.3" result="color" />
+                <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <filter id="eggTwistDangerGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feFlood floodColor="#EF4444" floodOpacity="0.4" result="color" />
+                <feComposite in="color" in2="blur" operator="in" result="coloredBlur" />
+                <feMerge>
+                  <feMergeNode in="coloredBlur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Premium background */}
+            <rect x="0" y="0" width="300" height="150" fill="url(#eggTwistBgGradient)" rx="10" />
+            <rect x="0" y="0" width="300" height="150" fill="none" stroke="#E5E7EB" strokeWidth="1" rx="10" />
+
+            {/* Connecting arrows showing progression */}
+            <g opacity="0.4">
+              <line x1="75" y1="65" x2="115" y2="65" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+              <line x1="185" y1="65" x2="210" y2="65" stroke="#64748B" strokeWidth="2" markerEnd="url(#arrow)" />
+              <polygon points="120,65 112,61 112,69" fill="#64748B" />
+              <polygon points="215,65 207,61 207,69" fill="#64748B" />
+            </g>
+
+            {/* 1m scenario with glow */}
+            <g transform="translate(50, 65)" filter="url(#eggTwistSuccessGlow)">
+              <circle cx="0" cy="0" r="22" fill="url(#eggTwistSuccessGradient)" />
+              <circle cx="0" cy="0" r="22" fill="none" stroke={colors.success} strokeWidth="2" opacity="0.6" />
+              {/* Momentum ring */}
+              <circle cx="0" cy="0" r="18" fill="none" stroke={colors.success} strokeWidth="1" strokeDasharray="3,3" opacity="0.5" />
+            </g>
+
+            {/* 3m scenario with warning glow */}
+            <g transform="translate(150, 65)" filter="url(#eggTwistWarningGlow)">
+              <circle cx="0" cy="0" r="32" fill="url(#eggTwistWarningGradient)" />
+              <circle cx="0" cy="0" r="32" fill="none" stroke={colors.accent} strokeWidth="2" opacity="0.6" />
+              {/* Momentum rings */}
+              <circle cx="0" cy="0" r="26" fill="none" stroke={colors.accent} strokeWidth="1" strokeDasharray="3,3" opacity="0.4" />
+              <circle cx="0" cy="0" r="20" fill="none" stroke={colors.accent} strokeWidth="1" strokeDasharray="3,3" opacity="0.3" />
+            </g>
+
+            {/* 5m scenario with danger glow */}
+            <g transform="translate(250, 65)" filter="url(#eggTwistDangerGlow)">
+              <circle cx="0" cy="0" r="42" fill="url(#eggTwistDangerGradient)" />
+              <circle cx="0" cy="0" r="42" fill="none" stroke={colors.danger} strokeWidth="2" opacity="0.6" />
+              {/* Momentum rings showing high energy */}
+              <circle cx="0" cy="0" r="35" fill="none" stroke={colors.danger} strokeWidth="1" strokeDasharray="3,3" opacity="0.4" />
+              <circle cx="0" cy="0" r="28" fill="none" stroke={colors.danger} strokeWidth="1" strokeDasharray="3,3" opacity="0.3" />
+              <circle cx="0" cy="0" r="21" fill="none" stroke={colors.danger} strokeWidth="1" strokeDasharray="3,3" opacity="0.2" />
+            </g>
+          </svg>
+
+          {/* Text labels outside SVG using typo system */}
+          <div className="absolute" style={{ top: '8%', left: '50%', transform: 'translateX(-50%)' }}>
+            <span
+              className="px-3 py-1 rounded-full text-white"
+              style={{
+                fontSize: typo.small,
+                fontWeight: 'bold',
+                background: `linear-gradient(135deg, ${colors.primary}, ${colors.secondary})`
+              }}
+            >
+              v = sqrt(2gh) - Velocity increases with height!
+            </span>
+          </div>
+
+          {/* Height labels */}
+          <div className="flex justify-around absolute w-full" style={{ top: '38%' }}>
+            <span style={{ fontSize: typo.bodyLarge, fontWeight: 'bold', color: colors.success, marginLeft: '8%' }}>1m</span>
+            <span style={{ fontSize: typo.bodyLarge, fontWeight: 'bold', color: colors.accent }}>3m</span>
+            <span style={{ fontSize: typo.bodyLarge, fontWeight: 'bold', color: colors.danger, marginRight: '5%' }}>5m</span>
+          </div>
+
+          {/* Velocity and status labels */}
+          <div className="flex justify-around mt-2">
+            <div className="text-center">
+              <div style={{ fontSize: typo.label, color: '#64748B' }}>v = 4.4 m/s</div>
+              <div style={{ fontSize: typo.small, fontWeight: 'bold', color: colors.success }}>Safe</div>
+            </div>
+            <div className="text-center">
+              <div style={{ fontSize: typo.label, color: '#64748B' }}>v = 7.7 m/s</div>
+              <div style={{ fontSize: typo.small, fontWeight: 'bold', color: colors.success }}>Safe</div>
+            </div>
+            <div className="text-center">
+              <div style={{ fontSize: typo.label, color: '#64748B' }}>v = 10 m/s</div>
+              <div style={{ fontSize: typo.small, fontWeight: 'bold', color: colors.danger }}>Breaks</div>
+            </div>
+          </div>
+        </div>
 
         <div className="text-center">
           <p className="text-indigo-800">

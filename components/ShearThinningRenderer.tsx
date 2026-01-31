@@ -458,15 +458,15 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
   };
 
   // ============================================================
-  // KETCHUP VISUALIZATION
+  // KETCHUP VISUALIZATION - Premium SVG Graphics
   // ============================================================
 
   const renderKetchupVisualization = (interactive: boolean = false) => {
     const width = isMobile ? 340 : 680;
-    const height = isMobile ? 300 : 380;
+    const height = isMobile ? 320 : 400;
     const cx = width / 2;
 
-    // Network visualization
+    // Network visualization nodes
     const networkNodes = useMemo(() => {
       const nodes = [];
       const gridSize = isMobile ? 4 : 6;
@@ -497,27 +497,52 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
       { color: colors.broken, label: 'Broken bonds (flowing)' },
     ];
 
+    // Calculate shear stress arrow animation
+    const shearIntensity = interactive ? (isShaking ? 1 : shearRate / 100) : 0;
+    const arrowPulse = Math.sin(animTime * 3) * 0.2 + 0.8;
+
     return (
       <div style={{ position: 'relative', width: '100%', maxWidth: '700px', margin: '0 auto' }}>
-        {/* Legend */}
+        {/* Title - moved outside SVG */}
+        <div style={{ textAlign: 'center', marginBottom: typo.elementGap }}>
+          <h3 style={{
+            fontSize: typo.heading,
+            fontWeight: 700,
+            color: colors.textPrimary,
+            margin: 0,
+            marginBottom: '4px'
+          }}>
+            Shear-Thinning Fluid: Ketchup
+          </h3>
+          <p style={{
+            fontSize: typo.small,
+            color: colors.textSecondary,
+            margin: 0
+          }}>
+            Polymer networks break under shear stress
+          </p>
+        </div>
+
+        {/* Legend - moved outside SVG */}
         <div style={{
           position: 'absolute',
-          top: isMobile ? '8px' : '12px',
+          top: isMobile ? '60px' : '70px',
           right: isMobile ? '8px' : '12px',
           background: 'rgba(15, 23, 42, 0.95)',
           borderRadius: '8px',
           padding: isMobile ? '8px' : '12px',
           border: `1px solid ${colors.border}`,
           zIndex: 10,
-          maxWidth: isMobile ? '130px' : '170px'
+          maxWidth: isMobile ? '130px' : '170px',
+          backdropFilter: 'blur(8px)'
         }}>
-          <p style={{ fontSize: '10px', fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase' }}>
+          <p style={{ fontSize: typo.label, fontWeight: 700, color: colors.textMuted, marginBottom: '6px', textTransform: 'uppercase', margin: 0 }}>
             Legend
           </p>
           {legendItems.map((item, i) => (
             <div key={i} style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '3px' }}>
               <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: item.color, flexShrink: 0 }} />
-              <span style={{ fontSize: '10px', color: colors.textSecondary, lineHeight: 1.2 }}>{item.label}</span>
+              <span style={{ fontSize: typo.label, color: colors.textSecondary, lineHeight: 1.2 }}>{item.label}</span>
             </div>
           ))}
         </div>
@@ -528,154 +553,480 @@ const ShearThinningRenderer: React.FC<ShearThinningRendererProps> = ({
           style={{ width: '100%', height: 'auto', display: 'block' }}
         >
           <defs>
-            <linearGradient id="ketchupBottle" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.ketchupLight} />
-              <stop offset="50%" stopColor={colors.ketchup} />
-              <stop offset="100%" stopColor={colors.ketchupDark} />
+            {/* Premium ketchup bottle gradient - 6 color stops for depth */}
+            <linearGradient id="shearBottleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="15%" stopColor="#f87171" />
+              <stop offset="35%" stopColor="#ef4444" />
+              <stop offset="55%" stopColor="#dc2626" />
+              <stop offset="80%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#991b1b" />
             </linearGradient>
-            <linearGradient id="ketchupInside" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.ketchupDark} />
-              <stop offset="100%" stopColor="#7f1d1d" />
+
+            {/* Ketchup inside fluid gradient - viscosity visualization */}
+            <linearGradient id="shearFluidGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#b91c1c" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#991b1b" />
+              <stop offset="50%" stopColor="#7f1d1d" />
+              <stop offset="75%" stopColor="#6b1616" />
+              <stop offset="100%" stopColor="#450a0a" />
             </linearGradient>
+
+            {/* Radial glow for ketchup fluid */}
+            <radialGradient id="shearFluidGlow" cx="50%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#dc2626" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#991b1b" stopOpacity="0.1" />
+            </radialGradient>
+
+            {/* Polymer node gradient */}
+            <radialGradient id="shearPolymerNode" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fde047" />
+              <stop offset="40%" stopColor="#fbbf24" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </radialGradient>
+
+            {/* Network connection gradient - intact */}
+            <linearGradient id="shearNetworkIntact" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#c084fc" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#c084fc" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Network connection gradient - broken */}
+            <linearGradient id="shearNetworkBroken" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#22c55e" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#4ade80" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Shear stress arrow gradient */}
+            <linearGradient id="shearArrowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#fb923c" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#fdba74" stopOpacity="1" />
+              <stop offset="70%" stopColor="#fb923c" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Viscosity meter gradient - high viscosity */}
+            <linearGradient id="shearViscosityHigh" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+
+            {/* Viscosity meter gradient - low viscosity */}
+            <linearGradient id="shearViscosityLow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#16a34a" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#4ade80" />
+            </linearGradient>
+
+            {/* Background lab gradient */}
+            <linearGradient id="shearLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e1b4b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Molecular panel gradient */}
+            <linearGradient id="shearPanelGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Cap metallic gradient */}
+            <linearGradient id="shearCapGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="30%" stopColor="#fcd34d" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Glow filter for polymer nodes */}
+            <filter id="shearNodeGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Intense glow filter for active elements */}
+            <filter id="shearActiveGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft inner glow for panels */}
+            <filter id="shearPanelGlow" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Arrow glow filter */}
+            <filter id="shearArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
 
-          {/* Background */}
-          <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
+          {/* Premium dark lab background with gradient */}
+          <rect x="0" y="0" width={width} height={height} fill="url(#shearLabBg)" rx="12" />
 
-          {/* Title */}
-          <text x={cx} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
-            Shear-Thinning Fluid: Ketchup
-          </text>
-          <text x={cx} y="48" textAnchor="middle" fill={colors.textSecondary} fontSize={isMobile ? 11 : 14} fontWeight="500">
-            Polymer networks break under shear stress
-          </text>
-
-          {/* Ketchup bottle */}
-          <g transform={`translate(${cx - 40}, 60) ${interactive && isShaking ? `rotate(${Math.sin(animTime * 20) * 8}, 40, 80)` : ''}`}>
-            {/* Bottle body */}
-            <path
-              d="M 20 50 L 20 140 Q 20 160, 40 160 Q 60 160, 60 140 L 60 50 Q 60 30, 40 30 Q 20 30, 20 50"
-              fill="url(#ketchupBottle)"
-              stroke={colors.ketchupDark}
-              strokeWidth="2"
-            />
-            {/* Bottle neck */}
-            <rect x="32" y="5" width="16" height="28" fill={colors.ketchup} />
-            {/* Cap */}
-            <rect x="28" y="0" width="24" height="10" fill={colors.warningLight} rx="3" />
-            {/* Label */}
-            <rect x="25" y="65" width="30" height="45" fill="#fef3c7" rx="3" />
-            <text x="40" y="85" textAnchor="middle" fill={colors.ketchupDark} fontSize="7" fontWeight="bold">
-              KETCHUP
-            </text>
-            {/* Ketchup inside - level based on flow */}
-            <path
-              d={`M 22 ${interactive ? 145 - (100 - networkIntegrity) * 0.3 : 145} L 22 138 Q 22 155, 40 155 Q 58 155, 58 138 L 58 ${interactive ? 145 - (100 - networkIntegrity) * 0.3 : 145} Z`}
-              fill="url(#ketchupInside)"
-            />
+          {/* Subtle grid pattern overlay */}
+          <g opacity="0.05">
+            {Array.from({ length: Math.floor(width / 20) }).map((_, i) => (
+              <line key={`v${i}`} x1={i * 20} y1="0" x2={i * 20} y2={height} stroke={colors.textMuted} strokeWidth="0.5" />
+            ))}
+            {Array.from({ length: Math.floor(height / 20) }).map((_, i) => (
+              <line key={`h${i}`} x1="0" y1={i * 20} x2={width} y2={i * 20} stroke={colors.textMuted} strokeWidth="0.5" />
+            ))}
           </g>
 
-          {/* Molecular network visualization */}
-          <g transform={`translate(${cx + (isMobile ? 60 : 100)}, 70)`}>
-            <rect x="-10" y="-10" width={isMobile ? 120 : 200} height={isMobile ? 160 : 200} fill={colors.bgCard} rx="8" stroke={colors.border} />
-            <text x={isMobile ? 50 : 90} y="10" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
-              Molecular Structure
-            </text>
+          {/* Ketchup bottle with premium graphics */}
+          <g transform={`translate(${isMobile ? cx - 50 : cx - 80}, ${isMobile ? 20 : 30}) ${interactive && isShaking ? `rotate(${Math.sin(animTime * 20) * 8}, 50, 100)` : ''}`}>
+            {/* Bottle shadow */}
+            <ellipse cx="50" cy={isMobile ? 175 : 195} rx="35" ry="8" fill="rgba(0,0,0,0.3)" />
 
-            {/* Draw network connections */}
+            {/* Bottle body - premium gradient */}
+            <path
+              d="M 25 60 L 25 160 Q 25 185, 50 185 Q 75 185, 75 160 L 75 60 Q 75 35, 50 35 Q 25 35, 25 60"
+              fill="url(#shearBottleGradient)"
+              stroke="#7f1d1d"
+              strokeWidth="2"
+            />
+
+            {/* Bottle highlight (glass reflection) */}
+            <path
+              d="M 30 65 L 30 155 Q 32 170, 38 172"
+              fill="none"
+              stroke="rgba(255,255,255,0.2)"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+
+            {/* Bottle neck */}
+            <rect x="40" y="8" width="20" height="32" fill="url(#shearBottleGradient)" rx="2" />
+
+            {/* Premium cap with metallic gradient */}
+            <rect x="35" y="0" width="30" height="14" fill="url(#shearCapGradient)" rx="4" />
+            <rect x="35" y="10" width="30" height="4" fill="#d97706" rx="1" />
+
+            {/* Label with texture */}
+            <rect x="32" y="80" width="36" height="55" fill="#fef3c7" rx="4" />
+            <rect x="32" y="80" width="36" height="8" fill="#fcd34d" rx="4" />
+            <rect x="32" y="127" width="36" height="8" fill="#fcd34d" rx="4" />
+
+            {/* Ketchup inside - dynamic level with premium fluid gradient */}
+            <clipPath id="shearFluidClip">
+              <path d="M 27 62 L 27 158 Q 27 182, 50 182 Q 73 182, 73 158 L 73 62 Q 73 38, 50 38 Q 27 38, 27 62" />
+            </clipPath>
+            <g clipPath="url(#shearFluidClip)">
+              <rect
+                x="27"
+                y={interactive ? 180 - (networkIntegrity * 1.2) : 60}
+                width="46"
+                height="130"
+                fill="url(#shearFluidGradient)"
+              />
+              {/* Fluid surface highlight */}
+              <ellipse
+                cx="50"
+                cy={interactive ? 180 - (networkIntegrity * 1.2) + 3 : 63}
+                rx="20"
+                ry="4"
+                fill="url(#shearFluidGlow)"
+              />
+            </g>
+
+            {/* Shear stress arrows - only when interactive and shearing */}
+            {interactive && shearIntensity > 0.1 && (
+              <g filter="url(#shearArrowGlow)" opacity={shearIntensity * arrowPulse}>
+                {/* Left arrow */}
+                <path
+                  d={`M ${5 - shearIntensity * 10} 120 L 20 120 L 15 115 M 20 120 L 15 125`}
+                  fill="none"
+                  stroke="url(#shearArrowGradient)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                {/* Right arrow */}
+                <path
+                  d={`M ${95 + shearIntensity * 10} 120 L 80 120 L 85 115 M 80 120 L 85 125`}
+                  fill="none"
+                  stroke="url(#shearArrowGradient)"
+                  strokeWidth="3"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+                {/* Top shake indicator */}
+                <path
+                  d={`M 50 ${-5 - shearIntensity * 5} L 50 -15 L 45 -10 M 50 -15 L 55 -10`}
+                  fill="none"
+                  stroke="url(#shearArrowGradient)"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                />
+              </g>
+            )}
+          </g>
+
+          {/* Molecular network visualization panel */}
+          <g transform={`translate(${cx + (isMobile ? 45 : 80)}, ${isMobile ? 25 : 40})`}>
+            {/* Panel background with gradient */}
+            <rect
+              x="-10"
+              y="-10"
+              width={isMobile ? 130 : 210}
+              height={isMobile ? 170 : 210}
+              fill="url(#shearPanelGradient)"
+              rx="12"
+              stroke={colors.border}
+              strokeWidth="1"
+              filter="url(#shearPanelGlow)"
+            />
+
+            {/* Panel inner glow */}
+            <rect
+              x="-8"
+              y="-8"
+              width={isMobile ? 126 : 206}
+              height={isMobile ? 166 : 206}
+              fill="none"
+              rx="10"
+              stroke="rgba(168,85,247,0.1)"
+              strokeWidth="2"
+            />
+
+            {/* Draw network connections with gradients */}
             {networkNodes.map((node, i) => {
               const neighbors = networkNodes.filter((n, j) =>
                 j !== i && Math.abs(networkNodes.indexOf(n) - i) < 3
               );
               return neighbors.slice(0, 2).map((neighbor, k) => {
-                const distance = Math.sqrt(
-                  Math.pow(node.x - neighbor.x - (cx + (isMobile ? 60 : 100)), 2) +
-                  Math.pow(node.y - neighbor.y - 70, 2)
-                );
                 const isIntact = interactive ? (networkIntegrity / 100) > Math.random() * 0.5 : true;
+                const nodeX = node.x - (cx + (isMobile ? 45 : 80)) + 10;
+                const nodeY = node.y - (isMobile ? 65 : 80);
+                const neighborX = neighbor.x - (cx + (isMobile ? 45 : 80)) + 10;
+                const neighborY = neighbor.y - (isMobile ? 65 : 80);
+
                 return (
                   <line
                     key={`${node.id}-${k}`}
-                    x1={node.x - (cx + (isMobile ? 60 : 100)) + 10}
-                    y1={node.y - 50}
-                    x2={neighbor.x - (cx + (isMobile ? 60 : 100)) + 10}
-                    y2={neighbor.y - 50}
-                    stroke={isIntact ? colors.network : colors.broken}
-                    strokeWidth={isIntact ? 2 : 1}
+                    x1={nodeX}
+                    y1={nodeY}
+                    x2={neighborX}
+                    y2={neighborY}
+                    stroke={isIntact ? 'url(#shearNetworkIntact)' : 'url(#shearNetworkBroken)'}
+                    strokeWidth={isIntact ? 2.5 : 1.5}
                     strokeDasharray={isIntact ? '0' : '4,4'}
-                    opacity={isIntact ? 0.7 : 0.4}
+                    opacity={isIntact ? 0.8 : 0.5}
                   />
                 );
               });
             })}
 
-            {/* Draw nodes (polymer particles) */}
-            {networkNodes.map((node, i) => (
-              <circle
-                key={node.id}
-                cx={node.x - (cx + (isMobile ? 60 : 100)) + 10}
-                cy={node.y - 50}
-                r={isMobile ? 4 : 6}
-                fill={colors.polymer}
-                opacity={0.9}
-              />
-            ))}
+            {/* Draw nodes (polymer particles) with premium gradients and glow */}
+            {networkNodes.map((node) => {
+              const nodeX = node.x - (cx + (isMobile ? 45 : 80)) + 10;
+              const nodeY = node.y - (isMobile ? 65 : 80);
+
+              return (
+                <g key={node.id} filter="url(#shearNodeGlow)">
+                  <circle
+                    cx={nodeX}
+                    cy={nodeY}
+                    r={isMobile ? 5 : 7}
+                    fill="url(#shearPolymerNode)"
+                  />
+                  {/* Inner highlight */}
+                  <circle
+                    cx={nodeX - 1.5}
+                    cy={nodeY - 1.5}
+                    r={isMobile ? 1.5 : 2}
+                    fill="rgba(255,255,255,0.4)"
+                  />
+                </g>
+              );
+            })}
           </g>
 
-          {/* Viscosity meter (interactive only) */}
+          {/* Viscosity meter with premium gradients (interactive only) */}
           {interactive && (
-            <g transform={`translate(${isMobile ? 20 : 40}, ${height - 80})`}>
-              <rect x="0" y="0" width={isMobile ? 100 : 140} height="60" fill={colors.bgCard} rx="8" stroke={colors.border} />
-              <text x={isMobile ? 50 : 70} y="18" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
-                Viscosity
-              </text>
-              <rect x="10" y="28" width={isMobile ? 80 : 120} height="12" fill={colors.bgDark} rx="4" />
+            <g transform={`translate(${isMobile ? 15 : 30}, ${height - 90})`}>
+              <rect x="0" y="0" width={isMobile ? 110 : 150} height="70" fill="url(#shearPanelGradient)" rx="10" stroke={colors.border} />
+
+              {/* Meter track */}
+              <rect x="12" y="32" width={isMobile ? 86 : 126} height="14" fill={colors.bgDark} rx="7" />
+
+              {/* Meter fill with dynamic gradient */}
               <rect
-                x="10"
-                y="28"
-                width={Math.max(10, (viscosity / 100) * (isMobile ? 80 : 120))}
-                height="12"
-                fill={viscosity > 50 ? colors.primary : colors.success}
-                rx="4"
+                x="12"
+                y="32"
+                width={Math.max(14, (viscosity / 100) * (isMobile ? 86 : 126))}
+                height="14"
+                fill={viscosity > 50 ? 'url(#shearViscosityHigh)' : 'url(#shearViscosityLow)'}
+                rx="7"
               />
-              <text x={isMobile ? 50 : 70} y="54" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">
-                {Math.round(viscosity)} Pa·s
-              </text>
+
+              {/* Meter highlight */}
+              <rect
+                x="12"
+                y="33"
+                width={Math.max(14, (viscosity / 100) * (isMobile ? 86 : 126)) - 4}
+                height="4"
+                fill="rgba(255,255,255,0.2)"
+                rx="2"
+              />
             </g>
           )}
 
-          {/* Network integrity meter (interactive only) */}
+          {/* Network integrity meter with premium gradients (interactive only) */}
           {interactive && (
-            <g transform={`translate(${width - (isMobile ? 120 : 180)}, ${height - 80})`}>
-              <rect x="0" y="0" width={isMobile ? 100 : 140} height="60" fill={colors.bgCard} rx="8" stroke={colors.border} />
-              <text x={isMobile ? 50 : 70} y="18" textAnchor="middle" fill={colors.textSecondary} fontSize="11" fontWeight="600">
-                Network
-              </text>
-              <rect x="10" y="28" width={isMobile ? 80 : 120} height="12" fill={colors.bgDark} rx="4" />
+            <g transform={`translate(${width - (isMobile ? 125 : 180)}, ${height - 90})`}>
+              <rect x="0" y="0" width={isMobile ? 110 : 150} height="70" fill="url(#shearPanelGradient)" rx="10" stroke={colors.border} />
+
+              {/* Meter track */}
+              <rect x="12" y="32" width={isMobile ? 86 : 126} height="14" fill={colors.bgDark} rx="7" />
+
+              {/* Meter fill */}
               <rect
-                x="10"
-                y="28"
-                width={(networkIntegrity / 100) * (isMobile ? 80 : 120)}
-                height="12"
-                fill={networkIntegrity > 50 ? colors.network : colors.broken}
-                rx="4"
+                x="12"
+                y="32"
+                width={(networkIntegrity / 100) * (isMobile ? 86 : 126)}
+                height="14"
+                fill={networkIntegrity > 50 ? 'url(#shearNetworkIntact)' : 'url(#shearNetworkBroken)'}
+                rx="7"
               />
-              <text x={isMobile ? 50 : 70} y="54" textAnchor="middle" fill={colors.textPrimary} fontSize="12" fontWeight="bold">
-                {Math.round(networkIntegrity)}% Intact
-              </text>
+
+              {/* Meter highlight */}
+              <rect
+                x="12"
+                y="33"
+                width={Math.max(0, (networkIntegrity / 100) * (isMobile ? 86 : 126) - 4)}
+                height="4"
+                fill="rgba(255,255,255,0.15)"
+                rx="2"
+              />
             </g>
           )}
 
-          {/* Physics formula */}
-          <g transform={`translate(${isMobile ? 15 : 25}, ${height - (isMobile ? 35 : 30)})`}>
-            <text fill={colors.textSecondary} fontSize={isMobile ? 10 : 12} fontWeight="600">
-              <tspan fill={colors.primaryLight}>η</tspan> = η₀ × (1 + (λ × <tspan fill={colors.accent}>γ̇</tspan>)<tspan baselineShift="super" fontSize="8">n-1</tspan>)
-            </text>
-            <text y="14" fill={colors.textMuted} fontSize={isMobile ? 8 : 10}>
-              Viscosity decreases with shear rate (n &lt; 1)
-            </text>
-          </g>
+          {/* Viscosity change indicator arrow */}
+          {interactive && shearIntensity > 0.2 && (
+            <g transform={`translate(${isMobile ? 130 : 190}, ${height - 60})`} opacity={shearIntensity}>
+              <path
+                d="M 0 0 L 20 0 L 15 -5 M 20 0 L 15 5"
+                fill="none"
+                stroke={colors.success}
+                strokeWidth="2"
+                strokeLinecap="round"
+                filter="url(#shearArrowGlow)"
+              >
+                <animate
+                  attributeName="opacity"
+                  values="0.5;1;0.5"
+                  dur="1s"
+                  repeatCount="indefinite"
+                />
+              </path>
+            </g>
+          )}
         </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        {interactive && (
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            padding: `0 ${typo.pagePadding}`,
+            marginTop: '-60px',
+            position: 'relative',
+            zIndex: 5
+          }}>
+            {/* Viscosity label */}
+            <div style={{ width: isMobile ? '110px' : '150px' }}>
+              <p style={{
+                fontSize: typo.small,
+                fontWeight: 600,
+                color: colors.textSecondary,
+                margin: 0,
+                marginBottom: '2px',
+                textAlign: 'center'
+              }}>
+                Viscosity
+              </p>
+              <p style={{
+                fontSize: typo.body,
+                fontWeight: 700,
+                color: colors.textPrimary,
+                margin: 0,
+                textAlign: 'center'
+              }}>
+                {Math.round(viscosity)} Pa·s
+              </p>
+            </div>
+
+            {/* Network label */}
+            <div style={{ width: isMobile ? '110px' : '150px' }}>
+              <p style={{
+                fontSize: typo.small,
+                fontWeight: 600,
+                color: colors.textSecondary,
+                margin: 0,
+                marginBottom: '2px',
+                textAlign: 'center'
+              }}>
+                Network
+              </p>
+              <p style={{
+                fontSize: typo.body,
+                fontWeight: 700,
+                color: colors.textPrimary,
+                margin: 0,
+                textAlign: 'center'
+              }}>
+                {Math.round(networkIntegrity)}% Intact
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Physics formula moved outside SVG */}
+        <div style={{
+          marginTop: interactive ? '8px' : typo.elementGap,
+          padding: `0 ${typo.pagePadding}`
+        }}>
+          <p style={{
+            fontSize: typo.small,
+            fontWeight: 600,
+            color: colors.textSecondary,
+            margin: 0,
+            fontFamily: 'monospace'
+          }}>
+            <span style={{ color: colors.primaryLight }}>η</span> = η₀ × (1 + (λ × <span style={{ color: colors.accent }}>γ̇</span>))<sup style={{ fontSize: '8px' }}>n-1</sup>
+          </p>
+          <p style={{
+            fontSize: typo.label,
+            color: colors.textMuted,
+            margin: 0,
+            marginTop: '2px'
+          }}>
+            Viscosity decreases with shear rate (n &lt; 1)
+          </p>
+        </div>
       </div>
     );
   };

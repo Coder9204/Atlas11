@@ -632,59 +632,248 @@ const EntropyRenderer: React.FC<Props> = ({
     const rightCount = particles.length - leftCount;
     const entropy = calculateEntropy();
     const maxEntropy = numParticles * Math.log(2); // Maximum when evenly distributed
+    const entropyRatio = maxEntropy > 0 ? entropy / maxEntropy : 0;
+
+    // Determine order state for visual feedback
+    const isOrdered = !barrierRemoved || entropyRatio < 0.3;
+    const isDisordered = barrierRemoved && entropyRatio > 0.7;
 
     return (
-      <svg width={width} height={height} className="mx-auto">
-        <defs>
-          <linearGradient id="entropyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#ef4444" />
-          </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-            <feMerge><feMergeNode in="coloredBlur"/><feMergeNode in="SourceGraphic"/></feMerge>
-          </filter>
-        </defs>
+      <div className="flex flex-col items-center">
+        <svg width={width} height={height} className="mx-auto">
+          <defs>
+            {/* Premium container gradient with depth */}
+            <linearGradient id="entContainerGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="25%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#020617" />
+              <stop offset="75%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
 
-        {/* Container */}
-        <rect x="5" y="5" width={width - 10} height={height - 10} rx="8"
-              fill="#0f172a" stroke="#334155" strokeWidth="2" />
+            {/* Container border gradient */}
+            <linearGradient id="entContainerBorder" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#6366f1" stopOpacity="0.6" />
+              <stop offset="25%" stopColor="#8b5cf6" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.3" />
+              <stop offset="75%" stopColor="#8b5cf6" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#6366f1" stopOpacity="0.6" />
+            </linearGradient>
 
-        {/* Barrier (if not removed) */}
-        {!barrierRemoved && (
-          <line x1={width/2} y1="10" x2={width/2} y2={height - 10}
-                stroke="#64748b" strokeWidth="4" strokeLinecap="round" />
-        )}
+            {/* Blue particle gradient (left/ordered) */}
+            <radialGradient id="entParticleBlue" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="30%" stopColor="#60a5fa" />
+              <stop offset="60%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </radialGradient>
 
-        {/* Barrier opening animation */}
-        {barrierRemoved && (
-          <line x1={width/2} y1="10" x2={width/2} y2={height - 10}
-                stroke="#64748b" strokeWidth="1" strokeDasharray="4 4" opacity="0.3" />
-        )}
+            {/* Red particle gradient (right/disordered) */}
+            <radialGradient id="entParticleRed" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="30%" stopColor="#f87171" />
+              <stop offset="60%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </radialGradient>
 
-        {/* Particles */}
-        {particles.map((p, i) => (
-          <circle
-            key={i}
-            cx={p.x}
-            cy={p.y}
-            r="5"
-            fill={p.x < 100 ? "#3b82f6" : "#ef4444"}
-            filter="url(#glow)"
+            {/* Ordered state gradient (cool blue-purple) */}
+            <linearGradient id="entOrderedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="25%" stopColor="#6366f1" />
+              <stop offset="50%" stopColor="#8b5cf6" />
+              <stop offset="75%" stopColor="#6366f1" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+
+            {/* Disordered state gradient (warm orange-red) */}
+            <linearGradient id="entDisorderedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f97316" />
+              <stop offset="25%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#ec4899" />
+              <stop offset="75%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f97316" />
+            </linearGradient>
+
+            {/* Entropy bar gradient (blue to red spectrum) */}
+            <linearGradient id="entEntropyBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="25%" stopColor="#8b5cf6" />
+              <stop offset="50%" stopColor="#d946ef" />
+              <stop offset="75%" stopColor="#f43f5e" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Barrier gradient */}
+            <linearGradient id="entBarrierGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="25%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="75%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* Particle glow filter */}
+            <filter id="entParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Strong glow for disordered state */}
+            <filter id="entDisorderGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Ordered state subtle glow */}
+            <filter id="entOrderGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Container inner shadow */}
+            <filter id="entInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="shadow" />
+              <feComposite in="SourceGraphic" in2="shadow" operator="over" />
+            </filter>
+
+            {/* Entropy indicator glow */}
+            <filter id="entBarGlow" x="-20%" y="-100%" width="140%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="glow" />
+              <feMerge>
+                <feMergeNode in="glow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background with subtle gradient */}
+          <rect x="0" y="0" width={width} height={height} fill="#030712" rx="12" />
+
+          {/* Premium container with gradient and border glow */}
+          <rect
+            x="5" y="15"
+            width={width - 10} height={height - 25}
+            rx="8"
+            fill="url(#entContainerGrad)"
+            stroke="url(#entContainerBorder)"
+            strokeWidth="2"
+            filter="url(#entInnerShadow)"
           />
-        ))}
 
-        {/* Labels */}
-        <text x={width * 0.25} y={height - 3} textAnchor="middle"
-              fill="#3b82f6" fontSize="10" fontWeight="bold">{leftCount}</text>
-        <text x={width * 0.75} y={height - 3} textAnchor="middle"
-              fill="#ef4444" fontSize="10" fontWeight="bold">{rightCount}</text>
+          {/* Order/Disorder visual indicator at top */}
+          <rect
+            x="10" y="3"
+            width={width - 20} height="6"
+            rx="3"
+            fill="#0f172a"
+            stroke="#1e293b"
+            strokeWidth="1"
+          />
+          <rect
+            x="10" y="3"
+            width={(width - 20) * entropyRatio} height="6"
+            rx="3"
+            fill="url(#entEntropyBarGrad)"
+            filter="url(#entBarGlow)"
+          />
 
-        {/* Entropy bar */}
-        <rect x="10" y="3" width={width - 20} height="4" rx="2" fill="#1e293b" />
-        <rect x="10" y="3" width={(width - 20) * (entropy / maxEntropy)} height="4" rx="2"
-              fill="url(#entropyGrad)" />
-      </svg>
+          {/* Barrier (if not removed) - premium metallic look */}
+          {!barrierRemoved && (
+            <g>
+              <rect
+                x={width/2 - 3} y="20"
+                width="6" height={height - 35}
+                rx="2"
+                fill="url(#entBarrierGrad)"
+              />
+              {/* Barrier highlight */}
+              <line
+                x1={width/2} y1="22"
+                x2={width/2} y2={height - 17}
+                stroke="#cbd5e1"
+                strokeWidth="1"
+                strokeOpacity="0.4"
+              />
+            </g>
+          )}
+
+          {/* Barrier removed - dashed outline showing where it was */}
+          {barrierRemoved && (
+            <line
+              x1={width/2} y1="20"
+              x2={width/2} y2={height - 15}
+              stroke="#475569"
+              strokeWidth="1"
+              strokeDasharray="4 4"
+              strokeOpacity="0.2"
+            />
+          )}
+
+          {/* Particles with premium gradients and glow */}
+          {particles.map((p, i) => {
+            const isLeft = p.x < 100;
+            const particleFilter = isDisordered ? "url(#entDisorderGlow)" :
+                                   isOrdered ? "url(#entOrderGlow)" :
+                                   "url(#entParticleGlow)";
+            return (
+              <circle
+                key={i}
+                cx={p.x * (width / 200)}
+                cy={p.y * (height / 150) + 5}
+                r="5"
+                fill={isLeft ? "url(#entParticleBlue)" : "url(#entParticleRed)"}
+                filter={particleFilter}
+              />
+            );
+          })}
+
+          {/* Side count indicators with glow */}
+          <g filter="url(#entParticleGlow)">
+            <circle cx={width * 0.2} cy={height - 8} r="8" fill="#1e293b" stroke="#3b82f6" strokeWidth="1" />
+            <circle cx={width * 0.8} cy={height - 8} r="8" fill="#1e293b" stroke="#ef4444" strokeWidth="1" />
+          </g>
+        </svg>
+
+        {/* External text labels using typo system */}
+        <div className="flex justify-between w-full px-4 -mt-5 relative z-10">
+          <span
+            style={{ fontSize: typo.label }}
+            className="font-bold text-blue-400 bg-slate-900/80 px-1.5 py-0.5 rounded"
+          >
+            {leftCount}
+          </span>
+          <span
+            style={{ fontSize: typo.label }}
+            className="font-bold text-red-400 bg-slate-900/80 px-1.5 py-0.5 rounded"
+          >
+            {rightCount}
+          </span>
+        </div>
+
+        {/* Order/Disorder state label */}
+        <div
+          className={`mt-2 px-3 py-1 rounded-full text-xs font-medium transition-all duration-500 ${
+            isDisordered
+              ? 'bg-gradient-to-r from-orange-500/20 to-red-500/20 text-orange-300 border border-orange-500/30'
+              : isOrdered
+                ? 'bg-gradient-to-r from-blue-500/20 to-purple-500/20 text-blue-300 border border-blue-500/30'
+                : 'bg-gradient-to-r from-purple-500/20 to-pink-500/20 text-purple-300 border border-purple-500/30'
+          }`}
+          style={{ fontSize: typo.label }}
+        >
+          {isDisordered ? 'High Entropy (Disordered)' : isOrdered ? 'Low Entropy (Ordered)' : 'Mixing...'}
+        </div>
+      </div>
     );
   };
 
@@ -1042,26 +1231,117 @@ const EntropyRenderer: React.FC<Props> = ({
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-3xl mb-6">
         <div className="grid md:grid-cols-2 gap-6">
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-blue-400 mb-3">❄️ Inside Refrigerator</h3>
+            <h3 style={{ fontSize: typo.bodyLarge }} className="font-semibold text-blue-400 mb-3">Inside Refrigerator</h3>
             <svg width="150" height="150" className="mx-auto">
-              <rect width="150" height="150" fill="#0f172a" rx="10" />
-              <rect x="20" y="20" width="110" height="110" fill="#1e3a5f" rx="5" />
-              <text x="75" y="60" textAnchor="middle" fill="#06b6d4" fontSize="30">❄️</text>
-              <text x="75" y="85" textAnchor="middle" fill="#06b6d4" fontSize="12">ΔS &lt; 0</text>
-              <text x="75" y="105" textAnchor="middle" fill="#94a3b8" fontSize="10">Entropy decreases</text>
-              <text x="75" y="125" textAnchor="middle" fill="#22c55e" fontSize="10">(Order increases)</text>
+              <defs>
+                {/* Cold interior gradient */}
+                <radialGradient id="entColdInterior" cx="50%" cy="50%" r="70%">
+                  <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.3" />
+                  <stop offset="40%" stopColor="#0284c7" stopOpacity="0.2" />
+                  <stop offset="70%" stopColor="#0369a1" stopOpacity="0.15" />
+                  <stop offset="100%" stopColor="#075985" stopOpacity="0.1" />
+                </radialGradient>
+                {/* Fridge outer shell */}
+                <linearGradient id="entFridgeShell" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#334155" />
+                  <stop offset="30%" stopColor="#1e293b" />
+                  <stop offset="70%" stopColor="#0f172a" />
+                  <stop offset="100%" stopColor="#020617" />
+                </linearGradient>
+                {/* Cold glow filter */}
+                <filter id="entColdGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                {/* Snowflake particles */}
+                <radialGradient id="entSnowflake" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#ffffff" />
+                  <stop offset="50%" stopColor="#e0f2fe" />
+                  <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              {/* Outer shell */}
+              <rect width="150" height="150" fill="url(#entFridgeShell)" rx="12" />
+              {/* Inner cold zone */}
+              <rect x="15" y="15" width="120" height="120" fill="url(#entColdInterior)" rx="8" stroke="#0ea5e9" strokeWidth="1" strokeOpacity="0.3" />
+              {/* Frost particles */}
+              {[
+                { x: 45, y: 50 }, { x: 75, y: 35 }, { x: 105, y: 55 },
+                { x: 55, y: 80 }, { x: 95, y: 75 }, { x: 75, y: 100 },
+                { x: 40, y: 110 }, { x: 110, y: 105 }
+              ].map((pos, i) => (
+                <circle key={i} cx={pos.x} cy={pos.y} r="3" fill="url(#entSnowflake)" filter="url(#entColdGlow)" opacity={0.7 + Math.random() * 0.3} />
+              ))}
+              {/* Down arrow indicating entropy decrease */}
+              <path d="M 75 115 L 65 125 L 75 135 L 85 125 Z" fill="#22d3ee" filter="url(#entColdGlow)" />
             </svg>
+            {/* External labels */}
+            <div className="mt-2 space-y-1">
+              <p style={{ fontSize: typo.small }} className="font-bold text-cyan-400">Delta S &lt; 0</p>
+              <p style={{ fontSize: typo.label }} className="text-slate-400">Entropy decreases</p>
+              <p style={{ fontSize: typo.label }} className="text-emerald-400">(Order increases)</p>
+            </div>
           </div>
           <div className="text-center">
-            <h3 className="text-lg font-semibold text-orange-400 mb-3">🔥 Kitchen (Environment)</h3>
+            <h3 style={{ fontSize: typo.bodyLarge }} className="font-semibold text-orange-400 mb-3">Kitchen (Environment)</h3>
             <svg width="150" height="150" className="mx-auto">
-              <rect width="150" height="150" fill="#0f172a" rx="10" />
-              <rect x="20" y="20" width="110" height="110" fill="#5f1e1e" rx="5" />
-              <text x="75" y="60" textAnchor="middle" fill="#f97316" fontSize="30">🔥</text>
-              <text x="75" y="85" textAnchor="middle" fill="#f97316" fontSize="12">ΔS &gt;&gt; 0</text>
-              <text x="75" y="105" textAnchor="middle" fill="#94a3b8" fontSize="10">Entropy increases MORE</text>
-              <text x="75" y="125" textAnchor="middle" fill="#ef4444" fontSize="10">(Disorder exported)</text>
+              <defs>
+                {/* Hot environment gradient */}
+                <radialGradient id="entHotEnvironment" cx="50%" cy="50%" r="70%">
+                  <stop offset="0%" stopColor="#f97316" stopOpacity="0.4" />
+                  <stop offset="30%" stopColor="#ea580c" stopOpacity="0.3" />
+                  <stop offset="60%" stopColor="#c2410c" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="#7c2d12" stopOpacity="0.1" />
+                </radialGradient>
+                {/* Kitchen outer */}
+                <linearGradient id="entKitchenShell" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#451a03" />
+                  <stop offset="30%" stopColor="#7c2d12" />
+                  <stop offset="70%" stopColor="#451a03" />
+                  <stop offset="100%" stopColor="#1c0a00" />
+                </linearGradient>
+                {/* Heat glow filter */}
+                <filter id="entHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+                {/* Heat particle */}
+                <radialGradient id="entHeatParticle" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#fbbf24" />
+                  <stop offset="40%" stopColor="#f97316" />
+                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+                </radialGradient>
+              </defs>
+              {/* Outer shell */}
+              <rect width="150" height="150" fill="url(#entKitchenShell)" rx="12" />
+              {/* Inner hot zone */}
+              <rect x="15" y="15" width="120" height="120" fill="url(#entHotEnvironment)" rx="8" stroke="#f97316" strokeWidth="1" strokeOpacity="0.4" />
+              {/* Heat particles (chaotic) */}
+              {[
+                { x: 35, y: 40 }, { x: 60, y: 30 }, { x: 90, y: 45 }, { x: 115, y: 35 },
+                { x: 45, y: 70 }, { x: 75, y: 60 }, { x: 105, y: 75 },
+                { x: 30, y: 100 }, { x: 55, y: 90 }, { x: 85, y: 105 }, { x: 115, y: 95 },
+                { x: 40, y: 120 }, { x: 70, y: 115 }, { x: 100, y: 125 }
+              ].map((pos, i) => (
+                <circle key={i} cx={pos.x} cy={pos.y} r="4" fill="url(#entHeatParticle)" filter="url(#entHeatGlow)" opacity={0.6 + Math.random() * 0.4} />
+              ))}
+              {/* Up arrows indicating entropy increase */}
+              <path d="M 55 125 L 45 115 L 55 105 L 65 115 Z" fill="#f97316" filter="url(#entHeatGlow)" />
+              <path d="M 95 125 L 85 115 L 95 105 L 105 115 Z" fill="#f97316" filter="url(#entHeatGlow)" />
             </svg>
+            {/* External labels */}
+            <div className="mt-2 space-y-1">
+              <p style={{ fontSize: typo.small }} className="font-bold text-orange-400">Delta S &gt;&gt; 0</p>
+              <p style={{ fontSize: typo.label }} className="text-slate-400">Entropy increases MORE</p>
+              <p style={{ fontSize: typo.label }} className="text-red-400">(Disorder exported)</p>
+            </div>
           </div>
         </div>
 

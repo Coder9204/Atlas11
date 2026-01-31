@@ -478,16 +478,76 @@ export default function SoapBoatRenderer({
             </p>
 
             <svg viewBox="0 0 400 250" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
-              {/* Water surface */}
               <defs>
-                <linearGradient id="waterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#60a5fa" />
-                  <stop offset="100%" stopColor="#1d4ed8" />
+                {/* Premium water gradient with depth */}
+                <linearGradient id="soapHookWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#7dd3fc" />
+                  <stop offset="25%" stopColor="#38bdf8" />
+                  <stop offset="50%" stopColor="#0ea5e9" />
+                  <stop offset="75%" stopColor="#0284c7" />
+                  <stop offset="100%" stopColor="#0369a1" />
                 </linearGradient>
-              </defs>
-              <rect x="20" y="120" width="360" height="110" fill="url(#waterGrad)" rx="5" />
 
-              {/* Surface ripples */}
+                {/* Water surface shimmer */}
+                <linearGradient id="soapHookSurfaceShimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.3" />
+                  <stop offset="25%" stopColor="#bae6fd" stopOpacity="0.6" />
+                  <stop offset="50%" stopColor="#e0f2fe" stopOpacity="0.8" />
+                  <stop offset="75%" stopColor="#bae6fd" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#e0f2fe" stopOpacity="0.3" />
+                </linearGradient>
+
+                {/* Boat hull gradient for 3D effect */}
+                <linearGradient id="soapHookHullGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#a16207" />
+                  <stop offset="30%" stopColor="#854d0e" />
+                  <stop offset="70%" stopColor="#713f12" />
+                  <stop offset="100%" stopColor="#422006" />
+                </linearGradient>
+
+                {/* Boat deck gradient */}
+                <linearGradient id="soapHookDeckGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#ca8a04" />
+                  <stop offset="50%" stopColor="#a16207" />
+                  <stop offset="100%" stopColor="#854d0e" />
+                </linearGradient>
+
+                {/* Soap drop gradient */}
+                <radialGradient id="soapHookSoapGrad" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#d8b4fe" />
+                  <stop offset="40%" stopColor="#a855f7" />
+                  <stop offset="80%" stopColor="#7c3aed" />
+                  <stop offset="100%" stopColor="#6d28d9" />
+                </radialGradient>
+
+                {/* Motion glow filter */}
+                <filter id="soapHookMotionGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Water ripple glow */}
+                <filter id="soapHookRippleGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="1.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Water body with premium gradient */}
+              <rect x="20" y="120" width="360" height="110" fill="url(#soapHookWaterGrad)" rx="8" />
+
+              {/* Water surface shimmer overlay */}
+              <ellipse cx="200" cy="125" rx="175" ry="8" fill="url(#soapHookSurfaceShimmer)">
+                <animate attributeName="opacity" values="0.6;1;0.6" dur="2s" repeatCount="indefinite" />
+              </ellipse>
+
+              {/* Surface ripples with glow */}
               {[0, 1, 2].map(i => (
                 <ellipse
                   key={i}
@@ -496,9 +556,10 @@ export default function SoapBoatRenderer({
                   rx={50 + i * 40}
                   ry={5 + i * 2}
                   fill="none"
-                  stroke="#93c5fd"
-                  strokeWidth="1"
-                  opacity={0.5 - i * 0.15}
+                  stroke="#7dd3fc"
+                  strokeWidth="1.5"
+                  opacity={0.6 - i * 0.15}
+                  filter="url(#soapHookRippleGlow)"
                 >
                   <animate
                     attributeName="rx"
@@ -509,51 +570,74 @@ export default function SoapBoatRenderer({
                 </ellipse>
               ))}
 
-              {/* Boat */}
+              {/* Boat with 3D appearance */}
               <g transform="translate(100, 100)">
-                {/* Hull */}
+                {/* Hull shadow */}
+                <path
+                  d="M 2,22 L 12,37 L 62,37 L 72,22 L 2,22"
+                  fill="#1e293b"
+                  opacity="0.3"
+                />
+                {/* Hull with gradient */}
                 <path
                   d="M 0,20 L 10,35 L 60,35 L 70,20 L 0,20"
-                  fill="#854d0e"
-                  stroke="#713f12"
-                  strokeWidth="2"
+                  fill="url(#soapHookHullGrad)"
+                  stroke="#422006"
+                  strokeWidth="1.5"
                 />
-                {/* Deck */}
-                <rect x="5" y="10" width="60" height="12" fill="#a16207" stroke="#854d0e" strokeWidth="1" rx="2" />
+                {/* Hull highlight */}
+                <path
+                  d="M 5,22 L 12,32 L 58,32 L 65,22"
+                  fill="none"
+                  stroke="#ca8a04"
+                  strokeWidth="1"
+                  opacity="0.4"
+                />
+                {/* Deck with gradient */}
+                <rect x="5" y="10" width="60" height="12" fill="url(#soapHookDeckGrad)" stroke="#713f12" strokeWidth="1" rx="2" />
+                {/* Deck highlight */}
+                <rect x="8" y="12" width="54" height="3" fill="#fbbf24" opacity="0.3" rx="1" />
 
-                {/* Motion lines */}
-                <g>
-                  <line x1="75" y1="25" x2="95" y2="25" stroke="#22c55e" strokeWidth="3" strokeLinecap="round">
+                {/* Motion lines with glow */}
+                <g filter="url(#soapHookMotionGlow)">
+                  <line x1="75" y1="25" x2="95" y2="25" stroke="#4ade80" strokeWidth="3" strokeLinecap="round">
                     <animate attributeName="x2" values="95;110;95" dur="0.5s" repeatCount="indefinite" />
+                    <animate attributeName="opacity" values="0.8;1;0.8" dur="0.5s" repeatCount="indefinite" />
                   </line>
-                  <line x1="75" y1="18" x2="90" y2="15" stroke="#22c55e" strokeWidth="2" strokeLinecap="round">
+                  <line x1="75" y1="18" x2="90" y2="15" stroke="#4ade80" strokeWidth="2" strokeLinecap="round">
                     <animate attributeName="x2" values="90;100;90" dur="0.5s" repeatCount="indefinite" />
                   </line>
-                  <line x1="75" y1="32" x2="90" y2="35" stroke="#22c55e" strokeWidth="2" strokeLinecap="round">
+                  <line x1="75" y1="32" x2="90" y2="35" stroke="#4ade80" strokeWidth="2" strokeLinecap="round">
                     <animate attributeName="x2" values="90;100;90" dur="0.5s" repeatCount="indefinite" />
                   </line>
                 </g>
 
-                {/* Soap drop */}
-                <circle cx="-10" cy="25" r="8" fill="#a855f7" opacity="0.8">
-                  <animate attributeName="r" values="8;10;8" dur="1s" repeatCount="indefinite" />
+                {/* Soap drop with premium gradient and glow */}
+                <circle cx="-10" cy="25" r="10" fill="url(#soapHookSoapGrad)" filter="url(#soapHookMotionGlow)">
+                  <animate attributeName="r" values="9;11;9" dur="1s" repeatCount="indefinite" />
                 </circle>
-                <text x="-10" y="28" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">
-                  soap
-                </text>
+                {/* Soap highlight */}
+                <circle cx="-13" cy="22" r="3" fill="#f0abfc" opacity="0.6" />
               </g>
-
-              {/* Labels */}
-              <text x="200" y="45" textAnchor="middle" fill="#1e293b" fontSize="14" fontWeight="bold">
-                A tiny soap drop makes the boat zoom!
-              </text>
-              <text x="200" y="200" textAnchor="middle" fill="white" fontSize="12">
-                No motor, no wind, no paddle...
-              </text>
-              <text x="200" y="220" textAnchor="middle" fill="#bfdbfe" fontSize="12">
-                Just surface tension!
-              </text>
             </svg>
+
+            {/* Labels moved outside SVG using typo system */}
+            <div style={{ textAlign: 'center', marginBottom: '1rem' }}>
+              <p style={{
+                fontSize: typo.bodyLarge,
+                fontWeight: 700,
+                color: colors.textPrimary,
+                marginBottom: '0.5rem'
+              }}>
+                A tiny soap drop makes the boat zoom!
+              </p>
+              <p style={{ fontSize: typo.body, color: colors.textSecondary }}>
+                No motor, no wind, no paddle...
+              </p>
+              <p style={{ fontSize: typo.body, color: colors.primary }}>
+                Just surface tension!
+              </p>
+            </div>
 
             <button
               onMouseDown={() => goToPhase('predict')}
@@ -589,36 +673,100 @@ export default function SoapBoatRenderer({
             </p>
 
             <svg viewBox="0 0 400 140" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
-              {/* Water */}
-              <rect x="20" y="70" width="360" height="50" fill="#3b82f6" rx="5" />
-
-              {/* Boat */}
-              <g transform="translate(180, 55)">
-                <path d="M 0,15 L 8,25 L 42,25 L 50,15 L 0,15" fill="#854d0e" stroke="#713f12" strokeWidth="2" />
-                <rect x="5" y="7" width="40" height="10" fill="#a16207" rx="2" />
-              </g>
-
-              {/* Soap drop approaching */}
-              <circle cx="120" cy="80" r="10" fill="#a855f7" opacity="0.8" />
-              <text x="120" y="83" textAnchor="middle" fill="white" fontSize="7" fontWeight="bold">
-                SOAP
-              </text>
-
-              {/* Question mark */}
-              <text x="330" y="90" fill="#1e293b" fontSize="24" fontWeight="bold">?</text>
-
-              {/* Arrow */}
-              <path d="M 150,80 L 170,80" fill="none" stroke="#64748b" strokeWidth="2" strokeDasharray="4,2" markerEnd="url(#arrowhead)" />
               <defs>
-                <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                  <polygon points="0 0, 10 3.5, 0 7" fill="#64748b" />
+                {/* Water gradient */}
+                <linearGradient id="soapPredictWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="40%" stopColor="#3b82f6" />
+                  <stop offset="70%" stopColor="#2563eb" />
+                  <stop offset="100%" stopColor="#1d4ed8" />
+                </linearGradient>
+
+                {/* Water surface highlight */}
+                <linearGradient id="soapPredictSurface" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.2" />
+                  <stop offset="50%" stopColor="#bfdbfe" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.2" />
+                </linearGradient>
+
+                {/* Boat hull gradient */}
+                <linearGradient id="soapPredictHull" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#a16207" />
+                  <stop offset="50%" stopColor="#854d0e" />
+                  <stop offset="100%" stopColor="#713f12" />
+                </linearGradient>
+
+                {/* Boat deck gradient */}
+                <linearGradient id="soapPredictDeck" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#ca8a04" />
+                  <stop offset="100%" stopColor="#a16207" />
+                </linearGradient>
+
+                {/* Soap gradient */}
+                <radialGradient id="soapPredictSoap" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#d8b4fe" />
+                  <stop offset="50%" stopColor="#a855f7" />
+                  <stop offset="100%" stopColor="#7c3aed" />
+                </radialGradient>
+
+                {/* Soap glow filter */}
+                <filter id="soapPredictGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Arrow marker */}
+                <marker id="soapPredictArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#94a3b8" />
                 </marker>
               </defs>
 
-              <text x="200" y="130" textAnchor="middle" fill="#64748b" fontSize="11">
-                Soap added behind the boat...
-              </text>
+              {/* Water with gradient */}
+              <rect x="20" y="70" width="360" height="50" fill="url(#soapPredictWater)" rx="6" />
+
+              {/* Surface shimmer */}
+              <ellipse cx="200" cy="72" rx="175" ry="4" fill="url(#soapPredictSurface)" />
+
+              {/* Boat with 3D appearance */}
+              <g transform="translate(180, 55)">
+                {/* Hull shadow */}
+                <path d="M 2,17 L 10,27 L 44,27 L 52,17" fill="#1e293b" opacity="0.3" />
+                {/* Hull */}
+                <path d="M 0,15 L 8,25 L 42,25 L 50,15 L 0,15" fill="url(#soapPredictHull)" stroke="#422006" strokeWidth="1.5" />
+                {/* Hull highlight */}
+                <path d="M 5,17 L 11,23 L 39,23 L 45,17" fill="none" stroke="#ca8a04" strokeWidth="0.5" opacity="0.5" />
+                {/* Deck */}
+                <rect x="5" y="7" width="40" height="10" fill="url(#soapPredictDeck)" stroke="#713f12" strokeWidth="1" rx="2" />
+                {/* Deck highlight */}
+                <rect x="7" y="9" width="36" height="2" fill="#fbbf24" opacity="0.3" rx="1" />
+              </g>
+
+              {/* Soap drop with gradient and glow */}
+              <circle cx="120" cy="80" r="12" fill="url(#soapPredictSoap)" filter="url(#soapPredictGlow)">
+                <animate attributeName="r" values="11;13;11" dur="1.5s" repeatCount="indefinite" />
+              </circle>
+              {/* Soap highlight */}
+              <circle cx="115" cy="75" r="3" fill="#f0abfc" opacity="0.6" />
+
+              {/* Question mark with glow */}
+              <text x="330" y="90" fill={colors.accent} fontSize="28" fontWeight="bold" filter="url(#soapPredictGlow)">?</text>
+
+              {/* Arrow */}
+              <path d="M 145,80 L 170,80" fill="none" stroke="#94a3b8" strokeWidth="2" strokeDasharray="4,2" markerEnd="url(#soapPredictArrow)" />
             </svg>
+
+            {/* Label moved outside SVG */}
+            <p style={{
+              textAlign: 'center',
+              fontSize: typo.small,
+              color: colors.textMuted,
+              marginBottom: '1rem'
+            }}>
+              Soap added behind the boat...
+            </p>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: '0.75rem', width: '100%', maxWidth: 400 }}>
               {[
@@ -788,139 +936,308 @@ export default function SoapBoatRenderer({
             </div>
 
             <svg viewBox="0 0 400 250" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }}>
-              {/* Container */}
-              <rect x="10" y="80" width="380" height="150" fill="#1e40af" rx="8" />
-              <rect x="15" y="85" width="370" height="140" fill="#3b82f6" rx="5" />
+              <defs>
+                {/* Container gradient (tank walls) */}
+                <linearGradient id="soapPlayContainerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#1e3a5f" />
+                  <stop offset="30%" stopColor="#1e40af" />
+                  <stop offset="70%" stopColor="#1e3a8a" />
+                  <stop offset="100%" stopColor="#172554" />
+                </linearGradient>
 
-              {/* Water surface effect */}
-              <ellipse cx="200" cy="85" rx="180" ry="5" fill="#60a5fa" opacity="0.5" />
+                {/* Water gradient with depth */}
+                <linearGradient id="soapPlayWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="25%" stopColor="#3b82f6" />
+                  <stop offset="50%" stopColor="#2563eb" />
+                  <stop offset="75%" stopColor="#1d4ed8" />
+                  <stop offset="100%" stopColor="#1e40af" />
+                </linearGradient>
 
-              {/* Soap spread visualization */}
+                {/* Water surface shimmer */}
+                <linearGradient id="soapPlaySurfaceShimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#bfdbfe" stopOpacity="0.2" />
+                  <stop offset="30%" stopColor="#93c5fd" stopOpacity="0.5" />
+                  <stop offset="50%" stopColor="#bfdbfe" stopOpacity="0.7" />
+                  <stop offset="70%" stopColor="#93c5fd" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#bfdbfe" stopOpacity="0.2" />
+                </linearGradient>
+
+                {/* Boat hull gradient */}
+                <linearGradient id="soapPlayHullGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#b45309" />
+                  <stop offset="30%" stopColor="#92400e" />
+                  <stop offset="70%" stopColor="#78350f" />
+                  <stop offset="100%" stopColor="#451a03" />
+                </linearGradient>
+
+                {/* Boat deck gradient */}
+                <linearGradient id="soapPlayDeckGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#d97706" />
+                  <stop offset="50%" stopColor="#b45309" />
+                  <stop offset="100%" stopColor="#92400e" />
+                </linearGradient>
+
+                {/* Flag gradient */}
+                <linearGradient id="soapPlayFlagGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#f87171" />
+                  <stop offset="50%" stopColor="#ef4444" />
+                  <stop offset="100%" stopColor="#dc2626" />
+                </linearGradient>
+
+                {/* Soap dispersal gradient */}
+                <radialGradient id="soapPlaySoapSpread" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#c084fc" stopOpacity="0.6" />
+                  <stop offset="40%" stopColor="#a855f7" stopOpacity="0.4" />
+                  <stop offset="70%" stopColor="#8b5cf6" stopOpacity="0.2" />
+                  <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Soap bottle gradient */}
+                <linearGradient id="soapPlayBottleGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#c084fc" />
+                  <stop offset="30%" stopColor="#a855f7" />
+                  <stop offset="70%" stopColor="#8b5cf6" />
+                  <stop offset="100%" stopColor="#7c3aed" />
+                </linearGradient>
+
+                {/* Bottle cap gradient */}
+                <linearGradient id="soapPlayCapGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#8b5cf6" />
+                  <stop offset="50%" stopColor="#7c3aed" />
+                  <stop offset="100%" stopColor="#6d28d9" />
+                </linearGradient>
+
+                {/* Surface tension arrow glow */}
+                <filter id="soapPlayArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Water ripple glow */}
+                <filter id="soapPlayRippleGlow" x="-30%" y="-30%" width="160%" height="160%">
+                  <feGaussianBlur stdDeviation="1" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Soap glow */}
+                <filter id="soapPlaySoapGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Container with gradient */}
+              <rect x="10" y="80" width="380" height="150" fill="url(#soapPlayContainerGrad)" rx="10" />
+              {/* Inner water body */}
+              <rect x="15" y="85" width="370" height="140" fill="url(#soapPlayWaterGrad)" rx="6" />
+
+              {/* Water surface shimmer effect */}
+              <ellipse cx="200" cy="88" rx="180" ry="6" fill="url(#soapPlaySurfaceShimmer)">
+                <animate attributeName="opacity" values="0.5;0.8;0.5" dur="2s" repeatCount="indefinite" />
+              </ellipse>
+
+              {/* Surface tension visualization (subtle lines) */}
+              {!waterContaminated && (
+                <g opacity="0.3">
+                  {[0, 1, 2, 3].map(i => (
+                    <line key={i} x1={50 + i * 80} y1="88" x2={90 + i * 80} y2="88" stroke="#7dd3fc" strokeWidth="1" strokeDasharray="2,4" />
+                  ))}
+                </g>
+              )}
+
+              {/* Soap spread visualization with gradient */}
               {soapAdded && (
                 <g>
                   <ellipse
                     cx={boatPosition - 10}
-                    cy="100"
-                    rx={soapSpread * 1.5}
-                    ry={soapSpread * 0.3}
-                    fill="#a855f7"
-                    opacity={0.3}
+                    cy="105"
+                    rx={soapSpread * 1.8}
+                    ry={soapSpread * 0.4}
+                    fill="url(#soapPlaySoapSpread)"
+                    filter="url(#soapPlaySoapGlow)"
                   />
-                  {/* Spreading ripples */}
+                  {/* Spreading ripples with glow */}
                   {[0, 1, 2].map(i => (
                     <ellipse
                       key={i}
                       cx={boatPosition - 10}
-                      cy="100"
-                      rx={Math.min(soapSpread * (1 + i * 0.3), 180)}
-                      ry={Math.min(soapSpread * 0.2, 20)}
+                      cy="105"
+                      rx={Math.min(soapSpread * (1.2 + i * 0.4), 180)}
+                      ry={Math.min(soapSpread * 0.25, 25)}
                       fill="none"
-                      stroke="#a855f7"
-                      strokeWidth="1"
-                      opacity={0.5 - i * 0.15}
+                      stroke="#c084fc"
+                      strokeWidth="1.5"
+                      opacity={0.6 - i * 0.18}
+                      filter="url(#soapPlayRippleGlow)"
                     />
                   ))}
                 </g>
               )}
 
-              {/* Boat */}
+              {/* Boat with 3D appearance */}
               <g transform={`translate(${boatPosition}, 85)`}>
-                {/* Hull */}
+                {/* Hull shadow */}
+                <path
+                  d="M 2,17 L 10,32 L 54,32 L 62,17"
+                  fill="#0f172a"
+                  opacity="0.4"
+                />
+                {/* Hull with gradient */}
                 <path
                   d="M 0,15 L 8,30 L 52,30 L 60,15 L 0,15"
-                  fill="#854d0e"
-                  stroke="#713f12"
-                  strokeWidth="2"
+                  fill="url(#soapPlayHullGrad)"
+                  stroke="#451a03"
+                  strokeWidth="1.5"
                 />
-                {/* Deck */}
-                <rect x="5" y="5" width="50" height="12" fill="#a16207" stroke="#854d0e" strokeWidth="1" rx="2" />
+                {/* Hull highlight */}
+                <path
+                  d="M 5,17 L 11,27 L 49,27 L 55,17"
+                  fill="none"
+                  stroke="#d97706"
+                  strokeWidth="0.8"
+                  opacity="0.4"
+                />
+                {/* Deck with gradient */}
+                <rect x="5" y="5" width="50" height="12" fill="url(#soapPlayDeckGrad)" stroke="#78350f" strokeWidth="1" rx="3" />
+                {/* Deck highlight */}
+                <rect x="8" y="7" width="44" height="3" fill="#fbbf24" opacity="0.25" rx="1" />
 
-                {/* Flag */}
-                <line x1="30" y1="5" x2="30" y2="-15" stroke="#713f12" strokeWidth="2" />
-                <path d="M 30,-15 L 45,-10 L 30,-5" fill="#ef4444" />
+                {/* Flag pole */}
+                <line x1="30" y1="5" x2="30" y2="-18" stroke="#78350f" strokeWidth="2.5" />
+                <line x1="30" y1="5" x2="30" y2="-18" stroke="#92400e" strokeWidth="1.5" />
+                {/* Flag with gradient */}
+                <path d="M 30,-18 L 48,-12 L 30,-6" fill="url(#soapPlayFlagGrad)" />
+                {/* Flag highlight */}
+                <path d="M 32,-16 L 42,-12 L 32,-8" fill="#fca5a5" opacity="0.3" />
               </g>
 
-              {/* Surface tension arrows */}
+              {/* Surface tension arrows - before soap */}
               {!waterContaminated && !soapAdded && (
-                <g opacity="0.6">
-                  {/* Front arrows (pull) */}
-                  <path d="M {boatPosition + 70},95 L {boatPosition + 90},95" fill="none" stroke="#22c55e" strokeWidth="2" markerEnd="url(#greenArrow)" />
-                  {/* Back arrows (pull) */}
-                  <path d="M {boatPosition - 20},95 L {boatPosition - 40},95" fill="none" stroke="#22c55e" strokeWidth="2" markerEnd="url(#greenArrow)" />
-                  <text x="200" y="145" textAnchor="middle" fill="white" fontSize="10">
-                    Equal surface tension on all sides = no movement
-                  </text>
+                <g opacity="0.7" filter="url(#soapPlayArrowGlow)">
+                  {/* Front arrow (pull) */}
+                  <line x1={boatPosition + 68} y1="100" x2={boatPosition + 90} y2="100" stroke="#4ade80" strokeWidth="2.5" />
+                  <polygon points={`${boatPosition + 90},100 ${boatPosition + 82},96 ${boatPosition + 82},104`} fill="#4ade80" />
+                  {/* Back arrow (pull) */}
+                  <line x1={boatPosition - 8} y1="100" x2={boatPosition - 30} y2="100" stroke="#4ade80" strokeWidth="2.5" />
+                  <polygon points={`${boatPosition - 30},100 ${boatPosition - 22},96 ${boatPosition - 22},104`} fill="#4ade80" />
                 </g>
               )}
 
-              {/* After soap */}
+              {/* After soap - force imbalance visualization */}
               {soapAdded && soapSpread > 20 && (
-                <g>
+                <g filter="url(#soapPlayArrowGlow)">
                   {/* Strong front pull */}
-                  <path
-                    d={`M ${boatPosition + 70},95 L ${boatPosition + 100},95`}
-                    fill="none"
+                  <line
+                    x1={boatPosition + 68}
+                    y1="100"
+                    x2={boatPosition + 105}
+                    y2="100"
                     stroke="#22c55e"
                     strokeWidth="4"
                   />
                   <polygon
-                    points={`${boatPosition + 100},95 ${boatPosition + 90},90 ${boatPosition + 90},100`}
+                    points={`${boatPosition + 105},100 ${boatPosition + 95},94 ${boatPosition + 95},106`}
                     fill="#22c55e"
                   />
-                  <text x={boatPosition + 85} y="80" fill="#22c55e" fontSize="9" fontWeight="bold">
-                    HIGH
-                  </text>
 
                   {/* Weak back pull */}
-                  <path
-                    d={`M ${boatPosition - 20},95 L ${boatPosition - 35},95`}
-                    fill="none"
+                  <line
+                    x1={boatPosition - 8}
+                    y1="100"
+                    x2={boatPosition - 25}
+                    y2="100"
                     stroke="#fbbf24"
                     strokeWidth="2"
-                    strokeDasharray="3,2"
+                    strokeDasharray="4,3"
                   />
-                  <text x={boatPosition - 35} y="80" fill="#fbbf24" fontSize="9" fontWeight="bold">
-                    LOW
-                  </text>
                 </g>
               )}
 
-              {/* Soap bottle */}
+              {/* Soap bottle with premium styling */}
               {!waterContaminated && (
                 <g
-                  transform="translate(20, 10)"
+                  transform="translate(20, 8)"
                   style={{ cursor: soapAdded ? 'default' : 'pointer' }}
                   onMouseDown={addSoap}
                 >
-                  <rect x="10" y="20" width="30" height="50" fill="#a855f7" rx="5" />
-                  <rect x="15" y="5" width="20" height="20" fill="#7c3aed" rx="3" />
-                  <text x="25" y="50" textAnchor="middle" fill="white" fontSize="8" fontWeight="bold">
-                    SOAP
-                  </text>
-                  {!soapAdded && (
-                    <text x="25" y="85" textAnchor="middle" fill="#1e293b" fontSize="10">
-                      Click me!
-                    </text>
-                  )}
+                  {/* Bottle shadow */}
+                  <rect x="12" y="22" width="30" height="50" fill="#1e1b4b" opacity="0.3" rx="6" />
+                  {/* Bottle body */}
+                  <rect x="10" y="20" width="30" height="50" fill="url(#soapPlayBottleGrad)" rx="6" />
+                  {/* Bottle highlight */}
+                  <rect x="12" y="22" width="8" height="40" fill="#e9d5ff" opacity="0.2" rx="3" />
+                  {/* Cap */}
+                  <rect x="15" y="5" width="20" height="18" fill="url(#soapPlayCapGrad)" rx="4" />
+                  {/* Cap highlight */}
+                  <rect x="17" y="7" width="5" height="12" fill="#a78bfa" opacity="0.3" rx="2" />
                 </g>
               )}
+            </svg>
 
-              {/* Status */}
-              <text x="200" y="240" textAnchor="middle" fill="#1e293b" fontSize="11">
+            {/* Labels and status moved outside SVG */}
+            <div style={{ textAlign: 'center', marginBottom: '0.5rem' }}>
+              {/* Soap bottle label */}
+              {!waterContaminated && !soapAdded && (
+                <p style={{
+                  fontSize: typo.small,
+                  color: colors.accent,
+                  fontWeight: 600,
+                  marginBottom: '0.5rem'
+                }}>
+                  Click the soap bottle to add soap behind the boat!
+                </p>
+              )}
+
+              {/* Tension labels */}
+              {soapAdded && soapSpread > 20 && (
+                <div style={{ display: 'flex', justifyContent: 'center', gap: '2rem', marginBottom: '0.5rem' }}>
+                  <span style={{ fontSize: typo.small, color: '#fbbf24', fontWeight: 600 }}>LOW tension (back)</span>
+                  <span style={{ fontSize: typo.small, color: '#22c55e', fontWeight: 600 }}>HIGH tension (front)</span>
+                </div>
+              )}
+
+              {/* Balance info before soap */}
+              {!waterContaminated && !soapAdded && (
+                <p style={{ fontSize: typo.small, color: colors.textSecondary }}>
+                  Equal surface tension on all sides = no movement
+                </p>
+              )}
+
+              {/* Status message */}
+              <p style={{
+                fontSize: typo.body,
+                color: waterContaminated ? colors.warning : colors.textSecondary,
+                fontWeight: waterContaminated ? 600 : 400
+              }}>
                 {waterContaminated
-                  ? '⚠️ Water contaminated - soap spread everywhere!'
+                  ? 'Water contaminated - soap spread everywhere!'
                   : soapAdded
                   ? `Soap spreading... ${Math.round(soapSpread)}%`
-                  : 'Add soap behind the boat'}
-              </text>
+                  : ''}
+              </p>
 
               {/* Velocity indicator */}
               {animating && (
-                <text x="200" y="180" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">
+                <p style={{
+                  fontSize: typo.bodyLarge,
+                  color: colors.primary,
+                  fontWeight: 700,
+                  marginTop: '0.25rem'
+                }}>
                   Speed: {(boatVelocity * 10).toFixed(1)} cm/s
-                </text>
+                </p>
               )}
-            </svg>
+            </div>
 
             {/* Controls */}
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>
@@ -1021,31 +1338,92 @@ export default function SoapBoatRenderer({
             }}>
               <h3 style={{ color: '#1d4ed8', marginBottom: '0.75rem' }}>What is Surface Tension?</h3>
 
-              <svg viewBox="0 0 300 120" style={{ width: '100%', marginBottom: '1rem' }}>
+              <svg viewBox="0 0 300 100" style={{ width: '100%', marginBottom: '1rem' }}>
+                <defs>
+                  {/* Bulk molecule gradient */}
+                  <radialGradient id="soapReviewBulkMol" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" stopColor="#60a5fa" />
+                    <stop offset="50%" stopColor="#3b82f6" />
+                    <stop offset="100%" stopColor="#2563eb" />
+                  </radialGradient>
+
+                  {/* Surface molecule gradient */}
+                  <radialGradient id="soapReviewSurfMol" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" stopColor="#f87171" />
+                    <stop offset="50%" stopColor="#ef4444" />
+                    <stop offset="100%" stopColor="#dc2626" />
+                  </radialGradient>
+
+                  {/* Force arrow glow */}
+                  <filter id="soapReviewForceGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="1" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+
+                  {/* Surface line gradient */}
+                  <linearGradient id="soapReviewSurfaceLine" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.1" />
+                    <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#93c5fd" stopOpacity="0.1" />
+                  </linearGradient>
+                </defs>
+
                 {/* Bulk molecules */}
-                <g transform="translate(50, 60)">
-                  <circle cx="0" cy="0" r="10" fill="#3b82f6" />
-                  <line x1="0" y1="-10" x2="0" y2="-25" stroke="#22c55e" strokeWidth="2" />
-                  <line x1="10" y1="0" x2="25" y2="0" stroke="#22c55e" strokeWidth="2" />
-                  <line x1="0" y1="10" x2="0" y2="25" stroke="#22c55e" strokeWidth="2" />
-                  <line x1="-10" y1="0" x2="-25" y2="0" stroke="#22c55e" strokeWidth="2" />
-                  <text x="0" y="50" textAnchor="middle" fill="#1e293b" fontSize="9">Inside: Pulled equally</text>
-                  <text x="0" y="62" textAnchor="middle" fill="#1e293b" fontSize="9">in all directions</text>
+                <g transform="translate(50, 50)">
+                  <circle cx="0" cy="0" r="12" fill="url(#soapReviewBulkMol)" />
+                  {/* Highlight */}
+                  <circle cx="-3" cy="-3" r="3" fill="#93c5fd" opacity="0.5" />
+                  {/* Force arrows with glow */}
+                  <g filter="url(#soapReviewForceGlow)">
+                    <line x1="0" y1="-12" x2="0" y2="-26" stroke="#4ade80" strokeWidth="2.5" />
+                    <polygon points="0,-26 -4,-20 4,-20" fill="#4ade80" />
+                    <line x1="12" y1="0" x2="26" y2="0" stroke="#4ade80" strokeWidth="2.5" />
+                    <polygon points="26,0 20,-4 20,4" fill="#4ade80" />
+                    <line x1="0" y1="12" x2="0" y2="26" stroke="#4ade80" strokeWidth="2.5" />
+                    <polygon points="0,26 -4,20 4,20" fill="#4ade80" />
+                    <line x1="-12" y1="0" x2="-26" y2="0" stroke="#4ade80" strokeWidth="2.5" />
+                    <polygon points="-26,0 -20,-4 -20,4" fill="#4ade80" />
+                  </g>
                 </g>
 
                 {/* Surface molecule */}
-                <g transform="translate(200, 60)">
-                  <rect x="-50" y="-30" width="100" height="5" fill="#60a5fa" opacity="0.3" />
-                  <text x="0" y="-40" textAnchor="middle" fill="#64748b" fontSize="8">Surface</text>
-                  <circle cx="0" cy="0" r="10" fill="#ef4444" />
-                  <line x1="10" y1="0" x2="25" y2="0" stroke="#22c55e" strokeWidth="2" />
-                  <line x1="0" y1="10" x2="0" y2="25" stroke="#22c55e" strokeWidth="2" />
-                  <line x1="-10" y1="0" x2="-25" y2="0" stroke="#22c55e" strokeWidth="2" />
-                  {/* No upward arrow! */}
-                  <text x="0" y="50" textAnchor="middle" fill="#1e293b" fontSize="9">Surface: No pull</text>
-                  <text x="0" y="62" textAnchor="middle" fill="#1e293b" fontSize="9">from above!</text>
+                <g transform="translate(200, 50)">
+                  {/* Surface line */}
+                  <rect x="-55" y="-30" width="110" height="4" fill="url(#soapReviewSurfaceLine)" rx="2" />
+                  <circle cx="0" cy="0" r="12" fill="url(#soapReviewSurfMol)" />
+                  {/* Highlight */}
+                  <circle cx="-3" cy="-3" r="3" fill="#fca5a5" opacity="0.5" />
+                  {/* Force arrows - no upward! */}
+                  <g filter="url(#soapReviewForceGlow)">
+                    <line x1="12" y1="0" x2="26" y2="0" stroke="#4ade80" strokeWidth="2.5" />
+                    <polygon points="26,0 20,-4 20,4" fill="#4ade80" />
+                    <line x1="0" y1="12" x2="0" y2="26" stroke="#4ade80" strokeWidth="2.5" />
+                    <polygon points="0,26 -4,20 4,20" fill="#4ade80" />
+                    <line x1="-12" y1="0" x2="-26" y2="0" stroke="#4ade80" strokeWidth="2.5" />
+                    <polygon points="-26,0 -20,-4 -20,4" fill="#4ade80" />
+                  </g>
+                  {/* X mark where upward arrow would be */}
+                  <g transform="translate(0, -22)">
+                    <line x1="-4" y1="-4" x2="4" y2="4" stroke="#ef4444" strokeWidth="2" />
+                    <line x1="4" y1="-4" x2="-4" y2="4" stroke="#ef4444" strokeWidth="2" />
+                  </g>
                 </g>
               </svg>
+
+              {/* Labels moved outside SVG */}
+              <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '1rem' }}>
+                <div style={{ textAlign: 'center', maxWidth: '120px' }}>
+                  <p style={{ fontSize: typo.small, color: colors.primary, fontWeight: 600 }}>Inside Water</p>
+                  <p style={{ fontSize: typo.label, color: colors.textMuted }}>Pulled equally in all directions</p>
+                </div>
+                <div style={{ textAlign: 'center', maxWidth: '120px' }}>
+                  <p style={{ fontSize: typo.small, color: colors.danger, fontWeight: 600 }}>At Surface</p>
+                  <p style={{ fontSize: typo.label, color: colors.textMuted }}>No pull from above!</p>
+                </div>
+              </div>
 
               <div style={{ fontSize: '0.9rem', color: '#1e293b' }}>
                 <p style={{ marginBottom: '0.75rem' }}>
@@ -1132,38 +1510,74 @@ export default function SoapBoatRenderer({
               Or on <strong>cooking oil</strong>?
             </p>
 
-            <svg viewBox="0 0 400 120" style={{ width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
+            <svg viewBox="0 0 400 90" style={{ width: '100%', maxWidth: 400, marginBottom: '1rem' }}>
+              <defs>
+                {/* Clean water gradient */}
+                <linearGradient id="soapTwistWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="40%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#2563eb" />
+                </linearGradient>
+
+                {/* Soapy water gradient */}
+                <linearGradient id="soapTwistSoapyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#c084fc" />
+                  <stop offset="40%" stopColor="#a855f7" />
+                  <stop offset="100%" stopColor="#8b5cf6" />
+                </linearGradient>
+
+                {/* Oil gradient */}
+                <linearGradient id="soapTwistOilGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#fcd34d" />
+                  <stop offset="40%" stopColor="#fbbf24" />
+                  <stop offset="100%" stopColor="#f59e0b" />
+                </linearGradient>
+
+                {/* Container shadow */}
+                <filter id="soapTwistContainerShadow" x="-10%" y="-10%" width="120%" height="130%">
+                  <feDropShadow dx="0" dy="2" stdDeviation="2" floodOpacity="0.3" />
+                </filter>
+
+                {/* Surface shimmer */}
+                <linearGradient id="soapTwistShimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="white" stopOpacity="0" />
+                  <stop offset="50%" stopColor="white" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="white" stopOpacity="0" />
+                </linearGradient>
+              </defs>
+
               {/* Three containers */}
-              <g transform="translate(30, 20)">
-                <rect x="0" y="30" width="80" height="50" fill="#3b82f6" rx="5" />
-                <text x="40" y="95" textAnchor="middle" fill="#1e293b" fontSize="10" fontWeight="bold">
-                  Clean Water
-                </text>
-                <text x="40" y="108" textAnchor="middle" fill="#64748b" fontSize="9">
-                  γ = 0.072 N/m
-                </text>
+              <g transform="translate(30, 15)" filter="url(#soapTwistContainerShadow)">
+                <rect x="0" y="30" width="80" height="50" fill="url(#soapTwistWaterGrad)" rx="6" />
+                <ellipse cx="40" cy="33" rx="38" ry="4" fill="url(#soapTwistShimmer)" />
               </g>
 
-              <g transform="translate(160, 20)">
-                <rect x="0" y="30" width="80" height="50" fill="#a855f7" rx="5" />
-                <text x="40" y="95" textAnchor="middle" fill="#1e293b" fontSize="10" fontWeight="bold">
-                  Soapy Water
-                </text>
-                <text x="40" y="108" textAnchor="middle" fill="#64748b" fontSize="9">
-                  γ = 0.025 N/m
-                </text>
+              <g transform="translate(160, 15)" filter="url(#soapTwistContainerShadow)">
+                <rect x="0" y="30" width="80" height="50" fill="url(#soapTwistSoapyGrad)" rx="6" />
+                <ellipse cx="40" cy="33" rx="38" ry="4" fill="url(#soapTwistShimmer)" />
               </g>
 
-              <g transform="translate(290, 20)">
-                <rect x="0" y="30" width="80" height="50" fill="#fbbf24" rx="5" />
-                <text x="40" y="95" textAnchor="middle" fill="#1e293b" fontSize="10" fontWeight="bold">
-                  Cooking Oil
-                </text>
-                <text x="40" y="108" textAnchor="middle" fill="#64748b" fontSize="9">
-                  γ = 0.032 N/m
-                </text>
+              <g transform="translate(290, 15)" filter="url(#soapTwistContainerShadow)">
+                <rect x="0" y="30" width="80" height="50" fill="url(#soapTwistOilGrad)" rx="6" />
+                <ellipse cx="40" cy="33" rx="38" ry="4" fill="url(#soapTwistShimmer)" />
               </g>
             </svg>
+
+            {/* Labels moved outside SVG using typo system */}
+            <div style={{ display: 'flex', justifyContent: 'space-around', width: '100%', maxWidth: 400, marginBottom: '1.5rem' }}>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: typo.small, color: colors.primary, fontWeight: 600 }}>Clean Water</p>
+                <p style={{ fontSize: typo.label, color: colors.textMuted, fontFamily: 'monospace' }}>gamma = 0.072 N/m</p>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: typo.small, color: colors.accent, fontWeight: 600 }}>Soapy Water</p>
+                <p style={{ fontSize: typo.label, color: colors.textMuted, fontFamily: 'monospace' }}>gamma = 0.025 N/m</p>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <p style={{ fontSize: typo.small, color: colors.warning, fontWeight: 600 }}>Cooking Oil</p>
+                <p style={{ fontSize: typo.label, color: colors.textMuted, fontFamily: 'monospace' }}>gamma = 0.032 N/m</p>
+              </div>
+            </div>
 
             <p style={{ color: '#64748b', marginBottom: '1rem', textAlign: 'center' }}>
               Where will the soap boat work best?
@@ -1262,44 +1676,137 @@ export default function SoapBoatRenderer({
               ))}
             </div>
 
-            <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }}>
+            <svg viewBox="0 0 400 170" style={{ width: '100%', maxWidth: 450, marginBottom: '1rem' }}>
+              <defs>
+                {/* Container gradient */}
+                <linearGradient id="soapTwistPlayContainer" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#334155" />
+                  <stop offset="50%" stopColor="#1e293b" />
+                  <stop offset="100%" stopColor="#0f172a" />
+                </linearGradient>
+
+                {/* Dynamic liquid gradients */}
+                <linearGradient id="soapTwistPlayWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" />
+                  <stop offset="40%" stopColor="#3b82f6" />
+                  <stop offset="100%" stopColor="#2563eb" />
+                </linearGradient>
+
+                <linearGradient id="soapTwistPlaySoapy" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#c084fc" />
+                  <stop offset="40%" stopColor="#a855f7" />
+                  <stop offset="100%" stopColor="#8b5cf6" />
+                </linearGradient>
+
+                <linearGradient id="soapTwistPlayOil" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#fcd34d" />
+                  <stop offset="40%" stopColor="#fbbf24" />
+                  <stop offset="100%" stopColor="#f59e0b" />
+                </linearGradient>
+
+                {/* Surface shimmer */}
+                <linearGradient id="soapTwistPlayShimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="white" stopOpacity="0.1" />
+                  <stop offset="50%" stopColor="white" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="white" stopOpacity="0.1" />
+                </linearGradient>
+
+                {/* Boat hull gradient */}
+                <linearGradient id="soapTwistPlayHull" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#b45309" />
+                  <stop offset="50%" stopColor="#92400e" />
+                  <stop offset="100%" stopColor="#78350f" />
+                </linearGradient>
+
+                {/* Boat deck gradient */}
+                <linearGradient id="soapTwistPlayDeck" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#d97706" />
+                  <stop offset="100%" stopColor="#b45309" />
+                </linearGradient>
+
+                {/* Flag gradient */}
+                <linearGradient id="soapTwistPlayFlag" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#f87171" />
+                  <stop offset="100%" stopColor="#dc2626" />
+                </linearGradient>
+
+                {/* Glow filter */}
+                <filter id="soapTwistPlayGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
               {/* Container */}
-              <rect x="20" y="60" width="360" height="120" fill="#1e293b" rx="8" />
-              <rect x="25" y="65" width="350" height="110" fill={liquidColors[liquidType]} rx="5" />
+              <rect x="20" y="50" width="360" height="110" fill="url(#soapTwistPlayContainer)" rx="10" />
+              {/* Liquid with dynamic gradient based on type */}
+              <rect
+                x="25"
+                y="55"
+                width="350"
+                height="100"
+                fill={liquidType === 'water' ? 'url(#soapTwistPlayWater)' : liquidType === 'soapyWater' ? 'url(#soapTwistPlaySoapy)' : 'url(#soapTwistPlayOil)'}
+                rx="6"
+              />
+              {/* Surface shimmer */}
+              <ellipse cx="200" cy="58" rx="170" ry="5" fill="url(#soapTwistPlayShimmer)">
+                <animate attributeName="opacity" values="0.5;0.8;0.5" dur="2s" repeatCount="indefinite" />
+              </ellipse>
 
-              {/* Boat */}
-              <g transform={`translate(${twistBoatPosition}, 55)`}>
-                <path d="M 0,15 L 8,30 L 52,30 L 60,15 L 0,15" fill="#854d0e" stroke="#713f12" strokeWidth="2" />
-                <rect x="5" y="5" width="50" height="12" fill="#a16207" rx="2" />
-                <line x1="30" y1="5" x2="30" y2="-15" stroke="#713f12" strokeWidth="2" />
-                <path d="M 30,-15 L 45,-10 L 30,-5" fill="#ef4444" />
+              {/* Boat with 3D appearance */}
+              <g transform={`translate(${twistBoatPosition}, 45)`}>
+                {/* Hull shadow */}
+                <path d="M 2,17 L 10,32 L 54,32 L 62,17" fill="#0f172a" opacity="0.4" />
+                {/* Hull */}
+                <path d="M 0,15 L 8,30 L 52,30 L 60,15 L 0,15" fill="url(#soapTwistPlayHull)" stroke="#451a03" strokeWidth="1.5" />
+                {/* Hull highlight */}
+                <path d="M 5,17 L 11,27 L 49,27 L 55,17" fill="none" stroke="#d97706" strokeWidth="0.8" opacity="0.4" />
+                {/* Deck */}
+                <rect x="5" y="5" width="50" height="12" fill="url(#soapTwistPlayDeck)" stroke="#78350f" strokeWidth="1" rx="3" />
+                {/* Deck highlight */}
+                <rect x="8" y="7" width="44" height="3" fill="#fbbf24" opacity="0.25" rx="1" />
+                {/* Flag pole */}
+                <line x1="30" y1="5" x2="30" y2="-15" stroke="#78350f" strokeWidth="2" />
+                {/* Flag */}
+                <path d="M 30,-15 L 45,-10 L 30,-5" fill="url(#soapTwistPlayFlag)" />
               </g>
-
-              {/* Result indicator */}
-              {twistSoapAdded && !twistAnimating && (
-                <g>
-                  <text
-                    x="200"
-                    y="145"
-                    textAnchor="middle"
-                    fill="white"
-                    fontSize="14"
-                    fontWeight="bold"
-                  >
-                    {liquidType === 'water'
-                      ? '✓ Moved significantly!'
-                      : liquidType === 'soapyWater'
-                      ? '✗ Barely moved - already low tension!'
-                      : '✗ Minimal effect - wrong chemistry!'}
-                  </text>
-                </g>
-              )}
-
-              {/* Liquid info */}
-              <text x="200" y="195" textAnchor="middle" fill="#64748b" fontSize="11">
-                Surface tension: {surfaceTensions[liquidType]} N/m
-              </text>
             </svg>
+
+            {/* Result and info moved outside SVG */}
+            {twistSoapAdded && !twistAnimating && (
+              <div style={{
+                textAlign: 'center',
+                padding: '0.75rem',
+                marginBottom: '0.5rem',
+                background: liquidType === 'water' ? 'rgba(34, 197, 94, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                borderRadius: '8px',
+                border: `1px solid ${liquidType === 'water' ? 'rgba(34, 197, 94, 0.3)' : 'rgba(239, 68, 68, 0.3)'}`
+              }}>
+                <p style={{
+                  fontSize: typo.body,
+                  fontWeight: 700,
+                  color: liquidType === 'water' ? colors.success : colors.danger
+                }}>
+                  {liquidType === 'water'
+                    ? 'Moved significantly!'
+                    : liquidType === 'soapyWater'
+                    ? 'Barely moved - already low tension!'
+                    : 'Minimal effect - wrong chemistry!'}
+                </p>
+              </div>
+            )}
+
+            <p style={{
+              textAlign: 'center',
+              fontSize: typo.small,
+              color: colors.textMuted,
+              marginBottom: '1rem'
+            }}>
+              Surface tension: <span style={{ color: colors.textSecondary, fontFamily: 'monospace' }}>{surfaceTensions[liquidType]} N/m</span>
+            </p>
 
             {/* Controls */}
             <div style={{ display: 'flex', gap: '1rem', marginBottom: '1rem' }}>

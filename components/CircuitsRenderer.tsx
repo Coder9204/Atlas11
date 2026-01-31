@@ -686,7 +686,7 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
             color: premiumDesign.colors.text.primary,
             marginBottom: premiumDesign.spacing.sm,
           }}>
-            ⚡ Ohm's Law Circuit Simulator
+            Ohm's Law Circuit Simulator
           </h2>
           <p style={{ color: premiumDesign.colors.text.secondary }}>
             Adjust voltage and resistance to see how current changes
@@ -708,78 +708,263 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
             <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
-              {/* Circuit wires */}
-              <rect x="50" y="70" width="200" height="160" fill="none" stroke={isCircuitOn ? premiumDesign.colors.voltage : '#666'} strokeWidth="3" rx="10" />
+              {/* Premium Defs - Gradients and Filters */}
+              <defs>
+                {/* Copper wire gradient */}
+                <linearGradient id="circCopperWire" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#CD7F32" />
+                  <stop offset="30%" stopColor="#F5C97F" />
+                  <stop offset="50%" stopColor="#FFE4B5" />
+                  <stop offset="70%" stopColor="#F5C97F" />
+                  <stop offset="100%" stopColor="#CD7F32" />
+                </linearGradient>
 
-              {/* Battery */}
-              <g transform="translate(30, 130)">
-                <rect x="0" y="0" width="20" height="50" fill={premiumDesign.colors.background.tertiary} stroke={premiumDesign.colors.voltage} strokeWidth="2" rx="3" />
-                <line x1="5" y1="15" x2="15" y2="15" stroke={premiumDesign.colors.voltage} strokeWidth="3" />
-                <line x1="10" y1="10" x2="10" y2="20" stroke={premiumDesign.colors.voltage} strokeWidth="3" />
-                <line x1="5" y1="35" x2="15" y2="35" stroke={premiumDesign.colors.voltage} strokeWidth="2" />
-                <text x="10" y="65" textAnchor="middle" fill={premiumDesign.colors.voltage} fontSize="12" fontWeight="bold">
-                  {voltage}V
-                </text>
+                {/* Copper wire active gradient */}
+                <linearGradient id="circCopperWireActive" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#E8A040" />
+                  <stop offset="30%" stopColor="#FFD890" />
+                  <stop offset="50%" stopColor="#FFF0C8" />
+                  <stop offset="70%" stopColor="#FFD890" />
+                  <stop offset="100%" stopColor="#E8A040" />
+                </linearGradient>
+
+                {/* Battery gradient */}
+                <linearGradient id="circBatteryBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3A3A4A" />
+                  <stop offset="50%" stopColor="#4A4A5C" />
+                  <stop offset="100%" stopColor="#2A2A3A" />
+                </linearGradient>
+
+                {/* Battery terminal gradient */}
+                <linearGradient id="circBatteryTerminal" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#FFD700" />
+                  <stop offset="50%" stopColor="#FFA500" />
+                  <stop offset="100%" stopColor="#FF8C00" />
+                </linearGradient>
+
+                {/* Resistor body gradient */}
+                <linearGradient id="circResistorBody" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#5A4A3A" />
+                  <stop offset="30%" stopColor="#7A6A5A" />
+                  <stop offset="70%" stopColor="#6A5A4A" />
+                  <stop offset="100%" stopColor="#4A3A2A" />
+                </linearGradient>
+
+                {/* Bulb glass gradient */}
+                <radialGradient id="circBulbGlass" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="rgba(255,255,255,0.4)" />
+                  <stop offset="50%" stopColor="rgba(200,200,200,0.2)" />
+                  <stop offset="100%" stopColor="rgba(100,100,100,0.1)" />
+                </radialGradient>
+
+                {/* Bulb glow gradient */}
+                <radialGradient id="circBulbGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#FFFACD" />
+                  <stop offset="40%" stopColor="#FFD700" />
+                  <stop offset="70%" stopColor="#FFA500" />
+                  <stop offset="100%" stopColor="rgba(255,165,0,0)" />
+                </radialGradient>
+
+                {/* Electron gradient */}
+                <radialGradient id="circElectron" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#00BFFF" />
+                  <stop offset="50%" stopColor="#1E90FF" />
+                  <stop offset="100%" stopColor="#0066CC" />
+                </radialGradient>
+
+                {/* Electron glow filter */}
+                <filter id="circElectronGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+
+                {/* Bulb glow filter */}
+                <filter id="circBulbGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+
+                {/* Component shadow filter */}
+                <filter id="circComponentShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="2" dy="2" stdDeviation="2" floodOpacity="0.4" />
+                </filter>
+
+                {/* Wire glow when active */}
+                <filter id="circWireGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="1.5" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+              </defs>
+
+              {/* Circuit wires - premium copper style */}
+              <rect
+                x="50" y="70" width="200" height="160"
+                fill="none"
+                stroke={isCircuitOn ? "url(#circCopperWireActive)" : "url(#circCopperWire)"}
+                strokeWidth="4"
+                rx="10"
+                filter={isCircuitOn ? "url(#circWireGlow)" : undefined}
+              />
+
+              {/* Battery - 3D effect */}
+              <g transform="translate(30, 130)" filter="url(#circComponentShadow)">
+                <rect x="0" y="0" width="20" height="50" fill="url(#circBatteryBody)" stroke="#555" strokeWidth="1" rx="3" />
+                {/* Positive terminal */}
+                <rect x="6" y="-4" width="8" height="6" fill="url(#circBatteryTerminal)" rx="1" />
+                {/* Terminal symbols */}
+                <line x1="5" y1="15" x2="15" y2="15" stroke="url(#circBatteryTerminal)" strokeWidth="3" strokeLinecap="round" />
+                <line x1="10" y1="10" x2="10" y2="20" stroke="url(#circBatteryTerminal)" strokeWidth="3" strokeLinecap="round" />
+                <line x1="5" y1="35" x2="15" y2="35" stroke="#888" strokeWidth="2" strokeLinecap="round" />
               </g>
 
-              {/* Resistor */}
-              <g transform="translate(115, 50)">
-                <rect x="0" y="0" width="70" height="25" fill={premiumDesign.colors.background.tertiary} stroke={premiumDesign.colors.resistance} strokeWidth="2" rx="3" />
-                {/* Zigzag pattern */}
-                <polyline points="10,12.5 20,5 30,20 40,5 50,20 60,12.5" fill="none" stroke={premiumDesign.colors.resistance} strokeWidth="2" />
-                <text x="35" y="40" textAnchor="middle" fill={premiumDesign.colors.resistance} fontSize="12" fontWeight="bold">
-                  {resistance}Ω
-                </text>
+              {/* Resistor - 3D ceramic style */}
+              <g transform="translate(115, 50)" filter="url(#circComponentShadow)">
+                <rect x="0" y="0" width="70" height="25" fill="url(#circResistorBody)" stroke="#8B4513" strokeWidth="1" rx="4" />
+                {/* Color bands */}
+                <rect x="12" y="2" width="6" height="21" fill="#8B4513" rx="1" />
+                <rect x="22" y="2" width="6" height="21" fill="#000" rx="1" />
+                <rect x="32" y="2" width="6" height="21" fill="#FF0000" rx="1" />
+                <rect x="42" y="2" width="6" height="21" fill="#FFD700" rx="1" />
+                {/* Highlight */}
+                <rect x="5" y="3" width="60" height="3" fill="rgba(255,255,255,0.15)" rx="1" />
+                {/* Zigzag heat pattern */}
+                <polyline points="10,12.5 20,5 30,20 40,5 50,20 60,12.5" fill="none" stroke="rgba(255,100,50,0.4)" strokeWidth="1.5" />
               </g>
 
-              {/* Light bulb (to show current) */}
+              {/* Light bulb - premium glass effect */}
               <g transform="translate(130, 220)">
-                <circle cx="20" cy="0" r="18" fill={isCircuitOn ? `rgba(251, 191, 36, ${Math.min(1, current / 5)})` : 'rgba(100,100,100,0.3)'} stroke="#888" strokeWidth="2" />
+                {/* Outer glow when on */}
                 {isCircuitOn && (
-                  <>
-                    <line x1="12" y1="-10" x2="8" y2="-18" stroke={premiumDesign.colors.voltage} strokeWidth="2" />
-                    <line x1="20" y1="-14" x2="20" y2="-22" stroke={premiumDesign.colors.voltage} strokeWidth="2" />
-                    <line x1="28" y1="-10" x2="32" y2="-18" stroke={premiumDesign.colors.voltage} strokeWidth="2" />
-                  </>
+                  <circle
+                    cx="20" cy="0" r="28"
+                    fill={`rgba(255, 200, 50, ${Math.min(0.4, current / 10)})`}
+                    filter="url(#circBulbGlowFilter)"
+                  />
+                )}
+                {/* Bulb base */}
+                <rect x="12" y="12" width="16" height="10" fill="#666" rx="2" />
+                <rect x="14" y="14" width="12" height="2" fill="#888" />
+                <rect x="14" y="18" width="12" height="2" fill="#888" />
+                {/* Bulb glass */}
+                <circle
+                  cx="20" cy="0" r="18"
+                  fill={isCircuitOn ? "url(#circBulbGlow)" : "url(#circBulbGlass)"}
+                  stroke="rgba(255,255,255,0.3)"
+                  strokeWidth="1"
+                  style={{ opacity: isCircuitOn ? Math.min(1, 0.3 + current / 4) : 1 }}
+                />
+                {/* Filament */}
+                <path
+                  d="M 15 0 Q 17 -5 20 0 Q 23 5 25 0"
+                  fill="none"
+                  stroke={isCircuitOn ? "#FFD700" : "#555"}
+                  strokeWidth="1.5"
+                  style={{ opacity: isCircuitOn ? 1 : 0.5 }}
+                />
+                {/* Light rays when on */}
+                {isCircuitOn && current > 1 && (
+                  <g stroke="#FFD700" strokeWidth="1.5" strokeLinecap="round" opacity={Math.min(1, current / 5)}>
+                    <line x1="12" y1="-10" x2="6" y2="-18" />
+                    <line x1="20" y1="-14" x2="20" y2="-24" />
+                    <line x1="28" y1="-10" x2="34" y2="-18" />
+                    <line x1="32" y1="0" x2="40" y2="0" />
+                    <line x1="8" y1="0" x2="0" y2="0" />
+                  </g>
                 )}
               </g>
 
-              {/* Switch */}
+              {/* Switch - improved visual */}
               <g transform="translate(220, 135)">
-                <circle cx="0" cy="0" r="5" fill={isCircuitOn ? premiumDesign.colors.success : '#666'} />
-                <line x1="0" y1="0" x2={isCircuitOn ? "30" : "20"} y2={isCircuitOn ? "0" : "-15"} stroke={isCircuitOn ? premiumDesign.colors.success : '#666'} strokeWidth="3" />
-                <circle cx="30" cy="0" r="5" fill={isCircuitOn ? premiumDesign.colors.success : '#666'} />
+                <circle cx="0" cy="0" r="6" fill={isCircuitOn ? "#22C55E" : "#666"} stroke={isCircuitOn ? "#16A34A" : "#444"} strokeWidth="2" />
+                <line
+                  x1="0" y1="0"
+                  x2={isCircuitOn ? "30" : "20"}
+                  y2={isCircuitOn ? "0" : "-15"}
+                  stroke={isCircuitOn ? "url(#circCopperWireActive)" : "url(#circCopperWire)"}
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+                <circle cx="30" cy="0" r="6" fill={isCircuitOn ? "#22C55E" : "#666"} stroke={isCircuitOn ? "#16A34A" : "#444"} strokeWidth="2" />
               </g>
 
-              {/* Electrons */}
+              {/* Electrons - premium glow effect */}
               {isCircuitOn && electrons.map(e => {
                 const pos = getElectronPosition(e.pathPosition);
                 return (
-                  <circle
-                    key={e.id}
-                    cx={pos.x}
-                    cy={pos.y}
-                    r="4"
-                    fill={premiumDesign.colors.current}
-                  />
+                  <g key={e.id} filter="url(#circElectronGlow)">
+                    <circle
+                      cx={pos.x}
+                      cy={pos.y}
+                      r="5"
+                      fill="url(#circElectron)"
+                    />
+                    <circle
+                      cx={pos.x - 1}
+                      cy={pos.y - 1}
+                      r="1.5"
+                      fill="rgba(255,255,255,0.7)"
+                    />
+                  </g>
                 );
               })}
-
-              {/* Current indicator */}
-              <g transform="translate(260, 150)">
-                <text x="0" y="0" fill={premiumDesign.colors.current} fontSize="14" fontWeight="bold">
-                  I = {current.toFixed(2)}A
-                </text>
-                <text x="0" y="18" fill={premiumDesign.colors.text.muted} fontSize="10">
-                  Current
-                </text>
-              </g>
-
-              {/* Ohm's Law formula */}
-              <text x="150" y="290" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">
-                V = I × R → {voltage}V = {current.toFixed(2)}A × {resistance}Ω
-              </text>
             </svg>
+
+            {/* Voltage/Current indicators moved outside SVG using typo system */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              marginTop: typo.elementGap,
+              padding: `0 ${typo.cardPadding}`,
+            }}>
+              <div style={{
+                background: 'rgba(59, 130, 246, 0.15)',
+                padding: typo.elementGap,
+                borderRadius: premiumDesign.radius.md,
+                border: '1px solid rgba(59, 130, 246, 0.3)',
+              }}>
+                <span style={{
+                  color: premiumDesign.colors.current,
+                  fontSize: typo.body,
+                  fontWeight: 700
+                }}>
+                  I = {current.toFixed(2)}A
+                </span>
+                <span style={{
+                  color: premiumDesign.colors.text.muted,
+                  fontSize: typo.small,
+                  marginLeft: '8px'
+                }}>
+                  Current
+                </span>
+              </div>
+              <div style={{
+                background: 'rgba(251, 191, 36, 0.15)',
+                padding: typo.elementGap,
+                borderRadius: premiumDesign.radius.md,
+                border: '1px solid rgba(251, 191, 36, 0.3)',
+              }}>
+                <span style={{
+                  color: premiumDesign.colors.voltage,
+                  fontSize: typo.body,
+                  fontWeight: 700
+                }}>
+                  V = I x R
+                </span>
+              </div>
+            </div>
+
+            {/* Ohm's Law formula - moved outside SVG */}
+            <div style={{
+              textAlign: 'center',
+              marginTop: typo.elementGap,
+              padding: typo.cardPadding,
+              background: 'rgba(255,255,255,0.03)',
+              borderRadius: premiumDesign.radius.md,
+            }}>
+              <span style={{ color: 'white', fontSize: typo.body, fontWeight: 600 }}>
+                {voltage}V = {current.toFixed(2)}A x {resistance}Ohm
+              </span>
+            </div>
           </div>
 
           {/* Controls */}
@@ -1102,106 +1287,294 @@ export default function CircuitsRenderer({ onGameEvent, gamePhase, onPhaseComple
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
-            <svg viewBox="0 0 300 280" style={{ width: '100%', maxHeight: 300 }}>
+            <svg viewBox="0 0 300 220" style={{ width: '100%', maxHeight: 250 }}>
+              {/* Premium Defs - Gradients and Filters */}
+              <defs>
+                {/* Copper wire gradient */}
+                <linearGradient id="circTwistCopperWire" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#CD7F32" />
+                  <stop offset="30%" stopColor="#F5C97F" />
+                  <stop offset="50%" stopColor="#FFE4B5" />
+                  <stop offset="70%" stopColor="#F5C97F" />
+                  <stop offset="100%" stopColor="#CD7F32" />
+                </linearGradient>
+
+                {/* Copper wire horizontal gradient */}
+                <linearGradient id="circTwistCopperWireH" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#CD7F32" />
+                  <stop offset="30%" stopColor="#F5C97F" />
+                  <stop offset="50%" stopColor="#FFE4B5" />
+                  <stop offset="70%" stopColor="#F5C97F" />
+                  <stop offset="100%" stopColor="#CD7F32" />
+                </linearGradient>
+
+                {/* Battery gradient */}
+                <linearGradient id="circTwistBatteryBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#3A3A4A" />
+                  <stop offset="50%" stopColor="#4A4A5C" />
+                  <stop offset="100%" stopColor="#2A2A3A" />
+                </linearGradient>
+
+                {/* Battery terminal gradient */}
+                <linearGradient id="circTwistBatteryTerminal" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#FFD700" />
+                  <stop offset="50%" stopColor="#FFA500" />
+                  <stop offset="100%" stopColor="#FF8C00" />
+                </linearGradient>
+
+                {/* Resistor body gradient */}
+                <linearGradient id="circTwistResistorBody" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#5A4A3A" />
+                  <stop offset="30%" stopColor="#7A6A5A" />
+                  <stop offset="70%" stopColor="#6A5A4A" />
+                  <stop offset="100%" stopColor="#4A3A2A" />
+                </linearGradient>
+
+                {/* Component shadow filter */}
+                <filter id="circTwistComponentShadow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feDropShadow dx="1" dy="1" stdDeviation="1.5" floodOpacity="0.4" />
+                </filter>
+
+                {/* Wire glow */}
+                <filter id="circTwistWireGlow" x="-20%" y="-20%" width="140%" height="140%">
+                  <feGaussianBlur stdDeviation="1" result="blur" />
+                  <feComposite in="SourceGraphic" in2="blur" operator="over" />
+                </filter>
+
+                {/* Current flow animation gradient */}
+                <linearGradient id="circTwistCurrentFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="rgba(59, 130, 246, 0)">
+                    <animate attributeName="offset" values="0;1" dur="1.5s" repeatCount="indefinite" />
+                  </stop>
+                  <stop offset="20%" stopColor="rgba(59, 130, 246, 0.8)">
+                    <animate attributeName="offset" values="0.2;1.2" dur="1.5s" repeatCount="indefinite" />
+                  </stop>
+                  <stop offset="40%" stopColor="rgba(59, 130, 246, 0)">
+                    <animate attributeName="offset" values="0.4;1.4" dur="1.5s" repeatCount="indefinite" />
+                  </stop>
+                </linearGradient>
+
+                {/* Junction node gradient */}
+                <radialGradient id="circTwistJunction" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#FFE4B5" />
+                  <stop offset="50%" stopColor="#CD7F32" />
+                  <stop offset="100%" stopColor="#8B5A2B" />
+                </radialGradient>
+              </defs>
+
               {circuitType === 'series' ? (
-                // Series circuit
+                // Series circuit - premium version
                 <g>
-                  {/* Wires */}
-                  <rect x="40" y="60" width="220" height="140" fill="none" stroke={premiumDesign.colors.voltage} strokeWidth="3" rx="10" />
+                  {/* Main circuit loop - copper wire */}
+                  <rect
+                    x="40" y="50" width="220" height="120"
+                    fill="none"
+                    stroke="url(#circTwistCopperWire)"
+                    strokeWidth="4"
+                    rx="10"
+                    filter="url(#circTwistWireGlow)"
+                  />
 
-                  {/* Battery */}
-                  <g transform="translate(20, 110)">
-                    <rect x="0" y="0" width="20" height="40" fill={premiumDesign.colors.background.tertiary} stroke={premiumDesign.colors.voltage} strokeWidth="2" rx="3" />
-                    <text x="10" y="55" textAnchor="middle" fill={premiumDesign.colors.voltage} fontSize="11">{twistVoltage}V</text>
+                  {/* Battery - 3D style */}
+                  <g transform="translate(20, 90)" filter="url(#circTwistComponentShadow)">
+                    <rect x="0" y="0" width="20" height="40" fill="url(#circTwistBatteryBody)" stroke="#555" strokeWidth="1" rx="3" />
+                    <rect x="6" y="-4" width="8" height="5" fill="url(#circTwistBatteryTerminal)" rx="1" />
+                    <line x1="5" y1="13" x2="15" y2="13" stroke="url(#circTwistBatteryTerminal)" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="10" y1="8" x2="10" y2="18" stroke="url(#circTwistBatteryTerminal)" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="5" y1="27" x2="15" y2="27" stroke="#888" strokeWidth="2" strokeLinecap="round" />
                   </g>
 
-                  {/* Resistor 1 */}
-                  <g transform="translate(80, 42)">
-                    <rect x="0" y="0" width="50" height="20" fill={premiumDesign.colors.background.tertiary} stroke={premiumDesign.colors.resistance} strokeWidth="2" rx="3" />
-                    <text x="25" y="35" textAnchor="middle" fill={premiumDesign.colors.resistance} fontSize="11">R₁={r1}Ω</text>
+                  {/* Resistor 1 - premium ceramic style */}
+                  <g transform="translate(80, 32)" filter="url(#circTwistComponentShadow)">
+                    <rect x="0" y="0" width="50" height="20" fill="url(#circTwistResistorBody)" stroke="#8B4513" strokeWidth="1" rx="4" />
+                    <rect x="8" y="2" width="5" height="16" fill="#8B4513" rx="1" />
+                    <rect x="16" y="2" width="5" height="16" fill="#000" rx="1" />
+                    <rect x="24" y="2" width="5" height="16" fill="#FF0000" rx="1" />
+                    <rect x="32" y="2" width="5" height="16" fill="#FFD700" rx="1" />
+                    <rect x="4" y="3" width="42" height="2" fill="rgba(255,255,255,0.12)" rx="1" />
                   </g>
 
-                  {/* Resistor 2 */}
-                  <g transform="translate(170, 42)">
-                    <rect x="0" y="0" width="50" height="20" fill={premiumDesign.colors.background.tertiary} stroke={premiumDesign.colors.resistance} strokeWidth="2" rx="3" />
-                    <text x="25" y="35" textAnchor="middle" fill={premiumDesign.colors.resistance} fontSize="11">R₂={r2}Ω</text>
+                  {/* Resistor 2 - premium ceramic style */}
+                  <g transform="translate(170, 32)" filter="url(#circTwistComponentShadow)">
+                    <rect x="0" y="0" width="50" height="20" fill="url(#circTwistResistorBody)" stroke="#8B4513" strokeWidth="1" rx="4" />
+                    <rect x="8" y="2" width="5" height="16" fill="#8B4513" rx="1" />
+                    <rect x="16" y="2" width="5" height="16" fill="#000" rx="1" />
+                    <rect x="24" y="2" width="5" height="16" fill="#FF0000" rx="1" />
+                    <rect x="32" y="2" width="5" height="16" fill="#FFD700" rx="1" />
+                    <rect x="4" y="3" width="42" height="2" fill="rgba(255,255,255,0.12)" rx="1" />
                   </g>
 
-                  {/* Labels */}
-                  <text x="150" y="130" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">
-                    SERIES
-                  </text>
-                  <text x="150" y="150" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="12">
-                    R_total = R₁ + R₂ = {seriesVals.totalR}Ω
-                  </text>
-                  <text x="150" y="170" textAnchor="middle" fill={premiumDesign.colors.current} fontSize="12">
-                    I = {seriesVals.i.toFixed(2)}A (same through both)
-                  </text>
-
-                  {/* Voltage drops */}
-                  <text x="105" y="95" textAnchor="middle" fill={premiumDesign.colors.voltage} fontSize="10">
-                    V₁={seriesVals.v1.toFixed(1)}V
-                  </text>
-                  <text x="195" y="95" textAnchor="middle" fill={premiumDesign.colors.voltage} fontSize="10">
-                    V₂={seriesVals.v2.toFixed(1)}V
-                  </text>
+                  {/* Current flow indicators - arrows on wire */}
+                  <polygon points="145,46 155,50 145,54" fill={premiumDesign.colors.current} opacity="0.8">
+                    <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1s" repeatCount="indefinite" />
+                  </polygon>
+                  <polygon points="145,166 155,170 145,174" fill={premiumDesign.colors.current} opacity="0.8">
+                    <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1s" repeatCount="indefinite" begin="0.3s" />
+                  </polygon>
                 </g>
               ) : (
-                // Parallel circuit
+                // Parallel circuit - premium version
                 <g>
-                  {/* Main wires */}
-                  <line x1="40" y1="70" x2="40" y2="190" stroke={premiumDesign.colors.voltage} strokeWidth="3" />
-                  <line x1="260" y1="70" x2="260" y2="190" stroke={premiumDesign.colors.voltage} strokeWidth="3" />
-                  <line x1="40" y1="70" x2="260" y2="70" stroke={premiumDesign.colors.voltage} strokeWidth="3" />
-                  <line x1="40" y1="190" x2="260" y2="190" stroke={premiumDesign.colors.voltage} strokeWidth="3" />
+                  {/* Main vertical wires - copper style */}
+                  <line x1="40" y1="50" x2="40" y2="170" stroke="url(#circTwistCopperWire)" strokeWidth="4" strokeLinecap="round" filter="url(#circTwistWireGlow)" />
+                  <line x1="260" y1="50" x2="260" y2="170" stroke="url(#circTwistCopperWire)" strokeWidth="4" strokeLinecap="round" filter="url(#circTwistWireGlow)" />
 
-                  {/* Branch wires */}
-                  <line x1="100" y1="70" x2="100" y2="100" stroke={premiumDesign.colors.voltage} strokeWidth="2" />
-                  <line x1="100" y1="140" x2="100" y2="190" stroke={premiumDesign.colors.voltage} strokeWidth="2" />
-                  <line x1="200" y1="70" x2="200" y2="100" stroke={premiumDesign.colors.voltage} strokeWidth="2" />
-                  <line x1="200" y1="140" x2="200" y2="190" stroke={premiumDesign.colors.voltage} strokeWidth="2" />
+                  {/* Main horizontal wires */}
+                  <line x1="40" y1="50" x2="260" y2="50" stroke="url(#circTwistCopperWireH)" strokeWidth="4" strokeLinecap="round" filter="url(#circTwistWireGlow)" />
+                  <line x1="40" y1="170" x2="260" y2="170" stroke="url(#circTwistCopperWireH)" strokeWidth="4" strokeLinecap="round" filter="url(#circTwistWireGlow)" />
 
-                  {/* Battery */}
-                  <g transform="translate(20, 110)">
-                    <rect x="0" y="0" width="20" height="40" fill={premiumDesign.colors.background.tertiary} stroke={premiumDesign.colors.voltage} strokeWidth="2" rx="3" />
-                    <text x="10" y="55" textAnchor="middle" fill={premiumDesign.colors.voltage} fontSize="11">{twistVoltage}V</text>
+                  {/* Branch wires with junction nodes */}
+                  <line x1="100" y1="50" x2="100" y2="80" stroke="url(#circTwistCopperWire)" strokeWidth="3" />
+                  <line x1="100" y1="120" x2="100" y2="170" stroke="url(#circTwistCopperWire)" strokeWidth="3" />
+                  <line x1="200" y1="50" x2="200" y2="80" stroke="url(#circTwistCopperWire)" strokeWidth="3" />
+                  <line x1="200" y1="120" x2="200" y2="170" stroke="url(#circTwistCopperWire)" strokeWidth="3" />
+
+                  {/* Junction nodes */}
+                  <circle cx="100" cy="50" r="5" fill="url(#circTwistJunction)" />
+                  <circle cx="200" cy="50" r="5" fill="url(#circTwistJunction)" />
+                  <circle cx="100" cy="170" r="5" fill="url(#circTwistJunction)" />
+                  <circle cx="200" cy="170" r="5" fill="url(#circTwistJunction)" />
+
+                  {/* Battery - 3D style */}
+                  <g transform="translate(20, 90)" filter="url(#circTwistComponentShadow)">
+                    <rect x="0" y="0" width="20" height="40" fill="url(#circTwistBatteryBody)" stroke="#555" strokeWidth="1" rx="3" />
+                    <rect x="6" y="-4" width="8" height="5" fill="url(#circTwistBatteryTerminal)" rx="1" />
+                    <line x1="5" y1="13" x2="15" y2="13" stroke="url(#circTwistBatteryTerminal)" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="10" y1="8" x2="10" y2="18" stroke="url(#circTwistBatteryTerminal)" strokeWidth="3" strokeLinecap="round" />
+                    <line x1="5" y1="27" x2="15" y2="27" stroke="#888" strokeWidth="2" strokeLinecap="round" />
                   </g>
 
-                  {/* Resistor 1 (top branch) */}
-                  <g transform="translate(75, 100)">
-                    <rect x="0" y="0" width="50" height="20" fill={premiumDesign.colors.background.tertiary} stroke={premiumDesign.colors.resistance} strokeWidth="2" rx="3" />
-                    <rect x="0" y="20" width="50" height="20" fill="transparent" />
-                    <text x="25" y="35" textAnchor="middle" fill={premiumDesign.colors.resistance} fontSize="10">R₁={r1}Ω</text>
+                  {/* Resistor 1 - premium ceramic style */}
+                  <g transform="translate(75, 80)" filter="url(#circTwistComponentShadow)">
+                    <rect x="0" y="0" width="50" height="20" fill="url(#circTwistResistorBody)" stroke="#8B4513" strokeWidth="1" rx="4" />
+                    <rect x="8" y="2" width="5" height="16" fill="#8B4513" rx="1" />
+                    <rect x="16" y="2" width="5" height="16" fill="#000" rx="1" />
+                    <rect x="24" y="2" width="5" height="16" fill="#FF0000" rx="1" />
+                    <rect x="32" y="2" width="5" height="16" fill="#FFD700" rx="1" />
+                    <rect x="4" y="3" width="42" height="2" fill="rgba(255,255,255,0.12)" rx="1" />
                   </g>
 
-                  {/* Resistor 2 (bottom branch) */}
-                  <g transform="translate(175, 100)">
-                    <rect x="0" y="0" width="50" height="20" fill={premiumDesign.colors.background.tertiary} stroke={premiumDesign.colors.resistance} strokeWidth="2" rx="3" />
-                    <rect x="0" y="20" width="50" height="20" fill="transparent" />
-                    <text x="25" y="35" textAnchor="middle" fill={premiumDesign.colors.resistance} fontSize="10">R₂={r2}Ω</text>
+                  {/* Resistor 2 - premium ceramic style */}
+                  <g transform="translate(175, 80)" filter="url(#circTwistComponentShadow)">
+                    <rect x="0" y="0" width="50" height="20" fill="url(#circTwistResistorBody)" stroke="#8B4513" strokeWidth="1" rx="4" />
+                    <rect x="8" y="2" width="5" height="16" fill="#8B4513" rx="1" />
+                    <rect x="16" y="2" width="5" height="16" fill="#000" rx="1" />
+                    <rect x="24" y="2" width="5" height="16" fill="#FF0000" rx="1" />
+                    <rect x="32" y="2" width="5" height="16" fill="#FFD700" rx="1" />
+                    <rect x="4" y="3" width="42" height="2" fill="rgba(255,255,255,0.12)" rx="1" />
                   </g>
 
-                  {/* Labels */}
-                  <text x="150" y="215" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">
-                    PARALLEL
-                  </text>
-                  <text x="150" y="235" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="11">
-                    1/R_total = 1/R₁ + 1/R₂ → R_total = {parallelVals.totalR.toFixed(2)}Ω
-                  </text>
-                  <text x="150" y="255" textAnchor="middle" fill={premiumDesign.colors.voltage} fontSize="11">
-                    V = {twistVoltage}V (same across both)
-                  </text>
-
-                  {/* Current labels */}
-                  <text x="100" y="165" textAnchor="middle" fill={premiumDesign.colors.current} fontSize="10">
-                    I₁={parallelVals.i1.toFixed(2)}A
-                  </text>
-                  <text x="200" y="165" textAnchor="middle" fill={premiumDesign.colors.current} fontSize="10">
-                    I₂={parallelVals.i2.toFixed(2)}A
-                  </text>
+                  {/* Current flow arrows - showing split */}
+                  <polygon points="95,65 100,55 105,65" fill={premiumDesign.colors.current} opacity="0.8">
+                    <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1s" repeatCount="indefinite" />
+                  </polygon>
+                  <polygon points="195,65 200,55 205,65" fill={premiumDesign.colors.current} opacity="0.8">
+                    <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1s" repeatCount="indefinite" begin="0.2s" />
+                  </polygon>
+                  <polygon points="95,155 100,165 105,155" fill={premiumDesign.colors.current} opacity="0.8">
+                    <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1s" repeatCount="indefinite" begin="0.5s" />
+                  </polygon>
+                  <polygon points="195,155 200,165 205,155" fill={premiumDesign.colors.current} opacity="0.8">
+                    <animate attributeName="opacity" values="0.3;0.9;0.3" dur="1s" repeatCount="indefinite" begin="0.7s" />
+                  </polygon>
                 </g>
               )}
             </svg>
+
+            {/* Labels moved outside SVG using typo system */}
+            <div style={{
+              textAlign: 'center',
+              marginTop: typo.elementGap,
+              padding: typo.cardPadding,
+              background: circuitType === 'series' ? 'rgba(251, 191, 36, 0.1)' : 'rgba(139, 92, 246, 0.1)',
+              borderRadius: premiumDesign.radius.md,
+              border: `1px solid ${circuitType === 'series' ? 'rgba(251, 191, 36, 0.3)' : 'rgba(139, 92, 246, 0.3)'}`,
+            }}>
+              <div style={{ color: 'white', fontSize: typo.heading, fontWeight: 700, marginBottom: '4px' }}>
+                {circuitType === 'series' ? 'SERIES' : 'PARALLEL'}
+              </div>
+              <div style={{ color: premiumDesign.colors.text.secondary, fontSize: typo.small }}>
+                {circuitType === 'series'
+                  ? `R_total = R1 + R2 = ${seriesVals.totalR}Ohm`
+                  : `1/R_total = 1/R1 + 1/R2 -> R_total = ${parallelVals.totalR.toFixed(2)}Ohm`
+                }
+              </div>
+            </div>
+
+            {/* Voltage/Current indicators */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-around',
+              marginTop: typo.elementGap,
+              gap: typo.elementGap,
+            }}>
+              <div style={{
+                flex: 1,
+                background: 'rgba(251, 191, 36, 0.12)',
+                padding: typo.elementGap,
+                borderRadius: premiumDesign.radius.md,
+                textAlign: 'center',
+                border: '1px solid rgba(251, 191, 36, 0.25)',
+              }}>
+                <div style={{ color: premiumDesign.colors.voltage, fontSize: typo.label, fontWeight: 600 }}>
+                  {circuitType === 'series' ? `V1=${seriesVals.v1.toFixed(1)}V` : `V=${twistVoltage}V`}
+                </div>
+                <div style={{ color: premiumDesign.colors.text.muted, fontSize: typo.label }}>
+                  {circuitType === 'series' ? 'R1 Voltage' : 'Same across both'}
+                </div>
+              </div>
+              <div style={{
+                flex: 1,
+                background: 'rgba(59, 130, 246, 0.12)',
+                padding: typo.elementGap,
+                borderRadius: premiumDesign.radius.md,
+                textAlign: 'center',
+                border: '1px solid rgba(59, 130, 246, 0.25)',
+              }}>
+                <div style={{ color: premiumDesign.colors.current, fontSize: typo.label, fontWeight: 600 }}>
+                  {circuitType === 'series'
+                    ? `I=${seriesVals.i.toFixed(2)}A`
+                    : `I1=${parallelVals.i1.toFixed(2)}A`
+                  }
+                </div>
+                <div style={{ color: premiumDesign.colors.text.muted, fontSize: typo.label }}>
+                  {circuitType === 'series' ? 'Same through both' : 'Branch 1'}
+                </div>
+              </div>
+              {circuitType === 'series' ? (
+                <div style={{
+                  flex: 1,
+                  background: 'rgba(251, 191, 36, 0.12)',
+                  padding: typo.elementGap,
+                  borderRadius: premiumDesign.radius.md,
+                  textAlign: 'center',
+                  border: '1px solid rgba(251, 191, 36, 0.25)',
+                }}>
+                  <div style={{ color: premiumDesign.colors.voltage, fontSize: typo.label, fontWeight: 600 }}>
+                    V2={seriesVals.v2.toFixed(1)}V
+                  </div>
+                  <div style={{ color: premiumDesign.colors.text.muted, fontSize: typo.label }}>
+                    R2 Voltage
+                  </div>
+                </div>
+              ) : (
+                <div style={{
+                  flex: 1,
+                  background: 'rgba(59, 130, 246, 0.12)',
+                  padding: typo.elementGap,
+                  borderRadius: premiumDesign.radius.md,
+                  textAlign: 'center',
+                  border: '1px solid rgba(59, 130, 246, 0.25)',
+                }}>
+                  <div style={{ color: premiumDesign.colors.current, fontSize: typo.label, fontWeight: 600 }}>
+                    I2={parallelVals.i2.toFixed(2)}A
+                  </div>
+                  <div style={{ color: premiumDesign.colors.text.muted, fontSize: typo.label }}>
+                    Branch 2
+                  </div>
+                </div>
+              )}
+            </div>
           </div>
 
           {/* Controls */}

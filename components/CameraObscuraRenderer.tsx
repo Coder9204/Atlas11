@@ -272,7 +272,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
     const generateRays = () => {
       const rays = [];
       const objectPoints = [objectTop, objectMid, objectBottom];
-      const rayColors = ['#fcd34d', '#fb923c', '#f87171'];
+      const rayGradients = ['url(#camRayGradTop)', 'url(#camRayGradMid)', 'url(#camRayGradBottom)'];
 
       objectPoints.forEach((pointY, pIndex) => {
         // For larger holes, show multiple rays through different parts of the hole
@@ -289,9 +289,10 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               y1={pointY}
               x2={pinholeX}
               y2={throughY}
-              stroke={rayColors[pIndex]}
-              strokeWidth={1.5}
-              opacity={0.6}
+              stroke={rayGradients[pIndex]}
+              strokeWidth={2}
+              filter="url(#camRayGlow)"
+              opacity={0.85}
             />
           );
 
@@ -308,9 +309,10 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
               y1={throughY}
               x2={screenX}
               y2={screenHitY}
-              stroke={rayColors[pIndex]}
-              strokeWidth={1.5}
-              opacity={0.6}
+              stroke={rayGradients[pIndex]}
+              strokeWidth={2}
+              filter="url(#camRayGlow)"
+              opacity={0.85}
             />
           );
         }
@@ -320,152 +322,405 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
     };
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#1e293b', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', borderRadius: '12px', maxWidth: '500px' }}
         >
-          {/* Define blur filter */}
           <defs>
-            <filter id="imageBlur">
+            {/* Premium lab background gradient */}
+            <linearGradient id="camLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Outside environment gradient (sky/ambient) */}
+            <linearGradient id="camOutsideBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="30%" stopColor="#2d4a6f" />
+              <stop offset="60%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Wooden box gradient with texture effect */}
+            <linearGradient id="camWoodGrain" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#5c3d2e" />
+              <stop offset="15%" stopColor="#8b5a3c" />
+              <stop offset="30%" stopColor="#6b4423" />
+              <stop offset="45%" stopColor="#8b5a3c" />
+              <stop offset="60%" stopColor="#5c3d2e" />
+              <stop offset="75%" stopColor="#7a4a30" />
+              <stop offset="90%" stopColor="#6b4423" />
+              <stop offset="100%" stopColor="#5c3d2e" />
+            </linearGradient>
+
+            {/* Wooden box top/bottom edge gradient */}
+            <linearGradient id="camWoodEdge" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#8b5a3c" />
+              <stop offset="20%" stopColor="#6b4423" />
+              <stop offset="50%" stopColor="#5c3d2e" />
+              <stop offset="80%" stopColor="#4a3222" />
+              <stop offset="100%" stopColor="#3d2a1c" />
+            </linearGradient>
+
+            {/* Box interior darkness with depth */}
+            <radialGradient id="camBoxInterior" cx="70%" cy="50%" r="80%">
+              <stop offset="0%" stopColor="#0a0f1a" />
+              <stop offset="40%" stopColor="#050810" />
+              <stop offset="70%" stopColor="#030508" />
+              <stop offset="100%" stopColor="#000000" />
+            </radialGradient>
+
+            {/* Screen/projection surface gradient */}
+            <linearGradient id="camScreenGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f8fafc" />
+              <stop offset="25%" stopColor="#e2e8f0" />
+              <stop offset="50%" stopColor="#f1f5f9" />
+              <stop offset="75%" stopColor="#e2e8f0" />
+              <stop offset="100%" stopColor="#cbd5e1" />
+            </linearGradient>
+
+            {/* Candle body gradient */}
+            <linearGradient id="camCandleBody" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="30%" stopColor="#ef4444" />
+              <stop offset="60%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+
+            {/* Flame outer gradient */}
+            <radialGradient id="camFlameOuter" cx="50%" cy="70%" r="60%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="30%" stopColor="#fcd34d" />
+              <stop offset="60%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.6" />
+            </radialGradient>
+
+            {/* Flame inner gradient */}
+            <radialGradient id="camFlameInner" cx="50%" cy="60%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="30%" stopColor="#fef9c3" />
+              <stop offset="60%" stopColor="#fef08a" />
+              <stop offset="100%" stopColor="#fcd34d" stopOpacity="0.8" />
+            </radialGradient>
+
+            {/* Light ray gradients - top ray (yellow) */}
+            <linearGradient id="camRayGradTop" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fef08a" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#fcd34d" stopOpacity="1" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="70%" stopColor="#fcd34d" stopOpacity="1" />
+              <stop offset="100%" stopColor="#fef08a" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Light ray gradients - middle ray (orange) */}
+            <linearGradient id="camRayGradMid" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fed7aa" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#fb923c" stopOpacity="1" />
+              <stop offset="50%" stopColor="#f97316" stopOpacity="1" />
+              <stop offset="70%" stopColor="#fb923c" stopOpacity="1" />
+              <stop offset="100%" stopColor="#fed7aa" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Light ray gradients - bottom ray (red-orange) */}
+            <linearGradient id="camRayGradBottom" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fecaca" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#f87171" stopOpacity="1" />
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="1" />
+              <stop offset="70%" stopColor="#f87171" stopOpacity="1" />
+              <stop offset="100%" stopColor="#fecaca" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Pinhole aperture gradient */}
+            <radialGradient id="camPinholeGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="40%" stopColor="#334155" />
+              <stop offset="70%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </radialGradient>
+
+            {/* Inverted image candle gradient */}
+            <linearGradient id="camInvertedCandle" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b91c1c" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#dc2626" stopOpacity="0.85" />
+              <stop offset="70%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#fca5a5" stopOpacity="0.75" />
+            </linearGradient>
+
+            {/* Inverted flame gradient */}
+            <radialGradient id="camInvertedFlame" cx="50%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="#fef9c3" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#fcd34d" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.5" />
+            </radialGradient>
+
+            {/* Glow filter for light rays */}
+            <filter id="camRayGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glow filter for flame */}
+            <filter id="camFlameGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft glow for inverted image */}
+            <filter id="camImageGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Image blur filter based on hole size */}
+            <filter id="camImageBlur">
               <feGaussianBlur stdDeviation={blurAmount} />
             </filter>
+
+            {/* Subtle inner shadow for box */}
+            <filter id="camInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Wood texture pattern */}
+            <pattern id="camWoodPattern" x="0" y="0" width="20" height="10" patternUnits="userSpaceOnUse">
+              <rect width="20" height="10" fill="url(#camWoodGrain)" />
+              <line x1="0" y1="2" x2="20" y2="2" stroke="#4a3222" strokeWidth="0.5" opacity="0.3" />
+              <line x1="0" y1="5" x2="20" y2="5.5" stroke="#4a3222" strokeWidth="0.3" opacity="0.2" />
+              <line x1="0" y1="8" x2="20" y2="7.5" stroke="#4a3222" strokeWidth="0.4" opacity="0.25" />
+            </pattern>
+
+            {/* Pinhole ring gradient */}
+            <linearGradient id="camPinholeRing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="30%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
           </defs>
 
-          {/* Background gradient for outside */}
-          <rect x={0} y={0} width={boxLeft} height={height} fill="#334155" />
+          {/* Premium dark lab background */}
+          <rect width={width} height={height} fill="url(#camLabBg)" />
 
-          {/* Object (candle/arrow shape) */}
+          {/* Background gradient for outside environment */}
+          <rect x={0} y={0} width={boxLeft} height={height} fill="url(#camOutsideBg)" />
+
+          {/* Object (candle/arrow shape) with premium gradients */}
           <g>
-            {/* Candle body */}
+            {/* Candle body with gradient */}
             <rect
               x={objectX - 8}
               y={objectTop}
               width={16}
               height={objectBottom - objectTop}
-              fill={colors.objectColor}
-              rx={2}
+              fill="url(#camCandleBody)"
+              rx={3}
             />
-            {/* Flame */}
+            {/* Candle wick */}
+            <rect
+              x={objectX - 1}
+              y={objectTop - 5}
+              width={2}
+              height={8}
+              fill="#1e293b"
+              rx={1}
+            />
+            {/* Flame outer with glow */}
+            <ellipse
+              cx={objectX}
+              cy={objectTop - 12}
+              rx={9}
+              ry={14}
+              fill="url(#camFlameOuter)"
+              filter="url(#camFlameGlow)"
+            />
+            {/* Flame inner (brighter core) */}
             <ellipse
               cx={objectX}
               cy={objectTop - 10}
-              rx={8}
-              ry={12}
-              fill="#fcd34d"
-            />
-            <ellipse
-              cx={objectX}
-              cy={objectTop - 8}
-              rx={4}
-              ry={8}
-              fill="#fed7aa"
+              rx={5}
+              ry={9}
+              fill="url(#camFlameInner)"
             />
             {/* Arrow indicating "up" */}
             <polygon
-              points={`${objectX},${objectTop - 25} ${objectX - 5},${objectTop - 18} ${objectX + 5},${objectTop - 18}`}
+              points={`${objectX},${objectTop - 30} ${objectX - 6},${objectTop - 22} ${objectX + 6},${objectTop - 22}`}
               fill={colors.textPrimary}
+              opacity={0.9}
             />
           </g>
 
-          {/* Box (camera obscura) */}
+          {/* Box (camera obscura) with wooden texture */}
+          {/* Box outer frame with wood pattern */}
           <rect
             x={boxLeft}
             y={boxTop}
             width={boxWidth}
             height={boxHeight}
-            fill="#1e293b"
-            stroke={colors.boxColor}
-            strokeWidth={3}
-          />
-
-          {/* Box interior darkness */}
-          <rect
-            x={boxLeft + 3}
-            y={boxTop + 3}
-            width={boxWidth - 6}
-            height={boxHeight - 6}
-            fill="#0f172a"
-          />
-
-          {/* Pinhole opening */}
-          <rect
-            x={pinholeX - 2}
-            y={pinholeY - pinholeRadius}
-            width={4}
-            height={pinholeRadius * 2}
-            fill="#334155"
-          />
-
-          {/* Screen inside box */}
-          <rect
-            x={screenX}
-            y={boxTop + 20}
-            width={10}
-            height={boxHeight - 40}
-            fill={colors.screenColor}
+            fill="url(#camWoodPattern)"
+            stroke="url(#camWoodEdge)"
+            strokeWidth={4}
             rx={2}
           />
 
-          {/* Projected image on screen (inverted) */}
-          <g filter={blurAmount > 0 ? "url(#imageBlur)" : undefined}>
+          {/* Box interior darkness with depth */}
+          <rect
+            x={boxLeft + 4}
+            y={boxTop + 4}
+            width={boxWidth - 8}
+            height={boxHeight - 8}
+            fill="url(#camBoxInterior)"
+            rx={1}
+          />
+
+          {/* Pinhole aperture with metallic ring */}
+          {/* Outer metallic ring */}
+          <circle
+            cx={pinholeX}
+            cy={pinholeY}
+            r={pinholeRadius + 4}
+            fill="url(#camPinholeRing)"
+          />
+          {/* Inner aperture hole */}
+          <ellipse
+            cx={pinholeX}
+            cy={pinholeY}
+            rx={pinholeRadius + 1}
+            ry={pinholeRadius}
+            fill="url(#camPinholeGrad)"
+          />
+          {/* Aperture opening (actual hole) */}
+          <ellipse
+            cx={pinholeX}
+            cy={pinholeY}
+            rx={pinholeRadius * 0.7}
+            ry={pinholeRadius * 0.6}
+            fill="#1e3a5f"
+            opacity={0.9}
+          />
+
+          {/* Screen inside box with gradient */}
+          <rect
+            x={screenX}
+            y={boxTop + 20}
+            width={12}
+            height={boxHeight - 40}
+            rx={2}
+            fill="url(#camScreenGrad)"
+            filter="url(#camImageGlow)"
+          />
+
+          {/* Projected image on screen (inverted) with premium effects */}
+          <g filter={blurAmount > 0 ? "url(#camImageBlur)" : "url(#camImageGlow)"}>
             {/* Inverted candle body */}
             <rect
-              x={screenX - 4}
+              x={screenX - 3}
               y={Math.min(imageTop, imageBottom)}
-              width={8}
+              width={9}
               height={Math.abs(imageBottom - imageTop)}
-              fill={colors.objectColor}
-              opacity={Math.max(0.3, Math.min(1, holeSize / 15))}
+              fill="url(#camInvertedCandle)"
+              opacity={Math.max(0.4, Math.min(1, holeSize / 12))}
               rx={1}
             />
             {/* Inverted flame (now at bottom) */}
             <ellipse
-              cx={screenX}
-              cy={imageTop + 8}
-              rx={4}
-              ry={6}
-              fill="#fcd34d"
-              opacity={Math.max(0.3, Math.min(1, holeSize / 15))}
+              cx={screenX + 1}
+              cy={imageTop + 10}
+              rx={5}
+              ry={7}
+              fill="url(#camInvertedFlame)"
+              opacity={Math.max(0.4, Math.min(1, holeSize / 12))}
             />
           </g>
 
-          {/* Light rays */}
+          {/* Light rays with glow effect */}
           {showRays && generateRays()}
-
-          {/* Labels */}
-          <text x={objectX} y={objectBottom + 20} fill={colors.textPrimary} fontSize={11} textAnchor="middle">
-            Object
-          </text>
-          <text x={pinholeX} y={boxBottom + 20} fill={colors.textPrimary} fontSize={11} textAnchor="middle">
-            Pinhole
-          </text>
-          <text x={screenX + 5} y={boxBottom + 20} fill={colors.textPrimary} fontSize={11} textAnchor="middle">
-            Screen
-          </text>
-
-          {/* Info panel */}
-          <rect x={10} y={10} width={120} height={50} fill="rgba(0,0,0,0.5)" rx={6} />
-          <text x={20} y={28} fill={colors.textSecondary} fontSize={11}>
-            Hole size: {holeSize}px
-          </text>
-          <text x={20} y={45} fill={colors.textSecondary} fontSize={11}>
-            Brightness: {Math.round(holeSize / 40 * 100)}%
-          </text>
-
-          {/* Sharpness/brightness indicator */}
-          <g transform={`translate(${width - 130}, 10)`}>
-            <rect width={120} height={50} fill="rgba(0,0,0,0.5)" rx={6} />
-            <text x={10} y={20} fill={colors.textSecondary} fontSize={10}>
-              Sharpness
-            </text>
-            <rect x={10} y={28} width={100} height={6} fill="#334155" rx={3} />
-            <rect x={10} y={28} width={Math.max(10, 100 - blurAmount * 5)} height={6} fill={colors.success} rx={3} />
-          </g>
         </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '500px',
+          padding: '0 16px',
+        }}>
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Object</span>
+          </div>
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Pinhole</span>
+          </div>
+          <div style={{ textAlign: 'center', flex: 1 }}>
+            <span style={{ color: colors.textSecondary, fontSize: typo.small }}>Screen</span>
+          </div>
+        </div>
+
+        {/* Info panels outside SVG */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '500px',
+          gap: typo.elementGap,
+        }}>
+          <div style={{
+            background: 'rgba(0,0,0,0.5)',
+            padding: typo.cardPadding,
+            borderRadius: '8px',
+            flex: 1,
+          }}>
+            <div style={{ color: colors.textSecondary, fontSize: typo.small }}>
+              Hole size: {holeSize}px
+            </div>
+            <div style={{ color: colors.textMuted, fontSize: typo.label, marginTop: '4px' }}>
+              Brightness: {Math.round(holeSize / 40 * 100)}%
+            </div>
+          </div>
+          <div style={{
+            background: 'rgba(0,0,0,0.5)',
+            padding: typo.cardPadding,
+            borderRadius: '8px',
+            flex: 1,
+          }}>
+            <div style={{ color: colors.textSecondary, fontSize: typo.small, marginBottom: '4px' }}>
+              Sharpness
+            </div>
+            <div style={{
+              height: '6px',
+              background: '#334155',
+              borderRadius: '3px',
+              overflow: 'hidden',
+            }}>
+              <div style={{
+                height: '100%',
+                width: `${Math.max(10, 100 - blurAmount * 5)}%`,
+                background: colors.success,
+                borderRadius: '3px',
+                transition: 'width 0.3s ease',
+              }} />
+            </div>
+          </div>
+        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
@@ -479,7 +734,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
               }}
             >
               {isAnimating ? 'Stop' : 'Animate Hole Size'}
@@ -494,7 +749,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
               }}
             >
               {showRays ? 'Hide Rays' : 'Show Rays'}
@@ -509,7 +764,7 @@ const CameraObscuraRenderer: React.FC<CameraObscuraRendererProps> = ({
                 color: colors.textMuted,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
               }}
             >
               Reset

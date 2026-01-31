@@ -392,63 +392,208 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, gamePhase,
     const material = materials[selectedMaterial];
 
     return (
-      <svg width={simWidth} height={simHeight} className="mx-auto">
-        <defs>
-          <linearGradient id="flameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#f97316" />
-            <stop offset="50%" stopColor="#eab308" />
-            <stop offset="100%" stopColor="#fef08a" />
-          </linearGradient>
-        </defs>
+      <>
+        <svg width={simWidth} height={simHeight} className="mx-auto">
+          <defs>
+            {/* Premium flame gradient with 5 color stops */}
+            <linearGradient id="htcFlameGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#fde047" />
+              <stop offset="100%" stopColor="#fef9c3" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect width={simWidth} height={simHeight} fill="#020617" />
+            {/* Heat source glow gradient */}
+            <radialGradient id="htcHeatSourceGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="1" />
+              <stop offset="40%" stopColor="#ea580c" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#c2410c" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#7c2d12" stopOpacity="0" />
+            </radialGradient>
 
-        {/* Flame */}
-        {isHeating && (
-          <g transform={`translate(30, ${simHeight / 2 - 40})`}>
-            <ellipse cx={15} cy={30} rx={15} ry={30} fill="url(#flameGrad)" opacity={0.9}>
-              <animate attributeName="ry" values="25;35;25" dur="0.3s" repeatCount="indefinite" />
-            </ellipse>
+            {/* Temperature bar gradient - hot to cold */}
+            <linearGradient id="htcTempBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+
+            {/* Metal bar surface gradient */}
+            <linearGradient id="htcMetalSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="80%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
+
+            {/* Lab background gradient */}
+            <linearGradient id="htcLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Equation box gradient */}
+            <linearGradient id="htcEquationBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Flame glow filter */}
+            <filter id="htcFlameGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Heat source outer glow */}
+            <filter id="htcSourceGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle inner glow for bar */}
+            <filter id="htcBarGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          {/* Premium lab background */}
+          <rect width={simWidth} height={simHeight} fill="url(#htcLabBg)" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="htcLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect width={simWidth} height={simHeight} fill="url(#htcLabGrid)" />
+
+          {/* Heat source base with glow */}
+          <g transform={`translate(25, ${simHeight / 2 - 50})`}>
+            {/* Outer glow when heating */}
+            {isHeating && (
+              <ellipse cx={20} cy={50} rx={25} ry={25} fill="url(#htcHeatSourceGlow)" filter="url(#htcSourceGlow)" opacity={0.6} />
+            )}
+
+            {/* Burner base */}
+            <rect x={5} y={70} width={30} height={15} rx={3} fill="url(#htcMetalSurface)" stroke="#475569" strokeWidth={1} />
+            <ellipse cx={20} cy={70} rx={15} ry={5} fill="#475569" />
+
+            {/* Flame with glow filter */}
+            {isHeating && (
+              <g filter="url(#htcFlameGlow)">
+                <ellipse cx={20} cy={45} rx={12} ry={25} fill="url(#htcFlameGrad)" opacity={0.95}>
+                  <animate attributeName="ry" values="22;28;22" dur="0.3s" repeatCount="indefinite" />
+                  <animate attributeName="rx" values="10;14;10" dur="0.25s" repeatCount="indefinite" />
+                </ellipse>
+                {/* Inner flame core */}
+                <ellipse cx={20} cy={50} rx={6} ry={15} fill="#fef9c3" opacity={0.9}>
+                  <animate attributeName="ry" values="12;18;12" dur="0.2s" repeatCount="indefinite" />
+                </ellipse>
+              </g>
+            )}
           </g>
-        )}
 
-        {/* Heat source label */}
-        <text x={30} y={simHeight / 2 + 50} fill="#f97316" fontSize={12} textAnchor="middle">{heatSource}C</text>
+          {/* Metal bar with temperature gradient segments */}
+          <g transform={`translate(60, ${simHeight / 2 - 20})`}>
+            {/* Bar shadow */}
+            <rect x={2} y={4} width={barWidth} height={40} rx={6} fill="#000" opacity={0.3} />
 
-        {/* Metal bar with temperature gradient */}
-        <g transform={`translate(60, ${simHeight / 2 - 15})`}>
-          {barTemperatures.map((temp, i) => {
-            const segWidth = barWidth / barTemperatures.length;
-            const t = Math.min(1, Math.max(0, (temp - 25) / 75));
-            const r = Math.round(59 + t * 180);
-            const g = Math.round(130 - t * 80);
-            const b = Math.round(246 - t * 200);
-            return (
-              <rect
-                key={i}
-                x={i * segWidth}
-                y={0}
-                width={segWidth + 1}
-                height={30}
-                rx={i === 0 ? 4 : i === barTemperatures.length - 1 ? 4 : 0}
-                fill={`rgb(${r},${g},${b})`}
-              />
-            );
-          })}
-          <rect x={0} y={0} width={barWidth} height={30} rx={4} fill="none" stroke="#334155" strokeWidth={2} />
-          <text x={barWidth / 2} y={22} fill="white" fontSize={12} textAnchor="middle" fontWeight="bold">{material.name} (k={material.k})</text>
-        </g>
+            {/* Temperature segments */}
+            {barTemperatures.map((temp, i) => {
+              const segWidth = barWidth / barTemperatures.length;
+              const t = Math.min(1, Math.max(0, (temp - 25) / 75));
+              // Enhanced color interpolation for premium look
+              const r = Math.round(59 + t * 196);
+              const g = Math.round(130 - t * 80 + (1 - t) * 50);
+              const b = Math.round(246 - t * 200);
+              return (
+                <rect
+                  key={i}
+                  x={i * segWidth}
+                  y={0}
+                  width={segWidth + 1}
+                  height={40}
+                  rx={i === 0 ? 6 : i === barTemperatures.length - 1 ? 6 : 0}
+                  fill={`rgb(${r},${g},${b})`}
+                  filter={t > 0.5 ? "url(#htcBarGlow)" : undefined}
+                />
+              );
+            })}
 
-        {/* Temperature labels */}
-        <text x={65} y={simHeight / 2 + 35} fill="#94a3b8" fontSize={10}>Hot: {Math.round(barTemperatures[0])}C</text>
-        <text x={60 + barWidth - 5} y={simHeight / 2 + 35} fill="#94a3b8" fontSize={10} textAnchor="end">Cold: {Math.round(barTemperatures[barTemperatures.length - 1])}C</text>
+            {/* Bar border with metallic look */}
+            <rect x={0} y={0} width={barWidth} height={40} rx={6} fill="none" stroke="url(#htcMetalSurface)" strokeWidth={2} />
 
-        {/* Time and equation */}
-        <text x={simWidth - 10} y={20} fill="#94a3b8" fontSize={11} textAnchor="end">Time: {elapsedTime.toFixed(1)}s</text>
-        <rect x={simWidth / 2 - 100} y={simHeight - 40} width={200} height={30} rx={8} fill="#0f172a" stroke="#334155" />
-        <text x={simWidth / 2} y={simHeight - 20} fill="#f97316" fontSize={12} textAnchor="middle" fontWeight="bold">Q/t = -kA(dT/dx)</text>
-      </svg>
+            {/* Highlight on top edge */}
+            <rect x={4} y={2} width={barWidth - 8} height={2} rx={1} fill="#94a3b8" opacity={0.3} />
+          </g>
+
+          {/* Heat flow arrows */}
+          {isHeating && (
+            <g opacity={0.7}>
+              {[0, 1, 2].map((i) => (
+                <g key={i} transform={`translate(${100 + i * 100}, ${simHeight / 2})`}>
+                  <path d="M0,0 L15,0 L12,-4 M15,0 L12,4" stroke="#f97316" strokeWidth={2} fill="none" opacity={0.6}>
+                    <animate attributeName="opacity" values="0.3;0.8;0.3" dur="1s" begin={`${i * 0.3}s`} repeatCount="indefinite" />
+                  </path>
+                </g>
+              ))}
+            </g>
+          )}
+
+          {/* Equation box with gradient */}
+          <g transform={`translate(${simWidth / 2 - 90}, ${simHeight - 50})`}>
+            <rect width={180} height={36} rx={10} fill="url(#htcEquationBg)" stroke="#475569" strokeWidth={1} />
+            <rect x={2} y={2} width={176} height={2} rx={1} fill="#64748b" opacity={0.2} />
+          </g>
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        <div className="flex justify-between items-center mt-2 px-4" style={{ maxWidth: simWidth, margin: '0 auto' }}>
+          <div className="text-center">
+            <span style={{ fontSize: typo.small, color: '#f97316', fontWeight: 600 }}>{heatSource}°C</span>
+            <div style={{ fontSize: typo.label, color: '#64748b' }}>Heat Source</div>
+          </div>
+          <div className="text-center">
+            <span style={{ fontSize: typo.body, color: materials[selectedMaterial].color, fontWeight: 700 }}>
+              {material.name}
+            </span>
+            <div style={{ fontSize: typo.small, color: '#94a3b8' }}>k = {material.k} W/mK</div>
+          </div>
+          <div className="text-center">
+            <span style={{ fontSize: typo.small, color: '#3b82f6', fontWeight: 600 }}>
+              {Math.round(barTemperatures[barTemperatures.length - 1])}°C
+            </span>
+            <div style={{ fontSize: typo.label, color: '#64748b' }}>Cold End</div>
+          </div>
+        </div>
+
+        <div className="flex justify-between items-center mt-2 px-4" style={{ maxWidth: simWidth, margin: '8px auto 0' }}>
+          <div style={{ fontSize: typo.small, color: '#94a3b8' }}>
+            Time: <span style={{ color: '#f8fafc', fontWeight: 600 }}>{elapsedTime.toFixed(1)}s</span>
+          </div>
+          <div style={{
+            fontSize: typo.body,
+            color: '#f97316',
+            fontWeight: 700,
+            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+            padding: '6px 16px',
+            borderRadius: '8px',
+            border: '1px solid #334155'
+          }}>
+            Q/t = -kA(dT/dx)
+          </div>
+        </div>
+      </>
     );
   };
 
@@ -461,66 +606,234 @@ const HeatTransferCapacityRenderer: React.FC<Props> = ({ onGameEvent, gamePhase,
     const simHeight = 280;
 
     return (
-      <svg width={simWidth} height={simHeight} className="mx-auto">
-        <defs>
-          <linearGradient id="flameGrad2" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#f97316" />
-            <stop offset="50%" stopColor="#eab308" />
-            <stop offset="100%" stopColor="#fef08a" />
-          </linearGradient>
-        </defs>
+      <>
+        <svg width={simWidth} height={simHeight} className="mx-auto">
+          <defs>
+            {/* Premium flame gradient for beaker burners */}
+            <linearGradient id="htcBeakerFlame" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="20%" stopColor="#f97316" />
+              <stop offset="45%" stopColor="#eab308" />
+              <stop offset="70%" stopColor="#fde047" />
+              <stop offset="90%" stopColor="#fef9c3" />
+              <stop offset="100%" stopColor="#ffffff" />
+            </linearGradient>
 
-        <rect width={simWidth} height={simHeight} fill="#020617" />
+            {/* Water gradient - blue tones */}
+            <linearGradient id="htcWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="30%" stopColor="#3b82f6" />
+              <stop offset="60%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
 
-        {/* Four beakers */}
-        {Object.entries(specificHeats).map(([key, data], idx) => {
-          const x = 40 + idx * (simWidth - 80) / 4;
-          const temp = substanceTemps[key];
-          const fillHeight = ((temp - 25) / 75) * 80;
-          const isWinner = temp >= 100;
+            {/* Oil gradient - yellow/amber tones */}
+            <linearGradient id="htcOilGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fde047" />
+              <stop offset="30%" stopColor="#eab308" />
+              <stop offset="60%" stopColor="#ca8a04" />
+              <stop offset="100%" stopColor="#a16207" />
+            </linearGradient>
 
-          return (
-            <g key={key} transform={`translate(${x}, 30)`}>
-              {/* Beaker */}
-              <path d="M 0 0 L 0 100 Q 0 115 15 115 L 55 115 Q 70 115 70 100 L 70 0 Z" fill="#0f172a" stroke="#334155" strokeWidth={2} />
+            {/* Aluminum gradient - silver tones */}
+            <linearGradient id="htcAluminumGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#cbd5e1" />
+              <stop offset="30%" stopColor="#94a3b8" />
+              <stop offset="60%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
 
-              {/* Liquid */}
-              <rect x={3} y={115 - fillHeight - 15} width={64} height={fillHeight + 12} fill={data.color} opacity={0.6} rx={2} />
+            {/* Iron gradient - dark gray tones */}
+            <linearGradient id="htcIronGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#9ca3af" />
+              <stop offset="30%" stopColor="#6b7280" />
+              <stop offset="60%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
 
-              {/* Bubbles when heating */}
-              {heatingStarted && temp > 50 && (
-                <g>
-                  {[0, 1, 2].map(i => (
-                    <circle key={i} cx={20 + i * 15} r={3} fill={data.color} opacity={0.5}>
-                      <animate attributeName="cy" values={`${100 - (temp - 50) * 0.5};60;${100 - (temp - 50) * 0.5}`} dur={`${1 + i * 0.3}s`} repeatCount="indefinite" />
-                    </circle>
-                  ))}
+            {/* Beaker glass gradient */}
+            <linearGradient id="htcBeakerGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#334155" />
+              <stop offset="15%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="85%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Lab background gradient */}
+            <linearGradient id="htcCapLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Winner glow gradient */}
+            <radialGradient id="htcWinnerGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#059669" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#047857" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Flame glow filter */}
+            <filter id="htcBeakerFlameGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Bubble glow */}
+            <filter id="htcBubbleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Winner pulse glow */}
+            <filter id="htcWinnerPulse" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glass reflection */}
+            <linearGradient id="htcGlassReflection" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+              <stop offset="20%" stopColor="#ffffff" stopOpacity="0.1" />
+              <stop offset="25%" stopColor="#ffffff" stopOpacity="0.2" />
+              <stop offset="30%" stopColor="#ffffff" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {/* Premium lab background */}
+          <rect width={simWidth} height={simHeight} fill="url(#htcCapLabBg)" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="htcCapGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect width={simWidth} height={simHeight} fill="url(#htcCapGrid)" />
+
+          {/* Four beakers with premium styling */}
+          {Object.entries(specificHeats).map(([key, data], idx) => {
+            const x = 40 + idx * (simWidth - 80) / 4;
+            const temp = substanceTemps[key];
+            const fillHeight = ((temp - 25) / 75) * 75;
+            const isWinner = temp >= 100;
+            const gradientId = key === 'water' ? 'htcWaterGrad' : key === 'oil' ? 'htcOilGrad' : key === 'aluminum' ? 'htcAluminumGrad' : 'htcIronGrad';
+
+            return (
+              <g key={key} transform={`translate(${x}, 25)`}>
+                {/* Winner glow effect */}
+                {isWinner && (
+                  <ellipse cx={35} cy={60} rx={40} ry={50} fill="url(#htcWinnerGlow)" filter="url(#htcWinnerPulse)">
+                    <animate attributeName="opacity" values="0.5;0.8;0.5" dur="1s" repeatCount="indefinite" />
+                  </ellipse>
+                )}
+
+                {/* Beaker shadow */}
+                <path d="M 3 5 L 3 100 Q 3 115 18 115 L 55 115 Q 70 115 70 100 L 70 5 Z" fill="#000" opacity={0.3} />
+
+                {/* Beaker body with glass gradient */}
+                <path d="M 0 0 L 0 100 Q 0 115 15 115 L 55 115 Q 70 115 70 100 L 70 0 Z" fill="#0f172a" stroke="url(#htcBeakerGlass)" strokeWidth={2} />
+
+                {/* Liquid with gradient fill */}
+                <clipPath id={`htcLiquidClip${idx}`}>
+                  <path d="M 3 0 L 3 97 Q 3 112 15 112 L 55 112 Q 67 112 67 97 L 67 0 Z" />
+                </clipPath>
+                <g clipPath={`url(#htcLiquidClip${idx})`}>
+                  <rect x={3} y={112 - fillHeight - 12} width={64} height={fillHeight + 15} fill={`url(#${gradientId})`} opacity={0.85} />
+
+                  {/* Liquid surface highlight */}
+                  <rect x={5} y={112 - fillHeight - 12} width={60} height={3} fill="#ffffff" opacity={0.2} rx={1} />
                 </g>
-              )}
 
-              {/* Temperature */}
-              <rect x={10} y={40} width={50} height={22} rx={4} fill="#020617" opacity={0.8} />
-              <text x={35} y={56} textAnchor="middle" fill={isWinner ? '#10b981' : 'white'} fontSize={13} fontWeight="bold">{Math.round(temp)}C</text>
-              {isWinner && <text x={35} y={75} textAnchor="middle" fontSize={16}>🏆</text>}
+                {/* Glass reflection */}
+                <rect x={5} y={5} width={8} height={100} fill="url(#htcGlassReflection)" rx={2} />
 
-              {/* Label */}
-              <text x={35} y={135} textAnchor="middle" fill={data.color} fontSize={11} fontWeight="bold">{data.name}</text>
-              <text x={35} y={148} textAnchor="middle" fill="#64748b" fontSize={9}>c={data.c}</text>
+                {/* Bubbles when heating */}
+                {heatingStarted && temp > 50 && (
+                  <g filter="url(#htcBubbleGlow)">
+                    {[0, 1, 2, 3].map(i => (
+                      <circle key={i} cx={15 + i * 12} r={2 + Math.random()} fill={data.color} opacity={0.6}>
+                        <animate attributeName="cy" values={`${95 - (temp - 50) * 0.4};55;${95 - (temp - 50) * 0.4}`} dur={`${0.8 + i * 0.25}s`} repeatCount="indefinite" />
+                        <animate attributeName="r" values="2;3;2" dur={`${0.6 + i * 0.2}s`} repeatCount="indefinite" />
+                      </circle>
+                    ))}
+                  </g>
+                )}
 
-              {/* Flame */}
-              {heatingStarted && (
-                <ellipse cx={35} cy={125} rx={12} ry={15} fill="url(#flameGrad2)" opacity={0.7}>
-                  <animate attributeName="ry" values="12;18;12" dur="0.3s" repeatCount="indefinite" />
-                </ellipse>
-              )}
-            </g>
-          );
-        })}
+                {/* Temperature display with gradient background */}
+                <rect x={10} y={38} width={50} height={24} rx={6} fill="#020617" opacity={0.9} stroke={isWinner ? '#10b981' : '#334155'} strokeWidth={isWinner ? 2 : 1} />
 
-        {/* Equation */}
-        <rect x={simWidth / 2 - 80} y={simHeight - 45} width={160} height={35} rx={8} fill="#0f172a" stroke="#334155" />
-        <text x={simWidth / 2} y={simHeight - 22} fill="#3b82f6" fontSize={14} textAnchor="middle" fontWeight="bold">Q = mcDeltaT</text>
-      </svg>
+                {/* Burner base */}
+                <rect x={15} y={122} width={40} height={8} rx={2} fill="url(#htcBeakerGlass)" />
+                <ellipse cx={35} cy={122} rx={20} ry={4} fill="#475569" />
+
+                {/* Flame with glow */}
+                {heatingStarted && (
+                  <g filter="url(#htcBeakerFlameGlow)">
+                    <ellipse cx={35} cy={135} rx={10} ry={14} fill="url(#htcBeakerFlame)" opacity={0.9}>
+                      <animate attributeName="ry" values="11;16;11" dur="0.25s" repeatCount="indefinite" />
+                      <animate attributeName="rx" values="8;12;8" dur="0.3s" repeatCount="indefinite" />
+                    </ellipse>
+                    {/* Inner flame core */}
+                    <ellipse cx={35} cy={138} rx={4} ry={8} fill="#fef9c3" opacity={0.9}>
+                      <animate attributeName="ry" values="6;10;6" dur="0.2s" repeatCount="indefinite" />
+                    </ellipse>
+                  </g>
+                )}
+              </g>
+            );
+          })}
+        </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div className="grid grid-cols-4 gap-2 mt-3 px-4" style={{ maxWidth: simWidth, margin: '12px auto 0' }}>
+          {Object.entries(specificHeats).map(([key, data]) => {
+            const temp = substanceTemps[key];
+            const isWinner = temp >= 100;
+            return (
+              <div key={key} className="text-center">
+                <div style={{
+                  fontSize: typo.bodyLarge,
+                  fontWeight: 700,
+                  color: isWinner ? '#10b981' : '#f8fafc'
+                }}>
+                  {Math.round(temp)}°C {isWinner && '🏆'}
+                </div>
+                <div style={{ fontSize: typo.small, color: data.color, fontWeight: 600 }}>
+                  {data.name}
+                </div>
+                <div style={{ fontSize: typo.label, color: '#64748b' }}>
+                  c = {data.c}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Equation display */}
+        <div className="flex justify-center mt-3">
+          <div style={{
+            fontSize: typo.body,
+            color: '#3b82f6',
+            fontWeight: 700,
+            background: 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)',
+            padding: '8px 24px',
+            borderRadius: '10px',
+            border: '1px solid #334155'
+          }}>
+            Q = mc&Delta;T
+          </div>
+        </div>
+      </>
     );
   };
 

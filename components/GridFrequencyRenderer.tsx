@@ -613,35 +613,145 @@ export default function GridFrequencyRenderer({
 
       <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '32px' }}>
         <defs>
-          <linearGradient id="gridGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+          {/* Premium power line gradient */}
+          <linearGradient id="gridPowerLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
             <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#8b5cf6" />
+            <stop offset="25%" stopColor="#6366f1" />
+            <stop offset="50%" stopColor="#8b5cf6" />
+            <stop offset="75%" stopColor="#6366f1" />
+            <stop offset="100%" stopColor="#3b82f6" />
           </linearGradient>
+
+          {/* Generator metallic gradient */}
+          <linearGradient id="gridGeneratorMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="30%" stopColor="#475569" />
+            <stop offset="70%" stopColor="#334155" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+
+          {/* House warm gradient */}
+          <linearGradient id="gridHouseGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="50%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#d97706" />
+          </linearGradient>
+
+          {/* Energy pulse glow */}
+          <radialGradient id="gridEnergyPulse" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.8" />
+            <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Frequency display gradient */}
+          <linearGradient id="gridFreqDisplay" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* Glow filter for generator */}
+          <filter id="gridGenGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Pulse glow filter */}
+          <filter id="gridPulseGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
         </defs>
 
+        {/* Background */}
         <rect width="400" height="200" fill="#1e293b" rx="12" />
 
-        {/* Generator */}
-        <circle cx="80" cy="100" r="35" fill="none" stroke="url(#gridGrad)" strokeWidth="4" />
-        <text x="80" y="105" textAnchor="middle" fill="#f8fafc" fontSize="12" fontWeight="bold">GEN</text>
-        <text x="80" y="150" textAnchor="middle" fill="#94a3b8" fontSize="10">Supply</text>
+        {/* Subtle grid lines */}
+        {[...Array(8)].map((_, i) => (
+          <line key={`hgrid${i}`} x1="0" y1={i * 25 + 25} x2="400" y2={i * 25 + 25} stroke="#334155" strokeWidth="0.5" strokeOpacity="0.3" />
+        ))}
+        {[...Array(16)].map((_, i) => (
+          <line key={`vgrid${i}`} x1={i * 25 + 25} y1="0" x2={i * 25 + 25} y2="200" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.3" />
+        ))}
 
-        {/* Transmission lines */}
-        <line x1="120" y1="100" x2="280" y2="100" stroke="#64748b" strokeWidth="3" />
-        <circle cx="200" cy="100" r="15" fill="#3b82f6" opacity="0.3">
-          <animate attributeName="r" values="10;20;10" dur="1s" repeatCount="indefinite" />
+        {/* Power Plant Icon */}
+        <g transform="translate(50, 60)">
+          {/* Cooling tower shape */}
+          <path d="M10 80 Q15 40 30 30 L30 10 L50 10 L50 30 Q65 40 70 80 Z" fill="url(#gridGeneratorMetal)" stroke="#64748b" strokeWidth="1.5" />
+          {/* Steam */}
+          <ellipse cx="40" cy="5" rx="8" ry="4" fill="#94a3b8" opacity="0.6">
+            <animate attributeName="cy" values="5;-5;5" dur="2s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite" />
+          </ellipse>
+          <ellipse cx="48" cy="8" rx="6" ry="3" fill="#94a3b8" opacity="0.4">
+            <animate attributeName="cy" values="8;-2;8" dur="2.5s" repeatCount="indefinite" />
+            <animate attributeName="opacity" values="0.4;0.1;0.4" dur="2.5s" repeatCount="indefinite" />
+          </ellipse>
+          {/* Generator circle with glow */}
+          <circle cx="40" cy="55" r="15" fill="none" stroke="url(#gridPowerLineGrad)" strokeWidth="3" filter="url(#gridGenGlow)">
+            <animate attributeName="stroke-opacity" values="0.8;1;0.8" dur="1.5s" repeatCount="indefinite" />
+          </circle>
+          {/* Spinning rotor indicator */}
+          <g transform="translate(40, 55)">
+            <line x1="-8" y1="0" x2="8" y2="0" stroke="#f8fafc" strokeWidth="2">
+              <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="2s" repeatCount="indefinite" />
+            </line>
+            <line x1="0" y1="-8" x2="0" y2="8" stroke="#f8fafc" strokeWidth="2">
+              <animateTransform attributeName="transform" type="rotate" from="0" to="360" dur="2s" repeatCount="indefinite" />
+            </line>
+          </g>
+        </g>
+
+        {/* Transmission lines with animated pulse */}
+        <line x1="130" y1="115" x2="270" y2="115" stroke="#475569" strokeWidth="4" strokeLinecap="round" />
+        <line x1="130" y1="115" x2="270" y2="115" stroke="url(#gridPowerLineGrad)" strokeWidth="2" strokeLinecap="round" />
+
+        {/* Energy flow pulses */}
+        <circle cx="150" cy="115" r="6" fill="url(#gridEnergyPulse)" filter="url(#gridPulseGlow)">
+          <animate attributeName="cx" values="130;270;130" dur="2s" repeatCount="indefinite" />
+          <animate attributeName="opacity" values="0.8;0.3;0.8" dur="2s" repeatCount="indefinite" />
+        </circle>
+        <circle cx="180" cy="115" r="4" fill="url(#gridEnergyPulse)" filter="url(#gridPulseGlow)">
+          <animate attributeName="cx" values="130;270;130" dur="2s" repeatCount="indefinite" begin="0.5s" />
+          <animate attributeName="opacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite" begin="0.5s" />
         </circle>
 
-        {/* Load (house with AC) */}
-        <rect x="280" y="70" width="60" height="60" fill="none" stroke="#f59e0b" strokeWidth="3" rx="4" />
-        <path d="M280 70 L310 50 L340 70" fill="none" stroke="#f59e0b" strokeWidth="3" />
-        <text x="310" y="105" textAnchor="middle" fill="#f8fafc" fontSize="10">AC</text>
-        <text x="310" y="150" textAnchor="middle" fill="#94a3b8" fontSize="10">Demand</text>
+        {/* House with AC unit */}
+        <g transform="translate(280, 60)">
+          {/* House body */}
+          <rect x="0" y="30" width="60" height="50" fill="#1e293b" stroke="url(#gridHouseGrad)" strokeWidth="2" rx="3" />
+          {/* Roof */}
+          <path d="M-5 30 L30 5 L65 30 Z" fill="#1e293b" stroke="url(#gridHouseGrad)" strokeWidth="2" />
+          {/* Window glow */}
+          <rect x="10" y="45" width="15" height="15" fill="#fbbf24" opacity="0.3" rx="2" />
+          <rect x="35" y="45" width="15" height="15" fill="#fbbf24" opacity="0.3" rx="2" />
+          {/* AC unit */}
+          <rect x="20" y="65" width="20" height="12" fill="#475569" stroke="#64748b" strokeWidth="1" rx="2" />
+          <line x1="23" y1="71" x2="37" y2="71" stroke="#94a3b8" strokeWidth="1" />
+          {/* AC running indicator */}
+          <circle cx="30" cy="71" r="2" fill="#22c55e">
+            <animate attributeName="opacity" values="1;0.3;1" dur="0.8s" repeatCount="indefinite" />
+          </circle>
+        </g>
 
-        {/* Frequency display */}
-        <rect x="150" y="20" width="100" height="30" fill="#0f172a" rx="6" />
-        <text x="200" y="40" textAnchor="middle" fill="#22c55e" fontSize="14" fontWeight="bold">60.00 Hz</text>
+        {/* Frequency display panel */}
+        <rect x="150" y="15" width="100" height="35" fill="url(#gridFreqDisplay)" rx="8" stroke="#475569" strokeWidth="1" />
+        <text x="200" y="28" textAnchor="middle" fill="#94a3b8" fontSize="8" fontWeight="600">FREQUENCY</text>
+        <text x="200" y="43" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">60.00 Hz</text>
       </svg>
+
+      {/* Labels outside SVG */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', maxWidth: '500px', margin: '0 auto', paddingLeft: '40px', paddingRight: '40px' }}>
+        <span style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Power Plant</span>
+        <span style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600 }}>Consumer Load</span>
+      </div>
 
       <div style={{
         background: 'rgba(30, 41, 59, 0.8)',
@@ -808,33 +918,202 @@ export default function GridFrequencyRenderer({
       </div>
 
       {/* SVG Visualization */}
-      <svg viewBox="0 0 400 180" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '24px' }}>
-        <rect width="400" height="180" fill="#0f172a" rx="12" />
+      <svg viewBox="0 0 400 220" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+        <defs>
+          {/* Supply gradient */}
+          <linearGradient id="gridSupplyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="30%" stopColor="#4ade80" />
+            <stop offset="70%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#16a34a" />
+          </linearGradient>
 
-        {/* Supply side */}
-        <rect x="20" y="40" width="120" height="100" fill="rgba(34, 197, 94, 0.1)" stroke="#22c55e" strokeWidth="2" rx="8" />
-        <text x="80" y="65" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">SUPPLY</text>
-        <rect x="40" y="80" width="80" height="20" fill="#1e293b" rx="4" />
-        <rect x="40" y="80" width={gridSupply * 0.8} height="20" fill="#22c55e" rx="4" />
-        <text x="80" y="130" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="bold">{gridSupply}%</text>
+          {/* Demand gradient */}
+          <linearGradient id="gridDemandGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="30%" stopColor="#f87171" />
+            <stop offset="70%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
 
-        {/* Balance indicator */}
-        <g transform={`translate(200, 90)`}>
-          <line x1="-30" y1="0" x2="30" y2="0" stroke="#64748b" strokeWidth="2" />
-          <polygon
-            points="-10,-15 10,-15 0,0"
-            fill={frequency > 60 ? '#22c55e' : frequency < 60 ? '#ef4444' : '#64748b'}
-            transform={`rotate(${(frequency - 60) * 30})`}
-          />
+          {/* Sine wave gradient */}
+          <linearGradient id="gridSineWaveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+            <stop offset="25%" stopColor="#6366f1" stopOpacity="1" />
+            <stop offset="50%" stopColor="#8b5cf6" stopOpacity="1" />
+            <stop offset="75%" stopColor="#6366f1" stopOpacity="1" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8" />
+          </linearGradient>
+
+          {/* Gauge arc gradient */}
+          <linearGradient id="gridGaugeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="25%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="75%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#ef4444" />
+          </linearGradient>
+
+          {/* Balance indicator glow */}
+          <radialGradient id="gridBalanceGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={frequency >= 59.5 && frequency <= 60.5 ? '#22c55e' : frequency >= 59 && frequency <= 61 ? '#f59e0b' : '#ef4444'} stopOpacity="0.6" />
+            <stop offset="100%" stopColor={frequency >= 59.5 && frequency <= 60.5 ? '#22c55e' : frequency >= 59 && frequency <= 61 ? '#f59e0b' : '#ef4444'} stopOpacity="0" />
+          </radialGradient>
+
+          {/* Glow filter for balance */}
+          <filter id="gridBalanceFilter" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Sine wave glow */}
+          <filter id="gridSineGlow" x="-10%" y="-50%" width="120%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <rect width="400" height="220" fill="#0f172a" rx="12" />
+
+        {/* Sine wave visualization at top */}
+        <g transform="translate(0, 10)">
+          {/* Sine wave background grid */}
+          <line x1="20" y1="35" x2="380" y2="35" stroke="#334155" strokeWidth="1" strokeDasharray="4,4" />
+
+          {/* Animated sine wave - frequency affects wavelength */}
+          <path
+            d={(() => {
+              const wavelength = 60 / frequency * 60;
+              let path = 'M 20 35';
+              for (let x = 0; x <= 360; x += 2) {
+                const y = 35 + Math.sin((x / wavelength) * Math.PI * 2) * 20;
+                path += ` L ${x + 20} ${y}`;
+              }
+              return path;
+            })()}
+            fill="none"
+            stroke="url(#gridSineWaveGrad)"
+            strokeWidth="3"
+            strokeLinecap="round"
+            filter="url(#gridSineGlow)"
+          >
+            <animate attributeName="stroke-dashoffset" from="0" to="-120" dur={`${60/frequency}s`} repeatCount="indefinite" />
+          </path>
+
+          {/* 60 Hz reference line label */}
+          <text x="30" y="28" fill="#64748b" fontSize="8">60 Hz Reference</text>
         </g>
 
-        {/* Demand side */}
-        <rect x="260" y="40" width="120" height="100" fill="rgba(239, 68, 68, 0.1)" stroke="#ef4444" strokeWidth="2" rx="8" />
-        <text x="320" y="65" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">DEMAND</text>
-        <rect x="280" y="80" width="80" height="20" fill="#1e293b" rx="4" />
-        <rect x="280" y="80" width={gridLoad * 0.8} height="20" fill="#ef4444" rx="4" />
-        <text x="320" y="130" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="bold">{gridLoad}%</text>
+        {/* Frequency gauge in center */}
+        <g transform="translate(200, 130)">
+          {/* Gauge background arc */}
+          <path
+            d="M -60 0 A 60 60 0 0 1 60 0"
+            fill="none"
+            stroke="#334155"
+            strokeWidth="8"
+            strokeLinecap="round"
+          />
+          {/* Gauge colored arc */}
+          <path
+            d="M -60 0 A 60 60 0 0 1 60 0"
+            fill="none"
+            stroke="url(#gridGaugeGrad)"
+            strokeWidth="6"
+            strokeLinecap="round"
+            opacity="0.7"
+          />
+
+          {/* Gauge tick marks */}
+          {[-60, -30, 0, 30, 60].map((angle, i) => (
+            <g key={`tick${i}`} transform={`rotate(${angle - 90})`}>
+              <line x1="50" y1="0" x2="58" y2="0" stroke="#94a3b8" strokeWidth="2" />
+            </g>
+          ))}
+
+          {/* Needle */}
+          <g transform={`rotate(${(frequency - 60) * 30})`} filter="url(#gridBalanceFilter)">
+            <line x1="0" y1="0" x2="0" y2="-45" stroke={getFrequencyColor()} strokeWidth="3" strokeLinecap="round" />
+            <circle cx="0" cy="0" r="8" fill={getFrequencyColor()} />
+            <circle cx="0" cy="0" r="4" fill="#0f172a" />
+          </g>
+
+          {/* Center glow */}
+          <circle cx="0" cy="0" r="20" fill="url(#gridBalanceGlow)" />
+
+          {/* Gauge labels */}
+          <text x="-55" y="20" fill="#ef4444" fontSize="8" fontWeight="bold">58</text>
+          <text x="0" y="-55" fill="#22c55e" fontSize="8" fontWeight="bold" textAnchor="middle">60</text>
+          <text x="50" y="20" fill="#ef4444" fontSize="8" fontWeight="bold">62</text>
+        </g>
+
+        {/* Supply side panel */}
+        <g transform="translate(20, 80)">
+          <rect x="0" y="0" width="100" height="90" fill="rgba(34, 197, 94, 0.08)" stroke="#22c55e" strokeWidth="1.5" rx="8" />
+
+          {/* Power plant mini icon */}
+          <g transform="translate(10, 10)">
+            <rect x="0" y="15" width="20" height="25" fill="#475569" rx="2" />
+            <ellipse cx="10" cy="12" rx="6" ry="3" fill="#94a3b8" opacity="0.5">
+              <animate attributeName="opacity" values="0.5;0.2;0.5" dur="2s" repeatCount="indefinite" />
+            </ellipse>
+          </g>
+
+          {/* Progress bar */}
+          <rect x="10" y="50" width="80" height="12" fill="#1e293b" rx="6" />
+          <rect x="10" y="50" width={gridSupply * 0.8} height="12" fill="url(#gridSupplyGrad)" rx="6" />
+
+          {/* Value */}
+          <text x="50" y="78" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="bold">{gridSupply}%</text>
+        </g>
+
+        {/* Demand side panel */}
+        <g transform="translate(280, 80)">
+          <rect x="0" y="0" width="100" height="90" fill="rgba(239, 68, 68, 0.08)" stroke="#ef4444" strokeWidth="1.5" rx="8" />
+
+          {/* House mini icon */}
+          <g transform="translate(10, 10)">
+            <rect x="2" y="20" width="16" height="20" fill="#475569" rx="1" />
+            <path d="M0 20 L10 8 L20 20" fill="#475569" stroke="#64748b" strokeWidth="1" />
+            <rect x="6" y="28" width="8" height="10" fill="#fbbf24" opacity="0.4" rx="1" />
+          </g>
+
+          {/* Progress bar */}
+          <rect x="10" y="50" width="80" height="12" fill="#1e293b" rx="6" />
+          <rect x="10" y="50" width={gridLoad * 0.8} height="12" fill="url(#gridDemandGrad)" rx="6" />
+
+          {/* Value */}
+          <text x="50" y="78" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="bold">{gridLoad}%</text>
+        </g>
+
+        {/* Load balance indicator arrows */}
+        <g transform="translate(150, 140)">
+          {/* Left arrow (supply) */}
+          <path d="M 0 0 L 20 0 L 15 -5 M 20 0 L 15 5" stroke="#22c55e" strokeWidth="2" fill="none" opacity={gridSupply > gridLoad ? 1 : 0.3}>
+            <animate attributeName="opacity" values={gridSupply > gridLoad ? "1;0.5;1" : "0.3"} dur="0.8s" repeatCount="indefinite" />
+          </path>
+          {/* Right arrow (demand) */}
+          <path d="M 100 0 L 80 0 L 85 -5 M 80 0 L 85 5" stroke="#ef4444" strokeWidth="2" fill="none" opacity={gridLoad > gridSupply ? 1 : 0.3}>
+            <animate attributeName="opacity" values={gridLoad > gridSupply ? "1;0.5;1" : "0.3"} dur="0.8s" repeatCount="indefinite" />
+          </path>
+          {/* Balance text */}
+          <text x="50" y="5" textAnchor="middle" fill="#94a3b8" fontSize="8">
+            {gridSupply === gridLoad ? 'BALANCED' : gridSupply > gridLoad ? 'SURPLUS' : 'DEFICIT'}
+          </text>
+        </g>
       </svg>
+
+      {/* Labels outside SVG */}
+      <div style={{ display: 'flex', justifyContent: 'space-between', maxWidth: '500px', margin: '0 auto 24px', padding: '0 30px' }}>
+        <span style={{ fontSize: typo.small, color: '#22c55e', fontWeight: 600 }}>Supply</span>
+        <span style={{ fontSize: typo.small, color: '#ef4444', fontWeight: 600 }}>Demand</span>
+      </div>
 
       {/* Controls */}
       <div style={{ marginBottom: '16px' }}>

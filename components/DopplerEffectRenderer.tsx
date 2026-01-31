@@ -551,190 +551,431 @@ const DopplerEffectRenderer: React.FC<DopplerEffectRendererProps> = ({ onComplet
     const observerXPos = 350;
     const sourceXPos = 50 + (sourcePosition / 100) * 500;
 
+    // Calculate wave compression/stretch factor for visual effect
+    const speedRatio = sourceSpeed / soundSpeed;
+
     return (
-      <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', height: '100%', maxHeight: '100%' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', width: '100%', height: '100%' }}>
+        <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', flex: 1, maxHeight: 'calc(100% - 60px)' }}>
         <defs>
-          <linearGradient id="deBg" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={design.colors.bgDeep} />
-            <stop offset="50%" stopColor={design.colors.bgPrimary} />
-            <stop offset="100%" stopColor={design.colors.bgDeep} />
+          {/* === PREMIUM BACKGROUND GRADIENTS === */}
+          <linearGradient id="doppBg" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0f0a08" />
+            <stop offset="40%" stopColor="#150a07" />
+            <stop offset="100%" stopColor="#1a0c09" />
           </linearGradient>
-          <linearGradient id="deRoad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#374151" />
-            <stop offset="50%" stopColor="#4b5563" />
-            <stop offset="100%" stopColor="#374151" />
+
+          {/* Road with realistic asphalt texture */}
+          <linearGradient id="doppRoad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#2d3748" />
+            <stop offset="20%" stopColor="#3d4a5c" />
+            <stop offset="50%" stopColor="#4a5568" />
+            <stop offset="80%" stopColor="#3d4a5c" />
+            <stop offset="100%" stopColor="#2d3748" />
           </linearGradient>
-          <linearGradient id="deAmbulance" x1="0%" y1="0%" x2="0%" y2="100%">
+
+          {/* Sidewalk concrete gradient */}
+          <linearGradient id="doppSidewalk" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#6b7280" />
+            <stop offset="50%" stopColor="#9ca3af" />
+            <stop offset="100%" stopColor="#6b7280" />
+          </linearGradient>
+
+          {/* === AMBULANCE 3D GRADIENTS === */}
+          <linearGradient id="doppAmbBody" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#ffffff" />
-            <stop offset="50%" stopColor="#f3f4f6" />
-            <stop offset="100%" stopColor="#e5e7eb" />
+            <stop offset="15%" stopColor="#f8fafc" />
+            <stop offset="50%" stopColor="#f1f5f9" />
+            <stop offset="85%" stopColor="#e2e8f0" />
+            <stop offset="100%" stopColor="#cbd5e1" />
           </linearGradient>
-          <radialGradient id="deRedLight" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor={design.colors.accentPrimary} stopOpacity="1" />
-            <stop offset="60%" stopColor={design.colors.accentMuted} stopOpacity="0.5" />
+
+          <linearGradient id="doppAmbStripe" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#f87171" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+
+          <linearGradient id="doppWindow" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#0284c7" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#0369a1" stopOpacity="0.7" />
+          </linearGradient>
+
+          <linearGradient id="doppWheel" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#374151" />
+            <stop offset="50%" stopColor="#1f2937" />
+            <stop offset="100%" stopColor="#111827" />
+          </linearGradient>
+
+          {/* === EMERGENCY LIGHTS WITH GLOW === */}
+          <radialGradient id="doppRedLight" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="20%" stopColor="#fca5a5" stopOpacity="1" />
+            <stop offset="50%" stopColor="#ef4444" stopOpacity="0.8" />
+            <stop offset="80%" stopColor="#dc2626" stopOpacity="0.4" />
             <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
           </radialGradient>
-          <radialGradient id="deBlueLight" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="1" />
-            <stop offset="60%" stopColor="#2563eb" stopOpacity="0.5" />
+
+          <radialGradient id="doppBlueLight" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+            <stop offset="20%" stopColor="#93c5fd" stopOpacity="1" />
+            <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.8" />
+            <stop offset="80%" stopColor="#2563eb" stopOpacity="0.4" />
             <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
           </radialGradient>
-          <filter id="deWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
+
+          {/* === OBSERVER PERSON GRADIENTS === */}
+          <radialGradient id="doppHead" cx="30%" cy="30%">
+            <stop offset="0%" stopColor="#fcd5d5" />
+            <stop offset="50%" stopColor="#f9a8d4" />
+            <stop offset="100%" stopColor="#ec4899" />
+          </radialGradient>
+
+          <linearGradient id="doppBody" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#f472b6" />
+            <stop offset="50%" stopColor="#ec4899" />
+            <stop offset="100%" stopColor="#db2777" />
+          </linearGradient>
+
+          {/* === WAVE GRADIENTS - FREQUENCY COLOR CODED === */}
+          <linearGradient id="doppWaveApproach" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#f97316" />
+          </linearGradient>
+
+          <linearGradient id="doppWaveRecede" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f97316" />
+            <stop offset="100%" stopColor="#fbbf24" />
+          </linearGradient>
+
+          {/* === GLOW FILTERS === */}
+          <filter id="doppWaveGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
             <feMerge>
+              <feMergeNode in="blur" />
               <feMergeNode in="blur" />
               <feMergeNode in="SourceGraphic" />
             </feMerge>
           </filter>
+
+          <filter id="doppLightGlow" x="-200%" y="-200%" width="500%" height="500%">
+            <feGaussianBlur stdDeviation="6" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="doppMotionBlur" x="-20%" y="-5%" width="140%" height="110%">
+            <feGaussianBlur in="SourceGraphic" stdDeviation={Math.min(sourceSpeed / 15, 4) + ",0"} />
+          </filter>
+
+          <filter id="doppShadow" x="-10%" y="-10%" width="120%" height="130%">
+            <feDropShadow dx="0" dy="4" stdDeviation="6" floodOpacity="0.4" />
+          </filter>
+
+          <filter id="doppInnerGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+
+          {/* Grid pattern */}
+          <pattern id="doppGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <rect width="40" height="40" fill="none" stroke="rgba(239, 68, 68, 0.05)" strokeWidth="1" />
+          </pattern>
         </defs>
 
-        {/* Background */}
-        <rect width={width} height={height} fill="url(#deBg)" />
-        <pattern id="deGrid" width="30" height="30" patternUnits="userSpaceOnUse">
-          <rect width="30" height="30" fill="none" stroke={design.colors.bgGlow} strokeWidth="0.5" strokeOpacity="0.3" />
-        </pattern>
-        <rect width={width} height={height} fill="url(#deGrid)" />
+        {/* === PREMIUM BACKGROUND === */}
+        <rect width={width} height={height} fill="url(#doppBg)" />
+        <rect width={width} height={height} fill="url(#doppGrid)" />
 
-        {/* Road */}
-        <rect x="0" y="200" width={width} height="80" fill="url(#deRoad)" />
-        <rect x="0" y="238" width={width} height="4" fill="#fbbf24" />
-        {Array.from({ length: 15 }).map((_, i) => (
-          <rect key={i} x={i * 50 + 10} y="238" width="30" height="4" fill="#fbbf24" />
+        {/* Atmospheric gradient overlay */}
+        <rect width={width} height="100" fill="url(#doppBg)" opacity="0.3" />
+
+        {/* === ROAD WITH DEPTH === */}
+        <rect x="0" y="200" width={width} height="80" fill="url(#doppRoad)" />
+        {/* Road markings - dashed center line */}
+        {Array.from({ length: 12 }).map((_, i) => (
+          <rect key={i} x={i * 60 + 15} y="238" width="35" height="4" rx="2" fill="#fbbf24" opacity="0.9" />
         ))}
 
-        {/* Sidewalk */}
-        <rect x="0" y="280" width={width} height="30" fill="#57534e" />
-        <rect x="0" y="278" width={width} height="4" fill="#78716c" />
+        {/* Road edge lines */}
+        <rect x="0" y="202" width={width} height="2" fill="#fbbf24" opacity="0.4" />
+        <rect x="0" y="276" width={width} height="2" fill="#fbbf24" opacity="0.4" />
 
-        {/* Wave fronts */}
-        {waveHistory.map((wave) => {
+        {/* Sidewalk with texture */}
+        <rect x="0" y="280" width={width} height="35" fill="url(#doppSidewalk)" />
+        <rect x="0" y="278" width={width} height="4" fill="#a1a1aa" />
+
+        {/* === PREMIUM WAVE FRONTS WITH COMPRESSION VISUALIZATION === */}
+        {waveHistory.map((wave, index) => {
           const age = (time - wave.t) * 300;
           const waveX = 50 + (wave.x / 100) * 500;
-          const radius = Math.min(age, 300);
-          const opacity = Math.max(0, 1 - age / 350) * 0.6;
-          const isCompressed = waveX < observerXPos;
-          const waveColor = isCompressed ? design.colors.accentPrimary : design.colors.accentSecondary;
 
-          if (radius > 0 && opacity > 0) {
+          // Base radius with compression/stretch effect based on source position
+          const distanceToObserver = observerXPos - waveX;
+          const isApproachingWave = distanceToObserver > 0;
+
+          // Compress waves in front, stretch waves behind
+          const compressionEffect = isApproachingWave
+            ? 1 - (speedRatio * 0.3)  // Compressed - smaller spacing
+            : 1 + (speedRatio * 0.3); // Stretched - larger spacing
+
+          const baseRadius = Math.min(age * compressionEffect, 300);
+          const opacity = Math.max(0, 1 - age / 400) * 0.7;
+
+          // Frequency-based color: red for compressed (high freq), orange/yellow for stretched (low freq)
+          const freqRatio = isApproachingWave ? 1.2 : 0.8;
+
+          if (baseRadius > 5 && opacity > 0.05) {
             return (
-              <circle
-                key={wave.id}
-                cx={waveX}
-                cy="210"
-                r={radius}
-                fill="none"
-                stroke={waveColor}
-                strokeWidth={2}
-                opacity={opacity}
-                filter="url(#deWaveGlow)"
-              />
+              <g key={wave.id}>
+                {/* Outer glow ring */}
+                <circle
+                  cx={waveX}
+                  cy="210"
+                  r={baseRadius}
+                  fill="none"
+                  stroke={isApproachingWave ? "#ef4444" : "#f97316"}
+                  strokeWidth={isApproachingWave ? 3 : 2}
+                  opacity={opacity * 0.4}
+                  filter="url(#doppWaveGlow)"
+                />
+                {/* Inner crisp ring */}
+                <circle
+                  cx={waveX}
+                  cy="210"
+                  r={baseRadius}
+                  fill="none"
+                  stroke={isApproachingWave ? "url(#doppWaveApproach)" : "url(#doppWaveRecede)"}
+                  strokeWidth={isApproachingWave ? 2.5 : 1.5}
+                  opacity={opacity}
+                  strokeDasharray={isApproachingWave ? "none" : "8,4"}
+                />
+              </g>
             );
           }
           return null;
         })}
 
-        {/* Ambulance */}
-        <g transform={`translate(${sourceXPos}, 200)`}>
-          <ellipse cx="0" cy="45" rx="50" ry="8" fill="rgba(0,0,0,0.3)" />
-          <rect x="-45" y="-30" width="90" height="55" rx="8" fill="url(#deAmbulance)" stroke="#d1d5db" strokeWidth="2" />
-          <rect x="-45" y="5" width="90" height="12" fill={design.colors.accentPrimary} />
-          <rect x="-40" y="-25" width="25" height="20" rx="3" fill="#0ea5e9" opacity="0.8" />
-          <rect x="-10" y="-25" width="20" height="20" rx="3" fill="#0ea5e9" opacity="0.7" />
-          <rect x="15" y="-25" width="25" height="20" rx="3" fill="#0ea5e9" opacity="0.6" />
-          <rect x="-8" y="-18" width="6" height="14" fill={design.colors.accentPrimary} />
-          <rect x="-11" y="-13" width="12" height="4" fill={design.colors.accentPrimary} />
+        {/* === PREMIUM AMBULANCE WITH 3D EFFECTS === */}
+        <g transform={`translate(${sourceXPos}, 200)`} filter={sourceSpeed > 40 ? "url(#doppMotionBlur)" : undefined}>
+          {/* Ground shadow - larger and blurred at higher speeds */}
+          <ellipse cx={sourceSpeed > 30 ? 10 : 0} cy="48" rx={55 + sourceSpeed * 0.2} ry={10} fill="rgba(0,0,0,0.35)" filter="url(#doppShadow)" />
 
-          <g transform="translate(-25, -38)">
-            <rect x="-8" y="-5" width="16" height="12" rx="3" fill="#1f2937" />
-            <ellipse cx="0" cy="0" rx="20" ry="15" fill="url(#deRedLight)">
-              {isAnimating && <animate attributeName="opacity" values="0.3;1;0.3" dur="0.3s" repeatCount="indefinite" />}
+          {/* Motion trail effect at high speeds */}
+          {sourceSpeed > 50 && (
+            <>
+              <rect x="-60" y="-28" width="15" height="50" rx="4" fill="rgba(255,255,255,0.1)" />
+              <rect x="-70" y="-25" width="10" height="45" rx="3" fill="rgba(255,255,255,0.05)" />
+            </>
+          )}
+
+          {/* Main body with 3D gradient */}
+          <rect x="-48" y="-32" width="96" height="58" rx="10" fill="url(#doppAmbBody)" filter="url(#doppShadow)" />
+
+          {/* Body highlight */}
+          <rect x="-46" y="-30" width="92" height="8" rx="4" fill="rgba(255,255,255,0.5)" />
+
+          {/* Red stripe with gradient */}
+          <rect x="-48" y="4" width="96" height="14" fill="url(#doppAmbStripe)" />
+
+          {/* Windows with gradient reflection */}
+          <rect x="-42" y="-26" width="28" height="22" rx="4" fill="url(#doppWindow)" />
+          <rect x="-40" y="-24" width="24" height="4" fill="rgba(255,255,255,0.4)" rx="2" />
+          <rect x="-8" y="-26" width="22" height="22" rx="4" fill="url(#doppWindow)" />
+          <rect x="-6" y="-24" width="18" height="4" fill="rgba(255,255,255,0.4)" rx="2" />
+          <rect x="18" y="-26" width="28" height="22" rx="4" fill="url(#doppWindow)" />
+          <rect x="20" y="-24" width="24" height="4" fill="rgba(255,255,255,0.4)" rx="2" />
+
+          {/* Medical cross with embossed effect */}
+          <rect x="-10" y="-20" width="8" height="18" rx="1" fill="#dc2626" />
+          <rect x="-14" y="-14" width="16" height="6" rx="1" fill="#dc2626" />
+          <rect x="-9" y="-19" width="6" height="16" rx="1" fill="#ef4444" />
+          <rect x="-13" y="-13" width="14" height="4" rx="1" fill="#ef4444" />
+
+          {/* Emergency lights with premium glow */}
+          <g transform="translate(-28, -42)">
+            <rect x="-10" y="-3" width="20" height="14" rx="4" fill="url(#doppWheel)" />
+            <ellipse cx="0" cy="3" rx="25" ry="18" fill="url(#doppRedLight)" filter="url(#doppLightGlow)">
+              {isAnimating && <animate attributeName="opacity" values="0.4;1;0.4" dur="0.25s" repeatCount="indefinite" />}
             </ellipse>
+            <circle cx="0" cy="3" r="6" fill="#fca5a5">
+              {isAnimating && <animate attributeName="opacity" values="0.6;1;0.6" dur="0.25s" repeatCount="indefinite" />}
+            </circle>
           </g>
 
-          <g transform="translate(25, -38)">
-            <rect x="-8" y="-5" width="16" height="12" rx="3" fill="#1f2937" />
-            <ellipse cx="0" cy="0" rx="20" ry="15" fill="url(#deBlueLight)">
-              {isAnimating && <animate attributeName="opacity" values="1;0.3;1" dur="0.3s" repeatCount="indefinite" />}
+          <g transform="translate(28, -42)">
+            <rect x="-10" y="-3" width="20" height="14" rx="4" fill="url(#doppWheel)" />
+            <ellipse cx="0" cy="3" rx="25" ry="18" fill="url(#doppBlueLight)" filter="url(#doppLightGlow)">
+              {isAnimating && <animate attributeName="opacity" values="1;0.4;1" dur="0.25s" repeatCount="indefinite" />}
             </ellipse>
+            <circle cx="0" cy="3" r="6" fill="#93c5fd">
+              {isAnimating && <animate attributeName="opacity" values="1;0.6;1" dur="0.25s" repeatCount="indefinite" />}
+            </circle>
           </g>
 
-          <circle cx="-28" cy="28" r="12" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-          <circle cx="-28" cy="28" r="6" fill="#4b5563" />
-          <circle cx="28" cy="28" r="12" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-          <circle cx="28" cy="28" r="6" fill="#4b5563" />
+          {/* Premium wheels with 3D effect */}
+          <g transform="translate(-30, 28)">
+            <circle r="14" fill="url(#doppWheel)" />
+            <circle r="12" fill="#1f2937" stroke="#374151" strokeWidth="2" />
+            <circle r="7" fill="#4b5563" />
+            <circle r="3" fill="#6b7280" />
+          </g>
+          <g transform="translate(30, 28)">
+            <circle r="14" fill="url(#doppWheel)" />
+            <circle r="12" fill="#1f2937" stroke="#374151" strokeWidth="2" />
+            <circle r="7" fill="#4b5563" />
+            <circle r="3" fill="#6b7280" />
+          </g>
 
-          <g transform="translate(0, -55)">
-            <rect x="-30" y="-10" width="60" height="18" rx="4" fill={design.colors.bgCard} stroke={design.colors.bgGlow} />
-            <text x="0" y="3" textAnchor="middle" fill={design.colors.textPrimary} fontSize="11" fontWeight="bold">
+          {/* Speed indicator badge - moved to floating position */}
+          <g transform="translate(0, -62)">
+            <rect x="-35" y="-12" width="70" height="22" rx="11" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(239, 68, 68, 0.5)" strokeWidth="1.5" />
+            <text x="0" y="4" textAnchor="middle" fill="#fef2f2" fontSize="13" fontWeight="bold" fontFamily="system-ui">
               {sourceSpeed} m/s
             </text>
+            {/* Speed indicator arrow */}
+            <polygon points="32,-2 38,0 32,2" fill={design.colors.accentPrimary} />
           </g>
         </g>
 
-        {/* Observer */}
+        {/* === PREMIUM OBSERVER WITH 3D PERSON === */}
         <g transform={`translate(${observerXPos}, 260)`}>
-          <circle cx="0" cy="-40" r="15" fill="#f472b6" />
-          <rect x="-12" y="-22" width="24" height="35" rx="6" fill="#ec4899" />
-          <rect x="-14" y="13" width="12" height="22" rx="3" fill="#ec4899" />
-          <rect x="2" y="13" width="12" height="22" rx="3" fill="#ec4899" />
+          {/* Shadow under person */}
+          <ellipse cx="0" cy="40" rx="20" ry="5" fill="rgba(0,0,0,0.3)" />
 
-          <g transform="translate(0, -80)">
-            <rect x="-50" y="-15" width="100" height="28" rx="6"
-              fill={isApproaching ? `${design.colors.accentPrimary}30` : `${design.colors.accentSecondary}30`}
-              stroke={isApproaching ? design.colors.accentPrimary : design.colors.accentSecondary} strokeWidth="2" />
-            <text x="0" y="5" textAnchor="middle"
-              fill={isApproaching ? design.colors.accentPrimary : design.colors.accentSecondary}
-              fontSize="14" fontWeight="bold">
-              {Math.round(currentObservedFreq)} Hz {isApproaching ? '↑' : '↓'}
+          {/* Head with 3D gradient */}
+          <circle cx="0" cy="-40" r="16" fill="url(#doppHead)" filter="url(#doppInnerGlow)" />
+          <circle cx="-4" cy="-44" r="3" fill="rgba(255,255,255,0.5)" />
+
+          {/* Body with gradient */}
+          <rect x="-14" y="-22" width="28" height="38" rx="8" fill="url(#doppBody)" filter="url(#doppShadow)" />
+
+          {/* Shirt detail */}
+          <rect x="-10" y="-18" width="20" height="6" fill="rgba(255,255,255,0.2)" rx="3" />
+
+          {/* Legs with gradient */}
+          <rect x="-15" y="16" width="13" height="24" rx="4" fill="url(#doppBody)" />
+          <rect x="2" y="16" width="13" height="24" rx="4" fill="url(#doppBody)" />
+
+          {/* Shoes */}
+          <ellipse cx="-9" cy="42" rx="8" ry="4" fill="#374151" />
+          <ellipse cx="8" cy="42" rx="8" ry="4" fill="#374151" />
+
+          {/* Frequency display badge - premium styled */}
+          <g transform="translate(0, -78)">
+            <rect x="-55" y="-18" width="110" height="34" rx="17"
+              fill={isApproaching ? "rgba(239, 68, 68, 0.15)" : "rgba(249, 115, 22, 0.15)"}
+              stroke={isApproaching ? "#ef4444" : "#f97316"}
+              strokeWidth="2"
+              filter="url(#doppInnerGlow)" />
+            <text x="0" y="6" textAnchor="middle"
+              fill={isApproaching ? "#fca5a5" : "#fdba74"}
+              fontSize="16" fontWeight="800" fontFamily="system-ui">
+              {Math.round(currentObservedFreq)} Hz
             </text>
+            {/* Frequency direction indicator */}
+            <g transform={`translate(40, 0)`}>
+              {isApproaching ? (
+                <polygon points="0,-8 8,0 0,8" fill="#ef4444" />
+              ) : (
+                <polygon points="8,-8 0,0 8,8" fill="#f97316" />
+              )}
+            </g>
           </g>
 
-          <text x="0" y="45" textAnchor="middle" fill={design.colors.textMuted} fontSize="11" fontWeight="bold">
-            OBSERVER
-          </text>
-
+          {/* Observer motion indicator for twist phase */}
           {showObserverControls && observerSpeed > 0 && (
-            <g transform="translate(60, -20)">
-              <path d="M0,0 L-20,0 L-15,-8 M-15,8 L-20,0" stroke={design.colors.accentSecondary} strokeWidth="3" fill="none" />
-              <text x="-10" y="-15" textAnchor="middle" fill={design.colors.accentSecondary} fontSize="10" fontWeight="bold">
-                {observerSpeed} m/s
+            <g transform="translate(65, -25)">
+              <rect x="-25" y="-18" width="50" height="24" rx="12" fill="rgba(249, 115, 22, 0.2)" stroke="#f97316" strokeWidth="1.5" />
+              <polygon points="-18,0 -8,-6 -8,6" fill="#f97316" />
+              <text x="8" y="5" textAnchor="middle" fill="#fdba74" fontSize="11" fontWeight="bold" fontFamily="system-ui">
+                {observerSpeed}
               </text>
             </g>
           )}
         </g>
 
-        {/* Teaching overlay */}
-        <g transform="translate(350, 30)">
-          <rect x="-140" y="-5" width="280" height="40" rx="8" fill={design.colors.bgCard} stroke={design.colors.bgGlow} opacity="0.95" />
-          <text x="0" y="20" textAnchor="middle" fill={design.colors.textPrimary} fontSize="13" fontWeight="bold">
-            {teachingMilestone === 'approaching' && '🔴 APPROACHING: Waves COMPRESS → Higher pitch'}
-            {teachingMilestone === 'passing' && '⚡ PASSING: Pitch changes dramatically!'}
-            {teachingMilestone === 'receding' && '🟠 RECEDING: Waves STRETCH → Lower pitch'}
-            {teachingMilestone === 'complete' && '✓ Watch the cycle repeat!'}
-            {teachingMilestone === 'none' && '👀 Observe the wave patterns...'}
+        {/* === PREMIUM TEACHING OVERLAY === */}
+        <g transform="translate(350, 28)">
+          <rect x="-155" y="-8" width="310" height="44" rx="22"
+            fill="rgba(15, 23, 42, 0.92)"
+            stroke={teachingMilestone === 'approaching' ? '#ef4444' : teachingMilestone === 'receding' ? '#f97316' : '#64748b'}
+            strokeWidth="1.5" />
+          {/* Pulsing indicator */}
+          <circle cx="-130" cy="14" r="6"
+            fill={teachingMilestone === 'approaching' ? '#ef4444' : teachingMilestone === 'receding' ? '#f97316' : '#64748b'}>
+            {isAnimating && <animate attributeName="opacity" values="0.5;1;0.5" dur="1s" repeatCount="indefinite" />}
+          </circle>
+          <text x="5" y="20" textAnchor="middle" fill="#f1f5f9" fontSize="13" fontWeight="600" fontFamily="system-ui">
+            {teachingMilestone === 'approaching' && 'APPROACHING: Waves COMPRESS → Higher pitch'}
+            {teachingMilestone === 'passing' && 'PASSING: Pitch changes dramatically!'}
+            {teachingMilestone === 'receding' && 'RECEDING: Waves STRETCH → Lower pitch'}
+            {teachingMilestone === 'complete' && 'Watch the cycle repeat!'}
+            {teachingMilestone === 'none' && 'Observe the wave patterns...'}
           </text>
         </g>
 
-        {/* Frequency panel */}
-        <g transform="translate(600, 120)">
-          <rect x="-60" y="-80" width="120" height="160" rx="8" fill={design.colors.bgCard} stroke={design.colors.bgGlow} opacity="0.95" />
-          <text x="0" y="-60" textAnchor="middle" fill={design.colors.textMuted} fontSize="9" fontWeight="bold">FREQUENCY</text>
-          <text x="0" y="-30" textAnchor="middle" fill={design.colors.textSecondary} fontSize="9">Source</text>
-          <text x="0" y="-12" textAnchor="middle" fill={design.colors.textPrimary} fontSize="16" fontWeight="bold">{sourceFreq} Hz</text>
-          <line x1="-40" y1="5" x2="40" y2="5" stroke={design.colors.bgGlow} strokeWidth="1" />
-          <text x="0" y="30" textAnchor="middle" fill={design.colors.accentPrimary} fontSize="9">Approaching</text>
-          <text x="0" y="48" textAnchor="middle" fill={design.colors.accentPrimary} fontSize="16" fontWeight="bold">{Math.round(observedFreqApproaching)} Hz</text>
-          <text x="0" y="70" textAnchor="middle" fill={design.colors.accentSecondary} fontSize="9">Receding</text>
-          <text x="0" y="88" textAnchor="middle" fill={design.colors.accentSecondary} fontSize="16" fontWeight="bold">{Math.round(observedFreqReceding)} Hz</text>
-        </g>
-
-        {/* Pass counter */}
-        <g transform="translate(80, 320)">
-          <rect x="-60" y="-20" width="120" height="35" rx="6" fill={design.colors.bgCard} stroke={design.colors.bgGlow} />
-          <text x="0" y="-2" textAnchor="middle" fill={design.colors.textMuted} fontSize="9" fontWeight="bold">PASSES</text>
-          <text x="0" y="18" textAnchor="middle" fill={design.colors.accentPrimary} fontSize="16" fontWeight="bold">{passCount}</text>
+        {/* === COMPACT PASS COUNTER IN SVG === */}
+        <g transform="translate(70, 320)">
+          <rect x="-50" y="-18" width="100" height="32" rx="16" fill="rgba(15, 23, 42, 0.9)" stroke="rgba(239, 68, 68, 0.3)" strokeWidth="1" />
+          <text x="-20" y="4" textAnchor="middle" fill="#94a3b8" fontSize="10" fontWeight="600" fontFamily="system-ui">PASSES</text>
+          <text x="25" y="5" textAnchor="middle" fill="#ef4444" fontSize="16" fontWeight="800" fontFamily="system-ui">{passCount}</text>
         </g>
       </svg>
+
+      {/* === FREQUENCY INFO PANEL - MOVED OUTSIDE SVG FOR BETTER TYPOGRAPHY === */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: typo.elementGap,
+        padding: `${design.spacing.sm}px ${design.spacing.md}px`,
+        background: 'rgba(15, 23, 42, 0.95)',
+        borderTop: '1px solid rgba(239, 68, 68, 0.2)',
+      }}>
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: design.spacing.sm,
+          padding: `${design.spacing.xs}px ${design.spacing.md}px`,
+          background: 'rgba(100, 116, 139, 0.1)',
+          borderRadius: design.radius.full,
+        }}>
+          <span style={{ fontSize: typo.label, color: design.colors.textMuted, fontWeight: 600 }}>SOURCE</span>
+          <span style={{ fontSize: typo.body, color: design.colors.textPrimary, fontWeight: 700 }}>{sourceFreq} Hz</span>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: design.spacing.sm,
+          padding: `${design.spacing.xs}px ${design.spacing.md}px`,
+          background: 'rgba(239, 68, 68, 0.1)',
+          borderRadius: design.radius.full,
+          border: '1px solid rgba(239, 68, 68, 0.3)',
+        }}>
+          <span style={{ fontSize: typo.label, color: '#fca5a5', fontWeight: 600 }}>APPROACH</span>
+          <span style={{ fontSize: typo.body, color: '#ef4444', fontWeight: 800 }}>{Math.round(observedFreqApproaching)} Hz</span>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          gap: design.spacing.sm,
+          padding: `${design.spacing.xs}px ${design.spacing.md}px`,
+          background: 'rgba(249, 115, 22, 0.1)',
+          borderRadius: design.radius.full,
+          border: '1px solid rgba(249, 115, 22, 0.3)',
+        }}>
+          <span style={{ fontSize: typo.label, color: '#fdba74', fontWeight: 600 }}>RECEDE</span>
+          <span style={{ fontSize: typo.body, color: '#f97316', fontWeight: 800 }}>{Math.round(observedFreqReceding)} Hz</span>
+        </div>
+      </div>
+      </div>
     );
   };
 

@@ -313,168 +313,422 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean, showComparison: boolean = false) => {
-    const width = 400;
-    const height = 380;
+    const width = 440;
+    const height = 400;
     const output = calculateDiffusion();
 
     // Calculate current diffusion profile based on animation
     const currentTime = isAnimating ? animationTime : diffusionTime;
     const timeRatio = Math.sqrt(currentTime / diffusionTime);
 
+    // Generate stable random positions for diffusing atoms (seeded by animation time)
+    const atomPositions = React.useMemo(() => {
+      const positions: Array<{x: number; y: number; delay: number}> = [];
+      for (let i = 0; i < 20; i++) {
+        positions.push({
+          x: 100 + (i * 37 % 200),
+          y: 0,
+          delay: (i * 0.15) % 1,
+        });
+      }
+      return positions;
+    }, []);
+
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '520px' }}
         >
           <defs>
-            <linearGradient id="siliconGrad3" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#374151" />
-              <stop offset="100%" stopColor="#1f2937" />
+            {/* Premium lab background gradient */}
+            <linearGradient id="dopeLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0a1628" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
             </linearGradient>
-            <linearGradient id="dopantGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.dopant} />
-              <stop offset="100%" stopColor={colors.nType} />
+
+            {/* Silicon substrate gradient - crystalline appearance */}
+            <linearGradient id="dopeSiliconSubstrate" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="15%" stopColor="#3b4a5c" />
+              <stop offset="40%" stopColor="#334155" />
+              <stop offset="65%" stopColor="#293548" />
+              <stop offset="85%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
-            <linearGradient id="heatGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+
+            {/* Silicon crystal pattern overlay */}
+            <pattern id="dopeCrystalPattern" width="8" height="8" patternUnits="userSpaceOnUse">
+              <rect width="8" height="8" fill="none" />
+              <circle cx="4" cy="4" r="0.8" fill="#64748b" opacity="0.3" />
+              <line x1="0" y1="4" x2="8" y2="4" stroke="#475569" strokeWidth="0.3" opacity="0.2" />
+              <line x1="4" y1="0" x2="4" y2="8" stroke="#475569" strokeWidth="0.3" opacity="0.2" />
+            </pattern>
+
+            {/* N-type doped region gradient (phosphorus - blue tint) */}
+            <linearGradient id="dopeNTypeRegion" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+              <stop offset="20%" stopColor="#3b82f6" stopOpacity="0.75" />
+              <stop offset="50%" stopColor="#2563eb" stopOpacity="0.5" />
+              <stop offset="80%" stopColor="#1d4ed8" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+            </linearGradient>
+
+            {/* P-type region gradient (boron - pink tint) */}
+            <linearGradient id="dopePTypeRegion" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#f472b6" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#ec4899" stopOpacity="0.4" />
+              <stop offset="60%" stopColor="#db2777" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#be185d" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Dopant source layer gradient */}
+            <linearGradient id="dopeDopantSource" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fde68a" />
+              <stop offset="30%" stopColor="#fbbf24" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Dopant atom glow */}
+            <radialGradient id="dopeDopantAtomGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fde68a" stopOpacity="1" />
+              <stop offset="40%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Temperature thermometer gradient */}
+            <linearGradient id="dopeThermometerFill" x1="0%" y1="100%" x2="0%" y2="0%">
               <stop offset="0%" stopColor="#1f2937" />
-              <stop offset={`${(temperature - 700) / 5}%`} stopColor="#ef4444" />
+              <stop offset="20%" stopColor="#7f1d1d" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="75%" stopColor="#f87171" />
               <stop offset="100%" stopColor="#fbbf24" />
             </linearGradient>
+
+            {/* Thermometer bulb glow */}
+            <radialGradient id="dopeThermoBulbGlow" cx="50%" cy="70%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="60%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </radialGradient>
+
+            {/* Junction line glow */}
+            <linearGradient id="dopeJunctionGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
+              <stop offset="20%" stopColor="#f87171" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#fca5a5" stopOpacity="1" />
+              <stop offset="80%" stopColor="#f87171" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Output panel gradient */}
+            <linearGradient id="dopeOutputPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Graph background gradient */}
+            <linearGradient id="dopeGraphBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="0.95" />
+            </linearGradient>
+
+            {/* Profile curve gradient */}
+            <linearGradient id="dopeProfileCurve" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Diffusion front glow effect */}
+            <filter id="dopeDiffusionGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Dopant atom glow filter */}
+            <filter id="dopeAtomGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Junction line glow filter */}
+            <filter id="dopeJunctionFilter" x="-20%" y="-100%" width="140%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Panel inner glow */}
+            <filter id="dopePanelGlow">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Heat shimmer effect */}
+            <filter id="dopeHeatShimmer" x="-10%" y="-10%" width="120%" height="120%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.05" numOctaves="2" result="noise" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+
+            {/* Subtle grid pattern for lab background */}
+            <pattern id="dopeLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
           </defs>
 
-          {/* Temperature indicator */}
-          <rect x="20" y="30" width="30" height="150" fill="#1f2937" rx="4" stroke="#374151" />
-          <rect
-            x="24"
-            y={30 + 150 * (1 - (temperature - 700) / 500)}
-            width="22"
-            height={150 * ((temperature - 700) / 500)}
-            fill="url(#heatGrad)"
-            rx="2"
-          />
-          <text x="35" y="200" fill={colors.textSecondary} fontSize="10" textAnchor="middle">{temperature}C</text>
+          {/* Premium lab background */}
+          <rect width={width} height={height} fill="url(#dopeLabBg)" />
+          <rect width={width} height={height} fill="url(#dopeLabGrid)" />
 
-          {/* Silicon wafer cross-section */}
-          <rect x="80" y="60" width="240" height="160" fill="url(#siliconGrad3)" rx="4" />
+          {/* Temperature indicator (thermometer) */}
+          <g transform="translate(20, 30)">
+            {/* Thermometer tube */}
+            <rect x="0" y="0" width="30" height="150" rx="6" fill="#0f172a" stroke="#334155" strokeWidth="1.5" />
+            <rect x="3" y="3" width="24" height="144" rx="4" fill="#1e293b" />
 
-          {/* Dopant concentration gradient */}
-          {output.profile.map((point, i) => {
-            if (i === 0) return null;
-            const prevPoint = output.profile[i - 1];
-            const x1 = 80;
-            const x2 = 320;
-            const y1 = 60 + (prevPoint.x / 5) * 160;
-            const y2 = 60 + (point.x / 5) * 160;
-            const alpha = Math.min(1, prevPoint.concentration * timeRatio);
-            return (
-              <rect
-                key={i}
-                x={x1}
-                y={y1}
-                width={x2 - x1}
-                height={y2 - y1}
-                fill={colors.dopant}
-                opacity={alpha * 0.7}
-              />
-            );
-          })}
+            {/* Temperature scale marks */}
+            {[0, 25, 50, 75, 100].map((pct, i) => (
+              <g key={i}>
+                <line x1="28" y1={147 - pct * 1.4} x2="33" y2={147 - pct * 1.4} stroke="#475569" strokeWidth="1" />
+              </g>
+            ))}
 
-          {/* Junction depth marker */}
-          <line
-            x1="80"
-            y1={60 + (output.junctionDepth / 5) * 160 * timeRatio}
-            x2="320"
-            y2={60 + (output.junctionDepth / 5) * 160 * timeRatio}
-            stroke={colors.error}
-            strokeWidth="2"
-            strokeDasharray="5,5"
-          />
-          <text
-            x="330"
-            y={60 + (output.junctionDepth / 5) * 160 * timeRatio + 4}
-            fill={colors.error}
-            fontSize="10"
-          >
-            Junction
-          </text>
+            {/* Mercury/temperature fill */}
+            <rect
+              x="8"
+              y={147 - 140 * ((temperature - 700) / 500)}
+              width="14"
+              height={140 * ((temperature - 700) / 500)}
+              rx="3"
+              fill="url(#dopeThermometerFill)"
+            />
 
-          {/* Dopant source on top */}
-          <rect x="80" y="50" width="240" height="10" fill={colors.dopant} rx="2" />
-          <text x="200" y="45" fill={colors.dopant} fontSize="10" textAnchor="middle">Dopant Source (POCl3 or PH3)</text>
+            {/* Thermometer bulb at bottom */}
+            <circle cx="15" cy="158" r="12" fill="url(#dopeThermoBulbGlow)" />
+            <circle cx="15" cy="158" r="8" fill="#ef4444" />
+          </g>
+
+          {/* Silicon wafer cross-section with crystal pattern */}
+          <g transform="translate(70, 55)">
+            {/* Wafer outline with shadow */}
+            <rect x="2" y="2" width="260" height="170" rx="6" fill="#000" opacity="0.3" />
+
+            {/* Main silicon substrate */}
+            <rect x="0" y="0" width="260" height="170" rx="6" fill="url(#dopeSiliconSubstrate)" />
+
+            {/* Crystal lattice pattern overlay */}
+            <rect x="0" y="0" width="260" height="170" rx="6" fill="url(#dopeCrystalPattern)" />
+
+            {/* P-type bulk indicator (subtle pink at bottom) */}
+            <rect x="0" y="120" width="260" height="50" rx="0 0 6 6" fill="url(#dopePTypeRegion)" />
+
+            {/* N-type doped region (dopant concentration gradient) */}
+            {output.profile.map((point, i) => {
+              if (i === 0) return null;
+              const prevPoint = output.profile[i - 1];
+              const y1 = (prevPoint.x / 5) * 170;
+              const y2 = (point.x / 5) * 170;
+              const alpha = Math.min(1, prevPoint.concentration * timeRatio);
+              return (
+                <rect
+                  key={i}
+                  x="0"
+                  y={y1}
+                  width="260"
+                  height={Math.max(1, y2 - y1)}
+                  fill={colors.nType}
+                  opacity={alpha * 0.6}
+                  rx={i === 1 ? "6 6 0 0" : "0"}
+                />
+              );
+            })}
+
+            {/* Diffusion front visualization */}
+            <line
+              x1="0"
+              y1={(output.junctionDepth / 5) * 170 * timeRatio}
+              x2="260"
+              y2={(output.junctionDepth / 5) * 170 * timeRatio}
+              stroke="url(#dopeJunctionGlow)"
+              strokeWidth="3"
+              filter="url(#dopeJunctionFilter)"
+              strokeDasharray="8,4"
+            />
+
+            {/* Junction depth indicator arrow */}
+            <g transform={`translate(265, ${(output.junctionDepth / 5) * 170 * timeRatio})`}>
+              <polygon points="0,0 8,-4 8,4" fill={colors.error} />
+            </g>
+          </g>
+
+          {/* Dopant source layer on top */}
+          <g transform="translate(70, 40)">
+            <rect x="0" y="0" width="260" height="15" rx="4" fill="url(#dopeDopantSource)" />
+            {/* Gas flow indicators */}
+            {[40, 90, 140, 190, 230].map((x, i) => (
+              <circle key={i} cx={x} cy="7" r="2" fill="#fef3c7" opacity="0.8" />
+            ))}
+          </g>
 
           {/* Diffusing atoms animation */}
-          {isAnimating && [...Array(15)].map((_, i) => {
-            const y = 60 + Math.random() * output.junctionDepth * 32 * timeRatio;
-            const x = 100 + Math.random() * 200;
+          {isAnimating && atomPositions.map((pos, i) => {
+            const maxDepth = output.junctionDepth * 170 / 5 * timeRatio;
+            const animY = 55 + (((animationTime * 3 + pos.delay * 100) % maxDepth));
+            if (animY > 55 + maxDepth) return null;
             return (
               <circle
                 key={i}
-                cx={x}
-                cy={y}
-                r="3"
-                fill={colors.dopant}
-                opacity={0.8}
+                cx={70 + pos.x}
+                cy={animY}
+                r="4"
+                fill="url(#dopeDopantAtomGlow)"
+                filter="url(#dopeAtomGlow)"
               />
             );
           })}
 
           {/* Concentration profile graph */}
-          <g transform="translate(80, 250)">
-            <rect x="0" y="0" width="240" height="80" fill="rgba(0,0,0,0.4)" rx="4" />
-            <text x="120" y="-5" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Concentration Profile</text>
+          <g transform="translate(70, 255)">
+            {/* Graph background */}
+            <rect x="0" y="0" width="260" height="90" rx="6" fill="url(#dopeGraphBg)" stroke="#334155" strokeWidth="1" />
+
+            {/* Grid lines */}
+            {[20, 40, 60].map((y) => (
+              <line key={y} x1="35" y1={y + 5} x2="245" y2={y + 5} stroke="#334155" strokeWidth="0.5" strokeDasharray="2,4" />
+            ))}
+            {[80, 130, 180].map((x) => (
+              <line key={x} x1={x} y1="15" x2={x} y2="75" stroke="#334155" strokeWidth="0.5" strokeDasharray="2,4" />
+            ))}
 
             {/* Axes */}
-            <line x1="30" y1="65" x2="220" y2="65" stroke={colors.textMuted} />
-            <line x1="30" y1="15" x2="30" y2="65" stroke={colors.textMuted} />
-            <text x="125" y="78" fill={colors.textMuted} fontSize="8" textAnchor="middle">Depth (um)</text>
-            <text x="15" y="40" fill={colors.textMuted} fontSize="8" textAnchor="middle" transform="rotate(-90, 15, 40)">[P]</text>
+            <line x1="35" y1="75" x2="245" y2="75" stroke="#64748b" strokeWidth="1.5" />
+            <line x1="35" y1="15" x2="35" y2="75" stroke="#64748b" strokeWidth="1.5" />
 
-            {/* Profile curve */}
+            {/* Axis arrows */}
+            <polygon points="245,75 240,72 240,78" fill="#64748b" />
+            <polygon points="35,15 32,20 38,20" fill="#64748b" />
+
+            {/* Profile curve with gradient */}
             <path
-              d={`M 30 ${65 - 50 * output.profile[0].concentration * timeRatio} ` +
-                output.profile.map((p, i) => {
-                  const x = 30 + (p.x / 5) * 190;
-                  const y = 65 - 50 * p.concentration * timeRatio;
+              d={`M 35 ${75 - 55 * output.profile[0].concentration * timeRatio} ` +
+                output.profile.map((p) => {
+                  const x = 35 + (p.x / 5) * 210;
+                  const y = 75 - 55 * p.concentration * timeRatio;
                   return `L ${x} ${y}`;
                 }).join(' ')}
               fill="none"
-              stroke={colors.dopant}
-              strokeWidth="2"
+              stroke="url(#dopeProfileCurve)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              filter="url(#dopeDiffusionGlow)"
             />
 
-            {/* Junction depth on graph */}
+            {/* Junction depth marker on graph */}
             <line
-              x1={30 + (output.junctionDepth / 5) * 190 * timeRatio}
+              x1={35 + (output.junctionDepth / 5) * 210 * timeRatio}
               y1="15"
-              x2={30 + (output.junctionDepth / 5) * 190 * timeRatio}
-              y2="65"
+              x2={35 + (output.junctionDepth / 5) * 210 * timeRatio}
+              y2="75"
               stroke={colors.error}
-              strokeWidth="1"
-              strokeDasharray="3,3"
+              strokeWidth="2"
+              strokeDasharray="4,3"
+              filter="url(#dopeJunctionFilter)"
+            />
+
+            {/* Junction depth label on graph */}
+            <circle
+              cx={35 + (output.junctionDepth / 5) * 210 * timeRatio}
+              cy={75 - 55 * 0.1 * timeRatio}
+              r="4"
+              fill={colors.error}
             />
           </g>
 
           {/* Output panel */}
-          <rect x="330" y="60" width="60" height="100" fill="rgba(0,0,0,0.6)" rx="4" stroke={colors.accent} strokeWidth="1" />
-          <text x="360" y="78" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Depth</text>
-          <text x="360" y="95" fill={colors.accent} fontSize="14" textAnchor="middle" fontWeight="bold">
-            {(output.junctionDepth * timeRatio).toFixed(2)}
-          </text>
-          <text x="360" y="108" fill={colors.textSecondary} fontSize="8" textAnchor="middle">um</text>
+          <g transform="translate(350, 55)">
+            <rect x="0" y="0" width="75" height="170" rx="8" fill="url(#dopeOutputPanel)" stroke="#334155" strokeWidth="1.5" filter="url(#dopePanelGlow)" />
 
-          <text x="360" y="130" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Rsheet</text>
-          <text x="360" y="147" fill={colors.success} fontSize="12" textAnchor="middle" fontWeight="bold">
-            {output.sheetResistance.toFixed(0)}
-          </text>
-          <text x="360" y="158" fill={colors.textSecondary} fontSize="8" textAnchor="middle">ohm/sq</text>
+            {/* Depth section */}
+            <rect x="5" y="8" width="65" height="70" rx="4" fill="rgba(96,165,250,0.1)" />
+            <text x="37" y="28" fill={colors.textMuted} fontSize="10" textAnchor="middle" fontWeight="600">DEPTH</text>
+            <text x="37" y="55" fill={colors.nType} fontSize="22" textAnchor="middle" fontWeight="bold">
+              {(output.junctionDepth * timeRatio).toFixed(2)}
+            </text>
+            <text x="37" y="70" fill={colors.textMuted} fontSize="9" textAnchor="middle">um</text>
+
+            {/* Sheet resistance section */}
+            <rect x="5" y="88" width="65" height="70" rx="4" fill="rgba(16,185,129,0.1)" />
+            <text x="37" y="108" fill={colors.textMuted} fontSize="10" textAnchor="middle" fontWeight="600">Rsheet</text>
+            <text x="37" y="135" fill={colors.success} fontSize="20" textAnchor="middle" fontWeight="bold">
+              {output.sheetResistance.toFixed(0)}
+            </text>
+            <text x="37" y="150" fill={colors.textMuted} fontSize="9" textAnchor="middle">ohm/sq</text>
+          </g>
+
+          {/* P/N Junction indicator legend */}
+          <g transform="translate(350, 240)">
+            <rect x="0" y="0" width="75" height="105" rx="8" fill="url(#dopeOutputPanel)" stroke="#334155" strokeWidth="1" />
+
+            {/* N-type indicator */}
+            <rect x="10" y="12" width="12" height="12" rx="2" fill={colors.nType} />
+            <text x="28" y="22" fill={colors.textSecondary} fontSize="10">N-type</text>
+
+            {/* P-type indicator */}
+            <rect x="10" y="32" width="12" height="12" rx="2" fill={colors.pType} />
+            <text x="28" y="42" fill={colors.textSecondary} fontSize="10">P-type</text>
+
+            {/* Junction indicator */}
+            <line x1="10" y1="58" x2="22" y2="58" stroke={colors.error} strokeWidth="2" strokeDasharray="3,2" />
+            <text x="28" y="62" fill={colors.textSecondary} fontSize="10">Junction</text>
+
+            {/* Dopant indicator */}
+            <circle cx="16" cy="80" r="5" fill="url(#dopeDopantAtomGlow)" />
+            <text x="28" y="84" fill={colors.textSecondary} fontSize="10">Dopant</text>
+          </g>
         </svg>
 
+        {/* Labels moved outside SVG */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '520px',
+          padding: `0 ${typo.pagePadding}`,
+          marginTop: '-8px'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: typo.label, color: colors.textMuted, display: 'block' }}>Temperature</span>
+            <span style={{ fontSize: typo.body, color: colors.accent, fontWeight: 'bold' }}>{temperature}C</span>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: typo.label, color: colors.textMuted, display: 'block' }}>Dopant Source</span>
+            <span style={{ fontSize: typo.small, color: colors.dopant }}>POCl3 / PH3</span>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ fontSize: typo.label, color: colors.textMuted, display: 'block' }}>Concentration</span>
+            <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Profile [P]</span>
+          </div>
+        </div>
+
         {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
+          <div style={{ display: 'flex', gap: typo.elementGap, flexWrap: 'wrap', justifyContent: 'center', padding: typo.cardPadding }}>
             <button
               onClick={() => { setIsAnimating(true); setAnimationTime(0); }}
               disabled={isAnimating}
@@ -482,12 +736,14 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.textMuted : colors.success,
+                background: isAnimating ? colors.textMuted : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: isAnimating ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
+                boxShadow: isAnimating ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.3)',
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
             >
               {isAnimating ? 'Diffusing...' : 'Start Diffusion'}
@@ -498,12 +754,13 @@ const DopingDiffusionRenderer: React.FC<DopingDiffusionRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.accent}`,
-                background: 'transparent',
+                background: 'rgba(245, 158, 11, 0.1)',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
+                transition: 'all 0.2s ease',
               }}
             >
               Reset

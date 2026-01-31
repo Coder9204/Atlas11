@@ -255,6 +255,9 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
   const [isAC, setIsAC] = useState(false);
   const [acPhase, setAcPhase] = useState(0);
 
+  // Animation time for current flow
+  const [animTime, setAnimTime] = useState(0);
+
   const navigationLockRef = useRef(false);
 
   // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -280,6 +283,14 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
   };
 
   // ─── Animation Effect ────────────────────────────────────────────────────────
+  // Animation timer for current flow visualization
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setAnimTime(t => (t + 1) % 100);
+    }, 50);
+    return () => clearInterval(interval);
+  }, []);
+
   // Paper clip attraction animation
   useEffect(() => {
     const fieldStrength = calculateFieldStrength(Math.abs(current), coilTurns, hasCore);
@@ -366,138 +377,456 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
     </div>
   );
 
+  // Premium SVG Defs for electromagnet visualization
+  const renderSVGDefs = () => (
+    <defs>
+      {/* Premium copper coil gradient - metallic appearance */}
+      <linearGradient id="emagCoilGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fbbf24" />
+        <stop offset="20%" stopColor="#f59e0b" />
+        <stop offset="40%" stopColor="#d97706" />
+        <stop offset="60%" stopColor="#b45309" />
+        <stop offset="80%" stopColor="#f59e0b" />
+        <stop offset="100%" stopColor="#fbbf24" />
+      </linearGradient>
+
+      {/* Coil highlight for 3D effect */}
+      <linearGradient id="emagCoilHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.8" />
+        <stop offset="30%" stopColor="#fcd34d" stopOpacity="0.4" />
+        <stop offset="70%" stopColor="#92400e" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#78350f" stopOpacity="0.5" />
+      </linearGradient>
+
+      {/* Iron core gradient - brushed metal look */}
+      <linearGradient id="emagCoreGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#6b7280" />
+        <stop offset="15%" stopColor="#9ca3af" />
+        <stop offset="30%" stopColor="#6b7280" />
+        <stop offset="50%" stopColor="#4b5563" />
+        <stop offset="70%" stopColor="#6b7280" />
+        <stop offset="85%" stopColor="#9ca3af" />
+        <stop offset="100%" stopColor="#6b7280" />
+      </linearGradient>
+
+      {/* Core edge highlight */}
+      <linearGradient id="emagCoreEdge" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#d1d5db" stopOpacity="0.6" />
+        <stop offset="50%" stopColor="#6b7280" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#374151" stopOpacity="0.8" />
+      </linearGradient>
+
+      {/* Magnetic field gradient - blue for north-oriented field */}
+      <linearGradient id="emagFieldGradBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+        <stop offset="20%" stopColor="#60a5fa" stopOpacity="0.3" />
+        <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.6" />
+        <stop offset="80%" stopColor="#60a5fa" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+      </linearGradient>
+
+      {/* Magnetic field gradient - red for south-oriented field */}
+      <linearGradient id="emagFieldGradRed" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
+        <stop offset="20%" stopColor="#f87171" stopOpacity="0.3" />
+        <stop offset="50%" stopColor="#fca5a5" stopOpacity="0.6" />
+        <stop offset="80%" stopColor="#f87171" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+      </linearGradient>
+
+      {/* Radial field glow */}
+      <radialGradient id="emagFieldGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#a855f7" stopOpacity="0.4" />
+        <stop offset="40%" stopColor="#7c3aed" stopOpacity="0.2" />
+        <stop offset="70%" stopColor="#6d28d9" stopOpacity="0.1" />
+        <stop offset="100%" stopColor="#5b21b6" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Battery/power source gradient */}
+      <linearGradient id="emagBatteryGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#4b5563" />
+        <stop offset="30%" stopColor="#374151" />
+        <stop offset="70%" stopColor="#1f2937" />
+        <stop offset="100%" stopColor="#111827" />
+      </linearGradient>
+
+      {/* Wire gradient - positive (red) */}
+      <linearGradient id="emagWirePositive" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#dc2626" />
+        <stop offset="30%" stopColor="#ef4444" />
+        <stop offset="50%" stopColor="#f87171" />
+        <stop offset="70%" stopColor="#ef4444" />
+        <stop offset="100%" stopColor="#dc2626" />
+      </linearGradient>
+
+      {/* Wire gradient - negative (blue) */}
+      <linearGradient id="emagWireNegative" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#1d4ed8" />
+        <stop offset="30%" stopColor="#3b82f6" />
+        <stop offset="50%" stopColor="#60a5fa" />
+        <stop offset="70%" stopColor="#3b82f6" />
+        <stop offset="100%" stopColor="#1d4ed8" />
+      </linearGradient>
+
+      {/* Neutral wire */}
+      <linearGradient id="emagWireNeutral" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#4b5563" />
+        <stop offset="50%" stopColor="#6b7280" />
+        <stop offset="100%" stopColor="#4b5563" />
+      </linearGradient>
+
+      {/* Current flow particle glow */}
+      <radialGradient id="emagCurrentGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+        <stop offset="40%" stopColor="#fde047" stopOpacity="0.8" />
+        <stop offset="70%" stopColor="#facc15" stopOpacity="0.4" />
+        <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Pole indicator gradients */}
+      <radialGradient id="emagNorthPole" cx="30%" cy="30%" r="70%">
+        <stop offset="0%" stopColor="#f87171" />
+        <stop offset="50%" stopColor="#ef4444" />
+        <stop offset="100%" stopColor="#b91c1c" />
+      </radialGradient>
+
+      <radialGradient id="emagSouthPole" cx="30%" cy="30%" r="70%">
+        <stop offset="0%" stopColor="#60a5fa" />
+        <stop offset="50%" stopColor="#3b82f6" />
+        <stop offset="100%" stopColor="#1d4ed8" />
+      </radialGradient>
+
+      {/* Paper clip metallic gradient */}
+      <linearGradient id="emagClipMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#e5e7eb" />
+        <stop offset="30%" stopColor="#d1d5db" />
+        <stop offset="50%" stopColor="#9ca3af" />
+        <stop offset="70%" stopColor="#d1d5db" />
+        <stop offset="100%" stopColor="#e5e7eb" />
+      </linearGradient>
+
+      {/* Attracted paper clip glow */}
+      <linearGradient id="emagClipAttracted" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#86efac" />
+        <stop offset="30%" stopColor="#4ade80" />
+        <stop offset="50%" stopColor="#22c55e" />
+        <stop offset="70%" stopColor="#4ade80" />
+        <stop offset="100%" stopColor="#86efac" />
+      </linearGradient>
+
+      {/* Info panel gradient */}
+      <linearGradient id="emagPanelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#1f2937" />
+        <stop offset="50%" stopColor="#111827" />
+        <stop offset="100%" stopColor="#0f172a" />
+      </linearGradient>
+
+      {/* Lab background gradient */}
+      <linearGradient id="emagLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#030712" />
+        <stop offset="50%" stopColor="#0a0f1a" />
+        <stop offset="100%" stopColor="#030712" />
+      </linearGradient>
+
+      {/* Glow filter for magnetic field */}
+      <filter id="emagFieldBlur" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="4" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Glow filter for current flow */}
+      <filter id="emagCurrentBlur" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Glow filter for pole indicators */}
+      <filter id="emagPoleGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Inner glow for core */}
+      <filter id="emagCoreInnerGlow">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      </filter>
+
+      {/* Subtle grid pattern for lab */}
+      <pattern id="emagLabGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+        <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+      </pattern>
+    </defs>
+  );
+
   const renderElectromagnet = (curr: number, turns: number, core: boolean, clips: typeof paperClipPositions) => {
     const fieldStrength = calculateFieldStrength(Math.abs(curr), turns, core);
     const fieldRadius = Math.min(80, fieldStrength * 8);
     const polarity = curr > 0 ? 'N-S' : curr < 0 ? 'S-N' : 'OFF';
+    const coilCount = Math.min(turns, 20);
+    const coilEndX = 160 + coilCount * 4;
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
-        {/* Background */}
-        <rect width="400" height="280" fill="#111827" />
+      <div className="space-y-3">
+        <svg viewBox="0 0 400 280" className="w-full h-56">
+          {renderSVGDefs()}
 
-        {/* Magnetic field lines */}
-        {curr !== 0 && (
-          <g className="animate-pulse" style={{ opacity: Math.min(1, fieldStrength / 5) }}>
-            {[...Array(6)].map((_, i) => {
-              const scale = 0.5 + (i * 0.15);
-              return (
+          {/* Premium dark lab background with gradient */}
+          <rect width="400" height="280" fill="url(#emagLabBg)" />
+          <rect width="400" height="280" fill="url(#emagLabGrid)" />
+
+          {/* Magnetic field lines with glow */}
+          {curr !== 0 && (
+            <g filter="url(#emagFieldBlur)" style={{ opacity: Math.min(1, fieldStrength / 5) }}>
+              {[...Array(6)].map((_, i) => {
+                const scale = 0.5 + (i * 0.15);
+                return (
+                  <ellipse
+                    key={i}
+                    cx="200"
+                    cy="140"
+                    rx={40 * scale + fieldRadius}
+                    ry={20 * scale + fieldRadius / 2}
+                    fill="none"
+                    stroke={curr > 0 ? 'url(#emagFieldGradBlue)' : 'url(#emagFieldGradRed)'}
+                    strokeWidth="2"
+                    strokeDasharray="8,4"
+                    opacity={1 - (i * 0.12)}
+                  >
+                    <animate
+                      attributeName="stroke-dashoffset"
+                      from="0"
+                      to={curr > 0 ? "-24" : "24"}
+                      dur="1s"
+                      repeatCount="indefinite"
+                    />
+                  </ellipse>
+                );
+              })}
+              {/* Central field glow */}
+              <ellipse
+                cx="200"
+                cy="140"
+                rx={30 + fieldRadius * 0.5}
+                ry={15 + fieldRadius * 0.25}
+                fill="url(#emagFieldGlow)"
+              />
+            </g>
+          )}
+
+          {/* Coil windings with premium copper gradient */}
+          <g>
+            {[...Array(coilCount)].map((_, i) => (
+              <g key={i}>
+                {/* Shadow/depth ellipse */}
                 <ellipse
-                  key={i}
-                  cx="200"
-                  cy="140"
-                  rx={40 * scale + fieldRadius}
-                  ry={20 * scale + fieldRadius / 2}
+                  cx={162 + i * 4}
+                  cy="142"
+                  rx="15"
+                  ry="30"
                   fill="none"
-                  stroke={curr > 0 ? '#3b82f6' : '#ef4444'}
-                  strokeWidth="1"
-                  strokeDasharray="4,4"
-                  opacity={1 - (i * 0.15)}
+                  stroke="#78350f"
+                  strokeWidth="4"
+                  opacity="0.3"
                 />
-              );
-            })}
-            {/* Field direction arrows */}
-            <text x="120" y="100" className={`text-xs ${curr > 0 ? 'fill-blue-400' : 'fill-red-400'}`}>
-              {curr > 0 ? '→' : '←'}
-            </text>
-            <text x="260" y="100" className={`text-xs ${curr > 0 ? 'fill-blue-400' : 'fill-red-400'}`}>
-              {curr > 0 ? '←' : '→'}
-            </text>
+                {/* Main coil with gradient */}
+                <ellipse
+                  cx={160 + i * 4}
+                  cy="140"
+                  rx="15"
+                  ry="30"
+                  fill="none"
+                  stroke="url(#emagCoilGrad)"
+                  strokeWidth="3"
+                />
+                {/* Highlight */}
+                <ellipse
+                  cx={159 + i * 4}
+                  cy="138"
+                  rx="14"
+                  ry="28"
+                  fill="none"
+                  stroke="url(#emagCoilHighlight)"
+                  strokeWidth="1"
+                  opacity="0.6"
+                />
+              </g>
+            ))}
           </g>
-        )}
 
-        {/* Coil windings */}
-        <g>
-          {[...Array(Math.min(turns, 20))].map((_, i) => (
-            <ellipse
-              key={i}
-              cx={160 + i * 4}
-              cy="140"
-              rx="15"
-              ry="30"
-              fill="none"
-              stroke="#f59e0b"
-              strokeWidth="3"
-            />
-          ))}
-        </g>
+          {/* Iron core (if enabled) with metallic gradient */}
+          {core && (
+            <g filter="url(#emagCoreInnerGlow)">
+              {/* Core shadow */}
+              <rect
+                x="157"
+                y="122"
+                width={coilCount * 4 + 10}
+                height="40"
+                rx="4"
+                fill="#1f2937"
+                opacity="0.5"
+              />
+              {/* Main core with brushed metal gradient */}
+              <rect
+                x="155"
+                y="120"
+                width={coilCount * 4 + 10}
+                height="40"
+                rx="4"
+                fill="url(#emagCoreGrad)"
+                stroke="url(#emagCoreEdge)"
+                strokeWidth="1.5"
+              />
+              {/* Core highlight line */}
+              <rect
+                x="155"
+                y="120"
+                width={coilCount * 4 + 10}
+                height="3"
+                rx="2"
+                fill="#d1d5db"
+                opacity="0.3"
+              />
+            </g>
+          )}
 
-        {/* Iron core (if enabled) */}
-        {core && (
-          <rect
-            x="155"
-            y="120"
-            width={Math.min(turns, 20) * 4 + 10}
-            height="40"
-            rx="4"
-            fill="#4b5563"
-            stroke="#6b7280"
-            strokeWidth="2"
-          />
-        )}
+          {/* Pole labels with premium styling */}
+          {curr !== 0 && (
+            <g filter="url(#emagPoleGlow)">
+              {/* Left pole (N or S based on current) */}
+              <circle cx="140" cy="140" r="16" fill={curr > 0 ? 'url(#emagNorthPole)' : 'url(#emagSouthPole)'} />
+              <circle cx="140" cy="140" r="16" fill="none" stroke="white" strokeWidth="1" opacity="0.3" />
 
-        {/* Pole labels */}
-        {curr !== 0 && (
-          <>
-            <circle cx="140" cy="140" r="15" fill={curr > 0 ? '#ef4444' : '#3b82f6'} />
-            <text x="140" y="145" textAnchor="middle" className="fill-white text-xs font-bold">
-              {curr > 0 ? 'N' : 'S'}
-            </text>
-            <circle cx="160 + Math.min(turns, 20) * 4 + 20" cy="140" r="15" fill={curr > 0 ? '#3b82f6' : '#ef4444'} />
-            <text x={160 + Math.min(turns, 20) * 4 + 20} y="145" textAnchor="middle" className="fill-white text-xs font-bold">
-              {curr > 0 ? 'S' : 'N'}
-            </text>
-          </>
-        )}
+              {/* Right pole */}
+              <circle cx={coilEndX + 20} cy="140" r="16" fill={curr > 0 ? 'url(#emagSouthPole)' : 'url(#emagNorthPole)'} />
+              <circle cx={coilEndX + 20} cy="140" r="16" fill="none" stroke="white" strokeWidth="1" opacity="0.3" />
+            </g>
+          )}
 
-        {/* Battery/power source */}
-        <rect x="170" y="220" width="60" height="30" rx="4" fill="#374151" stroke="#6b7280" strokeWidth="2" />
-        <text x="200" y="240" textAnchor="middle" className="fill-gray-300 text-xs">
-          {curr.toFixed(1)}A
-        </text>
+          {/* Battery/power source with premium gradient */}
+          <g>
+            <rect x="168" y="218" width="64" height="34" rx="6" fill="url(#emagBatteryGrad)" stroke="#4b5563" strokeWidth="1.5" />
+            {/* Battery terminals */}
+            <rect x="175" y="215" width="8" height="6" rx="1" fill="#dc2626" />
+            <rect x="217" y="215" width="8" height="6" rx="1" fill="#3b82f6" />
+            {/* Battery label background */}
+            <rect x="174" y="225" width="52" height="20" rx="3" fill="#1f2937" opacity="0.5" />
+          </g>
 
-        {/* Wires */}
-        <path
-          d={`M 160 170 L 160 220 L 170 220`}
-          fill="none"
-          stroke={curr > 0 ? '#ef4444' : curr < 0 ? '#3b82f6' : '#6b7280'}
-          strokeWidth="3"
-        />
-        <path
-          d={`M ${160 + Math.min(turns, 20) * 4} 170 L ${160 + Math.min(turns, 20) * 4} 220 L 230 220`}
-          fill="none"
-          stroke={curr > 0 ? '#3b82f6' : curr < 0 ? '#ef4444' : '#6b7280'}
-          strokeWidth="3"
-        />
-
-        {/* Paper clips */}
-        {clips.map((clip, i) => (
-          <g key={i} transform={`translate(${clip.x}, ${clip.y})`}>
+          {/* Wires with gradient and current flow */}
+          <g>
+            {/* Left wire */}
             <path
-              d="M -8 -5 L 8 -5 L 8 5 L -5 5 L -5 -2 L 5 -2"
+              d="M 160 170 L 160 218 L 168 218"
               fill="none"
-              stroke={clip.attracted ? '#22c55e' : '#9ca3af'}
-              strokeWidth="2"
+              stroke={curr > 0 ? 'url(#emagWirePositive)' : curr < 0 ? 'url(#emagWireNegative)' : 'url(#emagWireNeutral)'}
+              strokeWidth="4"
+              strokeLinecap="round"
             />
+            {/* Right wire */}
+            <path
+              d={`M ${coilEndX} 170 L ${coilEndX} 218 L 232 218`}
+              fill="none"
+              stroke={curr > 0 ? 'url(#emagWireNegative)' : curr < 0 ? 'url(#emagWirePositive)' : 'url(#emagWireNeutral)'}
+              strokeWidth="4"
+              strokeLinecap="round"
+            />
+
+            {/* Current flow particles */}
+            {curr !== 0 && (
+              <g filter="url(#emagCurrentBlur)">
+                {[0, 1, 2].map((i) => {
+                  const offset = ((animTime + i * 33) % 100) / 100;
+                  const leftY = 170 + offset * 48;
+                  const rightY = 170 + (1 - offset) * 48;
+                  return (
+                    <g key={i}>
+                      {/* Left wire particles */}
+                      <circle
+                        cx="160"
+                        cy={leftY}
+                        r="3"
+                        fill="url(#emagCurrentGlow)"
+                      />
+                      {/* Right wire particles */}
+                      <circle
+                        cx={coilEndX}
+                        cy={rightY}
+                        r="3"
+                        fill="url(#emagCurrentGlow)"
+                      />
+                    </g>
+                  );
+                })}
+              </g>
+            )}
           </g>
-        ))}
 
-        {/* Field strength meter */}
-        <rect x="20" y="20" width="100" height="50" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="70" y="40" textAnchor="middle" className="fill-gray-400 text-xs">Field Strength</text>
-        <text x="70" y="60" textAnchor="middle" className="fill-purple-400 text-sm font-bold">
-          {fieldStrength.toFixed(2)} T
-        </text>
+          {/* Paper clips with premium metallic gradient */}
+          {clips.map((clip, i) => (
+            <g key={i} transform={`translate(${clip.x}, ${clip.y})`}>
+              <path
+                d="M -10 -6 L 10 -6 L 10 6 L -6 6 L -6 -2 L 6 -2"
+                fill="none"
+                stroke={clip.attracted ? 'url(#emagClipAttracted)' : 'url(#emagClipMetal)'}
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {clip.attracted && (
+                <circle cx="0" cy="0" r="12" fill="url(#emagFieldGlow)" opacity="0.5" />
+              )}
+            </g>
+          ))}
 
-        {/* Polarity indicator */}
-        <rect x="280" y="20" width="100" height="50" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="330" y="40" textAnchor="middle" className="fill-gray-400 text-xs">Polarity</text>
-        <text x="330" y="60" textAnchor="middle" className={`text-sm font-bold ${
-          curr === 0 ? 'fill-gray-500' : curr > 0 ? 'fill-blue-400' : 'fill-red-400'
-        }`}>
-          {polarity}
-        </text>
-      </svg>
+          {/* Info panels with premium gradient */}
+          <g>
+            {/* Field strength panel */}
+            <rect x="15" y="15" width="110" height="55" rx="8" fill="url(#emagPanelGrad)" stroke="#374151" strokeWidth="1.5" />
+            <rect x="15" y="15" width="110" height="55" rx="8" fill="none" stroke="white" strokeWidth="0.5" opacity="0.1" />
+
+            {/* Polarity panel */}
+            <rect x="275" y="15" width="110" height="55" rx="8" fill="url(#emagPanelGrad)" stroke="#374151" strokeWidth="1.5" />
+            <rect x="275" y="15" width="110" height="55" rx="8" fill="none" stroke="white" strokeWidth="0.5" opacity="0.1" />
+          </g>
+        </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div className="flex justify-between px-4">
+          <div className="text-center">
+            <p style={{ fontSize: typo.label, color: '#9ca3af', marginBottom: '2px' }}>Field Strength</p>
+            <p style={{ fontSize: typo.body, color: '#a855f7', fontWeight: 700 }}>
+              {fieldStrength.toFixed(2)} T
+            </p>
+          </div>
+          <div className="text-center">
+            <p style={{ fontSize: typo.label, color: '#9ca3af', marginBottom: '2px' }}>Polarity</p>
+            <p style={{
+              fontSize: typo.body,
+              fontWeight: 700,
+              color: curr === 0 ? '#6b7280' : curr > 0 ? '#3b82f6' : '#ef4444'
+            }}>
+              {polarity}
+            </p>
+          </div>
+          <div className="text-center">
+            <p style={{ fontSize: typo.label, color: '#9ca3af', marginBottom: '2px' }}>Current</p>
+            <p style={{ fontSize: typo.body, color: '#fbbf24', fontWeight: 700 }}>
+              {curr.toFixed(1)} A
+            </p>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -506,84 +835,138 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
     const rotorAngle = ac ? phase * 2 : 0;
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill="#111827" />
+      <div className="space-y-3">
+        <svg viewBox="0 0 400 280" className="w-full h-56">
+          {renderSVGDefs()}
 
-        {/* Stator (outer electromagnets) */}
-        <circle cx="200" cy="140" r="100" fill="none" stroke="#4b5563" strokeWidth="8" />
+          {/* Premium dark lab background */}
+          <rect width="400" height="280" fill="url(#emagLabBg)" />
+          <rect width="400" height="280" fill="url(#emagLabGrid)" />
 
-        {/* Electromagnet coils on stator */}
-        {[0, 90, 180, 270].map((angle, i) => {
-          const rad = (angle * Math.PI) / 180;
-          const x = 200 + Math.cos(rad) * 80;
-          const y = 140 + Math.sin(rad) * 80;
-          const isActive = ac ? Math.abs(Math.sin(phase + (i * Math.PI / 2))) > 0.5 : curr > 0;
+          {/* Stator (outer electromagnets) with premium styling */}
+          <circle cx="200" cy="140" r="100" fill="none" stroke="url(#emagCoreGrad)" strokeWidth="10" />
+          <circle cx="200" cy="140" r="95" fill="none" stroke="#374151" strokeWidth="1" opacity="0.5" />
+          <circle cx="200" cy="140" r="105" fill="none" stroke="#4b5563" strokeWidth="1" opacity="0.3" />
 
-          return (
-            <g key={i}>
-              <rect
-                x={x - 15}
-                y={y - 15}
-                width="30"
-                height="30"
-                rx="4"
-                fill={isActive ? '#f59e0b' : '#374151'}
-                stroke="#6b7280"
-                strokeWidth="2"
-              />
-              {isActive && (
-                <circle
-                  cx={x}
-                  cy={y}
-                  r="25"
-                  fill="none"
-                  stroke={i % 2 === 0 ? '#3b82f6' : '#ef4444'}
+          {/* Electromagnet coils on stator with premium gradients */}
+          {[0, 90, 180, 270].map((angle, i) => {
+            const rad = (angle * Math.PI) / 180;
+            const x = 200 + Math.cos(rad) * 80;
+            const y = 140 + Math.sin(rad) * 80;
+            const isActive = ac ? Math.abs(Math.sin(phase + (i * Math.PI / 2))) > 0.5 : curr > 0;
+
+            return (
+              <g key={i}>
+                {/* Coil housing */}
+                <rect
+                  x={x - 18}
+                  y={y - 18}
+                  width="36"
+                  height="36"
+                  rx="6"
+                  fill={isActive ? 'url(#emagCoilGrad)' : 'url(#emagCoreGrad)'}
+                  stroke={isActive ? '#fbbf24' : '#6b7280'}
                   strokeWidth="2"
-                  strokeDasharray="4,4"
-                  className="animate-pulse"
                 />
-              )}
+                {/* Active field indicator */}
+                {isActive && (
+                  <g filter="url(#emagFieldBlur)">
+                    <circle
+                      cx={x}
+                      cy={y}
+                      r="28"
+                      fill="none"
+                      stroke={i % 2 === 0 ? 'url(#emagFieldGradBlue)' : 'url(#emagFieldGradRed)'}
+                      strokeWidth="3"
+                      strokeDasharray="6,3"
+                    >
+                      <animate
+                        attributeName="stroke-dashoffset"
+                        from="0"
+                        to="-18"
+                        dur="0.5s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  </g>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Rotor (inner permanent magnet) with premium styling */}
+          <g transform={`rotate(${(rotorAngle * 180) / Math.PI}, 200, 140)`}>
+            {/* Rotor body */}
+            <circle cx="200" cy="140" r="42" fill="url(#emagCoreGrad)" stroke="#4b5563" strokeWidth="2" />
+            <circle cx="200" cy="140" r="38" fill="none" stroke="#6b7280" strokeWidth="1" opacity="0.5" />
+
+            {/* N pole with premium gradient */}
+            <g filter="url(#emagPoleGlow)">
+              <path d="M 200 98 L 212 126 L 188 126 Z" fill="url(#emagNorthPole)" />
+              <path d="M 200 98 L 212 126 L 188 126 Z" fill="none" stroke="white" strokeWidth="1" opacity="0.3" />
             </g>
-          );
-        })}
 
-        {/* Rotor (inner permanent magnet) */}
-        <g transform={`rotate(${(rotorAngle * 180) / Math.PI}, 200, 140)`}>
-          <ellipse cx="200" cy="140" rx="40" ry="40" fill="#374151" stroke="#6b7280" strokeWidth="2" />
-          {/* N pole */}
-          <path d="M 200 100 L 210 125 L 190 125 Z" fill="#ef4444" />
-          <text x="200" y="118" textAnchor="middle" className="fill-white text-xs font-bold">N</text>
-          {/* S pole */}
-          <path d="M 200 180 L 210 155 L 190 155 Z" fill="#3b82f6" />
-          <text x="200" y="172" textAnchor="middle" className="fill-white text-xs font-bold">S</text>
-        </g>
+            {/* S pole with premium gradient */}
+            <g filter="url(#emagPoleGlow)">
+              <path d="M 200 182 L 212 154 L 188 154 Z" fill="url(#emagSouthPole)" />
+              <path d="M 200 182 L 212 154 L 188 154 Z" fill="none" stroke="white" strokeWidth="1" opacity="0.3" />
+            </g>
+          </g>
 
-        {/* Shaft */}
-        <rect x="195" y="180" width="10" height="60" fill="#6b7280" />
+          {/* Shaft with metallic gradient */}
+          <rect x="193" y="180" width="14" height="65" rx="2" fill="url(#emagCoreGrad)" stroke="#4b5563" strokeWidth="1" />
 
-        {/* Current waveform display */}
-        <rect x="20" y="20" width="120" height="60" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="80" y="40" textAnchor="middle" className="fill-gray-400 text-xs">
-          {ac ? 'AC Current' : 'DC Current'}
-        </text>
-        {ac ? (
-          <path
-            d={`M 30 60 ${[...Array(20)].map((_, i) => `L ${30 + i * 5} ${60 + Math.sin((i / 3) + phase) * 10}`).join(' ')}`}
-            fill="none"
-            stroke="#22c55e"
-            strokeWidth="2"
-          />
-        ) : (
-          <line x1="30" y1="60" x2="130" y2="60" stroke="#22c55e" strokeWidth="2" />
-        )}
+          {/* Info panels */}
+          <g>
+            {/* Current waveform panel */}
+            <rect x="15" y="15" width="125" height="65" rx="8" fill="url(#emagPanelGrad)" stroke="#374151" strokeWidth="1.5" />
 
-        {/* Mode indicator */}
-        <rect x="260" y="20" width="120" height="60" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="320" y="40" textAnchor="middle" className="fill-gray-400 text-xs">Motor Mode</text>
-        <text x="320" y="60" textAnchor="middle" className={`text-sm font-bold ${ac ? 'fill-green-400' : 'fill-yellow-400'}`}>
-          {ac ? 'AC ROTATING' : 'DC STATIC'}
-        </text>
-      </svg>
+            {/* Waveform visualization */}
+            {ac ? (
+              <path
+                d={`M 25 52 ${[...Array(22)].map((_, i) => `L ${25 + i * 5} ${52 + Math.sin((i / 3.5) + phase) * 12}`).join(' ')}`}
+                fill="none"
+                stroke="#22c55e"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+              />
+            ) : (
+              <line x1="25" y1="52" x2="130" y2="52" stroke="#22c55e" strokeWidth="2.5" strokeLinecap="round" />
+            )}
+
+            {/* Mode panel */}
+            <rect x="260" y="15" width="125" height="65" rx="8" fill="url(#emagPanelGrad)" stroke="#374151" strokeWidth="1.5" />
+          </g>
+        </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div className="flex justify-between px-4">
+          <div className="text-center">
+            <p style={{ fontSize: typo.label, color: '#9ca3af', marginBottom: '2px' }}>
+              {ac ? 'AC Current' : 'DC Current'}
+            </p>
+            <p style={{ fontSize: typo.body, color: '#22c55e', fontWeight: 700 }}>
+              {ac ? 'Alternating' : 'Steady'}
+            </p>
+          </div>
+          <div className="text-center">
+            <p style={{ fontSize: typo.label, color: '#9ca3af', marginBottom: '2px' }}>Motor Mode</p>
+            <p style={{
+              fontSize: typo.body,
+              fontWeight: 700,
+              color: ac ? '#22c55e' : '#fbbf24'
+            }}>
+              {ac ? 'AC ROTATING' : 'DC STATIC'}
+            </p>
+          </div>
+          <div className="text-center">
+            <p style={{ fontSize: typo.label, color: '#9ca3af', marginBottom: '2px' }}>Rotor</p>
+            <p style={{ fontSize: typo.body, color: '#a855f7', fontWeight: 700 }}>
+              {ac ? 'Spinning' : 'Aligned'}
+            </p>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -599,7 +982,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
         </p>
         <div className="mt-6 p-4 bg-gray-700 rounded-lg">
           <p className="text-blue-300 font-medium">
-            ⚡ The secret is the electromagnet—a magnet you can turn on and off!
+            The secret is the electromagnet—a magnet you can turn on and off!
           </p>
         </div>
         <p className="text-gray-400 mt-4">
@@ -611,7 +994,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
         onMouseDown={() => { playSound('click'); nextPhase(); }}
         className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
       >
-        Discover the Secret →
+        Discover the Secret
       </button>
     </div>
   );
@@ -652,7 +1035,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
           onMouseDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
         >
-          Test Your Prediction →
+          Test Your Prediction
         </button>
       )}
     </div>
@@ -670,7 +1053,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
 
           <div className="grid grid-cols-2 gap-6 mt-6">
             <div>
-              <label className="block text-yellow-400 font-medium mb-2">
+              <label className="block text-yellow-400 font-medium mb-2" style={{ fontSize: typo.body }}>
                 Current: {current.toFixed(1)} A
               </label>
               <input
@@ -682,14 +1065,14 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
                 onChange={(e) => setCurrent(Number(e.target.value))}
                 className="w-full accent-yellow-500"
               />
-              <div className="flex justify-between text-xs text-gray-500 mt-1">
+              <div className="flex justify-between mt-1" style={{ fontSize: typo.label, color: '#6b7280' }}>
                 <span>-5A</span>
                 <span>0</span>
                 <span>+5A</span>
               </div>
             </div>
             <div>
-              <label className="block text-orange-400 font-medium mb-2">
+              <label className="block text-orange-400 font-medium mb-2" style={{ fontSize: typo.body }}>
                 Coil Turns: {coilTurns}
               </label>
               <input
@@ -716,14 +1099,14 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
                   : 'bg-gray-600 text-gray-300'
               }`}
             >
-              {hasCore ? '🧲 Iron Core: ON' : '🔘 Iron Core: OFF'}
+              {hasCore ? 'Iron Core: ON' : 'Iron Core: OFF'}
             </button>
           </div>
 
           <div className="mt-4 p-4 bg-gray-700 rounded-lg">
-            <p className="text-gray-300 text-center">
+            <p className="text-gray-300 text-center" style={{ fontSize: typo.body }}>
               Field Strength: <span className="text-purple-400 font-bold">{fieldStrength.toFixed(3)} T</span>
-              {hasCore && <span className="text-green-400 ml-2">(1000× with iron core!)</span>}
+              {hasCore && <span className="text-green-400 ml-2">(1000x with iron core!)</span>}
             </p>
           </div>
         </div>
@@ -733,7 +1116,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
             onMouseDown={() => { playSound('click'); nextPhase(); }}
             className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
           >
-            Understand the Physics →
+            Understand the Physics
           </button>
         </div>
       </div>
@@ -757,32 +1140,32 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
         <div className="grid grid-cols-3 gap-3">
           <div className="p-3 bg-gray-700 rounded-lg text-center">
             <div className="text-2xl mb-1">⚡</div>
-            <p className="text-xs text-gray-400">More Current</p>
-            <p className="text-purple-400 font-bold">→ Stronger</p>
+            <p style={{ fontSize: typo.label, color: '#9ca3af' }}>More Current</p>
+            <p className="text-purple-400 font-bold" style={{ fontSize: typo.small }}>Stronger</p>
           </div>
           <div className="p-3 bg-gray-700 rounded-lg text-center">
             <div className="text-2xl mb-1">🔄</div>
-            <p className="text-xs text-gray-400">More Turns</p>
-            <p className="text-purple-400 font-bold">→ Stronger</p>
+            <p style={{ fontSize: typo.label, color: '#9ca3af' }}>More Turns</p>
+            <p className="text-purple-400 font-bold" style={{ fontSize: typo.small }}>Stronger</p>
           </div>
           <div className="p-3 bg-gray-700 rounded-lg text-center">
             <div className="text-2xl mb-1">🧲</div>
-            <p className="text-xs text-gray-400">Iron Core</p>
-            <p className="text-purple-400 font-bold">→ 1000× Stronger!</p>
+            <p style={{ fontSize: typo.label, color: '#9ca3af' }}>Iron Core</p>
+            <p className="text-purple-400 font-bold" style={{ fontSize: typo.small }}>1000x Stronger!</p>
           </div>
         </div>
 
         <div className="p-4 bg-yellow-900/30 rounded-lg border border-yellow-600">
-          <p className="text-yellow-300">
-            💡 <strong>Key Equation:</strong> B = μ₀ × n × I
+          <p className="text-yellow-300" style={{ fontSize: typo.body }}>
+            <strong>Key Equation:</strong> B = μ₀ × n × I
             <br />
-            <span className="text-sm">Field strength = permeability × turns/length × current</span>
+            <span style={{ fontSize: typo.small }}>Field strength = permeability × turns/length × current</span>
           </p>
         </div>
 
         <div className="p-4 bg-blue-900/30 rounded-lg border border-blue-600">
-          <p className="text-blue-300">
-            🧲 <strong>Why Iron Helps:</strong> Iron atoms act like tiny magnets that align
+          <p className="text-blue-300" style={{ fontSize: typo.body }}>
+            <strong>Why Iron Helps:</strong> Iron atoms act like tiny magnets that align
             with the coil&apos;s field, amplifying it by ~1000×. This is called &quot;ferromagnetism.&quot;
           </p>
         </div>
@@ -793,7 +1176,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
           onMouseDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
         >
-          What If We Reverse Current? →
+          What If We Reverse Current?
         </button>
       </div>
     </div>
@@ -836,7 +1219,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
           onMouseDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
         >
-          See What Happens →
+          See What Happens
         </button>
       )}
     </div>
@@ -875,18 +1258,18 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
         </div>
 
         <div className="mt-4 p-4 bg-gray-700 rounded-lg">
-          <p className="text-gray-300 text-center">
+          <p className="text-gray-300 text-center" style={{ fontSize: typo.body }}>
             {isAC ? (
               <>
                 <span className="text-green-400 font-bold">AC creates a rotating magnetic field!</span>
                 <br />
-                <span className="text-sm">The rotor chases the field, causing continuous rotation.</span>
+                <span style={{ fontSize: typo.small }}>The rotor chases the field, causing continuous rotation.</span>
               </>
             ) : (
               <>
                 <span className="text-yellow-400 font-bold">DC creates a static field.</span>
                 <br />
-                <span className="text-sm">The rotor aligns once, then stops. Motors need commutators to keep spinning.</span>
+                <span style={{ fontSize: typo.small }}>The rotor aligns once, then stops. Motors need commutators to keep spinning.</span>
               </>
             )}
           </p>
@@ -898,7 +1281,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
           onMouseDown={() => { playSound('click'); setIsAC(false); nextPhase(); }}
           className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
         >
-          Understand Motor Physics →
+          Understand Motor Physics
         </button>
       </div>
     </div>
@@ -911,7 +1294,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
       <div className="bg-gray-800 rounded-xl p-6 space-y-4">
         <div className="p-4 bg-green-900/30 rounded-lg border border-green-600">
           <h3 className="text-green-400 font-bold mb-2">The Rotating Field Principle</h3>
-          <p className="text-gray-300">
+          <p className="text-gray-300" style={{ fontSize: typo.body }}>
             <span className="text-yellow-400 font-bold">Reversing current reverses the magnetic poles.</span>{' '}
             By rapidly alternating current in multiple coils, we create a magnetic field
             that appears to rotate—and any magnet inside will spin trying to follow it!
@@ -921,27 +1304,27 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
         <div className="grid grid-cols-2 gap-4">
           <div className="p-4 bg-gray-700 rounded-lg">
             <h4 className="text-yellow-400 font-bold mb-2">DC Motors</h4>
-            <ul className="text-gray-300 text-sm space-y-1">
-              <li>• Need brushes/commutator to switch current</li>
-              <li>• Simple speed control</li>
-              <li>• Brushes wear out over time</li>
-              <li>• Used in toys, small appliances</li>
+            <ul className="text-gray-300 space-y-1" style={{ fontSize: typo.small }}>
+              <li>Need brushes/commutator to switch current</li>
+              <li>Simple speed control</li>
+              <li>Brushes wear out over time</li>
+              <li>Used in toys, small appliances</li>
             </ul>
           </div>
           <div className="p-4 bg-gray-700 rounded-lg">
             <h4 className="text-green-400 font-bold mb-2">AC Motors</h4>
-            <ul className="text-gray-300 text-sm space-y-1">
-              <li>• No brushes needed</li>
-              <li>• Grid power is already AC</li>
-              <li>• Very reliable, long-lasting</li>
-              <li>• Used in industry, EVs, fans</li>
+            <ul className="text-gray-300 space-y-1" style={{ fontSize: typo.small }}>
+              <li>No brushes needed</li>
+              <li>Grid power is already AC</li>
+              <li>Very reliable, long-lasting</li>
+              <li>Used in industry, EVs, fans</li>
             </ul>
           </div>
         </div>
 
         <div className="p-4 bg-yellow-900/30 rounded-lg border border-yellow-600">
-          <p className="text-yellow-300 text-sm">
-            💡 <strong>Fun Fact:</strong> Nikola Tesla invented the AC induction motor in 1887.
+          <p className="text-yellow-300" style={{ fontSize: typo.small }}>
+            <strong>Fun Fact:</strong> Nikola Tesla invented the AC induction motor in 1887.
             It&apos;s called &quot;induction&quot; because the rotating field induces current in the rotor,
             making it magnetic without any electrical connection!
           </p>
@@ -953,7 +1336,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
           onMouseDown={() => { playSound('click'); nextPhase(); }}
           className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
         >
-          See Real Applications →
+          See Real Applications
         </button>
       </div>
     </div>
@@ -980,9 +1363,9 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
           >
             <div className="text-3xl mb-2">{app.icon}</div>
             <h3 className="text-white font-bold mb-1">{app.title}</h3>
-            <p className="text-gray-400 text-sm">{app.description}</p>
+            <p className="text-gray-400" style={{ fontSize: typo.small }}>{app.description}</p>
             {completedApps.has(i) && (
-              <div className="mt-2 text-green-400 text-sm">✓ Explored</div>
+              <div className="mt-2 text-green-400" style={{ fontSize: typo.small }}>Explored</div>
             )}
           </button>
         ))}
@@ -994,13 +1377,13 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
             onMouseDown={() => { playSound('complete'); nextPhase(); }}
             className="px-8 py-4 bg-gradient-to-r from-purple-600 to-blue-600 text-white rounded-xl font-bold text-lg hover:from-purple-500 hover:to-blue-500 transition-all"
           >
-            Take the Test →
+            Take the Test
           </button>
         </div>
       )}
 
       {completedApps.size < 4 && (
-        <p className="text-center text-gray-500">
+        <p className="text-center text-gray-500" style={{ fontSize: typo.small }}>
           Explore all {4 - completedApps.size} remaining applications to continue
         </p>
       )}
@@ -1045,7 +1428,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
                 : 'bg-gradient-to-r from-purple-600 to-blue-600 text-white'
             }`}
           >
-            {passed ? 'Complete Lesson →' : 'Try Again'}
+            {passed ? 'Complete Lesson' : 'Try Again'}
           </button>
         </div>
       );
@@ -1117,7 +1500,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
       </div>
       <div className="p-4 bg-purple-900/30 rounded-lg border border-purple-600 max-w-md mx-auto">
         <p className="text-purple-300">
-          🧲 Key Insight: Electromagnets are switchable magnets—turn on current, get magnetism!
+          Key Insight: Electromagnets are switchable magnets—turn on current, get magnetism!
         </p>
       </div>
       <button
@@ -1127,7 +1510,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
         }}
         className="px-8 py-4 bg-gradient-to-r from-yellow-600 to-orange-600 text-white rounded-xl font-bold text-lg hover:from-yellow-500 hover:to-orange-500 transition-all"
       >
-        🎓 Claim Your Badge
+        Claim Your Badge
       </button>
     </div>
   );
@@ -1175,7 +1558,7 @@ export default function ElectromagnetRenderer({ phase: initialPhase, onPhaseComp
               }}
               className="px-4 py-2 bg-gray-700 text-gray-300 rounded-lg hover:bg-gray-600 transition-all"
             >
-              ← Back
+              Back
             </button>
             <div className="text-gray-500 text-sm">
               {PHASES.indexOf(phase) + 1} / {PHASES.length}

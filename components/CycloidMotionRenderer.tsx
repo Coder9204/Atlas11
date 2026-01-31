@@ -311,18 +311,200 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
           preserveAspectRatio="xMidYMid meet"
           style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '550px' }}
         >
-          {/* Ground */}
-          <rect x={0} y={groundY} width={width} height={80} fill={colors.ground} />
-          <line x1={0} y1={groundY} x2={width} y2={groundY} stroke="#64748b" strokeWidth={2} />
+          {/* Premium defs section with gradients and filters */}
+          <defs>
+            {/* Background gradient */}
+            <linearGradient id="cycBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0a0f1a" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-          {/* Trace path */}
+            {/* Ground surface gradient with texture effect */}
+            <linearGradient id="cycGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="15%" stopColor="#334155" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="85%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Ground surface line highlight */}
+            <linearGradient id="cycGroundLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#64748b" stopOpacity="0.3" />
+              <stop offset="25%" stopColor="#94a3b8" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#cbd5e1" stopOpacity="1" />
+              <stop offset="75%" stopColor="#94a3b8" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#64748b" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Wheel 3D gradient - radial for depth */}
+            <radialGradient id="cycWheelGradient" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.6" />
+              <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="#2563eb" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.2" />
+            </radialGradient>
+
+            {/* Wheel rim gradient */}
+            <linearGradient id="cycWheelRim" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="25%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
+
+            {/* Wheel hub gradient */}
+            <radialGradient id="cycWheelHub" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </radialGradient>
+
+            {/* Spoke gradient */}
+            <linearGradient id="cycSpokeGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.5" />
+            </linearGradient>
+
+            {/* Cycloid trace gradient */}
+            <linearGradient id="cycTraceGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+              <stop offset="25%" stopColor="#34d399" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#6ee7b7" stopOpacity="0.9" />
+              <stop offset="75%" stopColor="#34d399" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.5" />
+            </linearGradient>
+
+            {/* Tracing point gradient - radial glow */}
+            <radialGradient id="cycPointGradient" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="40%" stopColor="#f87171" />
+              <stop offset="70%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </radialGradient>
+
+            {/* Velocity arrow gradients */}
+            <linearGradient id="cycVelocityYellow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            <linearGradient id="cycVelocityGreen" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+
+            {/* Contact indicator gradient */}
+            <radialGradient id="cycContactGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#f87171" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Ground texture pattern */}
+            <pattern id="cycGroundTexture" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" />
+              <circle cx="2" cy="2" r="0.5" fill="#475569" fillOpacity="0.3" />
+              <circle cx="12" cy="8" r="0.3" fill="#64748b" fillOpacity="0.2" />
+              <circle cx="6" cy="15" r="0.4" fill="#475569" fillOpacity="0.25" />
+              <circle cx="17" cy="12" r="0.3" fill="#64748b" fillOpacity="0.2" />
+            </pattern>
+
+            {/* Arrow markers with gradients */}
+            <marker id="cycArrowYellow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L9,3 z" fill="url(#cycVelocityYellow)" />
+            </marker>
+            <marker id="cycArrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+              <path d="M0,0 L0,6 L9,3 z" fill="url(#cycVelocityGreen)" />
+            </marker>
+
+            {/* Tracing point glow filter */}
+            <filter id="cycPointGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#ef4444" floodOpacity="0.7" />
+              <feComposite in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Wheel glow filter */}
+            <filter id="cycWheelGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor="#3b82f6" floodOpacity="0.4" />
+              <feComposite in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Trace path glow filter */}
+            <filter id="cycTraceGlow" x="-10%" y="-50%" width="120%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feFlood floodColor="#10b981" floodOpacity="0.5" />
+              <feComposite in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Hub glow filter */}
+            <filter id="cycHubGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Contact pulse glow */}
+            <filter id="cycContactPulse" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feFlood floodColor="#ef4444" floodOpacity="0.6" />
+              <feComposite in2="blur" operator="in" result="coloredBlur" />
+              <feMerge>
+                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Premium background */}
+          <rect width={width} height={height} fill="url(#cycBgGradient)" />
+
+          {/* Subtle grid pattern for depth */}
+          <pattern id="cycGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+            <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.2" />
+          </pattern>
+          <rect width={width} height={groundY} fill="url(#cycGrid)" />
+
+          {/* Ground with texture */}
+          <rect x={0} y={groundY} width={width} height={80} fill="url(#cycGroundGradient)" />
+          <rect x={0} y={groundY} width={width} height={80} fill="url(#cycGroundTexture)" />
+
+          {/* Ground surface highlight line */}
+          <line x1={0} y1={groundY} x2={width} y2={groundY} stroke="url(#cycGroundLine)" strokeWidth={3} />
+          <line x1={0} y1={groundY + 1} x2={width} y2={groundY + 1} stroke="#1e293b" strokeWidth={1} />
+
+          {/* Trace path with gradient and glow */}
           {showTrace && tracePoints.length > 1 && (
             <path
               d={`M ${tracePoints[0].x} ${tracePoints[0].y} ${tracePoints.map(p => `L ${p.x} ${p.y}`).join(' ')}`}
               fill="none"
-              stroke={colors.cycloid}
-              strokeWidth={2}
-              opacity={0.8}
+              stroke="url(#cycTraceGradient)"
+              strokeWidth={3}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              filter="url(#cycTraceGlow)"
             />
           )}
 
@@ -337,23 +519,46 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
               }).join(' ')}
               fill="none"
               stroke={colors.cycloid}
-              strokeWidth={1}
-              strokeDasharray="5,5"
-              opacity={0.4}
+              strokeWidth={1.5}
+              strokeDasharray="6,4"
+              opacity={0.5}
             />
           )}
 
-          {/* Wheel */}
+          {/* Wheel outer glow */}
+          <circle
+            cx={center.x}
+            cy={center.y}
+            r={wheelRadius + 2}
+            fill="none"
+            stroke="#3b82f6"
+            strokeWidth={1}
+            opacity={0.3}
+            filter="url(#cycWheelGlow)"
+          />
+
+          {/* Wheel with 3D gradient fill */}
           <circle
             cx={center.x}
             cy={center.y}
             r={wheelRadius}
-            fill="rgba(59, 130, 246, 0.3)"
-            stroke={colors.wheel}
-            strokeWidth={3}
+            fill="url(#cycWheelGradient)"
+            stroke="url(#cycWheelRim)"
+            strokeWidth={4}
           />
 
-          {/* Wheel spokes */}
+          {/* Wheel inner ring for depth */}
+          <circle
+            cx={center.x}
+            cy={center.y}
+            r={wheelRadius - 5}
+            fill="none"
+            stroke="#60a5fa"
+            strokeWidth={1}
+            opacity={0.3}
+          />
+
+          {/* Wheel spokes with gradient */}
           {[0, 1, 2, 3, 4, 5].map((i) => {
             const spokeAngle = theta + (i * Math.PI) / 3;
             return (
@@ -363,39 +568,59 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
                 y1={center.y}
                 x2={center.x + wheelRadius * Math.sin(spokeAngle)}
                 y2={center.y + wheelRadius * Math.cos(spokeAngle)}
-                stroke={colors.wheel}
-                strokeWidth={2}
-                opacity={0.6}
+                stroke="url(#cycSpokeGradient)"
+                strokeWidth={3}
+                strokeLinecap="round"
               />
             );
           })}
 
-          {/* Center point */}
-          <circle cx={center.x} cy={center.y} r={5} fill={colors.wheel} />
+          {/* Center hub with gradient and glow */}
+          <circle
+            cx={center.x}
+            cy={center.y}
+            r={8}
+            fill="url(#cycWheelHub)"
+            filter="url(#cycHubGlow)"
+          />
+          <circle
+            cx={center.x}
+            cy={center.y}
+            r={4}
+            fill="#93c5fd"
+          />
 
-          {/* Tracing point */}
+          {/* Tracing point with premium glow */}
           <circle
             cx={tracingPoint.x}
             cy={tracingPoint.y}
-            r={8}
-            fill={colors.point}
-            filter="url(#pointGlow)"
+            r={10}
+            fill="url(#cycPointGradient)"
+            filter="url(#cycPointGlow)"
+          />
+          {/* Inner highlight on tracing point */}
+          <circle
+            cx={tracingPoint.x - 2}
+            cy={tracingPoint.y - 2}
+            r={3}
+            fill="#fecaca"
+            opacity={0.6}
           />
 
-          {/* Velocity vectors */}
+          {/* Velocity vectors with gradients */}
           {showVelocityVectors && (
             <g>
               {/* Center velocity */}
               <line
                 x1={center.x}
                 y1={center.y}
-                x2={center.x + 30}
+                x2={center.x + 35}
                 y2={center.y}
-                stroke={colors.warning}
-                strokeWidth={2}
-                markerEnd="url(#arrowYellow)"
+                stroke="url(#cycVelocityYellow)"
+                strokeWidth={3}
+                strokeLinecap="round"
+                markerEnd="url(#cycArrowYellow)"
               />
-              <text x={center.x + 35} y={center.y - 5} fill={colors.warning} fontSize={10}>v</text>
 
               {/* Point velocity */}
               <line
@@ -403,65 +628,96 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
                 y1={tracingPoint.y}
                 x2={tracingPoint.x + velocity.vx / 3}
                 y2={tracingPoint.y + velocity.vy / 3}
-                stroke={colors.success}
-                strokeWidth={2}
-                markerEnd="url(#arrowGreen)"
+                stroke="url(#cycVelocityGreen)"
+                strokeWidth={3}
+                strokeLinecap="round"
+                markerEnd="url(#cycArrowGreen)"
               />
             </g>
           )}
 
-          {/* Ground contact indicator */}
+          {/* Ground contact indicator with pulse effect */}
           {tracePointRadius === 1 && Math.abs(Math.cos(theta) - 1) < 0.1 && (
-            <circle
-              cx={tracingPoint.x}
-              cy={groundY}
-              r={10}
-              fill="none"
-              stroke={colors.point}
-              strokeWidth={2}
-              opacity={0.5}
-            />
+            <g>
+              <circle
+                cx={tracingPoint.x}
+                cy={groundY}
+                r={15}
+                fill="url(#cycContactGlow)"
+                filter="url(#cycContactPulse)"
+              />
+              <circle
+                cx={tracingPoint.x}
+                cy={groundY}
+                r={12}
+                fill="none"
+                stroke="#f87171"
+                strokeWidth={2}
+                opacity={0.7}
+              />
+            </g>
           )}
-
-          {/* Arrow markers */}
-          <defs>
-            <marker id="arrowYellow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L9,3 z" fill={colors.warning} />
-            </marker>
-            <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L9,3 z" fill={colors.success} />
-            </marker>
-            <filter id="pointGlow" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" result="blur" />
-              <feFlood floodColor={colors.point} floodOpacity="0.6" />
-              <feComposite in2="blur" operator="in" />
-              <feMerge>
-                <feMergeNode />
-                <feMergeNode in="SourceGraphic" />
-              </feMerge>
-            </filter>
-          </defs>
-
-          {/* Legend */}
-          <g transform="translate(20, 20)">
-            <circle cx={6} cy={0} r={4} fill={colors.wheel} />
-            <text x={16} y={4} fill={colors.textMuted} fontSize={10}>Wheel center</text>
-
-            <circle cx={6} cy={20} r={4} fill={colors.point} />
-            <text x={16} y={24} fill={colors.textMuted} fontSize={10}>Tracing point</text>
-
-            <line x1={0} y1={40} x2={12} y2={40} stroke={colors.cycloid} strokeWidth={2} />
-            <text x={16} y={44} fill={colors.textMuted} fontSize={10}>Cycloid path</text>
-          </g>
-
-          {/* Speed display */}
-          <text x={width - 20} y={25} textAnchor="end" fill={colors.textSecondary} fontSize={12}>
-            Point speed: {velocity.speed.toFixed(1)} units
-          </text>
-          <text x={width - 20} y={42} textAnchor="end" fill={colors.textMuted} fontSize={10}>
-            (Center = 1.0 unit)
-          </text>
         </svg>
+
+        {/* Legend moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          gap: isMobile ? '12px' : '20px',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          padding: '8px 16px',
+          background: 'rgba(30, 41, 59, 0.6)',
+          borderRadius: '8px',
+          maxWidth: '500px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #60a5fa, #2563eb)'
+            }} />
+            <span style={{ fontSize: typo.small, color: colors.textMuted }}>Wheel center</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{
+              width: '10px',
+              height: '10px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #f87171, #dc2626)',
+              boxShadow: '0 0 6px rgba(239, 68, 68, 0.5)'
+            }} />
+            <span style={{ fontSize: typo.small, color: colors.textMuted }}>Tracing point</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{
+              width: '16px',
+              height: '3px',
+              borderRadius: '2px',
+              background: 'linear-gradient(90deg, #10b981, #6ee7b7, #10b981)'
+            }} />
+            <span style={{ fontSize: typo.small, color: colors.textMuted }}>Cycloid path</span>
+          </div>
+        </div>
+
+        {/* Speed display moved outside SVG */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: '2px',
+          padding: '6px 12px',
+          background: 'rgba(6, 182, 212, 0.1)',
+          borderRadius: '6px',
+          border: '1px solid rgba(6, 182, 212, 0.2)'
+        }}>
+          <span style={{ fontSize: typo.body, color: colors.textSecondary }}>
+            Point speed: <strong style={{ color: colors.accent }}>{velocity.speed.toFixed(1)}</strong> units
+          </span>
+          <span style={{ fontSize: typo.label, color: colors.textMuted }}>
+            (Center = 1.0 unit)
+          </span>
+        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
@@ -471,14 +727,19 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isPlaying ? colors.error : colors.success,
+                background: isPlaying
+                  ? 'linear-gradient(135deg, #ef4444, #dc2626)'
+                  : 'linear-gradient(135deg, #10b981, #059669)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
+                boxShadow: isPlaying
+                  ? '0 4px 15px rgba(239, 68, 68, 0.3)'
+                  : '0 4px 15px rgba(16, 185, 129, 0.3)',
               }}
             >
-              {isPlaying ? '⏸ Pause' : '▶ Roll'}
+              {isPlaying ? 'Pause' : 'Roll'}
             </button>
             <button
               onClick={resetSimulation}
@@ -486,14 +747,14 @@ const CycloidMotionRenderer: React.FC<CycloidMotionRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.accent}`,
-                background: 'transparent',
+                background: 'rgba(6, 182, 212, 0.1)',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
                 fontSize: '14px',
               }}
             >
-              🔄 Reset
+              Reset
             </button>
           </div>
         )}

@@ -398,198 +398,505 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean, showBoost: boolean = false) => {
-    const width = 400;
-    const height = 340;
+    const width = 440;
+    const height = 380;
     const D = dutyCycle / 100;
     const switchOn = (animationPhase / 360) < D;
+    const efficiencyPercent = output.efficiency;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        {/* Title outside SVG using typo system */}
+        <div style={{ textAlign: 'center', marginBottom: '4px' }}>
+          <span style={{
+            fontSize: typo.heading,
+            fontWeight: 700,
+            color: colors.textPrimary,
+            letterSpacing: '-0.02em'
+          }}>
+            {converterType === 'buck' ? 'Buck Converter ' : 'Boost Converter '}
+          </span>
+          <span style={{
+            fontSize: typo.body,
+            color: colors.textMuted
+          }}>
+            {converterType === 'buck' ? '(Step-Down)' : '(Step-Up)'}
+          </span>
+        </div>
+
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '540px' }}
         >
           <defs>
-            <linearGradient id="inductorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.inductor} />
-              <stop offset="100%" stopColor="#7c3aed" />
+            {/* Premium background gradient */}
+            <linearGradient id="dcdcBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="25%" stopColor="#1a1a2e" />
+              <stop offset="50%" stopColor="#0f0f1a" />
+              <stop offset="75%" stopColor="#1a1a2e" />
+              <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
+
+            {/* Inductor coil gradient with metallic sheen */}
+            <linearGradient id="dcdcInductorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#7c3aed" />
+              <stop offset="20%" stopColor="#a855f7" />
+              <stop offset="40%" stopColor="#c084fc" />
+              <stop offset="60%" stopColor="#a855f7" />
+              <stop offset="80%" stopColor="#7c3aed" />
+              <stop offset="100%" stopColor="#6d28d9" />
+            </linearGradient>
+
+            {/* Input source gradient - blue power */}
+            <linearGradient id="dcdcInputGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="30%" stopColor="#2563eb" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="70%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* Output source gradient - green power */}
+            <linearGradient id="dcdcOutputGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#166534" />
+              <stop offset="30%" stopColor="#16a34a" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="70%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#166534" />
+            </linearGradient>
+
+            {/* Switch ON gradient - hot pink/magenta */}
+            <linearGradient id="dcdcSwitchOnGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#be185d" />
+              <stop offset="25%" stopColor="#db2777" />
+              <stop offset="50%" stopColor="#ec4899" />
+              <stop offset="75%" stopColor="#f472b6" />
+              <stop offset="100%" stopColor="#ec4899" />
+            </linearGradient>
+
+            {/* Switch OFF gradient - cool gray */}
+            <linearGradient id="dcdcSwitchOffGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="30%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* Diode active gradient - cyan */}
+            <linearGradient id="dcdcDiodeOnGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0891b2" />
+              <stop offset="30%" stopColor="#06b6d4" />
+              <stop offset="50%" stopColor="#22d3ee" />
+              <stop offset="70%" stopColor="#06b6d4" />
+              <stop offset="100%" stopColor="#0891b2" />
+            </linearGradient>
+
+            {/* Capacitor metallic gradient */}
+            <linearGradient id="dcdcCapGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="20%" stopColor="#64748b" />
+              <stop offset="40%" stopColor="#94a3b8" />
+              <stop offset="60%" stopColor="#64748b" />
+              <stop offset="80%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Wire gradient for connections */}
+            <linearGradient id="dcdcWireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* PWM waveform gradient */}
+            <linearGradient id="dcdcPwmGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f472b6" />
+              <stop offset="50%" stopColor="#ec4899" />
+              <stop offset="100%" stopColor="#db2777" />
+            </linearGradient>
+
+            {/* Efficiency meter gradient */}
+            <linearGradient id="dcdcEfficiencyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#84cc16" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
+
+            {/* Stats panel gradient */}
+            <linearGradient id="dcdcStatsPanelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(245,158,11,0.15)" />
+              <stop offset="50%" stopColor="rgba(245,158,11,0.08)" />
+              <stop offset="100%" stopColor="rgba(245,158,11,0.15)" />
+            </linearGradient>
+
+            {/* Formula panel gradient */}
+            <linearGradient id="dcdcFormulaPanelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(168,85,247,0.2)" />
+              <stop offset="50%" stopColor="rgba(168,85,247,0.1)" />
+              <stop offset="100%" stopColor="rgba(168,85,247,0.2)" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="dcdcSwitchGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="dcdcDiodeGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="dcdcCurrentGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="dcdcInductorGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Radial glow for energy storage */}
+            <radialGradient id="dcdcEnergyGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Current particle gradient */}
+            <radialGradient id="dcdcCurrentParticle" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Grid pattern for background */}
+            <pattern id="dcdcGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
           </defs>
 
-          {/* Title */}
-          <text x="200" y="25" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">
-            {converterType === 'buck' ? 'Buck Converter (Step-Down)' : 'Boost Converter (Step-Up)'}
-          </text>
+          {/* Premium background */}
+          <rect width={width} height={height} fill="url(#dcdcBgGrad)" rx="12" />
+          <rect width={width} height={height} fill="url(#dcdcGrid)" rx="12" />
 
           {converterType === 'buck' ? (
-            // Buck Converter Circuit
-            <g transform="translate(20, 40)">
-              {/* Input Source */}
-              <rect x="10" y="60" width="50" height="80" fill="rgba(59, 130, 246, 0.2)" stroke={colors.input} strokeWidth="2" rx="4" />
-              <text x="35" y="85" fill={colors.input} fontSize="11" textAnchor="middle">Input</text>
-              <text x="35" y="105" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">{inputVoltage}V</text>
-              <text x="35" y="125" fill={colors.textSecondary} fontSize="10" textAnchor="middle">{output.inputCurrent.toFixed(2)}A</text>
+            // Buck Converter Circuit - Premium Version
+            <g transform="translate(30, 25)">
+              {/* Input Source - Premium */}
+              <rect x="10" y="60" width="55" height="85" fill="url(#dcdcInputGrad)" stroke="#60a5fa" strokeWidth="2" rx="6" filter="url(#dcdcSwitchGlow)" />
+              <rect x="15" y="65" width="45" height="75" fill="rgba(0,0,0,0.3)" rx="4" />
+              {/* + and - terminals */}
+              <text x="37" y="78" fill="#93c5fd" fontSize="16" textAnchor="middle" fontWeight="bold">+</text>
+              <text x="37" y="138" fill="#93c5fd" fontSize="16" textAnchor="middle" fontWeight="bold">-</text>
 
-              {/* Switch (MOSFET) */}
-              <g transform="translate(80, 60)">
-                <rect x="0" y="0" width="40" height="30" fill={switchOn ? colors.switch : '#374151'} rx="4" opacity={0.8} />
-                <text x="20" y="20" fill="white" fontSize="10" textAnchor="middle">{switchOn ? 'ON' : 'OFF'}</text>
-                <text x="20" y="45" fill={colors.textMuted} fontSize="9" textAnchor="middle">Switch</text>
+              {/* Switch (MOSFET) - Premium with glow */}
+              <g transform="translate(85, 55)" filter={switchOn ? 'url(#dcdcSwitchGlow)' : undefined}>
+                <rect x="0" y="0" width="45" height="35" fill={switchOn ? 'url(#dcdcSwitchOnGrad)' : 'url(#dcdcSwitchOffGrad)'} rx="6" stroke={switchOn ? '#f472b6' : '#4b5563'} strokeWidth="1.5" />
+                {/* MOSFET symbol inside */}
+                <line x1="10" y1="8" x2="10" y2="27" stroke={switchOn ? '#fce7f3' : '#9ca3af'} strokeWidth="2" />
+                <line x1="10" y1="17" x2="20" y2="17" stroke={switchOn ? '#fce7f3' : '#9ca3af'} strokeWidth="2" />
+                <line x1="20" y1="10" x2="20" y2="25" stroke={switchOn ? '#fce7f3' : '#9ca3af'} strokeWidth="2" />
+                <line x1="20" y1="17" x2="35" y2="17" stroke={switchOn ? '#fce7f3' : '#9ca3af'} strokeWidth="2" />
+                {/* Gate */}
+                <line x1="10" y1="5" x2="10" y2="0" stroke={switchOn ? '#fce7f3' : '#9ca3af'} strokeWidth="1.5" />
+                <circle cx="10" cy="0" r="2" fill={switchOn ? '#fce7f3' : '#9ca3af'} />
               </g>
 
-              {/* Inductor */}
-              <g transform="translate(140, 55)">
-                <path d="M0,15 Q15,0 30,15 Q45,30 60,15 Q75,0 90,15" fill="none" stroke="url(#inductorGrad)" strokeWidth="4" />
-                <text x="45" y="45" fill={colors.inductor} fontSize="10" textAnchor="middle">{inductance}uH</text>
+              {/* Inductor - Premium with coil effect and glow */}
+              <g transform="translate(150, 50)" filter="url(#dcdcInductorGlow)">
+                {/* Core glow when storing energy */}
+                {isAnimating && switchOn && (
+                  <ellipse cx="45" cy="22" rx="50" ry="25" fill="url(#dcdcEnergyGlow)" />
+                )}
+                {/* Coil windings - multiple turns for realism */}
+                <path d="M0,22 Q10,5 20,22 Q30,39 40,22 Q50,5 60,22 Q70,39 80,22 Q90,5 100,22" fill="none" stroke="url(#dcdcInductorGrad)" strokeWidth="6" strokeLinecap="round" />
+                {/* Core line */}
+                <line x1="5" y1="35" x2="95" y2="35" stroke="#475569" strokeWidth="2" strokeDasharray="4,3" />
               </g>
 
-              {/* Diode */}
-              <g transform="translate(100, 100)">
-                <polygon points="0,0 20,15 0,30" fill={!switchOn ? colors.diode : '#374151'} />
-                <line x1="20" y1="0" x2="20" y2="30" stroke={!switchOn ? colors.diode : '#374151'} strokeWidth="3" />
-                <text x="10" y="50" fill={colors.textMuted} fontSize="9" textAnchor="middle">Diode</text>
+              {/* Diode - Premium with glow when active */}
+              <g transform="translate(105, 100)" filter={!switchOn ? 'url(#dcdcDiodeGlow)' : undefined}>
+                <polygon points="0,5 25,20 0,35" fill={!switchOn ? 'url(#dcdcDiodeOnGrad)' : 'url(#dcdcSwitchOffGrad)'} stroke={!switchOn ? '#22d3ee' : '#4b5563'} strokeWidth="1.5" />
+                <line x1="25" y1="5" x2="25" y2="35" stroke={!switchOn ? '#22d3ee' : '#4b5563'} strokeWidth="3" />
+                {/* Cathode band */}
+                <rect x="25" y="5" width="5" height="30" fill={!switchOn ? '#67e8f9' : '#6b7280'} />
               </g>
 
-              {/* Output Capacitor */}
-              <g transform="translate(250, 70)">
-                <line x1="0" y1="0" x2="0" y2="60" stroke={colors.textMuted} strokeWidth="3" />
-                <line x1="10" y1="0" x2="10" y2="60" stroke={colors.textMuted} strokeWidth="3" />
-                <text x="5" y="80" fill={colors.textMuted} fontSize="9" textAnchor="middle">Cap</text>
+              {/* Output Capacitor - Premium cylindrical look */}
+              <g transform="translate(265, 65)">
+                <rect x="0" y="0" width="15" height="65" fill="url(#dcdcCapGrad)" rx="3" stroke="#64748b" strokeWidth="1" />
+                <rect x="2" y="2" width="11" height="61" fill="rgba(0,0,0,0.2)" rx="2" />
+                {/* Polarity marking */}
+                <text x="7" y="15" fill="#94a3b8" fontSize="10" textAnchor="middle">+</text>
+                {/* Capacitor stripe */}
+                <rect x="0" y="50" width="15" height="10" fill="#334155" rx="2" />
               </g>
 
-              {/* Output/Load */}
-              <rect x="280" y="60" width="60" height="80" fill="rgba(34, 197, 94, 0.2)" stroke={colors.output} strokeWidth="2" rx="4" />
-              <text x="310" y="85" fill={colors.output} fontSize="11" textAnchor="middle">Output</text>
-              <text x="310" y="105" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">{output.outputVoltage.toFixed(1)}V</text>
-              <text x="310" y="125" fill={colors.textSecondary} fontSize="10" textAnchor="middle">{loadCurrent.toFixed(1)}A</text>
+              {/* Output/Load - Premium */}
+              <rect x="295" y="55" width="65" height="90" fill="url(#dcdcOutputGrad)" stroke="#4ade80" strokeWidth="2" rx="6" filter="url(#dcdcSwitchGlow)" />
+              <rect x="300" y="60" width="55" height="80" fill="rgba(0,0,0,0.3)" rx="4" />
+              {/* Load resistor symbol */}
+              <path d="M327,75 L327,80 L320,85 L334,90 L320,95 L334,100 L320,105 L334,110 L320,115 L327,120 L327,125" fill="none" stroke="#86efac" strokeWidth="2" />
 
-              {/* Current flow animation */}
+              {/* Current flow animation - Premium particles */}
               {isAnimating && (
-                <g>
+                <g filter="url(#dcdcCurrentGlow)">
                   {switchOn ? (
-                    // Current path when switch ON
-                    <circle cx={80 + (animationPhase % 180) * 1.2} cy="75" r="4" fill={colors.switch}>
-                      <animate attributeName="opacity" values="1;0.5;1" dur="0.3s" repeatCount="indefinite" />
-                    </circle>
+                    // Current path when switch ON - through switch and inductor
+                    <>
+                      <circle cx={85 + (animationPhase % 180) * 1.3} cy="72" r="6" fill="url(#dcdcCurrentParticle)">
+                        <animate attributeName="opacity" values="1;0.6;1" dur="0.2s" repeatCount="indefinite" />
+                      </circle>
+                      <circle cx={85 + ((animationPhase + 60) % 180) * 1.3} cy="72" r="4" fill="url(#dcdcCurrentParticle)">
+                        <animate attributeName="opacity" values="0.8;0.4;0.8" dur="0.25s" repeatCount="indefinite" />
+                      </circle>
+                    </>
                   ) : (
-                    // Current path through diode when switch OFF
-                    <circle cx={250 - (animationPhase % 180) * 0.8} cy="115" r="4" fill={colors.diode}>
-                      <animate attributeName="opacity" values="1;0.5;1" dur="0.3s" repeatCount="indefinite" />
-                    </circle>
+                    // Current path through diode when switch OFF - freewheeling
+                    <>
+                      <circle cx={265 - (animationPhase % 180) * 0.9} cy="120" r="6" fill="url(#dcdcCurrentParticle)">
+                        <animate attributeName="opacity" values="1;0.6;1" dur="0.2s" repeatCount="indefinite" />
+                      </circle>
+                      <circle cx={265 - ((animationPhase + 60) % 180) * 0.9} cy="120" r="4" fill="url(#dcdcCurrentParticle)">
+                        <animate attributeName="opacity" values="0.8;0.4;0.8" dur="0.25s" repeatCount="indefinite" />
+                      </circle>
+                    </>
                   )}
                 </g>
               )}
 
-              {/* Connection lines */}
-              <line x1="60" y1="75" x2="80" y2="75" stroke={colors.textMuted} strokeWidth="2" />
-              <line x1="120" y1="75" x2="140" y2="70" stroke={colors.textMuted} strokeWidth="2" />
-              <line x1="230" y1="70" x2="280" y2="70" stroke={colors.textMuted} strokeWidth="2" />
-              <line x1="120" y1="115" x2="120" y2="160" stroke={colors.textMuted} strokeWidth="2" />
-              <line x1="35" y1="140" x2="35" y2="160" stroke={colors.textMuted} strokeWidth="2" />
-              <line x1="35" y1="160" x2="310" y2="160" stroke={colors.textMuted} strokeWidth="2" />
-              <line x1="310" y1="140" x2="310" y2="160" stroke={colors.textMuted} strokeWidth="2" />
+              {/* Connection lines - Premium with gradient */}
+              <line x1="65" y1="72" x2="85" y2="72" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              <line x1="130" y1="72" x2="150" y2="72" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              <line x1="250" y1="72" x2="295" y2="72" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              <line x1="130" y1="120" x2="130" y2="165" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              <line x1="37" y1="145" x2="37" y2="165" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              <line x1="37" y1="165" x2="327" y2="165" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              <line x1="327" y1="145" x2="327" y2="165" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              {/* Node dots */}
+              <circle cx="130" cy="72" r="4" fill="#64748b" />
+              <circle cx="130" cy="120" r="4" fill="#64748b" />
             </g>
           ) : (
-            // Boost Converter Circuit
-            <g transform="translate(20, 40)">
-              {/* Input Source */}
-              <rect x="10" y="60" width="50" height="80" fill="rgba(59, 130, 246, 0.2)" stroke={colors.input} strokeWidth="2" rx="4" />
-              <text x="35" y="85" fill={colors.input} fontSize="11" textAnchor="middle">Input</text>
-              <text x="35" y="105" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">{inputVoltage}V</text>
-              <text x="35" y="125" fill={colors.textSecondary} fontSize="10" textAnchor="middle">{output.inputCurrent.toFixed(2)}A</text>
+            // Boost Converter Circuit - Premium Version
+            <g transform="translate(30, 25)">
+              {/* Input Source - Premium */}
+              <rect x="10" y="60" width="55" height="85" fill="url(#dcdcInputGrad)" stroke="#60a5fa" strokeWidth="2" rx="6" filter="url(#dcdcSwitchGlow)" />
+              <rect x="15" y="65" width="45" height="75" fill="rgba(0,0,0,0.3)" rx="4" />
+              <text x="37" y="78" fill="#93c5fd" fontSize="16" textAnchor="middle" fontWeight="bold">+</text>
+              <text x="37" y="138" fill="#93c5fd" fontSize="16" textAnchor="middle" fontWeight="bold">-</text>
 
-              {/* Inductor (before switch in boost) */}
-              <g transform="translate(80, 55)">
-                <path d="M0,15 Q15,0 30,15 Q45,30 60,15 Q75,0 90,15" fill="none" stroke="url(#inductorGrad)" strokeWidth="4" />
-                <text x="45" y="45" fill={colors.inductor} fontSize="10" textAnchor="middle">{inductance}uH</text>
+              {/* Inductor (before switch in boost) - Premium */}
+              <g transform="translate(85, 50)" filter="url(#dcdcInductorGlow)">
+                {isAnimating && switchOn && (
+                  <ellipse cx="45" cy="22" rx="50" ry="25" fill="url(#dcdcEnergyGlow)" />
+                )}
+                <path d="M0,22 Q10,5 20,22 Q30,39 40,22 Q50,5 60,22 Q70,39 80,22 Q90,5 100,22" fill="none" stroke="url(#dcdcInductorGrad)" strokeWidth="6" strokeLinecap="round" />
+                <line x1="5" y1="35" x2="95" y2="35" stroke="#475569" strokeWidth="2" strokeDasharray="4,3" />
               </g>
 
-              {/* Switch (MOSFET) - to ground in boost */}
-              <g transform="translate(180, 100)">
-                <rect x="0" y="0" width="40" height="30" fill={switchOn ? colors.switch : '#374151'} rx="4" opacity={0.8} />
-                <text x="20" y="20" fill="white" fontSize="10" textAnchor="middle">{switchOn ? 'ON' : 'OFF'}</text>
-                <text x="20" y="45" fill={colors.textMuted} fontSize="9" textAnchor="middle">Switch</text>
+              {/* Switch (MOSFET) - to ground in boost - Premium */}
+              <g transform="translate(185, 100)" filter={switchOn ? 'url(#dcdcSwitchGlow)' : undefined}>
+                <rect x="0" y="0" width="45" height="35" fill={switchOn ? 'url(#dcdcSwitchOnGrad)' : 'url(#dcdcSwitchOffGrad)'} rx="6" stroke={switchOn ? '#f472b6' : '#4b5563'} strokeWidth="1.5" />
+                <line x1="10" y1="8" x2="10" y2="27" stroke={switchOn ? '#fce7f3' : '#9ca3af'} strokeWidth="2" />
+                <line x1="10" y1="17" x2="20" y2="17" stroke={switchOn ? '#fce7f3' : '#9ca3af'} strokeWidth="2" />
+                <line x1="20" y1="10" x2="20" y2="25" stroke={switchOn ? '#fce7f3' : '#9ca3af'} strokeWidth="2" />
+                <line x1="20" y1="17" x2="35" y2="17" stroke={switchOn ? '#fce7f3' : '#9ca3af'} strokeWidth="2" />
+                <line x1="10" y1="5" x2="10" y2="0" stroke={switchOn ? '#fce7f3' : '#9ca3af'} strokeWidth="1.5" />
+                <circle cx="10" cy="0" r="2" fill={switchOn ? '#fce7f3' : '#9ca3af'} />
               </g>
 
-              {/* Diode */}
-              <g transform="translate(200, 55)">
-                <polygon points="0,15 20,0 20,30" fill={!switchOn ? colors.diode : '#374151'} />
-                <line x1="0" y1="0" x2="0" y2="30" stroke={!switchOn ? colors.diode : '#374151'} strokeWidth="3" />
-                <text x="10" y="50" fill={colors.textMuted} fontSize="9" textAnchor="middle">Diode</text>
+              {/* Diode - Premium */}
+              <g transform="translate(205, 50)" filter={!switchOn ? 'url(#dcdcDiodeGlow)' : undefined}>
+                <polygon points="0,22 25,7 25,37" fill={!switchOn ? 'url(#dcdcDiodeOnGrad)' : 'url(#dcdcSwitchOffGrad)'} stroke={!switchOn ? '#22d3ee' : '#4b5563'} strokeWidth="1.5" />
+                <line x1="0" y1="7" x2="0" y2="37" stroke={!switchOn ? '#22d3ee' : '#4b5563'} strokeWidth="3" />
+                <rect x="-5" y="7" width="5" height="30" fill={!switchOn ? '#67e8f9' : '#6b7280'} />
               </g>
 
-              {/* Output Capacitor */}
-              <g transform="translate(250, 70)">
-                <line x1="0" y1="0" x2="0" y2="60" stroke={colors.textMuted} strokeWidth="3" />
-                <line x1="10" y1="0" x2="10" y2="60" stroke={colors.textMuted} strokeWidth="3" />
-                <text x="5" y="80" fill={colors.textMuted} fontSize="9" textAnchor="middle">Cap</text>
+              {/* Output Capacitor - Premium */}
+              <g transform="translate(265, 65)">
+                <rect x="0" y="0" width="15" height="65" fill="url(#dcdcCapGrad)" rx="3" stroke="#64748b" strokeWidth="1" />
+                <rect x="2" y="2" width="11" height="61" fill="rgba(0,0,0,0.2)" rx="2" />
+                <text x="7" y="15" fill="#94a3b8" fontSize="10" textAnchor="middle">+</text>
+                <rect x="0" y="50" width="15" height="10" fill="#334155" rx="2" />
               </g>
 
-              {/* Output/Load */}
-              <rect x="280" y="60" width="60" height="80" fill="rgba(34, 197, 94, 0.2)" stroke={colors.output} strokeWidth="2" rx="4" />
-              <text x="310" y="85" fill={colors.output} fontSize="11" textAnchor="middle">Output</text>
-              <text x="310" y="105" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">{output.outputVoltage.toFixed(1)}V</text>
-              <text x="310" y="125" fill={colors.textSecondary} fontSize="10" textAnchor="middle">{loadCurrent.toFixed(1)}A</text>
+              {/* Output/Load - Premium */}
+              <rect x="295" y="55" width="65" height="90" fill="url(#dcdcOutputGrad)" stroke="#4ade80" strokeWidth="2" rx="6" filter="url(#dcdcSwitchGlow)" />
+              <rect x="300" y="60" width="55" height="80" fill="rgba(0,0,0,0.3)" rx="4" />
+              <path d="M327,75 L327,80 L320,85 L334,90 L320,95 L334,100 L320,105 L334,110 L320,115 L327,120 L327,125" fill="none" stroke="#86efac" strokeWidth="2" />
 
-              {/* Connection lines */}
-              <line x1="60" y1="75" x2="80" y2="70" stroke={colors.textMuted} strokeWidth="2" />
-              <line x1="170" y1="70" x2="200" y2="70" stroke={colors.textMuted} strokeWidth="2" />
-              <line x1="220" y1="70" x2="280" y2="70" stroke={colors.textMuted} strokeWidth="2" />
-              <line x1="200" y1="100" x2="200" y2="80" stroke={colors.textMuted} strokeWidth="2" />
-              <line x1="200" y1="130" x2="200" y2="160" stroke={colors.textMuted} strokeWidth="2" />
-              <line x1="35" y1="140" x2="35" y2="160" stroke={colors.textMuted} strokeWidth="2" />
-              <line x1="35" y1="160" x2="310" y2="160" stroke={colors.textMuted} strokeWidth="2" />
-              <line x1="310" y1="140" x2="310" y2="160" stroke={colors.textMuted} strokeWidth="2" />
+              {/* Connection lines - Premium */}
+              <line x1="65" y1="72" x2="85" y2="72" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              <line x1="185" y1="72" x2="205" y2="72" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              <line x1="230" y1="72" x2="295" y2="72" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              <line x1="207" y1="100" x2="207" y2="85" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              <line x1="207" y1="135" x2="207" y2="165" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              <line x1="37" y1="145" x2="37" y2="165" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              <line x1="37" y1="165" x2="327" y2="165" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              <line x1="327" y1="145" x2="327" y2="165" stroke="url(#dcdcWireGrad)" strokeWidth="3" />
+              {/* Node dots */}
+              <circle cx="207" cy="72" r="4" fill="#64748b" />
+              <circle cx="207" cy="100" r="4" fill="#64748b" />
+
+              {/* Current flow animation */}
+              {isAnimating && (
+                <g filter="url(#dcdcCurrentGlow)">
+                  {switchOn ? (
+                    // Current charging inductor through switch to ground
+                    <>
+                      <circle cx={120 + (animationPhase % 120) * 0.75} cy="72" r="6" fill="url(#dcdcCurrentParticle)">
+                        <animate attributeName="opacity" values="1;0.6;1" dur="0.2s" repeatCount="indefinite" />
+                      </circle>
+                    </>
+                  ) : (
+                    // Current through diode to output
+                    <>
+                      <circle cx={180 + (animationPhase % 120) * 0.9} cy="72" r="6" fill="url(#dcdcCurrentParticle)">
+                        <animate attributeName="opacity" values="1;0.6;1" dur="0.2s" repeatCount="indefinite" />
+                      </circle>
+                    </>
+                  )}
+                </g>
+              )}
             </g>
           )}
 
-          {/* Duty Cycle Waveform */}
-          <g transform="translate(30, 220)">
-            <rect x="0" y="0" width="160" height="60" fill="rgba(0,0,0,0.3)" rx="6" />
-            <text x="80" y="15" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Switch Signal (Duty Cycle: {dutyCycle}%)</text>
+          {/* Voltage Waveform Display - Premium */}
+          <g transform="translate(25, 220)">
+            <rect x="0" y="0" width="175" height="70" fill="rgba(0,0,0,0.4)" rx="8" stroke="#334155" strokeWidth="1" />
 
-            {/* PWM waveform */}
-            <line x1="10" y1="50" x2="150" y2="50" stroke={colors.textMuted} strokeWidth="1" />
-            <line x1="10" y1="25" x2="150" y2="25" stroke={colors.textMuted} strokeWidth="1" strokeDasharray="2,2" />
+            {/* PWM waveform with gradient */}
+            <line x1="10" y1="55" x2="165" y2="55" stroke="#475569" strokeWidth="1" />
+            <line x1="10" y1="30" x2="165" y2="30" stroke="#475569" strokeWidth="1" strokeDasharray="3,3" />
 
-            {/* Draw PWM pulses */}
+            {/* Draw PWM pulses with premium gradient */}
             {[0, 1, 2].map(i => {
-              const pulseWidth = 40 * D;
-              const x = 15 + i * 45;
+              const pulseWidth = 45 * D;
+              const x = 15 + i * 50;
               return (
                 <g key={i}>
-                  <line x1={x} y1="50" x2={x} y2="25" stroke={colors.switch} strokeWidth="2" />
-                  <line x1={x} y1="25" x2={x + pulseWidth} y2="25" stroke={colors.switch} strokeWidth="2" />
-                  <line x1={x + pulseWidth} y1="25" x2={x + pulseWidth} y2="50" stroke={colors.switch} strokeWidth="2" />
-                  <line x1={x + pulseWidth} y1="50" x2={x + 40} y2="50" stroke={colors.textMuted} strokeWidth="2" />
+                  <line x1={x} y1="55" x2={x} y2="30" stroke="url(#dcdcPwmGrad)" strokeWidth="2" />
+                  <line x1={x} y1="30" x2={x + pulseWidth} y2="30" stroke="url(#dcdcPwmGrad)" strokeWidth="2" />
+                  <line x1={x + pulseWidth} y1="30" x2={x + pulseWidth} y2="55" stroke="url(#dcdcPwmGrad)" strokeWidth="2" />
+                  <line x1={x + pulseWidth} y1="55" x2={x + 45} y2="55" stroke="#475569" strokeWidth="2" />
                 </g>
               );
             })}
           </g>
 
-          {/* Output Stats */}
-          <g transform="translate(210, 220)">
-            <rect x="0" y="0" width="170" height="60" fill="rgba(0,0,0,0.3)" rx="6" stroke={colors.accent} strokeWidth="1" />
-            <text x="85" y="15" fill={colors.accent} fontSize="10" textAnchor="middle" fontWeight="bold">Performance</text>
-            <text x="10" y="32" fill={colors.textSecondary} fontSize="10">Power: {output.outputPower.toFixed(1)}W</text>
-            <text x="10" y="48" fill={colors.success} fontSize="10">Efficiency: ~{output.efficiency.toFixed(0)}%</text>
-            <text x="100" y="32" fill={colors.textSecondary} fontSize="10">Ripple: {(output.rippleCurrent * 1000).toFixed(0)}mA</text>
+          {/* Efficiency Indicator - Premium gauge */}
+          <g transform="translate(220, 220)">
+            <rect x="0" y="0" width="195" height="70" fill="url(#dcdcStatsPanelGrad)" rx="8" stroke={colors.accent} strokeWidth="1" />
+
+            {/* Efficiency bar background */}
+            <rect x="10" y="35" width="175" height="12" fill="rgba(0,0,0,0.4)" rx="6" />
+            {/* Efficiency bar fill with gradient */}
+            <rect x="10" y="35" width={175 * (efficiencyPercent / 100)} height="12" fill="url(#dcdcEfficiencyGrad)" rx="6" />
+            {/* Efficiency marker */}
+            <rect x={10 + 175 * (efficiencyPercent / 100) - 2} y="33" width="4" height="16" fill="#fff" rx="2" />
+
+            {/* Stats below */}
+            <g transform="translate(10, 58)">
+              <circle cx="5" cy="5" r="3" fill={colors.success} />
+            </g>
+            <g transform="translate(70, 58)">
+              <circle cx="5" cy="5" r="3" fill={colors.accent} />
+            </g>
+            <g transform="translate(135, 58)">
+              <circle cx="5" cy="5" r="3" fill={colors.warning} />
+            </g>
           </g>
 
-          {/* Formula */}
-          <g transform="translate(30, 295)">
-            <rect x="0" y="0" width="340" height="35" fill="rgba(168, 85, 247, 0.15)" rx="6" />
-            <text x="170" y="22" fill={colors.inductor} fontSize="12" textAnchor="middle" fontWeight="bold">
-              {converterType === 'buck'
-                ? `Buck: Vout = D x Vin = ${D.toFixed(2)} x ${inputVoltage}V = ${output.outputVoltage.toFixed(1)}V`
-                : `Boost: Vout = Vin/(1-D) = ${inputVoltage}V/(1-${D.toFixed(2)}) = ${output.outputVoltage.toFixed(1)}V`
-              }
-            </text>
+          {/* Formula Panel - Premium */}
+          <g transform="translate(25, 305)">
+            <rect x="0" y="0" width="390" height="45" fill="url(#dcdcFormulaPanelGrad)" rx="8" stroke={colors.inductor} strokeWidth="1" />
           </g>
         </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '540px', padding: '0 20px', marginTop: '-75px' }}>
+          {/* Input label */}
+          <div style={{ textAlign: 'center', minWidth: '70px' }}>
+            <div style={{ fontSize: typo.small, color: colors.input, fontWeight: 600 }}>Input</div>
+            <div style={{ fontSize: typo.bodyLarge, color: colors.textPrimary, fontWeight: 700 }}>{inputVoltage}V</div>
+            <div style={{ fontSize: typo.label, color: colors.textSecondary }}>{output.inputCurrent.toFixed(2)}A</div>
+          </div>
+          {/* Inductor label */}
+          <div style={{ textAlign: 'center', minWidth: '70px' }}>
+            <div style={{ fontSize: typo.small, color: colors.inductor, fontWeight: 600 }}>Inductor</div>
+            <div style={{ fontSize: typo.bodyLarge, color: colors.textPrimary, fontWeight: 700 }}>{inductance}uH</div>
+          </div>
+          {/* Output label */}
+          <div style={{ textAlign: 'center', minWidth: '70px' }}>
+            <div style={{ fontSize: typo.small, color: colors.output, fontWeight: 600 }}>Output</div>
+            <div style={{ fontSize: typo.bodyLarge, color: colors.textPrimary, fontWeight: 700 }}>{output.outputVoltage.toFixed(1)}V</div>
+            <div style={{ fontSize: typo.label, color: colors.textSecondary }}>{loadCurrent.toFixed(1)}A</div>
+          </div>
+        </div>
+
+        {/* Waveform and Stats labels outside SVG */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', width: '100%', maxWidth: '540px', padding: '0 20px', marginTop: '8px' }}>
+          {/* PWM label */}
+          <div style={{ textAlign: 'center', minWidth: '175px' }}>
+            <div style={{ fontSize: typo.small, color: colors.switch, fontWeight: 600 }}>PWM Signal</div>
+            <div style={{ fontSize: typo.body, color: colors.textSecondary }}>Duty Cycle: {dutyCycle}%</div>
+          </div>
+          {/* Stats labels */}
+          <div style={{ display: 'flex', gap: '16px', alignItems: 'center' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: typo.label, color: colors.success }}>Efficiency</div>
+              <div style={{ fontSize: typo.body, color: colors.textPrimary, fontWeight: 600 }}>{output.efficiency.toFixed(0)}%</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: typo.label, color: colors.accent }}>Power</div>
+              <div style={{ fontSize: typo.body, color: colors.textPrimary, fontWeight: 600 }}>{output.outputPower.toFixed(1)}W</div>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{ fontSize: typo.label, color: colors.warning }}>Ripple</div>
+              <div style={{ fontSize: typo.body, color: colors.textPrimary, fontWeight: 600 }}>{(output.rippleCurrent * 1000).toFixed(0)}mA</div>
+            </div>
+          </div>
+        </div>
+
+        {/* Formula outside SVG */}
+        <div style={{
+          background: 'rgba(168, 85, 247, 0.15)',
+          padding: '12px 20px',
+          borderRadius: '8px',
+          borderLeft: `3px solid ${colors.inductor}`,
+          maxWidth: '520px',
+          width: '100%',
+          marginTop: '8px'
+        }}>
+          <span style={{ fontSize: typo.body, color: colors.inductor, fontWeight: 700 }}>
+            {converterType === 'buck'
+              ? `Buck: Vout = D x Vin = ${D.toFixed(2)} x ${inputVoltage}V = ${output.outputVoltage.toFixed(1)}V`
+              : `Boost: Vout = Vin/(1-D) = ${inputVoltage}V/(1-${D.toFixed(2)}) = ${output.outputVoltage.toFixed(1)}V`
+            }
+          </span>
+        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
@@ -599,11 +906,12 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
                 padding: '10px 20px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating ? `linear-gradient(135deg, ${colors.error} 0%, #dc2626 100%)` : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '13px',
+                fontSize: typo.small,
+                boxShadow: isAnimating ? `0 4px 15px ${colors.error}40` : `0 4px 15px ${colors.success}40`,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -615,11 +923,12 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
                 padding: '10px 20px',
                 borderRadius: '8px',
                 border: 'none',
-                background: colors.inductor,
+                background: `linear-gradient(135deg, ${colors.inductor} 0%, #7c3aed 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '13px',
+                fontSize: typo.small,
+                boxShadow: `0 4px 15px ${colors.inductor}40`,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -635,7 +944,7 @@ const DCDCConverterRenderer: React.FC<DCDCConverterRendererProps> = ({
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '13px',
+                fontSize: typo.small,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >

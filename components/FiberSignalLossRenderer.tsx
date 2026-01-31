@@ -310,169 +310,395 @@ const FiberSignalLossRenderer: React.FC<FiberSignalLossRendererProps> = ({
   }, [testAnswers, testQuestions, onCorrectAnswer, onIncorrectAnswer]);
 
   const renderVisualization = (interactive: boolean) => {
-    const width = 400;
-    const height = 300;
-    const pulsePosition = (animationFrame / 100) * 300;
-    const pulseIntensity = Math.max(0.2, 1 - (pulsePosition / 300) * (totalLoss / 20));
+    const width = 500;
+    const height = 320;
+    const pulsePosition = (animationFrame / 100) * 340;
+    const pulseIntensity = Math.max(0.2, 1 - (pulsePosition / 340) * (totalLoss / 20));
+
+    // Calculate fiber path based on bend radius
+    const fiberPath = bendRadius < 25
+      ? `M 85 160 Q 140 ${160 - (30 - bendRadius)}, 180 160 Q 250 ${160 + (30 - bendRadius)}, 320 160 Q 360 ${160 - (30 - bendRadius) / 2}, 415 160`
+      : 'M 85 160 L 415 160';
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
+        {/* Title outside SVG */}
+        <div style={{
+          color: colors.textPrimary,
+          fontSize: typo.heading,
+          fontWeight: 'bold',
+          textAlign: 'center'
+        }}>
+          Fiber Optic Signal Transmission
+        </div>
+
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#1e293b', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', borderRadius: '16px', maxWidth: '600px' }}
         >
           <defs>
-            <linearGradient id="fiberGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.fiberCore} />
-              <stop offset="100%" stopColor={colors.fiber} stopOpacity={signalStrength} />
+            {/* Premium laser housing gradient */}
+            <linearGradient id="fiberLaserHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="25%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="75%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
             </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+
+            {/* Laser diode glow */}
+            <radialGradient id="fiberLaserDiodeGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
+              <stop offset="40%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#dc2626" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Fiber cladding gradient - outer glass layer */}
+            <linearGradient id="fiberCladdingGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.9" />
+              <stop offset="20%" stopColor="#38bdf8" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#0ea5e9" stopOpacity={0.4 + signalStrength * 0.5} />
+              <stop offset="80%" stopColor="#0284c7" stopOpacity={0.3 + signalStrength * 0.4} />
+              <stop offset="100%" stopColor="#0369a1" stopOpacity={signalStrength * 0.6} />
+            </linearGradient>
+
+            {/* Fiber core gradient - inner light-carrying core */}
+            <linearGradient id="fiberCoreGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="30%" stopColor="#22d3ee" stopOpacity={0.9 * signalStrength + 0.1} />
+              <stop offset="60%" stopColor="#06b6d4" stopOpacity={0.7 * signalStrength + 0.1} />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity={0.5 * signalStrength} />
+            </linearGradient>
+
+            {/* Light pulse glow gradient */}
+            <radialGradient id="fiberLightPulseGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="25%" stopColor="#fcd34d" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="75%" stopColor="#ef4444" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Receiver housing gradient */}
+            <linearGradient id="fiberReceiverHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="30%" stopColor="#1f2937" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
+
+            {/* Receiver photodiode glow */}
+            <radialGradient id="fiberPhotodiodeGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={signalStrength > 0.3 ? '#6ee7b7' : '#fca5a5'} stopOpacity="1" />
+              <stop offset="40%" stopColor={signalStrength > 0.3 ? '#10b981' : '#ef4444'} stopOpacity="0.8" />
+              <stop offset="70%" stopColor={signalStrength > 0.3 ? '#059669' : '#dc2626'} stopOpacity="0.5" />
+              <stop offset="100%" stopColor={signalStrength > 0.3 ? '#047857' : '#b91c1c'} stopOpacity="0" />
+            </radialGradient>
+
+            {/* Connector metal gradient */}
+            <linearGradient id="fiberConnectorMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#9ca3af" />
+              <stop offset="25%" stopColor="#6b7280" />
+              <stop offset="50%" stopColor="#9ca3af" />
+              <stop offset="75%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+
+            {/* Attenuation graph gradient */}
+            <linearGradient id="fiberAttenuationGraph" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="30%" stopColor="#84cc16" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="70%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Background panel gradient */}
+            <linearGradient id="fiberPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Glow filter for light pulse */}
+            <filter id="fiberPulseGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
               </feMerge>
+            </filter>
+
+            {/* Soft glow filter for elements */}
+            <filter id="fiberSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner glow for fiber */}
+            <filter id="fiberInnerGlow">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Signal loss drop shadow */}
+            <filter id="fiberDropShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="2" stdDeviation="3" floodColor="#000" floodOpacity="0.3" />
             </filter>
           </defs>
 
-          {/* Title */}
-          <text x={200} y={25} textAnchor="middle" fill={colors.textPrimary} fontSize={14} fontWeight="bold">
-            Fiber Optic Signal Transmission
-          </text>
+          {/* Lab background with grid pattern */}
+          <rect width={width} height={height} fill="url(#fiberPanelBg)" />
+          <pattern id="fiberGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(100,116,139,0.1)" strokeWidth="0.5" />
+          </pattern>
+          <rect width={width} height={height} fill="url(#fiberGrid)" />
 
-          {/* Laser Source */}
-          <rect x={20} y={110} width={50} height={60} rx={4} fill="#374151" stroke={colors.laserRed} strokeWidth={2} />
-          <text x={45} y={135} textAnchor="middle" fill={colors.laserRed} fontSize={10} fontWeight="bold">LASER</text>
-          <text x={45} y={150} textAnchor="middle" fill={colors.textMuted} fontSize={8}>{inputPower} dBm</text>
-          <circle cx={45} cy={165} r={4} fill={colors.laserRed}>
-            <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
-          </circle>
+          {/* === LASER SOURCE UNIT === */}
+          <g filter="url(#fiberDropShadow)">
+            {/* Main housing */}
+            <rect x={15} y={125} width={65} height={70} rx={6} fill="url(#fiberLaserHousing)" />
+            {/* Housing border highlight */}
+            <rect x={15} y={125} width={65} height={70} rx={6} fill="none" stroke="#6b7280" strokeWidth={1} />
+            {/* Inner panel */}
+            <rect x={22} y={132} width={51} height={35} rx={3} fill="#1f2937" stroke="#374151" strokeWidth={1} />
+            {/* Laser diode with glow */}
+            <circle cx={47} cy={150} r={10} fill="url(#fiberLaserDiodeGlow)" filter="url(#fiberSoftGlow)" />
+            <circle cx={47} cy={150} r={5} fill={colors.laserRed}>
+              <animate attributeName="opacity" values="1;0.7;1" dur="0.3s" repeatCount="indefinite" />
+            </circle>
+            {/* Status LED */}
+            <circle cx={30} cy={183} r={3} fill="#22c55e">
+              <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
+            </circle>
+            {/* Fiber output port */}
+            <rect x={72} y={152} width={13} height={16} rx={2} fill="#475569" stroke="#6b7280" strokeWidth={1} />
+            <ellipse cx={78} cy={160} rx={4} ry={6} fill="#1e293b" />
+          </g>
 
-          {/* Fiber Cable with bends visualization */}
+          {/* === FIBER OPTIC CABLE === */}
+          {/* Fiber cladding (outer layer) */}
           <path
-            d={bendRadius < 25
-              ? `M 70 140 Q 120 ${140 - (30 - bendRadius)}, 150 140 Q 200 ${140 + (30 - bendRadius)}, 250 140 Q 280 ${140 - (30 - bendRadius) / 2}, 310 140`
-              : 'M 70 140 L 310 140'}
+            d={fiberPath}
             fill="none"
-            stroke="url(#fiberGrad)"
-            strokeWidth={8}
+            stroke="url(#fiberCladdingGradient)"
+            strokeWidth={14}
+            strokeLinecap="round"
+            filter="url(#fiberInnerGlow)"
+          />
+          {/* Glass core (inner layer) */}
+          <path
+            d={fiberPath}
+            fill="none"
+            stroke="url(#fiberCoreGradient)"
+            strokeWidth={6}
             strokeLinecap="round"
           />
-
-          {/* Fiber core */}
+          {/* Core center highlight */}
           <path
-            d={bendRadius < 25
-              ? `M 70 140 Q 120 ${140 - (30 - bendRadius)}, 150 140 Q 200 ${140 + (30 - bendRadius)}, 250 140 Q 280 ${140 - (30 - bendRadius) / 2}, 310 140`
-              : 'M 70 140 L 310 140'}
+            d={fiberPath}
             fill="none"
-            stroke={colors.fiberCore}
-            strokeWidth={3}
+            stroke="#a5f3fc"
+            strokeWidth={1.5}
             strokeLinecap="round"
-            opacity={0.6}
+            opacity={0.4 + signalStrength * 0.4}
           />
 
-          {/* Light pulse animation */}
-          <circle
-            cx={70 + pulsePosition}
-            cy={140}
-            r={6}
-            fill={colors.laserRed}
+          {/* === ANIMATED LIGHT PULSE === */}
+          <ellipse
+            cx={85 + pulsePosition}
+            cy={160}
+            rx={10}
+            ry={5}
+            fill="url(#fiberLightPulseGlow)"
             opacity={pulseIntensity}
-            filter="url(#glow)"
+            filter="url(#fiberPulseGlow)"
+          >
+            <animate attributeName="rx" values="10;12;10" dur="0.2s" repeatCount="indefinite" />
+          </ellipse>
+          {/* Pulse core */}
+          <ellipse
+            cx={85 + pulsePosition}
+            cy={160}
+            rx={4}
+            ry={2}
+            fill="#fef3c7"
+            opacity={pulseIntensity * 0.9}
           />
 
-          {/* Connectors */}
+          {/* === CONNECTORS === */}
           {numConnectors >= 1 && (
             <g>
-              <rect x={115} y={130} width={10} height={20} fill="#475569" stroke="#64748b" strokeWidth={1} />
-              <text x={120} y={165} textAnchor="middle" fill={colors.warning} fontSize={8}>-0.5dB</text>
+              <rect x={145} y={145} width={14} height={30} rx={2} fill="url(#fiberConnectorMetal)" stroke="#9ca3af" strokeWidth={1} />
+              <rect x={148} y={157} width={8} height={6} rx={1} fill="#1e293b" />
+              {/* Loss indicator glow */}
+              <circle cx={152} cy={190} r={8} fill="rgba(245,158,11,0.2)" />
             </g>
           )}
           {numConnectors >= 2 && (
             <g>
-              <rect x={255} y={130} width={10} height={20} fill="#475569" stroke="#64748b" strokeWidth={1} />
-              <text x={260} y={165} textAnchor="middle" fill={colors.warning} fontSize={8}>-0.5dB</text>
+              <rect x={343} y={145} width={14} height={30} rx={2} fill="url(#fiberConnectorMetal)" stroke="#9ca3af" strokeWidth={1} />
+              <rect x={346} y={157} width={8} height={6} rx={1} fill="#1e293b" />
+              {/* Loss indicator glow */}
+              <circle cx={350} cy={190} r={8} fill="rgba(245,158,11,0.2)" />
             </g>
           )}
 
-          {/* Splice indicator */}
+          {/* === SPLICE POINT === */}
           {numSplices >= 1 && (
             <g>
-              <line x1={185} y1={130} x2={185} y2={150} stroke={colors.accent} strokeWidth={2} strokeDasharray="2,2" />
-              <text x={185} y={125} textAnchor="middle" fill={colors.accent} fontSize={8}>Splice</text>
+              <line x1={245} y1={145} x2={245} y2={175} stroke={colors.accent} strokeWidth={2} strokeDasharray="3,2" />
+              <circle cx={245} cy={160} r={8} fill="rgba(6,182,212,0.2)" stroke={colors.accent} strokeWidth={1} />
+              <circle cx={245} cy={160} r={3} fill={colors.accent} />
             </g>
           )}
 
-          {/* Bend loss indicator */}
+          {/* === BEND LOSS VISUALIZATION === */}
           {bendRadius < 25 && (
             <g>
-              <text x={200} y={95} textAnchor="middle" fill={colors.error} fontSize={10} fontWeight="bold">
-                Bend Loss: {bendLoss.toFixed(1)} dB
-              </text>
-              <path d="M 160 100 L 170 105 L 160 110" fill="none" stroke={colors.error} strokeWidth={2} />
+              {/* Light escape rays */}
+              <g opacity={0.6}>
+                <line x1={180} y1={155} x2={165} y2={135} stroke="#ef4444" strokeWidth={1} strokeDasharray="2,2">
+                  <animate attributeName="opacity" values="0.6;0.2;0.6" dur="0.5s" repeatCount="indefinite" />
+                </line>
+                <line x1={250} y1={165} x2={265} y2={185} stroke="#ef4444" strokeWidth={1} strokeDasharray="2,2">
+                  <animate attributeName="opacity" values="0.2;0.6;0.2" dur="0.5s" repeatCount="indefinite" />
+                </line>
+              </g>
+              {/* Warning indicator */}
+              <circle cx={220} cy={105} r={12} fill="rgba(239,68,68,0.2)" />
+              <path d="M 215 108 L 220 98 L 225 108 Z" fill={colors.error} />
+              <circle cx={220} cy={103} r={1.5} fill={colors.error} />
             </g>
           )}
 
-          {/* Receiver */}
-          <rect x={330} y={110} width={50} height={60} rx={4} fill="#374151" stroke={colors.success} strokeWidth={2} />
-          <text x={355} y={135} textAnchor="middle" fill={colors.success} fontSize={10} fontWeight="bold">RX</text>
-          <text x={355} y={150} textAnchor="middle" fill={signalStrength > 0.3 ? colors.success : colors.error} fontSize={8}>
-            {outputPower.toFixed(1)} dBm
-          </text>
-          <circle cx={355} cy={165} r={4} fill={signalStrength > 0.3 ? colors.success : colors.error} opacity={signalStrength}>
-            <animate attributeName="opacity" values={`${signalStrength};${signalStrength * 0.5};${signalStrength}`} dur="0.5s" repeatCount="indefinite" />
-          </circle>
+          {/* === RECEIVER UNIT === */}
+          <g filter="url(#fiberDropShadow)">
+            {/* Fiber input port */}
+            <rect x={415} y={152} width={13} height={16} rx={2} fill="#475569" stroke="#6b7280" strokeWidth={1} />
+            <ellipse cx={422} cy={160} rx={4} ry={6} fill="#1e293b" />
+            {/* Main housing */}
+            <rect x={420} y={125} width={65} height={70} rx={6} fill="url(#fiberReceiverHousing)" />
+            <rect x={420} y={125} width={65} height={70} rx={6} fill="none" stroke={signalStrength > 0.3 ? '#10b981' : '#ef4444'} strokeWidth={1.5} />
+            {/* Inner panel */}
+            <rect x={427} y={132} width={51} height={35} rx={3} fill="#1f2937" stroke="#374151" strokeWidth={1} />
+            {/* Photodiode with glow */}
+            <circle cx={452} cy={150} r={10} fill="url(#fiberPhotodiodeGlow)" filter="url(#fiberSoftGlow)" opacity={signalStrength} />
+            <circle cx={452} cy={150} r={5} fill={signalStrength > 0.3 ? colors.success : colors.error}>
+              <animate attributeName="opacity" values={`${signalStrength};${signalStrength * 0.6};${signalStrength}`} dur="0.5s" repeatCount="indefinite" />
+            </circle>
+            {/* Signal strength bar */}
+            <rect x={430} y={175} width={40} height={8} rx={2} fill="#1f2937" stroke="#374151" strokeWidth={1} />
+            <rect x={431} y={176} width={Math.max(0, signalStrength * 38)} height={6} rx={1} fill={signalStrength > 0.5 ? colors.success : signalStrength > 0.3 ? colors.warning : colors.error} />
+          </g>
 
-          {/* Loss breakdown */}
-          <rect x={30} y={195} width={340} height={90} rx={8} fill="rgba(0,0,0,0.3)" />
-          <text x={200} y={215} textAnchor="middle" fill={colors.textPrimary} fontSize={11} fontWeight="bold">
-            Signal Loss Breakdown
-          </text>
-          <text x={50} y={235} fill={colors.textSecondary} fontSize={10}>
-            Fiber ({fiberLength}km x {fiber.attenuation}dB/km):
-          </text>
-          <text x={340} y={235} textAnchor="end" fill={colors.warning} fontSize={10} fontWeight="bold">
-            -{fiberLoss.toFixed(1)} dB
-          </text>
-          <text x={50} y={252} fill={colors.textSecondary} fontSize={10}>
-            Connectors ({numConnectors} x 0.5dB):
-          </text>
-          <text x={340} y={252} textAnchor="end" fill={colors.warning} fontSize={10} fontWeight="bold">
-            -{connectorLoss.toFixed(1)} dB
-          </text>
-          <text x={50} y={269} fill={colors.textSecondary} fontSize={10}>
-            Splices + Bends:
-          </text>
-          <text x={340} y={269} textAnchor="end" fill={colors.warning} fontSize={10} fontWeight="bold">
-            -{(spliceLoss + bendLoss).toFixed(1)} dB
-          </text>
-          <line x1={50} y1={275} x2={350} y2={275} stroke={colors.textMuted} strokeWidth={1} />
-          <text x={50} y={288} fill={colors.textPrimary} fontSize={10} fontWeight="bold">
-            TOTAL LOSS:
-          </text>
-          <text x={340} y={288} textAnchor="end" fill={colors.error} fontSize={12} fontWeight="bold">
-            -{totalLoss.toFixed(1)} dB
-          </text>
+          {/* === ATTENUATION GRAPH (mini) === */}
+          <g transform="translate(30, 220)">
+            <rect x={0} y={0} width={440} height={85} rx={8} fill="rgba(0,0,0,0.4)" />
+            {/* Graph area */}
+            <rect x={10} y={35} width={200} height={40} rx={4} fill="#0f172a" stroke="#334155" strokeWidth={1} />
+            {/* Attenuation line */}
+            <polyline
+              points={`15,40 ${15 + (200 * 0.2)},${40 + (fiberLoss / totalLoss) * 25} ${15 + (200 * 0.5)},${40 + ((fiberLoss + connectorLoss) / totalLoss) * 30} ${15 + (200 * 0.8)},${40 + ((fiberLoss + connectorLoss + spliceLoss) / totalLoss) * 32} 205,${42 + (totalLoss / 20) * 30}`}
+              fill="none"
+              stroke="url(#fiberAttenuationGraph)"
+              strokeWidth={2}
+              strokeLinecap="round"
+              strokeLinejoin="round"
+            />
+            {/* Graph labels as simple shapes/indicators instead of text */}
+            <circle cx={15} cy={40} r={3} fill="#22c55e" />
+            <circle cx={205} cy={Math.min(70, 42 + (totalLoss / 20) * 30)} r={3} fill="#ef4444" />
+          </g>
         </svg>
+
+        {/* Loss breakdown labels outside SVG */}
+        <div style={{
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '4px',
+          width: '100%',
+          maxWidth: '600px',
+          padding: `0 ${typo.pagePadding}`,
+          background: colors.bgCard,
+          borderRadius: '12px',
+          paddingTop: typo.cardPadding,
+          paddingBottom: typo.cardPadding,
+        }}>
+          <div style={{ color: colors.textPrimary, fontSize: typo.body, fontWeight: 'bold', marginBottom: '8px', textAlign: 'center' }}>
+            Signal Loss Breakdown
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textSecondary, fontSize: typo.small }}>
+            <span>Fiber ({fiberLength}km x {fiber.attenuation}dB/km):</span>
+            <span style={{ color: colors.warning, fontWeight: 'bold' }}>-{fiberLoss.toFixed(1)} dB</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textSecondary, fontSize: typo.small }}>
+            <span>Connectors ({numConnectors} x 0.5dB):</span>
+            <span style={{ color: colors.warning, fontWeight: 'bold' }}>-{connectorLoss.toFixed(1)} dB</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textSecondary, fontSize: typo.small }}>
+            <span>Splices + Bends:</span>
+            <span style={{ color: colors.warning, fontWeight: 'bold' }}>-{(spliceLoss + bendLoss).toFixed(1)} dB</span>
+          </div>
+          <div style={{ height: '1px', background: colors.textMuted, margin: '4px 0' }} />
+          <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textPrimary, fontSize: typo.body, fontWeight: 'bold' }}>
+            <span>TOTAL LOSS:</span>
+            <span style={{ color: colors.error }}>-{totalLoss.toFixed(1)} dB</span>
+          </div>
+          {bendRadius < 25 && (
+            <div style={{
+              color: colors.error,
+              fontSize: typo.small,
+              textAlign: 'center',
+              marginTop: '8px',
+              padding: '8px',
+              background: 'rgba(239,68,68,0.1)',
+              borderRadius: '8px',
+              border: `1px solid ${colors.error}`
+            }}>
+              Warning: Bend radius {bendRadius}mm is below minimum! Adding {bendLoss.toFixed(1)} dB loss.
+            </div>
+          )}
+        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
-            <div style={{ background: colors.bgCard, padding: '8px 16px', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ color: colors.textMuted, fontSize: '10px' }}>INPUT</div>
-              <div style={{ color: colors.accent, fontSize: '16px', fontWeight: 'bold' }}>{inputPower} dBm</div>
+            <div style={{ background: colors.bgCard, padding: '10px 18px', borderRadius: '10px', textAlign: 'center', border: `1px solid ${colors.accent}` }}>
+              <div style={{ color: colors.textMuted, fontSize: typo.label }}>INPUT</div>
+              <div style={{ color: colors.accent, fontSize: typo.heading, fontWeight: 'bold' }}>{inputPower} dBm</div>
             </div>
-            <div style={{ background: colors.bgCard, padding: '8px 16px', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ color: colors.textMuted, fontSize: '10px' }}>OUTPUT</div>
-              <div style={{ color: signalStrength > 0.3 ? colors.success : colors.error, fontSize: '16px', fontWeight: 'bold' }}>
+            <div style={{
+              background: colors.bgCard,
+              padding: '10px 18px',
+              borderRadius: '10px',
+              textAlign: 'center',
+              border: `1px solid ${signalStrength > 0.3 ? colors.success : colors.error}`
+            }}>
+              <div style={{ color: colors.textMuted, fontSize: typo.label }}>OUTPUT</div>
+              <div style={{ color: signalStrength > 0.3 ? colors.success : colors.error, fontSize: typo.heading, fontWeight: 'bold' }}>
                 {outputPower.toFixed(1)} dBm
               </div>
             </div>
-            <div style={{ background: colors.bgCard, padding: '8px 16px', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ color: colors.textMuted, fontSize: '10px' }}>SIGNAL</div>
-              <div style={{ color: signalStrength > 0.5 ? colors.success : signalStrength > 0.3 ? colors.warning : colors.error, fontSize: '16px', fontWeight: 'bold' }}>
+            <div style={{
+              background: colors.bgCard,
+              padding: '10px 18px',
+              borderRadius: '10px',
+              textAlign: 'center',
+              border: `1px solid ${signalStrength > 0.5 ? colors.success : signalStrength > 0.3 ? colors.warning : colors.error}`
+            }}>
+              <div style={{ color: colors.textMuted, fontSize: typo.label }}>SIGNAL</div>
+              <div style={{
+                color: signalStrength > 0.5 ? colors.success : signalStrength > 0.3 ? colors.warning : colors.error,
+                fontSize: typo.heading,
+                fontWeight: 'bold'
+              }}>
                 {(signalStrength * 100).toFixed(0)}%
               </div>
             </div>

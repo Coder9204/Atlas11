@@ -948,88 +948,246 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, gamePhase, onP
     const wheelRotation = isSpinning ? animPhase * (spinRate / 20) : 0;
     const stabilityFactor = isSpinning ? spinRate / 10 : 0;
     const tiltResistance = isSpinning ? Math.max(0, 20 - spinRate / 5) : 45;
+    const glowIntensity = isSpinning ? 0.6 + (spinRate / 200) : 0.2;
 
     return (
       <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold text-white mb-4 text-center">
+        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-4 text-center">
           Spinning Wheel Experiment
         </h2>
 
         <div className="bg-slate-900 rounded-xl p-4 mb-6">
-          <svg viewBox="0 0 400 250" className="w-full h-56">
-            <rect width="400" height="250" fill="#0f172a" />
+          <svg viewBox="0 0 400 280" className="w-full h-64">
+            <defs>
+              {/* Premium lab background gradient */}
+              <linearGradient id="gstabLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#030712" />
+                <stop offset="30%" stopColor="#0a0f1a" />
+                <stop offset="70%" stopColor="#0f172a" />
+                <stop offset="100%" stopColor="#030712" />
+              </linearGradient>
 
-            {/* Wheel with axle */}
-            <g transform={`translate(200, 130) rotate(${isSpinning ? tiltResistance : 45})`}>
-              {/* Axle */}
-              <line x1="-70" y1="0" x2="70" y2="0" stroke="#64748b" strokeWidth="6" />
-              <circle cx="-70" cy="0" r="8" fill="#475569" />
-              <circle cx="70" cy="0" r="8" fill="#475569" />
+              {/* Metallic axle gradient */}
+              <linearGradient id="gstabAxleMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#94a3b8" />
+                <stop offset="25%" stopColor="#64748b" />
+                <stop offset="50%" stopColor="#475569" />
+                <stop offset="75%" stopColor="#64748b" />
+                <stop offset="100%" stopColor="#334155" />
+              </linearGradient>
 
-              {/* Wheel */}
-              <g transform="translate(0, 0)">
-                <circle cx="0" cy="0" r="50" fill="none" stroke="#64748b" strokeWidth="6" />
-                {/* Spokes */}
+              {/* Spinning disc metallic gradient */}
+              <linearGradient id="gstabDiscMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#e2e8f0" />
+                <stop offset="20%" stopColor="#94a3b8" />
+                <stop offset="40%" stopColor="#64748b" />
+                <stop offset="60%" stopColor="#94a3b8" />
+                <stop offset="80%" stopColor="#64748b" />
+                <stop offset="100%" stopColor="#475569" />
+              </linearGradient>
+
+              {/* Disc rim gradient for 3D effect */}
+              <linearGradient id="gstabDiscRim" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#334155" />
+                <stop offset="25%" stopColor="#64748b" />
+                <stop offset="50%" stopColor="#94a3b8" />
+                <stop offset="75%" stopColor="#64748b" />
+                <stop offset="100%" stopColor="#334155" />
+              </linearGradient>
+
+              {/* Angular momentum vector glow */}
+              <linearGradient id="gstabMomentumGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#22c55e" stopOpacity="0.6" />
+                <stop offset="50%" stopColor="#4ade80" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#86efac" stopOpacity="1" />
+              </linearGradient>
+
+              {/* Hub center gradient */}
+              <radialGradient id="gstabHubCenter" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#64748b" />
+                <stop offset="50%" stopColor="#475569" />
+                <stop offset="100%" stopColor="#1e293b" />
+              </radialGradient>
+
+              {/* Stability indicator gradient */}
+              <linearGradient id="gstabStabilityHigh" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#059669" />
+                <stop offset="50%" stopColor="#22c55e" />
+                <stop offset="100%" stopColor="#4ade80" />
+              </linearGradient>
+
+              <linearGradient id="gstabStabilityLow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#dc2626" />
+                <stop offset="50%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#f87171" />
+              </linearGradient>
+
+              {/* Panel background gradient */}
+              <linearGradient id="gstabPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1e293b" />
+                <stop offset="50%" stopColor="#0f172a" />
+                <stop offset="100%" stopColor="#1e293b" />
+              </linearGradient>
+
+              {/* Glow filters */}
+              <filter id="gstabMomentumGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <filter id="gstabDiscGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <filter id="gstabHubGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Premium dark lab background */}
+            <rect width="400" height="280" fill="url(#gstabLabBg)" />
+
+            {/* Subtle grid pattern */}
+            <g opacity="0.1">
+              {Array.from({ length: 20 }).map((_, i) => (
+                <line key={`gv${i}`} x1={i * 20} y1="0" x2={i * 20} y2="280" stroke="#64748b" strokeWidth="0.5" />
+              ))}
+              {Array.from({ length: 14 }).map((_, i) => (
+                <line key={`gh${i}`} x1="0" y1={i * 20} x2="400" y2={i * 20} stroke="#64748b" strokeWidth="0.5" />
+              ))}
+            </g>
+
+            {/* Wheel with axle - premium gyroscope design */}
+            <g transform={`translate(200, 150) rotate(${isSpinning ? tiltResistance : 45})`}>
+              {/* Outer gimbal ring (3D effect) */}
+              <ellipse cx="0" cy="0" rx="70" ry="18" fill="none" stroke="url(#gstabAxleMetal)" strokeWidth="3" opacity="0.5" />
+
+              {/* Inner gimbal ring */}
+              <ellipse cx="0" cy="0" rx="60" ry="15" fill="none" stroke="url(#gstabAxleMetal)" strokeWidth="2" opacity="0.7" />
+
+              {/* Axle with metallic gradient */}
+              <line x1="-75" y1="0" x2="75" y2="0" stroke="url(#gstabAxleMetal)" strokeWidth="8" strokeLinecap="round" />
+
+              {/* Axle end caps with 3D effect */}
+              <circle cx="-75" cy="0" r="10" fill="url(#gstabHubCenter)" stroke="#475569" strokeWidth="1" />
+              <circle cx="75" cy="0" r="10" fill="url(#gstabHubCenter)" stroke="#475569" strokeWidth="1" />
+
+              {/* Spinning disc with metallic gradient and glow when spinning */}
+              <g filter={isSpinning ? 'url(#gstabDiscGlow)' : undefined} opacity={isSpinning ? glowIntensity + 0.4 : 1}>
+                {/* Disc rim (thick outer ring) */}
+                <circle cx="0" cy="0" r="52" fill="none" stroke="url(#gstabDiscRim)" strokeWidth="8" />
+
+                {/* Inner disc face with metallic sheen */}
+                <circle cx="0" cy="0" r="48" fill="url(#gstabDiscMetal)" opacity="0.3" />
+
+                {/* Spokes with metallic gradient */}
                 {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
                   <line
                     key={i}
                     x1="0"
                     y1="0"
-                    x2={Math.cos((i * 45 + wheelRotation) * Math.PI / 180) * 45}
-                    y2={Math.sin((i * 45 + wheelRotation) * Math.PI / 180) * 45}
-                    stroke="#475569"
-                    strokeWidth="2"
+                    x2={Math.cos((i * 45 + wheelRotation) * Math.PI / 180) * 46}
+                    y2={Math.sin((i * 45 + wheelRotation) * Math.PI / 180) * 46}
+                    stroke="url(#gstabAxleMetal)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
                   />
                 ))}
-                <circle cx="0" cy="0" r="8" fill="#334155" />
+
+                {/* Hub center with glow */}
+                <circle cx="0" cy="0" r="12" fill="url(#gstabHubCenter)" filter="url(#gstabHubGlow)" />
+                <circle cx="0" cy="0" r="8" fill="#1e293b" />
+                <circle cx="0" cy="0" r="3" fill="#475569" />
               </g>
 
-              {/* Angular momentum vector (when spinning) */}
+              {/* Angular momentum vector (when spinning) with glow effect */}
               {isSpinning && (
-                <g>
-                  <line x1="0" y1="0" x2="0" y2={-30 - stabilityFactor} stroke="#22c55e" strokeWidth="3" />
-                  <polygon points={`0,${-35 - stabilityFactor} -6,${-25 - stabilityFactor} 6,${-25 - stabilityFactor}`} fill="#22c55e" />
-                  <text x="15" y={-30 - stabilityFactor / 2} className="fill-emerald-400 text-sm font-bold">
+                <g filter="url(#gstabMomentumGlow)">
+                  {/* Vector shaft */}
+                  <line
+                    x1="0"
+                    y1="0"
+                    x2="0"
+                    y2={-35 - stabilityFactor}
+                    stroke="url(#gstabMomentumGrad)"
+                    strokeWidth="4"
+                    strokeLinecap="round"
+                  />
+                  {/* Arrow head */}
+                  <polygon
+                    points={`0,${-42 - stabilityFactor} -8,${-28 - stabilityFactor} 8,${-28 - stabilityFactor}`}
+                    fill="#4ade80"
+                  />
+                  {/* L label with glow */}
+                  <text
+                    x="18"
+                    y={-35 - stabilityFactor / 2}
+                    fill="#4ade80"
+                    fontSize="14"
+                    fontWeight="bold"
+                    fontStyle="italic"
+                  >
                     L
                   </text>
                 </g>
               )}
             </g>
 
-            {/* Hand trying to tilt */}
-            <g transform="translate(280, 100)">
-              <path d="M 0 30 Q 20 20, 40 30 Q 50 40, 40 50" fill="#e5d3bc" stroke="#d4c4ac" />
-              <path d="M 0 50 L -10 80" stroke="#f59e0b" strokeWidth="3" strokeDasharray="5" />
-              <text x="0" y="95" textAnchor="middle" className="fill-amber-400 text-xs">
-                Push!
-              </text>
-            </g>
+            {/* Stability indicator panel - premium design */}
+            <g transform="translate(20, 20)">
+              <rect width="110" height="90" fill="url(#gstabPanelBg)" rx="10" stroke="#334155" strokeWidth="1" />
+              <rect x="2" y="2" width="106" height="86" fill="none" rx="9" stroke="#475569" strokeWidth="0.5" opacity="0.5" />
 
-            {/* Status */}
-            <text x="200" y="30" textAnchor="middle" className="fill-white text-sm font-bold">
-              {isSpinning ? `Spinning at ${spinRate}% - Stability: ${stabilityFactor.toFixed(1)}` : 'Not Spinning - Unstable'}
-            </text>
-
-            {/* Tilt indicator */}
-            <g transform="translate(50, 60)">
-              <rect width="100" height="80" fill="#1e293b" rx="8" />
-              <text x="50" y="20" textAnchor="middle" className="fill-slate-400 text-xs font-semibold">
-                Tilt Resistance
-              </text>
-              <rect x="15" y="30" width="70" height="20" fill="#334155" rx="4" />
+              {/* Panel content moved outside SVG to typo system - just bar visualization */}
+              <rect x="15" y="40" width="80" height="24" fill="#0f172a" rx="6" stroke="#334155" strokeWidth="1" />
               <rect
-                x="17"
-                y="32"
-                width={Math.max(0, 66 * (1 - tiltResistance / 45))}
-                height="16"
-                fill={isSpinning ? '#22c55e' : '#ef4444'}
-                rx="3"
+                x="18"
+                y="43"
+                width={Math.max(0, 74 * (1 - tiltResistance / 45))}
+                height="18"
+                fill={isSpinning ? 'url(#gstabStabilityHigh)' : 'url(#gstabStabilityLow)'}
+                rx="4"
               />
-              <text x="50" y="65" textAnchor="middle" className={`text-xs font-bold ${isSpinning ? 'fill-emerald-400' : 'fill-red-400'}`}>
-                {isSpinning ? 'HIGH' : 'NONE'}
-              </text>
+
+              {/* Stability level markers */}
+              <line x1="18" y1="68" x2="18" y2="72" stroke="#475569" strokeWidth="1" />
+              <line x1="55" y1="68" x2="55" y2="72" stroke="#475569" strokeWidth="1" />
+              <line x1="92" y1="68" x2="92" y2="72" stroke="#475569" strokeWidth="1" />
             </g>
           </svg>
+        </div>
+
+        {/* Labels outside SVG using typo system */}
+        <div className="flex justify-between items-center mb-4 px-2">
+          <div className="bg-slate-800/80 backdrop-blur rounded-lg px-4 py-2 border border-slate-700">
+            <p style={{ fontSize: typo.label }} className="text-slate-400 uppercase tracking-wide mb-1">Tilt Resistance</p>
+            <p style={{ fontSize: typo.body }} className={`font-bold ${isSpinning ? 'text-emerald-400' : 'text-red-400'}`}>
+              {isSpinning ? 'HIGH' : 'NONE'}
+            </p>
+          </div>
+          <div className="bg-slate-800/80 backdrop-blur rounded-lg px-4 py-2 border border-slate-700 text-center">
+            <p style={{ fontSize: typo.label }} className="text-slate-400 uppercase tracking-wide mb-1">Status</p>
+            <p style={{ fontSize: typo.body }} className="text-white font-semibold">
+              {isSpinning ? `Spinning at ${spinRate}%` : 'Not Spinning'}
+            </p>
+          </div>
+          <div className="bg-slate-800/80 backdrop-blur rounded-lg px-4 py-2 border border-slate-700 text-right">
+            <p style={{ fontSize: typo.label }} className="text-slate-400 uppercase tracking-wide mb-1">Stability Factor</p>
+            <p style={{ fontSize: typo.body }} className={`font-bold ${isSpinning ? 'text-emerald-400' : 'text-slate-500'}`}>
+              {stabilityFactor.toFixed(1)}
+            </p>
+          </div>
         </div>
 
         <div className="grid grid-cols-2 gap-4 mb-6">
@@ -1042,11 +1200,11 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, gamePhase, onP
                 : 'bg-emerald-500 text-white hover:bg-emerald-600'
             }`}
           >
-            {isSpinning ? '⏹️ Stop Wheel' : '▶️ Spin Wheel'}
+            {isSpinning ? 'Stop Wheel' : 'Spin Wheel'}
           </button>
 
           <div className="bg-slate-700/30 rounded-xl p-3 flex flex-col justify-center">
-            <label className="text-slate-400 text-sm text-center mb-1">
+            <label style={{ fontSize: typo.small }} className="text-slate-400 text-center mb-1">
               Spin Rate: {spinRate}%
             </label>
             <input
@@ -1062,7 +1220,7 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, gamePhase, onP
         </div>
 
         <div className="bg-slate-700/30 rounded-xl p-4 mb-6">
-          <p className="text-slate-300 text-center">
+          <p style={{ fontSize: typo.body }} className="text-slate-300 text-center">
             {isSpinning
               ? `The wheel resists tilting! Angular momentum L = Iω points along the axis and wants to stay that direction.`
               : 'Try spinning the wheel and then notice how it resists being tilted.'}
@@ -1071,7 +1229,7 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, gamePhase, onP
 
         <div className="flex justify-center">
           <PrimaryButton onClick={nextPhase}>
-            Understand Why →
+            Understand Why
           </PrimaryButton>
         </div>
       </div>
@@ -1170,95 +1328,222 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, gamePhase, onP
   const renderTwistPlay = () => {
     const precessionAngle = animPhase * 0.5;
     const spinAngle = animPhase * 5;
+    const discPulse = 0.8 + Math.sin(animPhase * 0.1) * 0.2;
 
     return (
       <div className="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-8">
-        <h2 className="text-2xl font-bold text-white mb-4 text-center">
+        <h2 style={{ fontSize: typo.heading }} className="font-bold text-white mb-4 text-center">
           Gyroscopic Precession
         </h2>
 
         <div className="bg-slate-900 rounded-xl p-4 mb-6">
-          <svg viewBox="0 0 400 250" className="w-full h-56">
-            <rect width="400" height="250" fill="#0f172a" />
+          <svg viewBox="0 0 400 280" className="w-full h-64">
+            <defs>
+              {/* Premium lab background */}
+              <linearGradient id="gstabPrecLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#030712" />
+                <stop offset="30%" stopColor="#0a0f1a" />
+                <stop offset="70%" stopColor="#0f172a" />
+                <stop offset="100%" stopColor="#030712" />
+              </linearGradient>
 
-            {/* Pivot point */}
-            <circle cx="200" cy="200" r="5" fill="#64748b" />
+              {/* Metallic arm gradient */}
+              <linearGradient id="gstabArmMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#94a3b8" />
+                <stop offset="30%" stopColor="#64748b" />
+                <stop offset="60%" stopColor="#475569" />
+                <stop offset="100%" stopColor="#334155" />
+              </linearGradient>
+
+              {/* Spinning disc gradient with emerald tones */}
+              <radialGradient id="gstabPrecDiscGrad" cx="30%" cy="30%" r="80%">
+                <stop offset="0%" stopColor="#4ade80" />
+                <stop offset="30%" stopColor="#22c55e" />
+                <stop offset="60%" stopColor="#16a34a" />
+                <stop offset="100%" stopColor="#166534" />
+              </radialGradient>
+
+              {/* Disc rim metallic */}
+              <linearGradient id="gstabPrecDiscRim" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#166534" />
+                <stop offset="25%" stopColor="#22c55e" />
+                <stop offset="50%" stopColor="#4ade80" />
+                <stop offset="75%" stopColor="#22c55e" />
+                <stop offset="100%" stopColor="#166534" />
+              </linearGradient>
+
+              {/* Angular momentum (L) vector gradient - amber */}
+              <linearGradient id="gstabLVectorGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#d97706" stopOpacity="0.7" />
+                <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#fde68a" stopOpacity="1" />
+              </linearGradient>
+
+              {/* Gravity vector gradient - red */}
+              <linearGradient id="gstabGravityGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
+                <stop offset="50%" stopColor="#ef4444" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#dc2626" stopOpacity="0.8" />
+              </linearGradient>
+
+              {/* Precession path gradient */}
+              <linearGradient id="gstabPrecPathGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.2" />
+                <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.2" />
+              </linearGradient>
+
+              {/* Pivot point gradient */}
+              <radialGradient id="gstabPivotGrad" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#94a3b8" />
+                <stop offset="50%" stopColor="#64748b" />
+                <stop offset="100%" stopColor="#334155" />
+              </radialGradient>
+
+              {/* Glow filters */}
+              <filter id="gstabPrecDiscGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <filter id="gstabLVectorGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <filter id="gstabGravityGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <filter id="gstabPrecPathGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+
+            {/* Premium dark lab background */}
+            <rect width="400" height="280" fill="url(#gstabPrecLabBg)" />
+
+            {/* Subtle radial glow in center */}
+            <circle cx="200" cy="200" r="100" fill="url(#gstabPivotGrad)" opacity="0.1" />
+
+            {/* Precession path indicator with glow */}
+            <ellipse
+              cx="200"
+              cy="210"
+              rx="90"
+              ry="35"
+              fill="none"
+              stroke="url(#gstabPrecPathGrad)"
+              strokeWidth="2"
+              strokeDasharray="8 4"
+              filter="url(#gstabPrecPathGlow)"
+              opacity="0.7"
+            />
+
+            {/* Pivot point with metallic look */}
+            <circle cx="200" cy="210" r="8" fill="url(#gstabPivotGrad)" stroke="#475569" strokeWidth="1" />
+            <circle cx="200" cy="210" r="4" fill="#1e293b" />
 
             {/* Gyroscope with precession */}
-            <g transform={`translate(200, 200) rotate(${precessionAngle})`}>
-              {/* Arm */}
-              <line x1="0" y1="0" x2="80" y2="-60" stroke="#64748b" strokeWidth="4" />
+            <g transform={`translate(200, 210) rotate(${precessionAngle})`}>
+              {/* Support arm with metallic gradient */}
+              <line
+                x1="0"
+                y1="0"
+                x2="85"
+                y2="-70"
+                stroke="url(#gstabArmMetal)"
+                strokeWidth="6"
+                strokeLinecap="round"
+              />
 
               {/* Spinning disk at end of arm */}
-              <g transform="translate(80, -60)">
-                {/* Disk (shown as ellipse for 3D effect) */}
+              <g transform="translate(85, -70)" filter="url(#gstabPrecDiscGlow)">
+                {/* Outer gimbal ring */}
+                <ellipse cx="0" cy="0" rx="32" ry="10" fill="none" stroke="url(#gstabArmMetal)" strokeWidth="2" opacity="0.6" />
+
+                {/* Disc with 3D effect and pulsing opacity */}
                 <ellipse
                   cx="0"
                   cy="0"
-                  rx="25"
-                  ry="8"
-                  fill="#22c55e"
+                  rx="28"
+                  ry="9"
+                  fill="url(#gstabPrecDiscGrad)"
+                  opacity={discPulse}
                   transform={`rotate(${spinAngle})`}
                 />
+                {/* Disc rim */}
                 <ellipse
                   cx="0"
                   cy="0"
-                  rx="25"
-                  ry="8"
+                  rx="28"
+                  ry="9"
                   fill="none"
-                  stroke="#16a34a"
-                  strokeWidth="2"
+                  stroke="url(#gstabPrecDiscRim)"
+                  strokeWidth="3"
                 />
+                {/* Center hub */}
+                <circle cx="0" cy="0" r="5" fill="url(#gstabPivotGrad)" />
 
-                {/* Angular momentum vector */}
-                <line x1="0" y1="0" x2="0" y2="-40" stroke="#fbbf24" strokeWidth="2" />
-                <polygon points="0,-45 -4,-38 4,-38" fill="#fbbf24" />
-                <text x="10" y="-35" className="fill-amber-400 text-xs font-bold">L</text>
+                {/* Angular momentum vector (L) with glow */}
+                <g filter="url(#gstabLVectorGlow)">
+                  <line x1="0" y1="0" x2="0" y2="-50" stroke="url(#gstabLVectorGrad)" strokeWidth="4" strokeLinecap="round" />
+                  <polygon points="0,-58 -7,-45 7,-45" fill="#fbbf24" />
+                </g>
 
-                {/* Spin direction arrow */}
-                <path d="M -25 8 A 25 8 0 0 0 25 8" stroke="#22c55e" strokeWidth="2" fill="none" markerEnd="url(#arrowhead)" />
+                {/* Spin direction curved arrow */}
+                <path
+                  d="M -28 6 A 28 9 0 0 0 28 6"
+                  stroke="#4ade80"
+                  strokeWidth="2"
+                  fill="none"
+                  strokeLinecap="round"
+                  opacity="0.8"
+                />
+                <polygon points="28,6 22,12 24,3" fill="#4ade80" opacity="0.8" />
               </g>
             </g>
 
-            {/* Gravity arrow */}
-            <g transform="translate(280, 100)">
-              <line x1="0" y1="0" x2="0" y2="40" stroke="#ef4444" strokeWidth="2" />
-              <polygon points="0,45 -4,38 4,38" fill="#ef4444" />
-              <text x="15" y="25" className="fill-red-400 text-xs">Gravity</text>
-            </g>
-
-            {/* Precession circle indicator */}
-            <ellipse cx="200" cy="200" rx="80" ry="30" fill="none" stroke="#fbbf24" strokeWidth="1" strokeDasharray="5" />
-            <text x="200" y="240" textAnchor="middle" className="fill-amber-400 text-xs">
-              Precession path
-            </text>
-
-            {/* Title */}
-            <text x="200" y="25" textAnchor="middle" className="fill-white text-sm font-bold">
-              Gyroscope Precession Demo
-            </text>
-
-            {/* Explanation */}
-            <g transform="translate(30, 50)">
-              <rect width="130" height="80" fill="#1e293b" rx="8" />
-              <text x="65" y="18" textAnchor="middle" className="fill-slate-300 text-[10px] font-semibold">
-                Why Precession?
-              </text>
-              <text x="10" y="38" className="fill-slate-400 text-[9px]">
-                Torque = r × F
-              </text>
-              <text x="10" y="52" className="fill-slate-400 text-[9px]">
-                dL/dt = Torque
-              </text>
-              <text x="10" y="68" className="fill-teal-400 text-[9px]">
-                L rotates ⊥ to torque!
-              </text>
+            {/* Gravity arrow with glow */}
+            <g transform="translate(320, 80)" filter="url(#gstabGravityGlow)">
+              <line x1="0" y1="0" x2="0" y2="50" stroke="url(#gstabGravityGrad)" strokeWidth="4" strokeLinecap="round" />
+              <polygon points="0,58 -7,45 7,45" fill="#ef4444" />
             </g>
           </svg>
         </div>
 
+        {/* Labels outside SVG using typo system */}
+        <div className="flex justify-between items-center mb-4 px-2">
+          <div className="bg-slate-800/80 backdrop-blur rounded-lg px-4 py-2 border border-slate-700">
+            <p style={{ fontSize: typo.label }} className="text-amber-400 font-semibold mb-1">Angular Momentum L</p>
+            <p style={{ fontSize: typo.small }} className="text-slate-400">Points perpendicular to disc</p>
+          </div>
+          <div className="bg-slate-800/80 backdrop-blur rounded-lg px-4 py-2 border border-slate-700">
+            <p style={{ fontSize: typo.label }} className="text-red-400 font-semibold mb-1">Gravity</p>
+            <p style={{ fontSize: typo.small }} className="text-slate-400">Pulls downward</p>
+          </div>
+          <div className="bg-slate-800/80 backdrop-blur rounded-lg px-4 py-2 border border-slate-700">
+            <p style={{ fontSize: typo.label }} className="text-amber-400/70 font-semibold mb-1">Precession Path</p>
+            <p style={{ fontSize: typo.small }} className="text-slate-400">L traces a cone</p>
+          </div>
+        </div>
+
         <div className="bg-slate-700/30 rounded-xl p-4 mb-6">
-          <p className="text-slate-300 text-center">
+          <p style={{ fontSize: typo.body }} className="text-slate-300 text-center">
             Instead of falling, the gyroscope <strong className="text-amber-400">precesses</strong> -
             rotating around the vertical axis. The angular momentum vector traces a cone!
           </p>
@@ -1266,7 +1551,7 @@ export default function GyroscopeStabilityRenderer({ onGameEvent, gamePhase, onP
 
         <div className="flex justify-center">
           <PrimaryButton onClick={nextPhase}>
-            Learn More →
+            Learn More
           </PrimaryButton>
         </div>
       </div>

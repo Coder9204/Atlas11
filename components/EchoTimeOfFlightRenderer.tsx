@@ -707,7 +707,7 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
             fontWeight: 700,
             color: premiumDesign.colors.text.primary,
           }}>
-            📢 Echo Distance Calculator
+            Echo Distance Calculator
           </h2>
           <p style={{ color: premiumDesign.colors.text.secondary }}>
             Send a sound wave and measure the echo time!
@@ -729,79 +729,246 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           }}>
             <svg
               width="100%"
-              height="200"
-              viewBox="0 0 400 200"
+              height="220"
+              viewBox="0 0 400 220"
               style={{
                 background: premiumDesign.colors.background.secondary,
                 borderRadius: premiumDesign.radius.xl,
                 border: '1px solid rgba(255,255,255,0.1)',
               }}
             >
-              {/* Person */}
-              <g transform="translate(30, 100)">
-                <circle cx="0" cy="-30" r="15" fill={premiumDesign.colors.primary} />
-                <line x1="0" y1="-15" x2="0" y2="30" stroke={premiumDesign.colors.primary} strokeWidth="4" />
-                <line x1="0" y1="0" x2="-15" y2="20" stroke={premiumDesign.colors.primary} strokeWidth="4" />
-                <line x1="0" y1="0" x2="15" y2="20" stroke={premiumDesign.colors.primary} strokeWidth="4" />
-                <line x1="0" y1="30" x2="-12" y2="60" stroke={premiumDesign.colors.primary} strokeWidth="4" />
-                <line x1="0" y1="30" x2="12" y2="60" stroke={premiumDesign.colors.primary} strokeWidth="4" />
-                {/* Mouth */}
+              <defs>
+                {/* Premium background gradient */}
+                <linearGradient id="echoLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#030712" />
+                  <stop offset="25%" stopColor="#0a1628" />
+                  <stop offset="50%" stopColor="#0f172a" />
+                  <stop offset="75%" stopColor="#0a1628" />
+                  <stop offset="100%" stopColor="#030712" />
+                </linearGradient>
+
+                {/* Sound emitter gradient */}
+                <radialGradient id="echoEmitterGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+                  <stop offset="30%" stopColor="#06b6d4" stopOpacity="0.8" />
+                  <stop offset="60%" stopColor="#0891b2" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#0e7490" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Outgoing sound wave gradient */}
+                <radialGradient id="echoSoundWaveOut" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
+                  <stop offset="40%" stopColor="#22d3ee" stopOpacity="0.6" />
+                  <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.8" />
+                  <stop offset="80%" stopColor="#22d3ee" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Returning echo wave gradient */}
+                <radialGradient id="echoSoundWaveReturn" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#a78bfa" stopOpacity="0" />
+                  <stop offset="40%" stopColor="#a78bfa" stopOpacity="0.6" />
+                  <stop offset="60%" stopColor="#8b5cf6" stopOpacity="0.8" />
+                  <stop offset="80%" stopColor="#a78bfa" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Wall/obstacle gradient */}
+                <linearGradient id="echoWallGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#374151" />
+                  <stop offset="20%" stopColor="#4b5563" />
+                  <stop offset="40%" stopColor="#6b7280" />
+                  <stop offset="60%" stopColor="#4b5563" />
+                  <stop offset="80%" stopColor="#374151" />
+                  <stop offset="100%" stopColor="#1f2937" />
+                </linearGradient>
+
+                {/* Person body gradient */}
+                <linearGradient id="echoPersonGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#22d3ee" />
+                  <stop offset="50%" stopColor="#06b6d4" />
+                  <stop offset="100%" stopColor="#0891b2" />
+                </linearGradient>
+
+                {/* Ground gradient */}
+                <linearGradient id="echoGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#1f2937" />
+                  <stop offset="50%" stopColor="#111827" />
+                  <stop offset="100%" stopColor="#030712" />
+                </linearGradient>
+
+                {/* Emitter glow filter */}
+                <filter id="echoEmitterBlur" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Sound wave glow filter */}
+                <filter id="echoWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Success indicator glow */}
+                <filter id="echoSuccessGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
+              {/* Premium dark lab background */}
+              <rect width="400" height="220" fill="url(#echoLabBg)" />
+
+              {/* Subtle grid pattern */}
+              <pattern id="echoLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+              </pattern>
+              <rect width="400" height="220" fill="url(#echoLabGrid)" />
+
+              {/* Ground plane */}
+              <rect x="0" y="175" width="400" height="45" fill="url(#echoGroundGradient)" />
+              <line x1="0" y1="175" x2="400" y2="175" stroke="#374151" strokeWidth="1" />
+
+              {/* Person/Sound Emitter */}
+              <g transform="translate(45, 100)">
+                {/* Emitter glow when sending */}
+                {hasSentSound && !echoReceived && (
+                  <circle cx="20" cy="0" r="25" fill="url(#echoEmitterGlow)" filter="url(#echoEmitterBlur)" opacity="0.6">
+                    <animate attributeName="r" values="20;30;20" dur="0.5s" repeatCount="indefinite" />
+                  </circle>
+                )}
+
+                {/* Head */}
+                <circle cx="0" cy="-25" r="12" fill="url(#echoPersonGradient)" />
+
+                {/* Body */}
+                <line x1="0" y1="-13" x2="0" y2="25" stroke="url(#echoPersonGradient)" strokeWidth="4" strokeLinecap="round" />
+
+                {/* Arms */}
+                <line x1="0" y1="0" x2="-12" y2="15" stroke="url(#echoPersonGradient)" strokeWidth="3" strokeLinecap="round" />
+                <line x1="0" y1="0" x2="12" y2="15" stroke="url(#echoPersonGradient)" strokeWidth="3" strokeLinecap="round" />
+
+                {/* Legs */}
+                <line x1="0" y1="25" x2="-10" y2="50" stroke="url(#echoPersonGradient)" strokeWidth="3" strokeLinecap="round" />
+                <line x1="0" y1="25" x2="10" y2="50" stroke="url(#echoPersonGradient)" strokeWidth="3" strokeLinecap="round" />
+
+                {/* Megaphone/Speaker */}
                 {hasSentSound && (
-                  <path d="M5,-30 Q15,-25 5,-20" fill="none" stroke="white" strokeWidth="2" />
+                  <g transform="translate(12, -20)">
+                    <polygon points="0,0 15,-8 15,8" fill="#f59e0b" opacity="0.9" />
+                    <rect x="15" y="-10" width="8" height="20" rx="2" fill="#fbbf24" />
+                  </g>
                 )}
               </g>
 
-              {/* Wall */}
-              <rect
-                x="350" y="20"
-                width="30" height="160"
-                fill="#6b7280"
-                stroke="#9ca3af"
-                strokeWidth="2"
-              />
-              <text x="365" y="110" fill="white" fontSize="12" textAnchor="middle" transform="rotate(90, 365, 110)">
-                WALL
-              </text>
+              {/* Wall/Obstacle */}
+              <g>
+                <rect
+                  x="350" y="25"
+                  width="35" height="150"
+                  fill="url(#echoWallGradient)"
+                  rx="3"
+                />
+                {/* Wall texture lines */}
+                <line x1="358" y1="30" x2="358" y2="170" stroke="#9ca3af" strokeWidth="0.5" strokeOpacity="0.3" />
+                <line x1="367" y1="30" x2="367" y2="170" stroke="#9ca3af" strokeWidth="0.5" strokeOpacity="0.3" />
+                <line x1="376" y1="30" x2="376" y2="170" stroke="#9ca3af" strokeWidth="0.5" strokeOpacity="0.3" />
+                {/* Wall highlight */}
+                <rect x="350" y="25" width="3" height="150" fill="#6b7280" opacity="0.5" rx="1" />
+              </g>
 
-              {/* Distance label */}
-              <line x1="50" y1="180" x2="350" y2="180" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="4" />
-              <text x="200" y="195" fill={premiumDesign.colors.text.secondary} fontSize="12" textAnchor="middle">
-                {wallDistance}m
-              </text>
+              {/* Distance measurement line */}
+              <g>
+                <line x1="60" y1="190" x2="350" y2="190" stroke="rgba(255,255,255,0.4)" strokeWidth="1" strokeDasharray="6,3" />
+                <line x1="60" y1="185" x2="60" y2="195" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
+                <line x1="350" y1="185" x2="350" y2="195" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
+              </g>
 
-              {/* Sound waves */}
+              {/* Sound waves with premium gradients */}
               {soundWaves.map(wave => (
-                <g key={wave.id}>
+                <g key={wave.id} filter="url(#echoWaveGlow)">
+                  {/* Outer wave ring */}
                   <circle
                     cx={wave.x}
-                    cy="70"
+                    cy="75"
                     r={wave.radius}
                     fill="none"
-                    stroke={wave.returning ? premiumDesign.colors.echo : premiumDesign.colors.sound}
+                    stroke={wave.returning ? '#a78bfa' : '#22d3ee'}
                     strokeWidth="3"
                     opacity={wave.opacity}
                   />
+                  {/* Middle wave ring */}
                   <circle
                     cx={wave.x}
-                    cy="70"
-                    r={wave.radius - 10}
+                    cy="75"
+                    r={wave.radius - 8}
                     fill="none"
-                    stroke={wave.returning ? premiumDesign.colors.echo : premiumDesign.colors.sound}
+                    stroke={wave.returning ? '#8b5cf6' : '#06b6d4'}
                     strokeWidth="2"
                     opacity={wave.opacity * 0.7}
+                  />
+                  {/* Inner wave ring */}
+                  <circle
+                    cx={wave.x}
+                    cy="75"
+                    r={wave.radius - 16}
+                    fill="none"
+                    stroke={wave.returning ? '#c4b5fd' : '#67e8f9'}
+                    strokeWidth="1.5"
+                    opacity={wave.opacity * 0.5}
                   />
                 </g>
               ))}
 
-              {/* Echo received indicator */}
+              {/* Echo received success indicator */}
               {echoReceived && (
-                <g transform="translate(30, 50)">
-                  <text fill={premiumDesign.colors.success} fontSize="14" fontWeight="bold">
-                    🔊 ECHO!
-                  </text>
+                <g transform="translate(45, 45)" filter="url(#echoSuccessGlow)">
+                  <circle cx="0" cy="0" r="20" fill="rgba(16, 185, 129, 0.3)" />
+                  <circle cx="0" cy="0" r="12" fill="#10b981" />
+                  <path d="M-5,0 L-2,4 L6,-4" stroke="white" strokeWidth="2.5" fill="none" strokeLinecap="round" strokeLinejoin="round" />
                 </g>
               )}
             </svg>
+
+            {/* Labels outside SVG using typo system */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              alignItems: 'center',
+              padding: `0 ${premiumDesign.spacing.md}px`,
+              marginTop: `-${premiumDesign.spacing.sm}px`,
+            }}>
+              <span style={{
+                fontSize: typo.small,
+                color: premiumDesign.colors.text.muted,
+                fontWeight: 500,
+              }}>
+                Sound Emitter
+              </span>
+              <span style={{
+                fontSize: typo.body,
+                color: premiumDesign.colors.primary,
+                fontWeight: 600,
+              }}>
+                {wallDistance}m
+              </span>
+              <span style={{
+                fontSize: typo.small,
+                color: premiumDesign.colors.text.muted,
+                fontWeight: 500,
+              }}>
+                Wall
+              </span>
+            </div>
 
             {/* Formula display */}
             {totalTime && (
@@ -812,11 +979,11 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
                 border: '1px solid rgba(6, 182, 212, 0.3)',
                 textAlign: 'center',
               }}>
-                <p style={{ color: premiumDesign.colors.text.secondary, margin: 0, fontSize: '14px' }}>
-                  Distance = (Speed × Time) ÷ 2
+                <p style={{ color: premiumDesign.colors.text.secondary, margin: 0, fontSize: typo.body }}>
+                  Distance = (Speed x Time) / 2
                 </p>
-                <p style={{ color: premiumDesign.colors.primary, margin: '8px 0 0', fontSize: '18px', fontWeight: 600 }}>
-                  ({SPEED_OF_SOUND} m/s × {totalTime.toFixed(2)}s) ÷ 2 = {calculatedDistance?.toFixed(0)}m
+                <p style={{ color: premiumDesign.colors.primary, margin: '8px 0 0', fontSize: typo.bodyLarge, fontWeight: 600 }}>
+                  ({SPEED_OF_SOUND} m/s x {totalTime.toFixed(2)}s) / 2 = {calculatedDistance?.toFixed(0)}m
                 </p>
               </div>
             )}
@@ -1187,41 +1354,246 @@ export default function EchoTimeOfFlightRenderer({ onGameEvent, gamePhase, onPha
           border: '1px solid rgba(255,255,255,0.1)',
           marginBottom: premiumDesign.spacing.lg,
         }}>
-          <svg width="100%" height="150" viewBox="0 0 400 150">
-            {/* Source */}
-            <circle cx="50" cy="75" r="15" fill={premiumDesign.colors.primary} />
-            <text x="50" y="80" textAnchor="middle" fill="white" fontSize="10">
-              {medium === 'air' ? '🔊' : '🐬'}
-            </text>
+          <svg width="100%" height="180" viewBox="0 0 400 180">
+            <defs>
+              {/* Air medium background gradient */}
+              <linearGradient id="echoTwistAirBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0a1628" />
+                <stop offset="25%" stopColor="#111827" />
+                <stop offset="50%" stopColor="#1f2937" />
+                <stop offset="75%" stopColor="#111827" />
+                <stop offset="100%" stopColor="#0a1628" />
+              </linearGradient>
 
-            {/* Target */}
-            <rect x="350" y="50" width="30" height="50" fill="#6b7280" rx="4" />
+              {/* Water medium background gradient */}
+              <linearGradient id="echoTwistWaterBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#0c4a6e" />
+                <stop offset="25%" stopColor="#164e63" />
+                <stop offset="50%" stopColor="#155e75" />
+                <stop offset="75%" stopColor="#0e7490" />
+                <stop offset="100%" stopColor="#0891b2" stopOpacity="0.3" />
+              </linearGradient>
 
-            {/* Distance marker */}
-            <line x1="60" y1="130" x2="350" y2="130" stroke="rgba(255,255,255,0.3)" strokeWidth="1" strokeDasharray="4" />
-            <text x="205" y="145" fill={premiumDesign.colors.text.muted} fontSize="12" textAnchor="middle">
-              100m
-            </text>
+              {/* Sound source glow - air */}
+              <radialGradient id="echoTwistSourceAir" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+                <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.8" />
+                <stop offset="70%" stopColor="#d97706" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+              </radialGradient>
 
-            {/* Sound waves */}
-            {twistWaves.map(wave => (
+              {/* Sound source glow - water (dolphin) */}
+              <radialGradient id="echoTwistSourceWater" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+                <stop offset="40%" stopColor="#22d3ee" stopOpacity="0.8" />
+                <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Target/obstacle gradient */}
+              <linearGradient id="echoTwistTarget" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#374151" />
+                <stop offset="30%" stopColor="#4b5563" />
+                <stop offset="50%" stopColor="#6b7280" />
+                <stop offset="70%" stopColor="#4b5563" />
+                <stop offset="100%" stopColor="#374151" />
+              </linearGradient>
+
+              {/* Air wave gradient */}
+              <radialGradient id="echoTwistWaveAir" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#fbbf24" stopOpacity="0" />
+                <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.7" />
+                <stop offset="75%" stopColor="#fbbf24" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Water wave gradient */}
+              <radialGradient id="echoTwistWaveWater" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
+                <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.7" />
+                <stop offset="75%" stopColor="#22d3ee" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Returning wave gradient - purple for both media */}
+              <radialGradient id="echoTwistWaveReturn" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#a78bfa" stopOpacity="0" />
+                <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.7" />
+                <stop offset="75%" stopColor="#a78bfa" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Source glow filter */}
+              <filter id="echoTwistSourceGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Wave glow filter */}
+              <filter id="echoTwistWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Water caustics pattern */}
+              <pattern id="echoWaterCaustics" width="40" height="40" patternUnits="userSpaceOnUse">
+                <ellipse cx="10" cy="15" rx="8" ry="5" fill="rgba(103, 232, 249, 0.1)" />
+                <ellipse cx="30" cy="25" rx="6" ry="4" fill="rgba(34, 211, 238, 0.08)" />
+                <ellipse cx="20" cy="35" rx="7" ry="4" fill="rgba(103, 232, 249, 0.06)" />
+              </pattern>
+
+              {/* Air particles pattern */}
+              <pattern id="echoAirParticles" width="50" height="50" patternUnits="userSpaceOnUse">
+                <circle cx="10" cy="10" r="1" fill="rgba(255,255,255,0.1)" />
+                <circle cx="35" cy="25" r="0.8" fill="rgba(255,255,255,0.08)" />
+                <circle cx="20" cy="40" r="1.2" fill="rgba(255,255,255,0.06)" />
+              </pattern>
+            </defs>
+
+            {/* Background based on medium */}
+            <rect width="400" height="180" fill={medium === 'water' ? 'url(#echoTwistWaterBg)' : 'url(#echoTwistAirBg)'} />
+
+            {/* Medium-specific overlay pattern */}
+            {medium === 'water' ? (
+              <rect width="400" height="180" fill="url(#echoWaterCaustics)" opacity="0.5" />
+            ) : (
+              <rect width="400" height="180" fill="url(#echoAirParticles)" />
+            )}
+
+            {/* Water surface line */}
+            {medium === 'water' && (
+              <path d="M0,15 Q50,10 100,15 T200,15 T300,15 T400,15" stroke="#67e8f9" strokeWidth="2" fill="none" opacity="0.4">
+                <animate attributeName="d" values="M0,15 Q50,10 100,15 T200,15 T300,15 T400,15;M0,15 Q50,20 100,15 T200,15 T300,15 T400,15;M0,15 Q50,10 100,15 T200,15 T300,15 T400,15" dur="3s" repeatCount="indefinite" />
+              </path>
+            )}
+
+            {/* Source with glow */}
+            <g transform="translate(50, 90)">
+              {/* Glow effect */}
               <circle
-                key={wave.id}
-                cx={wave.x}
-                cy="75"
-                r={wave.radius}
-                fill="none"
-                stroke={wave.returning ? premiumDesign.colors.echo : premiumDesign.colors.sound}
-                strokeWidth="3"
-                opacity={wave.opacity}
-              />
-            ))}
+                cx="0" cy="0"
+                r="25"
+                fill={medium === 'water' ? 'url(#echoTwistSourceWater)' : 'url(#echoTwistSourceAir)'}
+                filter="url(#echoTwistSourceGlow)"
+                opacity={twistSent && !twistTime ? 0.8 : 0.4}
+              >
+                {twistSent && !twistTime && (
+                  <animate attributeName="r" values="20;30;20" dur="0.4s" repeatCount="indefinite" />
+                )}
+              </circle>
 
-            {/* Speed label */}
-            <text x="205" y="25" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="14">
-              Speed: {medium === 'air' ? airSpeed : waterSpeed} m/s
-            </text>
+              {/* Source icon representation */}
+              {medium === 'air' ? (
+                /* Speaker icon */
+                <g>
+                  <rect x="-8" y="-6" width="10" height="12" rx="2" fill="#fbbf24" />
+                  <polygon points="2,-10 12,-6 12,6 2,10" fill="#f59e0b" />
+                  {twistSent && (
+                    <>
+                      <path d="M16,-8 Q22,0 16,8" stroke="#fbbf24" strokeWidth="2" fill="none" opacity="0.6" />
+                      <path d="M20,-10 Q28,0 20,10" stroke="#fbbf24" strokeWidth="1.5" fill="none" opacity="0.4" />
+                    </>
+                  )}
+                </g>
+              ) : (
+                /* Dolphin stylized icon */
+                <g>
+                  <ellipse cx="0" cy="0" rx="15" ry="8" fill="#22d3ee" />
+                  <polygon points="15,0 25,-4 25,4" fill="#06b6d4" />
+                  <polygon points="-5,-8 0,-15 5,-8" fill="#0891b2" />
+                  <circle cx="-8" cy="-2" r="2" fill="#0f172a" />
+                </g>
+              )}
+            </g>
+
+            {/* Target/obstacle */}
+            <g>
+              <rect x="340" y="55" width="35" height="70" fill="url(#echoTwistTarget)" rx="4" />
+              <rect x="340" y="55" width="4" height="70" fill="#6b7280" opacity="0.5" rx="1" />
+              {/* Texture lines */}
+              <line x1="350" y1="60" x2="350" y2="120" stroke="#9ca3af" strokeWidth="0.5" strokeOpacity="0.3" />
+              <line x1="360" y1="60" x2="360" y2="120" stroke="#9ca3af" strokeWidth="0.5" strokeOpacity="0.3" />
+            </g>
+
+            {/* Distance measurement */}
+            <g>
+              <line x1="65" y1="155" x2="340" y2="155" stroke="rgba(255,255,255,0.4)" strokeWidth="1" strokeDasharray="6,3" />
+              <line x1="65" y1="150" x2="65" y2="160" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
+              <line x1="340" y1="150" x2="340" y2="160" stroke="rgba(255,255,255,0.4)" strokeWidth="1" />
+            </g>
+
+            {/* Sound waves with premium effects */}
+            {twistWaves.map(wave => (
+              <g key={wave.id} filter="url(#echoTwistWaveGlow)">
+                {/* Outer ring */}
+                <circle
+                  cx={wave.x}
+                  cy="90"
+                  r={wave.radius}
+                  fill="none"
+                  stroke={wave.returning ? '#a78bfa' : (medium === 'water' ? '#22d3ee' : '#fbbf24')}
+                  strokeWidth="3"
+                  opacity={wave.opacity}
+                />
+                {/* Middle ring */}
+                <circle
+                  cx={wave.x}
+                  cy="90"
+                  r={wave.radius - 6}
+                  fill="none"
+                  stroke={wave.returning ? '#8b5cf6' : (medium === 'water' ? '#06b6d4' : '#f59e0b')}
+                  strokeWidth="2"
+                  opacity={wave.opacity * 0.7}
+                />
+                {/* Inner ring */}
+                <circle
+                  cx={wave.x}
+                  cy="90"
+                  r={wave.radius - 12}
+                  fill="none"
+                  stroke={wave.returning ? '#c4b5fd' : (medium === 'water' ? '#67e8f9' : '#fcd34d')}
+                  strokeWidth="1.5"
+                  opacity={wave.opacity * 0.5}
+                />
+              </g>
+            ))}
           </svg>
+
+          {/* Labels outside SVG */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            padding: `${premiumDesign.spacing.sm}px ${premiumDesign.spacing.md}px 0`,
+          }}>
+            <span style={{
+              fontSize: typo.small,
+              color: medium === 'water' ? '#67e8f9' : '#fbbf24',
+              fontWeight: 500,
+            }}>
+              {medium === 'air' ? 'Speaker' : 'Dolphin'}
+            </span>
+            <span style={{
+              fontSize: typo.body,
+              color: premiumDesign.colors.text.secondary,
+              fontWeight: 600,
+            }}>
+              100m • Speed: {medium === 'air' ? airSpeed : waterSpeed} m/s
+            </span>
+            <span style={{
+              fontSize: typo.small,
+              color: premiumDesign.colors.text.muted,
+              fontWeight: 500,
+            }}>
+              Target
+            </span>
+          </div>
         </div>
 
         {/* Controls and results */}

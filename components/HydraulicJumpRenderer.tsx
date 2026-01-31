@@ -156,91 +156,277 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
 
     return (
       <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
+        {/* Title label outside SVG */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: typo.elementGap,
+          color: colors.textPrimary,
+          fontSize: typo.body,
+          fontWeight: 'bold',
+        }}>
+          Hydraulic Jump (Top View)
+        </div>
+
         <svg
-          viewBox="0 0 400 350"
+          viewBox="0 0 400 320"
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}
         >
           <defs>
-            {/* Water gradient for stream */}
-            <linearGradient id="streamGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.waterFast} stopOpacity="0.8" />
-              <stop offset="50%" stopColor={colors.waterJump} stopOpacity="0.9" />
-              <stop offset="100%" stopColor={colors.waterFast} stopOpacity="0.8" />
-            </linearGradient>
+            {/* ========== PREMIUM GRADIENTS ========== */}
 
-            {/* Radial gradient for water spread */}
-            <radialGradient id="waterSpread" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor={colors.waterFast} stopOpacity="0.9" />
-              <stop offset={`${(adjustedRadius / 80) * 50}%`} stopColor={colors.waterJump} stopOpacity="1" />
-              <stop offset={`${(adjustedRadius / 80) * 50 + 10}%`} stopColor={colors.waterSlow} stopOpacity="0.8" />
-              <stop offset="100%" stopColor={colors.waterSlow} stopOpacity="0.3" />
+            {/* Supercritical (fast) water gradient - radial with 5 color stops */}
+            <radialGradient id="hjumpFastWater" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="25%" stopColor="#22d3ee" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.85" />
+              <stop offset="75%" stopColor="#0891b2" stopOpacity="0.75" />
+              <stop offset="100%" stopColor="#0e7490" stopOpacity="0.6" />
             </radialGradient>
 
+            {/* Subcritical (slow) water gradient - radial with 5 color stops */}
+            <radialGradient id="hjumpSlowWater" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#0369a1" stopOpacity="0.7" />
+              <stop offset="25%" stopColor="#0284c7" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#0ea5e9" stopOpacity="0.5" />
+              <stop offset="75%" stopColor="#38bdf8" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.2" />
+            </radialGradient>
+
+            {/* Jump zone gradient - linear with 6 color stops for turbulent effect */}
+            <linearGradient id="hjumpTransition" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0891b2" stopOpacity="0.9" />
+              <stop offset="20%" stopColor="#22d3ee" stopOpacity="1" />
+              <stop offset="40%" stopColor="#a5f3fc" stopOpacity="1" />
+              <stop offset="60%" stopColor="#ecfeff" stopOpacity="0.95" />
+              <stop offset="80%" stopColor="#22d3ee" stopOpacity="1" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Faucet stream gradient - linear with 4 color stops */}
+            <linearGradient id="hjumpStream" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a5f3fc" stopOpacity="1" />
+              <stop offset="30%" stopColor="#67e8f9" stopOpacity="0.95" />
+              <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.85" />
+            </linearGradient>
+
+            {/* Stream center glow gradient */}
+            <radialGradient id="hjumpStreamGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#a5f3fc" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#67e8f9" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.3" />
+            </radialGradient>
+
+            {/* Surface gradient - brushed metal effect */}
+            <linearGradient id="hjumpSurface" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="25%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="75%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* Energy dissipation gradient - for turbulence visualization */}
+            <radialGradient id="hjumpEnergy" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="25%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#d97706" stopOpacity="0.4" />
+              <stop offset="75%" stopColor="#b45309" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Fast flow arrow gradient */}
+            <linearGradient id="hjumpFastArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fb923c" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#f97316" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#ea580c" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#c2410c" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Slow flow arrow gradient */}
+            <linearGradient id="hjumpSlowArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#2563eb" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Side view water gradients */}
+            <linearGradient id="hjumpSideSuper" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#67e8f9" />
+              <stop offset="50%" stopColor="#22d3ee" />
+              <stop offset="100%" stopColor="#06b6d4" />
+            </linearGradient>
+
+            <linearGradient id="hjumpSideSub" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#0284c7" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#0369a1" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#075985" stopOpacity="0.6" />
+            </linearGradient>
+
+            <linearGradient id="hjumpSideJump" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#22d3ee" />
+              <stop offset="30%" stopColor="#67e8f9" />
+              <stop offset="50%" stopColor="#a5f3fc" />
+              <stop offset="70%" stopColor="#ecfeff" />
+              <stop offset="100%" stopColor="#a5f3fc" />
+            </linearGradient>
+
+            {/* Faucet metal gradient */}
+            <linearGradient id="hjumpFaucet" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="30%" stopColor="#94a3b8" />
+              <stop offset="50%" stopColor="#cbd5e1" />
+              <stop offset="70%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
+
+            {/* ========== GLOW FILTERS ========== */}
+
+            {/* Water stream glow filter */}
+            <filter id="hjumpStreamBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Jump zone glow filter */}
+            <filter id="hjumpJumpGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Energy dissipation glow */}
+            <filter id="hjumpEnergyGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Ripple glow filter */}
+            <filter id="hjumpRippleGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow glow filter */}
+            <filter id="hjumpArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
             {/* Surface texture pattern */}
-            <pattern id="surfacePattern" patternUnits="userSpaceOnUse" width="10" height="10">
-              <rect width="10" height="10" fill={colors.surface} />
+            <pattern id="hjumpSurfacePattern" patternUnits="userSpaceOnUse" width="10" height="10">
+              <rect width="10" height="10" fill="url(#hjumpSurface)" />
               {surfaceTexture === 'rough' && (
                 <>
-                  <circle cx="2" cy="3" r="1" fill={colors.surfaceHighlight} opacity="0.3" />
-                  <circle cx="7" cy="8" r="1" fill={colors.surfaceHighlight} opacity="0.3" />
+                  <circle cx="2" cy="3" r="1.2" fill="#94a3b8" opacity="0.4" />
+                  <circle cx="7" cy="8" r="1" fill="#cbd5e1" opacity="0.3" />
+                  <circle cx="5" cy="5" r="0.8" fill="#64748b" opacity="0.35" />
                 </>
               )}
             </pattern>
 
-            {/* Turbulence filter */}
-            <filter id="turbulence">
-              <feTurbulence type="turbulence" baseFrequency="0.05" numOctaves="2" result="turb" />
-              <feDisplacementMap in="SourceGraphic" in2="turb" scale="3" />
-            </filter>
-          </defs>
+            {/* Arrow markers */}
+            <marker id="hjumpFastArrowHead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="url(#hjumpFastArrow)" />
+            </marker>
 
-          {/* Title */}
-          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold">
-            Hydraulic Jump (Top View)
-          </text>
+            <marker id="hjumpSlowArrowHead" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="url(#hjumpSlowArrow)" />
+            </marker>
+          </defs>
 
           {/* Sink/Surface (top view) */}
           <ellipse
             cx="200"
-            cy="190"
+            cy="165"
             rx="160"
             ry="120"
-            fill="url(#surfacePattern)"
-            stroke={colors.surfaceHighlight}
-            strokeWidth="2"
+            fill="url(#hjumpSurfacePattern)"
+            stroke="url(#hjumpSurface)"
+            strokeWidth="3"
           />
 
-          {/* Water spread - outer region (subcritical) */}
+          {/* Water spread - outer region (subcritical) with gradient */}
           <ellipse
             cx="200"
-            cy="190"
+            cy="165"
             rx={adjustedRadius + 50}
             ry={(adjustedRadius + 50) * 0.75}
-            fill={colors.waterSlow}
-            opacity="0.4"
+            fill="url(#hjumpSlowWater)"
           />
 
-          {/* Jump zone - animated ring */}
+          {/* Energy dissipation particles around jump zone */}
+          {[0, 1, 2, 3, 4, 5, 6, 7].map((i) => {
+            const angle = (i * 45 + animationTime * 30) * (Math.PI / 180);
+            const radius = adjustedRadius + 3 + Math.sin(animationTime * 4 + i) * 4;
+            const x = 200 + Math.cos(angle) * radius;
+            const y = 165 + Math.sin(angle) * radius * 0.75;
+            const size = 3 + Math.sin(animationTime * 5 + i * 0.5) * 1.5;
+            return (
+              <circle
+                key={`energy-${i}`}
+                cx={x}
+                cy={y}
+                r={size}
+                fill="url(#hjumpEnergy)"
+                filter="url(#hjumpEnergyGlow)"
+                opacity={0.6 + Math.sin(animationTime * 3 + i) * 0.3}
+              />
+            );
+          })}
+
+          {/* Jump zone - animated ring with premium gradient */}
           <ellipse
             cx="200"
-            cy="190"
+            cy="165"
             rx={adjustedRadius + 5 + Math.sin(animationTime * 3) * 2}
             ry={(adjustedRadius + 5) * 0.75 + Math.sin(animationTime * 3) * 1.5}
             fill="none"
-            stroke={colors.waterJump}
-            strokeWidth={8 + Math.sin(animationTime * 5) * 2}
-            opacity={0.7 + Math.sin(animationTime * 4) * 0.2}
+            stroke="url(#hjumpTransition)"
+            strokeWidth={10 + Math.sin(animationTime * 5) * 3}
+            opacity={0.85 + Math.sin(animationTime * 4) * 0.15}
+            filter="url(#hjumpJumpGlow)"
           />
 
-          {/* Inner region (supercritical) */}
+          {/* Inner turbulence ring at jump */}
           <ellipse
             cx="200"
-            cy="190"
+            cy="165"
+            rx={adjustedRadius + 2}
+            ry={(adjustedRadius + 2) * 0.75}
+            fill="none"
+            stroke="#a5f3fc"
+            strokeWidth="2"
+            strokeDasharray="4 3"
+            opacity={0.5 + Math.sin(animationTime * 6) * 0.3}
+          />
+
+          {/* Inner region (supercritical) with premium gradient */}
+          <ellipse
+            cx="200"
+            cy="165"
             rx={adjustedRadius}
             ry={adjustedRadius * 0.75}
-            fill={colors.waterFast}
-            opacity="0.7"
+            fill="url(#hjumpFastWater)"
           />
 
           {/* Central impact point with animated ripples */}
@@ -252,133 +438,221 @@ const HydraulicJumpRenderer: React.FC<HydraulicJumpRendererProps> = ({
               <ellipse
                 key={i}
                 cx="200"
-                cy="190"
+                cy="165"
                 rx={rippleRadius}
                 ry={rippleRadius * 0.75}
                 fill="none"
-                stroke={colors.waterSpray}
-                strokeWidth="1.5"
-                opacity={rippleOpacity * 0.6}
+                stroke="#a5f3fc"
+                strokeWidth="2"
+                opacity={rippleOpacity * 0.7}
+                filter="url(#hjumpRippleGlow)"
               />
             );
           })}
 
-          {/* Faucet stream (center) */}
+          {/* Faucet stream (center) with glow */}
           <circle
             cx="200"
-            cy="190"
+            cy="165"
+            r={streamWidth + 3}
+            fill="url(#hjumpStreamGlow)"
+            filter="url(#hjumpStreamBlur)"
+            opacity="0.6"
+          />
+          <circle
+            cx="200"
+            cy="165"
             r={streamWidth}
-            fill="url(#streamGradient)"
+            fill="url(#hjumpStream)"
+            filter="url(#hjumpStreamBlur)"
+          />
+          {/* Stream center highlight */}
+          <circle
+            cx="200"
+            cy="165"
+            r={streamWidth * 0.4}
+            fill="#ffffff"
+            opacity="0.7"
           />
 
-          {/* Flow direction arrows */}
-          {interactive && [0, 45, 90, 135, 180, 225, 270, 315].map((angle) => {
+          {/* Fast flow velocity arrows (inner region) */}
+          {[0, 45, 90, 135, 180, 225, 270, 315].map((angle) => {
             const rad = (angle * Math.PI) / 180;
-            const innerR = adjustedRadius * 0.4;
-            const outerR = adjustedRadius * 0.8;
+            const innerR = adjustedRadius * 0.25;
+            const outerR = adjustedRadius * 0.65;
             const x1 = 200 + Math.cos(rad) * innerR;
-            const y1 = 190 + Math.sin(rad) * innerR * 0.75;
+            const y1 = 165 + Math.sin(rad) * innerR * 0.75;
             const x2 = 200 + Math.cos(rad) * outerR;
-            const y2 = 190 + Math.sin(rad) * outerR * 0.75;
+            const y2 = 165 + Math.sin(rad) * outerR * 0.75;
 
             return (
-              <g key={angle}>
-                <line
-                  x1={x1}
-                  y1={y1}
-                  x2={x2}
-                  y2={y2}
-                  stroke={colors.fastFlow}
-                  strokeWidth="1.5"
-                  markerEnd="url(#arrowhead)"
-                  opacity="0.7"
-                />
-              </g>
+              <line
+                key={`fast-${angle}`}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke="url(#hjumpFastArrow)"
+                strokeWidth="2.5"
+                markerEnd="url(#hjumpFastArrowHead)"
+                opacity={0.8 + Math.sin(animationTime * 2 + angle * 0.02) * 0.2}
+                filter="url(#hjumpArrowGlow)"
+              />
             );
           })}
 
-          {/* Arrow marker definition */}
-          <defs>
-            <marker id="arrowhead" markerWidth="6" markerHeight="4" refX="5" refY="2" orient="auto">
-              <polygon points="0 0, 6 2, 0 4" fill={colors.fastFlow} />
-            </marker>
-          </defs>
+          {/* Slow flow velocity arrows (outer region) - only when interactive */}
+          {interactive && [22.5, 67.5, 112.5, 157.5, 202.5, 247.5, 292.5, 337.5].map((angle) => {
+            const rad = (angle * Math.PI) / 180;
+            const innerR = adjustedRadius + 15;
+            const outerR = adjustedRadius + 40;
+            const x1 = 200 + Math.cos(rad) * innerR;
+            const y1 = 165 + Math.sin(rad) * innerR * 0.75;
+            const x2 = 200 + Math.cos(rad) * outerR;
+            const y2 = 165 + Math.sin(rad) * outerR * 0.75;
 
-          {/* Labels */}
-          <text x="200" y="145" textAnchor="middle" fill={colors.textSecondary} fontSize="11">
-            Supercritical (Fast, Shallow)
-          </text>
-          <text x="200" y="160" textAnchor="middle" fill={colors.fastFlow} fontSize="10" fontWeight="bold">
-            Fr = {froudeSuper.toFixed(1)} {'>'} 1
-          </text>
+            return (
+              <line
+                key={`slow-${angle}`}
+                x1={x1}
+                y1={y1}
+                x2={x2}
+                y2={y2}
+                stroke="url(#hjumpSlowArrow)"
+                strokeWidth="2"
+                markerEnd="url(#hjumpSlowArrowHead)"
+                opacity="0.7"
+                filter="url(#hjumpArrowGlow)"
+              />
+            );
+          })}
 
-          <text x="330" y="230" textAnchor="middle" fill={colors.textSecondary} fontSize="11">
-            Subcritical
-          </text>
-          <text x="330" y="245" textAnchor="middle" fill={colors.textSecondary} fontSize="10">
-            (Slow, Deep)
-          </text>
-          <text x="330" y="260" textAnchor="middle" fill={colors.slowFlow} fontSize="10" fontWeight="bold">
-            Fr = {froudeSub.toFixed(1)} {'<'} 1
-          </text>
+          {/* Side view inset with premium graphics */}
+          <g transform="translate(10, 235)">
+            <rect x="0" y="0" width="140" height="75" fill={colors.bgCard} rx="6" stroke="#334155" strokeWidth="1" />
 
-          {/* Jump zone label */}
-          <text x="280" y="175" textAnchor="start" fill={colors.waterJump} fontSize="10" fontWeight="bold">
-            ← JUMP
-          </text>
+            {/* Surface line with gradient */}
+            <line x1="10" y1="58" x2="130" y2="58" stroke="url(#hjumpSurface)" strokeWidth="3" />
 
-          {/* Side view inset */}
-          <g transform="translate(10, 260)">
-            <rect x="0" y="0" width="130" height="70" fill={colors.bgCard} rx="5" />
-            <text x="65" y="15" textAnchor="middle" fill={colors.textMuted} fontSize="9">
-              Side View
-            </text>
-
-            {/* Surface line */}
-            <line x1="10" y1="55" x2="120" y2="55" stroke={colors.surface} strokeWidth="2" />
-
-            {/* Water profile - supercritical (thin) */}
+            {/* Water profile - supercritical (thin) with gradient */}
             <path
-              d={`M 30,55 Q 40,${52 - flowRate/20} 50,${50 - flowRate/15}`}
+              d={`M 35,58 Q 45,${55 - flowRate/20} 55,${52 - flowRate/15}`}
               fill="none"
-              stroke={colors.waterFast}
-              strokeWidth="3"
-            />
-
-            {/* Jump transition */}
-            <path
-              d={`M 50,${50 - flowRate/15} Q 55,35 60,30 Q 65,25 70,35`}
-              fill="none"
-              stroke={colors.waterJump}
-              strokeWidth="3"
-            />
-
-            {/* Subcritical (thick) */}
-            <path
-              d={`M 70,35 Q 80,40 100,45 L 100,55 L 70,55 Z`}
-              fill={colors.waterSlow}
-              opacity="0.6"
-            />
-
-            {/* Faucet */}
-            <rect x="25" y="20" width="8" height="20" fill={colors.surfaceHighlight} />
-            <path
-              d={`M 29,40 L 29,${50 - flowRate/15}`}
-              stroke={colors.waterFast}
-              strokeWidth={streamWidth/2}
+              stroke="url(#hjumpSideSuper)"
+              strokeWidth="4"
               strokeLinecap="round"
             />
+
+            {/* Jump transition with turbulent effect */}
+            <path
+              d={`M 55,${52 - flowRate/15} Q 60,35 65,28 Q 72,22 78,32`}
+              fill="none"
+              stroke="url(#hjumpSideJump)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              filter="url(#hjumpJumpGlow)"
+            />
+
+            {/* Subcritical (thick) with gradient fill */}
+            <path
+              d={`M 78,32 Q 90,38 110,44 L 110,58 L 78,58 Z`}
+              fill="url(#hjumpSideSub)"
+            />
+
+            {/* Turbulence bubbles at jump */}
+            {[0, 1, 2].map((i) => {
+              const bubbleY = 30 + Math.sin(animationTime * 4 + i * 2) * 5;
+              const bubbleX = 65 + i * 5;
+              return (
+                <circle
+                  key={`bubble-${i}`}
+                  cx={bubbleX}
+                  cy={bubbleY}
+                  r={2 - i * 0.5}
+                  fill="#a5f3fc"
+                  opacity={0.6 + Math.sin(animationTime * 5 + i) * 0.3}
+                />
+              );
+            })}
+
+            {/* Faucet with metal gradient */}
+            <rect x="28" y="15" width="10" height="25" fill="url(#hjumpFaucet)" rx="1" />
+            <path
+              d={`M 33,40 L 33,${52 - flowRate/15}`}
+              stroke="url(#hjumpStream)"
+              strokeWidth={streamWidth/2 + 1}
+              strokeLinecap="round"
+              filter="url(#hjumpStreamBlur)"
+            />
           </g>
 
-          {/* Legend */}
-          <g transform="translate(260, 285)">
-            <rect x="0" y="0" width="130" height="50" fill={colors.bgCard} rx="5" />
-            <circle cx="15" cy="15" r="6" fill={colors.waterFast} />
-            <text x="28" y="18" fill={colors.textSecondary} fontSize="9">Fast, thin flow</text>
-            <circle cx="15" cy="35" r="6" fill={colors.waterSlow} />
-            <text x="28" y="38" fill={colors.textSecondary} fontSize="9">Slow, thick flow</text>
+          {/* Legend with premium styling */}
+          <g transform="translate(250, 235)">
+            <rect x="0" y="0" width="140" height="75" fill={colors.bgCard} rx="6" stroke="#334155" strokeWidth="1" />
+
+            {/* Fast flow indicator */}
+            <circle cx="18" cy="20" r="8" fill="url(#hjumpFastWater)" />
+            <line x1="30" y1="20" x2="50" y2="20" stroke="url(#hjumpFastArrow)" strokeWidth="2" markerEnd="url(#hjumpFastArrowHead)" />
+
+            {/* Slow flow indicator */}
+            <circle cx="18" cy="50" r="8" fill="url(#hjumpSlowWater)" />
+            <line x1="30" y1="50" x2="50" y2="50" stroke="url(#hjumpSlowArrow)" strokeWidth="2" markerEnd="url(#hjumpSlowArrowHead)" />
           </g>
         </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          padding: `${typo.elementGap} ${typo.cardPadding}`,
+          marginTop: '-65px',
+          position: 'relative',
+          zIndex: 1,
+        }}>
+          {/* Side view label */}
+          <div style={{
+            color: colors.textMuted,
+            fontSize: typo.label,
+            marginLeft: '40px',
+          }}>
+            Side View
+          </div>
+
+          {/* Legend labels */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '22px',
+            marginRight: '5px',
+          }}>
+            <span style={{ color: colors.textSecondary, fontSize: typo.label }}>Fast, thin flow</span>
+            <span style={{ color: colors.textSecondary, fontSize: typo.label }}>Slow, thick flow</span>
+          </div>
+        </div>
+
+        {/* Flow region labels */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-around',
+          padding: `0 ${typo.cardPadding}`,
+          marginTop: typo.elementGap,
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: colors.textSecondary, fontSize: typo.small }}>Supercritical (Fast, Shallow)</div>
+            <div style={{ color: colors.fastFlow, fontSize: typo.label, fontWeight: 'bold' }}>
+              Fr = {froudeSuper.toFixed(1)} &gt; 1
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: colors.waterJump, fontSize: typo.small, fontWeight: 'bold' }}>JUMP</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: colors.textSecondary, fontSize: typo.small }}>Subcritical (Slow, Deep)</div>
+            <div style={{ color: colors.slowFlow, fontSize: typo.label, fontWeight: 'bold' }}>
+              Fr = {froudeSub.toFixed(1)} &lt; 1
+            </div>
+          </div>
+        </div>
       </div>
     );
   };

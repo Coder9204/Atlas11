@@ -350,8 +350,8 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
   };
 
   const renderVisualization = (interactive: boolean, showBypass: boolean = false) => {
-    const width = 500;
-    const height = 420;
+    const width = 520;
+    const height = 400;
     const output = calculateHotspot();
 
     const numCells = 12;
@@ -359,104 +359,284 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
     const cellHeight = 50;
     const cellGap = 3;
 
+    // Calculate stable temperatures for non-shaded cells (avoid random on each render)
+    const cellTemps = [...Array(numCells)].map((_, i) =>
+      i === shadedCellIndex ? output.cellTemperature : 25 + (i * 1.3) % 5
+    );
+
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        {/* Title label moved outside SVG */}
+        <div style={{
+          fontSize: typo.heading,
+          fontWeight: 700,
+          color: colors.accent,
+          textAlign: 'center',
+        }}>
+          Series String of Solar Cells
+        </div>
+
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f172a 100%)', borderRadius: '12px', maxWidth: '550px' }}
+          style={{ borderRadius: '12px', maxWidth: '560px' }}
         >
           <defs>
-            <linearGradient id="hotGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.hot} />
-              <stop offset="100%" stopColor={colors.warm} />
+            {/* Premium thermal gradient - hot to cool with 6 stops */}
+            <linearGradient id="hotThermalGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1d4ed8" />
+              <stop offset="20%" stopColor="#3b82f6" />
+              <stop offset="40%" stopColor="#22c55e" />
+              <stop offset="60%" stopColor="#eab308" />
+              <stop offset="80%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#dc2626" />
             </linearGradient>
-            <linearGradient id="coolGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.cool} />
-              <stop offset="100%" stopColor={colors.cold} />
+
+            {/* Hot cell gradient - vertical for cell fill */}
+            <linearGradient id="hotCellGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="25%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="75%" stopColor="#fb923c" />
+              <stop offset="100%" stopColor="#fdba74" />
             </linearGradient>
-            <filter id="heatGlow">
-              <feGaussianBlur stdDeviation="4" result="coloredBlur" />
+
+            {/* Cool cell gradient - normal operating cells */}
+            <linearGradient id="hotCoolCellGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="30%" stopColor="#2563eb" />
+              <stop offset="60%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#60a5fa" />
+            </linearGradient>
+
+            {/* Warm cell gradient - medium temperature */}
+            <linearGradient id="hotWarmCellGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ea580c" />
+              <stop offset="40%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#fb923c" />
+            </linearGradient>
+
+            {/* Solar panel frame metallic gradient */}
+            <linearGradient id="hotPanelFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="25%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="75%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Sun gradient */}
+            <radialGradient id="hotSunGradient" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="40%" stopColor="#fde047" />
+              <stop offset="70%" stopColor="#facc15" />
+              <stop offset="100%" stopColor="#eab308" stopOpacity="0.5" />
+            </radialGradient>
+
+            {/* Cloud gradient */}
+            <radialGradient id="hotCloudGradient" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </radialGradient>
+
+            {/* Bypass diode active glow */}
+            <radialGradient id="hotBypassGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0.6" />
+            </radialGradient>
+
+            {/* Data panel glass effect */}
+            <linearGradient id="hotPanelGlass" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="rgba(30,41,59,0.95)" />
+              <stop offset="100%" stopColor="rgba(15,23,42,0.98)" />
+            </linearGradient>
+
+            {/* Heat glow filter */}
+            <filter id="hotHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Intense heat glow for critical temps */}
+            <filter id="hotCriticalGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feColorMatrix in="blur" type="matrix"
+                values="1.5 0 0 0 0  0 0.3 0 0 0  0 0 0.3 0 0  0 0 0 1 0" result="coloredBlur"/>
               <feMerge>
                 <feMergeNode in="coloredBlur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+
+            {/* Sun ray glow */}
+            <filter id="hotSunGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Bypass diode glow */}
+            <filter id="hotBypassFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Current flow arrow gradient */}
+            <linearGradient id="hotCurrentGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Chart gradient fill */}
+            <linearGradient id="hotChartGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#dc2626" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0.1" />
+            </linearGradient>
+
+            {/* Grid pattern for solar cells */}
+            <pattern id="hotCellGrid" width="7" height="10" patternUnits="userSpaceOnUse">
+              <rect width="7" height="10" fill="none" />
+              <line x1="0" y1="0" x2="7" y2="0" stroke="rgba(255,255,255,0.15)" strokeWidth="0.5" />
+              <line x1="3.5" y1="0" x2="3.5" y2="10" stroke="rgba(255,255,255,0.1)" strokeWidth="0.3" />
+            </pattern>
           </defs>
 
-          {/* Title */}
-          <text x={250} y={25} fill={colors.accent} fontSize={14} fontWeight="bold" textAnchor="middle">
-            Series String of Solar Cells
-          </text>
+          {/* Background gradient */}
+          <rect width={width} height={height} fill="url(#hotPanelGlass)" rx="12" />
+
+          {/* Subtle grid overlay */}
+          <pattern id="hotBgGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="rgba(100,116,139,0.1)" strokeWidth="0.5" />
+          </pattern>
+          <rect width={width} height={height} fill="url(#hotBgGrid)" rx="12" />
+
+          {/* Sun icon */}
+          <circle cx={460} cy={30} r={18} fill="url(#hotSunGradient)" filter="url(#hotSunGlow)" />
+          {[...Array(8)].map((_, i) => {
+            const angle = (i * 45) * Math.PI / 180;
+            const x1 = 460 + Math.cos(angle) * 22;
+            const y1 = 30 + Math.sin(angle) * 22;
+            const x2 = 460 + Math.cos(angle) * 30;
+            const y2 = 30 + Math.sin(angle) * 30;
+            return (
+              <line key={`sunray${i}`} x1={x1} y1={y1} x2={x2} y2={y2}
+                stroke="#fde047" strokeWidth="2" strokeLinecap="round" opacity="0.8" />
+            );
+          })}
 
           {/* Sun rays on non-shaded cells */}
           {[...Array(numCells)].map((_, i) => {
             if (i === shadedCellIndex) return null;
-            const x = 40 + i * (cellWidth + cellGap) + cellWidth / 2;
+            const x = 50 + i * (cellWidth + cellGap) + cellWidth / 2;
             return (
-              <g key={`sun${i}`}>
-                <line x1={x} y1={35} x2={x} y2={55} stroke={colors.warning} strokeWidth={2} opacity={0.6} />
-                <line x1={x - 8} y1={40} x2={x - 4} y2={55} stroke={colors.warning} strokeWidth={1} opacity={0.4} />
-                <line x1={x + 8} y1={40} x2={x + 4} y2={55} stroke={colors.warning} strokeWidth={1} opacity={0.4} />
+              <g key={`sun${i}`} filter="url(#hotSunGlow)">
+                <line x1={x} y1={55} x2={x} y2={70} stroke="#fde047" strokeWidth={2} opacity={0.7} />
+                <line x1={x - 6} y1={58} x2={x - 3} y2={70} stroke="#fde047" strokeWidth={1.5} opacity={0.5} />
+                <line x1={x + 6} y1={58} x2={x + 3} y2={70} stroke="#fde047" strokeWidth={1.5} opacity={0.5} />
               </g>
             );
           })}
 
           {/* Shade cloud over shaded cell */}
           <ellipse
-            cx={40 + shadedCellIndex * (cellWidth + cellGap) + cellWidth / 2}
-            cy={45}
-            rx={25}
-            ry={15}
-            fill="#374151"
-            opacity={shadingLevel / 100}
+            cx={50 + shadedCellIndex * (cellWidth + cellGap) + cellWidth / 2}
+            cy={55}
+            rx={28}
+            ry={18}
+            fill="url(#hotCloudGradient)"
+            opacity={Math.min(shadingLevel / 100 + 0.2, 1)}
+          />
+          {/* Cloud secondary puffs */}
+          <ellipse
+            cx={50 + shadedCellIndex * (cellWidth + cellGap) + cellWidth / 2 - 15}
+            cy={60}
+            rx={12}
+            ry={10}
+            fill="url(#hotCloudGradient)"
+            opacity={Math.min(shadingLevel / 100 + 0.1, 0.9)}
+          />
+          <ellipse
+            cx={50 + shadedCellIndex * (cellWidth + cellGap) + cellWidth / 2 + 15}
+            cy={58}
+            rx={14}
+            ry={11}
+            fill="url(#hotCloudGradient)"
+            opacity={Math.min(shadingLevel / 100 + 0.1, 0.9)}
           />
 
+          {/* Solar panel frame */}
+          <rect x={44} y={73} width={numCells * (cellWidth + cellGap) + 8} height={cellHeight + 8}
+            fill="none" stroke="url(#hotPanelFrame)" strokeWidth="4" rx="4" />
+
           {/* Solar cells */}
-          <g transform="translate(40, 60)">
+          <g transform="translate(50, 77)">
             {[...Array(numCells)].map((_, i) => {
               const isShaded = i === shadedCellIndex;
-              const cellTemp = isShaded ? output.cellTemperature : 25 + Math.random() * 5;
-              const cellColor = isShaded ? getTemperatureColor(output.cellTemperature) : colors.cool;
+              const cellTemp = cellTemps[i];
+
+              // Choose gradient based on temperature
+              let cellGradient = 'url(#hotCoolCellGradient)';
+              let glowFilter = undefined;
+              if (isShaded) {
+                if (output.cellTemperature > 120) {
+                  cellGradient = 'url(#hotCellGradient)';
+                  glowFilter = 'url(#hotCriticalGlow)';
+                } else if (output.cellTemperature > 80) {
+                  cellGradient = 'url(#hotCellGradient)';
+                  glowFilter = 'url(#hotHeatGlow)';
+                } else if (output.cellTemperature > 50) {
+                  cellGradient = 'url(#hotWarmCellGradient)';
+                }
+              }
 
               return (
                 <g key={`cell${i}`}>
-                  {/* Cell body */}
+                  {/* Cell body with gradient */}
                   <rect
                     x={i * (cellWidth + cellGap)}
                     y={0}
                     width={cellWidth}
                     height={cellHeight}
-                    fill={cellColor}
-                    stroke={isShaded ? colors.hot : colors.textMuted}
+                    fill={cellGradient}
+                    stroke={isShaded && output.cellTemperature > 60 ? colors.hot : '#475569'}
                     strokeWidth={isShaded ? 2 : 1}
                     rx={2}
-                    filter={isShaded && output.cellTemperature > 80 ? 'url(#heatGlow)' : undefined}
-                    opacity={isShaded ? 0.5 + shadingLevel / 200 : 1}
+                    filter={glowFilter}
+                    opacity={isShaded ? 0.6 + shadingLevel / 250 : 1}
                   />
 
-                  {/* Cell label */}
-                  <text
-                    x={i * (cellWidth + cellGap) + cellWidth / 2}
-                    y={cellHeight + 15}
-                    fill={isShaded ? colors.hot : colors.textSecondary}
-                    fontSize={10}
-                    textAnchor="middle"
-                  >
-                    {isShaded ? `${cellTemp.toFixed(0)}C` : `${cellTemp.toFixed(0)}C`}
-                  </text>
+                  {/* Solar cell grid lines overlay */}
+                  <rect
+                    x={i * (cellWidth + cellGap)}
+                    y={0}
+                    width={cellWidth}
+                    height={cellHeight}
+                    fill="url(#hotCellGrid)"
+                    rx={2}
+                  />
 
-                  {/* Series connection lines */}
+                  {/* Series connection lines with gradient */}
                   {i < numCells - 1 && (
                     <line
                       x1={i * (cellWidth + cellGap) + cellWidth}
                       y1={cellHeight / 2}
                       x2={(i + 1) * (cellWidth + cellGap)}
                       y2={cellHeight / 2}
-                      stroke={colors.warning}
-                      strokeWidth={2}
+                      stroke="url(#hotCurrentGradient)"
+                      strokeWidth={3}
                     />
                   )}
                 </g>
@@ -464,153 +644,292 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
             })}
           </g>
 
-          {/* Current flow arrows */}
-          <g transform="translate(40, 130)">
-            <text x={-20} y={5} fill={colors.textSecondary} fontSize={11}>I=</text>
-            <text x={-5} y={5} fill={colors.warning} fontSize={11}>{stringCurrent}A</text>
+          {/* Current flow arrows with gradient */}
+          <g transform="translate(50, 145)">
             {[...Array(6)].map((_, i) => (
               <polygon
                 key={`arrow${i}`}
-                points={`${50 + i * 70},0 ${60 + i * 70},-5 ${60 + i * 70},5`}
-                fill={colors.warning}
-                opacity={0.8}
+                points={`${50 + i * 70},0 ${60 + i * 70},-6 ${60 + i * 70},6`}
+                fill="url(#hotCurrentGradient)"
+                filter="url(#hotSunGlow)"
               />
             ))}
           </g>
 
           {/* Bypass diode visualization */}
           {showBypass && (
-            <g transform="translate(40, 60)">
-              {/* Bypass diode over shaded cell group */}
+            <g transform="translate(50, 77)">
+              {/* Bypass diode arc */}
               <path
-                d={`M ${(shadedCellIndex - 1) * (cellWidth + cellGap) + cellWidth / 2} ${-10}
-                    Q ${shadedCellIndex * (cellWidth + cellGap) + cellWidth / 2} ${-25}
-                    ${(shadedCellIndex + 1) * (cellWidth + cellGap) + cellWidth / 2} ${-10}`}
+                d={`M ${Math.max(0, (shadedCellIndex - 1)) * (cellWidth + cellGap) + cellWidth / 2} ${-12}
+                    Q ${shadedCellIndex * (cellWidth + cellGap) + cellWidth / 2} ${-30}
+                    ${Math.min(numCells - 1, shadedCellIndex + 1) * (cellWidth + cellGap) + cellWidth / 2} ${-12}`}
                 fill="none"
-                stroke={bypassDiodeEnabled ? colors.success : colors.textMuted}
+                stroke={bypassDiodeEnabled ? '#22c55e' : colors.textMuted}
                 strokeWidth={bypassDiodeEnabled ? 3 : 2}
                 strokeDasharray={bypassDiodeEnabled ? 'none' : '5,5'}
+                filter={bypassDiodeEnabled && output.bypassActive ? 'url(#hotBypassFilter)' : undefined}
               />
+              {/* Diode symbol */}
               <circle
                 cx={shadedCellIndex * (cellWidth + cellGap) + cellWidth / 2}
-                cy={-20}
-                r={8}
-                fill={bypassDiodeEnabled && output.bypassActive ? colors.success : colors.bgCard}
-                stroke={bypassDiodeEnabled ? colors.success : colors.textMuted}
+                cy={-22}
+                r={10}
+                fill={bypassDiodeEnabled && output.bypassActive ? 'url(#hotBypassGlow)' : colors.bgCard}
+                stroke={bypassDiodeEnabled ? '#22c55e' : colors.textMuted}
                 strokeWidth={2}
+                filter={bypassDiodeEnabled && output.bypassActive ? 'url(#hotBypassFilter)' : undefined}
               />
-              <text
-                x={shadedCellIndex * (cellWidth + cellGap) + cellWidth / 2}
-                y={-16}
-                fill={bypassDiodeEnabled ? colors.textPrimary : colors.textMuted}
-                fontSize={10}
-                textAnchor="middle"
-              >
-                D
-              </text>
             </g>
           )}
 
           {/* Thermal heatmap bar */}
-          <g transform="translate(40, 160)">
-            <text x={0} y={0} fill={colors.accent} fontSize={12} fontWeight="bold">Thermal Heatmap View</text>
-            <rect x={0} y={10} width={420} height={30} fill="rgba(0,0,0,0.3)" rx={4} />
+          <g transform="translate(50, 165)">
+            {/* Heatmap background */}
+            <rect x={-5} y={8} width={numCells * (cellWidth + cellGap) + 6} height={28}
+              fill="rgba(0,0,0,0.4)" rx={4} stroke="rgba(100,116,139,0.3)" strokeWidth="1" />
 
             {[...Array(numCells)].map((_, i) => {
               const isShaded = i === shadedCellIndex;
-              const temp = isShaded ? output.cellTemperature : 25 + Math.random() * 5;
+              const temp = cellTemps[i];
               const heatIntensity = Math.min((temp - 25) / 125, 1);
 
               return (
                 <rect
                   key={`heat${i}`}
-                  x={5 + i * 35}
-                  y={15}
-                  width={30}
+                  x={i * (cellWidth + cellGap)}
+                  y={12}
+                  width={cellWidth - 2}
                   height={20}
-                  fill={`rgb(${Math.floor(heatIntensity * 255)}, ${Math.floor((1 - heatIntensity) * 100)}, ${Math.floor((1 - heatIntensity) * 200)})`}
+                  fill={`rgb(${Math.floor(heatIntensity * 220 + 35)}, ${Math.floor((1 - heatIntensity) * 120 + 30)}, ${Math.floor((1 - heatIntensity) * 180 + 40)})`}
                   rx={2}
+                  filter={isShaded && output.cellTemperature > 100 ? 'url(#hotHeatGlow)' : undefined}
                 />
               );
             })}
+
+            {/* Temperature scale bar */}
+            <rect x={0} y={42} width={numCells * (cellWidth + cellGap) - cellGap} height={8}
+              fill="url(#hotThermalGradient)" rx={4} />
           </g>
 
-          {/* Data panel */}
-          <g transform="translate(20, 220)">
-            <rect x={0} y={0} width={220} height={130} fill="rgba(0,0,0,0.5)" rx={8} />
-            <text x={10} y={20} fill={colors.accent} fontSize={12} fontWeight="bold">Hotspot Analysis</text>
-
-            <text x={10} y={42} fill={colors.textSecondary} fontSize={11}>Shading Level:</text>
-            <text x={130} y={42} fill={colors.textPrimary} fontSize={11}>{shadingLevel}%</text>
-
-            <text x={10} y={60} fill={colors.textSecondary} fontSize={11}>Reverse Voltage:</text>
-            <text x={130} y={60} fill={output.reverseVoltage > 5 ? colors.hot : colors.textPrimary} fontSize={11}>
-              {output.reverseVoltage.toFixed(1)} V
-            </text>
-
-            <text x={10} y={78} fill={colors.textSecondary} fontSize={11}>Heat Power:</text>
-            <text x={130} y={78} fill={output.heatPower > 20 ? colors.hot : colors.textPrimary} fontSize={11}>
-              {output.heatPower.toFixed(1)} W
-            </text>
-
-            <text x={10} y={96} fill={colors.textSecondary} fontSize={11}>Cell Temperature:</text>
-            <text x={130} y={96} fill={getTemperatureColor(output.cellTemperature)} fontSize={11} fontWeight="bold">
-              {output.cellTemperature.toFixed(0)}C
-            </text>
-
-            <text x={10} y={118} fill={colors.textSecondary} fontSize={11}>Risk Level:</text>
-            <text
-              x={130}
-              y={118}
-              fill={output.riskLevel === 'Critical' ? colors.hot : output.riskLevel === 'High' ? colors.warm : colors.success}
-              fontSize={11}
-              fontWeight="bold"
-            >
-              {output.riskLevel}
-            </text>
+          {/* Temperature indicator thermometer */}
+          <g transform="translate(480, 80)">
+            {/* Thermometer body */}
+            <rect x={0} y={0} width={20} height={100} rx={10} fill="rgba(0,0,0,0.5)" stroke="#475569" strokeWidth="1" />
+            {/* Mercury level */}
+            <rect
+              x={4}
+              y={96 - Math.min((output.cellTemperature - 25) / 150, 1) * 90}
+              width={12}
+              height={Math.min((output.cellTemperature - 25) / 150, 1) * 90}
+              rx={6}
+              fill={output.cellTemperature > 100 ? 'url(#hotCellGradient)' : output.cellTemperature > 60 ? 'url(#hotWarmCellGradient)' : 'url(#hotCoolCellGradient)'}
+              filter={output.cellTemperature > 100 ? 'url(#hotHeatGlow)' : undefined}
+            />
+            {/* Thermometer bulb */}
+            <circle cx={10} cy={100} r={12} fill="rgba(0,0,0,0.5)" stroke="#475569" strokeWidth="1" />
+            <circle
+              cx={10}
+              cy={100}
+              r={9}
+              fill={output.cellTemperature > 100 ? '#dc2626' : output.cellTemperature > 60 ? '#f97316' : '#3b82f6'}
+              filter={output.cellTemperature > 100 ? 'url(#hotHeatGlow)' : undefined}
+            />
+            {/* Scale marks */}
+            {[0, 50, 100, 150].map((temp, i) => (
+              <g key={`mark${i}`}>
+                <line x1={-5} y1={96 - (temp / 150) * 90} x2={0} y2={96 - (temp / 150) * 90}
+                  stroke="#94a3b8" strokeWidth="1" />
+              </g>
+            ))}
           </g>
 
-          {/* Reverse bias power curve */}
-          <g transform="translate(260, 220)">
-            <rect x={0} y={0} width={220} height={130} fill="rgba(0,0,0,0.5)" rx={8} />
-            <text x={10} y={20} fill={colors.accent} fontSize={12} fontWeight="bold">Power vs Shading</text>
+          {/* Data panel - Hotspot Analysis */}
+          <g transform="translate(15, 225)">
+            <rect x={0} y={0} width={230} height={135} fill="url(#hotPanelGlass)" rx={10}
+              stroke="rgba(100,116,139,0.3)" strokeWidth="1" />
 
-            {/* Axes */}
-            <line x1={30} y1={110} x2={200} y2={110} stroke={colors.textMuted} strokeWidth={1} />
-            <line x1={30} y1={35} x2={30} y2={110} stroke={colors.textMuted} strokeWidth={1} />
+            {/* Panel header accent line */}
+            <rect x={10} y={8} width={50} height={3} rx={1.5} fill={colors.accent} />
+          </g>
 
-            {/* Curve */}
+          {/* Power vs Shading chart */}
+          <g transform="translate(260, 225)">
+            <rect x={0} y={0} width={240} height={135} fill="url(#hotPanelGlass)" rx={10}
+              stroke="rgba(100,116,139,0.3)" strokeWidth="1" />
+
+            {/* Chart header accent line */}
+            <rect x={10} y={8} width={50} height={3} rx={1.5} fill={colors.accent} />
+
+            {/* Axes with better styling */}
+            <line x1={40} y1={115} x2={215} y2={115} stroke="#475569" strokeWidth={1.5} />
+            <line x1={40} y1={30} x2={40} y2={115} stroke="#475569" strokeWidth={1.5} />
+
+            {/* Grid lines */}
+            {[0.25, 0.5, 0.75].map((pct, i) => (
+              <line key={`gridH${i}`} x1={40} y1={115 - pct * 85} x2={215} y2={115 - pct * 85}
+                stroke="rgba(100,116,139,0.2)" strokeWidth="1" strokeDasharray="3,3" />
+            ))}
+            {[0.25, 0.5, 0.75].map((pct, i) => (
+              <line key={`gridV${i}`} x1={40 + pct * 175} y1={30} x2={40 + pct * 175} y2={115}
+                stroke="rgba(100,116,139,0.2)" strokeWidth="1" strokeDasharray="3,3" />
+            ))}
+
+            {/* Filled area under curve */}
             <path
-              d={`M 30,105 ${[...Array(20)].map((_, i) => {
+              d={`M 40,115 ${[...Array(20)].map((_, i) => {
                 const shade = (i / 19) * 100;
                 const power = stringCurrent * Math.min((11 * 0.6), (stringCurrent * shade / 100) * 2);
-                const x = 30 + i * 8.5;
-                const y = 105 - (power / 80) * 70;
-                return `L ${x},${Math.max(35, y)}`;
+                const x = 40 + i * 9.2;
+                const y = 115 - (power / 80) * 85;
+                return `L ${x},${Math.max(30, y)}`;
+              }).join(' ')} L 215,115 Z`}
+              fill={bypassDiodeEnabled ? 'rgba(34,197,94,0.2)' : 'url(#hotChartGradient)'}
+            />
+
+            {/* Curve line */}
+            <path
+              d={`M 40,115 ${[...Array(20)].map((_, i) => {
+                const shade = (i / 19) * 100;
+                const power = stringCurrent * Math.min((11 * 0.6), (stringCurrent * shade / 100) * 2);
+                const x = 40 + i * 9.2;
+                const y = 115 - (power / 80) * 85;
+                return `L ${x},${Math.max(30, y)}`;
               }).join(' ')}`}
               fill="none"
-              stroke={bypassDiodeEnabled ? colors.success : colors.hot}
-              strokeWidth={2}
+              stroke={bypassDiodeEnabled ? '#22c55e' : '#dc2626'}
+              strokeWidth={2.5}
+              strokeLinecap="round"
             />
 
             {/* Current position marker */}
             <circle
-              cx={30 + (shadingLevel / 100) * 170}
-              cy={105 - (output.heatPower / 80) * 70}
-              r={5}
+              cx={40 + (shadingLevel / 100) * 175}
+              cy={Math.max(30, 115 - (output.heatPower / 80) * 85)}
+              r={7}
               fill={colors.accent}
+              stroke="#1e293b"
+              strokeWidth={2}
+              filter="url(#hotSunGlow)"
             />
 
-            <text x={115} y={125} fill={colors.textMuted} fontSize={9} textAnchor="middle">Shading %</text>
-            <text x={15} y={70} fill={colors.textMuted} fontSize={9} textAnchor="middle" transform="rotate(-90, 15, 70)">Heat (W)</text>
-
             {showBypass && output.bypassActive && (
-              <text x={115} y={50} fill={colors.success} fontSize={10} textAnchor="middle">
-                Bypass Active!
-              </text>
+              <g transform="translate(127, 45)">
+                <rect x={-45} y={-12} width={90} height={20} rx={10} fill="rgba(34,197,94,0.2)" />
+              </g>
             )}
           </g>
         </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '560px',
+          padding: '0 16px',
+          gap: '16px'
+        }}>
+          {/* Hotspot Analysis panel label */}
+          <div style={{ flex: 1 }}>
+            <div style={{
+              fontSize: typo.body,
+              fontWeight: 700,
+              color: colors.accent,
+              marginBottom: '8px'
+            }}>
+              Hotspot Analysis
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: typo.small }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: colors.textSecondary }}>Shading Level:</span>
+                <span style={{ color: colors.textPrimary, fontWeight: 600 }}>{shadingLevel}%</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: colors.textSecondary }}>Reverse Voltage:</span>
+                <span style={{ color: output.reverseVoltage > 5 ? colors.hot : colors.textPrimary, fontWeight: 600 }}>
+                  {output.reverseVoltage.toFixed(1)} V
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: colors.textSecondary }}>Heat Power:</span>
+                <span style={{ color: output.heatPower > 20 ? colors.hot : colors.textPrimary, fontWeight: 600 }}>
+                  {output.heatPower.toFixed(1)} W
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: colors.textSecondary }}>Cell Temperature:</span>
+                <span style={{ color: getTemperatureColor(output.cellTemperature), fontWeight: 700 }}>
+                  {output.cellTemperature.toFixed(0)}C
+                </span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: colors.textSecondary }}>Risk Level:</span>
+                <span style={{
+                  color: output.riskLevel === 'Critical' ? colors.hot :
+                         output.riskLevel === 'High' ? colors.warm : colors.success,
+                  fontWeight: 700
+                }}>
+                  {output.riskLevel}
+                </span>
+              </div>
+            </div>
+          </div>
+
+          {/* Power vs Shading panel label */}
+          <div style={{ flex: 1 }}>
+            <div style={{
+              fontSize: typo.body,
+              fontWeight: 700,
+              color: colors.accent,
+              marginBottom: '8px'
+            }}>
+              Power vs Shading
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', fontSize: typo.small }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: colors.textSecondary }}>Current (I):</span>
+                <span style={{ color: colors.warning, fontWeight: 600 }}>{stringCurrent} A</span>
+              </div>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <span style={{ color: colors.textSecondary }}>Shaded Cell:</span>
+                <span style={{ color: colors.textPrimary, fontWeight: 600 }}>Cell {shadedCellIndex + 1}</span>
+              </div>
+              {showBypass && (
+                <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                  <span style={{ color: colors.textSecondary }}>Bypass Diode:</span>
+                  <span style={{
+                    color: bypassDiodeEnabled ? colors.success : colors.textMuted,
+                    fontWeight: 600
+                  }}>
+                    {bypassDiodeEnabled ? (output.bypassActive ? 'Active' : 'Ready') : 'Disabled'}
+                  </span>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* Thermal scale legend */}
+        <div style={{
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          gap: '8px',
+          fontSize: typo.label,
+          color: colors.textMuted,
+          marginTop: '4px'
+        }}>
+          <span>25C</span>
+          <div style={{
+            width: '120px',
+            height: '8px',
+            background: 'linear-gradient(to right, #1d4ed8, #3b82f6, #22c55e, #eab308, #f97316, #dc2626)',
+            borderRadius: '4px'
+          }} />
+          <span>150C+</span>
+        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
@@ -620,11 +939,16 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
+                boxShadow: isAnimating
+                  ? '0 4px 15px rgba(239,68,68,0.4)'
+                  : '0 4px 15px rgba(34,197,94,0.4)',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -635,12 +959,12 @@ const HotspotsRenderer: React.FC<HotspotsRendererProps> = ({
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
+                border: `2px solid ${colors.accent}`,
                 background: 'transparent',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >

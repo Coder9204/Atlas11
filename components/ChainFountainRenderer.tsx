@@ -183,64 +183,246 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
 
     return (
       <div style={{ width: '100%', maxWidth: '500px', margin: '0 auto' }}>
+        {/* Title moved outside SVG */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: typo.elementGap,
+          padding: `0 ${typo.cardPadding}`,
+        }}>
+          <h3 style={{
+            color: colors.textPrimary,
+            fontSize: typo.heading,
+            fontWeight: 'bold',
+            margin: 0,
+          }}>
+            Chain Fountain (Mould Effect)
+          </h3>
+        </div>
+
         <svg
-          viewBox="0 0 400 380"
+          viewBox="0 0 400 360"
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', background: colors.bgDark, borderRadius: '12px' }}
         >
           <defs>
-            {/* Chain link gradient */}
-            <linearGradient id="chainGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor={colors.chainHighlight} />
-              <stop offset="50%" stopColor={colors.chainLink} />
-              <stop offset="100%" stopColor={colors.chainShadow} />
+            {/* Premium chain link metallic gradient */}
+            <linearGradient id="chainLinkMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="20%" stopColor="#fde68a" />
+              <stop offset="40%" stopColor="#fbbf24" />
+              <stop offset="60%" stopColor="#f59e0b" />
+              <stop offset="80%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
             </linearGradient>
 
-            {/* Beaker gradient */}
-            <linearGradient id="beakerGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.beakerEdge} stopOpacity="0.5" />
-              <stop offset="50%" stopColor={colors.beaker} />
-              <stop offset="100%" stopColor={colors.beakerEdge} stopOpacity="0.5" />
+            {/* Chain arc glow gradient */}
+            <linearGradient id="chainArcGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0" />
+              <stop offset="25%" stopColor="#fde68a" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#fef3c7" stopOpacity="0.9" />
+              <stop offset="75%" stopColor="#fde68a" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
             </linearGradient>
+
+            {/* Beaker glass gradient with depth */}
+            <linearGradient id="chainBeakerGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.4" />
+              <stop offset="15%" stopColor="#93c5fd" stopOpacity="0.25" />
+              <stop offset="50%" stopColor="#bfdbfe" stopOpacity="0.15" />
+              <stop offset="85%" stopColor="#93c5fd" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Beaker rim metallic */}
+            <linearGradient id="chainBeakerRim" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="30%" stopColor="#60a5fa" />
+              <stop offset="70%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#2563eb" />
+            </linearGradient>
+
+            {/* Force arrow gradient - upward */}
+            <linearGradient id="chainForceUp" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#86efac" />
+            </linearGradient>
+
+            {/* Force arrow gradient - downward */}
+            <linearGradient id="chainForceDown" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* Momentum arrow gradient */}
+            <linearGradient id="chainMomentum" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#c084fc" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#9333ea" />
+            </linearGradient>
+
+            {/* Ground/surface gradient */}
+            <linearGradient id="chainGround" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Table surface gradient */}
+            <linearGradient id="chainTable" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="40%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Height marker gradient */}
+            <linearGradient id="chainHeightMarker" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Background gradient */}
+            <linearGradient id="chainBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Chain link glow filter */}
+            <filter id="chainLinkGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arc glow filter */}
+            <filter id="chainArcGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Force arrow glow */}
+            <filter id="chainForceGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Momentum arrow glow */}
+            <filter id="chainMomentumGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Beaker inner glow */}
+            <filter id="chainBeakerGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
           </defs>
 
-          {/* Title */}
-          <text x="200" y="25" textAnchor="middle" fill={colors.textPrimary} fontSize="16" fontWeight="bold">
-            Chain Fountain (Mould Effect)
-          </text>
+          {/* Premium dark lab background */}
+          <rect width="400" height="360" fill="url(#chainBgGradient)" />
 
-          {/* Ground line */}
-          <line x1="0" y1="350" x2="400" y2="350" stroke={colors.textMuted} strokeWidth="2" />
+          {/* Subtle grid pattern */}
+          <g opacity="0.1">
+            {[...Array(9)].map((_, i) => (
+              <line key={`vgrid-${i}`} x1={(i + 1) * 40} y1="0" x2={(i + 1) * 40} y2="360" stroke="#64748b" strokeWidth="0.5" />
+            ))}
+            {[...Array(8)].map((_, i) => (
+              <line key={`hgrid-${i}`} x1="0" y1={(i + 1) * 40} x2="400" y2={(i + 1) * 40} stroke="#64748b" strokeWidth="0.5" />
+            ))}
+          </g>
 
-          {/* Drop height indicator */}
+          {/* Ground line with gradient */}
+          <rect x="0" y="330" width="400" height="30" fill="url(#chainGround)" />
+
+          {/* Height markers on the left */}
+          <g opacity="0.6">
+            {[0, 1, 2, 3].map((i) => (
+              <g key={`height-marker-${i}`}>
+                <line
+                  x1="20"
+                  y1={150 + i * 50}
+                  x2="35"
+                  y2={150 + i * 50}
+                  stroke="url(#chainHeightMarker)"
+                  strokeWidth="2"
+                />
+                <line
+                  x1="35"
+                  y1={150}
+                  x2="35"
+                  y2={150 + i * 50}
+                  stroke="url(#chainHeightMarker)"
+                  strokeWidth="1"
+                  strokeDasharray="3,3"
+                  opacity="0.5"
+                />
+              </g>
+            ))}
+          </g>
+
+          {/* Drop height indicator with gradient */}
           <line
             x1={dropX}
             y1={150}
             x2={dropX}
             y2={dropY}
-            stroke={colors.forceDown}
-            strokeWidth="1"
+            stroke="url(#chainForceDown)"
+            strokeWidth="2"
             strokeDasharray="4,4"
+            filter="url(#chainForceGlow)"
           />
-          <text x={dropX + 10} y={(150 + dropY) / 2} fill={colors.forceDown} fontSize="10">
-            h = {((dropHeight / 100) * 3).toFixed(1)}m
-          </text>
+          {/* Height label moved to overlay */}
 
-          {/* Beaker/Container */}
+          {/* Beaker/Container with premium glass effect */}
           <g transform={`translate(${beakerX}, ${beakerY})`}>
-            {/* Beaker body */}
+            {/* Beaker shadow */}
+            <ellipse
+              cx={beakerWidth / 2}
+              cy={beakerHeight + 15}
+              rx={beakerWidth / 2 + 5}
+              ry="6"
+              fill="#000"
+              opacity="0.3"
+            />
+
+            {/* Beaker body with glass gradient */}
             <path
               d={`M 0,0 L 0,${beakerHeight} Q 0,${beakerHeight + 10} 10,${beakerHeight + 10}
                   L ${beakerWidth - 10},${beakerHeight + 10} Q ${beakerWidth},${beakerHeight + 10}
                   ${beakerWidth},${beakerHeight} L ${beakerWidth},0`}
-              fill="url(#beakerGradient)"
-              stroke={colors.beakerEdge}
+              fill="url(#chainBeakerGlass)"
+              stroke="url(#chainBeakerRim)"
               strokeWidth="2"
+              filter="url(#chainBeakerGlow)"
             />
 
-            {/* Chain pile inside beaker */}
+            {/* Glass reflection highlight */}
+            <path
+              d={`M 5,5 L 5,${beakerHeight - 10} Q 8,${beakerHeight} 15,${beakerHeight}`}
+              fill="none"
+              stroke="rgba(255,255,255,0.2)"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+
+            {/* Chain pile inside beaker with metallic gradient */}
             {!isRunning && (
-              <g>
+              <g filter="url(#chainLinkGlow)">
                 {[...Array(15)].map((_, i) => (
                   <ellipse
                     key={i}
@@ -248,25 +430,56 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                     cy={beakerHeight - 20 - i * 4}
                     rx={linkSize}
                     ry={linkSize * 0.6}
-                    fill="url(#chainGradient)"
-                    opacity={0.8}
+                    fill="url(#chainLinkMetallic)"
+                    opacity={0.9 - i * 0.02}
                   />
                 ))}
               </g>
             )}
 
+            {/* Beaker rim with metallic gradient */}
+            <rect
+              x="-2"
+              y="-4"
+              width={beakerWidth + 4}
+              height="5"
+              fill="url(#chainBeakerRim)"
+              rx="2"
+            />
+
             {/* Beaker rim highlight */}
-            <rect x="0" y="-3" width={beakerWidth} height="3" fill={colors.beakerEdge} rx="1" />
+            <rect
+              x="0"
+              y="-3"
+              width={beakerWidth}
+              height="2"
+              fill="rgba(255,255,255,0.3)"
+              rx="1"
+            />
           </g>
 
-          {/* Chain fountain arc */}
+          {/* Chain fountain arc with premium effects */}
           {isRunning && (
             <g>
-              {/* Draw chain links along path */}
+              {/* Arc glow effect behind the chain */}
+              <path
+                d={`M ${beakerX + beakerWidth / 2},${beakerY}
+                    Q ${beakerX + beakerWidth / 2 + 30},${beakerY - fountainHeight}
+                      ${beakerX + beakerWidth / 2 + 60},${beakerY - fountainHeight * 0.9}
+                    Q ${(beakerX + beakerWidth / 2 + 60 + dropX) / 2},${beakerY - fountainHeight * 0.5}
+                      ${dropX},${dropY}`}
+                fill="none"
+                stroke="url(#chainArcGlow)"
+                strokeWidth={linkSize * 3}
+                opacity="0.4"
+                filter="url(#chainArcGlowFilter)"
+              />
+
+              {/* Draw chain links along path with metallic gradient */}
               {chainPath.map((point, i) => {
                 if (i % 2 !== 0) return null; // Skip every other for performance
                 const phase = (animationTime * 5 + i * 0.2) % 1;
-                const brightness = 0.7 + Math.sin(phase * Math.PI * 2) * 0.3;
+                const brightness = 0.8 + Math.sin(phase * Math.PI * 2) * 0.2;
 
                 return (
                   <ellipse
@@ -275,8 +488,9 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                     cy={point.y}
                     rx={linkSize}
                     ry={linkSize * 0.6}
-                    fill={colors.chainLink}
+                    fill="url(#chainLinkMetallic)"
                     opacity={brightness}
+                    filter="url(#chainLinkGlow)"
                     transform={`rotate(${Math.atan2(
                       (chainPath[Math.min(i + 1, chainPath.length - 1)]?.y || point.y) - point.y,
                       (chainPath[Math.min(i + 1, chainPath.length - 1)]?.x || point.x) - point.x
@@ -285,7 +499,7 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                 );
               })}
 
-              {/* Flow arrows on chain */}
+              {/* Flow arrows on chain with gradient and glow */}
               {[0.2, 0.5, 0.8].map((t, i) => {
                 const idx = Math.floor(t * chainPath.length);
                 const point = chainPath[idx];
@@ -295,9 +509,10 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                 return (
                   <g key={i} transform={`translate(${point.x}, ${point.y}) rotate(${angle * 180 / Math.PI})`}>
                     <polygon
-                      points="0,-4 10,0 0,4"
-                      fill={colors.momentum}
-                      opacity={0.8}
+                      points="0,-5 12,0 0,5"
+                      fill="url(#chainMomentum)"
+                      filter="url(#chainMomentumGlow)"
+                      opacity={0.9}
                     />
                   </g>
                 );
@@ -305,31 +520,49 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
             </g>
           )}
 
-          {/* Kick force indicator at pickup point */}
+          {/* Kick force indicator at pickup point with premium styling */}
           {isRunning && interactive && (
             <g transform={`translate(${beakerX + beakerWidth / 2}, ${beakerY})`}>
-              {/* Upward kick force */}
-              <line x1="0" y1="0" x2="0" y2="-30" stroke={colors.forceUp} strokeWidth="3" />
-              <polygon points="-6,-30 0,-42 6,-30" fill={colors.forceUp} />
-              <text x="10" y="-20" fill={colors.forceUp} fontSize="9">
-                Kick force
-              </text>
+              {/* Upward kick force with gradient and glow */}
+              <line
+                x1="0"
+                y1="0"
+                x2="0"
+                y2="-35"
+                stroke="url(#chainForceUp)"
+                strokeWidth="4"
+                filter="url(#chainForceGlow)"
+              />
+              <polygon
+                points="-8,-35 0,-50 8,-35"
+                fill="url(#chainForceUp)"
+                filter="url(#chainForceGlow)"
+              />
 
               {/* Reaction from surface */}
-              <line x1="-15" y1="20" x2="-15" y2="-10" stroke={colors.forceUp} strokeWidth="2" />
-              <polygon points="-19,-10 -15,-18 -11,-10" fill={colors.forceUp} />
-              <text x="-45" y="0" fill={colors.forceUp} fontSize="8">
-                Reaction
-              </text>
+              <line
+                x1="-18"
+                y1="25"
+                x2="-18"
+                y2="-8"
+                stroke="url(#chainForceUp)"
+                strokeWidth="3"
+                filter="url(#chainForceGlow)"
+              />
+              <polygon
+                points="-24,-8 -18,-20 -12,-8"
+                fill="url(#chainForceUp)"
+                filter="url(#chainForceGlow)"
+              />
             </g>
           )}
 
-          {/* Falling chain from drop point */}
+          {/* Falling chain from drop point with gradient */}
           {isRunning && (
-            <g>
+            <g filter="url(#chainLinkGlow)">
               {[...Array(10)].map((_, i) => {
                 const y = dropY + i * 15 + (animationTime * 50) % 15;
-                if (y > 350) return null;
+                if (y > 330) return null;
                 return (
                   <ellipse
                     key={i}
@@ -337,45 +570,157 @@ const ChainFountainRenderer: React.FC<ChainFountainRendererProps> = ({
                     cy={y}
                     rx={linkSize}
                     ry={linkSize * 0.6}
-                    fill={colors.chainLink}
-                    opacity={0.7}
+                    fill="url(#chainLinkMetallic)"
+                    opacity={0.8 - i * 0.05}
                   />
                 );
               })}
             </g>
           )}
 
-          {/* Table surface under drop */}
-          <rect x={dropX - 30} y="350" width="60" height="10" fill={colors.textMuted} rx="2" />
-
-          {/* Info panels */}
-          <g transform="translate(10, 290)">
-            <rect x="0" y="0" width="140" height="50" fill={colors.bgCard} rx="6" />
-            <text x="10" y="15" fill={colors.textMuted} fontSize="9">Fountain Height:</text>
-            <text x="10" y="32" fill={colors.chainLink} fontSize="14" fontWeight="bold">
-              {(fountainHeight / 100 * maxFountain / 100).toFixed(2)} m
-            </text>
-            <text x="10" y="45" fill={colors.textMuted} fontSize="8">
-              ({(fountainHeight / maxFountain * 100).toFixed(0)}% of max)
-            </text>
+          {/* Table/platform surface under drop with gradient */}
+          <g>
+            {/* Platform shadow */}
+            <ellipse
+              cx={dropX}
+              cy="332"
+              rx="35"
+              ry="4"
+              fill="#000"
+              opacity="0.3"
+            />
+            {/* Platform surface */}
+            <rect
+              x={dropX - 35}
+              y="320"
+              width="70"
+              height="12"
+              fill="url(#chainTable)"
+              rx="3"
+            />
+            {/* Platform highlight */}
+            <rect
+              x={dropX - 33}
+              y="321"
+              width="66"
+              height="3"
+              fill="rgba(255,255,255,0.15)"
+              rx="1"
+            />
           </g>
 
-          <g transform="translate(160, 290)">
-            <rect x="0" y="0" width="110" height="50" fill={colors.bgCard} rx="6" />
-            <text x="10" y="15" fill={colors.textMuted} fontSize="9">Chain Velocity:</text>
-            <text x="10" y="32" fill={colors.momentum} fontSize="14" fontWeight="bold">
-              {velocity.toFixed(1)} m/s
-            </text>
-          </g>
-
-          <g transform="translate(280, 290)">
-            <rect x="0" y="0" width="110" height="50" fill={colors.bgCard} rx="6" />
-            <text x="10" y="15" fill={colors.textMuted} fontSize="9">Status:</text>
-            <text x="10" y="35" fill={isRunning ? colors.success : colors.textMuted} fontSize="12" fontWeight="bold">
-              {isRunning ? '🔄 Running' : '⏸️ Stopped'}
-            </text>
-          </g>
         </svg>
+
+        {/* Info panels moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: typo.elementGap,
+          padding: typo.cardPadding,
+          marginTop: typo.elementGap,
+        }}>
+          {/* Fountain Height Panel */}
+          <div style={{
+            flex: '1 1 120px',
+            background: colors.bgCard,
+            borderRadius: '8px',
+            padding: typo.cardPadding,
+            border: '1px solid rgba(251, 191, 36, 0.2)',
+          }}>
+            <div style={{
+              color: colors.textMuted,
+              fontSize: typo.label,
+              marginBottom: '4px',
+            }}>
+              Fountain Height
+            </div>
+            <div style={{
+              color: colors.chainLink,
+              fontSize: typo.bodyLarge,
+              fontWeight: 'bold',
+            }}>
+              {(fountainHeight / 100 * maxFountain / 100).toFixed(2)} m
+            </div>
+            <div style={{
+              color: colors.textMuted,
+              fontSize: typo.label,
+            }}>
+              {(fountainHeight / maxFountain * 100).toFixed(0)}% of max
+            </div>
+          </div>
+
+          {/* Chain Velocity Panel */}
+          <div style={{
+            flex: '1 1 100px',
+            background: colors.bgCard,
+            borderRadius: '8px',
+            padding: typo.cardPadding,
+            border: '1px solid rgba(168, 85, 247, 0.2)',
+          }}>
+            <div style={{
+              color: colors.textMuted,
+              fontSize: typo.label,
+              marginBottom: '4px',
+            }}>
+              Chain Velocity
+            </div>
+            <div style={{
+              color: colors.momentum,
+              fontSize: typo.bodyLarge,
+              fontWeight: 'bold',
+            }}>
+              {velocity.toFixed(1)} m/s
+            </div>
+          </div>
+
+          {/* Status Panel */}
+          <div style={{
+            flex: '1 1 100px',
+            background: colors.bgCard,
+            borderRadius: '8px',
+            padding: typo.cardPadding,
+            border: `1px solid ${isRunning ? 'rgba(16, 185, 129, 0.3)' : 'rgba(100, 116, 139, 0.2)'}`,
+          }}>
+            <div style={{
+              color: colors.textMuted,
+              fontSize: typo.label,
+              marginBottom: '4px',
+            }}>
+              Status
+            </div>
+            <div style={{
+              color: isRunning ? colors.success : colors.textMuted,
+              fontSize: typo.body,
+              fontWeight: 'bold',
+            }}>
+              {isRunning ? 'Running' : 'Stopped'}
+            </div>
+          </div>
+
+          {/* Drop Height Panel */}
+          <div style={{
+            flex: '1 1 100px',
+            background: colors.bgCard,
+            borderRadius: '8px',
+            padding: typo.cardPadding,
+            border: '1px solid rgba(239, 68, 68, 0.2)',
+          }}>
+            <div style={{
+              color: colors.textMuted,
+              fontSize: typo.label,
+              marginBottom: '4px',
+            }}>
+              Drop Height
+            </div>
+            <div style={{
+              color: colors.forceDown,
+              fontSize: typo.bodyLarge,
+              fontWeight: 'bold',
+            }}>
+              {((dropHeight / 100) * 3).toFixed(1)} m
+            </div>
+          </div>
+        </div>
       </div>
     );
   };

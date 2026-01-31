@@ -609,52 +609,184 @@ export default function GroundFaultRenderer({
       </p>
 
       <svg viewBox="0 0 400 220" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '32px' }}>
-        <rect width="400" height="220" fill="#1e293b" rx="12" />
+        <defs>
+          {/* Background gradient */}
+          <linearGradient id="gfaultBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="30%" stopColor="#0f172a" />
+            <stop offset="70%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* Hot wire gradient */}
+          <linearGradient id="gfaultHotWire" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#dc2626" />
+            <stop offset="25%" stopColor="#ef4444" />
+            <stop offset="50%" stopColor="#f87171" />
+            <stop offset="75%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+
+          {/* Neutral wire gradient */}
+          <linearGradient id="gfaultNeutralWire" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#2563eb" />
+            <stop offset="25%" stopColor="#3b82f6" />
+            <stop offset="50%" stopColor="#60a5fa" />
+            <stop offset="75%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#2563eb" />
+          </linearGradient>
+
+          {/* Power source gradient */}
+          <linearGradient id="gfaultPowerSource" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1f2937" />
+            <stop offset="30%" stopColor="#111827" />
+            <stop offset="70%" stopColor="#1f2937" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* GFCI box gradient */}
+          <linearGradient id="gfaultGFCIBox" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e3a5f" />
+            <stop offset="25%" stopColor="#1e40af" />
+            <stop offset="50%" stopColor="#1e3a5f" />
+            <stop offset="75%" stopColor="#172554" />
+            <stop offset="100%" stopColor="#1e3a5f" />
+          </linearGradient>
+
+          {/* Load box gradient */}
+          <linearGradient id="gfaultLoadBox" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#451a03" />
+            <stop offset="30%" stopColor="#78350f" />
+            <stop offset="70%" stopColor="#451a03" />
+            <stop offset="100%" stopColor="#1c1917" />
+          </linearGradient>
+
+          {/* Fault spark gradient */}
+          <radialGradient id="gfaultSparkGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fcd34d" stopOpacity="1" />
+            <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#d97706" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Ground symbol gradient */}
+          <linearGradient id="gfaultGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#22c55e" />
+            <stop offset="50%" stopColor="#16a34a" />
+            <stop offset="100%" stopColor="#166534" />
+          </linearGradient>
+
+          {/* Person glow */}
+          <radialGradient id="gfaultPersonGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#bbf7d0" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#22c55e" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#166534" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Wire glow filter */}
+          <filter id="gfaultWireGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Spark glow filter */}
+          <filter id="gfaultSparkFilter" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* GFCI box glow */}
+          <filter id="gfaultGFCIGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <rect width="400" height="220" fill="url(#gfaultBgGrad)" rx="12" />
 
         {/* Power source */}
-        <rect x="20" y="80" width="50" height="60" fill="none" stroke="#ef4444" strokeWidth="2" rx="4" />
-        <text x="45" y="115" textAnchor="middle" fill="#ef4444" fontSize="12" fontWeight="bold">120V</text>
+        <rect x="20" y="80" width="50" height="60" fill="url(#gfaultPowerSource)" stroke="url(#gfaultHotWire)" strokeWidth="2" rx="4" />
+        <text x="45" y="115" textAnchor="middle" fill="#fca5a5" fontSize="12" fontWeight="bold">120V</text>
 
-        {/* Hot wire */}
-        <line x1="70" y1="95" x2="150" y2="95" stroke="#ef4444" strokeWidth="3" />
-        <text x="110" y="85" textAnchor="middle" fill="#ef4444" fontSize="10">HOT (10A)</text>
+        {/* Hot wire with glow */}
+        <line x1="70" y1="95" x2="150" y2="95" stroke="url(#gfaultHotWire)" strokeWidth="4" filter="url(#gfaultWireGlow)" />
 
-        {/* GFCI box */}
-        <rect x="150" y="70" width="80" height="80" fill="#1e3a5f" stroke="#3b82f6" strokeWidth="2" rx="8" />
-        <text x="190" y="100" textAnchor="middle" fill="#3b82f6" fontSize="11" fontWeight="bold">GFCI</text>
-        <text x="190" y="115" textAnchor="middle" fill="#94a3b8" fontSize="9">Detects</text>
-        <text x="190" y="128" textAnchor="middle" fill="#94a3b8" fontSize="9">Imbalance</text>
+        {/* GFCI box with glow */}
+        <rect x="150" y="70" width="80" height="80" fill="url(#gfaultGFCIBox)" stroke="#3b82f6" strokeWidth="2" rx="8" filter="url(#gfaultGFCIGlow)" />
+        {/* GFCI internal detail - current transformer ring */}
+        <ellipse cx="190" cy="110" rx="25" ry="8" fill="none" stroke="#475569" strokeWidth="2" />
+        <ellipse cx="190" cy="110" rx="18" ry="5" fill="none" stroke="#64748b" strokeWidth="1" />
 
-        {/* Load */}
-        <rect x="280" y="80" width="60" height="60" fill="none" stroke="#f59e0b" strokeWidth="2" rx="4" />
-        <text x="310" y="115" textAnchor="middle" fill="#f59e0b" fontSize="11">LOAD</text>
+        {/* Load box */}
+        <rect x="280" y="80" width="60" height="60" fill="url(#gfaultLoadBox)" stroke="#f59e0b" strokeWidth="2" rx="4" />
+        {/* Load internal - resistor symbol */}
+        <path d="M295 110 L300 110 L302 105 L306 115 L310 105 L314 115 L318 105 L322 115 L324 110 L330 110"
+              fill="none" stroke="#fbbf24" strokeWidth="1.5" />
 
         {/* Hot continuation */}
-        <line x1="230" y1="95" x2="280" y2="95" stroke="#ef4444" strokeWidth="3" />
+        <line x1="230" y1="95" x2="280" y2="95" stroke="url(#gfaultHotWire)" strokeWidth="4" filter="url(#gfaultWireGlow)" />
 
-        {/* Neutral wire */}
-        <line x1="280" y1="125" x2="230" y2="125" stroke="#60a5fa" strokeWidth="3" />
-        <line x1="150" y1="125" x2="70" y2="125" stroke="#60a5fa" strokeWidth="3" />
-        <text x="110" y="145" textAnchor="middle" fill="#60a5fa" fontSize="10">NEUTRAL (10A)</text>
+        {/* Neutral wire with glow */}
+        <line x1="280" y1="125" x2="230" y2="125" stroke="url(#gfaultNeutralWire)" strokeWidth="4" filter="url(#gfaultWireGlow)" />
+        <line x1="150" y1="125" x2="70" y2="125" stroke="url(#gfaultNeutralWire)" strokeWidth="4" filter="url(#gfaultWireGlow)" />
 
         {/* Person touching wire - danger scenario */}
-        <circle cx="260" cy="170" r="15" fill="none" stroke="#22c55e" strokeWidth="2" />
+        <circle cx="260" cy="170" r="18" fill="url(#gfaultPersonGlow)" />
+        <circle cx="260" cy="170" r="15" fill="none" stroke="url(#gfaultGroundGrad)" strokeWidth="2" />
+        {/* Person head */}
+        <circle cx="260" cy="162" r="5" fill="none" stroke="#22c55e" strokeWidth="1.5" />
+
+        {/* Leakage path with spark effect */}
         <line x1="260" y1="155" x2="260" y2="140" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4" />
-        <text x="260" y="200" textAnchor="middle" fill="#f59e0b" fontSize="10">Leakage path?</text>
+        {/* Spark at contact point */}
+        <circle cx="260" cy="140" r="6" fill="url(#gfaultSparkGlow)" filter="url(#gfaultSparkFilter)" />
 
-        {/* Ground symbol */}
+        {/* Ground symbol with gradient */}
         <g transform="translate(260, 185)">
-          <line x1="0" y1="0" x2="0" y2="10" stroke="#22c55e" strokeWidth="2" />
-          <line x1="-8" y1="10" x2="8" y2="10" stroke="#22c55e" strokeWidth="2" />
-          <line x1="-5" y1="15" x2="5" y2="15" stroke="#22c55e" strokeWidth="2" />
-          <line x1="-2" y1="20" x2="2" y2="20" stroke="#22c55e" strokeWidth="2" />
+          <line x1="0" y1="0" x2="0" y2="10" stroke="url(#gfaultGroundGrad)" strokeWidth="2" />
+          <line x1="-10" y1="10" x2="10" y2="10" stroke="url(#gfaultGroundGrad)" strokeWidth="3" />
+          <line x1="-6" y1="15" x2="6" y2="15" stroke="url(#gfaultGroundGrad)" strokeWidth="2" />
+          <line x1="-3" y1="20" x2="3" y2="20" stroke="url(#gfaultGroundGrad)" strokeWidth="1.5" />
         </g>
-
-        {/* Question */}
-        <text x="200" y="35" textAnchor="middle" fill="#f8fafc" fontSize="13">
-          If current leaks through the person, what changes?
-        </text>
       </svg>
+
+      {/* Labels moved outside SVG */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-around',
+        maxWidth: '500px',
+        margin: '0 auto 16px',
+        fontSize: typo.small,
+        color: colors.textSecondary
+      }}>
+        <span style={{ color: '#ef4444' }}>HOT (10A)</span>
+        <span style={{ color: '#3b82f6' }}>GFCI Detects Imbalance</span>
+        <span style={{ color: '#f59e0b' }}>LOAD</span>
+      </div>
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        maxWidth: '500px',
+        margin: '0 auto 24px',
+        gap: '32px',
+        fontSize: typo.small
+      }}>
+        <span style={{ color: '#60a5fa' }}>NEUTRAL (10A)</span>
+        <span style={{ color: '#f59e0b' }}>Leakage path?</span>
+      </div>
+
+      <p style={{ fontSize: typo.body, color: colors.textSecondary, textAlign: 'center', marginBottom: '32px' }}>
+        If current leaks through the person, what changes?
+      </p>
 
       <div style={{
         background: 'rgba(30, 41, 59, 0.8)',
@@ -783,74 +915,279 @@ export default function GroundFaultRenderer({
       </div>
 
       {/* Circuit visualization */}
-      <svg viewBox="0 0 400 180" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '24px' }}>
-        <rect width="400" height="180" fill="#0f172a" rx="12" />
+      <svg viewBox="0 0 400 180" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+        <defs>
+          {/* Background gradient */}
+          <linearGradient id="gfaultPlayBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="30%" stopColor="#020617" />
+            <stop offset="70%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
 
-        {/* Hot wire with current indicator */}
-        <line x1="30" y1="50" x2="370" y2="50" stroke={gfciTripped ? '#64748b' : '#ef4444'} strokeWidth="4" />
-        <text x="200" y="40" textAnchor="middle" fill={gfciTripped ? '#64748b' : '#ef4444'} fontSize="11">
-          HOT: {gfciTripped ? '0' : hotCurrent.toFixed(3)}A
-        </text>
+          {/* Hot wire gradient - active */}
+          <linearGradient id="gfaultPlayHotActive" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#b91c1c" />
+            <stop offset="20%" stopColor="#dc2626" />
+            <stop offset="40%" stopColor="#ef4444" />
+            <stop offset="60%" stopColor="#f87171" />
+            <stop offset="80%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#dc2626" />
+          </linearGradient>
+
+          {/* Hot wire gradient - tripped */}
+          <linearGradient id="gfaultPlayHotTripped" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#374151" />
+            <stop offset="50%" stopColor="#4b5563" />
+            <stop offset="100%" stopColor="#374151" />
+          </linearGradient>
+
+          {/* Neutral wire gradient - active */}
+          <linearGradient id="gfaultPlayNeutralActive" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#1d4ed8" />
+            <stop offset="20%" stopColor="#2563eb" />
+            <stop offset="40%" stopColor="#3b82f6" />
+            <stop offset="60%" stopColor="#60a5fa" />
+            <stop offset="80%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#2563eb" />
+          </linearGradient>
+
+          {/* GFCI box gradient - normal */}
+          <linearGradient id="gfaultPlayGFCINormal" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e3a5f" />
+            <stop offset="25%" stopColor="#1e40af" />
+            <stop offset="50%" stopColor="#1e3a5f" />
+            <stop offset="75%" stopColor="#172554" />
+            <stop offset="100%" stopColor="#1e3a5f" />
+          </linearGradient>
+
+          {/* GFCI box gradient - tripped */}
+          <linearGradient id="gfaultPlayGFCITripped" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#450a0a" />
+            <stop offset="25%" stopColor="#7f1d1d" />
+            <stop offset="50%" stopColor="#991b1b" />
+            <stop offset="75%" stopColor="#7f1d1d" />
+            <stop offset="100%" stopColor="#450a0a" />
+          </linearGradient>
+
+          {/* Current particle glow - hot */}
+          <radialGradient id="gfaultPlayHotParticle" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fecaca" stopOpacity="1" />
+            <stop offset="40%" stopColor="#fca5a5" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Current particle glow - neutral */}
+          <radialGradient id="gfaultPlayNeutralParticle" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#dbeafe" stopOpacity="1" />
+            <stop offset="40%" stopColor="#93c5fd" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Leakage spark glow */}
+          <radialGradient id="gfaultPlayLeakGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fde047" stopOpacity="1" />
+            <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Person glow */}
+          <radialGradient id="gfaultPlayPersonGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fde047" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Wire glow filter */}
+          <filter id="gfaultPlayWireGlow" x="-30%" y="-100%" width="160%" height="300%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Particle glow filter */}
+          <filter id="gfaultPlayParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Spark filter */}
+          <filter id="gfaultPlaySparkFilter" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* GFCI glow filter */}
+          <filter id="gfaultPlayGFCIGlow" x="-30%" y="-20%" width="160%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <rect width="400" height="180" fill="url(#gfaultPlayBg)" rx="12" />
+
+        {/* Hot wire with gradient and glow */}
+        <line
+          x1="30" y1="50" x2="370" y2="50"
+          stroke={gfciTripped ? 'url(#gfaultPlayHotTripped)' : 'url(#gfaultPlayHotActive)'}
+          strokeWidth="5"
+          filter={gfciTripped ? undefined : 'url(#gfaultPlayWireGlow)'}
+        />
 
         {/* Animated current flow on hot (if not tripped) */}
         {!gfciTripped && (
           <>
-            {[0, 1, 2, 3].map(i => (
+            {[0, 1, 2, 3, 4, 5].map(i => (
               <circle
                 key={i}
-                cx={30 + ((animationTime * 50 + i * 85) % 340)}
+                cx={30 + ((animationTime * 60 + i * 57) % 340)}
                 cy="50"
-                r="4"
-                fill="#fca5a5"
-                opacity={0.8}
+                r="6"
+                fill="url(#gfaultPlayHotParticle)"
+                filter="url(#gfaultPlayParticleGlow)"
               />
             ))}
           </>
         )}
 
-        {/* Neutral wire with current indicator */}
-        <line x1="30" y1="130" x2="370" y2="130" stroke={gfciTripped ? '#64748b' : '#60a5fa'} strokeWidth="4" />
-        <text x="200" y="150" textAnchor="middle" fill={gfciTripped ? '#64748b' : '#60a5fa'} fontSize="11">
-          NEUTRAL: {gfciTripped ? '0' : neutralCurrent.toFixed(3)}A
-        </text>
+        {/* Neutral wire with gradient and glow */}
+        <line
+          x1="30" y1="130" x2="370" y2="130"
+          stroke={gfciTripped ? 'url(#gfaultPlayHotTripped)' : 'url(#gfaultPlayNeutralActive)'}
+          strokeWidth="5"
+          filter={gfciTripped ? undefined : 'url(#gfaultPlayWireGlow)'}
+        />
 
         {/* Animated current flow on neutral (if not tripped) */}
         {!gfciTripped && (
           <>
-            {[0, 1, 2, 3].map(i => (
+            {[0, 1, 2, 3, 4, 5].map(i => (
               <circle
                 key={i}
-                cx={370 - ((animationTime * 50 + i * 85) % 340)}
+                cx={370 - ((animationTime * 60 + i * 57) % 340)}
                 cy="130"
-                r="4"
-                fill="#93c5fd"
-                opacity={0.8}
+                r="6"
+                fill="url(#gfaultPlayNeutralParticle)"
+                filter="url(#gfaultPlayParticleGlow)"
               />
             ))}
           </>
         )}
 
-        {/* Leakage path */}
+        {/* Leakage path with premium spark effect */}
         {leakageCurrent > 0 && !gfciTripped && (
           <>
-            <line x1="280" y1="50" x2="280" y2="90" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4" />
+            {/* Leakage line from hot */}
+            <line x1="280" y1="50" x2="280" y2="85" stroke="#f59e0b" strokeWidth="2" strokeDasharray="4,2" />
+
+            {/* Person being shocked with glow */}
+            <circle cx="280" cy="90" r="14" fill="url(#gfaultPlayPersonGlow)" />
             <circle cx="280" cy="90" r="10" fill="none" stroke="#f59e0b" strokeWidth="2" />
-            <line x1="280" y1="100" x2="280" y2="130" stroke="#22c55e" strokeWidth="2" strokeDasharray="4" />
-            <text x="310" y="95" fill="#f59e0b" fontSize="10">{leakageCurrent}mA leak</text>
+            {/* Person head */}
+            <circle cx="280" cy="84" r="4" fill="none" stroke="#fbbf24" strokeWidth="1.5" />
+
+            {/* Sparks at contact point */}
+            {[0, 1, 2].map(i => (
+              <circle
+                key={i}
+                cx={280 + Math.sin(animationTime * 8 + i * 2) * 8}
+                cy={70 + Math.cos(animationTime * 8 + i * 2) * 4}
+                r={2 + Math.sin(animationTime * 10 + i) * 1}
+                fill="url(#gfaultPlayLeakGlow)"
+                filter="url(#gfaultPlaySparkFilter)"
+              />
+            ))}
+
+            {/* Leakage line to ground */}
+            <line x1="280" y1="100" x2="280" y2="130" stroke="#22c55e" strokeWidth="2" strokeDasharray="4,2" />
+
+            {/* Ground symbol */}
+            <g transform="translate(280, 135)">
+              <line x1="0" y1="0" x2="0" y2="8" stroke="#22c55e" strokeWidth="2" />
+              <line x1="-8" y1="8" x2="8" y2="8" stroke="#22c55e" strokeWidth="2" />
+              <line x1="-5" y1="12" x2="5" y2="12" stroke="#22c55e" strokeWidth="1.5" />
+              <line x1="-2" y1="16" x2="2" y2="16" stroke="#22c55e" strokeWidth="1" />
+            </g>
           </>
         )}
 
-        {/* GFCI detector */}
-        <rect x="100" y="40" width="60" height="100" fill="#1e3a5f" stroke={gfciTripped ? '#ef4444' : '#3b82f6'} strokeWidth="2" rx="6" />
-        <text x="130" y="80" textAnchor="middle" fill={gfciTripped ? '#ef4444' : '#3b82f6'} fontSize="10" fontWeight="bold">GFCI</text>
-        <text x="130" y="95" textAnchor="middle" fill="#94a3b8" fontSize="9">
-          {imbalance}mA
-        </text>
-        <text x="130" y="108" textAnchor="middle" fill="#94a3b8" fontSize="9">imbalance</text>
-        {!gfciTripped && imbalance > 0 && imbalance < 5 && (
-          <text x="130" y="125" textAnchor="middle" fill="#f59e0b" fontSize="8">Monitoring...</text>
-        )}
+        {/* GFCI detector with premium styling */}
+        <rect
+          x="100" y="40" width="60" height="100"
+          fill={gfciTripped ? 'url(#gfaultPlayGFCITripped)' : 'url(#gfaultPlayGFCINormal)'}
+          stroke={gfciTripped ? '#ef4444' : '#3b82f6'}
+          strokeWidth="2" rx="6"
+          filter="url(#gfaultPlayGFCIGlow)"
+        />
+
+        {/* GFCI internal - current transformer ring */}
+        <ellipse cx="130" cy="70" rx="20" ry="6" fill="none" stroke={gfciTripped ? '#f87171' : '#60a5fa'} strokeWidth="2" />
+        <ellipse cx="130" cy="70" rx="14" ry="4" fill="none" stroke={gfciTripped ? '#fca5a5' : '#93c5fd'} strokeWidth="1" />
+
+        {/* Test/Reset buttons on GFCI */}
+        <rect x="108" y="95" width="12" height="8" rx="1" fill={gfciTripped ? '#ef4444' : '#475569'} />
+        <rect x="124" y="95" width="12" height="8" rx="1" fill={gfciTripped ? '#22c55e' : '#475569'} />
+
+        {/* GFCI indicator LED */}
+        <circle cx="130" cy="115" r="4" fill={gfciTripped ? '#ef4444' : '#22c55e'} filter="url(#gfaultPlaySparkFilter)" />
       </svg>
+
+      {/* Labels moved outside SVG using typo system */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        maxWidth: '500px',
+        margin: '0 auto 8px',
+        padding: '0 30px',
+        fontSize: typo.small
+      }}>
+        <span style={{ color: gfciTripped ? '#64748b' : '#ef4444', fontWeight: 600 }}>
+          HOT: {gfciTripped ? '0' : hotCurrent.toFixed(3)}A
+        </span>
+        <span style={{ color: gfciTripped ? '#64748b' : '#60a5fa', fontWeight: 600 }}>
+          NEUTRAL: {gfciTripped ? '0' : neutralCurrent.toFixed(3)}A
+        </span>
+      </div>
+
+      {/* GFCI status label */}
+      <div style={{
+        textAlign: 'center',
+        fontSize: typo.small,
+        color: '#94a3b8',
+        marginBottom: '8px'
+      }}>
+        <span style={{ color: gfciTripped ? '#ef4444' : '#3b82f6', fontWeight: 'bold' }}>GFCI</span>
+        {' · '}
+        <span style={{ color: imbalance >= 5 ? '#ef4444' : imbalance > 0 ? '#f59e0b' : '#94a3b8' }}>
+          {imbalance}mA imbalance
+        </span>
+        {!gfciTripped && imbalance > 0 && imbalance < 5 && (
+          <span style={{ color: '#f59e0b' }}> · Monitoring...</span>
+        )}
+      </div>
+
+      {leakageCurrent > 0 && !gfciTripped && (
+        <div style={{
+          textAlign: 'center',
+          fontSize: typo.small,
+          color: '#f59e0b',
+          marginBottom: '16px'
+        }}>
+          {leakageCurrent}mA leaking through fault path
+        </div>
+      )}
 
       {/* Leakage slider */}
       <div style={{ marginBottom: '24px' }}>

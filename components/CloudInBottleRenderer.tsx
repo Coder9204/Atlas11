@@ -557,118 +557,440 @@ const CloudInBottleRenderer: React.FC<CloudInBottleRendererProps> = ({ phase, on
     const bottleHeight = 220;
     const compression = isSqueezing ? 0.85 : 1;
 
+    // Generate stable particle positions using seed-based approach
+    const smokeParticles = React.useMemo(() => {
+      return Array.from({ length: 20 }, (_, i) => ({
+        cx: 80 + ((i * 13) % 140),
+        cy: 70 + ((i * 17) % 160),
+        r: 1.5 + (i % 3),
+        opacity: 0.2 + (i % 5) * 0.1
+      }));
+    }, []);
+
+    // Generate water vapor particles
+    const vaporParticles = React.useMemo(() => {
+      return Array.from({ length: 12 }, (_, i) => ({
+        cx: 90 + ((i * 11) % 120),
+        cy: 200 + ((i * 7) % 50),
+        r: 2 + (i % 2),
+        delay: i * 0.3
+      }));
+    }, []);
+
+    // Status label text
+    const statusText = isSqueezing
+      ? 'Squeezed - Pressurized'
+      : cloudDensity > 20
+        ? 'Released - Cloud!'
+        : 'Released - Ready';
+
     return (
-      <svg viewBox={`0 0 300 280`} style={{ width: '100%', maxWidth: '350px', height: 'auto' }}>
-        <defs>
-          <linearGradient id="bottleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#64748b" stopOpacity="0.3" />
-            <stop offset="30%" stopColor="#94a3b8" stopOpacity="0.2" />
-            <stop offset="70%" stopColor="#94a3b8" stopOpacity="0.2" />
-            <stop offset="100%" stopColor="#64748b" stopOpacity="0.3" />
-          </linearGradient>
-          <radialGradient id="cloudGrad" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="white" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="white" stopOpacity="0" />
-          </radialGradient>
-          <filter id="cloudBlur">
-            <feGaussianBlur stdDeviation="3" />
-          </filter>
-        </defs>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
+        <svg viewBox="0 0 300 260" style={{ width: '100%', maxWidth: '350px', height: 'auto' }}>
+          <defs>
+            {/* Premium glass bottle gradient with transparency effect */}
+            <linearGradient id="cloudBottleGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" stopOpacity="0.4" />
+              <stop offset="15%" stopColor="#94a3b8" stopOpacity="0.25" />
+              <stop offset="35%" stopColor="#e2e8f0" stopOpacity="0.15" />
+              <stop offset="65%" stopColor="#e2e8f0" stopOpacity="0.15" />
+              <stop offset="85%" stopColor="#94a3b8" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#475569" stopOpacity="0.4" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect width="300" height="280" fill="#0f172a" rx="12" />
+            {/* Glass highlight for 3D effect */}
+            <linearGradient id="cloudBottleHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0" />
+              <stop offset="20%" stopColor="#ffffff" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#ffffff" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </linearGradient>
 
-        {/* Bottle body */}
-        <path
-          d={`M${150 - bottleWidth/2 * compression},${50}
-              L${150 - bottleWidth/2 * compression},${50 + bottleHeight}
-              Q${150 - bottleWidth/2 * compression},${50 + bottleHeight + 20} ${150},${50 + bottleHeight + 20}
-              Q${150 + bottleWidth/2 * compression},${50 + bottleHeight + 20} ${150 + bottleWidth/2 * compression},${50 + bottleHeight}
-              L${150 + bottleWidth/2 * compression},${50}
-              Q${150 + bottleWidth/2 * compression},${30} ${150},${30}
-              Q${150 - bottleWidth/2 * compression},${30} ${150 - bottleWidth/2 * compression},${50}
-              Z`}
-          fill="url(#bottleGrad)"
-          stroke="#64748b"
-          strokeWidth="2"
-        />
+            {/* Bottle neck metallic cap gradient */}
+            <linearGradient id="cloudBottleCap" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#94a3b8" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="80%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
 
-        {/* Bottle neck */}
-        <rect x="135" y="10" width="30" height="20" fill="url(#bottleGrad)" stroke="#64748b" strokeWidth="2" rx="3" />
+            {/* Water at bottom with depth gradient */}
+            <linearGradient id="cloudWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="#2563eb" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.6" />
+            </linearGradient>
 
-        {/* Water at bottom */}
-        <path
-          d={`M${150 - bottleWidth/2 * compression + 5},${50 + bottleHeight - 20}
-              L${150 - bottleWidth/2 * compression + 5},${50 + bottleHeight + 15}
-              Q${150},${50 + bottleHeight + 18} ${150 + bottleWidth/2 * compression - 5},${50 + bottleHeight + 15}
-              L${150 + bottleWidth/2 * compression - 5},${50 + bottleHeight - 20}
-              Z`}
-          fill="#3b82f6"
-          opacity="0.4"
-        />
+            {/* Cloud formation radial gradient - fluffy white effect */}
+            <radialGradient id="cloudFormationGradient" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+              <stop offset="25%" stopColor="#f8fafc" stopOpacity="0.85" />
+              <stop offset="50%" stopColor="#f1f5f9" stopOpacity="0.6" />
+              <stop offset="75%" stopColor="#e2e8f0" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#cbd5e1" stopOpacity="0" />
+            </radialGradient>
 
-        {/* Smoke particles (nuclei indicator) */}
-        {hasNuclei && (showSmoke || cloudDensity < 30) && (
-          <>
-            {[...Array(15)].map((_, i) => (
+            {/* Cloud particle glow gradient */}
+            <radialGradient id="cloudParticleGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f8fafc" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#e2e8f0" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#cbd5e1" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Smoke/nuclei particle gradient */}
+            <radialGradient id="cloudSmokeParticle" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#64748b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#475569" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Pressure indicator gradient - red/orange for compression */}
+            <linearGradient id="cloudPressureGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+              <stop offset="25%" stopColor="#f97316" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.5" />
+              <stop offset="75%" stopColor="#f97316" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Water vapor rising gradient */}
+            <linearGradient id="cloudVaporGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#dbeafe" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Hand skin tone gradient */}
+            <linearGradient id="cloudHandGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="30%" stopColor="#fbbf24" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Background subtle gradient */}
+            <linearGradient id="cloudBgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Glow filter for cloud particles */}
+            <filter id="cloudGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft blur for dense cloud */}
+            <filter id="cloudDenseBlur" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Pressure release effect filter */}
+            <filter id="cloudPressureBlur" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Smoke particle blur */}
+            <filter id="cloudSmokeBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" />
+            </filter>
+
+            {/* Water shimmer effect */}
+            <filter id="cloudWaterShimmer" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background with gradient */}
+          <rect width="300" height="260" fill="url(#cloudBgGradient)" rx="12" />
+
+          {/* Subtle grid pattern for depth */}
+          <pattern id="cloudGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+            <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+          </pattern>
+          <rect width="300" height="260" fill="url(#cloudGridPattern)" rx="12" />
+
+          {/* Pressure release visual effect (when releasing) */}
+          {!isSqueezing && squeezePressure < 30 && cloudDensity > 10 && (
+            <g filter="url(#cloudPressureBlur)">
+              <ellipse
+                cx="150"
+                cy="130"
+                rx={80}
+                ry={60}
+                fill="url(#cloudPressureGradient)"
+                opacity={0.3}
+              >
+                <animate attributeName="rx" values="70;90;70" dur="1s" repeatCount="indefinite" />
+                <animate attributeName="ry" values="50;70;50" dur="1s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.3;0.1;0.3" dur="1s" repeatCount="indefinite" />
+              </ellipse>
+            </g>
+          )}
+
+          {/* Bottle body - glass effect with multiple layers */}
+          <g>
+            {/* Main bottle shape - glass body */}
+            <path
+              d={`M${150 - bottleWidth/2 * compression},${50}
+                  L${150 - bottleWidth/2 * compression},${50 + bottleHeight}
+                  Q${150 - bottleWidth/2 * compression},${50 + bottleHeight + 20} ${150},${50 + bottleHeight + 20}
+                  Q${150 + bottleWidth/2 * compression},${50 + bottleHeight + 20} ${150 + bottleWidth/2 * compression},${50 + bottleHeight}
+                  L${150 + bottleWidth/2 * compression},${50}
+                  Q${150 + bottleWidth/2 * compression},${30} ${150},${30}
+                  Q${150 - bottleWidth/2 * compression},${30} ${150 - bottleWidth/2 * compression},${50}
+                  Z`}
+              fill="url(#cloudBottleGlass)"
+              stroke="#64748b"
+              strokeWidth="2"
+            />
+
+            {/* Glass highlight reflection */}
+            <path
+              d={`M${150 - bottleWidth/2 * compression + 10},${55}
+                  L${150 - bottleWidth/2 * compression + 10},${50 + bottleHeight - 10}
+                  Q${150 - bottleWidth/2 * compression + 15},${50 + bottleHeight + 10} ${150 - bottleWidth/4 * compression},${50 + bottleHeight + 10}
+                  L${150 - bottleWidth/4 * compression},${55}
+                  Z`}
+              fill="url(#cloudBottleHighlight)"
+            />
+
+            {/* Right side subtle reflection */}
+            <path
+              d={`M${150 + bottleWidth/3 * compression},${60}
+                  L${150 + bottleWidth/3 * compression},${50 + bottleHeight - 20}
+                  L${150 + bottleWidth/3 * compression + 8},${50 + bottleHeight - 25}
+                  L${150 + bottleWidth/3 * compression + 8},${65}
+                  Z`}
+              fill="#ffffff"
+              opacity="0.1"
+            />
+          </g>
+
+          {/* Bottle neck with metallic cap */}
+          <g>
+            <rect
+              x="135"
+              y="10"
+              width="30"
+              height="22"
+              fill="url(#cloudBottleCap)"
+              stroke="#475569"
+              strokeWidth="1.5"
+              rx="4"
+            />
+            {/* Cap ridges for realism */}
+            <line x1="138" y1="12" x2="138" y2="30" stroke="#94a3b8" strokeWidth="0.5" opacity="0.5" />
+            <line x1="143" y1="12" x2="143" y2="30" stroke="#94a3b8" strokeWidth="0.5" opacity="0.3" />
+            <line x1="157" y1="12" x2="157" y2="30" stroke="#94a3b8" strokeWidth="0.5" opacity="0.3" />
+            <line x1="162" y1="12" x2="162" y2="30" stroke="#94a3b8" strokeWidth="0.5" opacity="0.5" />
+          </g>
+
+          {/* Water at bottom with shimmer */}
+          <g filter="url(#cloudWaterShimmer)">
+            <path
+              d={`M${150 - bottleWidth/2 * compression + 5},${50 + bottleHeight - 20}
+                  L${150 - bottleWidth/2 * compression + 5},${50 + bottleHeight + 15}
+                  Q${150},${50 + bottleHeight + 18} ${150 + bottleWidth/2 * compression - 5},${50 + bottleHeight + 15}
+                  L${150 + bottleWidth/2 * compression - 5},${50 + bottleHeight - 20}
+                  Z`}
+              fill="url(#cloudWaterGradient)"
+            />
+            {/* Water surface highlight */}
+            <ellipse
+              cx="150"
+              cy={50 + bottleHeight - 18}
+              rx={bottleWidth/2 * compression - 10}
+              ry="3"
+              fill="#93c5fd"
+              opacity="0.4"
+            />
+          </g>
+
+          {/* Water vapor particles rising from water */}
+          {humidity > 60 && (
+            <g>
+              {vaporParticles.map((vp, i) => (
+                <ellipse
+                  key={`vapor-${i}`}
+                  cx={vp.cx}
+                  cy={vp.cy}
+                  rx={vp.r}
+                  ry={vp.r * 1.5}
+                  fill="url(#cloudVaporGradient)"
+                  opacity={0.4}
+                >
+                  <animate
+                    attributeName="cy"
+                    values={`${vp.cy};${vp.cy - 40};${vp.cy}`}
+                    dur="3s"
+                    begin={`${vp.delay}s`}
+                    repeatCount="indefinite"
+                  />
+                  <animate
+                    attributeName="opacity"
+                    values="0.4;0;0.4"
+                    dur="3s"
+                    begin={`${vp.delay}s`}
+                    repeatCount="indefinite"
+                  />
+                </ellipse>
+              ))}
+            </g>
+          )}
+
+          {/* Smoke particles (nuclei indicator) */}
+          {hasNuclei && (showSmoke || cloudDensity < 30) && (
+            <g filter="url(#cloudSmokeBlur)">
+              {smokeParticles.map((sp, i) => (
+                <circle
+                  key={`smoke-${i}`}
+                  cx={sp.cx}
+                  cy={sp.cy}
+                  r={sp.r}
+                  fill="url(#cloudSmokeParticle)"
+                  opacity={sp.opacity}
+                >
+                  {showSmoke && (
+                    <animate
+                      attributeName="opacity"
+                      values={`${sp.opacity};${sp.opacity * 0.3};${sp.opacity}`}
+                      dur="2s"
+                      repeatCount="indefinite"
+                    />
+                  )}
+                </circle>
+              ))}
+            </g>
+          )}
+
+          {/* Cloud particles with glow effect */}
+          <g filter="url(#cloudGlowFilter)">
+            {cloudParticles.map((p, i) => (
               <circle
-                key={i}
-                cx={100 + Math.random() * 100}
-                cy={80 + Math.random() * 150}
-                r={1 + Math.random() * 2}
-                fill="#94a3b8"
-                opacity={0.3 + Math.random() * 0.3}
+                key={`cloud-${i}`}
+                cx={p.x}
+                cy={p.y}
+                r={p.size}
+                fill="url(#cloudParticleGlow)"
+                opacity={p.opacity * (cloudDensity / 100)}
               />
             ))}
-          </>
-        )}
+          </g>
 
-        {/* Cloud particles */}
-        {cloudParticles.map((p, i) => (
-          <circle
-            key={i}
-            cx={p.x}
-            cy={p.y}
-            r={p.size}
-            fill="white"
-            opacity={p.opacity * (cloudDensity / 100)}
-            filter="url(#cloudBlur)"
-          />
-        ))}
+          {/* Dense cloud overlay - main cloud formation */}
+          {cloudDensity > 30 && (
+            <g filter="url(#cloudDenseBlur)">
+              {/* Multiple cloud puffs for realistic look */}
+              <ellipse
+                cx="150"
+                cy="120"
+                rx={45 * (cloudDensity / 100)}
+                ry={35 * (cloudDensity / 100)}
+                fill="url(#cloudFormationGradient)"
+                opacity={cloudDensity / 120}
+              />
+              <ellipse
+                cx="125"
+                cy="135"
+                rx={35 * (cloudDensity / 100)}
+                ry={30 * (cloudDensity / 100)}
+                fill="url(#cloudFormationGradient)"
+                opacity={cloudDensity / 130}
+              />
+              <ellipse
+                cx="175"
+                cy="135"
+                rx={35 * (cloudDensity / 100)}
+                ry={30 * (cloudDensity / 100)}
+                fill="url(#cloudFormationGradient)"
+                opacity={cloudDensity / 130}
+              />
+              <ellipse
+                cx="150"
+                cy="150"
+                rx={50 * (cloudDensity / 100)}
+                ry={40 * (cloudDensity / 100)}
+                fill="url(#cloudFormationGradient)"
+                opacity={cloudDensity / 140}
+              />
+            </g>
+          )}
 
-        {/* Dense cloud overlay */}
-        {cloudDensity > 50 && (
-          <ellipse
-            cx="150"
-            cy="140"
-            rx={60 * (cloudDensity / 100)}
-            ry={50 * (cloudDensity / 100)}
-            fill="url(#cloudGrad)"
-            opacity={cloudDensity / 150}
-          />
-        )}
+          {/* Hands squeezing with gradient (when active) */}
+          {isSqueezing && (
+            <g>
+              {/* Left hand */}
+              <path
+                d="M25,90 Q45,100 58,130 Q55,160 58,190 Q45,195 25,195 Q30,150 25,90"
+                fill="url(#cloudHandGradient)"
+                opacity="0.9"
+                stroke="#d97706"
+                strokeWidth="1"
+              />
+              {/* Left hand fingers */}
+              <path
+                d="M58,115 Q65,118 68,130 Q65,145 58,150"
+                fill="url(#cloudHandGradient)"
+                opacity="0.85"
+              />
 
-        {/* Hands squeezing (when active) */}
-        {isSqueezing && (
-          <>
-            <path
-              d="M30,100 Q50,110 60,140 Q50,180 30,190"
-              fill="#fcd34d"
-              opacity="0.8"
-            />
-            <path
-              d="M270,100 Q250,110 240,140 Q250,180 270,190"
-              fill="#fcd34d"
-              opacity="0.8"
-            />
-          </>
-        )}
+              {/* Right hand */}
+              <path
+                d="M275,90 Q255,100 242,130 Q245,160 242,190 Q255,195 275,195 Q270,150 275,90"
+                fill="url(#cloudHandGradient)"
+                opacity="0.9"
+                stroke="#d97706"
+                strokeWidth="1"
+              />
+              {/* Right hand fingers */}
+              <path
+                d="M242,115 Q235,118 232,130 Q235,145 242,150"
+                fill="url(#cloudHandGradient)"
+                opacity="0.85"
+              />
 
-        {/* Labels */}
-        <text x="150" y="265" fill="#94a3b8" fontSize="12" textAnchor="middle">
-          {isSqueezing ? 'Squeezed - Pressurized' : cloudDensity > 20 ? 'Released - Cloud!' : 'Released - Ready'}
-        </text>
-      </svg>
+              {/* Pressure arrows */}
+              <path d="M55,140 L70,140 L65,135 M70,140 L65,145" stroke="#f59e0b" strokeWidth="2" opacity="0.7" />
+              <path d="M245,140 L230,140 L235,135 M230,140 L235,145" stroke="#f59e0b" strokeWidth="2" opacity="0.7" />
+            </g>
+          )}
+        </svg>
+
+        {/* Status label moved outside SVG using typo system */}
+        <div style={{
+          fontSize: typo.small,
+          color: cloudDensity > 20 ? colors.primary : colors.textSecondary,
+          fontWeight: cloudDensity > 20 ? 600 : 400,
+          textAlign: 'center',
+          padding: '4px 12px',
+          background: cloudDensity > 20 ? 'rgba(59, 130, 246, 0.15)' : 'rgba(71, 85, 105, 0.3)',
+          borderRadius: '8px',
+          border: cloudDensity > 20 ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(71, 85, 105, 0.3)',
+          transition: 'all 0.3s ease'
+        }}>
+          {statusText}
+        </div>
+      </div>
     );
   };
 

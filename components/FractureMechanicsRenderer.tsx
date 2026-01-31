@@ -358,197 +358,526 @@ export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCo
     const localStress = appliedStress * kt;
     const stretch = appliedStress / 10;
 
+    // Get label text based on notch type
+    const notchLabel = notchType === 'none' ? 'Solid material' :
+      notchType === 'round' ? 'Circular hole (Kt = 2-3)' :
+        notchType === 'vsharp' ? 'Sharp V-notch (Kt = 5+)' :
+          'Crack (Kt -> very high!)';
+
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
-        <rect width="400" height="280" fill="#111827" />
+      <div className="relative">
+        <svg viewBox="0 0 400 260" className="w-full h-56">
+          <defs>
+            {/* Premium lab background gradient */}
+            <linearGradient id="fracLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-        {/* Stress arrows (top and bottom) */}
-        <g>
-          {/* Top arrows (pulling up) */}
-          {[...Array(5)].map((_, i) => (
-            <g key={`top-${i}`} transform={`translate(${80 + i * 60}, 20)`}>
-              <line x1="0" y1={30 + stretch} x2="0" y2="10" stroke="#ef4444" strokeWidth="3" />
-              <polygon points="-5,15 5,15 0,5" fill="#ef4444" />
-            </g>
-          ))}
-          {/* Bottom arrows (pulling down) */}
-          {[...Array(5)].map((_, i) => (
-            <g key={`bot-${i}`} transform={`translate(${80 + i * 60}, 260)`}>
-              <line x1="0" y1={-30 - stretch} x2="0" y2="-10" stroke="#ef4444" strokeWidth="3" />
-              <polygon points="-5,-15 5,-15 0,-5" fill="#ef4444" />
-            </g>
-          ))}
-        </g>
+            {/* Material gradient - realistic steel/metal look */}
+            <linearGradient id="fracMaterial" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="25%" stopColor="#4b5563" />
+              <stop offset="50%" stopColor="#6b7280" />
+              <stop offset="75%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
 
-        {/* Material specimen */}
-        <g transform="translate(100, 50)">
-          {/* Main body */}
-          <rect
-            x="0"
-            y={-stretch}
-            width="200"
-            height={160 + stretch * 2}
-            fill={isFractured ? '#7f1d1d' : '#4b5563'}
-            stroke={isFractured ? '#ef4444' : '#6b7280'}
-            strokeWidth="2"
-          />
+            {/* Fractured material gradient */}
+            <linearGradient id="fracMaterialBroken" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7f1d1d" />
+              <stop offset="30%" stopColor="#991b1b" />
+              <stop offset="60%" stopColor="#7f1d1d" />
+              <stop offset="100%" stopColor="#450a0a" />
+            </linearGradient>
 
-          {/* Notch/defect */}
-          {notchType === 'round' && (
-            <circle cx="100" cy={80} r="15" fill="#111827" />
-          )}
-          {notchType === 'vsharp' && (
-            <polygon points="100,65 85,80 100,95 115,80" fill="#111827" />
-          )}
-          {notchType === 'crack' && (
-            <line x1="50" y1="80" x2="100" y2="80" stroke="#111827" strokeWidth="3" />
-          )}
+            {/* Stress arrow gradient */}
+            <linearGradient id="fracStressArrow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="40%" stopColor="#f87171" />
+              <stop offset="60%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
 
-          {/* Stress field visualization */}
-          {appliedStress > 0 && notchType !== 'none' && !isFractured && (
-            <g>
-              {/* Stress concentration lines */}
-              {[...Array(8)].map((_, i) => {
-                const angle = (i / 8) * Math.PI * 2;
-                const baseRadius = notchType === 'crack' ? 10 : 20;
-                const intensityRadius = baseRadius + (localStress / 10) * Math.sin(animPhase + i);
-                return (
+            {/* Stress concentration zone gradient */}
+            <radialGradient id="fracStressZone" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="30%" stopColor="#f97316" stopOpacity="0.5" />
+              <stop offset="60%" stopColor="#facc15" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#facc15" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Crack propagation gradient */}
+            <linearGradient id="fracCrackLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+
+            {/* Info panel gradient */}
+            <linearGradient id="fracInfoPanel" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
+
+            {/* Glow filter for stress arrows */}
+            <filter id="fracArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Intense glow for stress concentration */}
+            <filter id="fracStressGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Fracture line glow */}
+            <filter id="fracLineGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Material edge highlight */}
+            <linearGradient id="fracEdgeHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#9ca3af" />
+              <stop offset="50%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+          </defs>
+
+          {/* Premium background */}
+          <rect width="400" height="260" fill="url(#fracLabBg)" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="fracGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect width="400" height="260" fill="url(#fracGrid)" />
+
+          {/* Stress arrows (top and bottom) with glow */}
+          <g filter="url(#fracArrowGlow)">
+            {/* Top arrows (pulling up) */}
+            {[...Array(5)].map((_, i) => (
+              <g key={`top-${i}`} transform={`translate(${80 + i * 60}, 15)`}>
+                <line x1="0" y1={25 + stretch} x2="0" y2="8" stroke="url(#fracStressArrow)" strokeWidth="4" strokeLinecap="round" />
+                <polygon points="-6,12 6,12 0,0" fill="url(#fracStressArrow)" />
+              </g>
+            ))}
+            {/* Bottom arrows (pulling down) */}
+            {[...Array(5)].map((_, i) => (
+              <g key={`bot-${i}`} transform={`translate(${80 + i * 60}, 245)`}>
+                <line x1="0" y1={-25 - stretch} x2="0" y2="-8" stroke="url(#fracStressArrow)" strokeWidth="4" strokeLinecap="round" />
+                <polygon points="-6,-12 6,-12 0,0" fill="url(#fracStressArrow)" />
+              </g>
+            ))}
+          </g>
+
+          {/* Material specimen */}
+          <g transform="translate(100, 45)">
+            {/* Shadow under material */}
+            <rect
+              x="5"
+              y={-stretch + 5}
+              width="200"
+              height={150 + stretch * 2}
+              rx="2"
+              fill="#000"
+              opacity="0.3"
+            />
+
+            {/* Main body with gradient */}
+            <rect
+              x="0"
+              y={-stretch}
+              width="200"
+              height={150 + stretch * 2}
+              rx="2"
+              fill={isFractured ? 'url(#fracMaterialBroken)' : 'url(#fracMaterial)'}
+              stroke={isFractured ? '#ef4444' : 'url(#fracEdgeHighlight)'}
+              strokeWidth="2"
+            />
+
+            {/* Material surface highlights */}
+            {!isFractured && (
+              <>
+                <rect x="0" y={-stretch} width="200" height="3" rx="1" fill="#9ca3af" opacity="0.3" />
+                <rect x="0" y={-stretch + 147 + stretch * 2} width="200" height="3" rx="1" fill="#1f2937" opacity="0.5" />
+              </>
+            )}
+
+            {/* Notch/defect with internal shadows */}
+            {notchType === 'round' && (
+              <g>
+                <circle cx="100" cy={75} r="16" fill="#0a0f1a" />
+                <circle cx="100" cy={75} r="15" fill="url(#fracLabBg)" stroke="#1f2937" strokeWidth="1" />
+                <circle cx="97" cy={72} r="4" fill="#1e293b" opacity="0.5" />
+              </g>
+            )}
+            {notchType === 'vsharp' && (
+              <g>
+                <polygon points="100,58 82,75 100,92 118,75" fill="#0a0f1a" />
+                <polygon points="100,60 84,75 100,90 116,75" fill="url(#fracLabBg)" stroke="#1f2937" strokeWidth="1" />
+              </g>
+            )}
+            {notchType === 'crack' && (
+              <g>
+                <line x1="48" y1="75" x2="102" y2="75" stroke="#0a0f1a" strokeWidth="5" strokeLinecap="round" />
+                <line x1="50" y1="75" x2="100" y2="75" stroke="url(#fracCrackLine)" strokeWidth="3" strokeLinecap="round" />
+              </g>
+            )}
+
+            {/* Stress field visualization with premium glow */}
+            {appliedStress > 0 && notchType !== 'none' && !isFractured && (
+              <g filter="url(#fracStressGlow)">
+                {/* Stress concentration zone */}
+                <circle
+                  cx={100}
+                  cy={75}
+                  r={15 + (localStress / 5)}
+                  fill="url(#fracStressZone)"
+                  opacity={0.5 + appliedStress / 200}
+                />
+                {/* Animated stress rings */}
+                {[...Array(6)].map((_, i) => {
+                  const baseRadius = notchType === 'crack' ? 8 : 18;
+                  const intensityRadius = baseRadius + (localStress / 8) * Math.sin(animPhase + i * 0.8);
+                  return (
+                    <circle
+                      key={i}
+                      cx={100}
+                      cy={75}
+                      r={intensityRadius}
+                      fill="none"
+                      stroke={i % 2 === 0 ? '#ef4444' : '#f97316'}
+                      strokeWidth={2 - i * 0.2}
+                      opacity={0.6 - i * 0.08}
+                    />
+                  );
+                })}
+              </g>
+            )}
+
+            {/* Fracture visualization with glow */}
+            {isFractured && (
+              <g filter="url(#fracLineGlow)">
+                <line x1="0" y1="75" x2="200" y2="75" stroke="url(#fracCrackLine)" strokeWidth="5" strokeDasharray="12,6" />
+                {/* Fracture sparks */}
+                {[...Array(5)].map((_, i) => (
                   <circle
                     key={i}
-                    cx={notchType === 'crack' ? 100 : 100}
-                    cy={80}
-                    r={intensityRadius}
-                    fill="none"
-                    stroke="#ef4444"
-                    strokeWidth="1"
-                    opacity={0.3 + (i % 2) * 0.2}
+                    cx={20 + i * 40 + Math.sin(animPhase + i) * 5}
+                    cy={75 + Math.cos(animPhase * 2 + i) * 8}
+                    r={2 + Math.sin(animPhase * 3 + i) * 1}
+                    fill="#fbbf24"
+                    opacity={0.6 + Math.sin(animPhase + i) * 0.4}
                   />
-                );
-              })}
-            </g>
-          )}
+                ))}
+              </g>
+            )}
+          </g>
 
-          {/* Fracture visualization */}
-          {isFractured && (
-            <g>
-              <line x1="0" y1="80" x2="200" y2="80" stroke="#ef4444" strokeWidth="4" strokeDasharray="10,5" />
-              <text x="100" y="40" textAnchor="middle" className="fill-red-400 text-lg font-bold">
-                FRACTURED!
-              </text>
-            </g>
-          )}
-        </g>
+          {/* Info panel with gradient */}
+          <g transform="translate(315, 70)">
+            <rect x="0" y="0" width="75" height="105" fill="url(#fracInfoPanel)" rx="8" stroke="#374151" strokeWidth="1" />
+            <rect x="0" y="0" width="75" height="2" rx="1" fill="#4b5563" opacity="0.5" />
+          </g>
+        </svg>
 
-        {/* Stress info panel */}
-        <g transform="translate(320, 80)">
-          <rect x="0" y="0" width="70" height="100" fill="#1f2937" rx="5" />
-          <text x="35" y="20" textAnchor="middle" className="fill-gray-400 text-xs">Applied</text>
-          <text x="35" y="38" textAnchor="middle" className="fill-white text-sm font-bold">{appliedStress.toFixed(0)} MPa</text>
-          <text x="35" y="55" textAnchor="middle" className="fill-gray-400 text-xs">Kt</text>
-          <text x="35" y="73" textAnchor="middle" className="fill-yellow-400 text-sm font-bold">×{kt}</text>
-          <text x="35" y="90" textAnchor="middle" className="fill-red-400 text-xs">Local: {localStress.toFixed(0)}</text>
-        </g>
+        {/* Info panel labels - outside SVG using typo system */}
+        <div
+          className="absolute text-center"
+          style={{
+            right: isMobile ? '8px' : '12px',
+            top: isMobile ? '78px' : '82px',
+            width: '70px'
+          }}
+        >
+          <div style={{ fontSize: typo.label }} className="text-gray-400">Applied</div>
+          <div style={{ fontSize: typo.body }} className="text-white font-bold">{appliedStress.toFixed(0)} MPa</div>
+          <div style={{ fontSize: typo.label, marginTop: '4px' }} className="text-gray-400">Kt</div>
+          <div style={{ fontSize: typo.body }} className="text-yellow-400 font-bold">x{kt}</div>
+          <div style={{ fontSize: typo.label, marginTop: '4px' }} className="text-red-400">Local: {localStress.toFixed(0)}</div>
+        </div>
 
-        {/* Notch type label */}
-        <text x="200" y="270" textAnchor="middle" className="fill-gray-400 text-sm">
-          {notchType === 'none' ? 'Solid material' :
-            notchType === 'round' ? 'Circular hole (Kt ≈ 2-3)' :
-              notchType === 'vsharp' ? 'Sharp V-notch (Kt ≈ 5+)' :
-                'Crack (Kt → very high!)'}
-        </text>
-      </svg>
+        {/* Notch type label - outside SVG */}
+        <div className="text-center mt-1" style={{ fontSize: typo.small }}>
+          <span className="text-gray-400">{notchLabel}</span>
+        </div>
+
+        {/* Fractured label - outside SVG */}
+        {isFractured && (
+          <div className="absolute left-1/2 -translate-x-1/2" style={{ top: isMobile ? '50px' : '55px' }}>
+            <span className="text-red-400 font-bold animate-pulse" style={{ fontSize: typo.heading }}>FRACTURED!</span>
+          </div>
+        )}
+      </div>
     );
   };
 
   const renderCrackStopScene = () => {
     const crackTipX = 100 + crackLength;
 
+    // Explanation text based on state
+    const explanationText = hasCrackStopHole
+      ? 'Hole converts sharp crack tip to rounded edge - lower Kt'
+      : 'Sharp crack tip has extreme stress concentration';
+
     return (
-      <svg viewBox="0 0 400 250" className="w-full h-48">
-        <rect width="400" height="250" fill="#111827" />
+      <div className="relative">
+        <svg viewBox="0 0 400 220" className="w-full h-48">
+          <defs>
+            {/* Lab background gradient */}
+            <linearGradient id="fracCrackLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-        {/* Metal plate */}
-        <rect x="50" y="50" width="300" height="150" fill="#4b5563" stroke="#6b7280" strokeWidth="2" />
+            {/* Metal plate gradient - industrial steel */}
+            <linearGradient id="fracPlate" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="80%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
 
-        {/* Stress arrows */}
-        {twistStress > 0 && (
-          <g>
-            {[...Array(3)].map((_, i) => (
-              <g key={i}>
-                <line x1={100 + i * 100} y1="30" x2={100 + i * 100} y2="50" stroke="#ef4444" strokeWidth="2" />
-                <line x1={100 + i * 100} y1="220" x2={100 + i * 100} y2="200" stroke="#ef4444" strokeWidth="2" />
-              </g>
-            ))}
-          </g>
-        )}
+            {/* Stress arrow gradient for crack scene */}
+            <linearGradient id="fracCrackArrow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
 
-        {/* Crack */}
-        <line
-          x1="50"
-          y1="125"
-          x2={crackTipX}
-          y2="125"
-          stroke="#1f2937"
-          strokeWidth="4"
-        />
+            {/* Crack gradient - dark to bright at tip */}
+            <linearGradient id="fracCrackGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
 
-        {/* Crack tip stress field */}
-        {twistStress > 0 && !hasCrackStopHole && crackLength < 150 && (
-          <g className="animate-pulse">
-            {[1, 2, 3].map(r => (
+            {/* Propagating crack gradient */}
+            <linearGradient id="fracPropagating" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="60%" stopColor="#ef4444" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+
+            {/* Stop hole success gradient */}
+            <radialGradient id="fracStopHole" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#111827" />
+              <stop offset="70%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#064e3b" />
+            </radialGradient>
+
+            {/* Stop hole glow */}
+            <radialGradient id="fracStopHoleGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#22c55e" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Crack tip stress gradient */}
+            <radialGradient id="fracCrackTipStress" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#f97316" stopOpacity="0.6" />
+              <stop offset="60%" stopColor="#facc15" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#facc15" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Info panel gradient */}
+            <linearGradient id="fracCrackInfo" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
+
+            {/* Arrow glow filter */}
+            <filter id="fracCrackArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Crack tip intense glow */}
+            <filter id="fracTipGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Stop hole glow filter */}
+            <filter id="fracHoleGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Premium background */}
+          <rect width="400" height="220" fill="url(#fracCrackLabBg)" />
+
+          {/* Subtle grid */}
+          <pattern id="fracCrackGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect width="400" height="220" fill="url(#fracCrackGrid)" />
+
+          {/* Metal plate with shadow */}
+          <rect x="55" y="45" width="300" height="130" rx="3" fill="#000" opacity="0.3" />
+          <rect x="50" y="40" width="300" height="130" rx="3" fill="url(#fracPlate)" stroke="#6b7280" strokeWidth="2" />
+
+          {/* Plate surface highlights */}
+          <rect x="50" y="40" width="300" height="3" rx="1" fill="#94a3b8" opacity="0.3" />
+          <rect x="50" y="167" width="300" height="3" rx="1" fill="#1f2937" opacity="0.5" />
+
+          {/* Stress arrows with glow */}
+          {twistStress > 0 && (
+            <g filter="url(#fracCrackArrowGlow)">
+              {[...Array(4)].map((_, i) => (
+                <g key={i}>
+                  <line x1={80 + i * 80} y1="25" x2={80 + i * 80} y2="40" stroke="url(#fracCrackArrow)" strokeWidth="4" strokeLinecap="round" />
+                  <polygon points={`${74 + i * 80},35 ${86 + i * 80},35 ${80 + i * 80},22`} fill="url(#fracCrackArrow)" />
+                  <line x1={80 + i * 80} y1="195" x2={80 + i * 80} y2="170" stroke="url(#fracCrackArrow)" strokeWidth="4" strokeLinecap="round" />
+                  <polygon points={`${74 + i * 80},175 ${86 + i * 80},175 ${80 + i * 80},198`} fill="url(#fracCrackArrow)" />
+                </g>
+              ))}
+            </g>
+          )}
+
+          {/* Crack with gradient */}
+          <line
+            x1="48"
+            y1="105"
+            x2={crackTipX + 2}
+            y2="105"
+            stroke="#0a0f1a"
+            strokeWidth="6"
+            strokeLinecap="round"
+          />
+          <line
+            x1="50"
+            y1="105"
+            x2={crackTipX}
+            y2="105"
+            stroke={crackLength >= 150 ? 'url(#fracPropagating)' : 'url(#fracCrackGrad)'}
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+
+          {/* Crack tip stress field with glow */}
+          {twistStress > 0 && !hasCrackStopHole && crackLength < 150 && (
+            <g filter="url(#fracTipGlow)">
               <circle
-                key={r}
                 cx={crackTipX}
-                cy={125}
-                r={r * 8}
-                fill="none"
-                stroke="#ef4444"
-                strokeWidth="1"
-                opacity={0.5 - r * 0.1}
+                cy={105}
+                r={12 + twistStress / 5}
+                fill="url(#fracCrackTipStress)"
               />
-            ))}
+              {[1, 2, 3, 4].map(r => (
+                <circle
+                  key={r}
+                  cx={crackTipX}
+                  cy={105}
+                  r={r * 6 + Math.sin(animPhase + r) * 2}
+                  fill="none"
+                  stroke={r % 2 === 0 ? '#f97316' : '#ef4444'}
+                  strokeWidth={2.5 - r * 0.4}
+                  opacity={0.7 - r * 0.12}
+                />
+              ))}
+            </g>
+          )}
+
+          {/* Crack-stop hole with glow */}
+          {hasCrackStopHole && (
+            <g>
+              {/* Glow behind hole */}
+              <circle cx={crackTipX + 15} cy={105} r={20} fill="url(#fracStopHoleGlow)" filter="url(#fracHoleGlow)" />
+              {/* Hole shadow */}
+              <circle cx={crackTipX + 16} cy={106} r={12} fill="#000" opacity="0.3" />
+              {/* Hole */}
+              <circle cx={crackTipX + 15} cy={105} r={12} fill="url(#fracStopHole)" stroke="#22c55e" strokeWidth="2" />
+              {/* Inner highlight */}
+              <circle cx={crackTipX + 12} cy={102} r={4} fill="#1e293b" opacity="0.5" />
+            </g>
+          )}
+
+          {/* Info panel */}
+          <g transform="translate(310, 50)">
+            <rect x="0" y="0" width="70" height="65" fill="url(#fracCrackInfo)" rx="8" stroke="#374151" strokeWidth="1" />
+            <rect x="0" y="0" width="70" height="2" rx="1" fill="#4b5563" opacity="0.5" />
           </g>
-        )}
+        </svg>
 
-        {/* Crack-stop hole */}
-        {hasCrackStopHole && (
-          <g>
-            <circle cx={crackTipX + 15} cy={125} r={12} fill="#111827" stroke="#22c55e" strokeWidth="2" />
-            <text x={crackTipX + 15} y={105} textAnchor="middle" className="fill-green-400 text-xs">
-              Stop hole
-            </text>
-          </g>
-        )}
-
-        {/* Propagation indicator */}
-        {crackLength >= 150 && (
-          <text x="200" y="30" textAnchor="middle" className="fill-red-400 text-sm font-bold">
-            Complete Fracture!
-          </text>
-        )}
-
-        {hasCrackStopHole && twistStress > 20 && (
-          <text x="200" y="30" textAnchor="middle" className="fill-green-400 text-sm font-bold">
-            Crack Arrested! ✓
-          </text>
-        )}
-
-        {/* Info */}
-        <g transform="translate(280, 60)">
-          <rect x="0" y="0" width="60" height="60" fill="#1f2937" rx="5" />
-          <text x="30" y="18" textAnchor="middle" className="fill-gray-400 text-xs">Kt at tip</text>
-          <text x="30" y="38" textAnchor="middle" className={`text-lg font-bold ${hasCrackStopHole ? 'fill-green-400' : 'fill-red-400'}`}>
+        {/* Info panel labels - outside SVG */}
+        <div
+          className="absolute text-center"
+          style={{
+            right: isMobile ? '15px' : '20px',
+            top: isMobile ? '55px' : '60px',
+            width: '65px'
+          }}
+        >
+          <div style={{ fontSize: typo.label }} className="text-gray-400">Kt at tip</div>
+          <div
+            style={{ fontSize: typo.heading }}
+            className={`font-bold ${hasCrackStopHole ? 'text-green-400' : 'text-red-400'}`}
+          >
             {hasCrackStopHole ? '~2' : '~8+'}
-          </text>
-        </g>
+          </div>
+        </div>
 
-        {/* Explanation */}
-        <text x="200" y="235" textAnchor="middle" className="fill-gray-400 text-xs">
-          {hasCrackStopHole
-            ? 'Hole converts sharp crack tip to rounded edge → lower Kt'
-            : 'Sharp crack tip has extreme stress concentration'}
-        </text>
-      </svg>
+        {/* Stop hole label - outside SVG */}
+        {hasCrackStopHole && (
+          <div
+            className="absolute text-center"
+            style={{
+              left: `${(crackTipX + 15) / 4}%`,
+              top: isMobile ? '38px' : '42px',
+              transform: 'translateX(-50%)'
+            }}
+          >
+            <span style={{ fontSize: typo.small }} className="text-green-400 font-medium">Stop hole</span>
+          </div>
+        )}
+
+        {/* Status messages - outside SVG */}
+        {crackLength >= 150 && (
+          <div className="absolute left-1/2 -translate-x-1/2 top-2">
+            <span style={{ fontSize: typo.body }} className="text-red-400 font-bold">Complete Fracture!</span>
+          </div>
+        )}
+
+        {hasCrackStopHole && twistStress > 20 && crackLength < 150 && (
+          <div className="absolute left-1/2 -translate-x-1/2 top-2">
+            <span style={{ fontSize: typo.body }} className="text-green-400 font-bold">Crack Arrested!</span>
+          </div>
+        )}
+
+        {/* Explanation text - outside SVG */}
+        <div className="text-center mt-1" style={{ fontSize: typo.small }}>
+          <span className="text-gray-400">{explanationText}</span>
+        </div>
+      </div>
     );
   };
 

@@ -528,7 +528,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
     </div>
   );
 
-  // Gyroscope visualization
+  // Gyroscope visualization with premium SVG graphics
   const renderGyroscope = (interactive: boolean = false) => {
     const precX = Math.sin(precessionAngle * Math.PI / 180) * 25;
     const precY = Math.cos(precessionAngle * Math.PI / 180) * 8;
@@ -542,82 +542,293 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
       }}>
         <svg viewBox="0 0 400 280" style={{ width: '100%', maxHeight: '260px', display: 'block' }}>
           <defs>
-            <linearGradient id="wheelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor={colors.primary} />
-              <stop offset="100%" stopColor={colors.primaryDark} />
+            {/* Premium 3D metallic disc gradient with 6 color stops */}
+            <linearGradient id="gyroDiscGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="20%" stopColor="#f59e0b" />
+              <stop offset="40%" stopColor="#d97706" />
+              <stop offset="60%" stopColor="#f59e0b" />
+              <stop offset="80%" stopColor="#b45309" />
+              <stop offset="100%" stopColor="#92400e" />
             </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="blur" />
-              <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+
+            {/* Spinning disc inner radial gradient for 3D depth */}
+            <radialGradient id="gyroDiscRadial" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fcd34d" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f59e0b" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#d97706" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#92400e" stopOpacity="0.6" />
+            </radialGradient>
+
+            {/* Axis metallic gradient - brushed steel effect */}
+            <linearGradient id="gyroAxisGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="15%" stopColor="#94a3b8" />
+              <stop offset="30%" stopColor="#cbd5e1" />
+              <stop offset="50%" stopColor="#e2e8f0" />
+              <stop offset="70%" stopColor="#cbd5e1" />
+              <stop offset="85%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
+
+            {/* Spin effect gradient for motion blur */}
+            <linearGradient id="gyroSpinGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Angular momentum vector glow gradient */}
+            <linearGradient id="gyroLVectorGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#8b5cf6" />
+              <stop offset="30%" stopColor="#a78bfa" />
+              <stop offset="60%" stopColor="#c4b5fd" />
+              <stop offset="100%" stopColor="#8b5cf6" />
+            </linearGradient>
+
+            {/* Torque arrow gradient */}
+            <linearGradient id="gyroTorqueGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* Precession path gradient */}
+            <linearGradient id="gyroPrecessionGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#34d399" stopOpacity="1" />
+              <stop offset="100%" stopColor="#10b981" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Hand skin tone gradient */}
+            <radialGradient id="gyroHandGrad" cx="40%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#a8a29e" />
+              <stop offset="40%" stopColor="#78716c" />
+              <stop offset="70%" stopColor="#57534e" />
+              <stop offset="100%" stopColor="#44403c" />
+            </radialGradient>
+
+            {/* Hub metallic gradient */}
+            <radialGradient id="gyroHubGrad" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </radialGradient>
+
+            {/* Spoke metallic gradient */}
+            <linearGradient id="gyroSpokeGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* Premium glow filter for spinning disc */}
+            <filter id="gyroDiscGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
             </filter>
+
+            {/* Angular momentum vector glow filter */}
+            <filter id="gyroVectorGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Torque arrow glow */}
+            <filter id="gyroTorqueGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Precession path glow */}
+            <filter id="gyroPrecessionGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Motion blur for spinning effect */}
+            <filter id="gyroMotionBlur" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1.5" />
+            </filter>
+
+            {/* Background lab gradient */}
+            <linearGradient id="gyroLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0a1628" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Grid pattern */}
+            <pattern id="gyroGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" />
+            </pattern>
           </defs>
 
-          {/* Background pattern */}
-          <pattern id="gridP" width="20" height="20" patternUnits="userSpaceOnUse">
-            <rect width="20" height="20" fill="none" stroke={colors.bgTertiary} strokeWidth="0.5" />
-          </pattern>
-          <rect width="400" height="280" fill="url(#gridP)" opacity="0.3" />
+          {/* Premium dark lab background */}
+          <rect width="400" height="280" fill="url(#gyroLabBg)" />
+          <rect width="400" height="280" fill="url(#gyroGridPattern)" opacity="0.3" />
 
-          {/* Hand */}
+          {/* Precession path visualization (elliptical orbit) */}
+          {isSpinning && (
+            <g transform="translate(200, 140)">
+              <ellipse
+                cx="70" cy="0" rx="30" ry="10"
+                fill="none"
+                stroke="url(#gyroPrecessionGrad)"
+                strokeWidth="2"
+                strokeDasharray="8 4"
+                filter="url(#gyroPrecessionGlow)"
+                opacity="0.6"
+              >
+                <animate attributeName="stroke-dashoffset" values="0;-24" dur="2s" repeatCount="indefinite" />
+              </ellipse>
+            </g>
+          )}
+
+          {/* Hand with premium gradient */}
           <g transform={`translate(${110 + precX}, ${140 + precY})`}>
-            <ellipse cx="0" cy="0" rx="22" ry="32" fill="#78716c" stroke="#a8a29e" strokeWidth="2" />
-            <ellipse cx="-7" cy="-14" rx="7" ry="11" fill="#78716c" />
-            <ellipse cx="7" cy="-16" rx="7" ry="11" fill="#78716c" />
+            <ellipse cx="0" cy="0" rx="22" ry="32" fill="url(#gyroHandGrad)" stroke="#a8a29e" strokeWidth="1.5" />
+            <ellipse cx="-7" cy="-14" rx="7" ry="11" fill="url(#gyroHandGrad)" />
+            <ellipse cx="7" cy="-16" rx="7" ry="11" fill="url(#gyroHandGrad)" />
+            {/* Finger highlights */}
+            <ellipse cx="-7" cy="-16" rx="3" ry="5" fill="#a8a29e" opacity="0.3" />
+            <ellipse cx="7" cy="-18" rx="3" ry="5" fill="#a8a29e" opacity="0.3" />
           </g>
 
-          {/* Axle */}
+          {/* Axle with metallic gradient */}
           <line
             x1={130 + precX} y1={140 + precY}
             x2={270 + precX} y2={140 + precY}
-            stroke="#94a3b8" strokeWidth="6" strokeLinecap="round"
+            stroke="url(#gyroAxisGrad)" strokeWidth="8" strokeLinecap="round"
+          />
+          {/* Axle highlight line */}
+          <line
+            x1={135 + precX} y1={138 + precY}
+            x2={265 + precX} y2={138 + precY}
+            stroke="#e2e8f0" strokeWidth="1" strokeLinecap="round" opacity="0.4"
           />
 
-          {/* Wheel */}
-          <g transform={`translate(${270 + precX}, ${140 + precY}) rotate(${wheelAngle})`} filter={isSpinning ? "url(#glow)" : ""}>
-            <circle cx="0" cy="0" r="50" fill="none" stroke="url(#wheelGrad)" strokeWidth="10" />
+          {/* Wheel with premium 3D metallic gradient */}
+          <g transform={`translate(${270 + precX}, ${140 + precY}) rotate(${wheelAngle})`} filter={isSpinning ? "url(#gyroDiscGlow)" : ""}>
+            {/* Outer disc ring with gradient */}
+            <circle cx="0" cy="0" r="50" fill="none" stroke="url(#gyroDiscGrad)" strokeWidth="12" />
+            {/* Inner highlight ring */}
+            <circle cx="0" cy="0" r="50" fill="none" stroke="#fcd34d" strokeWidth="2" opacity="0.4" />
+            {/* Outer shadow ring */}
+            <circle cx="0" cy="0" r="56" fill="none" stroke="#92400e" strokeWidth="1" opacity="0.3" />
+
+            {/* Spokes with metallic gradient */}
             {[0, 45, 90, 135, 180, 225, 270, 315].map((a, i) => (
-              <line key={i} x1="0" y1="0" x2={Math.cos(a * Math.PI / 180) * 40} y2={Math.sin(a * Math.PI / 180) * 40} stroke="#64748b" strokeWidth="2" />
+              <line
+                key={i}
+                x1="0" y1="0"
+                x2={Math.cos(a * Math.PI / 180) * 40}
+                y2={Math.sin(a * Math.PI / 180) * 40}
+                stroke="url(#gyroSpokeGrad)"
+                strokeWidth="3"
+                strokeLinecap="round"
+              />
             ))}
-            <circle cx="0" cy="0" r="10" fill="#475569" stroke="#64748b" strokeWidth="2" />
+
+            {/* Center hub with metallic gradient */}
+            <circle cx="0" cy="0" r="12" fill="url(#gyroHubGrad)" stroke="#94a3b8" strokeWidth="1" />
+            <circle cx="-3" cy="-3" r="4" fill="#cbd5e1" opacity="0.4" />
+
+            {/* Motion blur ring when spinning */}
+            {isSpinning && (
+              <circle cx="0" cy="0" r="50" fill="none" stroke="url(#gyroSpinGrad)" strokeWidth="14" opacity="0.5" filter="url(#gyroMotionBlur)" />
+            )}
           </g>
 
-          {/* L vector */}
-          <g transform={`translate(${270 + precX}, ${140 + precY})`}>
-            <line x1="0" y1="0" x2="0" y2="-80" stroke={colors.accent} strokeWidth="3" />
-            <polygon points="-5,-80 5,-80 0,-90" fill={colors.accent} />
-            <text x="12" y="-65" fontSize="13" fontWeight="bold" fill={colors.accent}>L</text>
+          {/* Angular momentum (L) vector with glow */}
+          <g transform={`translate(${270 + precX}, ${140 + precY})`} filter="url(#gyroVectorGlow)">
+            <line x1="0" y1="0" x2="0" y2="-80" stroke="url(#gyroLVectorGrad)" strokeWidth="4" strokeLinecap="round" />
+            <polygon points="-6,-78 6,-78 0,-92" fill="url(#gyroLVectorGrad)" />
+            {/* Glow effect at tip */}
+            <circle cx="0" cy="-85" r="6" fill="#a78bfa" opacity="0.3" />
           </g>
 
-          {/* Torque arrow */}
+          {/* Torque arrow with glow */}
           {isSpinning && (
-            <g transform={`translate(${270 + precX}, ${200 + precY})`}>
-              <line x1="0" y1="0" x2="0" y2="35" stroke={colors.danger} strokeWidth="3" strokeDasharray="6 3">
+            <g transform={`translate(${270 + precX}, ${200 + precY})`} filter="url(#gyroTorqueGlow)">
+              <line x1="0" y1="0" x2="0" y2="35" stroke="url(#gyroTorqueGrad)" strokeWidth="4" strokeDasharray="6 3" strokeLinecap="round">
                 <animate attributeName="stroke-dashoffset" values="0;-18" dur="0.5s" repeatCount="indefinite" />
               </line>
-              <polygon points="-5,35 5,35 0,45" fill={colors.danger} />
-              <text x="12" y="25" fontSize="11" fontWeight="bold" fill={colors.danger}>τ (Push)</text>
+              <polygon points="-6,33 6,33 0,46" fill="url(#gyroTorqueGrad)" />
+              {/* Glow at arrow tip */}
+              <circle cx="0" cy="40" r="5" fill="#f87171" opacity="0.4" />
             </g>
           )}
 
-          {/* Precession indicator */}
+          {/* Precession indicator with glow */}
           {isSpinning && (
-            <g transform="translate(200, 60)">
-              <path d="M-25,0 A25,8 0 0 1 25,0" fill="none" stroke={colors.success} strokeWidth="2" strokeDasharray="4 2">
-                <animate attributeName="stroke-dashoffset" values="0;-12" dur="1s" repeatCount="indefinite" />
+            <g transform="translate(200, 55)" filter="url(#gyroPrecessionGlow)">
+              <path d="M-30,0 A30,10 0 0 1 30,0" fill="none" stroke="url(#gyroPrecessionGrad)" strokeWidth="3" strokeDasharray="6 3">
+                <animate attributeName="stroke-dashoffset" values="0;-18" dur="1s" repeatCount="indefinite" />
               </path>
-              <polygon points="23,-4 30,0 23,4" fill={colors.success} />
-              <text x="0" y="-12" textAnchor="middle" fontSize="11" fontWeight="bold" fill={colors.success}>PRECESSION</text>
+              <polygon points="28,-5 36,0 28,5" fill="#34d399" />
             </g>
           )}
 
-          {/* Info box */}
-          <g transform="translate(15, 220)">
-            <rect width="140" height="50" rx="8" fill={colors.bgSecondary} stroke={colors.border} />
-            <text x="10" y="18" fontSize="10" fill={colors.textTertiary}>Spin: {spinSpeed.toFixed(1)} rad/s</text>
-            <text x="10" y="32" fontSize="10" fill={colors.textTertiary}>L = {angularMomentum.toFixed(2)} kg·m²/s</text>
-            <text x="10" y="46" fontSize="10" fill={colors.success}>Ω = {precessionRate.toFixed(2)} rad/s</text>
+          {/* Info box with premium styling */}
+          <g transform="translate(15, 215)">
+            <rect width="150" height="55" rx="10" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+            <rect x="1" y="1" width="148" height="53" rx="9" fill="none" stroke="#1e293b" strokeWidth="1" opacity="0.5" />
           </g>
         </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          marginTop: space.sm,
+          padding: `0 ${space.sm}`,
+        }}>
+          {/* Physics values panel */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '4px',
+          }}>
+            <span style={{ fontSize: typo.small, color: colors.textTertiary }}>
+              Spin: <span style={{ color: colors.textPrimary, fontWeight: 600 }}>{spinSpeed.toFixed(1)} rad/s</span>
+            </span>
+            <span style={{ fontSize: typo.small, color: colors.textTertiary }}>
+              L = <span style={{ color: colors.accent, fontWeight: 600 }}>{angularMomentum.toFixed(2)} kg·m²/s</span>
+            </span>
+            <span style={{ fontSize: typo.small, color: colors.textTertiary }}>
+              Precession: <span style={{ color: colors.success, fontWeight: 600 }}>Ω = {precessionRate.toFixed(2)} rad/s</span>
+            </span>
+          </div>
+
+          {/* Legend */}
+          {isSpinning && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              gap: '4px',
+              textAlign: 'right',
+            }}>
+              <span style={{ fontSize: typo.label, color: colors.accent }}>L = Angular Momentum</span>
+              <span style={{ fontSize: typo.label, color: colors.danger }}>τ = Torque (Push)</span>
+              <span style={{ fontSize: typo.label, color: colors.success }}>Precession Direction</span>
+            </div>
+          )}
+        </div>
 
         {interactive && (
           <div style={{ marginTop: space.md }}>
@@ -628,13 +839,13 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               borderRadius: radius.md,
               marginBottom: space.md,
             }}>
-              <span style={{ fontSize: '13px', color: colors.textSecondary, minWidth: '70px' }}>Spin Speed</span>
+              <span style={{ fontSize: typo.body, color: colors.textSecondary, minWidth: '70px' }}>Spin Speed</span>
               <input
                 type="range" min="1" max="10" step="0.5" value={spinSpeed}
                 onChange={(e) => setSpinSpeed(parseFloat(e.target.value))}
                 style={{ flex: 1, accentColor: colors.primary, height: '6px' }}
               />
-              <span style={{ fontSize: '13px', color: colors.textPrimary, minWidth: '50px', fontWeight: 600 }}>{spinSpeed.toFixed(1)}</span>
+              <span style={{ fontSize: typo.body, color: colors.textPrimary, minWidth: '50px', fontWeight: 600 }}>{spinSpeed.toFixed(1)}</span>
             </div>
 
             <button
@@ -643,7 +854,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 width: '100%',
                 padding: space.md,
                 borderRadius: radius.md,
-                fontSize: '15px', fontWeight: 700,
+                fontSize: typo.bodyLarge, fontWeight: 700,
                 background: isSpinning ? colors.bgTertiary : `linear-gradient(135deg, ${colors.primary} 0%, ${colors.accent} 100%)`,
                 color: colors.textPrimary,
                 border: 'none',
@@ -653,7 +864,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
                 zIndex: 10,
               }}
             >
-              {isSpinning ? '⏹ Stop & Reset' : '▶ Spin Wheel & Apply Torque'}
+              {isSpinning ? 'Stop & Reset' : 'Spin Wheel & Apply Torque'}
             </button>
           </div>
         )}
@@ -719,7 +930,7 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
           <div style={{ maxWidth: '560px', margin: '0 auto' }}>
             {renderHeader('Step 1 • Predict', 'Which Way Does It Move?', 'You hold a fast-spinning bike wheel, then push one end DOWN.')}
 
-            {/* Simple diagram */}
+            {/* Simple diagram with premium styling */}
             <div style={{
               padding: space.lg,
               background: colors.bgSecondary,
@@ -727,15 +938,59 @@ const GyroscopicPrecessionRenderer: React.FC<GyroscopicPrecessionRendererProps> 
               border: `1px solid ${colors.border}`,
               marginBottom: space.lg,
             }}>
-              <svg viewBox="0 0 300 120" style={{ width: '100%', maxHeight: '110px' }}>
-                <circle cx="150" cy="55" r="38" fill="none" stroke={colors.primary} strokeWidth="5" />
-                <line x1="90" y1="55" x2="210" y2="55" stroke="#64748b" strokeWidth="4" strokeLinecap="round" />
-                <circle cx="150" cy="55" r="7" fill="#475569" />
-                <line x1="210" y1="55" x2="210" y2="95" stroke={colors.danger} strokeWidth="3" />
-                <polygon points="205,95 215,95 210,105" fill={colors.danger} />
-                <text x="225" y="85" fontSize="11" fill={colors.danger} fontWeight="bold">PUSH</text>
-                <text x="150" y="115" textAnchor="middle" fontSize="10" fill={colors.textTertiary}>Spinning wheel - you push one end down</text>
+              <svg viewBox="0 0 300 100" style={{ width: '100%', maxHeight: '100px' }}>
+                <defs>
+                  {/* Wheel gradient */}
+                  <linearGradient id="gyroPredictWheelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#fbbf24" />
+                    <stop offset="30%" stopColor="#f59e0b" />
+                    <stop offset="70%" stopColor="#d97706" />
+                    <stop offset="100%" stopColor="#92400e" />
+                  </linearGradient>
+                  {/* Axle gradient */}
+                  <linearGradient id="gyroPredictAxisGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#64748b" />
+                    <stop offset="50%" stopColor="#cbd5e1" />
+                    <stop offset="100%" stopColor="#64748b" />
+                  </linearGradient>
+                  {/* Push arrow gradient */}
+                  <linearGradient id="gyroPredictPushGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#f87171" />
+                    <stop offset="100%" stopColor="#dc2626" />
+                  </linearGradient>
+                  {/* Hub gradient */}
+                  <radialGradient id="gyroPredictHubGrad" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" stopColor="#94a3b8" />
+                    <stop offset="100%" stopColor="#334155" />
+                  </radialGradient>
+                  {/* Glow filter */}
+                  <filter id="gyroPredictGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="2" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+                </defs>
+                {/* Axle */}
+                <line x1="90" y1="50" x2="210" y2="50" stroke="url(#gyroPredictAxisGrad)" strokeWidth="5" strokeLinecap="round" />
+                {/* Wheel ring */}
+                <circle cx="150" cy="50" r="38" fill="none" stroke="url(#gyroPredictWheelGrad)" strokeWidth="6" filter="url(#gyroPredictGlow)" />
+                {/* Hub */}
+                <circle cx="150" cy="50" r="8" fill="url(#gyroPredictHubGrad)" stroke="#64748b" strokeWidth="1" />
+                {/* Push arrow */}
+                <line x1="210" y1="50" x2="210" y2="85" stroke="url(#gyroPredictPushGrad)" strokeWidth="4" strokeLinecap="round" />
+                <polygon points="203,82 217,82 210,95" fill="url(#gyroPredictPushGrad)" />
               </svg>
+              {/* Label outside SVG */}
+              <p style={{
+                fontSize: typo.small,
+                color: colors.textTertiary,
+                textAlign: 'center',
+                marginTop: space.sm,
+              }}>
+                Spinning wheel - you push one end <span style={{ color: colors.danger, fontWeight: 600 }}>DOWN</span>
+              </p>
             </div>
 
             {/* Options */}

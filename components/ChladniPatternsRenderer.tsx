@@ -317,20 +317,174 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
           preserveAspectRatio="xMidYMid meet"
           style={{ background: colors.bgDark, borderRadius: '12px', maxWidth: '500px' }}
         >
-          {/* Plate background */}
+          <defs>
+            {/* Premium metal plate gradient - brushed steel effect */}
+            <linearGradient id="chladPlateMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#64748b" />
+              <stop offset="60%" stopColor="#475569" />
+              <stop offset="80%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Plate surface with depth */}
+            <radialGradient id="chladPlateSurface" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="40%" stopColor="#4b5563" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </radialGradient>
+
+            {/* Nodal line glow gradient */}
+            <linearGradient id="chladNodalGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0" />
+              <stop offset="30%" stopColor="#38bdf8" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#7dd3fc" stopOpacity="1" />
+              <stop offset="70%" stopColor="#38bdf8" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#0ea5e9" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Sand particle gradient - gold/amber */}
+            <radialGradient id="chladSandGrain" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fde68a" />
+              <stop offset="40%" stopColor="#fbbf24" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </radialGradient>
+
+            {/* Vibration amplitude visualization gradient */}
+            <radialGradient id="chladVibrationWave" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#14b8a6" stopOpacity="0.6" />
+              <stop offset="40%" stopColor="#2dd4bf" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="#5eead4" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#99f6e4" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Speaker/driver glow */}
+            <radialGradient id="chladSpeakerGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#14b8a6" />
+              <stop offset="50%" stopColor="#0d9488" />
+              <stop offset="100%" stopColor="#0f766e" stopOpacity="0.5" />
+            </radialGradient>
+
+            {/* Background lab gradient */}
+            <linearGradient id="chladLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Glow filter for nodal lines */}
+            <filter id="chladNodalGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glow filter for sand particles */}
+            <filter id="chladSandGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft glow for vibration indicator */}
+            <filter id="chladVibrationGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow for plate depth */}
+            <filter id="chladPlateInnerShadow" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Plate edge highlight gradient */}
+            <linearGradient id="chladPlateEdge" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+          </defs>
+
+          {/* Premium dark lab background */}
+          <rect width={width} height={height} fill="url(#chladLabBg)" />
+
+          {/* Subtle grid pattern */}
+          <defs>
+            <pattern id="chladLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+            </pattern>
+          </defs>
+          <rect width={width} height={height} fill="url(#chladLabGrid)" />
+
+          {/* Plate shadow for depth */}
+          <rect
+            x={plateX + 4}
+            y={plateY + 4}
+            width={plateSize}
+            height={plateSize}
+            fill="#000"
+            opacity={0.3}
+            rx={4}
+          />
+
+          {/* Premium metal plate with metallic gradient */}
           <rect
             x={plateX}
             y={plateY}
             width={plateSize}
             height={plateSize}
-            fill={colors.plate}
-            stroke="#64748b"
-            strokeWidth={2}
+            fill="url(#chladPlateSurface)"
+            stroke="url(#chladPlateEdge)"
+            strokeWidth={3}
+            rx={2}
+            filter="url(#chladPlateInnerShadow)"
           />
 
-          {/* Nodal lines visualization */}
-          {showNodalLines && isVibrating && (
+          {/* Plate surface highlight */}
+          <rect
+            x={plateX + 2}
+            y={plateY + 2}
+            width={plateSize - 4}
+            height={8}
+            fill="url(#chladPlateMetallic)"
+            opacity={0.3}
+            rx={1}
+          />
+
+          {/* Vibration amplitude visualization - concentric waves when vibrating */}
+          {isVibrating && (
             <g>
+              {[0.3, 0.5, 0.7].map((scale, idx) => (
+                <rect
+                  key={`vib-${idx}`}
+                  x={plateX + plateSize * (1 - scale) / 2}
+                  y={plateY + plateSize * (1 - scale) / 2}
+                  width={plateSize * scale}
+                  height={plateSize * scale}
+                  fill="none"
+                  stroke="url(#chladVibrationWave)"
+                  strokeWidth={1}
+                  opacity={0.3 + Math.sin(time * 8 + idx) * 0.2}
+                  rx={2}
+                />
+              ))}
+            </g>
+          )}
+
+          {/* Nodal lines visualization with glow */}
+          {showNodalLines && isVibrating && (
+            <g filter="url(#chladNodalGlowFilter)">
               {/* Draw approximate nodal lines for current mode */}
               {Array.from({ length: modeM }).map((_, i) => (
                 <line
@@ -339,10 +493,10 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                   y1={plateY}
                   x2={plateX + (plateSize * (i + 0.5)) / modeM}
                   y2={plateY + plateSize}
-                  stroke={colors.nodal}
-                  strokeWidth={2}
-                  strokeDasharray="5,5"
-                  opacity={0.5}
+                  stroke="url(#chladNodalGlow)"
+                  strokeWidth={3}
+                  strokeDasharray="8,4"
+                  opacity={0.7 + Math.sin(time * 6) * 0.2}
                 />
               ))}
               {Array.from({ length: modeN }).map((_, i) => (
@@ -352,74 +506,103 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                   y1={plateY + (plateSize * (i + 0.5)) / modeN}
                   x2={plateX + plateSize}
                   y2={plateY + (plateSize * (i + 0.5)) / modeN}
-                  stroke={colors.nodal}
-                  strokeWidth={2}
-                  strokeDasharray="5,5"
-                  opacity={0.5}
+                  stroke="url(#chladNodalGlow)"
+                  strokeWidth={3}
+                  strokeDasharray="8,4"
+                  opacity={0.7 + Math.sin(time * 6) * 0.2}
                 />
               ))}
             </g>
           )}
 
-          {/* Sand particles */}
-          {generateSandParticles.map((p, i) => (
-            <circle
-              key={i}
-              cx={plateX + (p.x * plateSize) / 300}
-              cy={plateY + (p.y * plateSize) / 300}
-              r={p.size}
-              fill={colors.sand}
-              opacity={0.8}
-            />
-          ))}
+          {/* Sand particles with premium gradient and glow */}
+          <g filter="url(#chladSandGlow)">
+            {generateSandParticles.map((p, i) => (
+              <circle
+                key={i}
+                cx={plateX + (p.x * plateSize) / 300}
+                cy={plateY + (p.y * plateSize) / 300}
+                r={p.size}
+                fill="url(#chladSandGrain)"
+                opacity={0.85}
+              />
+            ))}
+          </g>
 
-          {/* Vibration indicator */}
+          {/* Vibration indicator - speaker/driver visualization */}
           {isVibrating && (
-            <g>
+            <g filter="url(#chladVibrationGlow)">
               <circle
                 cx={width / 2}
                 cy={plateY + plateSize + 30}
                 r={15 + Math.sin(time * 10) * 5}
                 fill="none"
-                stroke={colors.accent}
-                strokeWidth={2}
-                opacity={0.5 + Math.sin(time * 10) * 0.3}
+                stroke="url(#chladSpeakerGlow)"
+                strokeWidth={3}
+                opacity={0.6 + Math.sin(time * 10) * 0.3}
               />
-              <text
-                x={width / 2}
-                y={plateY + plateSize + 55}
-                textAnchor="middle"
-                fill={colors.accent}
-                fontSize={12}
-              >
-                ♪ {frequency} Hz
-              </text>
+              <circle
+                cx={width / 2}
+                cy={plateY + plateSize + 30}
+                r={8 + Math.sin(time * 10) * 2}
+                fill="url(#chladSpeakerGlow)"
+                opacity={0.4}
+              />
             </g>
           )}
+        </svg>
 
-          {/* Mode indicator */}
-          <text
-            x={width - 20}
-            y={height - 15}
-            textAnchor="end"
-            fill={colors.textMuted}
-            fontSize={12}
-          >
-            Mode ({modeM}, {modeN})
-          </text>
-
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '500px',
+          padding: `0 ${typo.cardPadding}`,
+        }}>
           {/* Legend */}
-          <g transform={`translate(20, ${height - 30})`}>
-            <circle cx={0} cy={0} r={4} fill={colors.sand} />
-            <text x={10} y={4} fill={colors.textMuted} fontSize={10}>Sand</text>
+          <div style={{ display: 'flex', alignItems: 'center', gap: typo.elementGap }}>
+            <div style={{
+              width: '12px',
+              height: '12px',
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, #fde68a 0%, #f59e0b 50%, #d97706 100%)',
+            }} />
+            <span style={{ color: colors.textMuted, fontSize: typo.label }}>Sand</span>
             {showNodalLines && (
               <>
-                <line x1={60} y1={0} x2={80} y2={0} stroke={colors.nodal} strokeWidth={2} strokeDasharray="3,3" />
-                <text x={85} y={4} fill={colors.textMuted} fontSize={10}>Nodal lines</text>
+                <div style={{
+                  width: '24px',
+                  height: '3px',
+                  marginLeft: '8px',
+                  background: 'linear-gradient(90deg, transparent, #38bdf8, transparent)',
+                  borderRadius: '2px',
+                }} />
+                <span style={{ color: colors.textMuted, fontSize: typo.label }}>Nodal lines</span>
               </>
             )}
-          </g>
-        </svg>
+          </div>
+
+          {/* Mode indicator */}
+          <div style={{ color: colors.textMuted, fontSize: typo.label }}>
+            Mode ({modeM}, {modeN})
+          </div>
+        </div>
+
+        {/* Frequency indicator outside SVG */}
+        {isVibrating && (
+          <div style={{
+            color: colors.accent,
+            fontSize: typo.small,
+            fontWeight: 'bold',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+          }}>
+            <span style={{ fontSize: '16px' }}>&#9835;</span>
+            <span>{frequency} Hz</span>
+          </div>
+        )}
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
@@ -436,7 +619,7 @@ const ChladniPatternsRenderer: React.FC<ChladniPatternsRendererProps> = ({
                 fontSize: '14px',
               }}
             >
-              {isVibrating ? '⏹ Stop' : '🔊 Vibrate'}
+              {isVibrating ? 'Stop' : 'Vibrate'}
             </button>
           </div>
         )}

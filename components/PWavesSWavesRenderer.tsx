@@ -490,158 +490,447 @@ const PWavesSWavesRenderer: React.FC<PWavesSWavesRendererProps> = ({ onGameEvent
       </div>
    );
 
-   // Wave visualization component
+   // Wave visualization component - Premium SVG Graphics
    const renderWaveVisualization = () => {
       const sWaveBlocked = waveType === 's' && medium === 'liquid';
       const numParticles = 14;
 
       return (
-         <svg viewBox="0 0 600 280" style={{ width: '100%', height: '100%', maxHeight: '280px' }}>
-            <defs>
-               <linearGradient id="solidMedium" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#3f3f46" />
-                  <stop offset="100%" stopColor="#27272a" />
-               </linearGradient>
-               <linearGradient id="liquidMedium" x1="0%" y1="0%" x2="0%" y2="100%">
-                  <stop offset="0%" stopColor="#0c4a6e" />
-                  <stop offset="100%" stopColor="#082f49" />
-               </linearGradient>
-               <filter id="particleGlow">
-                  <feGaussianBlur stdDeviation="2" result="blur" />
-                  <feMerge>
-                     <feMergeNode in="blur" />
-                     <feMergeNode in="SourceGraphic" />
-                  </feMerge>
-               </filter>
-            </defs>
+         <div style={{ width: '100%', height: '100%', display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+            <svg viewBox="0 0 600 240" style={{ width: '100%', height: '100%', maxHeight: '240px' }}>
+               <defs>
+                  {/* ========== PREMIUM GRADIENT DEFINITIONS ========== */}
 
-            {/* Title */}
-            <text x="300" y="24" textAnchor="middle" style={{ fontSize: '14px', fontWeight: 700, fill: design.colors.textPrimary }}>
-               Wave Propagation Simulator
-            </text>
+                  {/* P-Wave gradient - warm orange/amber tones */}
+                  <linearGradient id="pswPWaveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                     <stop offset="0%" stopColor="#fcd34d" />
+                     <stop offset="25%" stopColor="#fbbf24" />
+                     <stop offset="50%" stopColor="#f97316" />
+                     <stop offset="75%" stopColor="#ea580c" />
+                     <stop offset="100%" stopColor="#c2410c" />
+                  </linearGradient>
 
-            {/* Medium container */}
-            <rect x="40" y="50" width="520" height="170" rx="12"
-               fill={medium === 'solid' ? 'url(#solidMedium)' : 'url(#liquidMedium)'}
-               stroke={design.colors.border} strokeWidth="2" />
+                  {/* S-Wave gradient - cool purple/violet tones */}
+                  <linearGradient id="pswSWaveGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                     <stop offset="0%" stopColor="#e9d5ff" />
+                     <stop offset="25%" stopColor="#c4b5fd" />
+                     <stop offset="50%" stopColor="#a78bfa" />
+                     <stop offset="75%" stopColor="#8b5cf6" />
+                     <stop offset="100%" stopColor="#7c3aed" />
+                  </linearGradient>
 
-            {/* Medium label */}
-            <text x="300" y="72" textAnchor="middle"
-               style={{ fontSize: '11px', fontWeight: 700, fill: design.colors.textTertiary, textTransform: 'uppercase', letterSpacing: '0.1em' }}>
-               {medium === 'solid' ? '🪨 Solid Medium (Rock)' : '💧 Liquid Medium (Water/Molten Iron)'}
-            </text>
+                  {/* Solid medium gradient - rocky/granite appearance */}
+                  <linearGradient id="pswSolidMedium" x1="0%" y1="0%" x2="0%" y2="100%">
+                     <stop offset="0%" stopColor="#52525b" />
+                     <stop offset="20%" stopColor="#3f3f46" />
+                     <stop offset="50%" stopColor="#27272a" />
+                     <stop offset="80%" stopColor="#1f1f23" />
+                     <stop offset="100%" stopColor="#18181b" />
+                  </linearGradient>
 
-            {/* Wave source indicator */}
-            <circle cx="65" cy="135" r="16"
-               fill={waveType === 'p' ? design.colors.pWave : design.colors.sWave}
-               filter="url(#particleGlow)"
-               opacity={isWaveActive ? 1 : 0.6} />
-            <text x="65" y="139" textAnchor="middle" style={{ fontSize: '10px', fontWeight: 700, fill: design.colors.bgPrimary }}>
-               SRC
-            </text>
+                  {/* Liquid medium gradient - deep ocean/molten appearance */}
+                  <linearGradient id="pswLiquidMedium" x1="0%" y1="0%" x2="0%" y2="100%">
+                     <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.4" />
+                     <stop offset="25%" stopColor="#0284c7" stopOpacity="0.35" />
+                     <stop offset="50%" stopColor="#0369a1" stopOpacity="0.3" />
+                     <stop offset="75%" stopColor="#075985" stopOpacity="0.25" />
+                     <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0.2" />
+                  </linearGradient>
 
-            {/* Particle chain */}
-            {Array.from({ length: numParticles }).map((_, i) => {
-               const baseX = 110 + i * 32;
-               const waveReached = waveProgress * numParticles > i;
-               const intensity = waveReached ? Math.max(0, 1 - Math.abs(waveProgress * numParticles - i) / 3) : 0;
+                  {/* Wave source radial gradient */}
+                  <radialGradient id="pswSourceGlow" cx="50%" cy="50%" r="50%">
+                     <stop offset="0%" stopColor={waveType === 'p' ? '#fbbf24' : '#c4b5fd'} stopOpacity="1" />
+                     <stop offset="40%" stopColor={waveType === 'p' ? '#f97316' : '#a78bfa'} stopOpacity="0.8" />
+                     <stop offset="70%" stopColor={waveType === 'p' ? '#ea580c' : '#8b5cf6'} stopOpacity="0.5" />
+                     <stop offset="100%" stopColor={waveType === 'p' ? '#c2410c' : '#7c3aed'} stopOpacity="0" />
+                  </radialGradient>
 
-               let offsetX = 0, offsetY = 0;
-               if (waveType === 'p') {
-                  // P-wave: compression (parallel motion)
-                  offsetX = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 14;
-               } else if (medium === 'solid') {
-                  // S-wave in solid: shear (perpendicular motion)
-                  offsetY = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 18;
-               } else {
-                  // S-wave in liquid: rapidly decays
-                  offsetY = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 18 * Math.exp(-i * 0.5);
-               }
+                  {/* Earth cross-section gradient for background depth */}
+                  <radialGradient id="pswEarthCrossSection" cx="50%" cy="120%" r="100%">
+                     <stop offset="0%" stopColor="#78350f" stopOpacity="0.15" />
+                     <stop offset="30%" stopColor="#451a03" stopOpacity="0.1" />
+                     <stop offset="60%" stopColor="#1c0a00" stopOpacity="0.05" />
+                     <stop offset="100%" stopColor="#09090b" stopOpacity="0" />
+                  </radialGradient>
 
-               const particleColor = waveReached
-                  ? (waveType === 'p' ? design.colors.pWave : design.colors.sWave)
-                  : design.colors.textMuted;
+                  {/* Compression zone gradient for P-wave visualization */}
+                  <linearGradient id="pswCompressionZone" x1="0%" y1="0%" x2="100%" y2="0%">
+                     <stop offset="0%" stopColor="#f97316" stopOpacity="0" />
+                     <stop offset="40%" stopColor="#fb923c" stopOpacity="0.4" />
+                     <stop offset="50%" stopColor="#fdba74" stopOpacity="0.6" />
+                     <stop offset="60%" stopColor="#fb923c" stopOpacity="0.4" />
+                     <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
+                  </linearGradient>
 
-               return (
-                  <g key={i}>
-                     {/* Connection line */}
-                     {i < numParticles - 1 && (
-                        <line
-                           x1={baseX + offsetX}
-                           y1={135 + offsetY}
-                           x2={110 + (i + 1) * 32}
-                           y2={135}
-                           stroke={design.colors.textMuted}
-                           strokeWidth="2"
-                           opacity={sWaveBlocked && i > 2 ? 0.15 : 0.35}
+                  {/* Shear zone gradient for S-wave visualization */}
+                  <linearGradient id="pswShearZone" x1="0%" y1="0%" x2="0%" y2="100%">
+                     <stop offset="0%" stopColor="#a78bfa" stopOpacity="0" />
+                     <stop offset="40%" stopColor="#c4b5fd" stopOpacity="0.4" />
+                     <stop offset="50%" stopColor="#e9d5ff" stopOpacity="0.6" />
+                     <stop offset="60%" stopColor="#c4b5fd" stopOpacity="0.4" />
+                     <stop offset="100%" stopColor="#a78bfa" stopOpacity="0" />
+                  </linearGradient>
+
+                  {/* ========== GLOW FILTERS ========== */}
+
+                  {/* Particle glow filter */}
+                  <filter id="pswParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+                     <feGaussianBlur stdDeviation="3" result="blur" />
+                     <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                     </feMerge>
+                  </filter>
+
+                  {/* Intense source glow */}
+                  <filter id="pswSourceGlowFilter" x="-150%" y="-150%" width="400%" height="400%">
+                     <feGaussianBlur stdDeviation="5" result="blur1" />
+                     <feGaussianBlur stdDeviation="2" result="blur2" />
+                     <feMerge>
+                        <feMergeNode in="blur1" />
+                        <feMergeNode in="blur2" />
+                        <feMergeNode in="SourceGraphic" />
+                     </feMerge>
+                  </filter>
+
+                  {/* Wave propagation pulse filter */}
+                  <filter id="pswWavePulse" x="-50%" y="-50%" width="200%" height="200%">
+                     <feGaussianBlur stdDeviation="4" result="blur" />
+                     <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                     </feMerge>
+                  </filter>
+
+                  {/* Danger glow for blocked indicator */}
+                  <filter id="pswDangerGlow" x="-50%" y="-50%" width="200%" height="200%">
+                     <feGaussianBlur stdDeviation="3" result="blur" />
+                     <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                     </feMerge>
+                  </filter>
+
+                  {/* Connection line gradient */}
+                  <linearGradient id="pswConnectionLine" x1="0%" y1="0%" x2="100%" y2="0%">
+                     <stop offset="0%" stopColor="#71717a" stopOpacity="0.6" />
+                     <stop offset="50%" stopColor="#a1a1aa" stopOpacity="0.4" />
+                     <stop offset="100%" stopColor="#71717a" stopOpacity="0.6" />
+                  </linearGradient>
+               </defs>
+
+               {/* Background with earth cross-section effect */}
+               <rect width="600" height="240" fill="#09090b" />
+               <rect width="600" height="240" fill="url(#pswEarthCrossSection)" />
+
+               {/* Subtle grid pattern for scientific feel */}
+               {Array.from({ length: 12 }).map((_, i) => (
+                  <line key={`vgrid-${i}`} x1={50 + i * 50} y1="30" x2={50 + i * 50} y2="200" stroke="#27272a" strokeWidth="1" opacity="0.3" />
+               ))}
+               {Array.from({ length: 4 }).map((_, i) => (
+                  <line key={`hgrid-${i}`} x1="40" y1={50 + i * 50} x2="560" y2={50 + i * 50} stroke="#27272a" strokeWidth="1" opacity="0.3" />
+               ))}
+
+               {/* Medium container with premium styling */}
+               <rect x="40" y="40" width="520" height="150" rx="12"
+                  fill={medium === 'solid' ? 'url(#pswSolidMedium)' : 'url(#pswLiquidMedium)'}
+                  stroke={medium === 'solid' ? '#52525b' : '#0ea5e9'}
+                  strokeWidth="2"
+                  opacity="0.95" />
+
+               {/* Medium inner glow effect */}
+               <rect x="42" y="42" width="516" height="146" rx="10"
+                  fill="none"
+                  stroke={medium === 'solid' ? '#71717a' : '#38bdf8'}
+                  strokeWidth="1"
+                  opacity="0.3" />
+
+               {/* Liquid wave effect when in liquid medium */}
+               {medium === 'liquid' && (
+                  <g opacity="0.4">
+                     {Array.from({ length: 3 }).map((_, i) => (
+                        <path
+                           key={`liquidwave-${i}`}
+                           d={`M 40 ${60 + i * 40} Q ${100 + Math.sin(timeRef.current + i) * 10} ${55 + i * 40} 160 ${60 + i * 40} T 280 ${60 + i * 40} T 400 ${60 + i * 40} T 520 ${60 + i * 40} T 560 ${60 + i * 40}`}
+                           fill="none"
+                           stroke="#38bdf8"
+                           strokeWidth="1"
+                           opacity={0.3 - i * 0.08}
                         />
-                     )}
-                     {/* Particle */}
-                     <circle
-                        cx={baseX + offsetX}
-                        cy={135 + offsetY}
-                        r="8"
-                        fill={particleColor}
-                        opacity={sWaveBlocked && i > 2 ? 0.2 : 0.9}
-                        filter={waveReached ? 'url(#particleGlow)' : undefined}
-                     />
+                     ))}
                   </g>
-               );
-            })}
+               )}
 
-            {/* S-wave blocked indicator */}
-            {sWaveBlocked && isWaveActive && waveProgress > 0.2 && (
-               <g>
-                  <rect x="220" y="100" width="160" height="70" rx="10"
-                     fill={design.colors.dangerMuted} fillOpacity="0.95"
-                     stroke={design.colors.danger} strokeWidth="2" />
-                  <text x="300" y="128" textAnchor="middle"
-                     style={{ fontSize: '14px', fontWeight: 800, fill: design.colors.danger }}>
-                     ⚠️ S-WAVE BLOCKED
-                  </text>
-                  <text x="300" y="150" textAnchor="middle"
-                     style={{ fontSize: '11px', fill: '#fca5a5' }}>
-                     Liquids can't support shear
-                  </text>
+               {/* Wave source with pulsing glow */}
+               <g filter="url(#pswSourceGlowFilter)">
+                  {/* Outer pulse ring */}
+                  <circle cx="65" cy="115" r={isWaveActive ? 24 + Math.sin(timeRef.current * 8) * 4 : 22}
+                     fill="none"
+                     stroke={waveType === 'p' ? '#f97316' : '#a78bfa'}
+                     strokeWidth="2"
+                     opacity={isWaveActive ? 0.6 : 0.3} />
+
+                  {/* Main source circle */}
+                  <circle cx="65" cy="115" r="16"
+                     fill="url(#pswSourceGlow)"
+                     opacity={isWaveActive ? 1 : 0.7} />
+
+                  {/* Inner bright core */}
+                  <circle cx="65" cy="115" r="8"
+                     fill={waveType === 'p' ? '#fcd34d' : '#e9d5ff'}
+                     opacity={isWaveActive ? 0.9 : 0.6} />
                </g>
+
+               {/* Wave propagation effect - compression rings for P-wave */}
+               {waveType === 'p' && isWaveActive && (
+                  <g>
+                     {Array.from({ length: 3 }).map((_, i) => {
+                        const ringProgress = (waveProgress - i * 0.1);
+                        if (ringProgress <= 0 || ringProgress > 1) return null;
+                        const ringX = 65 + ringProgress * 450;
+                        return (
+                           <ellipse
+                              key={`pring-${i}`}
+                              cx={ringX}
+                              cy="115"
+                              rx={12 + ringProgress * 8}
+                              ry={40 - ringProgress * 10}
+                              fill="url(#pswCompressionZone)"
+                              opacity={0.5 * (1 - ringProgress)}
+                              filter="url(#pswWavePulse)"
+                           />
+                        );
+                     })}
+                  </g>
+               )}
+
+               {/* Wave propagation effect - shear bands for S-wave */}
+               {waveType === 's' && isWaveActive && !sWaveBlocked && (
+                  <g>
+                     {Array.from({ length: 3 }).map((_, i) => {
+                        const bandProgress = (waveProgress - i * 0.1);
+                        if (bandProgress <= 0 || bandProgress > 1) return null;
+                        const bandX = 65 + bandProgress * 450;
+                        return (
+                           <rect
+                              key={`sband-${i}`}
+                              x={bandX - 10}
+                              y={70}
+                              width={20}
+                              height={90}
+                              rx={5}
+                              fill="url(#pswShearZone)"
+                              opacity={0.4 * (1 - bandProgress)}
+                              filter="url(#pswWavePulse)"
+                           />
+                        );
+                     })}
+                  </g>
+               )}
+
+               {/* Particle chain with premium styling */}
+               {Array.from({ length: numParticles }).map((_, i) => {
+                  const baseX = 110 + i * 32;
+                  const waveReached = waveProgress * numParticles > i;
+                  const intensity = waveReached ? Math.max(0, 1 - Math.abs(waveProgress * numParticles - i) / 3) : 0;
+
+                  let offsetX = 0, offsetY = 0;
+                  if (waveType === 'p') {
+                     // P-wave: compression (parallel motion)
+                     offsetX = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 14;
+                  } else if (medium === 'solid') {
+                     // S-wave in solid: shear (perpendicular motion)
+                     offsetY = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 18;
+                  } else {
+                     // S-wave in liquid: rapidly decays
+                     offsetY = intensity * Math.sin(timeRef.current * 12 + i * 0.8) * 18 * Math.exp(-i * 0.5);
+                  }
+
+                  const isBlocked = sWaveBlocked && i > 2;
+                  const particleGradient = waveReached
+                     ? (waveType === 'p' ? 'url(#pswPWaveGrad)' : 'url(#pswSWaveGrad)')
+                     : '#52525b';
+
+                  return (
+                     <g key={i}>
+                        {/* Connection line with gradient */}
+                        {i < numParticles - 1 && (
+                           <line
+                              x1={baseX + offsetX}
+                              y1={115 + offsetY}
+                              x2={110 + (i + 1) * 32}
+                              y2={115}
+                              stroke="url(#pswConnectionLine)"
+                              strokeWidth={isBlocked ? 1 : 2}
+                              opacity={isBlocked ? 0.15 : 0.5}
+                           />
+                        )}
+
+                        {/* Particle outer glow */}
+                        {waveReached && !isBlocked && (
+                           <circle
+                              cx={baseX + offsetX}
+                              cy={115 + offsetY}
+                              r="12"
+                              fill={waveType === 'p' ? '#f97316' : '#a78bfa'}
+                              opacity={intensity * 0.3}
+                              filter="url(#pswParticleGlow)"
+                           />
+                        )}
+
+                        {/* Main particle */}
+                        <circle
+                           cx={baseX + offsetX}
+                           cy={115 + offsetY}
+                           r="8"
+                           fill={particleGradient}
+                           opacity={isBlocked ? 0.2 : 0.95}
+                           filter={waveReached && !isBlocked ? 'url(#pswParticleGlow)' : undefined}
+                        />
+
+                        {/* Particle highlight */}
+                        {!isBlocked && (
+                           <circle
+                              cx={baseX + offsetX - 2}
+                              cy={115 + offsetY - 2}
+                              r="3"
+                              fill="white"
+                              opacity={waveReached ? 0.4 : 0.15}
+                           />
+                        )}
+                     </g>
+                  );
+               })}
+
+               {/* S-wave blocked indicator with premium styling */}
+               {sWaveBlocked && isWaveActive && waveProgress > 0.2 && (
+                  <g filter="url(#pswDangerGlow)">
+                     {/* Blocked zone visualization */}
+                     <rect x="200" y="60" width="180" height="110" rx="10"
+                        fill="#450a0a" fillOpacity="0.9"
+                        stroke="#ef4444" strokeWidth="2" />
+
+                     {/* X pattern */}
+                     <line x1="220" y1="80" x2="360" y2="150" stroke="#ef4444" strokeWidth="3" opacity="0.6" />
+                     <line x1="360" y1="80" x2="220" y2="150" stroke="#ef4444" strokeWidth="3" opacity="0.6" />
+
+                     {/* Warning icon area */}
+                     <circle cx="290" cy="100" r="18" fill="#7f1d1d" stroke="#ef4444" strokeWidth="2" />
+                     <text x="290" y="107" textAnchor="middle" style={{ fontSize: '18px' }}>!</text>
+                  </g>
+               )}
+
+               {/* Wave type indicator panel with premium styling */}
+               <rect x="470" y="50" width="80" height="90" rx="10"
+                  fill="#18181b"
+                  stroke={waveType === 'p' ? '#f97316' : '#a78bfa'}
+                  strokeWidth="2"
+                  opacity="0.95" />
+
+               {/* Wave type icon */}
+               <circle cx="510" cy="80" r="18"
+                  fill={waveType === 'p' ? 'url(#pswPWaveGrad)' : 'url(#pswSWaveGrad)'}
+                  filter="url(#pswParticleGlow)" />
+
+               {/* Direction arrows inside circle */}
+               <text x="510" y="86" textAnchor="middle"
+                  style={{ fontSize: '14px', fontWeight: 700, fill: '#18181b' }}>
+                  {waveType === 'p' ? '\u2194' : '\u2195'}
+               </text>
+            </svg>
+
+            {/* Labels outside SVG using typo system */}
+            <div style={{
+               width: '100%',
+               display: 'flex',
+               justifyContent: 'space-between',
+               alignItems: 'flex-start',
+               padding: '8px 40px',
+               marginTop: '4px'
+            }}>
+               {/* Left: Medium label */}
+               <div style={{
+                  fontSize: typo.small,
+                  fontWeight: 700,
+                  color: medium === 'solid' ? design.colors.solid : design.colors.liquid,
+                  textTransform: 'uppercase',
+                  letterSpacing: '0.08em'
+               }}>
+                  {medium === 'solid' ? 'Solid Medium (Rock)' : 'Liquid Medium'}
+               </div>
+
+               {/* Center: Motion explanation */}
+               <div style={{
+                  textAlign: 'center',
+                  flex: 1,
+                  padding: '0 16px'
+               }}>
+                  <div style={{
+                     fontSize: typo.small,
+                     color: design.colors.textSecondary,
+                     marginBottom: '2px'
+                  }}>
+                     {waveType === 'p'
+                        ? 'P-Wave: Compression motion parallel to direction'
+                        : 'S-Wave: Shear motion perpendicular to direction'}
+                  </div>
+                  <div style={{
+                     fontSize: typo.label,
+                     color: design.colors.textTertiary
+                  }}>
+                     {waveType === 'p'
+                        ? 'Speed: ~6-8 km/s in rock \u2022 Arrives FIRST'
+                        : 'Speed: ~3.5-4.5 km/s in rock \u2022 Arrives SECOND'}
+                  </div>
+               </div>
+
+               {/* Right: Wave type label */}
+               <div style={{
+                  textAlign: 'right'
+               }}>
+                  <div style={{
+                     fontSize: typo.body,
+                     fontWeight: 800,
+                     color: waveType === 'p' ? design.colors.pWave : design.colors.sWave
+                  }}>
+                     {waveType === 'p' ? 'P-Wave' : 'S-Wave'}
+                  </div>
+                  <div style={{
+                     fontSize: typo.label,
+                     color: design.colors.textTertiary
+                  }}>
+                     {waveType === 'p' ? 'Compression' : 'Shear'}
+                  </div>
+               </div>
+            </div>
+
+            {/* S-wave blocked message outside SVG */}
+            {sWaveBlocked && isWaveActive && waveProgress > 0.2 && (
+               <div style={{
+                  marginTop: '8px',
+                  padding: '10px 20px',
+                  borderRadius: design.radius.md,
+                  background: design.colors.dangerMuted,
+                  border: `2px solid ${design.colors.danger}`,
+                  textAlign: 'center'
+               }}>
+                  <div style={{
+                     fontSize: typo.body,
+                     fontWeight: 800,
+                     color: design.colors.danger,
+                     marginBottom: '2px'
+                  }}>
+                     S-WAVE BLOCKED
+                  </div>
+                  <div style={{
+                     fontSize: typo.small,
+                     color: '#fca5a5'
+                  }}>
+                     Liquids cannot support shear stress
+                  </div>
+               </div>
             )}
-
-            {/* Wave type indicator */}
-            <rect x="480" y="85" width="70" height="100" rx="8"
-               fill={design.colors.bgSecondary} stroke={design.colors.border} />
-            <text x="515" y="108" textAnchor="middle"
-               style={{ fontSize: '10px', fontWeight: 600, fill: design.colors.textTertiary }}>
-               WAVE TYPE
-            </text>
-            <text x="515" y="135" textAnchor="middle"
-               style={{ fontSize: '16px', fontWeight: 800, fill: waveType === 'p' ? design.colors.pWave : design.colors.sWave }}>
-               {waveType === 'p' ? 'P-Wave' : 'S-Wave'}
-            </text>
-            <text x="515" y="155" textAnchor="middle"
-               style={{ fontSize: '9px', fill: design.colors.textTertiary }}>
-               {waveType === 'p' ? 'Compression' : 'Shear'}
-            </text>
-            <text x="515" y="175" textAnchor="middle"
-               style={{ fontSize: '20px' }}>
-               {waveType === 'p' ? '← →' : '↑ ↓'}
-            </text>
-
-            {/* Motion explanation */}
-            <text x="300" y="245" textAnchor="middle"
-               style={{ fontSize: '12px', fill: design.colors.textSecondary }}>
-               {waveType === 'p'
-                  ? 'P-Wave: Particles compress & expand parallel to wave direction'
-                  : 'S-Wave: Particles move perpendicular to wave direction (shear)'}
-            </text>
-
-            {/* Speed comparison */}
-            <text x="300" y="265" textAnchor="middle"
-               style={{ fontSize: '11px', fill: design.colors.textTertiary }}>
-               {waveType === 'p'
-                  ? 'Speed: ~6-8 km/s in rock • Arrives FIRST (Primary)'
-                  : 'Speed: ~3.5-4.5 km/s in rock • Arrives SECOND (Secondary)'}
-            </text>
-         </svg>
+         </div>
       );
    };
 

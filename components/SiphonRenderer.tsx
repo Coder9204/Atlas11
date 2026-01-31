@@ -512,29 +512,102 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
             </p>
 
             <svg width="320" height="200" viewBox="0 0 320 200" style={{ margin: '0 auto', display: 'block' }}>
+              <defs>
+                {/* Premium water gradient with depth */}
+                <linearGradient id="siphWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+                  <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.85" />
+                  <stop offset="60%" stopColor="#2563eb" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.75" />
+                </linearGradient>
+
+                {/* Tank metal gradient */}
+                <linearGradient id="siphTankMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#4b5563" />
+                  <stop offset="25%" stopColor="#374151" />
+                  <stop offset="50%" stopColor="#4b5563" />
+                  <stop offset="75%" stopColor="#374151" />
+                  <stop offset="100%" stopColor="#1f2937" />
+                </linearGradient>
+
+                {/* Tube gradient with transparency */}
+                <linearGradient id="siphTubeOuter" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#6b7280" />
+                  <stop offset="30%" stopColor="#9ca3af" />
+                  <stop offset="50%" stopColor="#d1d5db" stopOpacity="0.6" />
+                  <stop offset="70%" stopColor="#9ca3af" />
+                  <stop offset="100%" stopColor="#6b7280" />
+                </linearGradient>
+
+                <linearGradient id="siphTubeInner" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#374151" stopOpacity="0.5" />
+                  <stop offset="50%" stopColor="#1f2937" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#374151" stopOpacity="0.5" />
+                </linearGradient>
+
+                {/* Flow water in tube */}
+                <linearGradient id="siphFlowWater" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.9" />
+                  <stop offset="50%" stopColor="#0ea5e9" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#0284c7" stopOpacity="0.9" />
+                </linearGradient>
+
+                {/* Glow filters */}
+                <filter id="siphWaterGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                <filter id="siphDropletGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Arrow glow for height difference */}
+                <filter id="siphArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="1.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Radial gradient for droplets */}
+                <radialGradient id="siphDroplet" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#7dd3fc" />
+                  <stop offset="50%" stopColor="#38bdf8" />
+                  <stop offset="100%" stopColor="#0284c7" />
+                </radialGradient>
+              </defs>
+
               {/* Upper tank */}
-              <rect x="30" y="60" width="80" height="80" rx="5" fill="#333" stroke="#444" strokeWidth="2" />
-              <rect x="35" y="70" width="70" height={showSiphonFlow ? 50 : 65} fill={colors.water} opacity="0.7" />
-              <text x="70" y="55" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Source</text>
+              <rect x="30" y="60" width="80" height="80" rx="5" fill="url(#siphTankMetal)" stroke="#1f2937" strokeWidth="2" />
+              <rect x="35" y="70" width="70" height={showSiphonFlow ? 50 : 65} fill="url(#siphWaterGrad)" filter="url(#siphWaterGlow)" />
 
               {/* Lower tank */}
-              <rect x="210" y="120" width="80" height="60" rx="5" fill="#333" stroke="#444" strokeWidth="2" />
-              <rect x="215" y={showSiphonFlow ? 140 : 165} width="70" height={showSiphonFlow ? 35 : 10} fill={colors.water} opacity="0.7" />
-              <text x="250" y="115" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Destination</text>
+              <rect x="210" y="120" width="80" height="60" rx="5" fill="url(#siphTankMetal)" stroke="#1f2937" strokeWidth="2" />
+              <rect x="215" y={showSiphonFlow ? 140 : 165} width="70" height={showSiphonFlow ? 35 : 10} fill="url(#siphWaterGrad)" filter="url(#siphWaterGlow)" />
 
-              {/* Siphon tube */}
+              {/* Siphon tube - outer with transparency effect */}
               <path
                 d="M 100 80 Q 100 30 160 30 Q 220 30 220 80 L 220 130"
                 fill="none"
-                stroke="#666"
-                strokeWidth="8"
+                stroke="url(#siphTubeOuter)"
+                strokeWidth="10"
                 strokeLinecap="round"
               />
+              {/* Siphon tube - inner */}
               <path
                 d="M 100 80 Q 100 30 160 30 Q 220 30 220 80 L 220 130"
                 fill="none"
-                stroke="#888"
-                strokeWidth="4"
+                stroke="url(#siphTubeInner)"
+                strokeWidth="6"
                 strokeLinecap="round"
               />
 
@@ -544,30 +617,38 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                   <path
                     d="M 100 80 Q 100 30 160 30 Q 220 30 220 80 L 220 130"
                     fill="none"
-                    stroke={colors.water}
-                    strokeWidth="3"
+                    stroke="url(#siphFlowWater)"
+                    strokeWidth="4"
                     strokeLinecap="round"
-                    opacity="0.8"
+                    filter="url(#siphWaterGlow)"
                   />
-                  {/* Flow droplets */}
-                  <circle cx="220" cy="145" r="4" fill={colors.water}>
+                  {/* Flow droplets with glow */}
+                  <circle cx="220" cy="145" r="5" fill="url(#siphDroplet)" filter="url(#siphDropletGlow)">
                     <animate attributeName="cy" values="130;155" dur="0.5s" repeatCount="indefinite" />
                   </circle>
-                  <circle cx="220" cy="135" r="3" fill={colors.water}>
+                  <circle cx="220" cy="135" r="4" fill="url(#siphDroplet)" filter="url(#siphDropletGlow)">
                     <animate attributeName="cy" values="130;155" dur="0.5s" begin="0.25s" repeatCount="indefinite" />
                   </circle>
                 </>
               )}
 
-              {/* Apex label */}
-              <text x="160" y="20" fill={colors.primary} fontSize="10" textAnchor="middle">↑ Apex (highest point)</text>
-
-              {/* Height difference arrow */}
-              <line x1="280" y1="80" x2="280" y2="140" stroke={colors.warning} strokeWidth="2" />
-              <polygon points="280,80 275,90 285,90" fill={colors.warning} />
-              <polygon points="280,140 275,130 285,130" fill={colors.warning} />
-              <text x="295" y="115" fill={colors.warning} fontSize="10">Δh</text>
+              {/* Height difference arrow with glow */}
+              <g filter="url(#siphArrowGlow)">
+                <line x1="280" y1="80" x2="280" y2="140" stroke={colors.warning} strokeWidth="2" />
+                <polygon points="280,80 275,90 285,90" fill={colors.warning} />
+                <polygon points="280,140 275,130 285,130" fill={colors.warning} />
+              </g>
             </svg>
+
+            {/* Labels moved outside SVG */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', padding: '0 20px' }}>
+              <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Source</span>
+              <span style={{ fontSize: typo.small, color: colors.primary }}>Apex (highest point)</span>
+              <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Destination</span>
+            </div>
+            <div style={{ textAlign: 'right', paddingRight: '10px', marginTop: '4px' }}>
+              <span style={{ fontSize: typo.small, color: colors.warning }}>Δh</span>
+            </div>
 
             <button
               onMouseDown={() => {
@@ -657,30 +738,70 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
         </p>
 
         <svg width="100%" height="150" viewBox="0 0 400 150" style={{ marginBottom: '20px' }}>
+          <defs>
+            {/* Reuse gradient IDs with predict prefix */}
+            <linearGradient id="siphPredictWater" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.85" />
+              <stop offset="60%" stopColor="#2563eb" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.75" />
+            </linearGradient>
+
+            <linearGradient id="siphPredictTank" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="50%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            <linearGradient id="siphPredictTube" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="50%" stopColor="#9ca3af" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#6b7280" />
+            </linearGradient>
+
+            <radialGradient id="siphPredictDroplet" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#7dd3fc" />
+              <stop offset="100%" stopColor="#0284c7" />
+            </radialGradient>
+
+            <filter id="siphPredictGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
           {/* Before */}
           <g transform="translate(50, 0)">
-            <text x="60" y="15" fill={colors.textSecondary} fontSize="11" textAnchor="middle">Before</text>
-            <rect x="20" y="50" width="60" height="60" fill="#333" rx="3" />
-            <rect x="23" y="60" width="54" height="47" fill={colors.water} opacity="0.6" />
-            <path d="M 75 70 Q 75 35 100 35 Q 125 35 125 70 L 125 100" fill="none" stroke="#666" strokeWidth="4" />
-            <circle cx="125" cy="105" r="4" fill={colors.water}>
+            <rect x="20" y="50" width="60" height="60" fill="url(#siphPredictTank)" rx="3" stroke="#1f2937" strokeWidth="1" />
+            <rect x="23" y="60" width="54" height="47" fill="url(#siphPredictWater)" filter="url(#siphPredictGlow)" />
+            <path d="M 75 70 Q 75 35 100 35 Q 125 35 125 70 L 125 100" fill="none" stroke="url(#siphPredictTube)" strokeWidth="5" strokeLinecap="round" />
+            <circle cx="125" cy="105" r="5" fill="url(#siphPredictDroplet)" filter="url(#siphPredictGlow)">
               <animate attributeName="cy" values="100;115" dur="0.4s" repeatCount="indefinite" />
             </circle>
             <line x1="90" y1="60" x2="130" y2="60" stroke={colors.warning} strokeWidth="1" strokeDasharray="3,2" />
-            <text x="140" y="63" fill={colors.warning} fontSize="9">Water level</text>
           </g>
 
           {/* After */}
           <g transform="translate(220, 0)">
-            <text x="60" y="15" fill={colors.textSecondary} fontSize="11" textAnchor="middle">After</text>
-            <rect x="20" y="50" width="60" height="60" fill="#333" rx="3" />
-            <rect x="23" y="60" width="54" height="47" fill={colors.water} opacity="0.6" />
-            <path d="M 75 70 Q 75 35 100 35 Q 125 35 125 50" fill="none" stroke="#666" strokeWidth="4" />
-            <text x="145" y="60" fill={colors.accent} fontSize="10">Outlet raised!</text>
+            <rect x="20" y="50" width="60" height="60" fill="url(#siphPredictTank)" rx="3" stroke="#1f2937" strokeWidth="1" />
+            <rect x="23" y="60" width="54" height="47" fill="url(#siphPredictWater)" filter="url(#siphPredictGlow)" />
+            <path d="M 75 70 Q 75 35 100 35 Q 125 35 125 50" fill="none" stroke="url(#siphPredictTube)" strokeWidth="5" strokeLinecap="round" />
             <line x1="90" y1="60" x2="130" y2="60" stroke={colors.warning} strokeWidth="1" strokeDasharray="3,2" />
             <text x="125" y="45" fill={colors.accent} fontSize="18">?</text>
           </g>
         </svg>
+
+        {/* Labels moved outside SVG */}
+        <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '16px' }}>
+          <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Before</span>
+          <span style={{ fontSize: typo.small, color: colors.textSecondary }}>After (Outlet raised!)</span>
+        </div>
+        <div style={{ textAlign: 'center', marginBottom: '8px' }}>
+          <span style={{ fontSize: typo.small, color: colors.warning }}>Water level</span>
+        </div>
 
         <p style={{ color: colors.text, fontSize: '18px', fontWeight: '600', marginBottom: '16px', textAlign: 'center' }}>
           What happens to the siphon?
@@ -793,29 +914,106 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
           {/* Siphon visualization */}
           <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
             <svg width="100%" height="220" viewBox="0 0 400 220">
+              <defs>
+                {/* Premium water gradient with depth */}
+                <linearGradient id="siphPlayWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.95" />
+                  <stop offset="25%" stopColor="#3b82f6" stopOpacity="0.9" />
+                  <stop offset="50%" stopColor="#2563eb" stopOpacity="0.85" />
+                  <stop offset="75%" stopColor="#1d4ed8" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#1e40af" stopOpacity="0.75" />
+                </linearGradient>
+
+                {/* Tank metal gradient */}
+                <linearGradient id="siphPlayTank" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#4b5563" />
+                  <stop offset="25%" stopColor="#374151" />
+                  <stop offset="50%" stopColor="#4b5563" />
+                  <stop offset="75%" stopColor="#374151" />
+                  <stop offset="100%" stopColor="#1f2937" />
+                </linearGradient>
+
+                {/* Tube outer gradient with transparency */}
+                <linearGradient id="siphPlayTubeOuter" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#6b7280" />
+                  <stop offset="25%" stopColor="#9ca3af" />
+                  <stop offset="50%" stopColor="#d1d5db" stopOpacity="0.5" />
+                  <stop offset="75%" stopColor="#9ca3af" />
+                  <stop offset="100%" stopColor="#6b7280" />
+                </linearGradient>
+
+                {/* Tube inner/flowing water */}
+                <linearGradient id="siphPlayFlowWater" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.9" />
+                  <stop offset="30%" stopColor="#0ea5e9" stopOpacity="1" />
+                  <stop offset="70%" stopColor="#0ea5e9" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#0284c7" stopOpacity="0.9" />
+                </linearGradient>
+
+                {/* Inactive tube gradient */}
+                <linearGradient id="siphPlayTubeInactive" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#374151" stopOpacity="0.5" />
+                  <stop offset="50%" stopColor="#1f2937" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#374151" stopOpacity="0.5" />
+                </linearGradient>
+
+                {/* Flow particle gradient */}
+                <radialGradient id="siphPlayParticle" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#7dd3fc" />
+                  <stop offset="40%" stopColor="#38bdf8" />
+                  <stop offset="100%" stopColor="#0284c7" />
+                </radialGradient>
+
+                {/* Scale line gradient */}
+                <linearGradient id="siphPlayScale" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#6b7280" />
+                  <stop offset="100%" stopColor="#374151" />
+                </linearGradient>
+
+                {/* Glow filters */}
+                <filter id="siphPlayWaterGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                <filter id="siphPlayFlowGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                <filter id="siphPlayParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
               {/* Height scale */}
-              <line x1="20" y1="30" x2="20" y2="200" stroke="#444" strokeWidth="1" />
+              <line x1="20" y1="30" x2="20" y2="200" stroke="url(#siphPlayScale)" strokeWidth="2" />
               {[0, 25, 50, 75, 100].map(h => (
                 <g key={h}>
-                  <line x1="15" y1={200 - h * 1.5} x2="25" y2={200 - h * 1.5} stroke="#444" strokeWidth="1" />
-                  <text x="10" y={205 - h * 1.5} fill={colors.textSecondary} fontSize="8" textAnchor="end">{h}</text>
+                  <line x1="15" y1={200 - h * 1.5} x2="25" y2={200 - h * 1.5} stroke="#6b7280" strokeWidth="1" />
                 </g>
               ))}
-              <text x="12" y="20" fill={colors.textSecondary} fontSize="9" textAnchor="middle">Height</text>
 
               {/* Upper tank */}
               <g transform={`translate(80, ${200 - upperTankHeight - 50})`}>
-                <rect x="0" y="0" width="70" height="50" rx="3" fill="#333" stroke="#444" strokeWidth="2" />
-                <rect x="3" y={50 - waterLevel * 0.45} width="64" height={waterLevel * 0.45} fill={colors.water} opacity="0.7" />
-                <text x="35" y="-8" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Source Tank</text>
-                <text x="35" y={waterLevel > 50 ? 20 : 60} fill={colors.text} fontSize="9" textAnchor="middle">{waterLevel.toFixed(0)}%</text>
+                <rect x="0" y="0" width="70" height="50" rx="4" fill="url(#siphPlayTank)" stroke="#1f2937" strokeWidth="2" />
+                <rect x="3" y={50 - waterLevel * 0.45} width="64" height={waterLevel * 0.45} fill="url(#siphPlayWater)" filter="url(#siphPlayWaterGlow)" />
               </g>
 
               {/* Lower tank */}
               <g transform={`translate(250, ${200 - lowerTankHeight - 40})`}>
-                <rect x="0" y="0" width="70" height="40" rx="3" fill="#333" stroke="#444" strokeWidth="2" />
-                <rect x="3" y={40 - (100 - waterLevel) * 0.35} width="64" height={Math.max(0, (100 - waterLevel) * 0.35)} fill={colors.water} opacity="0.7" />
-                <text x="35" y="-8" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Destination</text>
+                <rect x="0" y="0" width="70" height="40" rx="4" fill="url(#siphPlayTank)" stroke="#1f2937" strokeWidth="2" />
+                <rect x="3" y={40 - (100 - waterLevel) * 0.35} width="64" height={Math.max(0, (100 - waterLevel) * 0.35)} fill="url(#siphPlayWater)" filter="url(#siphPlayWaterGlow)" />
               </g>
 
               {/* Siphon tube */}
@@ -826,24 +1024,26 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
 
                 return (
                   <>
+                    {/* Outer tube with transparency effect */}
                     <path
                       d={`M 145 ${sourceY} Q 145 ${apexY} 200 ${apexY} Q 255 ${apexY} 255 ${destY}`}
                       fill="none"
-                      stroke="#666"
-                      strokeWidth="10"
+                      stroke="url(#siphPlayTubeOuter)"
+                      strokeWidth="12"
                       strokeLinecap="round"
                     />
+                    {/* Inner tube / water */}
                     <path
                       d={`M 145 ${sourceY} Q 145 ${apexY} 200 ${apexY} Q 255 ${apexY} 255 ${destY}`}
                       fill="none"
-                      stroke={canFlow ? colors.water : '#444'}
-                      strokeWidth="6"
+                      stroke={canFlow ? 'url(#siphPlayFlowWater)' : 'url(#siphPlayTubeInactive)'}
+                      strokeWidth="7"
                       strokeLinecap="round"
-                      opacity={canFlow ? 0.8 : 0.3}
+                      filter={canFlow ? 'url(#siphPlayFlowGlow)' : undefined}
                     />
-                    {/* Flow animation */}
+                    {/* Flow animation particle */}
                     {canFlow && (
-                      <circle r="4" fill={colors.water}>
+                      <circle r="5" fill="url(#siphPlayParticle)" filter="url(#siphPlayParticleGlow)">
                         <animateMotion
                           dur={`${2 / Math.max(0.5, flowRate)}s`}
                           repeatCount="indefinite"
@@ -854,26 +1054,33 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
                   </>
                 );
               })()}
-
-              {/* Height difference indicator */}
-              {heightDiff !== 0 && (
-                <g transform="translate(350, 100)">
-                  <text x="0" y="0" fill={heightDiff > 0 ? colors.success : colors.accent} fontSize="11" textAnchor="middle">
-                    Δh = {heightDiff > 0 ? '+' : ''}{heightDiff}
-                  </text>
-                  <text x="0" y="15" fill={colors.textSecondary} fontSize="9" textAnchor="middle">
-                    {heightDiff > 0 ? 'Will flow ✓' : 'No flow ✗'}
-                  </text>
-                </g>
-              )}
-
-              {/* Flow rate display */}
-              {canFlow && (
-                <text x="200" y="210" fill={colors.water} fontSize="12" textAnchor="middle" fontWeight="600">
-                  Flow rate: {flowRate.toFixed(1)} units/s
-                </text>
-              )}
             </svg>
+
+            {/* Labels moved outside SVG */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 40px 0' }}>
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: typo.small, color: colors.textSecondary, display: 'block' }}>Source Tank</span>
+                <span style={{ fontSize: typo.body, color: colors.text, fontWeight: '600' }}>{waterLevel.toFixed(0)}%</span>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: typo.small, color: heightDiff > 0 ? colors.success : colors.accent }}>
+                  Δh = {heightDiff > 0 ? '+' : ''}{heightDiff}
+                </span>
+                <span style={{ fontSize: typo.label, color: colors.textSecondary, display: 'block' }}>
+                  {heightDiff > 0 ? 'Will flow' : 'No flow'}
+                </span>
+              </div>
+              <div style={{ textAlign: 'center' }}>
+                <span style={{ fontSize: typo.small, color: colors.textSecondary, display: 'block' }}>Destination</span>
+              </div>
+            </div>
+            {canFlow && (
+              <div style={{ textAlign: 'center', marginTop: '8px' }}>
+                <span style={{ fontSize: typo.body, color: colors.water, fontWeight: '600' }}>
+                  Flow rate: {flowRate.toFixed(1)} units/s
+                </span>
+              </div>
+            )}
           </div>
 
           {/* Controls */}
@@ -1052,26 +1259,91 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
           background: colors.background,
           borderRadius: '12px'
         }}>
-          <p style={{ color: colors.text, fontWeight: '600', margin: '0 0 12px 0', textAlign: 'center' }}>
-            Pressure Along the Siphon
-          </p>
           <svg width="100%" height="100" viewBox="0 0 400 100">
-            {/* Siphon profile */}
-            <path d="M 50 70 Q 50 30 150 30 Q 250 30 250 50 L 350 80" fill="none" stroke={colors.water} strokeWidth="3" />
+            <defs>
+              {/* Siphon tube gradient */}
+              <linearGradient id="siphReviewTube" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.9" />
+                <stop offset="30%" stopColor="#0ea5e9" />
+                <stop offset="70%" stopColor="#0ea5e9" />
+                <stop offset="100%" stopColor="#0284c7" stopOpacity="0.9" />
+              </linearGradient>
 
-            {/* Pressure labels */}
-            <circle cx="50" cy="70" r="5" fill={colors.accent} />
-            <text x="50" y="90" fill={colors.accent} fontSize="10" textAnchor="middle">P_atm + ρgh</text>
+              {/* Flow arrow gradient */}
+              <linearGradient id="siphReviewArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={colors.primary} stopOpacity="0.5" />
+                <stop offset="50%" stopColor={colors.primary} />
+                <stop offset="100%" stopColor={colors.primary} stopOpacity="0.8" />
+              </linearGradient>
 
-            <circle cx="150" cy="30" r="5" fill={colors.warning} />
-            <text x="150" y="15" fill={colors.warning} fontSize="10" textAnchor="middle">P_low (apex)</text>
+              {/* Pressure point gradients */}
+              <radialGradient id="siphReviewPressureHigh" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#fca5a5" />
+                <stop offset="100%" stopColor="#ef4444" />
+              </radialGradient>
 
-            <circle cx="350" cy="80" r="5" fill={colors.success} />
-            <text x="350" y="95" fill={colors.success} fontSize="10" textAnchor="middle">P_atm</text>
+              <radialGradient id="siphReviewPressureLow" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#fde047" />
+                <stop offset="100%" stopColor="#eab308" />
+              </radialGradient>
 
-            {/* Flow arrow */}
-            <line x1="100" y1="50" x2="300" y2="65" stroke={colors.primary} strokeWidth="2" markerEnd="url(#flowArrow)" />
+              <radialGradient id="siphReviewPressureOut" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#6ee7b7" />
+                <stop offset="100%" stopColor="#10b981" />
+              </radialGradient>
+
+              {/* Glow filters */}
+              <filter id="siphReviewTubeGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <filter id="siphReviewPointGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <filter id="siphReviewArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="1.5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Arrow marker */}
+              <marker id="siphReviewFlowArrow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill={colors.primary} />
+              </marker>
+            </defs>
+
+            {/* Siphon profile with glow */}
+            <path d="M 50 70 Q 50 30 150 30 Q 250 30 250 50 L 350 80" fill="none" stroke="url(#siphReviewTube)" strokeWidth="5" strokeLinecap="round" filter="url(#siphReviewTubeGlow)" />
+
+            {/* Pressure points with glow */}
+            <circle cx="50" cy="70" r="7" fill="url(#siphReviewPressureHigh)" filter="url(#siphReviewPointGlow)" />
+            <circle cx="150" cy="30" r="7" fill="url(#siphReviewPressureLow)" filter="url(#siphReviewPointGlow)" />
+            <circle cx="350" cy="80" r="7" fill="url(#siphReviewPressureOut)" filter="url(#siphReviewPointGlow)" />
+
+            {/* Flow arrow with glow */}
+            <line x1="100" y1="50" x2="290" y2="65" stroke="url(#siphReviewArrow)" strokeWidth="2" markerEnd="url(#siphReviewFlowArrow)" filter="url(#siphReviewArrowGlow)" />
           </svg>
+
+          {/* Labels moved outside SVG */}
+          <div style={{ textAlign: 'center', marginTop: '8px', marginBottom: '8px' }}>
+            <span style={{ fontSize: typo.body, color: colors.text, fontWeight: '600' }}>Pressure Along the Siphon</span>
+          </div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '0 20px' }}>
+            <span style={{ fontSize: typo.small, color: colors.accent }}>P_atm + pgh</span>
+            <span style={{ fontSize: typo.small, color: colors.warning }}>P_low (apex)</span>
+            <span style={{ fontSize: typo.small, color: colors.success }}>P_atm</span>
+          </div>
         </div>
 
         {renderKeyTakeaway("A siphon is driven by atmospheric pressure pushing water into the tube and gravity pulling it out — creating continuous flow without any pump!")}
@@ -1098,24 +1370,91 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
         </p>
 
         <svg width="100%" height="140" viewBox="0 0 400 140" style={{ marginBottom: '20px' }}>
-          {/* Wall */}
-          <rect x="175" y="20" width="50" height="120" fill="#555" />
-          <text x="200" y="85" fill={colors.textSecondary} fontSize="10" textAnchor="middle" transform="rotate(-90, 200, 85)">TALL WALL</text>
+          <defs>
+            {/* Wall gradient */}
+            <linearGradient id="siphTwistWall" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="30%" stopColor="#6b7280" />
+              <stop offset="70%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
 
-          {/* Source */}
-          <rect x="40" y="90" width="50" height="40" fill="#333" rx="3" />
-          <rect x="43" y="95" width="44" height="32" fill={colors.water} opacity="0.6" />
+            {/* Tank gradient */}
+            <linearGradient id="siphTwistTank" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="50%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
 
-          {/* Destination */}
-          <rect x="310" y="100" width="50" height="30" fill="#333" rx="3" />
+            {/* Water gradient */}
+            <linearGradient id="siphTwistWater" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.75" />
+            </linearGradient>
 
-          {/* Very high siphon */}
-          <path d="M 85 100 Q 85 10 200 10 Q 315 10 315 105" fill="none" stroke="#888" strokeWidth="4" strokeDasharray="5,3" />
+            {/* Dashed tube gradient */}
+            <linearGradient id="siphTwistTube" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#9ca3af" />
+              <stop offset="50%" stopColor="#d1d5db" />
+              <stop offset="100%" stopColor="#9ca3af" />
+            </linearGradient>
 
-          {/* Height markers */}
-          <line x1="380" y1="100" x2="380" y2="10" stroke={colors.accent} strokeWidth="1" />
-          <text x="390" y="55" fill={colors.accent} fontSize="10">?? m</text>
+            {/* Height marker gradient */}
+            <linearGradient id="siphTwistHeight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="siphTwistWaterGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="siphTwistHeightGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Wall with gradient */}
+          <rect x="175" y="20" width="50" height="120" fill="url(#siphTwistWall)" rx="2" />
+
+          {/* Source tank */}
+          <rect x="40" y="90" width="50" height="40" fill="url(#siphTwistTank)" rx="3" stroke="#1f2937" strokeWidth="1" />
+          <rect x="43" y="95" width="44" height="32" fill="url(#siphTwistWater)" filter="url(#siphTwistWaterGlow)" />
+
+          {/* Destination tank */}
+          <rect x="310" y="100" width="50" height="30" fill="url(#siphTwistTank)" rx="3" stroke="#1f2937" strokeWidth="1" />
+
+          {/* Very high siphon - dashed */}
+          <path d="M 85 100 Q 85 10 200 10 Q 315 10 315 105" fill="none" stroke="url(#siphTwistTube)" strokeWidth="5" strokeDasharray="8,4" strokeLinecap="round" />
+
+          {/* Height markers with glow */}
+          <g filter="url(#siphTwistHeightGlow)">
+            <line x1="380" y1="100" x2="380" y2="10" stroke="url(#siphTwistHeight)" strokeWidth="2" />
+            <polygon points="380,10 375,20 385,20" fill={colors.accent} />
+            <polygon points="380,100 375,90 385,90" fill={colors.accent} />
+          </g>
         </svg>
+
+        {/* Labels moved outside SVG */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', padding: '0 30px' }}>
+          <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Source</span>
+          <span style={{ fontSize: typo.small, color: colors.textSecondary }}>TALL WALL</span>
+          <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Destination</span>
+        </div>
+        <div style={{ textAlign: 'right', paddingRight: '10px' }}>
+          <span style={{ fontSize: typo.small, color: colors.accent }}>?? m</span>
+        </div>
 
         <p style={{ color: colors.text, fontSize: '18px', fontWeight: '600', marginBottom: '16px', textAlign: 'center' }}>
           Is there a maximum height for siphoning water?
@@ -1216,65 +1555,180 @@ const SiphonRenderer: React.FC<SiphonRendererProps> = ({ phase, onPhaseComplete,
           {/* Visualization */}
           <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
             <svg width="100%" height="200" viewBox="0 0 400 200">
+              <defs>
+                {/* Water gradient */}
+                <linearGradient id="siphTwistPlayWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.95" />
+                  <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.9" />
+                  <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.8" />
+                </linearGradient>
+
+                {/* Tank gradient */}
+                <linearGradient id="siphTwistPlayTank" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#4b5563" />
+                  <stop offset="50%" stopColor="#374151" />
+                  <stop offset="100%" stopColor="#1f2937" />
+                </linearGradient>
+
+                {/* Working tube gradient */}
+                <linearGradient id="siphTwistPlayTubeWork" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.9" />
+                  <stop offset="30%" stopColor="#0ea5e9" />
+                  <stop offset="70%" stopColor="#0ea5e9" />
+                  <stop offset="100%" stopColor="#0284c7" stopOpacity="0.9" />
+                </linearGradient>
+
+                {/* Broken tube gradient */}
+                <linearGradient id="siphTwistPlayTubeBroken" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#f87171" stopOpacity="0.5" />
+                  <stop offset="50%" stopColor="#ef4444" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#dc2626" stopOpacity="0.5" />
+                </linearGradient>
+
+                {/* Scale gradient */}
+                <linearGradient id="siphTwistPlayScale" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#6b7280" />
+                  <stop offset="100%" stopColor="#374151" />
+                </linearGradient>
+
+                {/* Critical line gradient */}
+                <linearGradient id="siphTwistPlayCritical" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+                  <stop offset="50%" stopColor="#ef4444" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
+                </linearGradient>
+
+                {/* Status indicator gradients */}
+                <radialGradient id="siphTwistPlayStatusOk" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#6ee7b7" />
+                  <stop offset="100%" stopColor="#10b981" />
+                </radialGradient>
+
+                <radialGradient id="siphTwistPlayStatusFail" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#fca5a5" />
+                  <stop offset="100%" stopColor="#ef4444" />
+                </radialGradient>
+
+                {/* Bubble gradient */}
+                <radialGradient id="siphTwistPlayBubble" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+                  <stop offset="50%" stopColor="#e5e7eb" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#d1d5db" stopOpacity="0.5" />
+                </radialGradient>
+
+                {/* Vacuum indicator gradient */}
+                <linearGradient id="siphTwistPlayVacuum" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#a855f7" stopOpacity="0.3" />
+                  <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#a855f7" stopOpacity="0.3" />
+                </linearGradient>
+
+                {/* Glow filters */}
+                <filter id="siphTwistPlayWaterGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                <filter id="siphTwistPlayTubeGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                <filter id="siphTwistPlayStatusGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                <filter id="siphTwistPlayBubbleGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+
               {/* Height scale */}
-              <line x1="30" y1="180" x2="30" y2="20" stroke="#444" strokeWidth="1" />
+              <line x1="30" y1="180" x2="30" y2="20" stroke="url(#siphTwistPlayScale)" strokeWidth="2" />
               {[0, 5, 10, 15, 20].map(h => (
                 <g key={h}>
-                  <line x1="25" y1={180 - h * 8} x2="35" y2={180 - h * 8} stroke="#444" strokeWidth="1" />
-                  <text x="20" y={183 - h * 8} fill={colors.textSecondary} fontSize="9" textAnchor="end">{h}m</text>
+                  <line x1="25" y1={180 - h * 8} x2="35" y2={180 - h * 8} stroke="#6b7280" strokeWidth="1" />
                 </g>
               ))}
 
-              {/* Critical line at 10m */}
-              <line x1="35" y1={180 - 10 * 8} x2="380" y2={180 - 10 * 8} stroke={colors.accent} strokeWidth="1" strokeDasharray="5,3" />
-              <text x="385" y={183 - 10 * 8} fill={colors.accent} fontSize="9">Max ≈ 10.3m</text>
+              {/* Critical line at 10m with glow */}
+              <line x1="35" y1={180 - 10 * 8} x2="380" y2={180 - 10 * 8} stroke="url(#siphTwistPlayCritical)" strokeWidth="2" strokeDasharray="8,4" />
 
-              {/* Ground/water level */}
-              <rect x="50" y="160" width="100" height="30" fill="#333" rx="3" />
-              <rect x="55" y="165" width="90" height="20" fill={colors.water} opacity="0.6" />
-              <text x="100" y="155" fill={colors.textSecondary} fontSize="10" textAnchor="middle">Source</text>
+              {/* Ground/water level - Source tank */}
+              <rect x="50" y="160" width="100" height="30" fill="url(#siphTwistPlayTank)" rx="4" stroke="#1f2937" strokeWidth="1" />
+              <rect x="55" y="165" width="90" height="20" fill="url(#siphTwistPlayWater)" filter="url(#siphTwistPlayWaterGlow)" />
 
               {/* Siphon tube with variable apex */}
               <path
                 d={`M 145 165 Q 145 ${180 - apexHeight * 8} 200 ${180 - apexHeight * 8} Q 255 ${180 - apexHeight * 8} 255 175`}
                 fill="none"
-                stroke={works ? colors.water : colors.accent}
-                strokeWidth="6"
-                opacity={works ? 0.8 : 0.4}
+                stroke={works ? 'url(#siphTwistPlayTubeWork)' : 'url(#siphTwistPlayTubeBroken)'}
+                strokeWidth="8"
+                strokeLinecap="round"
+                filter="url(#siphTwistPlayTubeGlow)"
               />
 
-              {/* Destination */}
-              <rect x="250" y="170" width="80" height="25" fill="#333" rx="3" />
+              {/* Destination tank */}
+              <rect x="250" y="170" width="80" height="25" fill="url(#siphTwistPlayTank)" rx="4" stroke="#1f2937" strokeWidth="1" />
 
-              {/* Status at apex */}
+              {/* Status at apex with glow */}
               <g transform={`translate(200, ${175 - apexHeight * 8})`}>
-                <circle r="10" fill={works ? colors.success : colors.accent} opacity="0.3" />
-                <text y="4" fill={works ? colors.success : colors.accent} fontSize="14" textAnchor="middle">
-                  {works ? '✓' : '✗'}
-                </text>
+                <circle r="12" fill={works ? 'url(#siphTwistPlayStatusOk)' : 'url(#siphTwistPlayStatusFail)'} filter="url(#siphTwistPlayStatusGlow)" />
               </g>
-
-              {/* Apex height label */}
-              <text x="200" y={160 - apexHeight * 8} fill={colors.text} fontSize="11" textAnchor="middle" fontWeight="600">
-                {apexHeight}m apex
-              </text>
 
               {/* Vacuum indicator */}
               {vacuumMode && (
                 <g transform="translate(300, 50)">
-                  <rect x="-30" y="-15" width="60" height="30" rx="5" fill={colors.secondary} opacity="0.3" />
-                  <text y="5" fill={colors.secondary} fontSize="11" textAnchor="middle">VACUUM</text>
+                  <rect x="-35" y="-18" width="70" height="36" rx="8" fill="url(#siphTwistPlayVacuum)" stroke={colors.secondary} strokeWidth="1" />
                 </g>
               )}
 
               {/* Bubble if broken */}
               {!works && !vacuumMode && (
                 <g transform={`translate(200, ${180 - apexHeight * 8})`}>
-                  <circle r="8" fill="#fff" opacity="0.5" />
-                  <text y="25" fill={colors.accent} fontSize="9" textAnchor="middle">Vapor bubble!</text>
+                  <circle r="10" fill="url(#siphTwistPlayBubble)" filter="url(#siphTwistPlayBubbleGlow)" />
                 </g>
               )}
             </svg>
+
+            {/* Labels moved outside SVG */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 20px 0' }}>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                {[0, 5, 10, 15, 20].map(h => (
+                  <span key={h} style={{ fontSize: typo.label, color: h === 10 ? colors.accent : colors.textSecondary }}>{h}m</span>
+                ))}
+              </div>
+              <span style={{ fontSize: typo.small, color: colors.accent }}>Max ~10.3m</span>
+            </div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 40px 0' }}>
+              <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Source</span>
+              <span style={{ fontSize: typo.body, color: colors.text, fontWeight: '600' }}>{apexHeight}m apex {works ? '(OK)' : '(FAIL)'}</span>
+              <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Destination</span>
+            </div>
+            {vacuumMode && (
+              <div style={{ textAlign: 'center', marginTop: '8px' }}>
+                <span style={{ fontSize: typo.body, color: colors.secondary, fontWeight: '600' }}>VACUUM MODE</span>
+              </div>
+            )}
+            {!works && !vacuumMode && (
+              <div style={{ textAlign: 'center', marginTop: '8px' }}>
+                <span style={{ fontSize: typo.small, color: colors.accent }}>Vapor bubble formed!</span>
+              </div>
+            )}
           </div>
 
           {/* Controls */}

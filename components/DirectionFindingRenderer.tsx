@@ -268,7 +268,7 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
     const shadowStartAngle = angleRad + Math.PI - shadowAngle / 2;
     const shadowEndAngle = angleRad + Math.PI + shadowAngle / 2;
 
-    // Generate wave fronts
+    // Generate wave fronts with gradient
     const generateWaveFronts = () => {
       const waveFronts = [];
       const numWaves = 6;
@@ -284,9 +284,10 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
               cy={sourceY}
               r={baseRadius}
               fill="none"
-              stroke={colors.soundWave}
-              strokeWidth={2}
+              stroke="url(#dfWaveGradient)"
+              strokeWidth={2.5}
               opacity={Math.max(0, 1 - baseRadius / (sourceDistance + 50))}
+              filter="url(#dfWaveGlow)"
             />
           );
         }
@@ -310,6 +311,12 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
     const effectiveLeftIntensity = earCovered === 'left' ? 0.1 : leftIntensity;
     const effectiveRightIntensity = earCovered === 'right' ? 0.1 : rightIntensity;
 
+    // Signal strength for meter (0-100)
+    const signalStrength = Math.round(100 * (1 - Math.abs(sourceAngle - 45) / 90));
+
+    // Direction indicator angle (pointing toward source)
+    const directionAngle = -sourceAngle + 90;
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
         <svg
@@ -317,137 +324,399 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#1e293b', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)', borderRadius: '12px', maxWidth: '500px' }}
         >
-          {/* Shadow region */}
+          {/* Premium SVG Definitions */}
+          <defs>
+            {/* Antenna metallic gradient */}
+            <linearGradient id="dfAntennaMetallic" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="25%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#cbd5e1" />
+              <stop offset="75%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* Head skin gradient */}
+            <radialGradient id="dfHeadGradient" cx="40%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#78716c" />
+              <stop offset="40%" stopColor="#57534e" />
+              <stop offset="70%" stopColor="#44403c" />
+              <stop offset="100%" stopColor="#292524" />
+            </radialGradient>
+
+            {/* Ear gradient - healthy */}
+            <radialGradient id="dfEarHealthy" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="40%" stopColor="#22c55e" />
+              <stop offset="70%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" />
+            </radialGradient>
+
+            {/* Ear gradient - covered/muted */}
+            <radialGradient id="dfEarCovered" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </radialGradient>
+
+            {/* Sound wave gradient */}
+            <linearGradient id="dfWaveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
+              <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#93c5fd" stopOpacity="1" />
+              <stop offset="70%" stopColor="#60a5fa" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Sound source gradient */}
+            <radialGradient id="dfSoundSource" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="30%" stopColor="#60a5fa" />
+              <stop offset="60%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </radialGradient>
+
+            {/* Shadow region gradient */}
+            <radialGradient id="dfShadowGradient" cx="50%" cy="0%" r="100%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.05" />
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.25" />
+            </radialGradient>
+
+            {/* Direction indicator gradient */}
+            <linearGradient id="dfDirectionArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.3" />
+              <stop offset="40%" stopColor="#a78bfa" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#c4b5fd" stopOpacity="1" />
+              <stop offset="60%" stopColor="#a78bfa" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Signal strength meter gradient */}
+            <linearGradient id="dfMeterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="40%" stopColor="#84cc16" />
+              <stop offset="70%" stopColor="#eab308" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Info panel gradient */}
+            <linearGradient id="dfPanelGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Nose gradient */}
+            <radialGradient id="dfNoseGradient" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#78716c" />
+              <stop offset="60%" stopColor="#57534e" />
+              <stop offset="100%" stopColor="#44403c" />
+            </radialGradient>
+
+            {/* Wave glow filter */}
+            <filter id="dfWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Source glow filter */}
+            <filter id="dfSourceGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Ear glow filter */}
+            <filter id="dfEarGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Direction glow filter */}
+            <filter id="dfDirectionGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Text shadow filter */}
+            <filter id="dfTextShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="1" stdDeviation="1" floodColor="#000" floodOpacity="0.5" />
+            </filter>
+
+            {/* Inner glow for head */}
+            <filter id="dfInnerGlow">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          {/* Shadow region with gradient */}
           <path
             d={`M ${centerX} ${centerY}
                 L ${centerX + 200 * Math.cos(shadowStartAngle)} ${centerY + 200 * Math.sin(shadowStartAngle)}
                 A 200 200 0 0 1 ${centerX + 200 * Math.cos(shadowEndAngle)} ${centerY + 200 * Math.sin(shadowEndAngle)}
                 Z`}
-            fill={colors.shadow}
-            opacity={0.15 + headShadowFactor * 0.1}
+            fill="url(#dfShadowGradient)"
+            opacity={0.5 + headShadowFactor * 0.15}
           />
 
-          {/* Sound waves */}
+          {/* RF Signal visualization - antenna array representation */}
+          <g transform={`translate(${width - 35}, 90)`}>
+            {/* Antenna base */}
+            <rect x="-8" y="0" width="16" height="60" rx="3" fill="url(#dfAntennaMetallic)" />
+            {/* Antenna elements */}
+            <rect x="-15" y="5" width="30" height="4" rx="2" fill="url(#dfAntennaMetallic)" />
+            <rect x="-12" y="20" width="24" height="4" rx="2" fill="url(#dfAntennaMetallic)" />
+            <rect x="-9" y="35" width="18" height="4" rx="2" fill="url(#dfAntennaMetallic)" />
+            {/* Antenna tip */}
+            <circle cx="0" cy="-5" r="4" fill="url(#dfSoundSource)" filter="url(#dfSourceGlow)" />
+          </g>
+
+          {/* Signal strength meter */}
+          <g transform={`translate(${width - 35}, 170)`}>
+            {/* Meter background */}
+            <rect x="-10" y="0" width="20" height="80" rx="4" fill="url(#dfPanelGradient)" stroke="#334155" strokeWidth="1" />
+            {/* Meter fill */}
+            <rect
+              x="-6"
+              y={80 - (signalStrength * 0.72)}
+              width="12"
+              height={signalStrength * 0.72}
+              rx="2"
+              fill="url(#dfMeterGradient)"
+              opacity="0.9"
+            />
+            {/* Meter ticks */}
+            {[0, 20, 40, 60, 80].map((tick, i) => (
+              <line key={i} x1="-10" y1={80 - tick * 0.9} x2="-6" y2={80 - tick * 0.9} stroke="#64748b" strokeWidth="1" />
+            ))}
+          </g>
+
+          {/* Sound waves with gradient and glow */}
           {isAnimating && generateWaveFronts()}
 
-          {/* Head (top view) */}
-          <ellipse
-            cx={centerX}
-            cy={centerY}
-            rx={headRadius}
-            ry={headRadius * 0.85}
-            fill="#475569"
-            stroke={colors.textSecondary}
-            strokeWidth={2}
-          />
-
-          {/* Nose indicator (shows front) */}
-          <ellipse
-            cx={centerX}
-            cy={centerY - headRadius * 0.85 - 8}
-            rx={8}
-            ry={6}
-            fill="#475569"
-            stroke={colors.textSecondary}
-            strokeWidth={2}
-          />
-
-          {/* Left ear */}
-          <ellipse
-            cx={leftEarX}
-            cy={centerY}
-            rx={8}
-            ry={14}
-            fill={earCovered === 'left' ? '#64748b' : colors.ear}
-            stroke={earCovered === 'left' ? colors.textMuted : colors.ear}
-            strokeWidth={2}
-            opacity={effectiveLeftIntensity}
-          />
-          {earCovered === 'left' && (
-            <text x={leftEarX} y={centerY + 4} textAnchor="middle" fill={colors.textMuted} fontSize={10}>X</text>
-          )}
-
-          {/* Right ear */}
-          <ellipse
-            cx={rightEarX}
-            cy={centerY}
-            rx={8}
-            ry={14}
-            fill={earCovered === 'right' ? '#64748b' : colors.ear}
-            stroke={earCovered === 'right' ? colors.textMuted : colors.ear}
-            strokeWidth={2}
-            opacity={effectiveRightIntensity}
-          />
-          {earCovered === 'right' && (
-            <text x={rightEarX} y={centerY + 4} textAnchor="middle" fill={colors.textMuted} fontSize={10}>X</text>
-          )}
-
-          {/* Sound source */}
-          <circle
-            cx={sourceX}
-            cy={sourceY}
-            r={12}
-            fill={colors.soundWave}
-            stroke="white"
-            strokeWidth={2}
-          />
-          <text x={sourceX} y={sourceY + 4} textAnchor="middle" fill="white" fontSize={10} fontWeight="bold">
-            {frequency >= 1000 ? `${(frequency/1000).toFixed(1)}k` : frequency}
-          </text>
-
-          {/* Direction line from head to source */}
+          {/* Direction indicator line with gradient */}
           <line
             x1={centerX}
             y1={centerY}
             x2={sourceX}
             y2={sourceY}
-            stroke={colors.accent}
-            strokeWidth={1}
-            strokeDasharray="4,4"
-            opacity={0.5}
+            stroke="url(#dfDirectionArrow)"
+            strokeWidth={2}
+            strokeDasharray="6,4"
+            filter="url(#dfDirectionGlow)"
           />
 
-          {/* Labels */}
-          <text x={20} y={25} fill={colors.textPrimary} fontSize={12}>
-            Frequency: {frequency} Hz
-          </text>
-          <text x={20} y={42} fill={colors.textPrimary} fontSize={12}>
-            Wavelength: {wavelengthCm.toFixed(1)} cm
-          </text>
-          <text x={20} y={59} fill={colors.textSecondary} fontSize={11}>
-            Head: {headSize} cm
-          </text>
+          {/* Direction indicator arrow head */}
+          <polygon
+            points={`${sourceX},${sourceY} ${sourceX - 8},${sourceY + 12} ${sourceX + 8},${sourceY + 12}`}
+            fill="url(#dfDirectionArrow)"
+            transform={`rotate(${-sourceAngle}, ${sourceX}, ${sourceY})`}
+            filter="url(#dfDirectionGlow)"
+          />
 
-          {/* ITD/ILD display */}
-          <rect x={width - 130} y={10} width={120} height={70} rx={6} fill="rgba(0,0,0,0.3)" />
-          <text x={width - 120} y={30} fill={colors.textSecondary} fontSize={11}>
-            ITD: {itdMs.toFixed(3)} ms
-          </text>
-          <text x={width - 120} y={48} fill={colors.textSecondary} fontSize={11}>
-            ILD: {ildDb.toFixed(1)} dB
-          </text>
-          <text x={width - 120} y={66} fill={headShadowFactor > 1 ? colors.success : colors.warning} fontSize={10}>
-            Shadow: {headShadowFactor > 1 ? 'Strong' : 'Weak'}
-          </text>
+          {/* Head (top view) with premium gradient */}
+          <ellipse
+            cx={centerX}
+            cy={centerY}
+            rx={headRadius}
+            ry={headRadius * 0.85}
+            fill="url(#dfHeadGradient)"
+            stroke="#78716c"
+            strokeWidth={2}
+            filter="url(#dfInnerGlow)"
+          />
+
+          {/* Nose indicator (shows front) with gradient */}
+          <ellipse
+            cx={centerX}
+            cy={centerY - headRadius * 0.85 - 8}
+            rx={8}
+            ry={6}
+            fill="url(#dfNoseGradient)"
+            stroke="#78716c"
+            strokeWidth={1.5}
+          />
+
+          {/* Left ear with gradient and glow */}
+          <ellipse
+            cx={leftEarX}
+            cy={centerY}
+            rx={8}
+            ry={14}
+            fill={earCovered === 'left' ? 'url(#dfEarCovered)' : 'url(#dfEarHealthy)'}
+            stroke={earCovered === 'left' ? '#64748b' : '#22c55e'}
+            strokeWidth={2}
+            opacity={effectiveLeftIntensity}
+            filter={earCovered === 'left' ? '' : 'url(#dfEarGlow)'}
+          />
+          {earCovered === 'left' && (
+            <g>
+              <line x1={leftEarX - 5} y1={centerY - 5} x2={leftEarX + 5} y2={centerY + 5} stroke="#ef4444" strokeWidth="2" />
+              <line x1={leftEarX - 5} y1={centerY + 5} x2={leftEarX + 5} y2={centerY - 5} stroke="#ef4444" strokeWidth="2" />
+            </g>
+          )}
+
+          {/* Right ear with gradient and glow */}
+          <ellipse
+            cx={rightEarX}
+            cy={centerY}
+            rx={8}
+            ry={14}
+            fill={earCovered === 'right' ? 'url(#dfEarCovered)' : 'url(#dfEarHealthy)'}
+            stroke={earCovered === 'right' ? '#64748b' : '#22c55e'}
+            strokeWidth={2}
+            opacity={effectiveRightIntensity}
+            filter={earCovered === 'right' ? '' : 'url(#dfEarGlow)'}
+          />
+          {earCovered === 'right' && (
+            <g>
+              <line x1={rightEarX - 5} y1={centerY - 5} x2={rightEarX + 5} y2={centerY + 5} stroke="#ef4444" strokeWidth="2" />
+              <line x1={rightEarX - 5} y1={centerY + 5} x2={rightEarX + 5} y2={centerY - 5} stroke="#ef4444" strokeWidth="2" />
+            </g>
+          )}
+
+          {/* Sound source with premium gradient and glow */}
+          <circle
+            cx={sourceX}
+            cy={sourceY}
+            r={14}
+            fill="url(#dfSoundSource)"
+            stroke="#93c5fd"
+            strokeWidth={2}
+            filter="url(#dfSourceGlow)"
+          />
+          {/* Pulsing ring around source when animating */}
+          {isAnimating && (
+            <circle
+              cx={sourceX}
+              cy={sourceY}
+              r={18 + Math.sin(animationTime * 4) * 3}
+              fill="none"
+              stroke="#60a5fa"
+              strokeWidth={1.5}
+              opacity={0.6 + Math.sin(animationTime * 4) * 0.3}
+            />
+          )}
+
+          {/* ITD/ILD display panel with gradient */}
+          <rect x={width - 130} y={10} width={120} height={70} rx={8} fill="url(#dfPanelGradient)" stroke="#334155" strokeWidth="1" />
+
+          {/* Legend panel with gradient */}
+          <rect x={10} y={height - 55} width={105} height={42} rx={6} fill="url(#dfPanelGradient)" stroke="#334155" strokeWidth="1" />
+          <circle cx={24} cy={height - 40} r={6} fill="url(#dfSoundSource)" filter="url(#dfSourceGlow)" />
+          <rect x={19} y={height - 25} width={10} height={10} fill="url(#dfShadowGradient)" rx="2" />
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        <div style={{
+          width: '100%',
+          maxWidth: '500px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          padding: '0 8px',
+          marginTop: '-70px',
+          position: 'relative',
+          zIndex: 1
+        }}>
+          {/* Left info panel */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '2px',
+            paddingTop: '12px'
+          }}>
+            <span style={{ color: colors.textPrimary, fontSize: typo.small, fontWeight: 600 }}>
+              Frequency: {frequency} Hz
+            </span>
+            <span style={{ color: colors.textSecondary, fontSize: typo.label }}>
+              Wavelength: {wavelengthCm.toFixed(1)} cm
+            </span>
+            <span style={{ color: colors.textMuted, fontSize: typo.label }}>
+              Head: {headSize} cm
+            </span>
+          </div>
+
+          {/* Right info panel */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            gap: '2px',
+            textAlign: 'right',
+            paddingTop: '12px'
+          }}>
+            <span style={{ color: colors.textSecondary, fontSize: typo.small }}>
+              ITD: {itdMs.toFixed(3)} ms
+            </span>
+            <span style={{ color: colors.textSecondary, fontSize: typo.small }}>
+              ILD: {ildDb.toFixed(1)} dB
+            </span>
+            <span style={{
+              color: headShadowFactor > 1 ? colors.success : colors.warning,
+              fontSize: typo.label,
+              fontWeight: 600
+            }}>
+              Shadow: {headShadowFactor > 1 ? 'Strong' : 'Weak'}
+            </span>
+          </div>
+        </div>
+
+        {/* Bottom labels */}
+        <div style={{
+          width: '100%',
+          maxWidth: '500px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-end',
+          padding: '0 8px',
+          marginTop: '-30px',
+          position: 'relative',
+          zIndex: 1
+        }}>
+          {/* Legend */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'linear-gradient(135deg, #93c5fd 0%, #3b82f6 100%)' }} />
+              <span style={{ color: colors.textMuted, fontSize: typo.label }}>Sound source</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: '10px', height: '10px', borderRadius: '2px', background: 'rgba(239, 68, 68, 0.3)' }} />
+              <span style={{ color: colors.textMuted, fontSize: typo.label }}>Shadow region</span>
+            </div>
+          </div>
 
           {/* Angle indicator */}
-          <text x={centerX} y={height - 15} textAnchor="middle" fill={colors.textMuted} fontSize={11}>
-            Source angle: {sourceAngle}° from front
-          </text>
+          <span style={{ color: colors.textMuted, fontSize: typo.small }}>
+            Source angle: {sourceAngle} degrees from front
+          </span>
+        </div>
 
-          {/* Ear labels */}
-          <text x={leftEarX} y={centerY + 30} textAnchor="middle" fill={colors.textMuted} fontSize={9}>L</text>
-          <text x={rightEarX} y={centerY + 30} textAnchor="middle" fill={colors.textMuted} fontSize={9}>R</text>
-
-          {/* Legend */}
-          <rect x={10} y={height - 50} width={100} height={35} rx={4} fill="rgba(0,0,0,0.3)" />
-          <circle cx={22} cy={height - 37} r={5} fill={colors.soundWave} />
-          <text x={32} y={height - 33} fill={colors.textMuted} fontSize={9}>Sound source</text>
-          <rect x={17} y={height - 25} width={10} height={10} fill={colors.shadow} opacity={0.4} />
-          <text x={32} y={height - 17} fill={colors.textMuted} fontSize={9}>Shadow region</text>
-        </svg>
+        {/* Ear labels */}
+        <div style={{
+          width: '100%',
+          maxWidth: '500px',
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '80px',
+          marginTop: '8px'
+        }}>
+          <span style={{ color: colors.textMuted, fontSize: typo.label, fontWeight: 600 }}>L</span>
+          <span style={{ color: colors.textMuted, fontSize: typo.label, fontWeight: 600 }}>R</span>
+        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
@@ -457,11 +726,16 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.success,
+                background: isAnimating
+                  ? 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'
+                  : 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
+                boxShadow: isAnimating
+                  ? '0 4px 15px rgba(239, 68, 68, 0.4)'
+                  : '0 4px 15px rgba(16, 185, 129, 0.4)',
               }}
             >
               {isAnimating ? 'Stop Waves' : 'Show Waves'}
@@ -481,7 +755,7 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
               }}
             >
               Reset
@@ -495,7 +769,7 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
   const renderControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '16px' }}>
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
           Sound Frequency: {frequency} Hz ({frequency < 500 ? 'Bass' : frequency < 2000 ? 'Mid' : 'Treble'})
         </label>
         <input
@@ -507,15 +781,15 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
           onChange={(e) => setFrequency(parseInt(e.target.value))}
           style={{ width: '100%' }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: typo.label }}>
           <span>100 Hz (Bass)</span>
           <span>8000 Hz (Treble)</span>
         </div>
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
-          Source Angle: {sourceAngle}° from front
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
+          Source Angle: {sourceAngle} degrees from front
         </label>
         <input
           type="range"
@@ -526,14 +800,14 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
           onChange={(e) => setSourceAngle(parseInt(e.target.value))}
           style={{ width: '100%' }}
         />
-        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: '11px' }}>
-          <span>0° (Front)</span>
-          <span>90° (Side)</span>
+        <div style={{ display: 'flex', justifyContent: 'space-between', color: colors.textMuted, fontSize: typo.label }}>
+          <span>0 degrees (Front)</span>
+          <span>90 degrees (Side)</span>
         </div>
       </div>
 
       <div>
-        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px' }}>
+        <label style={{ color: colors.textSecondary, display: 'block', marginBottom: '8px', fontSize: typo.body }}>
           Head Diameter: {headSize} cm
         </label>
         <input
@@ -553,15 +827,15 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
         borderRadius: '8px',
         borderLeft: `3px solid ${colors.accent}`,
       }}>
-        <div style={{ color: colors.textPrimary, fontSize: '13px', marginBottom: '4px' }}>
+        <div style={{ color: colors.textPrimary, fontSize: typo.body, marginBottom: '4px' }}>
           Head Shadow Effect:
         </div>
-        <div style={{ color: colors.textSecondary, fontSize: '12px' }}>
+        <div style={{ color: colors.textSecondary, fontSize: typo.small }}>
           Wavelength ({wavelengthCm.toFixed(1)} cm) vs Head ({headSize} cm)
         </div>
         <div style={{
           color: headShadowFactor > 1 ? colors.success : colors.warning,
-          fontSize: '12px',
+          fontSize: typo.small,
           marginTop: '4px'
         }}>
           {headShadowFactor > 1
@@ -575,7 +849,7 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
 
   const renderEarControls = () => (
     <div style={{ padding: '16px', display: 'flex', flexDirection: 'column', gap: '12px' }}>
-      <label style={{ color: colors.textSecondary }}>Cover an ear:</label>
+      <label style={{ color: colors.textSecondary, fontSize: typo.body }}>Cover an ear:</label>
       <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap' }}>
         {(['none', 'left', 'right'] as const).map((option) => (
           <button
@@ -588,7 +862,7 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
               background: earCovered === option ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
               color: colors.textPrimary,
               cursor: 'pointer',
-              fontSize: '14px',
+              fontSize: typo.body,
             }}
           >
             {option === 'none' ? 'Both Open' : option === 'left' ? 'Cover Left' : 'Cover Right'}
@@ -618,11 +892,14 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
           padding: '12px 32px',
           borderRadius: '8px',
           border: 'none',
-          background: canProceed ? colors.accent : 'rgba(255,255,255,0.1)',
+          background: canProceed
+            ? 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)'
+            : 'rgba(255,255,255,0.1)',
           color: canProceed ? 'white' : colors.textMuted,
           fontWeight: 'bold',
           cursor: canProceed ? 'pointer' : 'not-allowed',
-          fontSize: '16px',
+          fontSize: typo.bodyLarge,
+          boxShadow: canProceed ? '0 4px 15px rgba(139, 92, 246, 0.4)' : 'none',
         }}
       >
         {buttonText}
@@ -635,41 +912,41 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
-            <h1 style={{ color: colors.accent, fontSize: '28px', marginBottom: '8px' }}>
+          <div style={{ padding: typo.pagePadding, textAlign: 'center' }}>
+            <h1 style={{ color: colors.accent, fontSize: typo.title, marginBottom: '8px' }}>
               Why is locating bass harder than treble?
             </h1>
-            <p style={{ color: colors.textSecondary, fontSize: '18px', marginBottom: '24px' }}>
+            <p style={{ color: colors.textSecondary, fontSize: typo.bodyLarge, marginBottom: '24px' }}>
               Your ears are acoustic detectors with built-in direction finding
             </p>
           </div>
 
           {renderVisualization(true)}
 
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ padding: typo.pagePadding, textAlign: 'center' }}>
             <div style={{
               background: colors.bgCard,
-              padding: '20px',
+              padding: typo.cardPadding,
               borderRadius: '12px',
               marginBottom: '16px',
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.6 }}>
+              <p style={{ color: colors.textPrimary, fontSize: typo.bodyLarge, lineHeight: 1.6 }}>
                 Close your eyes and a friend snaps their fingers - you can point right at them.
                 But when the bass kicks in at a concert, the thumping seems to come from everywhere.
                 Why the difference?
               </p>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginTop: '12px' }}>
+              <p style={{ color: colors.textSecondary, fontSize: typo.body, marginTop: '12px' }}>
                 The answer involves your head casting an acoustic "shadow."
               </p>
             </div>
 
             <div style={{
               background: 'rgba(139, 92, 246, 0.2)',
-              padding: '16px',
+              padding: typo.cardPadding,
               borderRadius: '8px',
               borderLeft: `3px solid ${colors.accent}`,
             }}>
-              <p style={{ color: colors.textPrimary, fontSize: '14px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: typo.body }}>
                 Click "Show Waves" and drag the frequency slider to see how wavelength affects the head shadow!
               </p>
             </div>
@@ -690,11 +967,11 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
           <div style={{
             background: colors.bgCard,
             margin: '16px',
-            padding: '16px',
+            padding: typo.cardPadding,
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>What You're Looking At:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: typo.heading }}>What You're Looking At:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.5 }}>
               A top-down view of a head with two ears. A sound source emits waves at a certain frequency.
               The red shaded area shows the "shadow" region where the head blocks sound.
               ITD shows time delay between ears; ILD shows volume difference.
@@ -702,7 +979,7 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
           </div>
 
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: typo.heading }}>
               When you compare localizing bass (100-500 Hz) vs treble (2000+ Hz), which is easier?
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -711,14 +988,14 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
                   key={p.id}
                   onClick={() => setPrediction(p.id)}
                   style={{
-                    padding: '16px',
+                    padding: typo.cardPadding,
                     borderRadius: '8px',
                     border: prediction === p.id ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)',
                     background: prediction === p.id ? 'rgba(139, 92, 246, 0.2)' : 'transparent',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    fontSize: '14px',
+                    fontSize: typo.body,
                   }}
                 >
                   {p.label}
@@ -737,9 +1014,9 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px' }}>Explore Head Shadow Effect</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+          <div style={{ padding: typo.pagePadding, textAlign: 'center' }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: typo.heading }}>Explore Head Shadow Effect</h2>
+            <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
               Adjust frequency and angle to see how localization cues change
             </p>
           </div>
@@ -750,15 +1027,15 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
           <div style={{
             background: colors.bgCard,
             margin: '16px',
-            padding: '16px',
+            padding: typo.cardPadding,
             borderRadius: '12px',
           }}>
-            <h4 style={{ color: colors.accent, marginBottom: '8px' }}>Try These Experiments:</h4>
-            <ul style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <h4 style={{ color: colors.accent, marginBottom: '8px', fontSize: typo.body }}>Try These Experiments:</h4>
+            <ul style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
               <li>Set frequency to 100 Hz (bass) - notice weak shadow</li>
               <li>Set frequency to 4000 Hz (treble) - notice strong shadow</li>
-              <li>Move source to 90° - maximum ITD and ILD</li>
-              <li>Move source to 0° (front) - zero ITD and ILD!</li>
+              <li>Move source to 90 degrees - maximum ITD and ILD</li>
+              <li>Move source to 0 degrees (front) - zero ITD and ILD!</li>
             </ul>
           </div>
         </div>
@@ -781,10 +1058,10 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontSize: typo.heading }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textPrimary, fontSize: typo.body }}>
               Treble is easier to locate because high frequencies create stronger head shadow effects.
             </p>
           </div>
@@ -795,8 +1072,8 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>The Physics of Sound Localization</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.heading }}>The Physics of Sound Localization</h3>
+            <div style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>ITD (Interaural Time Difference):</strong> Sound
                 reaches your near ear before your far ear. Maximum ITD is about 0.6-0.7 ms (head diameter / speed of sound).
@@ -825,9 +1102,9 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>The Twist</h2>
-            <p style={{ color: colors.textSecondary }}>
+          <div style={{ padding: typo.pagePadding, textAlign: 'center' }}>
+            <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: typo.heading }}>The Twist</h2>
+            <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
               What happens if you cover one ear gently?
             </p>
           </div>
@@ -837,18 +1114,18 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
           <div style={{
             background: colors.bgCard,
             margin: '16px',
-            padding: '16px',
+            padding: typo.cardPadding,
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '8px' }}>The Setup:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.5 }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '8px', fontSize: typo.heading }}>The Setup:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.5 }}>
               Imagine covering one ear with your hand or an earplug. You can still hear sounds,
               just muffled on one side. How does this affect your ability to locate sounds?
             </p>
           </div>
 
           <div style={{ padding: '0 16px 16px 16px' }}>
-            <h3 style={{ color: colors.textPrimary, marginBottom: '12px' }}>
+            <h3 style={{ color: colors.textPrimary, marginBottom: '12px', fontSize: typo.heading }}>
               When you cover one ear, localization becomes:
             </h3>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
@@ -857,14 +1134,14 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
                   key={p.id}
                   onClick={() => setTwistPrediction(p.id)}
                   style={{
-                    padding: '16px',
+                    padding: typo.cardPadding,
                     borderRadius: '8px',
                     border: twistPrediction === p.id ? `2px solid ${colors.warning}` : '1px solid rgba(255,255,255,0.2)',
                     background: twistPrediction === p.id ? 'rgba(245, 158, 11, 0.2)' : 'transparent',
                     color: colors.textPrimary,
                     cursor: 'pointer',
                     textAlign: 'left',
-                    fontSize: '14px',
+                    fontSize: typo.body,
                   }}
                 >
                   {p.label}
@@ -883,9 +1160,9 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px', textAlign: 'center' }}>
-            <h2 style={{ color: colors.warning, marginBottom: '8px' }}>Test One-Ear Localization</h2>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+          <div style={{ padding: typo.pagePadding, textAlign: 'center' }}>
+            <h2 style={{ color: colors.warning, marginBottom: '8px', fontSize: typo.heading }}>Test One-Ear Localization</h2>
+            <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
               Cover an ear and observe how ITD and ILD information is lost
             </p>
           </div>
@@ -897,12 +1174,12 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
           <div style={{
             background: 'rgba(245, 158, 11, 0.2)',
             margin: '16px',
-            padding: '16px',
+            padding: typo.cardPadding,
             borderRadius: '12px',
             borderLeft: `3px solid ${colors.warning}`,
           }}>
-            <h4 style={{ color: colors.warning, marginBottom: '8px' }}>Key Observation:</h4>
-            <p style={{ color: colors.textSecondary, fontSize: '14px' }}>
+            <h4 style={{ color: colors.warning, marginBottom: '8px', fontSize: typo.body }}>Key Observation:</h4>
+            <p style={{ color: colors.textSecondary, fontSize: typo.body }}>
               With one ear covered, you lose the ability to compare arrival times (ITD) and
               loudness levels (ILD) between ears. The brain needs BOTH ears to triangulate sound position!
             </p>
@@ -927,10 +1204,10 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
             borderRadius: '12px',
             borderLeft: `4px solid ${wasCorrect ? colors.success : colors.error}`,
           }}>
-            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px' }}>
+            <h3 style={{ color: wasCorrect ? colors.success : colors.error, marginBottom: '8px', fontSize: typo.heading }}>
               {wasCorrect ? 'Correct!' : 'Not Quite!'}
             </h3>
-            <p style={{ color: colors.textPrimary }}>
+            <p style={{ color: colors.textPrimary, fontSize: typo.body }}>
               Covering one ear dramatically worsens localization for ALL directions!
             </p>
           </div>
@@ -941,8 +1218,8 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
             padding: '20px',
             borderRadius: '12px',
           }}>
-            <h3 style={{ color: colors.warning, marginBottom: '12px' }}>Why Both Ears Matter</h3>
-            <div style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.7 }}>
+            <h3 style={{ color: colors.warning, marginBottom: '12px', fontSize: typo.heading }}>Why Both Ears Matter</h3>
+            <div style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.7 }}>
               <p style={{ marginBottom: '12px' }}>
                 <strong style={{ color: colors.textPrimary }}>Comparison is key:</strong> Sound localization
                 works by COMPARING signals between ears. One ear alone cannot determine if a sound is
@@ -970,14 +1247,14 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
-            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center' }}>
+          <div style={{ padding: typo.pagePadding }}>
+            <h2 style={{ color: colors.textPrimary, marginBottom: '8px', textAlign: 'center', fontSize: typo.heading }}>
               Real-World Applications
             </h2>
-            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textSecondary, textAlign: 'center', marginBottom: '16px', fontSize: typo.body }}>
               ITD and ILD principles are used everywhere from home theaters to hunting owls
             </p>
-            <p style={{ color: colors.textMuted, fontSize: '12px', textAlign: 'center', marginBottom: '16px' }}>
+            <p style={{ color: colors.textMuted, fontSize: typo.label, textAlign: 'center', marginBottom: '16px' }}>
               Complete all 4 applications to unlock the test
             </p>
           </div>
@@ -988,29 +1265,29 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
               style={{
                 background: colors.bgCard,
                 margin: '16px',
-                padding: '16px',
+                padding: typo.cardPadding,
                 borderRadius: '12px',
                 border: transferCompleted.has(index) ? `2px solid ${colors.success}` : '1px solid rgba(255,255,255,0.1)',
               }}
             >
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '8px' }}>
-                <h3 style={{ color: colors.textPrimary, fontSize: '16px' }}>{app.title}</h3>
-                {transferCompleted.has(index) && <span style={{ color: colors.success }}>Completed</span>}
+                <h3 style={{ color: colors.textPrimary, fontSize: typo.bodyLarge }}>{app.title}</h3>
+                {transferCompleted.has(index) && <span style={{ color: colors.success, fontSize: typo.small }}>Completed</span>}
               </div>
-              <p style={{ color: colors.textSecondary, fontSize: '14px', marginBottom: '12px' }}>{app.description}</p>
+              <p style={{ color: colors.textSecondary, fontSize: typo.body, marginBottom: '12px' }}>{app.description}</p>
               <div style={{ background: 'rgba(139, 92, 246, 0.1)', padding: '12px', borderRadius: '8px', marginBottom: '8px' }}>
-                <p style={{ color: colors.accent, fontSize: '13px', fontWeight: 'bold' }}>{app.question}</p>
+                <p style={{ color: colors.accent, fontSize: typo.small, fontWeight: 'bold' }}>{app.question}</p>
               </div>
               {!transferCompleted.has(index) ? (
                 <button
                   onClick={() => setTransferCompleted(new Set([...transferCompleted, index]))}
-                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: '13px' }}
+                  style={{ padding: '8px 16px', borderRadius: '6px', border: `1px solid ${colors.accent}`, background: 'transparent', color: colors.accent, cursor: 'pointer', fontSize: typo.small }}
                 >
                   Reveal Answer
                 </button>
               ) : (
                 <div style={{ background: 'rgba(16, 185, 129, 0.1)', padding: '12px', borderRadius: '8px', borderLeft: `3px solid ${colors.success}` }}>
-                  <p style={{ color: colors.textPrimary, fontSize: '13px' }}>{app.answer}</p>
+                  <p style={{ color: colors.textPrimary, fontSize: typo.small }}>{app.answer}</p>
                 </div>
               )}
             </div>
@@ -1034,11 +1311,11 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
               borderRadius: '12px',
               textAlign: 'center',
             }}>
-              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px' }}>
+              <h2 style={{ color: testScore >= 8 ? colors.success : colors.error, marginBottom: '8px', fontSize: typo.heading }}>
                 {testScore >= 8 ? 'Excellent!' : 'Keep Learning!'}
               </h2>
-              <p style={{ color: colors.textPrimary, fontSize: '24px', fontWeight: 'bold' }}>{testScore} / 10</p>
-              <p style={{ color: colors.textSecondary, marginTop: '8px' }}>
+              <p style={{ color: colors.textPrimary, fontSize: typo.title, fontWeight: 'bold' }}>{testScore} / 10</p>
+              <p style={{ color: colors.textSecondary, marginTop: '8px', fontSize: typo.body }}>
                 {testScore >= 8 ? 'You\'ve mastered sound localization!' : 'Review the material and try again.'}
               </p>
             </div>
@@ -1046,10 +1323,10 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
               const userAnswer = testAnswers[qIndex];
               const isCorrect = userAnswer !== null && q.options[userAnswer].correct;
               return (
-                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: '16px', borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
-                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold' }}>{qIndex + 1}. {q.question}</p>
+                <div key={qIndex} style={{ background: colors.bgCard, margin: '16px', padding: typo.cardPadding, borderRadius: '12px', borderLeft: `4px solid ${isCorrect ? colors.success : colors.error}` }}>
+                  <p style={{ color: colors.textPrimary, marginBottom: '12px', fontWeight: 'bold', fontSize: typo.body }}>{qIndex + 1}. {q.question}</p>
                   {q.options.map((opt, oIndex) => (
-                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary }}>
+                    <div key={oIndex} style={{ padding: '8px 12px', marginBottom: '4px', borderRadius: '6px', background: opt.correct ? 'rgba(16, 185, 129, 0.2)' : userAnswer === oIndex ? 'rgba(239, 68, 68, 0.2)' : 'transparent', color: opt.correct ? colors.success : userAnswer === oIndex ? colors.error : colors.textSecondary, fontSize: typo.small }}>
                       {opt.correct ? 'Correct: ' : userAnswer === oIndex ? 'Your answer: ' : ''}{opt.text}
                     </div>
                   ))}
@@ -1066,10 +1343,10 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '16px' }}>
+          <div style={{ padding: typo.pagePadding }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-              <h2 style={{ color: colors.textPrimary }}>Knowledge Test</h2>
-              <span style={{ color: colors.textSecondary }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
+              <h2 style={{ color: colors.textPrimary, fontSize: typo.heading }}>Knowledge Test</h2>
+              <span style={{ color: colors.textSecondary, fontSize: typo.body }}>{currentTestQuestion + 1} / {testQuestions.length}</span>
             </div>
             <div style={{ display: 'flex', gap: '4px', marginBottom: '24px' }}>
               {testQuestions.map((_, i) => (
@@ -1077,22 +1354,22 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
               ))}
             </div>
             <div style={{ background: colors.bgCard, padding: '20px', borderRadius: '12px', marginBottom: '16px' }}>
-              <p style={{ color: colors.textPrimary, fontSize: '16px', lineHeight: 1.5 }}>{currentQ.question}</p>
+              <p style={{ color: colors.textPrimary, fontSize: typo.bodyLarge, lineHeight: 1.5 }}>{currentQ.question}</p>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
               {currentQ.options.map((opt, oIndex) => (
-                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: '16px', borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: '14px' }}>
+                <button key={oIndex} onClick={() => handleTestAnswer(currentTestQuestion, oIndex)} style={{ padding: typo.cardPadding, borderRadius: '8px', border: testAnswers[currentTestQuestion] === oIndex ? `2px solid ${colors.accent}` : '1px solid rgba(255,255,255,0.2)', background: testAnswers[currentTestQuestion] === oIndex ? 'rgba(139, 92, 246, 0.2)' : 'transparent', color: colors.textPrimary, cursor: 'pointer', textAlign: 'left', fontSize: typo.body }}>
                   {opt.text}
                 </button>
               ))}
             </div>
           </div>
-          <div style={{ display: 'flex', justifyContent: 'space-between', padding: '16px' }}>
-            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer' }}>Previous</button>
+          <div style={{ display: 'flex', justifyContent: 'space-between', padding: typo.pagePadding }}>
+            <button onClick={() => setCurrentTestQuestion(Math.max(0, currentTestQuestion - 1))} disabled={currentTestQuestion === 0} style={{ padding: '12px 24px', borderRadius: '8px', border: `1px solid ${colors.textMuted}`, background: 'transparent', color: currentTestQuestion === 0 ? colors.textMuted : colors.textPrimary, cursor: currentTestQuestion === 0 ? 'not-allowed' : 'pointer', fontSize: typo.body }}>Previous</button>
             {currentTestQuestion < testQuestions.length - 1 ? (
-              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: colors.accent, color: 'white', cursor: 'pointer' }}>Next</button>
+              <button onClick={() => setCurrentTestQuestion(currentTestQuestion + 1)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: 'linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%)', color: 'white', cursor: 'pointer', fontSize: typo.body, boxShadow: '0 4px 15px rgba(139, 92, 246, 0.4)' }}>Next</button>
             ) : (
-              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : colors.success, color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer' }}>Submit Test</button>
+              <button onClick={submitTest} disabled={testAnswers.includes(null)} style={{ padding: '12px 24px', borderRadius: '8px', border: 'none', background: testAnswers.includes(null) ? colors.textMuted : 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', cursor: testAnswers.includes(null) ? 'not-allowed' : 'pointer', fontSize: typo.body, boxShadow: testAnswers.includes(null) ? 'none' : '0 4px 15px rgba(16, 185, 129, 0.4)' }}>Submit Test</button>
             )}
           </div>
         </div>
@@ -1105,14 +1382,14 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
     return (
       <div style={{ height: '100dvh', display: 'flex', flexDirection: 'column', overflow: 'hidden', background: colors.bgPrimary }}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: '100px' }}>
-          <div style={{ padding: '24px', textAlign: 'center' }}>
+          <div style={{ padding: typo.pagePadding, textAlign: 'center' }}>
             <div style={{ fontSize: '64px', marginBottom: '16px' }}>Trophy</div>
-            <h1 style={{ color: colors.success, marginBottom: '8px' }}>Mastery Achieved!</h1>
-            <p style={{ color: colors.textSecondary, marginBottom: '24px' }}>You've mastered the physics of sound localization</p>
+            <h1 style={{ color: colors.success, marginBottom: '8px', fontSize: typo.title }}>Mastery Achieved!</h1>
+            <p style={{ color: colors.textSecondary, marginBottom: '24px', fontSize: typo.body }}>You've mastered the physics of sound localization</p>
           </div>
           <div style={{ background: colors.bgCard, margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Key Concepts Mastered:</h3>
-            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0 }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.heading }}>Key Concepts Mastered:</h3>
+            <ul style={{ color: colors.textSecondary, lineHeight: 1.8, paddingLeft: '20px', margin: 0, fontSize: typo.body }}>
               <li>Head shadow effect and wavelength dependence</li>
               <li>Interaural Time Difference (ITD) - up to 0.6-0.7 ms</li>
               <li>Interaural Level Difference (ILD) - stronger at high frequencies</li>
@@ -1121,8 +1398,8 @@ const DirectionFindingRenderer: React.FC<DirectionFindingRendererProps> = ({
             </ul>
           </div>
           <div style={{ background: 'rgba(139, 92, 246, 0.2)', margin: '16px', padding: '20px', borderRadius: '12px' }}>
-            <h3 style={{ color: colors.accent, marginBottom: '12px' }}>Beyond the Basics:</h3>
-            <p style={{ color: colors.textSecondary, fontSize: '14px', lineHeight: 1.6 }}>
+            <h3 style={{ color: colors.accent, marginBottom: '12px', fontSize: typo.heading }}>Beyond the Basics:</h3>
+            <p style={{ color: colors.textSecondary, fontSize: typo.body, lineHeight: 1.6 }}>
               The "Duplex Theory" explains that ITD dominates for low frequencies (below ~1500 Hz)
               while ILD dominates for high frequencies. The "cone of confusion" exists because sounds
               at different elevations can produce identical ITD/ILD - your brain uses pinna (outer ear)

@@ -528,39 +528,155 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
               <div className="relative w-full max-w-md h-64 rounded-xl overflow-hidden mx-auto">
                 <svg viewBox="0 0 400 300" className="w-full h-full">
                   <defs>
-                    <linearGradient id="skyBg" x1="0%" y1="0%" x2="0%" y2="100%">
-                      <stop offset="0%" stopColor="#87ceeb" />
-                      <stop offset="100%" stopColor="#4a90a4" />
+                    {/* Premium sky gradient with depth */}
+                    <linearGradient id="dragHookSkyBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#87ceeb" stopOpacity="0.5" />
+                      <stop offset="25%" stopColor="#7ec8e3" stopOpacity="0.45" />
+                      <stop offset="50%" stopColor="#5ba3c6" stopOpacity="0.4" />
+                      <stop offset="75%" stopColor="#4a90a4" stopOpacity="0.35" />
+                      <stop offset="100%" stopColor="#3d7a8e" stopOpacity="0.3" />
                     </linearGradient>
+
+                    {/* Cloud gradient */}
+                    <radialGradient id="dragHookCloudGrad" cx="40%" cy="40%" r="60%">
+                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+                      <stop offset="50%" stopColor="#f0f9ff" stopOpacity="0.7" />
+                      <stop offset="100%" stopColor="#e0f2fe" stopOpacity="0.4" />
+                    </radialGradient>
+
+                    {/* Skydiver suit gradient */}
+                    <radialGradient id="dragHookSuitGrad" cx="35%" cy="35%" r="65%">
+                      <stop offset="0%" stopColor="#ff8844" />
+                      <stop offset="50%" stopColor="#ff6600" />
+                      <stop offset="100%" stopColor="#dd5500" />
+                    </radialGradient>
+
+                    {/* Skin tone gradient */}
+                    <radialGradient id="dragHookSkinGrad" cx="40%" cy="30%" r="60%">
+                      <stop offset="0%" stopColor="#ffdab3" />
+                      <stop offset="50%" stopColor="#ffcc99" />
+                      <stop offset="100%" stopColor="#e6b380" />
+                    </radialGradient>
+
+                    {/* Helmet gradient */}
+                    <radialGradient id="dragHookHelmetGrad" cx="35%" cy="30%" r="65%">
+                      <stop offset="0%" stopColor="#4b5563" />
+                      <stop offset="50%" stopColor="#374151" />
+                      <stop offset="100%" stopColor="#1f2937" />
+                    </radialGradient>
+
+                    {/* Air resistance arrow gradient (upward) */}
+                    <linearGradient id="dragHookAirGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                      <stop offset="0%" stopColor="#4ade80" />
+                      <stop offset="50%" stopColor="#22c55e" />
+                      <stop offset="100%" stopColor="#16a34a" />
+                    </linearGradient>
+
+                    {/* Gravity arrow gradient (downward) */}
+                    <linearGradient id="dragHookGravityGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#f87171" />
+                      <stop offset="50%" stopColor="#ef4444" />
+                      <stop offset="100%" stopColor="#dc2626" />
+                    </linearGradient>
+
+                    {/* Arrow glow filter */}
+                    <filter id="dragHookArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Skydiver glow filter */}
+                    <filter id="dragHookSkydiverGlow" x="-30%" y="-30%" width="160%" height="160%">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
                   </defs>
-                  <rect x="0" y="0" width="400" height="300" fill="url(#skyBg)" opacity="0.3" />
 
-                  <ellipse cx="80" cy="40" rx="40" ry="20" fill="white" opacity="0.6" />
-                  <ellipse cx="320" cy="80" rx="50" ry="25" fill="white" opacity="0.5" />
+                  {/* Premium sky background */}
+                  <rect x="0" y="0" width="400" height="300" fill="url(#dragHookSkyBg)" />
 
-                  <g transform="translate(200, 140)">
-                    <ellipse cx="0" cy="0" rx="25" ry="15" fill="#ff6600" />
-                    <circle cx="0" cy="-20" r="12" fill="#ffcc99" />
-                    <ellipse cx="0" cy="-22" rx="14" ry="10" fill="#333" />
-                    <line x1="-25" y1="-5" x2="-60" y2="-15" stroke="#ff6600" strokeWidth="8" strokeLinecap="round" />
-                    <line x1="25" y1="-5" x2="60" y2="-15" stroke="#ff6600" strokeWidth="8" strokeLinecap="round" />
-                    <line x1="-10" y1="15" x2="-35" y2="40" stroke="#333" strokeWidth="8" strokeLinecap="round" />
-                    <line x1="10" y1="15" x2="35" y2="40" stroke="#333" strokeWidth="8" strokeLinecap="round" />
+                  {/* Premium clouds with gradient */}
+                  <ellipse cx="80" cy="40" rx="45" ry="22" fill="url(#dragHookCloudGrad)" />
+                  <ellipse cx="60" cy="45" rx="25" ry="15" fill="url(#dragHookCloudGrad)" />
+                  <ellipse cx="100" cy="48" rx="20" ry="12" fill="url(#dragHookCloudGrad)" />
+
+                  <ellipse cx="320" cy="80" rx="55" ry="28" fill="url(#dragHookCloudGrad)" />
+                  <ellipse cx="295" cy="85" rx="30" ry="18" fill="url(#dragHookCloudGrad)" />
+                  <ellipse cx="350" cy="88" rx="25" ry="15" fill="url(#dragHookCloudGrad)" />
+
+                  {/* Premium 3D skydiver */}
+                  <g transform="translate(200, 140)" filter="url(#dragHookSkydiverGlow)">
+                    {/* Shadow */}
+                    <ellipse cx="3" cy="3" rx="28" ry="16" fill="rgba(0,0,0,0.2)" />
+                    {/* Body */}
+                    <ellipse cx="0" cy="0" rx="28" ry="16" fill="url(#dragHookSuitGrad)" stroke="#cc5500" strokeWidth="1" />
+                    {/* Head with helmet */}
+                    <circle cx="0" cy="-22" r="14" fill="url(#dragHookHelmetGrad)" />
+                    <circle cx="0" cy="-21" r="9" fill="url(#dragHookSkinGrad)" />
+                    {/* Arms spread */}
+                    <line x1="-28" y1="-5" x2="-65" y2="-18" stroke="url(#dragHookSuitGrad)" strokeWidth="9" strokeLinecap="round" />
+                    <line x1="28" y1="-5" x2="65" y2="-18" stroke="url(#dragHookSuitGrad)" strokeWidth="9" strokeLinecap="round" />
+                    {/* Hands */}
+                    <circle cx="-68" cy="-20" r="5" fill="url(#dragHookSkinGrad)" />
+                    <circle cx="68" cy="-20" r="5" fill="url(#dragHookSkinGrad)" />
+                    {/* Legs */}
+                    <line x1="-12" y1="16" x2="-38" y2="45" stroke="#1f2937" strokeWidth="9" strokeLinecap="round" />
+                    <line x1="12" y1="16" x2="38" y2="45" stroke="#1f2937" strokeWidth="9" strokeLinecap="round" />
+                    {/* Feet */}
+                    <ellipse cx="-42" cy="50" rx="7" ry="4" fill="#1f2937" />
+                    <ellipse cx="42" cy="50" rx="7" ry="4" fill="#1f2937" />
                   </g>
 
-                  <g opacity="0.7">
-                    <path d="M200 80 L200 110" stroke="#00ff00" strokeWidth="4" />
-                    <polygon points="200,75 195,85 205,85" fill="#00ff00" />
+                  {/* Air resistance arrow with glow */}
+                  <g filter="url(#dragHookArrowGlow)">
+                    <line x1="200" y1="110" x2="200" y2="75" stroke="url(#dragHookAirGrad)" strokeWidth="5" strokeLinecap="round" />
+                    <polygon points="200,68 194,80 206,80" fill="#22c55e" />
                   </g>
 
-                  <path d="M200 200 L200 250" stroke="#ff4444" strokeWidth="4">
-                    <animate attributeName="stroke-opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
-                  </path>
-                  <polygon points="200,260 195,250 205,250" fill="#ff4444" />
-
-                  <text x="200" y="275" fontSize="14" fill="#ff4444" textAnchor="middle" fontWeight="bold">Gravity</text>
-                  <text x="200" y="65" fontSize="14" fill="#00ff00" textAnchor="middle" fontWeight="bold">Air Resistance</text>
+                  {/* Gravity arrow with glow and animation */}
+                  <g filter="url(#dragHookArrowGlow)">
+                    <line x1="200" y1="200" x2="200" y2="250" stroke="url(#dragHookGravityGrad)" strokeWidth="5" strokeLinecap="round">
+                      <animate attributeName="stroke-opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
+                    </line>
+                    <polygon points="200,258 194,246 206,246" fill="#ef4444">
+                      <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
+                    </polygon>
+                  </g>
                 </svg>
+
+                {/* Labels outside SVG using typo system */}
+                <div
+                  className="absolute pointer-events-none"
+                  style={{
+                    bottom: '8px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    fontSize: typo.body,
+                    color: colors.dragForce,
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Gravity
+                </div>
+                <div
+                  className="absolute pointer-events-none"
+                  style={{
+                    top: '45px',
+                    left: '50%',
+                    transform: 'translateX(-50%)',
+                    fontSize: typo.body,
+                    color: colors.success,
+                    fontWeight: 'bold'
+                  }}
+                >
+                  Air Resistance
+                </div>
               </div>
               <p className="text-lg text-slate-300 mt-4 mb-2">
                 Ever wondered why a feather falls slowly but a rock plummets fast?
@@ -653,42 +769,291 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
             <div className="relative w-full max-w-lg h-80 bg-gradient-to-b from-sky-400/20 to-sky-900/40 rounded-xl mb-4 overflow-hidden">
               <svg viewBox="0 0 400 400" className="w-full h-full">
                 <defs>
-                  <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-                    <stop offset="0%" stopColor="#87ceeb" stopOpacity="0.4" />
-                    <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.6" />
+                  {/* Premium sky gradient with depth */}
+                  <linearGradient id="dragSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#87ceeb" stopOpacity="0.5" />
+                    <stop offset="25%" stopColor="#5ba3c6" stopOpacity="0.45" />
+                    <stop offset="50%" stopColor="#3d7a9e" stopOpacity="0.5" />
+                    <stop offset="75%" stopColor="#1e5a7a" stopOpacity="0.55" />
+                    <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.7" />
+                  </linearGradient>
+
+                  {/* Premium ground gradient */}
+                  <linearGradient id="dragGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#4a7c44" />
+                    <stop offset="30%" stopColor="#3d6b38" />
+                    <stop offset="70%" stopColor="#2d5a27" />
+                    <stop offset="100%" stopColor="#1e4a1a" />
+                  </linearGradient>
+
+                  {/* 3D falling object gradient */}
+                  <radialGradient id="dragObjectGrad" cx="35%" cy="35%" r="65%">
+                    <stop offset="0%" stopColor="#ffaa44" />
+                    <stop offset="25%" stopColor="#ff8833" />
+                    <stop offset="50%" stopColor="#ff6600" />
+                    <stop offset="75%" stopColor="#dd5500" />
+                    <stop offset="100%" stopColor="#aa4400" />
+                  </radialGradient>
+
+                  {/* Object highlight for 3D effect */}
+                  <radialGradient id="dragObjectHighlight" cx="30%" cy="25%" r="40%">
+                    <stop offset="0%" stopColor="#ffffff" stopOpacity="0.5" />
+                    <stop offset="50%" stopColor="#ffdd99" stopOpacity="0.2" />
+                    <stop offset="100%" stopColor="#ff8833" stopOpacity="0" />
+                  </radialGradient>
+
+                  {/* Air flow streamline gradient */}
+                  <linearGradient id="dragAirFlowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0" />
+                    <stop offset="20%" stopColor="#38bdf8" stopOpacity="0.4" />
+                    <stop offset="50%" stopColor="#0ea5e9" stopOpacity="0.6" />
+                    <stop offset="80%" stopColor="#38bdf8" stopOpacity="0.4" />
+                    <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
+                  </linearGradient>
+
+                  {/* Weight arrow gradient */}
+                  <linearGradient id="dragWeightGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#f87171" />
+                    <stop offset="50%" stopColor="#ef4444" />
+                    <stop offset="100%" stopColor="#dc2626" />
+                  </linearGradient>
+
+                  {/* Drag arrow gradient */}
+                  <linearGradient id="dragForceGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                    <stop offset="0%" stopColor="#4ade80" />
+                    <stop offset="50%" stopColor="#22c55e" />
+                    <stop offset="100%" stopColor="#16a34a" />
+                  </linearGradient>
+
+                  {/* Glow filter for arrows */}
+                  <filter id="dragArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="3" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+
+                  {/* Glow filter for object */}
+                  <filter id="dragObjectGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+
+                  {/* Terminal velocity indicator gradient */}
+                  <linearGradient id="dragTerminalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#f59e0b" stopOpacity="0" />
+                    <stop offset="20%" stopColor="#f59e0b" stopOpacity="0.8" />
+                    <stop offset="50%" stopColor="#fbbf24" stopOpacity="1" />
+                    <stop offset="80%" stopColor="#f59e0b" stopOpacity="0.8" />
+                    <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
                   </linearGradient>
                 </defs>
-                <rect x="0" y="0" width="400" height="400" fill="url(#skyGrad)" />
 
-                <rect x="0" y="360" width="400" height="40" fill="#2d5a27" />
+                {/* Premium sky background */}
+                <rect x="0" y="0" width="400" height="400" fill="url(#dragSkyGrad)" />
 
-                <g transform={`translate(200, ${objectY})`}>
-                  <ellipse cx="0" cy="0" rx={15 + surfaceArea * 20} ry={10 + surfaceArea * 10} fill="#ff6600" stroke="#cc5500" strokeWidth="2" />
-                  <text x="0" y="4" fontSize="10" fill="white" textAnchor="middle">Object</text>
+                {/* Air flow streamlines */}
+                {isSimulating && (
+                  <g opacity="0.7">
+                    {[80, 140, 200, 260, 320].map((xPos, i) => (
+                      <g key={i}>
+                        <line
+                          x1={xPos}
+                          y1={objectY - 80}
+                          x2={xPos}
+                          y2={objectY + 30}
+                          stroke="url(#dragAirFlowGrad)"
+                          strokeWidth="2"
+                          strokeDasharray="8,4"
+                        >
+                          <animate attributeName="stroke-dashoffset" from="0" to="-24" dur="0.5s" repeatCount="indefinite" />
+                        </line>
+                      </g>
+                    ))}
+                  </g>
+                )}
+
+                {/* Premium ground with gradient */}
+                <rect x="0" y="360" width="400" height="40" fill="url(#dragGroundGrad)" />
+                <line x1="0" y1="360" x2="400" y2="360" stroke="#5a9a50" strokeWidth="2" />
+
+                {/* 3D Falling object with glow */}
+                <g transform={`translate(200, ${objectY})`} filter={isSimulating ? "url(#dragObjectGlow)" : undefined}>
+                  {/* Shadow */}
+                  <ellipse
+                    cx="3"
+                    cy="3"
+                    rx={15 + surfaceArea * 20}
+                    ry={10 + surfaceArea * 10}
+                    fill="rgba(0,0,0,0.3)"
+                  />
+                  {/* Main body with 3D gradient */}
+                  <ellipse
+                    cx="0"
+                    cy="0"
+                    rx={15 + surfaceArea * 20}
+                    ry={10 + surfaceArea * 10}
+                    fill="url(#dragObjectGrad)"
+                    stroke="#aa4400"
+                    strokeWidth="2"
+                  />
+                  {/* 3D highlight */}
+                  <ellipse
+                    cx={-5 - surfaceArea * 5}
+                    cy={-3 - surfaceArea * 3}
+                    rx={(15 + surfaceArea * 20) * 0.5}
+                    ry={(10 + surfaceArea * 10) * 0.4}
+                    fill="url(#dragObjectHighlight)"
+                  />
                 </g>
 
+                {/* Force vectors with glow effects */}
                 {showVectors && objectY < 340 && (
                   <>
-                    <line x1="200" y1={objectY + 25} x2="200" y2={objectY + 25 + 40} stroke="#ff4444" strokeWidth="4" />
-                    <polygon points={`200,${objectY + 70} 195,${objectY + 60} 205,${objectY + 60}`} fill="#ff4444" />
-                    <text x="220" y={objectY + 50} fontSize="10" fill="#ff4444">Weight</text>
+                    {/* Weight arrow with glow */}
+                    <g filter="url(#dragArrowGlow)">
+                      <line
+                        x1="200"
+                        y1={objectY + 25}
+                        x2="200"
+                        y2={objectY + 25 + 40}
+                        stroke="url(#dragWeightGrad)"
+                        strokeWidth="5"
+                        strokeLinecap="round"
+                      />
+                      <polygon
+                        points={`200,${objectY + 72} 193,${objectY + 60} 207,${objectY + 60}`}
+                        fill="#ef4444"
+                      />
+                    </g>
 
+                    {/* Drag arrow with glow */}
                     {currentDrag > 0 && (
-                      <>
-                        <line x1="200" y1={objectY - 20} x2="200" y2={objectY - 20 - Math.min(currentDrag / 10, 50)} stroke="#00ff00" strokeWidth="4" />
-                        <polygon points={`200,${objectY - 25 - Math.min(currentDrag / 10, 50)} 195,${objectY - 15 - Math.min(currentDrag / 10, 50)} 205,${objectY - 15 - Math.min(currentDrag / 10, 50)}`} fill="#00ff00" />
-                        <text x="220" y={objectY - 30} fontSize="10" fill="#00ff00">Drag</text>
-                      </>
+                      <g filter="url(#dragArrowGlow)">
+                        <line
+                          x1="200"
+                          y1={objectY - 20}
+                          x2="200"
+                          y2={objectY - 20 - Math.min(currentDrag / 10, 50)}
+                          stroke="url(#dragForceGrad)"
+                          strokeWidth="5"
+                          strokeLinecap="round"
+                        />
+                        <polygon
+                          points={`200,${objectY - 27 - Math.min(currentDrag / 10, 50)} 193,${objectY - 15 - Math.min(currentDrag / 10, 50)} 207,${objectY - 15 - Math.min(currentDrag / 10, 50)}`}
+                          fill="#22c55e"
+                        />
+                      </g>
+                    )}
+
+                    {/* Terminal velocity indicator line */}
+                    {Math.abs(currentDrag - 49) < 5 && currentDrag > 0 && (
+                      <g opacity="0.8">
+                        <line
+                          x1="50"
+                          y1={objectY}
+                          x2="150"
+                          y2={objectY}
+                          stroke="url(#dragTerminalGrad)"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                        />
+                        <line
+                          x1="250"
+                          y1={objectY}
+                          x2="350"
+                          y2={objectY}
+                          stroke="url(#dragTerminalGrad)"
+                          strokeWidth="3"
+                          strokeLinecap="round"
+                        />
+                      </g>
                     )}
                   </>
                 )}
 
-                <rect x="10" y="10" width="150" height="100" fill="rgba(0,0,0,0.6)" rx="5" />
-                <text x="20" y="30" fontSize="12" fill="#fff">Speed: {currentVelocity.toFixed(1)} m/s</text>
-                <text x="20" y="50" fontSize="12" fill="#00ff00">Drag: {currentDrag.toFixed(1)} N</text>
-                <text x="20" y="70" fontSize="12" fill="#fff">Time: {timeElapsed.toFixed(1)}s</text>
-                <text x="20" y="90" fontSize="10" fill="#888">Predicted: {calculatedDrag.toFixed(1)} N</text>
+                {/* Data panel background with glassmorphism effect */}
+                <rect x="10" y="10" width="160" height="110" fill="rgba(0,0,0,0.7)" rx="8" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
               </svg>
+
+              {/* Data panel labels outside SVG using typo system */}
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  top: '20px',
+                  left: '22px',
+                  display: 'flex',
+                  flexDirection: 'column',
+                  gap: '6px'
+                }}
+              >
+                <div style={{ fontSize: typo.small, color: colors.textPrimary }}>
+                  Speed: <span style={{ color: colors.velocity, fontWeight: 'bold' }}>{currentVelocity.toFixed(1)} m/s</span>
+                </div>
+                <div style={{ fontSize: typo.small, color: colors.textPrimary }}>
+                  Drag: <span style={{ color: colors.success, fontWeight: 'bold' }}>{currentDrag.toFixed(1)} N</span>
+                </div>
+                <div style={{ fontSize: typo.small, color: colors.textPrimary }}>
+                  Time: <span style={{ fontWeight: 'bold' }}>{timeElapsed.toFixed(1)}s</span>
+                </div>
+                <div style={{ fontSize: typo.label, color: colors.textMuted }}>
+                  Predicted: {calculatedDrag.toFixed(1)} N
+                </div>
+              </div>
+
+              {/* Force vector labels outside SVG */}
+              {showVectors && objectY < 340 && (
+                <>
+                  <div
+                    className="absolute pointer-events-none"
+                    style={{
+                      left: '52%',
+                      top: `${(objectY + 50) / 4 + 5}%`,
+                      fontSize: typo.label,
+                      color: colors.dragForce,
+                      fontWeight: 'bold'
+                    }}
+                  >
+                    Weight
+                  </div>
+                  {currentDrag > 0 && (
+                    <div
+                      className="absolute pointer-events-none"
+                      style={{
+                        left: '52%',
+                        top: `${(objectY - 35) / 4 + 5}%`,
+                        fontSize: typo.label,
+                        color: colors.success,
+                        fontWeight: 'bold'
+                      }}
+                    >
+                      Drag
+                    </div>
+                  )}
+                  {Math.abs(currentDrag - 49) < 5 && currentDrag > 0 && (
+                    <div
+                      className="absolute pointer-events-none"
+                      style={{
+                        left: '50%',
+                        transform: 'translateX(-50%)',
+                        top: `${(objectY - 25) / 4 + 5}%`,
+                        fontSize: typo.label,
+                        color: colors.terminal,
+                        fontWeight: 'bold',
+                        background: 'rgba(0,0,0,0.5)',
+                        padding: '2px 8px',
+                        borderRadius: '4px'
+                      }}
+                    >
+                      Terminal Velocity!
+                    </div>
+                  )}
+                </>
+              )}
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4 w-full max-w-lg mb-4">
@@ -904,44 +1269,237 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
 
             <div className="relative w-full max-w-lg h-80 bg-gradient-to-b from-sky-400/20 to-sky-900/40 rounded-xl mb-4 overflow-hidden">
               <svg viewBox="0 0 400 400" className="w-full h-full">
-                <rect x="0" y="0" width="400" height="400" fill="url(#skyGrad)" />
-                <rect x="0" y="360" width="400" height="40" fill="#2d5a27" />
+                <defs>
+                  {/* Premium sky gradient for terminal velocity sim */}
+                  <linearGradient id="dragTermSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#87ceeb" stopOpacity="0.5" />
+                    <stop offset="25%" stopColor="#5ba3c6" stopOpacity="0.45" />
+                    <stop offset="50%" stopColor="#3d7a9e" stopOpacity="0.5" />
+                    <stop offset="75%" stopColor="#1e5a7a" stopOpacity="0.55" />
+                    <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.7" />
+                  </linearGradient>
 
-                {/* Labels */}
-                <text x="120" y="30" fontSize="12" fill="#00ff00" textAnchor="middle">Spread Eagle</text>
-                <text x="280" y="30" fontSize="12" fill="#ff6600" textAnchor="middle">Tucked</text>
+                  {/* Premium ground gradient */}
+                  <linearGradient id="dragTermGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#4a7c44" />
+                    <stop offset="50%" stopColor="#3d6b38" />
+                    <stop offset="100%" stopColor="#2d5a27" />
+                  </linearGradient>
+
+                  {/* Skydiver suit gradient - spread eagle */}
+                  <radialGradient id="dragSuitSpreadGrad" cx="35%" cy="35%" r="65%">
+                    <stop offset="0%" stopColor="#22c55e" />
+                    <stop offset="50%" stopColor="#16a34a" />
+                    <stop offset="100%" stopColor="#15803d" />
+                  </radialGradient>
+
+                  {/* Skydiver suit gradient - tucked */}
+                  <radialGradient id="dragSuitTuckedGrad" cx="35%" cy="35%" r="65%">
+                    <stop offset="0%" stopColor="#fb923c" />
+                    <stop offset="50%" stopColor="#f97316" />
+                    <stop offset="100%" stopColor="#ea580c" />
+                  </radialGradient>
+
+                  {/* Skin tone gradient */}
+                  <radialGradient id="dragSkinGrad" cx="40%" cy="30%" r="60%">
+                    <stop offset="0%" stopColor="#ffdab3" />
+                    <stop offset="50%" stopColor="#ffcc99" />
+                    <stop offset="100%" stopColor="#e6b380" />
+                  </radialGradient>
+
+                  {/* Helmet gradient */}
+                  <radialGradient id="dragHelmetGrad" cx="35%" cy="30%" r="65%">
+                    <stop offset="0%" stopColor="#4b5563" />
+                    <stop offset="50%" stopColor="#374151" />
+                    <stop offset="100%" stopColor="#1f2937" />
+                  </radialGradient>
+
+                  {/* Terminal velocity reached glow */}
+                  <filter id="dragTerminalGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+
+                  {/* Air flow around skydivers */}
+                  <linearGradient id="dragTermAirFlow" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#38bdf8" stopOpacity="0" />
+                    <stop offset="30%" stopColor="#38bdf8" stopOpacity="0.3" />
+                    <stop offset="70%" stopColor="#38bdf8" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#38bdf8" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+
+                {/* Premium sky background */}
+                <rect x="0" y="0" width="400" height="400" fill="url(#dragTermSkyGrad)" />
+
+                {/* Air flow streamlines when falling */}
+                {showTerminalSim && terminalObjects.length >= 2 && (
+                  <g opacity="0.5">
+                    {/* Streamlines around spread eagle */}
+                    {[80, 100, 140, 160].map((xPos, i) => (
+                      <line
+                        key={`spread-${i}`}
+                        x1={xPos}
+                        y1={terminalObjects[0].y - 60}
+                        x2={xPos}
+                        y2={terminalObjects[0].y + 40}
+                        stroke="url(#dragTermAirFlow)"
+                        strokeWidth="2"
+                        strokeDasharray="6,4"
+                      >
+                        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="0.4s" repeatCount="indefinite" />
+                      </line>
+                    ))}
+                    {/* Streamlines around tucked */}
+                    {[260, 275, 285, 300].map((xPos, i) => (
+                      <line
+                        key={`tucked-${i}`}
+                        x1={xPos}
+                        y1={terminalObjects[1].y - 60}
+                        x2={xPos}
+                        y2={terminalObjects[1].y + 40}
+                        stroke="url(#dragTermAirFlow)"
+                        strokeWidth="2"
+                        strokeDasharray="6,4"
+                      >
+                        <animate attributeName="stroke-dashoffset" from="0" to="-20" dur="0.3s" repeatCount="indefinite" />
+                      </line>
+                    ))}
+                  </g>
+                )}
+
+                {/* Premium ground */}
+                <rect x="0" y="360" width="400" height="40" fill="url(#dragTermGroundGrad)" />
+                <line x1="0" y1="360" x2="400" y2="360" stroke="#5a9a50" strokeWidth="2" />
 
                 {terminalObjects.length >= 2 && (
                   <>
-                    {/* Spread eagle skydiver */}
-                    <g transform={`translate(120, ${terminalObjects[0].y})`}>
-                      <ellipse cx="0" cy="0" rx="25" ry="12" fill="#ff6600" />
-                      <circle cx="0" cy="-15" r="8" fill="#ffcc99" />
-                      <line x1="-25" y1="0" x2="-45" y2="-10" stroke="#ff6600" strokeWidth="5" strokeLinecap="round" />
-                      <line x1="25" y1="0" x2="45" y2="-10" stroke="#ff6600" strokeWidth="5" strokeLinecap="round" />
-                      <line x1="-8" y1="12" x2="-20" y2="30" stroke="#333" strokeWidth="5" strokeLinecap="round" />
-                      <line x1="8" y1="12" x2="20" y2="30" stroke="#333" strokeWidth="5" strokeLinecap="round" />
+                    {/* Spread eagle skydiver with premium graphics */}
+                    <g
+                      transform={`translate(120, ${terminalObjects[0].y})`}
+                      filter={terminalObjects[0].reached ? "url(#dragTerminalGlow)" : undefined}
+                    >
+                      {/* Body shadow */}
+                      <ellipse cx="3" cy="3" rx="25" ry="12" fill="rgba(0,0,0,0.3)" />
+                      {/* Body */}
+                      <ellipse cx="0" cy="0" rx="25" ry="12" fill="url(#dragSuitSpreadGrad)" stroke="#15803d" strokeWidth="1" />
+                      {/* Head with helmet */}
+                      <circle cx="0" cy="-15" r="10" fill="url(#dragHelmetGrad)" />
+                      <circle cx="0" cy="-14" r="6" fill="url(#dragSkinGrad)" />
+                      {/* Arms spread */}
+                      <line x1="-25" y1="0" x2="-48" y2="-8" stroke="url(#dragSuitSpreadGrad)" strokeWidth="6" strokeLinecap="round" />
+                      <line x1="25" y1="0" x2="48" y2="-8" stroke="url(#dragSuitSpreadGrad)" strokeWidth="6" strokeLinecap="round" />
+                      {/* Hands */}
+                      <circle cx="-50" cy="-9" r="4" fill="url(#dragSkinGrad)" />
+                      <circle cx="50" cy="-9" r="4" fill="url(#dragSkinGrad)" />
+                      {/* Legs spread */}
+                      <line x1="-10" y1="12" x2="-25" y2="32" stroke="#1f2937" strokeWidth="6" strokeLinecap="round" />
+                      <line x1="10" y1="12" x2="25" y2="32" stroke="#1f2937" strokeWidth="6" strokeLinecap="round" />
+                      {/* Feet */}
+                      <ellipse cx="-27" cy="35" rx="5" ry="3" fill="#1f2937" />
+                      <ellipse cx="27" cy="35" rx="5" ry="3" fill="#1f2937" />
                     </g>
-                    <text x="120" y={terminalObjects[0].y + 50} fontSize="10" fill="#fff" textAnchor="middle">
-                      {terminalObjects[0].v.toFixed(0)} m/s {terminalObjects[0].reached ? '(Terminal!)' : ''}
-                    </text>
 
-                    {/* Tucked skydiver */}
-                    <g transform={`translate(280, ${terminalObjects[1].y})`}>
-                      <ellipse cx="0" cy="0" rx="12" ry="20" fill="#ff6600" />
-                      <circle cx="0" cy="-18" r="8" fill="#ffcc99" />
-                      <ellipse cx="0" cy="15" rx="10" ry="6" fill="#333" />
+                    {/* Tucked skydiver with premium graphics */}
+                    <g
+                      transform={`translate(280, ${terminalObjects[1].y})`}
+                      filter={terminalObjects[1].reached ? "url(#dragTerminalGlow)" : undefined}
+                    >
+                      {/* Body shadow */}
+                      <ellipse cx="3" cy="3" rx="12" ry="22" fill="rgba(0,0,0,0.3)" />
+                      {/* Body - tucked position */}
+                      <ellipse cx="0" cy="0" rx="12" ry="22" fill="url(#dragSuitTuckedGrad)" stroke="#ea580c" strokeWidth="1" />
+                      {/* Head with helmet */}
+                      <circle cx="0" cy="-20" r="10" fill="url(#dragHelmetGrad)" />
+                      <circle cx="0" cy="-19" r="6" fill="url(#dragSkinGrad)" />
+                      {/* Arms tucked in */}
+                      <ellipse cx="-8" cy="0" rx="4" ry="8" fill="url(#dragSuitTuckedGrad)" />
+                      <ellipse cx="8" cy="0" rx="4" ry="8" fill="url(#dragSuitTuckedGrad)" />
+                      {/* Legs tucked */}
+                      <ellipse cx="0" cy="18" rx="10" ry="8" fill="#1f2937" />
                     </g>
-                    <text x="280" y={terminalObjects[1].y + 50} fontSize="10" fill="#fff" textAnchor="middle">
-                      {terminalObjects[1].v.toFixed(0)} m/s {terminalObjects[1].reached ? '(Terminal!)' : ''}
-                    </text>
                   </>
                 )}
-
-                {!showTerminalSim && (
-                  <text x="200" y="200" fontSize="16" fill="#888" textAnchor="middle">Click &quot;Jump&quot; to start</text>
-                )}
               </svg>
+
+              {/* Labels outside SVG using typo system */}
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  top: '16px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  display: 'flex',
+                  gap: '80px'
+                }}
+              >
+                <div style={{ fontSize: typo.small, color: colors.success, fontWeight: 'bold', textAlign: 'center' }}>
+                  Spread Eagle
+                </div>
+                <div style={{ fontSize: typo.small, color: colors.accent, fontWeight: 'bold', textAlign: 'center' }}>
+                  Tucked
+                </div>
+              </div>
+
+              {/* Velocity labels outside SVG */}
+              {terminalObjects.length >= 2 && (
+                <>
+                  <div
+                    className="absolute pointer-events-none"
+                    style={{
+                      left: '25%',
+                      transform: 'translateX(-50%)',
+                      top: `${(terminalObjects[0].y + 55) / 4 + 5}%`,
+                      fontSize: typo.small,
+                      color: terminalObjects[0].reached ? colors.terminal : colors.textPrimary,
+                      fontWeight: 'bold',
+                      textAlign: 'center',
+                      background: 'rgba(0,0,0,0.5)',
+                      padding: '2px 8px',
+                      borderRadius: '4px'
+                    }}
+                  >
+                    {terminalObjects[0].v.toFixed(0)} m/s {terminalObjects[0].reached && '(Terminal!)'}
+                  </div>
+                  <div
+                    className="absolute pointer-events-none"
+                    style={{
+                      left: '75%',
+                      transform: 'translateX(-50%)',
+                      top: `${(terminalObjects[1].y + 55) / 4 + 5}%`,
+                      fontSize: typo.small,
+                      color: terminalObjects[1].reached ? colors.terminal : colors.textPrimary,
+                      fontWeight: 'bold',
+                      textAlign: 'center',
+                      background: 'rgba(0,0,0,0.5)',
+                      padding: '2px 8px',
+                      borderRadius: '4px'
+                    }}
+                  >
+                    {terminalObjects[1].v.toFixed(0)} m/s {terminalObjects[1].reached && '(Terminal!)'}
+                  </div>
+                </>
+              )}
+
+              {/* Start prompt outside SVG */}
+              {!showTerminalSim && (
+                <div
+                  className="absolute pointer-events-none"
+                  style={{
+                    top: '50%',
+                    left: '50%',
+                    transform: 'translate(-50%, -50%)',
+                    fontSize: typo.bodyLarge,
+                    color: colors.textMuted,
+                    textAlign: 'center'
+                  }}
+                >
+                  Click &quot;Jump&quot; to start
+                </div>
+              )}
             </div>
 
             <div className="bg-slate-800 p-4 rounded-xl max-w-lg mb-4">

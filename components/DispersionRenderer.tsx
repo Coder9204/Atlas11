@@ -630,7 +630,7 @@ export default function DispersionRenderer() {
   );
 
   // =============================================================================
-  // PRISM VISUALIZATION
+  // PRISM VISUALIZATION - Premium SVG Graphics
   // =============================================================================
   const renderPrismVisualization = useCallback(() => {
     const width = isMobile ? 340 : 500;
@@ -640,10 +640,6 @@ export default function DispersionRenderer() {
     const prismSize = isMobile ? 100 : 140;
     const prismCenterX = width * 0.4;
     const prismCenterY = height * 0.5;
-
-    // Calculate prism vertices (equilateral triangle rotated)
-    const prismAngleRad = (prismAngle * Math.PI) / 180;
-    const halfAngle = prismAngleRad / 2;
 
     // Simple triangular prism
     const prismPoints = [
@@ -671,24 +667,147 @@ export default function DispersionRenderer() {
           gap: defined.spacing.md,
         }}
       >
+        {/* Prism title label - moved outside SVG */}
+        <div
+          style={{
+            fontSize: typo.small,
+            color: defined.colors.text.muted,
+            fontFamily: defined.typography.fontFamily,
+            textAlign: 'center',
+          }}
+        >
+          {PRISM_MATERIALS[prismMaterial].name} Prism
+        </div>
+
         <svg width={width} height={height} style={{ overflow: 'visible' }}>
           <defs>
-            {/* White light gradient */}
-            <linearGradient id="whiteLightGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.3" />
+            {/* ============================================ */}
+            {/* PREMIUM GRADIENT DEFINITIONS - disp* prefix */}
+            {/* ============================================ */}
+
+            {/* Lab background gradient */}
+            <linearGradient id="dispLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="25%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Premium prism glass gradient with refraction effect */}
+            <linearGradient id="dispPrismGlass" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(200, 220, 255, 0.35)" />
+              <stop offset="20%" stopColor="rgba(180, 200, 240, 0.25)" />
+              <stop offset="40%" stopColor="rgba(160, 180, 220, 0.15)" />
+              <stop offset="60%" stopColor="rgba(180, 200, 240, 0.20)" />
+              <stop offset="80%" stopColor="rgba(200, 220, 255, 0.30)" />
+              <stop offset="100%" stopColor="rgba(220, 240, 255, 0.25)" />
+            </linearGradient>
+
+            {/* Prism internal refraction gradient */}
+            <radialGradient id="dispPrismInternal" cx="30%" cy="30%" r="80%">
+              <stop offset="0%" stopColor="rgba(255, 255, 255, 0.15)" />
+              <stop offset="30%" stopColor="rgba(200, 220, 255, 0.08)" />
+              <stop offset="60%" stopColor="rgba(180, 200, 240, 0.05)" />
+              <stop offset="100%" stopColor="rgba(160, 180, 220, 0.02)" />
+            </radialGradient>
+
+            {/* White light beam gradient */}
+            <linearGradient id="dispWhiteLight" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="0.4" />
+              <stop offset="20%" stopColor="#FFFEF8" stopOpacity="0.7" />
               <stop offset="50%" stopColor="#FFFFFF" stopOpacity="1" />
-              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.3" />
+              <stop offset="80%" stopColor="#FFFEF8" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#FFFFFF" stopOpacity="0.4" />
             </linearGradient>
 
-            {/* Prism glass gradient */}
-            <linearGradient id="prismGlassGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-              <stop offset="0%" stopColor="rgba(148, 163, 184, 0.3)" />
-              <stop offset="50%" stopColor="rgba(148, 163, 184, 0.15)" />
-              <stop offset="100%" stopColor="rgba(148, 163, 184, 0.25)" />
+            {/* Light source radial gradient */}
+            <radialGradient id="dispLightSource" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#FFFFFF" stopOpacity="1" />
+              <stop offset="30%" stopColor="#FFFEF0" stopOpacity="0.95" />
+              <stop offset="60%" stopColor="#FFF8E1" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#FFECB3" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Rainbow spectrum gradient - vertical for screen display */}
+            <linearGradient id="dispRainbowVertical" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#8B5CF6" />
+              <stop offset="14%" stopColor="#6366F1" />
+              <stop offset="28%" stopColor="#3B82F6" />
+              <stop offset="43%" stopColor="#22C55E" />
+              <stop offset="57%" stopColor="#EAB308" />
+              <stop offset="71%" stopColor="#F97316" />
+              <stop offset="85%" stopColor="#EF4444" />
+              <stop offset="100%" stopColor="#DC2626" />
             </linearGradient>
 
-            {/* Light glow filter */}
-            <filter id="lightGlow" x="-50%" y="-50%" width="200%" height="200%">
+            {/* Individual color ray gradients for glow effect */}
+            <linearGradient id="dispRayRed" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#EF4444" stopOpacity="1" />
+              <stop offset="50%" stopColor="#F87171" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#EF4444" stopOpacity="0.6" />
+            </linearGradient>
+
+            <linearGradient id="dispRayOrange" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#F97316" stopOpacity="1" />
+              <stop offset="50%" stopColor="#FB923C" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#F97316" stopOpacity="0.6" />
+            </linearGradient>
+
+            <linearGradient id="dispRayYellow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#EAB308" stopOpacity="1" />
+              <stop offset="50%" stopColor="#FACC15" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#EAB308" stopOpacity="0.6" />
+            </linearGradient>
+
+            <linearGradient id="dispRayGreen" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22C55E" stopOpacity="1" />
+              <stop offset="50%" stopColor="#4ADE80" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#22C55E" stopOpacity="0.6" />
+            </linearGradient>
+
+            <linearGradient id="dispRayBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3B82F6" stopOpacity="1" />
+              <stop offset="50%" stopColor="#60A5FA" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#3B82F6" stopOpacity="0.6" />
+            </linearGradient>
+
+            <linearGradient id="dispRayIndigo" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6366F1" stopOpacity="1" />
+              <stop offset="50%" stopColor="#818CF8" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#6366F1" stopOpacity="0.6" />
+            </linearGradient>
+
+            <linearGradient id="dispRayViolet" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#8B5CF6" stopOpacity="1" />
+              <stop offset="50%" stopColor="#A78BFA" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* Info panel gradient */}
+            <linearGradient id="dispInfoPanel" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(30, 41, 59, 0.95)" />
+              <stop offset="50%" stopColor="rgba(30, 41, 59, 0.9)" />
+              <stop offset="100%" stopColor="rgba(15, 23, 42, 0.95)" />
+            </linearGradient>
+
+            {/* ============================================ */}
+            {/* PREMIUM FILTER DEFINITIONS                  */}
+            {/* ============================================ */}
+
+            {/* White light glow filter */}
+            <filter id="dispWhiteLightGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur1" />
+              <feGaussianBlur stdDeviation="8" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Color ray glow filter */}
+            <filter id="dispRayGlow" x="-50%" y="-50%" width="200%" height="200%">
               <feGaussianBlur stdDeviation="3" result="coloredBlur" />
               <feMerge>
                 <feMergeNode in="coloredBlur" />
@@ -696,89 +815,135 @@ export default function DispersionRenderer() {
               </feMerge>
             </filter>
 
-            {/* Rainbow gradient */}
-            <linearGradient id="rainbowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#8B5CF6" />
-              <stop offset="17%" stopColor="#6366F1" />
-              <stop offset="33%" stopColor="#3B82F6" />
-              <stop offset="50%" stopColor="#22C55E" />
-              <stop offset="67%" stopColor="#EAB308" />
-              <stop offset="83%" stopColor="#F97316" />
-              <stop offset="100%" stopColor="#EF4444" />
-            </linearGradient>
+            {/* Intense glow for light source */}
+            <filter id="dispSourceGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur1" />
+              <feGaussianBlur stdDeviation="12" result="blur2" />
+              <feGaussianBlur stdDeviation="20" result="blur3" />
+              <feMerge>
+                <feMergeNode in="blur3" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Prism glass refraction shimmer */}
+            <filter id="dispPrismShimmer" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Spectrum screen glow */}
+            <filter id="dispSpectrumGlow" x="-30%" y="-10%" width="160%" height="120%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle inner glow for panels */}
+            <filter id="dispPanelGlow">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
           </defs>
 
-          {/* Background */}
-          <rect width={width} height={height} fill={defined.colors.background.secondary} rx="12" />
+          {/* Premium background with gradient */}
+          <rect width={width} height={height} fill="url(#dispLabBg)" rx="12" />
 
-          {/* Title */}
-          <text
-            x={width / 2}
-            y={25}
-            fill={defined.colors.text.muted}
-            fontSize="14"
-            fontFamily={defined.typography.fontFamily}
-            textAnchor="middle"
-          >
-            {PRISM_MATERIALS[prismMaterial].name} Prism
-          </text>
+          {/* Subtle grid pattern */}
+          <defs>
+            <pattern id="dispGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="rgba(100, 116, 139, 0.1)" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+          <rect width={width} height={height} fill="url(#dispGrid)" rx="12" opacity="0.5" />
 
-          {/* Prism */}
+          {/* Premium glass prism with refraction effect */}
           <polygon
             points={prismPoints.map((p) => `${p.x},${p.y}`).join(' ')}
-            fill="url(#prismGlassGrad)"
-            stroke="rgba(148, 163, 184, 0.5)"
+            fill="url(#dispPrismGlass)"
+            stroke="rgba(200, 220, 255, 0.4)"
             strokeWidth="2"
+            filter="url(#dispPrismShimmer)"
           />
-          {/* Prism highlight */}
+
+          {/* Prism internal refraction overlay */}
+          <polygon
+            points={prismPoints.map((p) => `${p.x},${p.y}`).join(' ')}
+            fill="url(#dispPrismInternal)"
+          />
+
+          {/* Prism edge highlights for 3D glass effect */}
           <line
             x1={prismPoints[0].x}
             y1={prismPoints[0].y}
             x2={prismPoints[1].x}
             y2={prismPoints[1].y}
-            stroke="rgba(255, 255, 255, 0.3)"
+            stroke="rgba(255, 255, 255, 0.5)"
+            strokeWidth="1.5"
+          />
+          <line
+            x1={prismPoints[0].x}
+            y1={prismPoints[0].y}
+            x2={prismPoints[2].x}
+            y2={prismPoints[2].y}
+            stroke="rgba(255, 255, 255, 0.25)"
             strokeWidth="1"
           />
 
-          {/* Incident white light ray */}
+          {/* Premium white light beam with glow */}
           <line
             x1={rayStartX}
             y1={rayStartY}
             x2={rayHitX}
             y2={rayHitY}
-            stroke="white"
-            strokeWidth="4"
-            filter="url(#lightGlow)"
+            stroke="url(#dispWhiteLight)"
+            strokeWidth="6"
+            filter="url(#dispWhiteLightGlow)"
+            strokeLinecap="round"
           />
 
-          {/* Light source */}
-          <circle cx={rayStartX} cy={rayStartY} r="15" fill="white" opacity="0.8" />
-          <circle cx={rayStartX} cy={rayStartY} r="8" fill="white" />
-          {showLabels && (
-            <text
-              x={rayStartX}
-              y={rayStartY - 25}
-              fill={defined.colors.text.secondary}
-              fontSize="11"
-              fontFamily={defined.typography.fontFamily}
-              textAnchor="middle"
-            >
-              White Light
-            </text>
-          )}
+          {/* Light source with premium glow effect */}
+          <circle cx={rayStartX} cy={rayStartY} r="20" fill="url(#dispLightSource)" filter="url(#dispSourceGlow)" />
+          <circle cx={rayStartX} cy={rayStartY} r="12" fill="white" opacity="0.95" />
+          <circle cx={rayStartX} cy={rayStartY} r="6" fill="white" />
 
-          {/* Light inside prism (white but starting to separate) */}
+          {/* Light path inside prism - transitioning to rainbow */}
           <line
             x1={rayHitX}
             y1={rayHitY}
             x2={exitX}
             y2={exitY}
             stroke="white"
-            strokeWidth="3"
-            opacity="0.6"
+            strokeWidth="4"
+            opacity="0.5"
+            strokeLinecap="round"
+          />
+          {/* Rainbow hint inside prism */}
+          <line
+            x1={rayHitX + 5}
+            y1={rayHitY - 2}
+            x2={exitX}
+            y2={exitY - 5}
+            stroke="rgba(139, 92, 246, 0.3)"
+            strokeWidth="2"
+          />
+          <line
+            x1={rayHitX + 5}
+            y1={rayHitY + 2}
+            x2={exitX}
+            y2={exitY + 5}
+            stroke="rgba(239, 68, 68, 0.3)"
+            strokeWidth="2"
           />
 
-          {/* Dispersed rays exiting prism */}
+          {/* Dispersed rainbow rays exiting prism */}
           {dispersedColors.map((color, i) => {
             // Calculate exit angle for each color
             const angleOffset = ((i - 3) * totalSpread) / 7;
@@ -789,70 +954,94 @@ export default function DispersionRenderer() {
             const rayEndY = exitY + Math.sin(exitAngleRad) * rayLength;
 
             // Animate with slight pulse
-            const pulse = 0.8 + 0.2 * Math.sin((animationPhase + i * 30) * (Math.PI / 180));
+            const pulse = 0.85 + 0.15 * Math.sin((animationPhase + i * 30) * (Math.PI / 180));
+
+            // Map color key to gradient
+            const gradientMap: Record<string, string> = {
+              red: 'url(#dispRayRed)',
+              orange: 'url(#dispRayOrange)',
+              yellow: 'url(#dispRayYellow)',
+              green: 'url(#dispRayGreen)',
+              blue: 'url(#dispRayBlue)',
+              indigo: 'url(#dispRayIndigo)',
+              violet: 'url(#dispRayViolet)',
+            };
 
             return (
               <g key={color.key}>
+                {/* Outer glow layer */}
                 <line
                   x1={exitX}
                   y1={exitY}
                   x2={rayEndX}
                   y2={rayEndY}
                   stroke={color.color}
-                  strokeWidth={3 * pulse}
-                  filter="url(#lightGlow)"
-                  opacity={0.9}
+                  strokeWidth={6 * pulse}
+                  opacity={0.3}
+                  filter="url(#dispRayGlow)"
+                  strokeLinecap="round"
                 />
-                {showLabels && (
-                  <text
-                    x={rayEndX + 10}
-                    y={rayEndY}
-                    fill={color.color}
-                    fontSize="10"
-                    fontFamily={defined.typography.fontFamily}
-                  >
-                    {color.name}
-                  </text>
-                )}
+                {/* Main ray with gradient */}
+                <line
+                  x1={exitX}
+                  y1={exitY}
+                  x2={rayEndX}
+                  y2={rayEndY}
+                  stroke={gradientMap[color.key] || color.color}
+                  strokeWidth={3 * pulse}
+                  filter="url(#dispRayGlow)"
+                  opacity={0.95}
+                  strokeLinecap="round"
+                />
               </g>
             );
           })}
 
-          {/* Screen showing spectrum */}
+          {/* Premium spectrum screen with glow */}
           <rect
-            x={width - 60}
-            y={height * 0.2}
-            width="30"
-            height={height * 0.6}
-            fill="url(#rainbowGrad)"
-            rx="4"
-            opacity="0.8"
+            x={width - 65}
+            y={height * 0.18}
+            width="35"
+            height={height * 0.64}
+            fill="url(#dispRainbowVertical)"
+            rx="6"
+            filter="url(#dispSpectrumGlow)"
           />
-          {showLabels && (
-            <text
-              x={width - 45}
-              y={height * 0.15}
-              fill={defined.colors.text.muted}
-              fontSize="10"
-              fontFamily={defined.typography.fontFamily}
-              textAnchor="middle"
-            >
-              Spectrum
-            </text>
-          )}
+          {/* Screen frame */}
+          <rect
+            x={width - 65}
+            y={height * 0.18}
+            width="35"
+            height={height * 0.64}
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.2)"
+            strokeWidth="1"
+            rx="6"
+          />
 
-          {/* Info display */}
+          {/* Premium info display panel */}
           <rect
             x={10}
-            y={height - 70}
-            width={160}
-            height={55}
-            fill={defined.colors.background.card}
-            rx="8"
+            y={height - 75}
+            width={170}
+            height={60}
+            fill="url(#dispInfoPanel)"
+            rx="10"
+            filter="url(#dispPanelGlow)"
+          />
+          <rect
+            x={10}
+            y={height - 75}
+            width={170}
+            height={60}
+            fill="none"
+            stroke="rgba(255, 255, 255, 0.1)"
+            strokeWidth="1"
+            rx="10"
           />
           <text
-            x={20}
-            y={height - 48}
+            x={22}
+            y={height - 52}
             fill={defined.colors.text.secondary}
             fontSize="11"
             fontFamily={defined.typography.fontFamily}
@@ -860,8 +1049,8 @@ export default function DispersionRenderer() {
             Prism angle: {prismAngle}°
           </text>
           <text
-            x={20}
-            y={height - 32}
+            x={22}
+            y={height - 35}
             fill={defined.colors.text.secondary}
             fontSize="11"
             fontFamily={defined.typography.fontFamily}
@@ -869,24 +1058,57 @@ export default function DispersionRenderer() {
             Color spread: {totalSpread.toFixed(1)}°
           </text>
           <text
-            x={20}
-            y={height - 16}
+            x={22}
+            y={height - 18}
             fill={defined.colors.accent}
             fontSize="11"
             fontFamily={defined.typography.fontFamily}
+            fontWeight="600"
           >
             Dispersion: {PRISM_MATERIALS[prismMaterial].dispersion}x
           </text>
         </svg>
 
-        {/* Wavelength info */}
+        {/* Labels moved outside SVG using typo system */}
+        {showLabels && (
+          <div
+            style={{
+              display: 'flex',
+              justifyContent: 'space-between',
+              width: '100%',
+              maxWidth: `${width}px`,
+              padding: `0 ${defined.spacing.md}`,
+            }}
+          >
+            <span
+              style={{
+                fontSize: typo.label,
+                color: defined.colors.text.secondary,
+                fontFamily: defined.typography.fontFamily,
+              }}
+            >
+              White Light Source
+            </span>
+            <span
+              style={{
+                fontSize: typo.label,
+                color: defined.colors.text.secondary,
+                fontFamily: defined.typography.fontFamily,
+              }}
+            >
+              Spectrum Display
+            </span>
+          </div>
+        )}
+
+        {/* Wavelength info with premium styling */}
         <div
           style={{
             display: 'flex',
             gap: defined.spacing.xs,
             flexWrap: 'wrap',
             justifyContent: 'center',
-            maxWidth: '400px',
+            maxWidth: '420px',
           }}
         >
           {Object.values(WAVELENGTHS).map((color) => (
@@ -897,29 +1119,40 @@ export default function DispersionRenderer() {
                 flexDirection: 'column',
                 alignItems: 'center',
                 padding: defined.spacing.xs,
-                background: `${color.color}20`,
-                borderRadius: defined.radius.sm,
-                minWidth: '45px',
+                background: `linear-gradient(135deg, ${color.color}15, ${color.color}25)`,
+                borderRadius: defined.radius.md,
+                minWidth: '48px',
+                border: `1px solid ${color.color}30`,
               }}
             >
               <div
                 style={{
-                  width: '12px',
-                  height: '12px',
+                  width: '14px',
+                  height: '14px',
                   borderRadius: '50%',
-                  background: color.color,
+                  background: `radial-gradient(circle at 30% 30%, ${color.color}, ${color.color}CC)`,
+                  boxShadow: `0 0 8px ${color.color}60`,
                 }}
               />
-              <span style={{ fontSize: '8px', color: defined.colors.text.muted }}>{color.wavelength}nm</span>
+              <span
+                style={{
+                  fontSize: typo.label,
+                  color: defined.colors.text.muted,
+                  fontFamily: defined.typography.fontFamily,
+                  marginTop: '2px',
+                }}
+              >
+                {color.wavelength}nm
+              </span>
             </div>
           ))}
         </div>
       </div>
     );
-  }, [isMobile, prismAngle, prismMaterial, dispersedColors, totalSpread, showLabels, animationPhase]);
+  }, [isMobile, prismAngle, prismMaterial, dispersedColors, totalSpread, showLabels, animationPhase, typo]);
 
   // =============================================================================
-  // CD VISUALIZATION (for twist)
+  // CD VISUALIZATION - Premium SVG Graphics (for twist)
   // =============================================================================
   const renderCDVisualization = useCallback(() => {
     const width = isMobile ? 300 : 400;
@@ -929,102 +1162,249 @@ export default function DispersionRenderer() {
     const cdRadius = isMobile ? 90 : 120;
 
     return (
-      <svg width={width} height={height}>
-        <defs>
-          {/* CD rainbow gradient */}
-          <radialGradient id="cdRainbow" cx="30%" cy="30%">
-            <stop offset="0%" stopColor="rgba(255,255,255,0.8)" />
-            <stop offset="20%" stopColor="rgba(139, 92, 246, 0.3)" />
-            <stop offset="40%" stopColor="rgba(59, 130, 246, 0.3)" />
-            <stop offset="60%" stopColor="rgba(34, 197, 94, 0.3)" />
-            <stop offset="80%" stopColor="rgba(234, 179, 8, 0.3)" />
-            <stop offset="100%" stopColor="rgba(239, 68, 68, 0.3)" />
-          </radialGradient>
+      <div
+        style={{
+          display: 'flex',
+          flexDirection: 'column',
+          alignItems: 'center',
+          gap: defined.spacing.sm,
+        }}
+      >
+        <svg width={width} height={height - 30}>
+          <defs>
+            {/* ============================================ */}
+            {/* PREMIUM CD GRADIENT DEFINITIONS             */}
+            {/* ============================================ */}
 
-          {/* Animated sweep */}
-          <linearGradient
-            id="sweepGradient"
-            gradientTransform={`rotate(${animationPhase}, 0.5, 0.5)`}
-          >
-            <stop offset="0%" stopColor="rgba(255,255,255,0)" />
-            <stop offset="45%" stopColor="rgba(255,255,255,0)" />
-            <stop offset="50%" stopColor="rgba(255,255,255,0.8)" />
-            <stop offset="55%" stopColor="rgba(255,255,255,0)" />
-            <stop offset="100%" stopColor="rgba(255,255,255,0)" />
-          </linearGradient>
-        </defs>
+            {/* Premium lab background */}
+            <linearGradient id="dispCdLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="30%" stopColor="#1e293b" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect width={width} height={height} fill={defined.colors.background.secondary} rx="12" />
+            {/* CD base metallic gradient */}
+            <radialGradient id="dispCdBase" cx="40%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#2a2a4a" />
+              <stop offset="30%" stopColor="#1a1a2e" />
+              <stop offset="60%" stopColor="#252545" />
+              <stop offset="100%" stopColor="#0f0f1e" />
+            </radialGradient>
 
-        {/* CD body */}
-        <circle cx={centerX} cy={centerY} r={cdRadius} fill="#1a1a2e" />
+            {/* Premium rainbow diffraction gradient */}
+            <radialGradient id="dispCdRainbow" cx="35%" cy="35%" r="70%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.6)" />
+              <stop offset="15%" stopColor="rgba(139, 92, 246, 0.4)" />
+              <stop offset="30%" stopColor="rgba(99, 102, 241, 0.35)" />
+              <stop offset="45%" stopColor="rgba(59, 130, 246, 0.35)" />
+              <stop offset="60%" stopColor="rgba(34, 197, 94, 0.35)" />
+              <stop offset="75%" stopColor="rgba(234, 179, 8, 0.35)" />
+              <stop offset="90%" stopColor="rgba(249, 115, 22, 0.35)" />
+              <stop offset="100%" stopColor="rgba(239, 68, 68, 0.3)" />
+            </radialGradient>
 
-        {/* Rainbow effect layer */}
-        <circle cx={centerX} cy={centerY} r={cdRadius} fill="url(#cdRainbow)" />
+            {/* Secondary rainbow layer for depth */}
+            <radialGradient id="dispCdRainbow2" cx="60%" cy="60%" r="50%">
+              <stop offset="0%" stopColor="rgba(239, 68, 68, 0.25)" />
+              <stop offset="25%" stopColor="rgba(234, 179, 8, 0.2)" />
+              <stop offset="50%" stopColor="rgba(34, 197, 94, 0.2)" />
+              <stop offset="75%" stopColor="rgba(59, 130, 246, 0.25)" />
+              <stop offset="100%" stopColor="rgba(139, 92, 246, 0.2)" />
+            </radialGradient>
 
-        {/* Concentric tracks */}
-        {[0.3, 0.45, 0.6, 0.75, 0.9].map((ratio, i) => (
-          <circle
-            key={i}
+            {/* Animated sweep/reflection gradient */}
+            <linearGradient
+              id="dispCdSweep"
+              gradientTransform={`rotate(${animationPhase}, 0.5, 0.5)`}
+            >
+              <stop offset="0%" stopColor="rgba(255,255,255,0)" />
+              <stop offset="40%" stopColor="rgba(255,255,255,0)" />
+              <stop offset="48%" stopColor="rgba(255,255,255,0.4)" />
+              <stop offset="50%" stopColor="rgba(255,255,255,0.9)" />
+              <stop offset="52%" stopColor="rgba(255,255,255,0.4)" />
+              <stop offset="60%" stopColor="rgba(255,255,255,0)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0)" />
+            </linearGradient>
+
+            {/* CD center hole gradient */}
+            <radialGradient id="dispCdHole" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#0a0f1a" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </radialGradient>
+
+            {/* CD edge highlight */}
+            <linearGradient id="dispCdEdge" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.3)" />
+              <stop offset="50%" stopColor="rgba(255,255,255,0.1)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0.2)" />
+            </linearGradient>
+
+            {/* ============================================ */}
+            {/* PREMIUM CD FILTER DEFINITIONS               */}
+            {/* ============================================ */}
+
+            {/* CD surface shimmer glow */}
+            <filter id="dispCdGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Rainbow arc glow */}
+            <filter id="dispArcGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Intense reflection glow */}
+            <filter id="dispReflectionGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur1" />
+              <feGaussianBlur stdDeviation="8" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Track groove pattern */}
+            <pattern id="dispCdTracks" width="4" height="4" patternUnits="userSpaceOnUse">
+              <circle cx="2" cy="2" r="0.3" fill="rgba(255,255,255,0.05)" />
+            </pattern>
+          </defs>
+
+          {/* Premium background */}
+          <rect width={width} height={height - 30} fill="url(#dispCdLabBg)" rx="12" />
+
+          {/* Subtle ambient glow behind CD */}
+          <ellipse
             cx={centerX}
             cy={centerY}
-            r={cdRadius * ratio}
+            rx={cdRadius * 1.1}
+            ry={cdRadius * 1.1}
+            fill="rgba(139, 92, 246, 0.1)"
+            filter="url(#dispCdGlow)"
+          />
+
+          {/* CD base with metallic finish */}
+          <circle cx={centerX} cy={centerY} r={cdRadius} fill="url(#dispCdBase)" />
+
+          {/* Primary rainbow diffraction layer */}
+          <circle cx={centerX} cy={centerY} r={cdRadius} fill="url(#dispCdRainbow)" />
+
+          {/* Secondary rainbow layer for depth */}
+          <circle cx={centerX} cy={centerY} r={cdRadius} fill="url(#dispCdRainbow2)" opacity="0.7" />
+
+          {/* Concentric data tracks with premium styling */}
+          {[0.25, 0.35, 0.45, 0.55, 0.65, 0.75, 0.85, 0.95].map((ratio, i) => (
+            <circle
+              key={i}
+              cx={centerX}
+              cy={centerY}
+              r={cdRadius * ratio}
+              fill="none"
+              stroke={`rgba(255,255,255,${0.03 + i * 0.015})`}
+              strokeWidth="0.5"
+              strokeDasharray={i % 2 === 0 ? '2 4' : '4 2'}
+            />
+          ))}
+
+          {/* Track pattern overlay */}
+          <circle cx={centerX} cy={centerY} r={cdRadius} fill="url(#dispCdTracks)" opacity="0.5" />
+
+          {/* Animated light sweep/reflection */}
+          <circle cx={centerX} cy={centerY} r={cdRadius} fill="url(#dispCdSweep)" filter="url(#dispReflectionGlow)" />
+
+          {/* Edge highlight ring */}
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r={cdRadius - 1}
             fill="none"
-            stroke={`rgba(255,255,255,${0.05 + i * 0.02})`}
+            stroke="url(#dispCdEdge)"
+            strokeWidth="2"
+          />
+
+          {/* Animated rainbow arcs showing diffraction */}
+          {Object.values(WAVELENGTHS).map((color, i) => {
+            const startAngle = animationPhase + i * 12;
+            const arcRadius = cdRadius * (0.5 + (i * 0.05));
+            const x1 = centerX + arcRadius * Math.cos((startAngle * Math.PI) / 180);
+            const y1 = centerY + arcRadius * Math.sin((startAngle * Math.PI) / 180);
+            const x2 = centerX + arcRadius * Math.cos(((startAngle + 25) * Math.PI) / 180);
+            const y2 = centerY + arcRadius * Math.sin(((startAngle + 25) * Math.PI) / 180);
+
+            const pulse = 0.7 + 0.3 * Math.sin((animationPhase + i * 20) * (Math.PI / 180));
+
+            return (
+              <g key={color.name}>
+                {/* Glow layer */}
+                <path
+                  d={`M ${x1} ${y1} A ${arcRadius} ${arcRadius} 0 0 1 ${x2} ${y2}`}
+                  fill="none"
+                  stroke={color.color}
+                  strokeWidth={5 * pulse}
+                  opacity={0.3}
+                  filter="url(#dispArcGlow)"
+                  strokeLinecap="round"
+                />
+                {/* Main arc */}
+                <path
+                  d={`M ${x1} ${y1} A ${arcRadius} ${arcRadius} 0 0 1 ${x2} ${y2}`}
+                  fill="none"
+                  stroke={color.color}
+                  strokeWidth={3 * pulse}
+                  opacity={0.85}
+                  filter="url(#dispArcGlow)"
+                  strokeLinecap="round"
+                />
+              </g>
+            );
+          })}
+
+          {/* Premium center hole with depth */}
+          <circle cx={centerX} cy={centerY} r={cdRadius * 0.14} fill="url(#dispCdHole)" />
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r={cdRadius * 0.14}
+            fill="none"
+            stroke="rgba(255,255,255,0.25)"
+            strokeWidth="1.5"
+          />
+          {/* Inner ring highlight */}
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r={cdRadius * 0.12}
+            fill="none"
+            stroke="rgba(255,255,255,0.1)"
             strokeWidth="0.5"
           />
-        ))}
+        </svg>
 
-        {/* Animated sweep effect */}
-        <circle cx={centerX} cy={centerY} r={cdRadius} fill="url(#sweepGradient)" />
-
-        {/* Center hole */}
-        <circle cx={centerX} cy={centerY} r={cdRadius * 0.12} fill={defined.colors.background.primary} />
-        <circle
-          cx={centerX}
-          cy={centerY}
-          r={cdRadius * 0.12}
-          fill="none"
-          stroke="rgba(255,255,255,0.3)"
-          strokeWidth="1"
-        />
-
-        {/* Rainbow arc demonstration */}
-        {Object.values(WAVELENGTHS).map((color, i) => {
-          const startAngle = animationPhase + i * 10;
-          const arcRadius = cdRadius * 0.6;
-          const x1 = centerX + arcRadius * Math.cos((startAngle * Math.PI) / 180);
-          const y1 = centerY + arcRadius * Math.sin((startAngle * Math.PI) / 180);
-          const x2 = centerX + arcRadius * Math.cos(((startAngle + 20) * Math.PI) / 180);
-          const y2 = centerY + arcRadius * Math.sin(((startAngle + 20) * Math.PI) / 180);
-
-          return (
-            <path
-              key={color.name}
-              d={`M ${x1} ${y1} A ${arcRadius} ${arcRadius} 0 0 1 ${x2} ${y2}`}
-              fill="none"
-              stroke={color.color}
-              strokeWidth="3"
-              opacity="0.7"
-            />
-          );
-        })}
-
-        {/* Label */}
-        <text
-          x={centerX}
-          y={height - 20}
-          fill={defined.colors.text.muted}
-          fontSize="12"
-          fontFamily={defined.typography.fontFamily}
-          textAnchor="middle"
+        {/* Label moved outside SVG using typo system */}
+        <div
+          style={{
+            fontSize: typo.small,
+            color: defined.colors.text.muted,
+            fontFamily: defined.typography.fontFamily,
+            textAlign: 'center',
+            maxWidth: '300px',
+          }}
         >
           CD tracks diffract light into rainbow patterns
-        </text>
-      </svg>
+        </div>
+      </div>
     );
-  }, [isMobile, animationPhase]);
+  }, [isMobile, animationPhase, typo]);
 
   // =============================================================================
   // CONTROLS PANEL

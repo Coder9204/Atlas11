@@ -380,133 +380,343 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
     const momentumRight = massRight * rightVel;
     const totalMomentum = momentumLeft + momentumRight;
 
+    // Calculate positions for external labels
+    const leftCartCenterX = ((leftCartX + cartWidth / 2) / 400) * 100;
+    const rightCartCenterX = ((rightCartX + cartWidth / 2) / 400) * 100;
+
     return (
-      <svg width="100%" height="260" viewBox="0 0 400 260" className="block">
-        <defs>
-          <linearGradient id="mc-cart-blue" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#60a5fa" />
-            <stop offset="100%" stopColor="#2563eb" />
-          </linearGradient>
-          <linearGradient id="mc-cart-orange" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#fb923c" />
-            <stop offset="100%" stopColor="#ea580c" />
-          </linearGradient>
-          <linearGradient id="mc-track" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={hasFriction ? '#a07a55' : '#4a4a5e'} />
-            <stop offset="100%" stopColor={hasFriction ? '#8b6b4a' : '#3d3d50'} />
-          </linearGradient>
-        </defs>
+      <div className="relative">
+        <svg width="100%" height="260" viewBox="0 0 400 260" className="block">
+          <defs>
+            {/* Premium 3D radial gradient for left cart (blue) */}
+            <radialGradient id="momConCartBlue" cx="35%" cy="25%" r="70%" fx="25%" fy="15%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="20%" stopColor="#60a5fa" />
+              <stop offset="45%" stopColor="#3b82f6" />
+              <stop offset="70%" stopColor="#2563eb" />
+              <stop offset="90%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </radialGradient>
 
-        {/* Background */}
-        <rect width="400" height="260" fill="#0f172a" />
+            {/* Premium 3D radial gradient for right cart (orange) */}
+            <radialGradient id="momConCartOrange" cx="35%" cy="25%" r="70%" fx="25%" fy="15%">
+              <stop offset="0%" stopColor="#fed7aa" />
+              <stop offset="20%" stopColor="#fdba74" />
+              <stop offset="45%" stopColor="#fb923c" />
+              <stop offset="70%" stopColor="#f97316" />
+              <stop offset="90%" stopColor="#ea580c" />
+              <stop offset="100%" stopColor="#c2410c" />
+            </radialGradient>
 
-        {/* Grid */}
-        <pattern id="mc-grid" width="40" height="40" patternUnits="userSpaceOnUse">
-          <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.5" />
-        </pattern>
-        <rect width="400" height="260" fill="url(#mc-grid)" />
+            {/* Glowing gradient for left velocity arrow */}
+            <linearGradient id="momConArrowBlue" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="25%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
 
-        {/* Track */}
-        <rect x={24} y={trackY + cartHeight + 8} width={352} height={14} rx={3} fill="url(#mc-track)" />
-        <rect x={24} y={trackY + cartHeight + 8} width={352} height={4} rx={2} fill="rgba(255,255,255,0.08)" />
+            {/* Glowing gradient for right velocity arrow */}
+            <linearGradient id="momConArrowOrange" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#c2410c" />
+              <stop offset="25%" stopColor="#ea580c" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="75%" stopColor="#fb923c" />
+              <stop offset="100%" stopColor="#fdba74" />
+            </linearGradient>
 
-        {/* Track label */}
-        <text x={368} y={trackY + cartHeight + 38} textAnchor="end" fill="#64748b" fontSize={11} fontFamily="system-ui">
-          {hasFriction ? 'Carpet (friction)' : 'Frictionless track'}
-        </text>
+            {/* Spring gradient */}
+            <linearGradient id="momConSpring" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="30%" stopColor="#22c55e" />
+              <stop offset="70%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
 
-        {/* Spring mechanism */}
-        <g transform={`translate(${leftCartX + cartWidth}, ${trackY + cartHeight / 2})`}>
-          {isCompressed ? (
-            <g>
-              <path
-                d={`M0 0 ${Array.from({length: 8}, (_, i) => `L${3 + i * 3} ${i % 2 === 0 ? -6 : 6}`).join(' ')} L${springLen} 0`}
-                stroke="#22c55e" strokeWidth={3.5} fill="none" strokeLinecap="round"
-              />
-              <circle cx={springLen / 2} cy={0} r={5} fill="#22c55e" opacity={0.6}>
-                <animate attributeName="r" values="4;6;4" dur="0.8s" repeatCount="indefinite" />
+            {/* Track gradient with enhanced depth */}
+            <linearGradient id="momConTrack" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={hasFriction ? '#b8956a' : '#5a5a70'} />
+              <stop offset="20%" stopColor={hasFriction ? '#a07a55' : '#4a4a5e'} />
+              <stop offset="80%" stopColor={hasFriction ? '#8b6b4a' : '#3d3d50'} />
+              <stop offset="100%" stopColor={hasFriction ? '#6b5030' : '#2d2d40'} />
+            </linearGradient>
+
+            {/* Wheel radial gradient */}
+            <radialGradient id="momConWheel" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#4a4a5e" />
+              <stop offset="40%" stopColor="#2a2a35" />
+              <stop offset="80%" stopColor="#1a1a25" />
+              <stop offset="100%" stopColor="#0f0f15" />
+            </radialGradient>
+
+            {/* Glow filter for arrows */}
+            <filter id="momConArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Glow filter for spring */}
+            <filter id="momConSpringGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Cart shadow filter */}
+            <filter id="momConCartShadow" x="-20%" y="-20%" width="140%" height="160%">
+              <feDropShadow dx="2" dy="4" stdDeviation="3" floodColor="#000" floodOpacity="0.4" />
+            </filter>
+
+            {/* Impact burst filter */}
+            <filter id="momConImpactGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Motion trail gradient for left cart */}
+            <linearGradient id="momConTrailBlue" x1="100%" y1="0%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Motion trail gradient for right cart */}
+            <linearGradient id="momConTrailOrange" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#f97316" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {/* Background */}
+          <rect width="400" height="260" fill="#0f172a" />
+
+          {/* Grid */}
+          <pattern id="momConGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+            <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e293b" strokeWidth="0.5" />
+          </pattern>
+          <rect width="400" height="260" fill="url(#momConGrid)" />
+
+          {/* Track */}
+          <rect x={24} y={trackY + cartHeight + 8} width={352} height={14} rx={3} fill="url(#momConTrack)" />
+          <rect x={24} y={trackY + cartHeight + 8} width={352} height={3} rx={1.5} fill="rgba(255,255,255,0.12)" />
+          <rect x={24} y={trackY + cartHeight + 18} width={352} height={2} rx={1} fill="rgba(0,0,0,0.3)" />
+
+          {/* Motion trails when moving */}
+          {!isCompressed && Math.abs(leftVel) > 0.5 && (
+            <rect
+              x={leftCartX + cartWidth}
+              y={trackY + 4}
+              width={Math.min(60, Math.abs(leftPos) * 2)}
+              height={cartHeight - 8}
+              rx={4}
+              fill="url(#momConTrailBlue)"
+            />
+          )}
+          {!isCompressed && Math.abs(rightVel) > 0.5 && (
+            <rect
+              x={rightCartX - Math.min(60, Math.abs(rightPos) * 2)}
+              y={trackY + 4}
+              width={Math.min(60, Math.abs(rightPos) * 2)}
+              height={cartHeight - 8}
+              rx={4}
+              fill="url(#momConTrailOrange)"
+            />
+          )}
+
+          {/* Spring mechanism */}
+          <g transform={`translate(${leftCartX + cartWidth}, ${trackY + cartHeight / 2})`}>
+            {isCompressed ? (
+              <g filter="url(#momConSpringGlow)">
+                <path
+                  d={`M0 0 ${Array.from({length: 8}, (_, i) => `L${3 + i * 3} ${i % 2 === 0 ? -6 : 6}`).join(' ')} L${springLen} 0`}
+                  stroke="url(#momConSpring)" strokeWidth={4} fill="none" strokeLinecap="round"
+                />
+                {/* Spring energy glow */}
+                <ellipse cx={springLen / 2} cy={0} rx={8} ry={10} fill="#22c55e" opacity={0.2}>
+                  <animate attributeName="opacity" values="0.15;0.3;0.15" dur="0.6s" repeatCount="indefinite" />
+                </ellipse>
+                <circle cx={springLen / 2} cy={0} r={4} fill="#4ade80" opacity={0.8}>
+                  <animate attributeName="r" values="3;5;3" dur="0.6s" repeatCount="indefinite" />
+                </circle>
+              </g>
+            ) : (
+              <line x1={0} y1={0} x2={Math.max(20, rightCartX - leftCartX - cartWidth - 8)} y2={0}
+                    stroke="#22c55e" strokeWidth={2} strokeDasharray="6,4" opacity={0.3} />
+            )}
+          </g>
+
+          {/* Impact effect when just released */}
+          {!isCompressed && Math.abs(leftPos) < 5 && Math.abs(leftVel) > 2 && (
+            <g transform={`translate(${centerX - 8}, ${trackY + cartHeight / 2})`} filter="url(#momConImpactGlow)">
+              <circle r={12} fill="#4ade80" opacity={0.4}>
+                <animate attributeName="r" values="8;20;8" dur="0.3s" />
+                <animate attributeName="opacity" values="0.6;0;0.6" dur="0.3s" />
               </circle>
             </g>
-          ) : (
-            <line x1={0} y1={0} x2={Math.max(20, rightCartX - leftCartX - cartWidth - 8)} y2={0}
-                  stroke="#22c55e" strokeWidth={2} strokeDasharray="6,4" opacity={0.4} />
           )}
-        </g>
 
-        {/* Left Cart */}
-        <g>
-          <rect x={leftCartX} y={trackY} width={cartWidth} height={cartHeight} rx={6} fill="url(#mc-cart-blue)" />
-          <rect x={leftCartX + 4} y={trackY + 4} width={cartWidth - 8} height={8} rx={2} fill="rgba(255,255,255,0.2)" />
-          <text x={leftCartX + cartWidth / 2} y={trackY + cartHeight / 2 + 6} textAnchor="middle"
-                fill="#fff" fontSize={15} fontWeight="700" fontFamily="system-ui">
-            {massLeft} kg
-          </text>
-          {/* Wheels */}
-          <circle cx={leftCartX + 14} cy={trackY + cartHeight + 5} r={7} fill="#1a1a25" stroke="#3a3a50" strokeWidth={2} />
-          <circle cx={leftCartX + cartWidth - 14} cy={trackY + cartHeight + 5} r={7} fill="#1a1a25" stroke="#3a3a50" strokeWidth={2} />
-        </g>
+          {/* Left Cart */}
+          <g filter="url(#momConCartShadow)">
+            {/* Cart body with 3D gradient */}
+            <rect x={leftCartX} y={trackY} width={cartWidth} height={cartHeight} rx={6} fill="url(#momConCartBlue)" />
+            {/* Top highlight */}
+            <rect x={leftCartX + 4} y={trackY + 3} width={cartWidth - 8} height={6} rx={2} fill="rgba(255,255,255,0.25)" />
+            {/* Side highlight */}
+            <rect x={leftCartX + 2} y={trackY + 6} width={3} height={cartHeight - 12} rx={1.5} fill="rgba(255,255,255,0.15)" />
+            {/* Bottom shadow */}
+            <rect x={leftCartX + 4} y={trackY + cartHeight - 6} width={cartWidth - 8} height={4} rx={2} fill="rgba(0,0,0,0.2)" />
+            {/* Mass label background */}
+            <rect x={leftCartX + 8} y={trackY + 14} width={cartWidth - 16} height={18} rx={3} fill="rgba(0,0,0,0.25)" />
+            <text x={leftCartX + cartWidth / 2} y={trackY + cartHeight / 2 + 5} textAnchor="middle"
+                  fill="#fff" fontSize={14} fontWeight="700" fontFamily="system-ui" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+              {massLeft} kg
+            </text>
+            {/* Wheels with 3D effect */}
+            <circle cx={leftCartX + 14} cy={trackY + cartHeight + 5} r={8} fill="url(#momConWheel)" />
+            <circle cx={leftCartX + 14} cy={trackY + cartHeight + 5} r={5} fill="#2a2a35" stroke="#4a4a5e" strokeWidth={1} />
+            <circle cx={leftCartX + 14} cy={trackY + cartHeight + 3} r={2} fill="rgba(255,255,255,0.15)" />
+            <circle cx={leftCartX + cartWidth - 14} cy={trackY + cartHeight + 5} r={8} fill="url(#momConWheel)" />
+            <circle cx={leftCartX + cartWidth - 14} cy={trackY + cartHeight + 5} r={5} fill="#2a2a35" stroke="#4a4a5e" strokeWidth={1} />
+            <circle cx={leftCartX + cartWidth - 14} cy={trackY + cartHeight + 3} r={2} fill="rgba(255,255,255,0.15)" />
+          </g>
 
-        {/* Right Cart */}
-        <g>
-          <rect x={rightCartX} y={trackY} width={cartWidth} height={cartHeight} rx={6} fill="url(#mc-cart-orange)" />
-          <rect x={rightCartX + 4} y={trackY + 4} width={cartWidth - 8} height={8} rx={2} fill="rgba(255,255,255,0.2)" />
-          <text x={rightCartX + cartWidth / 2} y={trackY + cartHeight / 2 + 6} textAnchor="middle"
-                fill="#fff" fontSize={15} fontWeight="700" fontFamily="system-ui">
-            {massRight} kg
-          </text>
-          <circle cx={rightCartX + 14} cy={trackY + cartHeight + 5} r={7} fill="#1a1a25" stroke="#3a3a50" strokeWidth={2} />
-          <circle cx={rightCartX + cartWidth - 14} cy={trackY + cartHeight + 5} r={7} fill="#1a1a25" stroke="#3a3a50" strokeWidth={2} />
-        </g>
+          {/* Right Cart */}
+          <g filter="url(#momConCartShadow)">
+            {/* Cart body with 3D gradient */}
+            <rect x={rightCartX} y={trackY} width={cartWidth} height={cartHeight} rx={6} fill="url(#momConCartOrange)" />
+            {/* Top highlight */}
+            <rect x={rightCartX + 4} y={trackY + 3} width={cartWidth - 8} height={6} rx={2} fill="rgba(255,255,255,0.25)" />
+            {/* Side highlight */}
+            <rect x={rightCartX + 2} y={trackY + 6} width={3} height={cartHeight - 12} rx={1.5} fill="rgba(255,255,255,0.15)" />
+            {/* Bottom shadow */}
+            <rect x={rightCartX + 4} y={trackY + cartHeight - 6} width={cartWidth - 8} height={4} rx={2} fill="rgba(0,0,0,0.2)" />
+            {/* Mass label background */}
+            <rect x={rightCartX + 8} y={trackY + 14} width={cartWidth - 16} height={18} rx={3} fill="rgba(0,0,0,0.25)" />
+            <text x={rightCartX + cartWidth / 2} y={trackY + cartHeight / 2 + 5} textAnchor="middle"
+                  fill="#fff" fontSize={14} fontWeight="700" fontFamily="system-ui" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>
+              {massRight} kg
+            </text>
+            {/* Wheels with 3D effect */}
+            <circle cx={rightCartX + 14} cy={trackY + cartHeight + 5} r={8} fill="url(#momConWheel)" />
+            <circle cx={rightCartX + 14} cy={trackY + cartHeight + 5} r={5} fill="#2a2a35" stroke="#4a4a5e" strokeWidth={1} />
+            <circle cx={rightCartX + 14} cy={trackY + cartHeight + 3} r={2} fill="rgba(255,255,255,0.15)" />
+            <circle cx={rightCartX + cartWidth - 14} cy={trackY + cartHeight + 5} r={8} fill="url(#momConWheel)" />
+            <circle cx={rightCartX + cartWidth - 14} cy={trackY + cartHeight + 5} r={5} fill="#2a2a35" stroke="#4a4a5e" strokeWidth={1} />
+            <circle cx={rightCartX + cartWidth - 14} cy={trackY + cartHeight + 3} r={2} fill="rgba(255,255,255,0.15)" />
+          </g>
 
-        {/* Velocity arrows */}
-        {!isCompressed && Math.abs(leftVel) > 0.1 && (
-          <g transform={`translate(${leftCartX + cartWidth / 2}, ${trackY - 20})`}>
-            <line x1={0} y1={0} x2={leftVel * 6} y2={0} stroke="#3b82f6" strokeWidth={3} strokeLinecap="round" />
-            <polygon points={`${leftVel * 6},0 ${leftVel * 6 + (leftVel > 0 ? -8 : 8)},-5 ${leftVel * 6 + (leftVel > 0 ? -8 : 8)},5`} fill="#3b82f6" />
-            <text x={leftVel * 3} y={-10} textAnchor="middle" fill="#3b82f6" fontSize={11} fontWeight="600">
-              v = {Math.abs(leftVel).toFixed(1)}
+          {/* Velocity arrows with glow */}
+          {!isCompressed && Math.abs(leftVel) > 0.1 && (
+            <g transform={`translate(${leftCartX + cartWidth / 2}, ${trackY - 20})`} filter="url(#momConArrowGlow)">
+              <line x1={0} y1={0} x2={leftVel * 6} y2={0} stroke="url(#momConArrowBlue)" strokeWidth={4} strokeLinecap="round" />
+              <polygon points={`${leftVel * 6},0 ${leftVel * 6 + (leftVel > 0 ? -10 : 10)},-6 ${leftVel * 6 + (leftVel > 0 ? -10 : 10)},6`} fill="#60a5fa" />
+            </g>
+          )}
+          {!isCompressed && Math.abs(rightVel) > 0.1 && (
+            <g transform={`translate(${rightCartX + cartWidth / 2}, ${trackY - 20})`} filter="url(#momConArrowGlow)">
+              <line x1={0} y1={0} x2={rightVel * 6} y2={0} stroke="url(#momConArrowOrange)" strokeWidth={4} strokeLinecap="round" />
+              <polygon points={`${rightVel * 6},0 ${rightVel * 6 + (rightVel > 0 ? -10 : 10)},-6 ${rightVel * 6 + (rightVel > 0 ? -10 : 10)},6`} fill="#fdba74" />
+            </g>
+          )}
+
+          {/* Momentum display removed - moved outside SVG */}
+
+          {/* Total momentum badge with glow */}
+          <g transform="translate(310, 15)">
+            <rect x={0} y={0} width={75} height={32} rx={8}
+                  fill={Math.abs(totalMomentum) < 0.5 ? 'rgba(34,197,94,0.2)' : '#1e293b'}
+                  stroke={Math.abs(totalMomentum) < 0.5 ? '#22c55e' : '#334155'} strokeWidth={1.5} />
+            {Math.abs(totalMomentum) < 0.5 && (
+              <rect x={0} y={0} width={75} height={32} rx={8} fill="none" stroke="#22c55e" strokeWidth={1} opacity={0.5}>
+                <animate attributeName="opacity" values="0.3;0.6;0.3" dur="1.5s" repeatCount="indefinite" />
+              </rect>
+            )}
+            <text x={37} y={14} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="system-ui">Total p</text>
+            <text x={37} y={26} textAnchor="middle" fill={Math.abs(totalMomentum) < 0.5 ? '#4ade80' : '#f1f5f9'}
+                  fontSize={12} fontWeight="700" fontFamily="monospace">
+              {totalMomentum.toFixed(1)}
             </text>
           </g>
+        </svg>
+
+        {/* External velocity labels using typo system */}
+        {!isCompressed && Math.abs(leftVel) > 0.1 && (
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              left: `${leftCartCenterX}%`,
+              top: '28px',
+              transform: 'translateX(-50%)',
+              fontSize: typo.label,
+            }}
+          >
+            <span className="text-blue-400 font-semibold bg-slate-900/80 px-2 py-0.5 rounded">
+              v = {Math.abs(leftVel).toFixed(1)} m/s
+            </span>
+          </div>
         )}
         {!isCompressed && Math.abs(rightVel) > 0.1 && (
-          <g transform={`translate(${rightCartX + cartWidth / 2}, ${trackY - 20})`}>
-            <line x1={0} y1={0} x2={rightVel * 6} y2={0} stroke="#f97316" strokeWidth={3} strokeLinecap="round" />
-            <polygon points={`${rightVel * 6},0 ${rightVel * 6 + (rightVel > 0 ? -8 : 8)},-5 ${rightVel * 6 + (rightVel > 0 ? -8 : 8)},5`} fill="#f97316" />
-            <text x={rightVel * 3} y={-10} textAnchor="middle" fill="#f97316" fontSize={11} fontWeight="600">
-              v = {Math.abs(rightVel).toFixed(1)}
-            </text>
-          </g>
+          <div
+            className="absolute pointer-events-none"
+            style={{
+              left: `${rightCartCenterX}%`,
+              top: '28px',
+              transform: 'translateX(-50%)',
+              fontSize: typo.label,
+            }}
+          >
+            <span className="text-orange-400 font-semibold bg-slate-900/80 px-2 py-0.5 rounded">
+              v = {Math.abs(rightVel).toFixed(1)} m/s
+            </span>
+          </div>
         )}
 
-        {/* Momentum display */}
-        <g transform="translate(20, 220)">
-          <text x={0} y={0} fill="#94a3b8" fontSize={12} fontWeight="600" fontFamily="system-ui">
-            Momentum (p = mv)
-          </text>
-          <rect x={0} y={8} width={100} height={8} rx={4} fill="#1e293b" />
-          <rect x={50 - Math.min(50, Math.abs(momentumLeft) * 3)} y={8} width={Math.min(50, Math.abs(momentumLeft) * 3)} height={8} rx={4} fill="#3b82f6" />
-          <text x={110} y={16} fill="#3b82f6" fontSize={11} fontWeight="600" fontFamily="monospace">
-            p₁ = {momentumLeft.toFixed(1)}
-          </text>
+        {/* Track label outside SVG */}
+        <div
+          className="absolute pointer-events-none text-slate-500"
+          style={{
+            right: '8px',
+            bottom: '28px',
+            fontSize: typo.label,
+          }}
+        >
+          {hasFriction ? 'Carpet (friction)' : 'Frictionless track'}
+        </div>
 
-          <rect x={180} y={8} width={100} height={8} rx={4} fill="#1e293b" />
-          <rect x={230} y={8} width={Math.min(50, Math.abs(momentumRight) * 3)} height={8} rx={4} fill="#f97316" />
-          <text x={290} y={16} fill="#f97316" fontSize={11} fontWeight="600" fontFamily="monospace">
-            p₂ = {momentumRight.toFixed(1)}
-          </text>
-        </g>
-
-        {/* Total momentum badge */}
-        <g transform="translate(310, 15)">
-          <rect x={0} y={0} width={75} height={32} rx={8} fill={Math.abs(totalMomentum) < 0.5 ? 'rgba(34,197,94,0.15)' : '#1e293b'}
-                stroke={Math.abs(totalMomentum) < 0.5 ? '#22c55e' : '#334155'} strokeWidth={1} />
-          <text x={37} y={14} textAnchor="middle" fill="#64748b" fontSize={9} fontFamily="system-ui">Σp</text>
-          <text x={37} y={26} textAnchor="middle" fill={Math.abs(totalMomentum) < 0.5 ? '#22c55e' : '#f1f5f9'}
-                fontSize={12} fontWeight="700" fontFamily="monospace">
-            {totalMomentum.toFixed(1)}
-          </text>
-        </g>
-      </svg>
+        {/* Momentum display outside SVG */}
+        <div
+          className="absolute left-4 pointer-events-none"
+          style={{
+            bottom: '8px',
+            fontSize: typo.label,
+          }}
+        >
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-2">
+              <span className="text-slate-400 font-medium">p = mv</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-16 h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-blue-500 rounded-full transition-all"
+                  style={{ width: `${Math.min(100, Math.abs(momentumLeft) * 10)}%`, marginLeft: momentumLeft < 0 ? 'auto' : 0 }}
+                />
+              </div>
+              <span className="text-blue-400 font-mono font-semibold">p1={momentumLeft.toFixed(1)}</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-16 h-2 bg-slate-800 rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-orange-500 rounded-full transition-all"
+                  style={{ width: `${Math.min(100, Math.abs(momentumRight) * 10)}%` }}
+                />
+              </div>
+              <span className="text-orange-400 font-mono font-semibold">p2={momentumRight.toFixed(1)}</span>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 
@@ -833,74 +1043,265 @@ const MomentumConservationRenderer: React.FC<MomentumConservationRendererProps> 
       };
     }, []);
 
+    // Fixed star positions to avoid re-randomization on re-render
+    const starPositions = React.useMemo(() =>
+      [...Array(40)].map((_, i) => ({
+        cx: (i * 37 + 13) % 400,
+        cy: (i * 23 + 7) % 260,
+        r: 0.5 + (i % 3) * 0.5,
+        opacity: 0.3 + (i % 5) * 0.15
+      })), []
+    );
+
     return (
       <div className="flex flex-col items-center p-6">
         <h2 className="text-2xl font-bold text-amber-400 mb-4">Rocket Propulsion Lab</h2>
 
-        <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-lg">
+        <div className="bg-slate-800/50 rounded-2xl p-4 mb-4 w-full max-w-lg relative">
           <svg width="100%" height="260" viewBox="0 0 400 260" className="block">
-            <rect width="400" height="260" fill="#0a0a15" />
+            <defs>
+              {/* Premium rocket body gradient */}
+              <radialGradient id="momConRocketBody" cx="40%" cy="30%" r="70%" fx="30%" fy="20%">
+                <stop offset="0%" stopColor="#93c5fd" />
+                <stop offset="25%" stopColor="#60a5fa" />
+                <stop offset="50%" stopColor="#3b82f6" />
+                <stop offset="75%" stopColor="#2563eb" />
+                <stop offset="100%" stopColor="#1e40af" />
+              </radialGradient>
 
-            {/* Stars */}
-            {[...Array(30)].map((_, i) => (
-              <circle key={i} cx={Math.random() * 400} cy={Math.random() * 260} r={1} fill="#fff" opacity={0.5 + Math.random() * 0.5} />
+              {/* Rocket nose gradient */}
+              <linearGradient id="momConRocketNose" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#60a5fa" />
+                <stop offset="50%" stopColor="#93c5fd" />
+                <stop offset="100%" stopColor="#bfdbfe" />
+              </linearGradient>
+
+              {/* Rocket tail/fin gradient */}
+              <linearGradient id="momConRocketTail" x1="100%" y1="0%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#1e40af" />
+                <stop offset="50%" stopColor="#1d4ed8" />
+                <stop offset="100%" stopColor="#2563eb" />
+              </linearGradient>
+
+              {/* Window gradient */}
+              <radialGradient id="momConWindow" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#7dd3fc" />
+                <stop offset="40%" stopColor="#38bdf8" />
+                <stop offset="80%" stopColor="#0ea5e9" />
+                <stop offset="100%" stopColor="#0284c7" />
+              </radialGradient>
+
+              {/* Flame gradient - outer */}
+              <radialGradient id="momConFlameOuter" cx="80%" cy="50%" r="80%">
+                <stop offset="0%" stopColor="#fbbf24" />
+                <stop offset="30%" stopColor="#f97316" />
+                <stop offset="60%" stopColor="#ea580c" />
+                <stop offset="100%" stopColor="#c2410c" stopOpacity="0.5" />
+              </radialGradient>
+
+              {/* Flame gradient - inner */}
+              <radialGradient id="momConFlameInner" cx="80%" cy="50%" r="60%">
+                <stop offset="0%" stopColor="#fef3c7" />
+                <stop offset="30%" stopColor="#fde68a" />
+                <stop offset="60%" stopColor="#fbbf24" />
+                <stop offset="100%" stopColor="#f97316" />
+              </radialGradient>
+
+              {/* Exhaust particle gradient */}
+              <radialGradient id="momConExhaust" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#fbbf24" />
+                <stop offset="40%" stopColor="#f97316" />
+                <stop offset="80%" stopColor="#ea580c" />
+                <stop offset="100%" stopColor="#c2410c" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Momentum arrow gradients */}
+              <linearGradient id="momConRocketArrowExhaust" x1="100%" y1="0%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#fdba74" />
+                <stop offset="50%" stopColor="#f97316" />
+                <stop offset="100%" stopColor="#ea580c" />
+              </linearGradient>
+
+              <linearGradient id="momConRocketArrowForward" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#60a5fa" />
+                <stop offset="50%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#93c5fd" />
+              </linearGradient>
+
+              {/* Glow filters */}
+              <filter id="momConRocketGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+
+              <filter id="momConFlameGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+
+              <filter id="momConExhaustGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+
+              <filter id="momConStarGlow" x="-200%" y="-200%" width="500%" height="500%">
+                <feGaussianBlur stdDeviation="1.5" result="blur" />
+                <feComposite in="SourceGraphic" in2="blur" operator="over" />
+              </filter>
+
+              {/* Space background gradient */}
+              <radialGradient id="momConSpaceBg" cx="50%" cy="50%" r="70%">
+                <stop offset="0%" stopColor="#0f172a" />
+                <stop offset="50%" stopColor="#0a0f1a" />
+                <stop offset="100%" stopColor="#020617" />
+              </radialGradient>
+            </defs>
+
+            {/* Space background */}
+            <rect width="400" height="260" fill="url(#momConSpaceBg)" />
+
+            {/* Stars with glow */}
+            {starPositions.map((star, i) => (
+              <circle
+                key={i}
+                cx={star.cx}
+                cy={star.cy}
+                r={star.r}
+                fill="#fff"
+                opacity={star.opacity}
+                filter={i % 5 === 0 ? "url(#momConStarGlow)" : undefined}
+              />
             ))}
 
-            {/* Exhaust particles */}
+            {/* Distant nebula effect */}
+            <ellipse cx={320} cy={60} rx={50} ry={30} fill="#3b82f6" opacity={0.05} />
+            <ellipse cx={80} cy={200} rx={40} ry={25} fill="#f97316" opacity={0.04} />
+
+            {/* Exhaust particles with premium glow */}
             {exhaustParticles.map(p => (
-              <circle key={p.id} cx={p.x} cy={p.y} r={4} fill="#f97316" opacity={0.8}>
-                <animate attributeName="opacity" from="0.8" to="0" dur="0.5s" />
-              </circle>
+              <g key={p.id} filter="url(#momConExhaustGlow)">
+                <circle cx={p.x} cy={p.y} r={6} fill="url(#momConExhaust)" opacity={0.9}>
+                  <animate attributeName="opacity" from="0.9" to="0" dur="0.6s" />
+                  <animate attributeName="r" from="6" to="3" dur="0.6s" />
+                </circle>
+              </g>
             ))}
 
-            {/* Rocket */}
-            <g transform={`translate(${rocketPos}, 130)`}>
-              {/* Body */}
-              <ellipse cx={0} cy={0} rx={25} ry={15} fill="#3b82f6" />
-              {/* Nose */}
-              <polygon points="25,0 40,-8 40,8" fill="#60a5fa" />
-              {/* Tail */}
-              <polygon points="-25,-10 -35,-20 -25,-5" fill="#1e40af" />
-              <polygon points="-25,10 -35,20 -25,5" fill="#1e40af" />
-              {/* Window */}
-              <circle cx={10} cy={0} r={6} fill="#0ea5e9" />
-              <circle cx={10} cy={0} r={4} fill="#38bdf8" />
-              {/* Flame when firing */}
+            {/* Rocket with premium styling */}
+            <g transform={`translate(${rocketPos}, 130)`} filter="url(#momConRocketGlow)">
+              {/* Engine glow when firing */}
               {isFiring && (
-                <g transform="translate(-30, 0)">
-                  <ellipse cx={0} cy={0} rx={15} ry={8} fill="#f97316">
-                    <animate attributeName="rx" values="15;20;15" dur="0.1s" repeatCount="indefinite" />
+                <ellipse cx={-25} cy={0} rx={8} ry={12} fill="#f97316" opacity={0.3}>
+                  <animate attributeName="opacity" values="0.2;0.4;0.2" dur="0.15s" repeatCount="indefinite" />
+                </ellipse>
+              )}
+
+              {/* Tail fins with 3D effect */}
+              <polygon points="-25,-10 -38,-22 -25,-5" fill="url(#momConRocketTail)" />
+              <polygon points="-25,-10 -38,-22 -32,-16" fill="rgba(255,255,255,0.1)" />
+              <polygon points="-25,10 -38,22 -25,5" fill="url(#momConRocketTail)" />
+              <polygon points="-25,5 -38,22 -32,16" fill="rgba(0,0,0,0.2)" />
+
+              {/* Main body with 3D gradient */}
+              <ellipse cx={0} cy={0} rx={28} ry={16} fill="url(#momConRocketBody)" />
+              {/* Body highlight */}
+              <ellipse cx={-5} cy={-6} rx={18} ry={5} fill="rgba(255,255,255,0.15)" />
+              {/* Body shadow */}
+              <ellipse cx={0} cy={8} rx={20} ry={4} fill="rgba(0,0,0,0.2)" />
+
+              {/* Nose cone with highlight */}
+              <polygon points="28,0 45,-10 45,10" fill="url(#momConRocketNose)" />
+              <polygon points="28,-3 45,-10 45,-2" fill="rgba(255,255,255,0.3)" />
+
+              {/* Window with 3D effect */}
+              <circle cx={10} cy={0} r={7} fill="#0c4a6e" />
+              <circle cx={10} cy={0} r={6} fill="url(#momConWindow)" />
+              <ellipse cx={8} cy={-2} rx={3} ry={2} fill="rgba(255,255,255,0.4)" />
+
+              {/* Premium flame when firing */}
+              {isFiring && (
+                <g transform="translate(-30, 0)" filter="url(#momConFlameGlow)">
+                  {/* Outer flame */}
+                  <ellipse cx={-5} cy={0} rx={22} ry={10} fill="url(#momConFlameOuter)">
+                    <animate attributeName="rx" values="18;25;18" dur="0.08s" repeatCount="indefinite" />
+                    <animate attributeName="ry" values="9;12;9" dur="0.1s" repeatCount="indefinite" />
                   </ellipse>
-                  <ellipse cx={-5} cy={0} rx={8} ry={4} fill="#fbbf24" />
+                  {/* Middle flame */}
+                  <ellipse cx={0} cy={0} rx={14} ry={7} fill="url(#momConFlameInner)">
+                    <animate attributeName="rx" values="12;16;12" dur="0.07s" repeatCount="indefinite" />
+                  </ellipse>
+                  {/* Inner core */}
+                  <ellipse cx={3} cy={0} rx={6} ry={3} fill="#fef3c7">
+                    <animate attributeName="rx" values="5;8;5" dur="0.06s" repeatCount="indefinite" />
+                  </ellipse>
                 </g>
               )}
             </g>
 
-            {/* Labels */}
-            <text x={200} y={30} textAnchor="middle" fill="#94a3b8" fontSize={12}>
-              Exhaust goes LEFT ← | Rocket goes RIGHT →
-            </text>
-
-            {/* Momentum arrows */}
+            {/* Premium momentum arrows */}
             {isFiring && (
               <>
-                <g transform={`translate(${rocketPos - 60}, 180)`}>
-                  <line x1={0} y1={0} x2={-40} y2={0} stroke="#f97316" strokeWidth={3} />
-                  <polygon points="-40,0 -30,-6 -30,6" fill="#f97316" />
-                  <text x={-20} y={20} textAnchor="middle" fill="#f97316" fontSize={11}>p exhaust</text>
+                <g transform={`translate(${rocketPos - 65}, 190)`} filter="url(#momConRocketGlow)">
+                  <line x1={0} y1={0} x2={-45} y2={0} stroke="url(#momConRocketArrowExhaust)" strokeWidth={4} strokeLinecap="round" />
+                  <polygon points="-45,0 -35,-7 -35,7" fill="#fdba74" />
                 </g>
-                <g transform={`translate(${rocketPos + 40}, 180)`}>
-                  <line x1={0} y1={0} x2={40} y2={0} stroke="#3b82f6" strokeWidth={3} />
-                  <polygon points="40,0 30,-6 30,6" fill="#3b82f6" />
-                  <text x={20} y={20} textAnchor="middle" fill="#3b82f6" fontSize={11}>p rocket</text>
+                <g transform={`translate(${rocketPos + 50}, 190)`} filter="url(#momConRocketGlow)">
+                  <line x1={0} y1={0} x2={45} y2={0} stroke="url(#momConRocketArrowForward)" strokeWidth={4} strokeLinecap="round" />
+                  <polygon points="45,0 35,-7 35,7" fill="#93c5fd" />
                 </g>
               </>
             )}
-
-            <text x={200} y={240} textAnchor="middle" fill="#64748b" fontSize={11}>
-              Total momentum = 0 (conserved!)
-            </text>
           </svg>
+
+          {/* External labels using typo system */}
+          <div
+            className="absolute top-2 left-1/2 -translate-x-1/2 pointer-events-none"
+            style={{ fontSize: typo.label }}
+          >
+            <span className="text-slate-400 bg-slate-900/80 px-3 py-1 rounded-full">
+              Exhaust goes LEFT  |  Rocket goes RIGHT
+            </span>
+          </div>
+
+          {/* Momentum labels */}
+          {isFiring && (
+            <>
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  left: `${((rocketPos - 85) / 400) * 100}%`,
+                  bottom: '20px',
+                  fontSize: typo.label,
+                }}
+              >
+                <span className="text-orange-400 font-semibold bg-slate-900/80 px-2 py-0.5 rounded">
+                  p exhaust
+                </span>
+              </div>
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  left: `${((rocketPos + 70) / 400) * 100}%`,
+                  bottom: '20px',
+                  fontSize: typo.label,
+                }}
+              >
+                <span className="text-blue-400 font-semibold bg-slate-900/80 px-2 py-0.5 rounded">
+                  p rocket
+                </span>
+              </div>
+            </>
+          )}
+
+          {/* Conservation badge */}
+          <div
+            className="absolute bottom-2 left-1/2 -translate-x-1/2 pointer-events-none"
+            style={{ fontSize: typo.label }}
+          >
+            <span className="text-emerald-400 bg-emerald-900/30 border border-emerald-500/30 px-3 py-1 rounded-full font-medium">
+              Total momentum = 0 (conserved!)
+            </span>
+          </div>
         </div>
 
         <div className="flex gap-3 mb-4">

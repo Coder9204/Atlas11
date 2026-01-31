@@ -341,7 +341,7 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
     }
   ];
 
-  // Render energy bar chart
+  // Render energy bar chart with premium SVG graphics
   const renderEnergyChart = (soluteIndex: number, showLabels: boolean = true) => {
     const solute = solutes[soluteIndex];
     const maxEnergy = 100;
@@ -350,199 +350,560 @@ const EndothermicExothermicRenderer: React.FC<EndothermicExothermicRendererProps
     const netHeight = Math.abs(solute.netEnergy) / maxEnergy * 150;
 
     return (
-      <svg viewBox="0 0 300 200" style={{ width: '100%', maxWidth: '300px' }}>
-        {/* Background */}
-        <rect width="300" height="200" fill="#1e293b" rx="8" />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <svg viewBox="0 0 300 180" style={{ width: '100%', maxWidth: '300px' }}>
+          <defs>
+            {/* Premium background gradient */}
+            <linearGradient id="endoChartBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="30%" stopColor="#1e293b" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
 
-        {/* Zero line */}
-        <line x1="40" y1="100" x2="280" y2="100" stroke="#475569" strokeWidth="2" strokeDasharray="4" />
-        <text x="30" y="104" fontSize="10" fill="#94a3b8" textAnchor="end">0</text>
+            {/* Bond energy gradient - warm orange tones */}
+            <linearGradient id="endoBondGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#ea580c" />
+              <stop offset="75%" stopColor="#c2410c" />
+              <stop offset="100%" stopColor="#9a3412" />
+            </linearGradient>
 
-        {/* Bond Energy (always positive - absorbs) */}
-        <rect
-          x="60"
-          y={100 - bondHeight}
-          width="50"
-          height={bondHeight}
-          fill="#f97316"
-          rx="4"
-        />
+            {/* Hydration energy gradient - cool blue tones */}
+            <linearGradient id="endoHydrationGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0284c7" />
+              <stop offset="25%" stopColor="#0369a1" />
+              <stop offset="50%" stopColor="#1d4ed8" />
+              <stop offset="75%" stopColor="#1e40af" />
+              <stop offset="100%" stopColor="#1e3a8a" />
+            </linearGradient>
+
+            {/* Net energy gradient - endothermic (green/cyan for cooling) */}
+            <linearGradient id="endoNetEndoGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="25%" stopColor="#10b981" />
+              <stop offset="50%" stopColor="#059669" />
+              <stop offset="75%" stopColor="#047857" />
+              <stop offset="100%" stopColor="#065f46" />
+            </linearGradient>
+
+            {/* Net energy gradient - exothermic (red/orange for heating) */}
+            <linearGradient id="endoNetExoGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="25%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="75%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            {/* Glow filter for bars */}
+            <filter id="endoBarGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Zero line glow */}
+            <filter id="endoZeroGlow" x="-20%" y="-100%" width="140%" height="300%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Grid pattern for background */}
+            <pattern id="endoGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.5" />
+            </pattern>
+          </defs>
+
+          {/* Background with gradient */}
+          <rect width="300" height="180" fill="url(#endoChartBg)" rx="8" />
+
+          {/* Grid overlay */}
+          <rect x="40" y="20" width="240" height="140" fill="url(#endoGridPattern)" opacity="0.3" />
+
+          {/* Zero line with glow */}
+          <line x1="40" y1="90" x2="280" y2="90" stroke="#64748b" strokeWidth="2" strokeDasharray="6,4" filter="url(#endoZeroGlow)" />
+
+          {/* Bond Energy bar with gradient and glow */}
+          <rect
+            x="60"
+            y={90 - bondHeight * 0.9}
+            width="50"
+            height={bondHeight * 0.9}
+            fill="url(#endoBondGradient)"
+            rx="6"
+            filter="url(#endoBarGlow)"
+          />
+          {/* Bond bar highlight */}
+          <rect
+            x="62"
+            y={92 - bondHeight * 0.9}
+            width="8"
+            height={bondHeight * 0.9 - 4}
+            fill="rgba(255,255,255,0.15)"
+            rx="3"
+          />
+
+          {/* Hydration Energy bar with gradient and glow */}
+          <rect
+            x="125"
+            y={90}
+            width="50"
+            height={hydrationHeight * 0.9}
+            fill="url(#endoHydrationGradient)"
+            rx="6"
+            filter="url(#endoBarGlow)"
+          />
+          {/* Hydration bar highlight */}
+          <rect
+            x="127"
+            y={92}
+            width="8"
+            height={hydrationHeight * 0.9 - 4}
+            fill="rgba(255,255,255,0.15)"
+            rx="3"
+          />
+
+          {/* Net Energy bar with dynamic gradient and glow */}
+          <rect
+            x="190"
+            y={solute.netEnergy > 0 ? 90 - netHeight * 0.9 : 90}
+            width="50"
+            height={netHeight * 0.9}
+            fill={solute.netEnergy > 0 ? 'url(#endoNetEndoGradient)' : 'url(#endoNetExoGradient)'}
+            rx="6"
+            filter="url(#endoBarGlow)"
+          />
+          {/* Net bar highlight */}
+          <rect
+            x="192"
+            y={solute.netEnergy > 0 ? 92 - netHeight * 0.9 : 92}
+            width="8"
+            height={netHeight * 0.9 - 4}
+            fill="rgba(255,255,255,0.15)"
+            rx="3"
+          />
+
+          {/* Energy flow arrows */}
+          <path
+            d={`M 85 ${90 - bondHeight * 0.9 - 12} L 85 ${90 - bondHeight * 0.9 - 2}`}
+            stroke="#fbbf24"
+            strokeWidth="2"
+            markerEnd="url(#endoArrowUp)"
+          />
+          <path
+            d={`M 150 ${90 + hydrationHeight * 0.9 + 2} L 150 ${90 + hydrationHeight * 0.9 + 12}`}
+            stroke="#3b82f6"
+            strokeWidth="2"
+            markerEnd="url(#endoArrowDown)"
+          />
+
+          {/* Arrow markers */}
+          <defs>
+            <marker id="endoArrowUp" markerWidth="6" markerHeight="6" refX="3" refY="6" orient="auto">
+              <path d="M 0 6 L 3 0 L 6 6" fill="none" stroke="#fbbf24" strokeWidth="1.5" />
+            </marker>
+            <marker id="endoArrowDown" markerWidth="6" markerHeight="6" refX="3" refY="0" orient="auto">
+              <path d="M 0 0 L 3 6 L 6 0" fill="none" stroke="#3b82f6" strokeWidth="1.5" />
+            </marker>
+          </defs>
+        </svg>
+
+        {/* Labels outside SVG using typo system */}
         {showLabels && (
-          <>
-            <text x="85" y={90 - bondHeight} fontSize="9" fill="#f97316" textAnchor="middle">
-              +{solute.bondEnergy.toFixed(1)}
-            </text>
-            <text x="85" y="185" fontSize="9" fill="#94a3b8" textAnchor="middle">Bond</text>
-            <text x="85" y="195" fontSize="8" fill="#94a3b8" textAnchor="middle">Breaking</text>
-          </>
+          <div style={{ width: '100%', maxWidth: '300px', marginTop: '8px' }}>
+            {/* Title and type */}
+            <div style={{ textAlign: 'center', marginBottom: '12px' }}>
+              <div style={{ fontSize: typo.body, fontWeight: 'bold', color: '#e2e8f0' }}>
+                {solute.name}
+              </div>
+              <div style={{
+                fontSize: typo.small,
+                color: solute.netEnergy > 0 ? '#60a5fa' : '#f87171',
+                fontWeight: '600'
+              }}>
+                {solute.netEnergy > 0 ? 'ENDOTHERMIC (Cools)' : 'EXOTHERMIC (Heats)'}
+              </div>
+            </div>
+
+            {/* Bar labels */}
+            <div style={{ display: 'flex', justifyContent: 'space-around', textAlign: 'center' }}>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: typo.small, color: '#f97316', fontWeight: '600' }}>
+                  +{solute.bondEnergy.toFixed(1)}
+                </div>
+                <div style={{ fontSize: typo.label, color: '#94a3b8' }}>Bond Breaking</div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{ fontSize: typo.small, color: '#3b82f6', fontWeight: '600' }}>
+                  {solute.hydrationEnergy.toFixed(1)}
+                </div>
+                <div style={{ fontSize: typo.label, color: '#94a3b8' }}>Hydration</div>
+              </div>
+              <div style={{ flex: 1 }}>
+                <div style={{
+                  fontSize: typo.small,
+                  color: solute.netEnergy > 0 ? '#22c55e' : '#ef4444',
+                  fontWeight: '600'
+                }}>
+                  {solute.netEnergy > 0 ? '+' : ''}{solute.netEnergy.toFixed(1)}
+                </div>
+                <div style={{ fontSize: typo.label, color: '#94a3b8' }}>Net kJ/mol</div>
+              </div>
+            </div>
+          </div>
         )}
-
-        {/* Hydration Energy (always negative - releases) */}
-        <rect
-          x="125"
-          y={100}
-          width="50"
-          height={hydrationHeight}
-          fill="#3b82f6"
-          rx="4"
-        />
-        {showLabels && (
-          <>
-            <text x="150" y={110 + hydrationHeight} fontSize="9" fill="#3b82f6" textAnchor="middle">
-              {solute.hydrationEnergy.toFixed(1)}
-            </text>
-            <text x="150" y="185" fontSize="9" fill="#94a3b8" textAnchor="middle">Hydration</text>
-            <text x="150" y="195" fontSize="8" fill="#94a3b8" textAnchor="middle">Energy</text>
-          </>
-        )}
-
-        {/* Net Energy */}
-        <rect
-          x="190"
-          y={solute.netEnergy > 0 ? 100 - netHeight : 100}
-          width="50"
-          height={netHeight}
-          fill={solute.netEnergy > 0 ? '#22c55e' : '#ef4444'}
-          rx="4"
-        />
-        {showLabels && (
-          <>
-            <text
-              x="215"
-              y={solute.netEnergy > 0 ? 90 - netHeight : 110 + netHeight}
-              fontSize="9"
-              fill={solute.netEnergy > 0 ? '#22c55e' : '#ef4444'}
-              textAnchor="middle"
-            >
-              {solute.netEnergy > 0 ? '+' : ''}{solute.netEnergy.toFixed(1)}
-            </text>
-            <text x="215" y="185" fontSize="9" fill="#94a3b8" textAnchor="middle">Net</text>
-            <text x="215" y="195" fontSize="8" fill="#94a3b8" textAnchor="middle">kJ/mol</text>
-          </>
-        )}
-
-        {/* Labels */}
-        <text x="150" y="20" fontSize="11" fill="#e2e8f0" textAnchor="middle" fontWeight="bold">
-          {solute.name}
-        </text>
-        <text x="150" y="35" fontSize="10" fill="#94a3b8" textAnchor="middle">
-          {solute.netEnergy > 0 ? 'ENDOTHERMIC (Cools)' : 'EXOTHERMIC (Heats)'}
-        </text>
-
-        {/* Axis labels */}
-        <text x="30" y="60" fontSize="8" fill="#94a3b8" textAnchor="end">Absorbs</text>
-        <text x="30" y="150" fontSize="8" fill="#94a3b8" textAnchor="end">Releases</text>
-      </svg>
+      </div>
     );
   };
 
-  // Render beaker visualization
+  // Render beaker visualization with premium SVG graphics
   const renderBeakerVisualization = () => {
     const solute = solutes[selectedSolute];
 
     return (
-      <svg viewBox="0 0 300 250" style={{ width: '100%', maxWidth: '300px' }}>
-        {/* Background */}
-        <rect width="300" height="250" fill="#0f172a" rx="8" />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center' }}>
+        <svg viewBox="0 0 300 220" style={{ width: '100%', maxWidth: '300px' }}>
+          <defs>
+            {/* Premium lab background gradient */}
+            <linearGradient id="endoLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0a0f1a" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-        {/* Beaker */}
-        <path
-          d="M 80 60 L 80 180 Q 80 200 100 200 L 200 200 Q 220 200 220 180 L 220 60"
-          fill="none"
-          stroke="#64748b"
-          strokeWidth="4"
-        />
+            {/* Glass beaker gradient with depth */}
+            <linearGradient id="endoBeakerGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.8" />
+              <stop offset="15%" stopColor="#64748b" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#475569" stopOpacity="0.4" />
+              <stop offset="85%" stopColor="#64748b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.8" />
+            </linearGradient>
 
-        {/* Water */}
-        <rect
-          x="84"
-          y="80"
-          width="132"
-          height="116"
-          fill={getTempColor(waterTemp)}
-          opacity="0.6"
-          rx="2"
-        />
+            {/* Cold water gradient (blue tones) */}
+            <linearGradient id="endoWaterCold" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.5" />
+              <stop offset="25%" stopColor="#3b82f6" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#2563eb" stopOpacity="0.65" />
+              <stop offset="75%" stopColor="#1d4ed8" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0.75" />
+            </linearGradient>
 
-        {/* Dissolved color change */}
-        {mixProgress > 0 && (
+            {/* Warm water gradient (orange/red tones) */}
+            <linearGradient id="endoWaterHot" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5" />
+              <stop offset="25%" stopColor="#f97316" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#ea580c" stopOpacity="0.65" />
+              <stop offset="75%" stopColor="#dc2626" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.75" />
+            </linearGradient>
+
+            {/* Neutral water gradient */}
+            <linearGradient id="endoWaterNeutral" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.4" />
+              <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#0891b2" stopOpacity="0.55" />
+              <stop offset="75%" stopColor="#0e7490" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#155e75" stopOpacity="0.65" />
+            </linearGradient>
+
+            {/* Temperature thermometer gradient - cold */}
+            <linearGradient id="endoThermoCold" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="25%" stopColor="#2563eb" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#93c5fd" />
+            </linearGradient>
+
+            {/* Temperature thermometer gradient - hot */}
+            <linearGradient id="endoThermoHot" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#991b1b" />
+              <stop offset="25%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+
+            {/* Heat flow glow filter */}
+            <filter id="endoHeatGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Particle glow filter */}
+            <filter id="endoParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Water surface shimmer */}
+            <filter id="endoWaterShimmer" x="0" y="0" width="100%" height="100%">
+              <feTurbulence type="fractalNoise" baseFrequency="0.02" numOctaves="3" result="noise" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale="2" xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+
+            {/* Progress bar gradient */}
+            <linearGradient id="endoProgressGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="25%" stopColor="#16a34a" />
+              <stop offset="50%" stopColor="#15803d" />
+              <stop offset="75%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
+
+            {/* Solute particle gradients */}
+            <radialGradient id="endoSoluteParticle" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+              <stop offset="30%" stopColor={solute.color} stopOpacity="0.8" />
+              <stop offset="70%" stopColor={solute.color} stopOpacity="0.9" />
+              <stop offset="100%" stopColor={solute.color} stopOpacity="1" />
+            </radialGradient>
+
+            {/* Heat arrow gradients */}
+            <linearGradient id="endoHeatArrowIn" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+              <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#93c5fd" stopOpacity="1" />
+              <stop offset="70%" stopColor="#60a5fa" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </linearGradient>
+
+            <linearGradient id="endoHeatArrowOut" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
+              <stop offset="30%" stopColor="#f87171" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#fca5a5" stopOpacity="1" />
+              <stop offset="70%" stopColor="#f87171" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Arrow markers with glow */}
+            <marker id="endoArrowBlue" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+              <path d="M 0 0 L 8 4 L 0 8 Z" fill="#60a5fa" />
+            </marker>
+            <marker id="endoArrowRed" markerWidth="8" markerHeight="8" refX="4" refY="4" orient="auto">
+              <path d="M 0 0 L 8 4 L 0 8 Z" fill="#f87171" />
+            </marker>
+          </defs>
+
+          {/* Premium lab background */}
+          <rect width="300" height="220" fill="url(#endoLabBg)" rx="8" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="endoLabGrid" width="15" height="15" patternUnits="userSpaceOnUse">
+            <path d="M 15 0 L 0 0 0 15" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+          </pattern>
+          <rect width="300" height="220" fill="url(#endoLabGrid)" rx="8" />
+
+          {/* Beaker with glass effect */}
+          <path
+            d="M 80 50 L 80 165 Q 80 185 100 185 L 200 185 Q 220 185 220 165 L 220 50"
+            fill="none"
+            stroke="url(#endoBeakerGlass)"
+            strokeWidth="5"
+            strokeLinecap="round"
+          />
+          {/* Beaker inner highlight */}
+          <path
+            d="M 85 55 L 85 162 Q 85 180 102 180"
+            fill="none"
+            stroke="rgba(255,255,255,0.1)"
+            strokeWidth="2"
+          />
+
+          {/* Water with temperature-based gradient */}
           <rect
             x="84"
-            y={196 - mixProgress * 1.16}
+            y="70"
             width="132"
-            height={mixProgress * 1.16}
-            fill={solute.color}
-            opacity={0.4}
+            height="112"
+            fill={waterTemp < 20 ? 'url(#endoWaterCold)' : waterTemp > 30 ? 'url(#endoWaterHot)' : 'url(#endoWaterNeutral)'}
             rx="2"
           />
-        )}
 
-        {/* Particles */}
-        {particles.map(p => (
-          <circle
-            key={p.id}
-            cx={p.x}
-            cy={p.y + (p.dissolving ? animationFrame % 30 : 0)}
-            r={p.dissolving ? 3 : 5}
-            fill={solute.color}
-            opacity={p.dissolving ? 0.5 : 1}
+          {/* Water surface highlight */}
+          <ellipse
+            cx="150"
+            cy="72"
+            rx="60"
+            ry="4"
+            fill="rgba(255,255,255,0.15)"
           />
-        ))}
 
-        {/* Temperature indicator */}
-        <g transform="translate(250, 80)">
-          <rect x="-15" y="0" width="30" height="100" fill="#1f2937" stroke="#374151" rx="4" />
-          <rect
-            x="-10"
-            y={100 - (waterTemp / 50) * 90}
-            width="20"
-            height={(waterTemp / 50) * 90}
-            fill={getTempColor(waterTemp)}
-            rx="2"
-          />
-          <text x="0" y="-10" textAnchor="middle" fontSize="14" fill="#e2e8f0" fontWeight="bold">
-            {waterTemp.toFixed(1)}C
-          </text>
-        </g>
+          {/* Dissolved solute spreading effect */}
+          {mixProgress > 0 && (
+            <>
+              <rect
+                x="84"
+                y={182 - mixProgress * 1.1}
+                width="132"
+                height={mixProgress * 1.1}
+                fill={solute.color}
+                opacity={0.35}
+                rx="2"
+              />
+              {/* Swirl effect during mixing */}
+              {isMixing && (
+                <ellipse
+                  cx={150 + Math.sin(animationFrame / 8) * 20}
+                  cy={140 + Math.cos(animationFrame / 6) * 15}
+                  rx="25"
+                  ry="15"
+                  fill={solute.color}
+                  opacity={0.2}
+                  transform={`rotate(${animationFrame * 3} 150 140)`}
+                />
+              )}
+            </>
+          )}
 
-        {/* Heat flow arrows */}
-        {isMixing && (
-          <g>
-            {solute.netEnergy > 0 ? (
-              // Endothermic - arrows pointing IN (absorbing heat)
-              <>
-                <path d={`M 60 ${140 + Math.sin(animationFrame / 10) * 5} L 80 140`} stroke="#3b82f6" strokeWidth="2" markerEnd="url(#arrowBlue)" />
-                <path d={`M 240 ${140 + Math.sin(animationFrame / 10 + 1) * 5} L 220 140`} stroke="#3b82f6" strokeWidth="2" markerEnd="url(#arrowBlue)" />
-              </>
-            ) : (
-              // Exothermic - arrows pointing OUT (releasing heat)
-              <>
-                <path d={`M 80 140 L 60 ${140 + Math.sin(animationFrame / 10) * 5}`} stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrowRed)" />
-                <path d={`M 220 140 L 240 ${140 + Math.sin(animationFrame / 10 + 1) * 5}`} stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrowRed)" />
-              </>
-            )}
+          {/* Particles with glow */}
+          {particles.map(p => (
+            <g key={p.id}>
+              <circle
+                cx={p.x}
+                cy={p.y + (p.dissolving ? animationFrame % 30 : 0)}
+                r={p.dissolving ? 4 : 6}
+                fill="url(#endoSoluteParticle)"
+                opacity={p.dissolving ? 0.4 : 0.9}
+                filter="url(#endoParticleGlow)"
+              />
+            </g>
+          ))}
+
+          {/* Premium temperature indicator */}
+          <g transform="translate(255, 60)">
+            {/* Thermometer body */}
+            <rect x="-12" y="0" width="24" height="110" fill="#1e293b" stroke="#475569" strokeWidth="2" rx="6" />
+            {/* Scale marks */}
+            {[0, 25, 50].map((temp, i) => (
+              <g key={temp}>
+                <line x1="-8" y1={100 - i * 40} x2="8" y2={100 - i * 40} stroke="#64748b" strokeWidth="1" />
+              </g>
+            ))}
+            {/* Mercury column with temperature gradient */}
+            <rect
+              x="-6"
+              y={100 - (waterTemp / 50) * 90}
+              width="12"
+              height={(waterTemp / 50) * 90}
+              fill={waterTemp < 25 ? 'url(#endoThermoCold)' : 'url(#endoThermoHot)'}
+              rx="3"
+            />
+            {/* Thermometer bulb */}
+            <circle cx="0" cy="105" r="10" fill={waterTemp < 25 ? '#3b82f6' : '#ef4444'} />
           </g>
-        )}
 
-        {/* Arrow markers */}
-        <defs>
-          <marker id="arrowBlue" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-            <path d="M 0 0 L 6 3 L 0 6 Z" fill="#3b82f6" />
-          </marker>
-          <marker id="arrowRed" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-            <path d="M 0 0 L 6 3 L 0 6 Z" fill="#ef4444" />
-          </marker>
-        </defs>
+          {/* Heat flow arrows with glow */}
+          {isMixing && (
+            <g filter="url(#endoHeatGlow)">
+              {solute.netEnergy > 0 ? (
+                // Endothermic - arrows pointing IN (absorbing heat)
+                <>
+                  <path
+                    d={`M 50 ${130 + Math.sin(animationFrame / 10) * 8} L 78 130`}
+                    stroke="url(#endoHeatArrowIn)"
+                    strokeWidth="4"
+                    markerEnd="url(#endoArrowBlue)"
+                  />
+                  <path
+                    d={`M 250 ${130 + Math.sin(animationFrame / 10 + 2) * 8} L 222 130`}
+                    stroke="url(#endoHeatArrowIn)"
+                    strokeWidth="4"
+                    markerEnd="url(#endoArrowBlue)"
+                  />
+                  {/* Secondary arrows */}
+                  <path
+                    d={`M 55 ${155 + Math.sin(animationFrame / 10 + 1) * 6} L 78 152`}
+                    stroke="url(#endoHeatArrowIn)"
+                    strokeWidth="3"
+                    markerEnd="url(#endoArrowBlue)"
+                    opacity="0.6"
+                  />
+                  <path
+                    d={`M 245 ${155 + Math.sin(animationFrame / 10 + 3) * 6} L 222 152`}
+                    stroke="url(#endoHeatArrowIn)"
+                    strokeWidth="3"
+                    markerEnd="url(#endoArrowBlue)"
+                    opacity="0.6"
+                  />
+                </>
+              ) : (
+                // Exothermic - arrows pointing OUT (releasing heat)
+                <>
+                  <path
+                    d={`M 78 130 L 50 ${130 + Math.sin(animationFrame / 10) * 8}`}
+                    stroke="url(#endoHeatArrowOut)"
+                    strokeWidth="4"
+                    markerEnd="url(#endoArrowRed)"
+                  />
+                  <path
+                    d={`M 222 130 L 250 ${130 + Math.sin(animationFrame / 10 + 2) * 8}`}
+                    stroke="url(#endoHeatArrowOut)"
+                    strokeWidth="4"
+                    markerEnd="url(#endoArrowRed)"
+                  />
+                  {/* Secondary arrows */}
+                  <path
+                    d={`M 78 152 L 55 ${155 + Math.sin(animationFrame / 10 + 1) * 6}`}
+                    stroke="url(#endoHeatArrowOut)"
+                    strokeWidth="3"
+                    markerEnd="url(#endoArrowRed)"
+                    opacity="0.6"
+                  />
+                  <path
+                    d={`M 222 152 L 245 ${155 + Math.sin(animationFrame / 10 + 3) * 6}`}
+                    stroke="url(#endoHeatArrowOut)"
+                    strokeWidth="3"
+                    markerEnd="url(#endoArrowRed)"
+                    opacity="0.6"
+                  />
+                </>
+              )}
+            </g>
+          )}
 
-        {/* Progress bar */}
-        <rect x="84" y="210" width="132" height="8" fill="#1f2937" rx="4" />
-        <rect x="84" y="210" width={mixProgress * 1.32} height="8" fill="#22c55e" rx="4" />
+          {/* Progress bar with gradient */}
+          <rect x="84" y="195" width="132" height="10" fill="#1e293b" stroke="#334155" rx="5" />
+          <rect x="85" y="196" width={Math.max(0, mixProgress * 1.30)} height="8" fill="url(#endoProgressGradient)" rx="4" />
+        </svg>
 
-        {/* Status text */}
-        <text x="150" y="235" textAnchor="middle" fontSize="11" fill="#94a3b8">
-          {isMixing ? `Dissolving: ${mixProgress.toFixed(0)}%` : mixProgress >= 100 ? 'Complete!' : 'Ready to mix'}
-        </text>
-      </svg>
+        {/* Labels outside SVG using typo system */}
+        <div style={{ width: '100%', maxWidth: '300px', marginTop: '8px' }}>
+          {/* Temperature display */}
+          <div style={{
+            display: 'flex',
+            justifyContent: 'space-between',
+            alignItems: 'center',
+            marginBottom: '8px'
+          }}>
+            <div style={{
+              fontSize: typo.bodyLarge,
+              fontWeight: 'bold',
+              color: waterTemp < 25 ? '#60a5fa' : waterTemp > 25 ? '#f87171' : '#e2e8f0'
+            }}>
+              {waterTemp.toFixed(1)}°C
+            </div>
+            <div style={{ fontSize: typo.small, color: '#94a3b8' }}>
+              {isMixing ? `Dissolving: ${mixProgress.toFixed(0)}%` : mixProgress >= 100 ? 'Complete!' : 'Ready to mix'}
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 

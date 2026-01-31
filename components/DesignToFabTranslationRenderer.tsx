@@ -334,19 +334,23 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
 
   const renderVisualization = (interactive: boolean, showSpacingRule: boolean = false) => {
     const width = 500;
-    const height = 450;
+    const height = 520;
     const parasitics = calculateParasitics();
 
     // Layout dimensions
     const layoutX = 50;
-    const layoutY = 50;
+    const layoutY = 60;
     const layoutW = 400;
-    const layoutH = 200;
+    const layoutH = 180;
 
     // Wire visualization
-    const wireY1 = layoutY + 60;
-    const wireY2 = layoutY + 140;
+    const wireY1 = layoutY + 50;
+    const wireY2 = layoutY + 120;
     const scaledWidth = Math.max(5, wireWidth * 20);
+
+    // Cross-section dimensions
+    const crossSectionY = 280;
+    const crossSectionH = 100;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -355,37 +359,153 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #0f172a 0%, #1e1b4b 100%)', borderRadius: '12px', maxWidth: '550px' }}
+          style={{ borderRadius: '12px', maxWidth: '550px' }}
         >
           <defs>
-            <pattern id="gridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
-              <path d="M 20 0 L 0 0 0 20" fill="none" stroke={colors.textMuted} strokeWidth="0.5" opacity="0.3" />
+            {/* Premium background gradient */}
+            <linearGradient id="fabBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#1e1b4b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Grid pattern */}
+            <pattern id="fabGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#475569" strokeWidth="0.3" opacity="0.4" />
             </pattern>
-            <linearGradient id="metal1Grad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.metal1} />
-              <stop offset="100%" stopColor="#1d4ed8" />
+
+            {/* Metal 1 layer gradient - copper tones with 5 stops */}
+            <linearGradient id="fabMetal1Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="25%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
             </linearGradient>
-            <linearGradient id="metal2Grad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.metal2} />
-              <stop offset="100%" stopColor="#6d28d9" />
+
+            {/* Metal 2 layer gradient - purple tones with 5 stops */}
+            <linearGradient id="fabMetal2Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#c084fc" />
+              <stop offset="25%" stopColor="#a855f7" />
+              <stop offset="50%" stopColor="#9333ea" />
+              <stop offset="75%" stopColor="#7e22ce" />
+              <stop offset="100%" stopColor="#6b21a8" />
             </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur" />
+
+            {/* Via gradient - green with metallic sheen */}
+            <linearGradient id="fabViaGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="30%" stopColor="#22c55e" />
+              <stop offset="70%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+
+            {/* Substrate layer gradient */}
+            <linearGradient id="fabSubstrateGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Oxide layer gradient */}
+            <linearGradient id="fabOxideGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#334155" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#1e293b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Polysilicon gate gradient */}
+            <linearGradient id="fabPolyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="25%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="75%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </linearGradient>
+
+            {/* Diffusion layer gradient */}
+            <linearGradient id="fabDiffusionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fdba74" />
+              <stop offset="25%" stopColor="#fb923c" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="75%" stopColor="#ea580c" />
+              <stop offset="100%" stopColor="#c2410c" />
+            </linearGradient>
+
+            {/* Mask pattern gradient */}
+            <linearGradient id="fabMaskGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Premium wire glow filter */}
+            <filter id="fabWireGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
-                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Via glow filter */}
+            <filter id="fabViaGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Error glow filter for DRC violations */}
+            <filter id="fabErrorGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#ef4444" floodOpacity="0.6" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="colorBlur" />
+              <feMerge>
+                <feMergeNode in="colorBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Success glow filter */}
+            <filter id="fabSuccessGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor="#10b981" floodOpacity="0.5" result="color" />
+              <feComposite in="color" in2="blur" operator="in" result="colorBlur" />
+              <feMerge>
+                <feMergeNode in="colorBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow for depth */}
+            <filter id="fabInnerShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feOffset dx="0" dy="2" />
+              <feGaussianBlur stdDeviation="2" result="offset-blur" />
+              <feComposite operator="out" in="SourceGraphic" in2="offset-blur" result="inverse" />
+              <feFlood floodColor="black" floodOpacity="0.3" result="color" />
+              <feComposite operator="in" in="color" in2="inverse" result="shadow" />
+              <feComposite operator="over" in="shadow" in2="SourceGraphic" />
+            </filter>
+
+            {/* Process step indicator glow */}
+            <filter id="fabProcessGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
 
-          {/* Title */}
-          <text x={250} y={25} fill={colors.accent} fontSize={14} fontWeight="bold" textAnchor="middle">
-            IC Layout View - {metalLayer === 1 ? 'Metal 1' : 'Metal 2'} Layer
-          </text>
+          {/* Premium dark background */}
+          <rect width={width} height={height} fill="url(#fabBgGradient)" />
 
           {/* Layout area with grid */}
-          <rect x={layoutX} y={layoutY} width={layoutW} height={layoutH} fill={colors.substrate} rx={4} />
-          <rect x={layoutX} y={layoutY} width={layoutW} height={layoutH} fill="url(#gridPattern)" rx={4} />
+          <rect x={layoutX} y={layoutY} width={layoutW} height={layoutH} fill="url(#fabSubstrateGrad)" rx={6} filter="url(#fabInnerShadow)" />
+          <rect x={layoutX} y={layoutY} width={layoutW} height={layoutH} fill="url(#fabGridPattern)" rx={6} />
 
           {/* Wire 1 (horizontal) */}
           <rect
@@ -393,9 +513,9 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
             y={wireY1}
             width={wireLength * 2}
             height={scaledWidth}
-            fill={metalLayer === 1 ? 'url(#metal1Grad)' : 'url(#metal2Grad)'}
+            fill={metalLayer === 1 ? 'url(#fabMetal1Grad)' : 'url(#fabMetal2Grad)'}
             rx={2}
-            filter={isViolation && showSpacingRule ? undefined : 'url(#glow)'}
+            filter={isViolation && showSpacingRule ? 'url(#fabErrorGlow)' : 'url(#fabWireGlow)'}
           />
 
           {/* Wire 2 (horizontal, below) */}
@@ -404,9 +524,9 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
             y={wireY2}
             width={wireLength * 1.5}
             height={scaledWidth}
-            fill={metalLayer === 1 ? 'url(#metal1Grad)' : 'url(#metal2Grad)'}
+            fill={metalLayer === 1 ? 'url(#fabMetal1Grad)' : 'url(#fabMetal2Grad)'}
             rx={2}
-            filter={isViolation && showSpacingRule ? undefined : 'url(#glow)'}
+            filter={isViolation && showSpacingRule ? 'url(#fabErrorGlow)' : 'url(#fabWireGlow)'}
           />
 
           {/* Vertical connecting wire with vias */}
@@ -415,143 +535,283 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
             y={wireY1}
             width={scaledWidth}
             height={wireY2 - wireY1 + scaledWidth}
-            fill={metalLayer === 1 ? 'url(#metal2Grad)' : 'url(#metal1Grad)'}
+            fill={metalLayer === 1 ? 'url(#fabMetal2Grad)' : 'url(#fabMetal1Grad)'}
             rx={2}
+            filter="url(#fabWireGlow)"
           />
 
-          {/* Vias */}
+          {/* Vias with premium styling */}
           {[...Array(numVias)].map((_, i) => (
             <g key={`via${i}`}>
               <rect
                 x={layoutX + 10 + wireLength * 2 - scaledWidth + 2}
-                y={wireY1 + 2 + i * 20}
-                width={scaledWidth - 4}
-                height={scaledWidth - 4}
-                fill={colors.via}
+                y={wireY1 + 2 + i * 18}
+                width={Math.max(4, scaledWidth - 4)}
+                height={Math.max(4, scaledWidth - 4)}
+                fill="url(#fabViaGrad)"
                 rx={1}
+                filter="url(#fabViaGlow)"
               />
-              <text
-                x={layoutX + 10 + wireLength * 2}
-                y={wireY1 + 10 + i * 20}
-                fill={colors.textPrimary}
-                fontSize={6}
-                textAnchor="middle"
-              >
-                V
-              </text>
             </g>
           ))}
 
           {/* Spacing rule violation indicator */}
           {showSpacingRule && (
             <g>
-              {/* Spacing measurement */}
+              {/* Spacing measurement line */}
               <line
                 x1={layoutX + 10}
-                y1={wireY1 + scaledWidth + 5}
+                y1={wireY1 + scaledWidth + 8}
                 x2={layoutX + 30}
-                y2={wireY1 + scaledWidth + 5}
+                y2={wireY1 + scaledWidth + 8}
                 stroke={isViolation ? colors.error : colors.success}
                 strokeWidth={2}
                 strokeDasharray={isViolation ? '5,3' : 'none'}
+                filter={isViolation ? 'url(#fabErrorGlow)' : 'url(#fabSuccessGlow)'}
               />
-              <text
-                x={layoutX + 20}
-                y={wireY1 + scaledWidth + 20}
-                fill={isViolation ? colors.error : colors.success}
-                fontSize={10}
-                textAnchor="middle"
-              >
-                {isViolation ? 'DRC VIOLATION!' : `Spacing: ${(spacingRule).toFixed(2)}um`}
-              </text>
 
-              {/* Minimum spacing rule line */}
+              {/* Minimum spacing rule indicator */}
               <line
-                x1={layoutX + layoutW - 50}
+                x1={layoutX + layoutW - 60}
                 y1={wireY1}
-                x2={layoutX + layoutW - 50}
+                x2={layoutX + layoutW - 60}
                 y2={wireY1 + spacingRule * 50}
                 stroke={colors.warning}
-                strokeWidth={2}
+                strokeWidth={3}
+                filter="url(#fabProcessGlow)"
               />
-              <text
-                x={layoutX + layoutW - 30}
-                y={wireY1 + spacingRule * 25}
+              <circle
+                cx={layoutX + layoutW - 60}
+                cy={wireY1}
+                r={4}
                 fill={colors.warning}
-                fontSize={9}
-              >
-                Min: {spacingRule}um
-              </text>
+                filter="url(#fabProcessGlow)"
+              />
+              <circle
+                cx={layoutX + layoutW - 60}
+                cy={wireY1 + spacingRule * 50}
+                r={4}
+                fill={colors.warning}
+                filter="url(#fabProcessGlow)"
+              />
             </g>
           )}
 
-          {/* Layer legend */}
-          <g transform="translate(50, 270)">
-            <rect x={0} y={0} width={150} height={90} fill="rgba(0,0,0,0.5)" rx={8} />
-            <text x={10} y={20} fill={colors.accent} fontSize={11} fontWeight="bold">Layer Legend</text>
+          {/* Cross-section view */}
+          <g transform={`translate(${layoutX}, ${crossSectionY})`}>
+            {/* Section label - moved outside SVG via typo system below */}
 
-            <rect x={10} y={30} width={20} height={8} fill={colors.metal1} rx={2} />
-            <text x={35} y={38} fill={colors.textSecondary} fontSize={10}>Metal 1</text>
+            {/* Silicon substrate */}
+            <rect x={0} y={crossSectionH - 20} width={layoutW} height={20} fill="url(#fabSubstrateGrad)" rx={2} />
 
-            <rect x={10} y={45} width={20} height={8} fill={colors.metal2} rx={2} />
-            <text x={35} y={53} fill={colors.textSecondary} fontSize={10}>Metal 2</text>
+            {/* Oxide layers */}
+            <rect x={0} y={crossSectionH - 45} width={layoutW} height={25} fill="url(#fabOxideGrad)" rx={2} />
+            <rect x={0} y={crossSectionH - 70} width={layoutW} height={25} fill="url(#fabOxideGrad)" opacity={0.7} rx={2} />
 
-            <rect x={10} y={60} width={10} height={10} fill={colors.via} rx={1} />
-            <text x={35} y={70} fill={colors.textSecondary} fontSize={10}>Via</text>
+            {/* Diffusion regions */}
+            <rect x={40} y={crossSectionH - 25} width={60} height={10} fill="url(#fabDiffusionGrad)" rx={2} filter="url(#fabWireGlow)" />
+            <rect x={150} y={crossSectionH - 25} width={60} height={10} fill="url(#fabDiffusionGrad)" rx={2} filter="url(#fabWireGlow)" />
+
+            {/* Polysilicon gate */}
+            <rect x={90} y={crossSectionH - 35} width={40} height={15} fill="url(#fabPolyGrad)" rx={2} filter="url(#fabWireGlow)" />
+
+            {/* Metal 1 layer */}
+            <rect x={30} y={crossSectionH - 55} width={80} height={10} fill="url(#fabMetal1Grad)" rx={2} filter="url(#fabWireGlow)" />
+            <rect x={160} y={crossSectionH - 55} width={80} height={10} fill="url(#fabMetal1Grad)" rx={2} filter="url(#fabWireGlow)" />
+
+            {/* Metal 2 layer */}
+            <rect x={50} y={crossSectionH - 80} width={150} height={12} fill="url(#fabMetal2Grad)" rx={2} filter="url(#fabWireGlow)" />
+
+            {/* Vias connecting layers */}
+            <rect x={55} y={crossSectionH - 68} width={8} height={15} fill="url(#fabViaGrad)" rx={1} filter="url(#fabViaGlow)" />
+            <rect x={180} y={crossSectionH - 68} width={8} height={15} fill="url(#fabViaGrad)" rx={1} filter="url(#fabViaGlow)" />
+
+            {/* Contacts to diffusion */}
+            <rect x={60} y={crossSectionH - 45} width={6} height={12} fill="url(#fabViaGrad)" rx={1} filter="url(#fabViaGlow)" />
+            <rect x={170} y={crossSectionH - 45} width={6} height={12} fill="url(#fabViaGrad)" rx={1} filter="url(#fabViaGlow)" />
+
+            {/* Contact to gate */}
+            <rect x={105} y={crossSectionH - 45} width={6} height={10} fill="url(#fabViaGrad)" rx={1} filter="url(#fabViaGlow)" />
+
+            {/* Mask visualization (when spacing rule shown) */}
+            {showSpacingRule && (
+              <g>
+                <rect x={280} y={0} width={100} height={crossSectionH - 5} fill="url(#fabMaskGrad)" rx={4} stroke={colors.warning} strokeWidth={1} strokeDasharray="4,2" />
+                {/* Mask apertures */}
+                <rect x={290} y={20} width={30} height={25} fill="url(#fabBgGradient)" rx={2} />
+                <rect x={340} y={20} width={30} height={25} fill="url(#fabBgGradient)" rx={2} />
+                <rect x={305} y={55} width={40} height={20} fill="url(#fabBgGradient)" rx={2} />
+              </g>
+            )}
           </g>
 
-          {/* Parasitic values */}
-          <g transform="translate(220, 270)">
-            <rect x={0} y={0} width={220} height={130} fill="rgba(0,0,0,0.5)" rx={8} />
-            <text x={10} y={20} fill={colors.accent} fontSize={11} fontWeight="bold">Extracted Parasitics</text>
-
-            <text x={10} y={42} fill={colors.textSecondary} fontSize={10}>Wire Resistance:</text>
-            <text x={130} y={42} fill={colors.textPrimary} fontSize={10}>{parasitics.resistance} ohm</text>
-
-            <text x={10} y={58} fill={colors.textSecondary} fontSize={10}>Via Resistance:</text>
-            <text x={130} y={58} fill={colors.textPrimary} fontSize={10}>{parasitics.viaResistance} ohm</text>
-
-            <text x={10} y={74} fill={colors.textSecondary} fontSize={10}>Capacitance:</text>
-            <text x={130} y={74} fill={colors.textPrimary} fontSize={10}>{parasitics.capacitance} fF</text>
-
-            <text x={10} y={90} fill={colors.textSecondary} fontSize={10}>RC Delay:</text>
-            <text x={130} y={90} fill={colors.warning} fontSize={10} fontWeight="bold">{parasitics.rcDelay} ps</text>
-
-            <text x={10} y={106} fill={colors.textSecondary} fontSize={10}>Inductance:</text>
-            <text x={130} y={106} fill={colors.textPrimary} fontSize={10}>{parasitics.inductance} pH</text>
-
-            <text x={10} y={122} fill={colors.textSecondary} fontSize={10}>L matters above:</text>
-            <text x={130} y={122} fill={colors.textPrimary} fontSize={10}>{parasitics.criticalFreq} GHz</text>
+          {/* Process step indicators */}
+          <g transform={`translate(${layoutX + layoutW + 20}, ${layoutY})`}>
+            {/* Process flow arrows */}
+            {['Diffusion', 'Poly Gate', 'Metal 1', 'Via', 'Metal 2'].map((step, i) => (
+              <g key={step} transform={`translate(0, ${i * 28})`}>
+                <circle
+                  cx={8}
+                  cy={8}
+                  r={6}
+                  fill={i <= (metalLayer === 1 ? 2 : 4) ? (i === (metalLayer === 1 ? 2 : 4) ? colors.accent : colors.success) : colors.textMuted}
+                  filter={i === (metalLayer === 1 ? 2 : 4) ? 'url(#fabProcessGlow)' : undefined}
+                />
+                {i < 4 && (
+                  <line
+                    x1={8}
+                    y1={14}
+                    x2={8}
+                    y2={28}
+                    stroke={i < (metalLayer === 1 ? 2 : 4) ? colors.success : colors.textMuted}
+                    strokeWidth={2}
+                    strokeDasharray={i >= (metalLayer === 1 ? 2 : 4) ? '2,2' : 'none'}
+                  />
+                )}
+              </g>
+            ))}
           </g>
 
           {/* Timing impact visualization */}
-          <g transform="translate(50, 380)">
-            <text x={0} y={0} fill={colors.textSecondary} fontSize={10}>Signal Timing Impact</text>
-            <rect x={0} y={10} width={400} height={30} fill="rgba(0,0,0,0.3)" rx={4} />
+          <g transform={`translate(${layoutX}, ${crossSectionY + crossSectionH + 15})`}>
+            <rect x={0} y={10} width={layoutW} height={35} fill="rgba(0,0,0,0.4)" rx={6} />
 
             {/* Ideal signal */}
             <path
-              d="M 10,35 L 10,15 L 100,15 L 100,35 L 200,35 L 200,15 L 300,15 L 300,35"
+              d="M 15,38 L 15,18 L 90,18 L 90,38 L 180,38 L 180,18 L 270,18 L 270,38 L 360,38"
               fill="none"
               stroke={colors.success}
               strokeWidth={2}
-              opacity={0.5}
+              opacity={0.6}
             />
 
             {/* Actual signal with RC delay */}
             <path
-              d={`M 10,35 Q 20,35 ${20 + parseFloat(parasitics.rcDelay) * 0.5},15 L 100,15
-                  Q 110,15 ${110 + parseFloat(parasitics.rcDelay) * 0.5},35 L 200,35
-                  Q 210,35 ${210 + parseFloat(parasitics.rcDelay) * 0.5},15 L 300,15`}
+              d={`M 15,38 Q 25,38 ${25 + parseFloat(parasitics.rcDelay) * 0.4},18 L 90,18
+                  Q 100,18 ${100 + parseFloat(parasitics.rcDelay) * 0.4},38 L 180,38
+                  Q 190,38 ${190 + parseFloat(parasitics.rcDelay) * 0.4},18 L 270,18
+                  Q 280,18 ${280 + parseFloat(parasitics.rcDelay) * 0.4},38 L 360,38`}
               fill="none"
               stroke={colors.error}
               strokeWidth={2}
+              filter="url(#fabErrorGlow)"
             />
-
-            <text x={320} y={20} fill={colors.success} fontSize={8}>Ideal</text>
-            <text x={320} y={35} fill={colors.error} fontSize={8}>Actual</text>
           </g>
         </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '550px',
+          padding: '0 16px',
+          marginTop: '-8px'
+        }}>
+          <div style={{ flex: 1 }}>
+            <span style={{
+              fontSize: typo.label,
+              color: colors.accent,
+              fontWeight: 700,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px'
+            }}>
+              IC Layout View - {metalLayer === 1 ? 'Metal 1' : 'Metal 2'} Layer
+            </span>
+          </div>
+          <div style={{ flex: 1, textAlign: 'right' }}>
+            <span style={{
+              fontSize: typo.label,
+              color: colors.textMuted,
+              fontWeight: 600
+            }}>
+              Cross-Section View
+            </span>
+          </div>
+        </div>
+
+        {/* Parasitic values panel outside SVG */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: typo.elementGap,
+          width: '100%',
+          maxWidth: '550px',
+          padding: typo.cardPadding,
+          background: colors.bgCard,
+          borderRadius: '8px',
+          marginTop: typo.elementGap,
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.label, color: colors.textMuted, marginBottom: '4px' }}>Wire R</div>
+            <div style={{ fontSize: typo.body, color: colors.textPrimary, fontWeight: 700 }}>{parasitics.resistance} ohm</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.label, color: colors.textMuted, marginBottom: '4px' }}>Capacitance</div>
+            <div style={{ fontSize: typo.body, color: colors.textPrimary, fontWeight: 700 }}>{parasitics.capacitance} fF</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.label, color: colors.textMuted, marginBottom: '4px' }}>RC Delay</div>
+            <div style={{ fontSize: typo.body, color: colors.warning, fontWeight: 700 }}>{parasitics.rcDelay} ps</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.label, color: colors.textMuted, marginBottom: '4px' }}>Via R</div>
+            <div style={{ fontSize: typo.body, color: colors.textPrimary, fontWeight: 700 }}>{parasitics.viaResistance} ohm</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.label, color: colors.textMuted, marginBottom: '4px' }}>Inductance</div>
+            <div style={{ fontSize: typo.body, color: colors.textPrimary, fontWeight: 700 }}>{parasitics.inductance} pH</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.label, color: colors.textMuted, marginBottom: '4px' }}>L Critical</div>
+            <div style={{ fontSize: typo.body, color: colors.textPrimary, fontWeight: 700 }}>{parasitics.criticalFreq} GHz</div>
+          </div>
+        </div>
+
+        {/* Spacing rule status */}
+        {showSpacingRule && (
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: typo.elementGap,
+            padding: typo.cardPadding,
+            background: isViolation ? 'rgba(239, 68, 68, 0.15)' : 'rgba(16, 185, 129, 0.15)',
+            borderRadius: '8px',
+            borderLeft: `4px solid ${isViolation ? colors.error : colors.success}`,
+            width: '100%',
+            maxWidth: '550px',
+          }}>
+            <span style={{ fontSize: typo.body, color: isViolation ? colors.error : colors.success, fontWeight: 700 }}>
+              {isViolation ? 'DRC VIOLATION' : 'DRC PASSED'}
+            </span>
+            <span style={{ fontSize: typo.small, color: colors.textSecondary }}>
+              Min spacing: {spacingRule.toFixed(2)}um
+            </span>
+          </div>
+        )}
+
+        {/* Legend outside SVG */}
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: typo.elementGap,
+          justifyContent: 'center',
+          width: '100%',
+          maxWidth: '550px',
+        }}>
+          {[
+            { label: 'Metal 1', color: colors.metal1 },
+            { label: 'Metal 2', color: colors.metal2 },
+            { label: 'Via', color: colors.via },
+            { label: 'Poly', color: colors.poly },
+            { label: 'Diffusion', color: colors.diffusion },
+          ].map(({ label, color }) => (
+            <div key={label} style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: '12px', height: '12px', borderRadius: '3px', background: color }} />
+              <span style={{ fontSize: typo.label, color: colors.textSecondary }}>{label}</span>
+            </div>
+          ))}
+        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
@@ -561,11 +821,12 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: metalLayer === 1 ? colors.metal1 : colors.metal2,
+                background: metalLayer === 1 ? `linear-gradient(135deg, ${colors.metal1} 0%, #1d4ed8 100%)` : `linear-gradient(135deg, ${colors.metal2} 0%, #6d28d9 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
+                boxShadow: `0 4px 12px ${metalLayer === 1 ? colors.metal1 : colors.metal2}40`,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -581,7 +842,7 @@ const DesignToFabTranslationRenderer: React.FC<DesignToFabTranslationRendererPro
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >

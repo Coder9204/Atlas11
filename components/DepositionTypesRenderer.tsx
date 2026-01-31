@@ -372,8 +372,8 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
     const sideFilm = result.sidewallThickness * filmScale;
     const bottomFilm = result.bottomThickness * filmScale;
 
-    const depositionColor = depositionType === 'pvd' ? colors.pvd :
-      depositionType === 'cvd' ? colors.cvd : colors.ald;
+    // Animation time for particles
+    const animPhase = (depositionTime / 100) * Math.PI * 2;
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
@@ -382,246 +382,569 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px' }}
+          style={{ borderRadius: '12px', maxWidth: '550px' }}
         >
           <defs>
-            <linearGradient id="substrateGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#334155" />
+            {/* Premium lab background gradient */}
+            <linearGradient id="depLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Subtle grid pattern for lab background */}
+            <pattern id="depLabGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+              <rect width="25" height="25" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+
+            {/* Premium substrate silicon gradient with depth */}
+            <linearGradient id="depSubstrateGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="15%" stopColor="#334155" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="85%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Substrate side highlight for 3D effect */}
+            <linearGradient id="depSubstrateHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#64748b" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#475569" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#334155" stopOpacity="0" />
+            </linearGradient>
+
+            {/* PVD metal target gradient - brushed metal look */}
+            <linearGradient id="depPvdTarget" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#64748b" />
+              <stop offset="60%" stopColor="#475569" />
+              <stop offset="80%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* PVD film gradient */}
+            <linearGradient id="depPvdFilm" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="30%" stopColor="#3b82f6" />
+              <stop offset="70%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
+
+            {/* CVD film gradient - purple tones */}
+            <linearGradient id="depCvdFilm" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#c084fc" />
+              <stop offset="30%" stopColor="#a855f7" />
+              <stop offset="70%" stopColor="#9333ea" />
+              <stop offset="100%" stopColor="#7e22ce" />
+            </linearGradient>
+
+            {/* ALD film gradient - green tones */}
+            <linearGradient id="depAldFilm" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="30%" stopColor="#22c55e" />
+              <stop offset="70%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+
+            {/* Chamber metallic gradient */}
+            <linearGradient id="depChamberMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="25%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="75%" stopColor="#475569" />
               <stop offset="100%" stopColor="#1e293b" />
             </linearGradient>
-            <pattern id="depositionParticles" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
-              <circle cx="10" cy="10" r="2" fill={depositionColor} opacity="0.5" />
-            </pattern>
+
+            {/* Plasma/vapor glow for CVD */}
+            <radialGradient id="depPlasmaGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#e879f9" stopOpacity="0.8" />
+              <stop offset="40%" stopColor="#a855f7" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="#7c3aed" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#5b21b6" stopOpacity="0" />
+            </radialGradient>
+
+            {/* PVD particle glow */}
+            <radialGradient id="depPvdParticleGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
+              <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#1d4ed8" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+            </radialGradient>
+
+            {/* CVD molecule glow */}
+            <radialGradient id="depCvdMoleculeGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#e9d5ff" stopOpacity="1" />
+              <stop offset="40%" stopColor="#a855f7" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#7e22ce" stopOpacity="0" />
+            </radialGradient>
+
+            {/* ALD layer glow */}
+            <radialGradient id="depAldLayerGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#86efac" stopOpacity="1" />
+              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Void warning glow */}
+            <radialGradient id="depVoidGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#020617" />
+              <stop offset="60%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" stopOpacity="0.5" />
+            </radialGradient>
+
+            {/* Coverage meter gradients */}
+            <linearGradient id="depMeterSuccess" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
+
+            <linearGradient id="depMeterWarning" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+
+            <linearGradient id="depMeterError" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#f87171" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Panel background gradient */}
+            <linearGradient id="depPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Glow filters using feGaussianBlur + feMerge pattern */}
+            <filter id="depParticleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="depFilmGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="depPlasmaFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="depVoidFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="depTextGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Film growth animation keyframes via CSS */}
+            <style>{`
+              @keyframes depPulse {
+                0%, 100% { opacity: 0.6; }
+                50% { opacity: 1; }
+              }
+              @keyframes depFloat {
+                0%, 100% { transform: translateY(0); }
+                50% { transform: translateY(-3px); }
+              }
+              @keyframes depPlasmaSwirl {
+                0% { transform: rotate(0deg); }
+                100% { transform: rotate(360deg); }
+              }
+              .dep-particle-anim {
+                animation: depPulse 1s ease-in-out infinite;
+              }
+              .dep-plasma-anim {
+                animation: depPlasmaSwirl 3s linear infinite;
+              }
+            `}</style>
           </defs>
 
-          {/* Title */}
-          <text x={width / 2} y={25} fill={colors.textPrimary} fontSize={14} textAnchor="middle" fontWeight="bold">
-            {depositionType.toUpperCase()} Deposition - Trench Filling
-          </text>
-          <text x={width / 2} y={42} fill={depositionColor} fontSize={11} textAnchor="middle">
-            {depositionType === 'pvd' ? 'Physical Vapor Deposition (Directional)' :
-              depositionType === 'cvd' ? 'Chemical Vapor Deposition (Semi-conformal)' :
-                'Atomic Layer Deposition (Conformal)'}
-          </text>
+          {/* Premium lab background */}
+          <rect width={width} height={height} fill="url(#depLabBg)" />
+          <rect width={width} height={height} fill="url(#depLabGrid)" />
 
-          {/* Source illustration */}
+          {/* Deposition chamber frame */}
+          <rect x={15} y={45} width={width - 30} height={265} rx={8}
+            fill="none" stroke="url(#depChamberMetal)" strokeWidth={2} opacity={0.6} />
+
+          {/* Source illustration with premium graphics */}
           {depositionType === 'pvd' && (
             <g>
-              <rect x={trenchX - 30} y={55} width={60 + scaledWidth} height={20} fill="#4b5563" rx={3} />
-              <text x={trenchX + scaledWidth / 2} y={68} fill={colors.textPrimary} fontSize={8} textAnchor="middle">
-                Metal Target
-              </text>
-              {/* Directional arrows */}
+              {/* PVD Metal Target - premium brushed metal */}
+              <rect x={trenchX - 35} y={50} width={70 + scaledWidth} height={25}
+                fill="url(#depPvdTarget)" rx={4} />
+              <rect x={trenchX - 35} y={50} width={70 + scaledWidth} height={3}
+                fill="#94a3b8" opacity={0.4} rx={1} />
+
+              {/* Sputtering particles with glow */}
               {depositionTime > 0 && depositionTime < 100 && (
-                <>
-                  {[-20, 0, 20, 40].map((offset, i) => (
-                    <line
-                      key={i}
-                      x1={trenchX + offset}
-                      y1={80}
-                      x2={trenchX + offset}
-                      y2={trenchTopY - 5}
-                      stroke={colors.pvd}
-                      strokeWidth={2}
-                      strokeDasharray="4,4"
-                      opacity={0.7}
-                    />
-                  ))}
-                </>
+                <g filter="url(#depParticleGlow)">
+                  {[-25, -10, 5, 20, 35].map((offset, i) => {
+                    const particleY = 78 + ((depositionTime * 0.4 + i * 8) % 35);
+                    return (
+                      <g key={i}>
+                        <circle
+                          cx={trenchX + offset}
+                          cy={particleY}
+                          r={3}
+                          fill="url(#depPvdParticleGlow)"
+                          className="dep-particle-anim"
+                          style={{ animationDelay: `${i * 0.15}s` }}
+                        />
+                        {/* Particle trail */}
+                        <line
+                          x1={trenchX + offset}
+                          y1={particleY - 8}
+                          x2={trenchX + offset}
+                          y2={particleY}
+                          stroke="#3b82f6"
+                          strokeWidth={1.5}
+                          strokeLinecap="round"
+                          opacity={0.5}
+                        />
+                      </g>
+                    );
+                  })}
+                </g>
               )}
             </g>
           )}
+
           {depositionType === 'cvd' && (
             <g>
-              <text x={trenchX + scaledWidth / 2} y={68} fill={colors.cvd} fontSize={9} textAnchor="middle">
-                Gas Precursors (diffuse in all directions)
-              </text>
+              {/* Gas inlet pipes */}
+              <rect x={trenchX - 50} y={50} width={12} height={30} fill="url(#depChamberMetal)" rx={2} />
+              <rect x={trenchX + scaledWidth + 38} y={50} width={12} height={30} fill="url(#depChamberMetal)" rx={2} />
+
+              {/* Plasma/vapor cloud with glow */}
               {depositionTime > 0 && depositionTime < 100 && (
-                <g>
-                  {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle, i) => (
-                    <circle
-                      key={i}
-                      cx={trenchX + scaledWidth / 2 + Math.cos(angle * Math.PI / 180) * 30}
-                      cy={90 + Math.sin(angle * Math.PI / 180) * 20}
-                      r={3}
-                      fill={colors.cvd}
-                      opacity={0.6}
-                    />
-                  ))}
+                <g filter="url(#depPlasmaFilter)">
+                  {/* Central plasma glow */}
+                  <ellipse
+                    cx={trenchX + scaledWidth / 2}
+                    cy={85}
+                    rx={50}
+                    ry={25}
+                    fill="url(#depPlasmaGlow)"
+                    opacity={0.6 + Math.sin(animPhase) * 0.2}
+                  />
+                  {/* Diffusing molecules */}
+                  {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => {
+                    const dist = 25 + Math.sin(animPhase + i) * 10;
+                    return (
+                      <circle
+                        key={i}
+                        cx={trenchX + scaledWidth / 2 + Math.cos(angle * Math.PI / 180) * dist}
+                        cy={85 + Math.sin(angle * Math.PI / 180) * dist * 0.6}
+                        r={4}
+                        fill="url(#depCvdMoleculeGlow)"
+                        opacity={0.7}
+                        className="dep-particle-anim"
+                        style={{ animationDelay: `${i * 0.1}s` }}
+                      />
+                    );
+                  })}
                 </g>
               )}
             </g>
           )}
+
           {depositionType === 'ald' && (
             <g>
-              <text x={trenchX + scaledWidth / 2} y={60} fill={colors.ald} fontSize={9} textAnchor="middle">
-                Precursor A: Saturates surface
-              </text>
-              <text x={trenchX + scaledWidth / 2} y={75} fill={colors.ald} fontSize={9} textAnchor="middle">
-                Precursor B: Reacts to form 1 layer
-              </text>
+              {/* ALD precursor pulse indicators */}
+              <g>
+                {/* Precursor A indicator */}
+                <rect x={trenchX - 60} y={55} width={40} height={20} rx={3}
+                  fill={depositionTime % 20 < 10 ? 'url(#depAldFilm)' : '#1e293b'}
+                  stroke="#22c55e" strokeWidth={1} opacity={0.8} />
+                {/* Precursor B indicator */}
+                <rect x={trenchX + scaledWidth + 20} y={55} width={40} height={20} rx={3}
+                  fill={depositionTime % 20 >= 10 ? 'url(#depAldFilm)' : '#1e293b'}
+                  stroke="#22c55e" strokeWidth={1} opacity={0.8} />
+              </g>
+
+              {/* ALD layer-by-layer visualization */}
               {depositionTime > 0 && depositionTime < 100 && (
-                <g>
-                  {[0, 1, 2, 3, 4].map((i) => (
-                    <rect
-                      key={i}
-                      x={trenchX - 40 + i * 30}
-                      y={85}
-                      width={20}
-                      height={3}
-                      fill={colors.ald}
-                      opacity={0.7}
-                    />
-                  ))}
+                <g filter="url(#depParticleGlow)">
+                  {/* Surface saturation effect */}
+                  {[0, 1, 2, 3, 4, 5].map((i) => {
+                    const layerOpacity = Math.min(1, (depositionTime / 100) * 1.5);
+                    return (
+                      <rect
+                        key={i}
+                        x={trenchX - 50 + i * 25}
+                        y={90 + Math.sin(animPhase + i * 0.5) * 2}
+                        width={20}
+                        height={4}
+                        fill="url(#depAldLayerGlow)"
+                        opacity={layerOpacity * (0.7 + Math.sin(animPhase + i) * 0.3)}
+                        rx={2}
+                      />
+                    );
+                  })}
                 </g>
               )}
             </g>
           )}
 
-          {/* Substrate with trench */}
+          {/* Substrate with trench - premium 3D effect */}
           <g transform={`translate(${trenchX}, ${trenchTopY})`}>
-            {/* Substrate bulk */}
-            <rect x={-60} y={0} width={60} height={scaledDepth + 50} fill="url(#substrateGrad)" />
-            <rect x={scaledWidth} y={0} width={60} height={scaledDepth + 50} fill="url(#substrateGrad)" />
-            <rect x={0} y={scaledDepth} width={scaledWidth} height={50} fill="url(#substrateGrad)" />
+            {/* Substrate bulk with gradient */}
+            <rect x={-60} y={0} width={60} height={scaledDepth + 50} fill="url(#depSubstrateGrad)" />
+            <rect x={scaledWidth} y={0} width={60} height={scaledDepth + 50} fill="url(#depSubstrateGrad)" />
+            <rect x={0} y={scaledDepth} width={scaledWidth} height={50} fill="url(#depSubstrateGrad)" />
 
-            {/* Deposited film on top (left side) */}
+            {/* 3D edge highlights */}
+            <rect x={-60} y={0} width={2} height={scaledDepth + 50} fill="url(#depSubstrateHighlight)" />
+            <rect x={scaledWidth + 58} y={0} width={2} height={scaledDepth + 50} fill="url(#depSubstrateHighlight)" opacity={0.3} />
+
+            {/* Trench walls inner shadow */}
+            <rect x={0} y={0} width={3} height={scaledDepth} fill="#020617" opacity={0.5} />
+            <rect x={scaledWidth - 3} y={0} width={3} height={scaledDepth} fill="#020617" opacity={0.3} />
+
+            {/* Deposited film with gradient and glow */}
             {depositionTime > 0 && (
-              <>
-                <rect x={-60} y={-topFilm} width={60} height={topFilm} fill={depositionColor} opacity={0.8} />
-                <rect x={scaledWidth} y={-topFilm} width={60} height={topFilm} fill={depositionColor} opacity={0.8} />
+              <g filter="url(#depFilmGlow)">
+                {/* Top film - left side */}
+                <rect x={-60} y={-topFilm} width={60} height={topFilm}
+                  fill={depositionType === 'pvd' ? 'url(#depPvdFilm)' :
+                        depositionType === 'cvd' ? 'url(#depCvdFilm)' : 'url(#depAldFilm)'} />
+                {/* Top film - right side */}
+                <rect x={scaledWidth} y={-topFilm} width={60} height={topFilm}
+                  fill={depositionType === 'pvd' ? 'url(#depPvdFilm)' :
+                        depositionType === 'cvd' ? 'url(#depCvdFilm)' : 'url(#depAldFilm)'} />
 
-                {/* PVD overhang effect */}
+                {/* PVD overhang effect with gradient */}
                 {depositionType === 'pvd' && topFilm > 5 && (
                   <>
                     <polygon
                       points={`0,${-topFilm} ${-topFilm * 0.8},${-topFilm} 0,0`}
-                      fill={depositionColor}
-                      opacity={0.8}
+                      fill="url(#depPvdFilm)"
                     />
                     <polygon
                       points={`${scaledWidth},${-topFilm} ${scaledWidth + topFilm * 0.8},${-topFilm} ${scaledWidth},0`}
-                      fill={depositionColor}
-                      opacity={0.8}
+                      fill="url(#depPvdFilm)"
                     />
                   </>
                 )}
 
-                {/* Sidewall film */}
-                <rect x={0} y={0} width={sideFilm} height={scaledDepth} fill={depositionColor} opacity={0.7} />
-                <rect x={scaledWidth - sideFilm} y={0} width={sideFilm} height={scaledDepth} fill={depositionColor} opacity={0.7} />
+                {/* Sidewall film with gradient */}
+                <rect x={0} y={0} width={sideFilm} height={scaledDepth}
+                  fill={depositionType === 'pvd' ? 'url(#depPvdFilm)' :
+                        depositionType === 'cvd' ? 'url(#depCvdFilm)' : 'url(#depAldFilm)'}
+                  opacity={0.85} />
+                <rect x={scaledWidth - sideFilm} y={0} width={sideFilm} height={scaledDepth}
+                  fill={depositionType === 'pvd' ? 'url(#depPvdFilm)' :
+                        depositionType === 'cvd' ? 'url(#depCvdFilm)' : 'url(#depAldFilm)'}
+                  opacity={0.85} />
 
-                {/* Bottom film */}
-                <rect x={sideFilm} y={scaledDepth - bottomFilm} width={scaledWidth - 2 * sideFilm} height={bottomFilm} fill={depositionColor} opacity={0.7} />
+                {/* Bottom film with gradient */}
+                <rect x={sideFilm} y={scaledDepth - bottomFilm} width={scaledWidth - 2 * sideFilm} height={bottomFilm}
+                  fill={depositionType === 'pvd' ? 'url(#depPvdFilm)' :
+                        depositionType === 'cvd' ? 'url(#depCvdFilm)' : 'url(#depAldFilm)'}
+                  opacity={0.85} />
 
                 {/* Void indicator for PVD at high aspect ratio */}
                 {result.voidRisk && (
-                  <g>
+                  <g filter="url(#depVoidFilter)">
                     <ellipse
                       cx={scaledWidth / 2}
                       cy={scaledDepth * 0.4}
                       rx={scaledWidth * 0.3}
                       ry={scaledDepth * 0.2}
-                      fill={colors.bgPrimary}
+                      fill="url(#depVoidGlow)"
                       stroke={colors.error}
                       strokeWidth={2}
                       strokeDasharray="4,2"
                     />
-                    <text x={scaledWidth / 2} y={scaledDepth * 0.4 + 4} fill={colors.error} fontSize={8} textAnchor="middle">
-                      VOID
-                    </text>
                   </g>
                 )}
-              </>
+              </g>
             )}
-
-            {/* Dimension labels */}
-            <text x={scaledWidth / 2} y={scaledDepth + 25} fill={colors.textMuted} fontSize={8} textAnchor="middle">
-              Width: {trenchWidth}nm
-            </text>
-            <text x={-45} y={scaledDepth / 2} fill={colors.textMuted} fontSize={8} textAnchor="middle" transform={`rotate(-90, -45, ${scaledDepth / 2})`}>
-              Depth: {trenchDepth.toFixed(0)}nm
-            </text>
           </g>
 
-          {/* Step coverage meter */}
+          {/* Step coverage meter - premium panel */}
           <g transform="translate(340, 100)">
-            <text x={60} y={0} fill={colors.textSecondary} fontSize={11} textAnchor="middle">Step Coverage</text>
+            <rect x={-5} y={5} width={130} height={115} fill="url(#depPanelBg)" rx={10}
+              stroke="#334155" strokeWidth={1} />
 
-            <rect x={0} y={15} width={120} height={100} fill="rgba(0,0,0,0.4)" rx={8} />
-
-            <text x={10} y={35} fill={colors.textPrimary} fontSize={9}>Top: {(result.topCoverage * 100).toFixed(0)}%</text>
-            <rect x={50} y={25} width={60} height={8} fill="rgba(255,255,255,0.1)" rx={2} />
-            <rect x={50} y={25} width={result.topCoverage * 60} height={8} fill={colors.success} rx={2} />
-
-            <text x={10} y={55} fill={colors.textPrimary} fontSize={9}>Side: {(result.sidewallCoverage * 100).toFixed(0)}%</text>
-            <rect x={50} y={45} width={60} height={8} fill="rgba(255,255,255,0.1)" rx={2} />
-            <rect x={50} y={45} width={result.sidewallCoverage * 60} height={8} fill={result.sidewallCoverage > 0.5 ? colors.success : colors.warning} rx={2} />
-
-            <text x={10} y={75} fill={colors.textPrimary} fontSize={9}>Bottom: {(result.bottomCoverage * 100).toFixed(0)}%</text>
-            <rect x={50} y={65} width={60} height={8} fill="rgba(255,255,255,0.1)" rx={2} />
-            <rect x={50} y={65} width={result.bottomCoverage * 60} height={8} fill={result.bottomCoverage > 0.5 ? colors.success : colors.error} rx={2} />
-
-            <text x={10} y={105} fill={depositionColor} fontSize={10} fontWeight="bold">
-              Coverage: {result.stepCoverage.toFixed(0)}%
+            <text x={60} y={28} fill={colors.textPrimary} fontSize={10} textAnchor="middle" fontWeight="bold">
+              STEP COVERAGE
             </text>
+
+            {/* Top coverage bar */}
+            <text x={8} y={48} fill={colors.textSecondary} fontSize={9}>Top</text>
+            <text x={110} y={48} fill={colors.textPrimary} fontSize={9} textAnchor="end">
+              {(result.topCoverage * 100).toFixed(0)}%
+            </text>
+            <rect x={8} y={52} width={104} height={6} fill="rgba(255,255,255,0.1)" rx={3} />
+            <rect x={8} y={52} width={result.topCoverage * 104} height={6} fill="url(#depMeterSuccess)" rx={3} />
+
+            {/* Side coverage bar */}
+            <text x={8} y={70} fill={colors.textSecondary} fontSize={9}>Side</text>
+            <text x={110} y={70} fill={colors.textPrimary} fontSize={9} textAnchor="end">
+              {(result.sidewallCoverage * 100).toFixed(0)}%
+            </text>
+            <rect x={8} y={74} width={104} height={6} fill="rgba(255,255,255,0.1)" rx={3} />
+            <rect x={8} y={74} width={result.sidewallCoverage * 104} height={6}
+              fill={result.sidewallCoverage > 0.5 ? 'url(#depMeterSuccess)' : 'url(#depMeterWarning)'} rx={3} />
+
+            {/* Bottom coverage bar */}
+            <text x={8} y={92} fill={colors.textSecondary} fontSize={9}>Bottom</text>
+            <text x={110} y={92} fill={colors.textPrimary} fontSize={9} textAnchor="end">
+              {(result.bottomCoverage * 100).toFixed(0)}%
+            </text>
+            <rect x={8} y={96} width={104} height={6} fill="rgba(255,255,255,0.1)" rx={3} />
+            <rect x={8} y={96} width={result.bottomCoverage * 104} height={6}
+              fill={result.bottomCoverage > 0.5 ? 'url(#depMeterSuccess)' : 'url(#depMeterError)'} rx={3} />
           </g>
 
-          {/* Comparison guide */}
+          {/* Method comparison legend - premium panel */}
           <g transform="translate(340, 230)">
-            <text x={60} y={0} fill={colors.textSecondary} fontSize={11} textAnchor="middle">Method Comparison</text>
+            <rect x={-5} y={0} width={130} height={78} fill="url(#depPanelBg)" rx={10}
+              stroke="#334155" strokeWidth={1} />
 
-            <rect x={0} y={10} width={120} height={80} fill="rgba(0,0,0,0.3)" rx={6} />
-
-            <circle cx={15} cy={30} r={6} fill={colors.pvd} />
-            <text x={25} y={34} fill={colors.textSecondary} fontSize={9}>PVD: Directional</text>
-
-            <circle cx={15} cy={50} r={6} fill={colors.cvd} />
-            <text x={25} y={54} fill={colors.textSecondary} fontSize={9}>CVD: Semi-conformal</text>
-
-            <circle cx={15} cy={70} r={6} fill={colors.ald} />
-            <text x={25} y={74} fill={colors.textSecondary} fontSize={9}>ALD: Conformal</text>
+            <circle cx={15} cy={22} r={6} fill="url(#depPvdFilm)" filter="url(#depParticleGlow)" />
+            <circle cx={15} cy={44} r={6} fill="url(#depCvdFilm)" filter="url(#depParticleGlow)" />
+            <circle cx={15} cy={66} r={6} fill="url(#depAldFilm)" filter="url(#depParticleGlow)" />
           </g>
 
-          {/* Metrics panel */}
-          <rect x={20} y={320} width={180} height={90} fill="rgba(0,0,0,0.6)" rx={8} stroke={depositionColor} strokeWidth={1} />
-          <text x={30} y={340} fill={colors.textSecondary} fontSize={10}>DEPOSITION METRICS</text>
+          {/* Metrics panel - premium design */}
+          <rect x={18} y={318} width={185} height={95} fill="url(#depPanelBg)" rx={10}
+            stroke={depositionType === 'pvd' ? '#3b82f6' : depositionType === 'cvd' ? '#a855f7' : '#22c55e'}
+            strokeWidth={1.5} />
 
-          <text x={30} y={358} fill={colors.textPrimary} fontSize={10}>
-            Aspect Ratio: {aspectRatio.toFixed(1)}:1
-          </text>
-          <text x={30} y={373} fill={colors.textPrimary} fontSize={10}>
-            Film Thickness: {result.thickness.toFixed(1)} nm
-          </text>
-          <text x={30} y={388} fill={result.stepCoverage > 80 ? colors.success : result.stepCoverage > 50 ? colors.warning : colors.error} fontSize={10}>
-            Conformality: {result.conformality}
-          </text>
-          {result.voidRisk && (
-            <text x={30} y={403} fill={colors.error} fontSize={10} fontWeight="bold">
-              Void Formation Risk!
-            </text>
-          )}
-
-          {/* Quality indicator */}
-          <rect x={220} y={320} width={140} height={90} fill="rgba(0,0,0,0.4)" rx={8} />
-          <text x={290} y={340} fill={colors.textSecondary} fontSize={10} textAnchor="middle">Process Quality</text>
+          {/* Quality indicator panel */}
+          <rect x={218} y={318} width={145} height={95} fill="url(#depPanelBg)" rx={10}
+            stroke="#334155" strokeWidth={1} />
           <text
             x={290}
-            y={375}
+            y={370}
             fill={result.stepCoverage > 90 ? colors.success : result.stepCoverage > 60 ? colors.warning : colors.error}
-            fontSize={28}
+            fontSize={26}
             fontWeight="bold"
             textAnchor="middle"
+            filter="url(#depTextGlow)"
           >
             {result.stepCoverage > 90 ? 'Excellent' : result.stepCoverage > 60 ? 'Fair' : 'Poor'}
           </text>
-          <text x={290} y={400} fill={colors.textMuted} fontSize={9} textAnchor="middle">
-            {result.stepCoverage > 90 ? 'Uniform coating' : result.stepCoverage > 60 ? 'Some thin spots' : 'Significant gaps'}
-          </text>
         </svg>
 
+        {/* Labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '550px',
+          padding: '0 20px',
+          marginTop: '-80px',
+          pointerEvents: 'none'
+        }}>
+          {/* Left metrics labels */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', marginTop: '8px' }}>
+            <span style={{ fontSize: typo.label, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Deposition Metrics
+            </span>
+            <span style={{ fontSize: typo.small, color: colors.textPrimary }}>
+              Aspect Ratio: {aspectRatio.toFixed(1)}:1
+            </span>
+            <span style={{ fontSize: typo.small, color: colors.textPrimary }}>
+              Film Thickness: {result.thickness.toFixed(1)} nm
+            </span>
+            <span style={{
+              fontSize: typo.small,
+              color: result.stepCoverage > 80 ? colors.success : result.stepCoverage > 50 ? colors.warning : colors.error
+            }}>
+              Conformality: {result.conformality}
+            </span>
+            {result.voidRisk && (
+              <span style={{ fontSize: typo.small, color: colors.error, fontWeight: 'bold' }}>
+                Void Formation Risk!
+              </span>
+            )}
+          </div>
+
+          {/* Right quality labels */}
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '4px', marginTop: '8px' }}>
+            <span style={{ fontSize: typo.label, color: colors.textSecondary, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Process Quality
+            </span>
+            <span style={{ fontSize: typo.small, color: colors.textMuted, textAlign: 'center' }}>
+              {result.stepCoverage > 90 ? 'Uniform coating' : result.stepCoverage > 60 ? 'Some thin spots' : 'Significant gaps'}
+            </span>
+          </div>
+        </div>
+
+        {/* Method comparison labels */}
+        <div style={{
+          position: 'relative',
+          marginTop: '-30px',
+          marginLeft: 'auto',
+          marginRight: '40px',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '10px',
+          pointerEvents: 'none'
+        }}>
+          <span style={{ fontSize: typo.small, color: colors.textSecondary }}>PVD: Directional</span>
+          <span style={{ fontSize: typo.small, color: colors.textSecondary }}>CVD: Semi-conformal</span>
+          <span style={{ fontSize: typo.small, color: colors.textSecondary }}>ALD: Conformal</span>
+        </div>
+
+        {/* Title labels outside SVG */}
+        <div style={{
+          textAlign: 'center',
+          marginTop: '-380px',
+          marginBottom: '340px',
+          pointerEvents: 'none'
+        }}>
+          <div style={{
+            fontSize: typo.bodyLarge,
+            color: colors.textPrimary,
+            fontWeight: 'bold',
+            marginBottom: '4px'
+          }}>
+            {depositionType.toUpperCase()} Deposition - Trench Filling
+          </div>
+          <div style={{
+            fontSize: typo.small,
+            color: depositionType === 'pvd' ? colors.pvd : depositionType === 'cvd' ? colors.cvd : colors.ald
+          }}>
+            {depositionType === 'pvd' ? 'Physical Vapor Deposition (Directional)' :
+              depositionType === 'cvd' ? 'Chemical Vapor Deposition (Semi-conformal)' :
+                'Atomic Layer Deposition (Conformal)'}
+          </div>
+        </div>
+
         {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px', marginTop: '16px' }}>
             <button
               onClick={() => {
                 setDepositionTime(0);
@@ -632,11 +955,12 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.textMuted : colors.success,
+                background: isAnimating ? colors.textMuted : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: isAnimating ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
+                boxShadow: isAnimating ? 'none' : `0 4px 20px ${colors.accentGlow}`,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -652,7 +976,7 @@ const DepositionTypesRenderer: React.FC<DepositionTypesRendererProps> = ({
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >

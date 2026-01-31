@@ -374,91 +374,412 @@ export default function BoilingPressureRenderer({ onBack, onPhaseComplete }: Boi
     }
   }, [phase]);
 
-  // Render beaker visualization
+  // Render premium beaker visualization with SVG defs
   const renderBeaker = (temp: number, pres: number, currentBubbles: typeof bubbles) => {
     const boilingPoint = getBoilingPoint(pres);
     const state = getWaterState(temp, boilingPoint);
-    const waterColor = state === 'boiling' ? '#60a5fa' : state === 'gas' ? '#93c5fd' : '#3b82f6';
+    const isBoiling = state === 'boiling';
+    const isGas = state === 'gas';
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-56">
-        {/* Background */}
-        <rect width="400" height="280" fill="#1e293b" />
+      <div>
+        <svg viewBox="0 0 400 280" className="w-full h-56">
+          <defs>
+            {/* Premium water gradient - deep blue with depth */}
+            <linearGradient id="boilWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#3b82f6" stopOpacity="0.85" />
+              <stop offset="50%" stopColor="#2563eb" stopOpacity="0.8" />
+              <stop offset="75%" stopColor="#1d4ed8" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0.9" />
+            </linearGradient>
 
-        {/* Pressure gauge */}
-        <rect x="20" y="20" width="80" height="50" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="60" y="40" textAnchor="middle" fill="#94a3b8" fontSize="11">Pressure</text>
-        <text x="60" y="60" textAnchor="middle" fill="#22d3ee" fontSize="14" fontWeight="bold">
-          {pres.toFixed(2)} atm
-        </text>
+            {/* Boiling water gradient - warmer tones */}
+            <linearGradient id="boilWaterBoiling" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.85" />
+              <stop offset="20%" stopColor="#60a5fa" stopOpacity="0.8" />
+              <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.75" />
+              <stop offset="60%" stopColor="#2563eb" stopOpacity="0.8" />
+              <stop offset="80%" stopColor="#1d4ed8" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0.9" />
+            </linearGradient>
 
-        {/* Temperature display */}
-        <rect x="300" y="20" width="80" height="50" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="340" y="40" textAnchor="middle" fill="#94a3b8" fontSize="11">Temperature</text>
-        <text x="340" y="60" textAnchor="middle" fill="#fb923c" fontSize="14" fontWeight="bold">
-          {temp.toFixed(0)}C
-        </text>
+            {/* Steam/gas gradient */}
+            <linearGradient id="boilSteamGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.4" />
+              <stop offset="30%" stopColor="#bae6fd" stopOpacity="0.3" />
+              <stop offset="60%" stopColor="#7dd3fc" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.1" />
+            </linearGradient>
 
-        {/* Boiling point indicator */}
-        <rect x="160" y="20" width="80" height="50" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="2" />
-        <text x="200" y="40" textAnchor="middle" fill="#94a3b8" fontSize="11">Boils at</text>
-        <text x="200" y="60" textAnchor="middle" fill="#f87171" fontSize="14" fontWeight="bold">
-          {boilingPoint.toFixed(0)}C
-        </text>
+            {/* Bubble gradient with shine */}
+            <radialGradient id="boilBubbleGradient" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#e0f2fe" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#bae6fd" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.3" />
+            </radialGradient>
 
-        {/* Beaker outline */}
-        <path
-          d="M 100 90 L 100 240 Q 100 260 120 260 L 280 260 Q 300 260 300 240 L 300 90"
-          fill="none"
-          stroke="#6b7280"
-          strokeWidth="4"
-        />
+            {/* Glass beaker gradient - realistic glass effect */}
+            <linearGradient id="boilGlassGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.4" />
+              <stop offset="15%" stopColor="#cbd5e1" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#e2e8f0" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#f1f5f9" stopOpacity="0.5" />
+              <stop offset="70%" stopColor="#e2e8f0" stopOpacity="0.3" />
+              <stop offset="85%" stopColor="#cbd5e1" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#94a3b8" stopOpacity="0.4" />
+            </linearGradient>
 
-        {/* Water */}
-        <path
-          d="M 104 120 L 104 236 Q 104 256 124 256 L 276 256 Q 296 256 296 236 L 296 120 Z"
-          fill={waterColor}
-          fillOpacity={state === 'gas' ? 0.3 : 0.7}
-        />
+            {/* Burner metal gradient */}
+            <linearGradient id="boilBurnerMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="30%" stopColor="#374151" />
+              <stop offset="70%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
 
-        {/* Bubbles */}
-        {currentBubbles.map(b => (
-          <circle
-            key={b.id}
-            cx={b.x}
-            cy={b.y}
-            r={b.size}
-            fill="white"
-            fillOpacity="0.6"
-          />
-        ))}
+            {/* Heat/flame gradient */}
+            <radialGradient id="boilFlameGradient" cx="50%" cy="100%" r="80%">
+              <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+              <stop offset="25%" stopColor="#fde047" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#facc15" stopOpacity="0.85" />
+              <stop offset="70%" stopColor="#f97316" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </radialGradient>
 
-        {/* Steam if boiling */}
-        {state === 'boiling' && (
-          <g className="animate-pulse">
-            <path d="M 150 85 Q 145 70 150 55" fill="none" stroke="#e5e7eb" strokeWidth="3" strokeLinecap="round" />
-            <path d="M 200 85 Q 210 65 200 50" fill="none" stroke="#e5e7eb" strokeWidth="3" strokeLinecap="round" />
-            <path d="M 250 85 Q 255 70 250 55" fill="none" stroke="#e5e7eb" strokeWidth="3" strokeLinecap="round" />
+            {/* Heat outer glow */}
+            <radialGradient id="boilHeatGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#f97316" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#fb923c" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Pressure gauge gradient */}
+            <linearGradient id="boilGaugeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Gauge bezel gradient */}
+            <linearGradient id="boilGaugeBezel" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="30%" stopColor="#334155" />
+              <stop offset="70%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Steam wisp gradient */}
+            <linearGradient id="boilSteamWisp" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#e5e7eb" stopOpacity="0.6" />
+              <stop offset="40%" stopColor="#f3f4f6" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="#f9fafb" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Glow filter for bubbles */}
+            <filter id="boilBubbleGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Heat glow filter */}
+            <filter id="boilHeatGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Steam glow filter */}
+            <filter id="boilSteamGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glass reflection filter */}
+            <filter id="boilGlassShine">
+              <feGaussianBlur stdDeviation="0.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Lab background gradient */}
+            <linearGradient id="boilLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Gauge needle gradient */}
+            <linearGradient id="boilNeedleGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#f87171" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+          </defs>
+
+          {/* Premium lab background */}
+          <rect width="400" height="280" fill="url(#boilLabBg)" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="boilLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+          </pattern>
+          <rect width="400" height="280" fill="url(#boilLabGrid)" />
+
+          {/* === PRESSURE GAUGE (LEFT) === */}
+          <g transform="translate(20, 15)">
+            {/* Gauge body */}
+            <rect x="0" y="0" width="90" height="55" rx="10" fill="url(#boilGaugeGradient)" stroke="url(#boilGaugeBezel)" strokeWidth="2" />
+            {/* Inner shadow */}
+            <rect x="3" y="3" width="84" height="49" rx="8" fill="none" stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
+            {/* Gauge dial arc */}
+            <path d="M 20 42 A 25 25 0 0 1 70 42" fill="none" stroke="#334155" strokeWidth="3" strokeLinecap="round" />
+            {/* Pressure level arc */}
+            <path
+              d={`M 20 42 A 25 25 0 0 1 ${20 + 50 * Math.min(pres / 3, 1)} ${42 - 20 * Math.sin(Math.PI * Math.min(pres / 3, 1))}`}
+              fill="none"
+              stroke="#22d3ee"
+              strokeWidth="3"
+              strokeLinecap="round"
+            />
+            {/* Center dot */}
+            <circle cx="45" cy="42" r="4" fill="#475569" />
+            <circle cx="45" cy="42" r="2" fill="#22d3ee" />
           </g>
-        )}
 
-        {/* Burner */}
-        <rect x="120" y="265" width="160" height="15" rx="4" fill="#374151" />
-        {heating && (
+          {/* === TEMPERATURE GAUGE (RIGHT) === */}
+          <g transform="translate(290, 15)">
+            {/* Gauge body */}
+            <rect x="0" y="0" width="90" height="55" rx="10" fill="url(#boilGaugeGradient)" stroke="url(#boilGaugeBezel)" strokeWidth="2" />
+            <rect x="3" y="3" width="84" height="49" rx="8" fill="none" stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
+            {/* Thermometer bar */}
+            <rect x="15" y="15" width="60" height="8" rx="4" fill="#1f2937" />
+            <rect x="15" y="15" width={Math.min((temp / 150) * 60, 60)} height="8" rx="4" fill={isBoiling ? '#fb923c' : '#f97316'} />
+            {/* Temperature markers */}
+            <line x1="15" y1="26" x2="15" y2="30" stroke="#64748b" strokeWidth="1" />
+            <line x1="45" y1="26" x2="45" y2="30" stroke="#64748b" strokeWidth="1" />
+            <line x1="75" y1="26" x2="75" y2="30" stroke="#64748b" strokeWidth="1" />
+          </g>
+
+          {/* === BOILING POINT DISPLAY (CENTER) === */}
+          <g transform="translate(155, 15)">
+            <rect x="0" y="0" width="90" height="55" rx="10" fill="url(#boilGaugeGradient)" stroke="url(#boilGaugeBezel)" strokeWidth="2" />
+            <rect x="3" y="3" width="84" height="49" rx="8" fill="none" stroke="#0f172a" strokeWidth="1" strokeOpacity="0.5" />
+            {/* Boiling indicator circle */}
+            <circle cx="45" cy="28" r="12" fill="none" stroke={isBoiling ? '#f87171' : '#475569'} strokeWidth="2" />
+            {isBoiling && (
+              <circle cx="45" cy="28" r="8" fill="#f87171" opacity="0.6">
+                <animate attributeName="opacity" values="0.6;1;0.6" dur="0.5s" repeatCount="indefinite" />
+              </circle>
+            )}
+          </g>
+
+          {/* === PREMIUM GLASS BEAKER === */}
           <g>
-            <ellipse cx="200" cy="265" rx="60" ry="5" fill="#ef4444" fillOpacity="0.6" className="animate-pulse" />
-            <ellipse cx="200" cy="263" rx="40" ry="3" fill="#f97316" fillOpacity="0.8" className="animate-pulse" />
-          </g>
-        )}
+            {/* Beaker shadow */}
+            <path
+              d="M 105 95 L 105 242 Q 105 262 125 262 L 275 262 Q 295 262 295 242 L 295 95"
+              fill="none"
+              stroke="#0f172a"
+              strokeWidth="8"
+              strokeOpacity="0.3"
+            />
 
-        {/* State indicator */}
-        <rect x="140" y="170" width="120" height="30" rx="8" fill="#1f2937" fillOpacity="0.9" />
-        <text x="200" y="190" textAnchor="middle" fontSize="14" fontWeight="bold" fill={
-          state === 'boiling' ? '#fb923c' : state === 'gas' ? '#f87171' : '#60a5fa'
-        }>
-          {state.toUpperCase()}
-        </text>
-      </svg>
+            {/* Water fill - using gradient based on state */}
+            <path
+              d="M 104 120 L 104 238 Q 104 258 124 258 L 276 258 Q 296 258 296 238 L 296 120 Z"
+              fill={isGas ? 'url(#boilSteamGradient)' : isBoiling ? 'url(#boilWaterBoiling)' : 'url(#boilWaterGradient)'}
+            />
+
+            {/* Water surface highlight */}
+            <path
+              d="M 108 120 L 292 120"
+              stroke="#bae6fd"
+              strokeWidth="2"
+              strokeOpacity={isGas ? 0.2 : 0.4}
+            />
+
+            {/* Premium bubbles with glow */}
+            {currentBubbles.map(b => (
+              <g key={b.id} filter="url(#boilBubbleGlow)">
+                <circle
+                  cx={b.x}
+                  cy={b.y}
+                  r={b.size}
+                  fill="url(#boilBubbleGradient)"
+                />
+                {/* Bubble highlight */}
+                <circle
+                  cx={b.x - b.size * 0.3}
+                  cy={b.y - b.size * 0.3}
+                  r={b.size * 0.25}
+                  fill="white"
+                  fillOpacity="0.8"
+                />
+              </g>
+            ))}
+
+            {/* Glass beaker outline with gradient */}
+            <path
+              d="M 100 90 L 100 240 Q 100 262 122 262 L 278 262 Q 300 262 300 240 L 300 90"
+              fill="none"
+              stroke="url(#boilGlassGradient)"
+              strokeWidth="4"
+              filter="url(#boilGlassShine)"
+            />
+
+            {/* Glass rim highlight */}
+            <path
+              d="M 100 90 L 100 95"
+              stroke="#e2e8f0"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeOpacity="0.5"
+            />
+            <path
+              d="M 300 90 L 300 95"
+              stroke="#e2e8f0"
+              strokeWidth="3"
+              strokeLinecap="round"
+              strokeOpacity="0.5"
+            />
+
+            {/* Glass reflection line */}
+            <path
+              d="M 106 100 L 106 230"
+              stroke="#ffffff"
+              strokeWidth="1.5"
+              strokeOpacity="0.15"
+            />
+          </g>
+
+          {/* === STEAM WISPS === */}
+          {isBoiling && (
+            <g filter="url(#boilSteamGlow)">
+              <path d="M 150 85 Q 145 65 155 45 Q 160 30 150 15" fill="none" stroke="url(#boilSteamWisp)" strokeWidth="4" strokeLinecap="round">
+                <animate attributeName="d" values="M 150 85 Q 145 65 155 45 Q 160 30 150 15;M 150 85 Q 155 65 145 45 Q 140 30 150 15;M 150 85 Q 145 65 155 45 Q 160 30 150 15" dur="2s" repeatCount="indefinite" />
+              </path>
+              <path d="M 200 85 Q 210 60 195 40 Q 185 25 200 5" fill="none" stroke="url(#boilSteamWisp)" strokeWidth="5" strokeLinecap="round">
+                <animate attributeName="d" values="M 200 85 Q 210 60 195 40 Q 185 25 200 5;M 200 85 Q 190 60 205 40 Q 215 25 200 5;M 200 85 Q 210 60 195 40 Q 185 25 200 5" dur="2.5s" repeatCount="indefinite" />
+              </path>
+              <path d="M 250 85 Q 255 65 245 45 Q 240 30 250 15" fill="none" stroke="url(#boilSteamWisp)" strokeWidth="4" strokeLinecap="round">
+                <animate attributeName="d" values="M 250 85 Q 255 65 245 45 Q 240 30 250 15;M 250 85 Q 245 65 255 45 Q 260 30 250 15;M 250 85 Q 255 65 245 45 Q 240 30 250 15" dur="1.8s" repeatCount="indefinite" />
+              </path>
+            </g>
+          )}
+
+          {/* === PREMIUM BURNER === */}
+          <g>
+            {/* Burner base with metal gradient */}
+            <rect x="115" y="264" width="170" height="16" rx="4" fill="url(#boilBurnerMetal)" />
+            {/* Burner top surface */}
+            <rect x="115" y="264" width="170" height="3" rx="1" fill="#4b5563" />
+            {/* Burner grate lines */}
+            {[135, 165, 195, 225, 255].map(x => (
+              <rect key={x} x={x} y="267" width="4" height="10" rx="1" fill="#1f2937" />
+            ))}
+
+            {/* Heat/Flame effect when heating */}
+            {heating && (
+              <g filter="url(#boilHeatGlowFilter)">
+                {/* Outer heat glow */}
+                <ellipse cx="200" cy="262" rx="70" ry="8" fill="url(#boilHeatGlow)">
+                  <animate attributeName="opacity" values="0.5;0.8;0.5" dur="0.3s" repeatCount="indefinite" />
+                </ellipse>
+                {/* Main flame */}
+                <ellipse cx="200" cy="262" rx="50" ry="6" fill="url(#boilFlameGradient)">
+                  <animate attributeName="rx" values="50;55;50" dur="0.2s" repeatCount="indefinite" />
+                </ellipse>
+                {/* Inner hot core */}
+                <ellipse cx="200" cy="261" rx="30" ry="3" fill="#fef9c3" fillOpacity="0.9">
+                  <animate attributeName="fillOpacity" values="0.9;1;0.9" dur="0.15s" repeatCount="indefinite" />
+                </ellipse>
+              </g>
+            )}
+          </g>
+
+          {/* === STATE INDICATOR BADGE === */}
+          <g>
+            <rect x="140" y="175" width="120" height="35" rx="10" fill="url(#boilGaugeGradient)" stroke={
+              isBoiling ? '#fb923c' : isGas ? '#f87171' : '#60a5fa'
+            } strokeWidth="2" />
+            {/* Glow effect for active state */}
+            {isBoiling && (
+              <rect x="140" y="175" width="120" height="35" rx="10" fill="none" stroke="#fb923c" strokeWidth="1" strokeOpacity="0.5">
+                <animate attributeName="strokeOpacity" values="0.5;1;0.5" dur="0.5s" repeatCount="indefinite" />
+              </rect>
+            )}
+          </g>
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          marginTop: '-260px',
+          padding: '0 20px',
+          position: 'relative',
+          pointerEvents: 'none'
+        }}>
+          {/* Pressure label */}
+          <div style={{
+            width: '90px',
+            textAlign: 'center',
+            marginTop: '25px'
+          }}>
+            <div style={{ fontSize: typo.label, color: colors.textSecondary, marginBottom: '2px' }}>Pressure</div>
+            <div style={{ fontSize: typo.body, color: colors.primary, fontWeight: 'bold' }}>{pres.toFixed(2)} atm</div>
+          </div>
+
+          {/* Boiling point label */}
+          <div style={{
+            width: '90px',
+            textAlign: 'center',
+            marginTop: '25px'
+          }}>
+            <div style={{ fontSize: typo.label, color: colors.textSecondary, marginBottom: '2px' }}>Boils at</div>
+            <div style={{ fontSize: typo.body, color: colors.danger, fontWeight: 'bold' }}>{boilingPoint.toFixed(0)}°C</div>
+          </div>
+
+          {/* Temperature label */}
+          <div style={{
+            width: '90px',
+            textAlign: 'center',
+            marginTop: '25px'
+          }}>
+            <div style={{ fontSize: typo.label, color: colors.textSecondary, marginBottom: '2px' }}>Temperature</div>
+            <div style={{ fontSize: typo.body, color: colors.accent, fontWeight: 'bold' }}>{temp.toFixed(0)}°C</div>
+          </div>
+        </div>
+
+        {/* State indicator label */}
+        <div style={{
+          position: 'relative',
+          marginTop: '78px',
+          textAlign: 'center',
+          pointerEvents: 'none'
+        }}>
+          <div style={{
+            display: 'inline-block',
+            fontSize: typo.bodyLarge,
+            fontWeight: 'bold',
+            color: isBoiling ? colors.accent : isGas ? colors.danger : colors.water,
+            textTransform: 'uppercase',
+            letterSpacing: '1px'
+          }}>
+            {state}
+          </div>
+        </div>
+      </div>
     );
   };
 

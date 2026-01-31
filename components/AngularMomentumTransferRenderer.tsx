@@ -329,6 +329,213 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, gamePha
     }, 0);
   };
 
+  // Premium SVG Definitions for Angular Momentum Transfer visualizations
+  const renderSVGDefs = () => (
+    <defs>
+      {/* === GRADIENT DEFINITIONS === */}
+
+      {/* Premium sky gradient with depth */}
+      <linearGradient id="amtSkyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#0369a1" />
+        <stop offset="25%" stopColor="#0ea5e9" />
+        <stop offset="50%" stopColor="#38bdf8" />
+        <stop offset="75%" stopColor="#7dd3fc" />
+        <stop offset="100%" stopColor="#bae6fd" />
+      </linearGradient>
+
+      {/* Cat body gradient - main orange fur */}
+      <linearGradient id="amtCatBodyGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fb923c" />
+        <stop offset="25%" stopColor="#f97316" />
+        <stop offset="50%" stopColor="#ea580c" />
+        <stop offset="75%" stopColor="#f97316" />
+        <stop offset="100%" stopColor="#c2410c" />
+      </linearGradient>
+
+      {/* Cat front body lighter gradient */}
+      <linearGradient id="amtCatFrontGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fdba74" />
+        <stop offset="30%" stopColor="#fb923c" />
+        <stop offset="70%" stopColor="#f97316" />
+        <stop offset="100%" stopColor="#ea580c" />
+      </linearGradient>
+
+      {/* Cat leg gradient for 3D effect */}
+      <linearGradient id="amtCatLegGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#ea580c" />
+        <stop offset="30%" stopColor="#f97316" />
+        <stop offset="50%" stopColor="#fb923c" />
+        <stop offset="70%" stopColor="#f97316" />
+        <stop offset="100%" stopColor="#c2410c" />
+      </linearGradient>
+
+      {/* Cat head gradient with highlight */}
+      <radialGradient id="amtCatHeadGrad" cx="35%" cy="35%" r="65%">
+        <stop offset="0%" stopColor="#fdba74" />
+        <stop offset="30%" stopColor="#fb923c" />
+        <stop offset="60%" stopColor="#f97316" />
+        <stop offset="100%" stopColor="#ea580c" />
+      </radialGradient>
+
+      {/* Tail gradient */}
+      <linearGradient id="amtTailGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#f97316" />
+        <stop offset="50%" stopColor="#ea580c" />
+        <stop offset="100%" stopColor="#c2410c" />
+      </linearGradient>
+
+      {/* Ground/grass gradient */}
+      <linearGradient id="amtGroundGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#22c55e" />
+        <stop offset="30%" stopColor="#16a34a" />
+        <stop offset="60%" stopColor="#15803d" />
+        <stop offset="100%" stopColor="#166534" />
+      </linearGradient>
+
+      {/* Angular momentum arrow gradient - clockwise */}
+      <linearGradient id="amtArrowCWGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#22c55e" />
+        <stop offset="50%" stopColor="#4ade80" />
+        <stop offset="100%" stopColor="#86efac" />
+      </linearGradient>
+
+      {/* Angular momentum arrow gradient - counter-clockwise */}
+      <linearGradient id="amtArrowCCWGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#ef4444" />
+        <stop offset="50%" stopColor="#f87171" />
+        <stop offset="100%" stopColor="#fca5a5" />
+      </linearGradient>
+
+      {/* Spinning wheel gradient - metallic 3D effect */}
+      <radialGradient id="amtWheelGrad" cx="35%" cy="35%" r="65%">
+        <stop offset="0%" stopColor="#94a3b8" />
+        <stop offset="25%" stopColor="#64748b" />
+        <stop offset="50%" stopColor="#475569" />
+        <stop offset="75%" stopColor="#334155" />
+        <stop offset="100%" stopColor="#1e293b" />
+      </radialGradient>
+
+      {/* Wheel rim highlight */}
+      <linearGradient id="amtWheelRimGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#cbd5e1" />
+        <stop offset="20%" stopColor="#94a3b8" />
+        <stop offset="50%" stopColor="#64748b" />
+        <stop offset="80%" stopColor="#475569" />
+        <stop offset="100%" stopColor="#334155" />
+      </linearGradient>
+
+      {/* Transfer energy glow gradient */}
+      <radialGradient id="amtTransferGlowGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+        <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.8" />
+        <stop offset="60%" stopColor="#d97706" stopOpacity="0.4" />
+        <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Rotation speed indicator gradient */}
+      <linearGradient id="amtSpeedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#06b6d4" />
+        <stop offset="25%" stopColor="#22d3ee" />
+        <stop offset="50%" stopColor="#67e8f9" />
+        <stop offset="75%" stopColor="#22d3ee" />
+        <stop offset="100%" stopColor="#0891b2" />
+      </linearGradient>
+
+      {/* Moment of inertia visualization - extended */}
+      <radialGradient id="amtMoIExtendedGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+        <stop offset="50%" stopColor="#16a34a" stopOpacity="0.2" />
+        <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Moment of inertia visualization - tucked */}
+      <radialGradient id="amtMoITuckedGrad" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.4" />
+        <stop offset="50%" stopColor="#d97706" stopOpacity="0.2" />
+        <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Cat eye shine */}
+      <radialGradient id="amtEyeGrad" cx="30%" cy="30%" r="70%">
+        <stop offset="0%" stopColor="#475569" />
+        <stop offset="40%" stopColor="#1e293b" />
+        <stop offset="100%" stopColor="#0f172a" />
+      </radialGradient>
+
+      {/* Cat nose gradient */}
+      <radialGradient id="amtNoseGrad" cx="50%" cy="30%" r="70%">
+        <stop offset="0%" stopColor="#fda4af" />
+        <stop offset="60%" stopColor="#fb7185" />
+        <stop offset="100%" stopColor="#f43f5e" />
+      </radialGradient>
+
+      {/* === FILTER DEFINITIONS === */}
+
+      {/* Glow filter for angular momentum arrows */}
+      <filter id="amtArrowGlow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Soft glow for transfer visualization */}
+      <filter id="amtTransferGlow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="4" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Speed indicator blur */}
+      <filter id="amtSpeedBlur" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Cat fur texture shadow */}
+      <filter id="amtFurShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="1.5" result="blur" />
+        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      </filter>
+
+      {/* Inner glow for wheels */}
+      <filter id="amtWheelGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Highlight filter for metallic surfaces */}
+      <filter id="amtMetalHighlight">
+        <feGaussianBlur stdDeviation="0.5" result="blur" />
+        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      </filter>
+
+      {/* === MARKER DEFINITIONS === */}
+
+      <marker id="amtArrowHeadGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L9,3 z" fill="url(#amtArrowCWGrad)" />
+      </marker>
+
+      <marker id="amtArrowHeadRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L9,3 z" fill="url(#amtArrowCCWGrad)" />
+      </marker>
+
+      <marker id="amtArrowHeadCyan" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+        <path d="M0,0 L0,6 L9,3 z" fill="url(#amtSpeedGrad)" />
+      </marker>
+    </defs>
+  );
+
   const renderCat = (rotation: number, frontExt: boolean, backExt: boolean, size: number = 200, showLabels: boolean = false) => {
     const centerX = size / 2;
     const centerY = size / 2;
@@ -337,82 +544,239 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, gamePha
     const frontRotation = rotation;
     const backRotation = rotation; // In reality, slightly different, but simplified here
 
+    // Calculate rotation speed visualization
+    const rotationProgress = Math.abs(180 - rotation) / 180;
+
     return (
-      <svg width={size} height={size} className="overflow-visible">
-        {/* Background - sky or space */}
-        <rect x="0" y="0" width={size} height={size} fill="url(#skyGrad)" rx="10" />
+      <div style={{ position: 'relative' }}>
+        <svg width={size} height={size} className="overflow-visible">
+          {renderSVGDefs()}
 
-        {/* Cat body */}
-        <g transform={`translate(${centerX}, ${centerY}) rotate(${rotation})`}>
-          {/* Back body segment */}
-          <g transform={`rotate(${backRotation - rotation})`}>
-            <ellipse cx="20" cy="0" rx="30" ry="20" fill="#f97316" />
-            {/* Back legs */}
-            {backExt ? (
-              <>
-                <rect x="30" y="-25" width="8" height="30" rx="3" fill="#ea580c" transform="rotate(-30, 30, -10)" />
-                <rect x="30" y="-5" width="8" height="30" rx="3" fill="#ea580c" transform="rotate(30, 30, 10)" />
-              </>
-            ) : (
-              <>
-                <rect x="35" y="-12" width="6" height="15" rx="3" fill="#ea580c" transform="rotate(-15, 35, -5)" />
-                <rect x="35" y="-3" width="6" height="15" rx="3" fill="#ea580c" transform="rotate(15, 35, 5)" />
-              </>
-            )}
-            {/* Tail */}
-            <path d="M45,0 Q60,-10 70,5 Q80,20 70,25" fill="none" stroke="#ea580c" strokeWidth="6" strokeLinecap="round" />
-            {showLabels && backExt && (
-              <text x="50" y="45" textAnchor="middle" fill="#22c55e" fontSize="10" fontWeight="bold">Extended (Large I)</text>
-            )}
-            {showLabels && !backExt && (
-              <text x="50" y="35" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">Tucked (Small I)</text>
-            )}
+          {/* Background - premium sky gradient */}
+          <rect x="0" y="0" width={size} height={size} fill="url(#amtSkyGrad)" rx="10" />
+
+          {/* Subtle cloud wisps */}
+          <ellipse cx={size * 0.2} cy={size * 0.15} rx="20" ry="8" fill="white" opacity="0.3" />
+          <ellipse cx={size * 0.8} cy={size * 0.25} rx="25" ry="10" fill="white" opacity="0.25" />
+          <ellipse cx={size * 0.5} cy={size * 0.1} rx="15" ry="6" fill="white" opacity="0.2" />
+
+          {/* Angular momentum visualization circles */}
+          {showLabels && (
+            <>
+              {/* Front half moment of inertia indicator */}
+              <circle
+                cx={centerX - 30}
+                cy={centerY}
+                r={frontExt ? 45 : 25}
+                fill={frontExt ? "url(#amtMoIExtendedGrad)" : "url(#amtMoITuckedGrad)"}
+                opacity="0.6"
+                style={{ transition: 'r 0.3s ease' }}
+              />
+              {/* Back half moment of inertia indicator */}
+              <circle
+                cx={centerX + 30}
+                cy={centerY}
+                r={backExt ? 45 : 25}
+                fill={backExt ? "url(#amtMoIExtendedGrad)" : "url(#amtMoITuckedGrad)"}
+                opacity="0.6"
+                style={{ transition: 'r 0.3s ease' }}
+              />
+            </>
+          )}
+
+          {/* Rotation speed arc indicator */}
+          {rotationProgress > 0.05 && (
+            <path
+              d={`M ${centerX - 60} ${centerY} A 60 60 0 0 1 ${centerX + 60} ${centerY}`}
+              fill="none"
+              stroke="url(#amtSpeedGrad)"
+              strokeWidth="3"
+              strokeDasharray={`${rotationProgress * 188} 188`}
+              filter="url(#amtSpeedBlur)"
+              opacity="0.8"
+            />
+          )}
+
+          {/* Cat body */}
+          <g transform={`translate(${centerX}, ${centerY}) rotate(${rotation})`} filter="url(#amtFurShadow)">
+            {/* Back body segment */}
+            <g transform={`rotate(${backRotation - rotation})`}>
+              {/* Back body with gradient */}
+              <ellipse cx="20" cy="0" rx="30" ry="20" fill="url(#amtCatBodyGrad)" />
+
+              {/* Fur texture lines */}
+              <path d="M5,-15 Q15,-12 25,-15" stroke="#c2410c" strokeWidth="0.5" fill="none" opacity="0.4" />
+              <path d="M5,15 Q15,12 25,15" stroke="#c2410c" strokeWidth="0.5" fill="none" opacity="0.4" />
+
+              {/* Back legs with gradient */}
+              {backExt ? (
+                <>
+                  <rect x="30" y="-25" width="8" height="30" rx="3" fill="url(#amtCatLegGrad)" transform="rotate(-30, 30, -10)" />
+                  <rect x="30" y="-5" width="8" height="30" rx="3" fill="url(#amtCatLegGrad)" transform="rotate(30, 30, 10)" />
+                  {/* Paw details */}
+                  <ellipse cx="48" cy="-30" rx="5" ry="3" fill="#ea580c" transform="rotate(-30, 30, -10)" />
+                  <ellipse cx="48" cy="30" rx="5" ry="3" fill="#ea580c" transform="rotate(30, 30, 10)" />
+                </>
+              ) : (
+                <>
+                  <rect x="35" y="-12" width="6" height="15" rx="3" fill="url(#amtCatLegGrad)" transform="rotate(-15, 35, -5)" />
+                  <rect x="35" y="-3" width="6" height="15" rx="3" fill="url(#amtCatLegGrad)" transform="rotate(15, 35, 5)" />
+                </>
+              )}
+
+              {/* Premium tail with gradient stroke */}
+              <path
+                d="M45,0 Q60,-10 70,5 Q80,20 70,25"
+                fill="none"
+                stroke="url(#amtTailGrad)"
+                strokeWidth="6"
+                strokeLinecap="round"
+              />
+
+              {/* Angular momentum arrow for back section */}
+              {showLabels && (
+                <path
+                  d={backExt ? "M50,30 A25,25 0 0 1 50,-30" : "M45,20 A15,15 0 0 0 45,-20"}
+                  fill="none"
+                  stroke={backExt ? "url(#amtArrowCWGrad)" : "url(#amtArrowCCWGrad)"}
+                  strokeWidth="2.5"
+                  markerEnd={backExt ? "url(#amtArrowHeadGreen)" : "url(#amtArrowHeadRed)"}
+                  filter="url(#amtArrowGlow)"
+                  opacity="0.9"
+                />
+              )}
+            </g>
+
+            {/* Front body segment */}
+            <g transform={`rotate(${frontRotation - rotation})`}>
+              {/* Front body with lighter gradient */}
+              <ellipse cx="-20" cy="0" rx="25" ry="18" fill="url(#amtCatFrontGrad)" />
+
+              {/* Head with radial gradient */}
+              <circle cx="-45" cy="0" r="18" fill="url(#amtCatHeadGrad)" />
+
+              {/* Ears with gradient */}
+              <polygon points="-55,-15 -58,-30 -48,-18" fill="url(#amtCatBodyGrad)" />
+              <polygon points="-35,-15 -32,-30 -42,-18" fill="url(#amtCatBodyGrad)" />
+              {/* Inner ear */}
+              <polygon points="-54,-17 -56,-26 -50,-19" fill="#fda4af" opacity="0.6" />
+              <polygon points="-36,-17 -34,-26 -40,-19" fill="#fda4af" opacity="0.6" />
+
+              {/* Eyes with gradient shine */}
+              <circle cx="-50" cy="-3" r="3.5" fill="url(#amtEyeGrad)" />
+              <circle cx="-40" cy="-3" r="3.5" fill="url(#amtEyeGrad)" />
+              {/* Eye highlights */}
+              <circle cx="-51" cy="-4" r="1" fill="white" opacity="0.8" />
+              <circle cx="-41" cy="-4" r="1" fill="white" opacity="0.8" />
+
+              {/* Nose with gradient */}
+              <ellipse cx="-45" cy="5" rx="4" ry="2.5" fill="url(#amtNoseGrad)" />
+
+              {/* Whiskers */}
+              <line x1="-55" y1="3" x2="-68" y2="0" stroke="#94a3b8" strokeWidth="0.5" opacity="0.6" />
+              <line x1="-55" y1="5" x2="-68" y2="5" stroke="#94a3b8" strokeWidth="0.5" opacity="0.6" />
+              <line x1="-55" y1="7" x2="-68" y2="10" stroke="#94a3b8" strokeWidth="0.5" opacity="0.6" />
+              <line x1="-35" y1="3" x2="-22" y2="0" stroke="#94a3b8" strokeWidth="0.5" opacity="0.6" />
+              <line x1="-35" y1="5" x2="-22" y2="5" stroke="#94a3b8" strokeWidth="0.5" opacity="0.6" />
+              <line x1="-35" y1="7" x2="-22" y2="10" stroke="#94a3b8" strokeWidth="0.5" opacity="0.6" />
+
+              {/* Front legs with gradient */}
+              {frontExt ? (
+                <>
+                  <rect x="-35" y="-25" width="8" height="30" rx="3" fill="url(#amtCatLegGrad)" transform="rotate(30, -35, -10)" />
+                  <rect x="-35" y="-5" width="8" height="30" rx="3" fill="url(#amtCatLegGrad)" transform="rotate(-30, -35, 10)" />
+                  {/* Paw details */}
+                  <ellipse cx="-17" cy="-30" rx="5" ry="3" fill="#ea580c" transform="rotate(30, -35, -10)" />
+                  <ellipse cx="-17" cy="30" rx="5" ry="3" fill="#ea580c" transform="rotate(-30, -35, 10)" />
+                </>
+              ) : (
+                <>
+                  <rect x="-30" y="-12" width="6" height="15" rx="3" fill="url(#amtCatLegGrad)" transform="rotate(15, -30, -5)" />
+                  <rect x="-30" y="-3" width="6" height="15" rx="3" fill="url(#amtCatLegGrad)" transform="rotate(-15, -30, 5)" />
+                </>
+              )}
+
+              {/* Angular momentum arrow for front section */}
+              {showLabels && (
+                <path
+                  d={frontExt ? "M-50,-30 A25,25 0 0 0 -50,30" : "M-45,-20 A15,15 0 0 1 -45,20"}
+                  fill="none"
+                  stroke={frontExt ? "url(#amtArrowCWGrad)" : "url(#amtArrowCCWGrad)"}
+                  strokeWidth="2.5"
+                  markerEnd={frontExt ? "url(#amtArrowHeadGreen)" : "url(#amtArrowHeadRed)"}
+                  filter="url(#amtArrowGlow)"
+                  opacity="0.9"
+                />
+              )}
+            </g>
           </g>
 
-          {/* Front body segment */}
-          <g transform={`rotate(${frontRotation - rotation})`}>
-            <ellipse cx="-20" cy="0" rx="25" ry="18" fill="#fb923c" />
-            {/* Head */}
-            <circle cx="-45" cy="0" r="18" fill="#f97316" />
-            {/* Ears */}
-            <polygon points="-55,-15 -58,-30 -48,-18" fill="#ea580c" />
-            <polygon points="-35,-15 -32,-30 -42,-18" fill="#ea580c" />
-            {/* Face */}
-            <circle cx="-50" cy="-3" r="3" fill="#1e293b" />
-            <circle cx="-40" cy="-3" r="3" fill="#1e293b" />
-            <ellipse cx="-45" cy="5" rx="4" ry="2" fill="#fda4af" />
-            {/* Front legs */}
-            {frontExt ? (
-              <>
-                <rect x="-35" y="-25" width="8" height="30" rx="3" fill="#ea580c" transform="rotate(30, -35, -10)" />
-                <rect x="-35" y="-5" width="8" height="30" rx="3" fill="#ea580c" transform="rotate(-30, -35, 10)" />
-              </>
-            ) : (
-              <>
-                <rect x="-30" y="-12" width="6" height="15" rx="3" fill="#ea580c" transform="rotate(15, -30, -5)" />
-                <rect x="-30" y="-3" width="6" height="15" rx="3" fill="#ea580c" transform="rotate(-15, -30, 5)" />
-              </>
-            )}
-            {showLabels && frontExt && (
-              <text x="-45" y="45" textAnchor="middle" fill="#22c55e" fontSize="10" fontWeight="bold">Extended (Large I)</text>
-            )}
-            {showLabels && !frontExt && (
-              <text x="-45" y="35" textAnchor="middle" fill="#f59e0b" fontSize="10" fontWeight="bold">Tucked (Small I)</text>
-            )}
-          </g>
-        </g>
+          {/* Transfer visualization - energy pulse between body halves */}
+          {showLabels && rotationProgress > 0.1 && (
+            <g>
+              <circle
+                cx={centerX}
+                cy={centerY}
+                r="8"
+                fill="url(#amtTransferGlowGrad)"
+                filter="url(#amtTransferGlow)"
+                opacity={0.5 + rotationProgress * 0.5}
+              >
+                <animate
+                  attributeName="r"
+                  values="6;12;6"
+                  dur="0.5s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+            </g>
+          )}
 
-        {/* Ground indicator */}
-        <rect x="0" y={size - 15} width={size} height="15" fill="#22c55e" />
-        <rect x="0" y={size - 15} width={size} height="3" fill="#16a34a" />
+          {/* Ground with premium gradient */}
+          <rect x="0" y={size - 15} width={size} height="15" fill="url(#amtGroundGrad)" />
+          {/* Grass texture */}
+          <path
+            d={`M5,${size - 15} L8,${size - 20} L11,${size - 15} M25,${size - 15} L28,${size - 18} L31,${size - 15} M45,${size - 15} L48,${size - 22} L51,${size - 15} M${size - 45},${size - 15} L${size - 42},${size - 19} L${size - 39},${size - 15} M${size - 25},${size - 15} L${size - 22},${size - 17} L${size - 19},${size - 15} M${size - 10},${size - 15} L${size - 7},${size - 20} L${size - 4},${size - 15}`}
+            fill="#16a34a"
+          />
+        </svg>
 
-        <defs>
-          <linearGradient id="skyGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#0ea5e9" />
-            <stop offset="100%" stopColor="#7dd3fc" />
-          </linearGradient>
-        </defs>
-      </svg>
+        {/* Labels rendered outside SVG using typo system */}
+        {showLabels && (
+          <div style={{
+            position: 'absolute',
+            bottom: '20px',
+            left: '0',
+            right: '0',
+            display: 'flex',
+            justifyContent: 'space-between',
+            padding: '0 10px'
+          }}>
+            <div style={{
+              fontSize: typo.label,
+              fontWeight: 700,
+              color: frontExt ? colors.success : colors.secondary,
+              backgroundColor: `${frontExt ? colors.success : colors.secondary}20`,
+              padding: '4px 8px',
+              borderRadius: '6px',
+              border: `1px solid ${frontExt ? colors.success : colors.secondary}40`
+            }}>
+              Front: {frontExt ? 'Extended (Large I)' : 'Tucked (Small I)'}
+            </div>
+            <div style={{
+              fontSize: typo.label,
+              fontWeight: 700,
+              color: backExt ? colors.success : colors.secondary,
+              backgroundColor: `${backExt ? colors.success : colors.secondary}20`,
+              padding: '4px 8px',
+              borderRadius: '6px',
+              border: `1px solid ${backExt ? colors.success : colors.secondary}40`
+            }}>
+              Back: {backExt ? 'Extended (Large I)' : 'Tucked (Small I)'}
+            </div>
+          </div>
+        )}
+      </div>
     );
   };
 
@@ -707,43 +1071,141 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, gamePha
       <div className="grid md:grid-cols-2 gap-6 mb-6 max-w-3xl">
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-cyan-400 mb-2 text-center">Cat Method</h3>
-          <svg width="180" height="120" className="mx-auto">
-            {/* Cat silhouette */}
-            <ellipse cx="60" cy="60" rx="25" ry="15" fill="#f97316" />
-            <ellipse cx="100" cy="60" rx="25" ry="15" fill="#fb923c" />
-            <circle cx="130" cy="60" r="12" fill="#f97316" />
-            {/* Rotation arrows */}
-            <path d="M60,35 A25,25 0 0 1 60,85" fill="none" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowGreen)" />
-            <path d="M100,85 A25,25 0 0 1 100,35" fill="none" stroke="#ef4444" strokeWidth="2" markerEnd="url(#arrowRed)" />
-            <text x="90" y="110" textAnchor="middle" fill="#94a3b8" fontSize="10">Flexible spine rotation</text>
+          <svg width="180" height="120" className="mx-auto" style={{ overflow: 'visible' }}>
+            <defs>
+              {/* Cat body gradient */}
+              <linearGradient id="amtTwistCatBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fb923c" />
+                <stop offset="50%" stopColor="#f97316" />
+                <stop offset="100%" stopColor="#ea580c" />
+              </linearGradient>
+              <linearGradient id="amtTwistCatFront" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fdba74" />
+                <stop offset="50%" stopColor="#fb923c" />
+                <stop offset="100%" stopColor="#f97316" />
+              </linearGradient>
+              <radialGradient id="amtTwistCatHead" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#fdba74" />
+                <stop offset="50%" stopColor="#fb923c" />
+                <stop offset="100%" stopColor="#f97316" />
+              </radialGradient>
+              {/* Arrow gradients */}
+              <linearGradient id="amtTwistArrowGreen" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#22c55e" />
+                <stop offset="100%" stopColor="#4ade80" />
+              </linearGradient>
+              <linearGradient id="amtTwistArrowRed" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#f87171" />
+              </linearGradient>
+              {/* Glow filters */}
+              <filter id="amtTwistGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Arrow markers */}
+              <marker id="amtTwistArrowHeadGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#4ade80" />
+              </marker>
+              <marker id="amtTwistArrowHeadRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#f87171" />
+              </marker>
+            </defs>
+            {/* Premium cat silhouette with gradients */}
+            <ellipse cx="60" cy="60" rx="25" ry="15" fill="url(#amtTwistCatBody)" />
+            <ellipse cx="100" cy="60" rx="25" ry="15" fill="url(#amtTwistCatFront)" />
+            <circle cx="130" cy="60" r="12" fill="url(#amtTwistCatHead)" />
+            {/* Cat ears */}
+            <polygon points="122,52 120,42 128,50" fill="url(#amtTwistCatBody)" />
+            <polygon points="138,52 140,42 132,50" fill="url(#amtTwistCatBody)" />
+            {/* Cat eyes */}
+            <circle cx="126" cy="58" r="2" fill="#1e293b" />
+            <circle cx="134" cy="58" r="2" fill="#1e293b" />
+            <circle cx="125.5" cy="57.5" r="0.7" fill="white" />
+            <circle cx="133.5" cy="57.5" r="0.7" fill="white" />
+            {/* Cat tail */}
+            <path d="M35,60 Q25,50 20,60 Q15,70 25,65" fill="none" stroke="url(#amtTwistCatBody)" strokeWidth="4" strokeLinecap="round" />
+            {/* Rotation arrows with glow */}
+            <path d="M60,35 A25,25 0 0 1 60,85" fill="none" stroke="url(#amtTwistArrowGreen)" strokeWidth="2.5" markerEnd="url(#amtTwistArrowHeadGreen)" filter="url(#amtTwistGlow)" />
+            <path d="M100,85 A25,25 0 0 1 100,35" fill="none" stroke="url(#amtTwistArrowRed)" strokeWidth="2.5" markerEnd="url(#amtTwistArrowHeadRed)" filter="url(#amtTwistGlow)" />
+            {/* Spine connection indicator */}
+            <line x1="78" y1="60" x2="82" y2="60" stroke="#f59e0b" strokeWidth="2" strokeDasharray="2,2" />
           </svg>
+          <p style={{ fontSize: typo.label, color: colors.textMuted, textAlign: 'center', marginTop: '8px' }}>
+            Flexible spine rotation
+          </p>
         </div>
 
         <div className="bg-slate-800/50 rounded-2xl p-4">
           <h3 className="text-lg font-semibold text-purple-400 mb-2 text-center">Astronaut Method</h3>
-          <svg width="180" height="120" className="mx-auto">
-            {/* Astronaut */}
-            <circle cx="90" cy="40" r="15" fill="#f8fafc" stroke="#64748b" strokeWidth="2" />
-            <rect x="75" y="55" width="30" height="35" rx="5" fill="#f8fafc" stroke="#64748b" strokeWidth="2" />
-            {/* Arms in motion */}
-            <line x1="75" y1="65" x2="45" y2="45" stroke="#f8fafc" strokeWidth="6" strokeLinecap="round" />
-            <line x1="105" y1="65" x2="135" y2="85" stroke="#f8fafc" strokeWidth="6" strokeLinecap="round" />
-            {/* Rotation arrow */}
-            <path d="M70,95 A40,40 0 0 0 110,95" fill="none" stroke="#a855f7" strokeWidth="2" markerEnd="url(#arrowPurple)" />
-            <text x="90" y="110" textAnchor="middle" fill="#94a3b8" fontSize="10">Asymmetric arm circles</text>
+          <svg width="180" height="120" className="mx-auto" style={{ overflow: 'visible' }}>
+            <defs>
+              {/* Astronaut suit gradient */}
+              <linearGradient id="amtTwistSuit" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f8fafc" />
+                <stop offset="30%" stopColor="#e2e8f0" />
+                <stop offset="70%" stopColor="#cbd5e1" />
+                <stop offset="100%" stopColor="#94a3b8" />
+              </linearGradient>
+              <radialGradient id="amtTwistHelmet" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#f8fafc" />
+                <stop offset="40%" stopColor="#e2e8f0" />
+                <stop offset="100%" stopColor="#94a3b8" />
+              </radialGradient>
+              <radialGradient id="amtTwistVisor" cx="50%" cy="30%" r="60%">
+                <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#0891b2" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#164e63" />
+              </radialGradient>
+              {/* Purple arrow gradient */}
+              <linearGradient id="amtTwistArrowPurple" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#a855f7" />
+                <stop offset="50%" stopColor="#c084fc" />
+                <stop offset="100%" stopColor="#d8b4fe" />
+              </linearGradient>
+              <marker id="amtTwistArrowHeadPurple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L9,3 z" fill="#c084fc" />
+              </marker>
+              <filter id="amtTwistPurpleGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            {/* Space background hint */}
+            <circle cx="20" cy="20" r="1" fill="white" opacity="0.5" />
+            <circle cx="160" cy="15" r="0.8" fill="white" opacity="0.4" />
+            <circle cx="170" cy="80" r="1.2" fill="white" opacity="0.3" />
+            {/* Astronaut with premium gradients */}
+            <circle cx="90" cy="40" r="15" fill="url(#amtTwistHelmet)" stroke="#64748b" strokeWidth="1.5" />
+            {/* Visor */}
+            <ellipse cx="90" cy="42" rx="10" ry="8" fill="url(#amtTwistVisor)" />
+            {/* Body */}
+            <rect x="75" y="55" width="30" height="35" rx="5" fill="url(#amtTwistSuit)" stroke="#64748b" strokeWidth="1.5" />
+            {/* Life support pack */}
+            <rect x="78" y="58" width="8" height="12" rx="2" fill="#64748b" />
+            <rect x="94" y="58" width="8" height="12" rx="2" fill="#64748b" />
+            {/* Arms in asymmetric motion with gradients */}
+            <line x1="75" y1="65" x2="45" y2="45" stroke="url(#amtTwistSuit)" strokeWidth="7" strokeLinecap="round" />
+            <line x1="105" y1="65" x2="135" y2="85" stroke="url(#amtTwistSuit)" strokeWidth="7" strokeLinecap="round" />
+            {/* Gloves */}
+            <circle cx="45" cy="45" r="5" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
+            <circle cx="135" cy="85" r="5" fill="#e2e8f0" stroke="#64748b" strokeWidth="1" />
+            {/* Motion lines for arm movement */}
+            <path d="M50,50 Q55,45 60,48" fill="none" stroke="#a855f7" strokeWidth="1" opacity="0.5" />
+            <path d="M130,80 Q125,85 120,82" fill="none" stroke="#a855f7" strokeWidth="1" opacity="0.5" />
+            {/* Rotation arrow with glow */}
+            <path d="M70,95 A40,40 0 0 0 110,95" fill="none" stroke="url(#amtTwistArrowPurple)" strokeWidth="2.5" markerEnd="url(#amtTwistArrowHeadPurple)" filter="url(#amtTwistPurpleGlow)" />
           </svg>
+          <p style={{ fontSize: typo.label, color: colors.textMuted, textAlign: 'center', marginTop: '8px' }}>
+            Asymmetric arm circles
+          </p>
         </div>
-        <defs>
-          <marker id="arrowGreen" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#22c55e" />
-          </marker>
-          <marker id="arrowRed" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#ef4444" />
-          </marker>
-          <marker id="arrowPurple" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#a855f7" />
-          </marker>
-        </defs>
       </div>
 
       <div className="bg-gradient-to-br from-purple-900/40 to-pink-900/40 rounded-2xl p-6 max-w-2xl">
@@ -808,27 +1270,81 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, gamePha
       description: "Divers and gymnasts use asymmetric arm and leg movements to control twists in mid-air.",
       details: "A diver can initiate a twist after leaving the board by dropping one shoulder and asymmetrically moving their arms. The same physics that rights a cat allows them to add rotations!",
       animation: (
-        <svg width="200" height="150" className="mx-auto">
-          {/* Water */}
-          <rect x="0" y="120" width="200" height="30" fill="#3b82f6" opacity="0.5" />
-          {/* Platform */}
-          <rect x="10" y="20" width="40" height="8" fill="#64748b" />
-          {/* Diver stages */}
-          <g transform="translate(35, 45)">
-            <ellipse cx="0" cy="0" rx="5" ry="12" fill="#fcd9b6" />
-            <line x1="-8" y1="-5" x2="-18" y2="-15" stroke="#fcd9b6" strokeWidth="3" />
-            <line x1="8" y1="-5" x2="18" y2="5" stroke="#fcd9b6" strokeWidth="3" />
-          </g>
-          <g transform="translate(90, 70) rotate(90)">
-            <circle cx="0" cy="0" r="10" fill="#fcd9b6" />
-          </g>
-          <g transform="translate(145, 95) rotate(180)">
-            <ellipse cx="0" cy="0" rx="5" ry="12" fill="#fcd9b6" />
-          </g>
-          {/* Twist arrows */}
-          <path d="M70,60 Q80,50 90,60" fill="none" stroke="#a855f7" strokeWidth="2" />
-          <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">Asymmetric arms add twist</text>
-        </svg>
+        <div style={{ position: 'relative' }}>
+          <svg width="200" height="130" className="mx-auto" style={{ overflow: 'visible' }}>
+            <defs>
+              {/* Water gradient */}
+              <linearGradient id="amtAppWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.6" />
+                <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#2563eb" stopOpacity="0.8" />
+              </linearGradient>
+              {/* Platform gradient */}
+              <linearGradient id="amtAppPlatformGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#94a3b8" />
+                <stop offset="50%" stopColor="#64748b" />
+                <stop offset="100%" stopColor="#475569" />
+              </linearGradient>
+              {/* Skin gradient */}
+              <radialGradient id="amtAppSkinGrad" cx="40%" cy="40%" r="60%">
+                <stop offset="0%" stopColor="#fde68a" />
+                <stop offset="50%" stopColor="#fcd9b6" />
+                <stop offset="100%" stopColor="#f5c89a" />
+              </radialGradient>
+              {/* Twist arrow gradient */}
+              <linearGradient id="amtAppTwistGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#a855f7" />
+                <stop offset="50%" stopColor="#c084fc" />
+                <stop offset="100%" stopColor="#d8b4fe" />
+              </linearGradient>
+              {/* Glow filter */}
+              <filter id="amtAppGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            {/* Water with gradient */}
+            <rect x="0" y="100" width="200" height="30" fill="url(#amtAppWaterGrad)" rx="3" />
+            {/* Water surface ripples */}
+            <path d="M0,102 Q25,100 50,102 Q75,104 100,102 Q125,100 150,102 Q175,104 200,102" fill="none" stroke="white" strokeWidth="0.5" opacity="0.4" />
+            {/* Platform with gradient */}
+            <rect x="5" y="15" width="45" height="10" rx="2" fill="url(#amtAppPlatformGrad)" />
+            <rect x="5" y="15" width="45" height="2" fill="#cbd5e1" opacity="0.5" />
+            {/* Platform support */}
+            <rect x="20" y="25" width="15" height="75" fill="url(#amtAppPlatformGrad)" />
+            {/* Diver 1 - on platform */}
+            <g transform="translate(35, 38)">
+              <ellipse cx="0" cy="0" rx="5" ry="12" fill="url(#amtAppSkinGrad)" />
+              <circle cx="0" cy="-16" r="6" fill="url(#amtAppSkinGrad)" />
+              <line x1="-5" y1="-5" x2="-15" y2="-12" stroke="url(#amtAppSkinGrad)" strokeWidth="3" strokeLinecap="round" />
+              <line x1="5" y1="-5" x2="15" y2="2" stroke="url(#amtAppSkinGrad)" strokeWidth="3" strokeLinecap="round" />
+            </g>
+            {/* Diver 2 - mid-air twist */}
+            <g transform="translate(90, 55) rotate(45)">
+              <ellipse cx="0" cy="0" rx="5" ry="10" fill="url(#amtAppSkinGrad)" />
+              <circle cx="0" cy="-14" r="5" fill="url(#amtAppSkinGrad)" />
+              <line x1="-5" y1="0" x2="-12" y2="-8" stroke="url(#amtAppSkinGrad)" strokeWidth="2.5" strokeLinecap="round" />
+              <line x1="5" y1="0" x2="12" y2="5" stroke="url(#amtAppSkinGrad)" strokeWidth="2.5" strokeLinecap="round" />
+            </g>
+            {/* Diver 3 - entering water */}
+            <g transform="translate(150, 85) rotate(160)">
+              <ellipse cx="0" cy="0" rx="4" ry="10" fill="url(#amtAppSkinGrad)" />
+              <circle cx="0" cy="-13" r="5" fill="url(#amtAppSkinGrad)" />
+            </g>
+            {/* Twist arrows with glow */}
+            <path d="M65,45 Q80,35 95,50" fill="none" stroke="url(#amtAppTwistGrad)" strokeWidth="2.5" filter="url(#amtAppGlow)" />
+            <path d="M115,60 Q130,55 145,70" fill="none" stroke="url(#amtAppTwistGrad)" strokeWidth="2" filter="url(#amtAppGlow)" />
+            {/* Splash effect */}
+            <path d="M145,98 Q150,92 155,98" fill="none" stroke="white" strokeWidth="1" opacity="0.6" />
+            <path d="M150,96 L150,90" stroke="white" strokeWidth="1" opacity="0.5" />
+          </svg>
+          <p style={{ fontSize: '10px', color: '#94a3b8', textAlign: 'center', marginTop: '4px' }}>
+            Asymmetric arms add twist
+          </p>
+        </div>
       )
     },
     {
@@ -837,26 +1353,100 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, gamePha
       description: "Astronauts use self-rotation techniques during spacewalks and inside spacecraft.",
       details: "NASA trains astronauts in these maneuvers in underwater neutral buoyancy facilities. During EVAs, being able to reorient without grabbing anything can be crucial for safety.",
       animation: (
-        <svg width="200" height="150" className="mx-auto">
-          {/* Stars */}
-          {[1,2,3,4,5,6,7,8,9,10].map(i => (
-            <circle key={i} cx={(i * 19) % 190 + 5} cy={(i * 13) % 130 + 10} r="1" fill="white" opacity="0.6" />
-          ))}
-          {/* Space station segment */}
-          <rect x="0" y="50" width="60" height="50" fill="#64748b" />
-          <rect x="60" y="40" width="80" height="70" fill="#94a3b8" />
-          {/* Astronaut floating */}
-          <g transform="translate(120, 75)">
-            <circle cx="0" cy="-15" r="12" fill="white" stroke="#64748b" strokeWidth="2" />
-            <rect x="-10" y="-3" width="20" height="30" rx="3" fill="white" stroke="#64748b" strokeWidth="2" />
-            {/* Rotating arms */}
-            <line x1="-10" y1="5" x2="-25" y2="-5" stroke="white" strokeWidth="4" />
-            <line x1="10" y1="5" x2="25" y2="15" stroke="white" strokeWidth="4" />
-          </g>
-          {/* Rotation arrow */}
-          <path d="M100,90 A30,30 0 0 1 140,90" fill="none" stroke="#22c55e" strokeWidth="2" markerEnd="url(#arrowGreen)" />
-          <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">Self-rotation in microgravity</text>
-        </svg>
+        <div style={{ position: 'relative' }}>
+          <svg width="200" height="130" className="mx-auto" style={{ overflow: 'visible' }}>
+            <defs>
+              {/* Space background gradient */}
+              <linearGradient id="amtAppSpaceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#0f172a" />
+                <stop offset="50%" stopColor="#1e1b4b" />
+                <stop offset="100%" stopColor="#0f172a" />
+              </linearGradient>
+              {/* Station module gradient */}
+              <linearGradient id="amtAppStationGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#e2e8f0" />
+                <stop offset="30%" stopColor="#94a3b8" />
+                <stop offset="70%" stopColor="#64748b" />
+                <stop offset="100%" stopColor="#475569" />
+              </linearGradient>
+              {/* Astronaut suit gradient */}
+              <linearGradient id="amtAppAstroSuit" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f8fafc" />
+                <stop offset="30%" stopColor="#e2e8f0" />
+                <stop offset="70%" stopColor="#cbd5e1" />
+                <stop offset="100%" stopColor="#94a3b8" />
+              </linearGradient>
+              {/* Visor gradient */}
+              <radialGradient id="amtAppVisorGrad" cx="30%" cy="30%" r="70%">
+                <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.8" />
+                <stop offset="50%" stopColor="#d97706" stopOpacity="0.9" />
+                <stop offset="100%" stopColor="#92400e" />
+              </radialGradient>
+              {/* Rotation arrow gradient */}
+              <linearGradient id="amtAppRotateGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#22c55e" />
+                <stop offset="50%" stopColor="#4ade80" />
+                <stop offset="100%" stopColor="#86efac" />
+              </linearGradient>
+              <marker id="amtAppArrowGreen" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" fill="#4ade80" />
+              </marker>
+              <filter id="amtAppStarGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="1" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            {/* Space background */}
+            <rect x="0" y="0" width="200" height="130" fill="url(#amtAppSpaceGrad)" rx="4" />
+            {/* Stars with glow */}
+            {[
+              { x: 15, y: 20, r: 1.2 }, { x: 45, y: 10, r: 0.8 }, { x: 80, y: 25, r: 1 },
+              { x: 170, y: 15, r: 1.3 }, { x: 185, y: 45, r: 0.9 }, { x: 160, y: 110, r: 1.1 },
+              { x: 10, y: 80, r: 0.7 }, { x: 30, y: 115, r: 1 }, { x: 95, y: 5, r: 0.8 }
+            ].map((star, i) => (
+              <circle key={i} cx={star.x} cy={star.y} r={star.r} fill="white" filter="url(#amtAppStarGlow)" />
+            ))}
+            {/* Space station modules */}
+            <rect x="0" y="40" width="55" height="45" rx="3" fill="url(#amtAppStationGrad)" />
+            <rect x="55" y="32" width="75" height="60" rx="4" fill="url(#amtAppStationGrad)" />
+            {/* Solar panel */}
+            <rect x="60" y="8" width="25" height="20" fill="#1e3a5f" stroke="#475569" strokeWidth="1" />
+            <rect x="60" y="96" width="25" height="20" fill="#1e3a5f" stroke="#475569" strokeWidth="1" />
+            {/* Panel lines */}
+            <line x1="65" y1="8" x2="65" y2="28" stroke="#334155" strokeWidth="0.5" />
+            <line x1="72" y1="8" x2="72" y2="28" stroke="#334155" strokeWidth="0.5" />
+            <line x1="80" y1="8" x2="80" y2="28" stroke="#334155" strokeWidth="0.5" />
+            {/* Module windows */}
+            <circle cx="25" cy="62" r="6" fill="#0f172a" stroke="#64748b" strokeWidth="1" />
+            <circle cx="90" cy="55" r="8" fill="#0f172a" stroke="#64748b" strokeWidth="1" />
+            <circle cx="90" cy="75" r="6" fill="#0f172a" stroke="#64748b" strokeWidth="1" />
+            {/* Astronaut floating */}
+            <g transform="translate(145, 60)">
+              {/* Helmet */}
+              <circle cx="0" cy="-12" r="10" fill="url(#amtAppAstroSuit)" stroke="#64748b" strokeWidth="1" />
+              <ellipse cx="0" cy="-10" rx="7" ry="5" fill="url(#amtAppVisorGrad)" />
+              {/* Body */}
+              <rect x="-8" y="-2" width="16" height="24" rx="3" fill="url(#amtAppAstroSuit)" stroke="#64748b" strokeWidth="1" />
+              {/* Life support */}
+              <rect x="-6" y="0" width="5" height="8" rx="1" fill="#64748b" />
+              <rect x="1" y="0" width="5" height="8" rx="1" fill="#64748b" />
+              {/* Arms asymmetric */}
+              <line x1="-8" y1="5" x2="-22" y2="-5" stroke="url(#amtAppAstroSuit)" strokeWidth="5" strokeLinecap="round" />
+              <line x1="8" y1="5" x2="22" y2="15" stroke="url(#amtAppAstroSuit)" strokeWidth="5" strokeLinecap="round" />
+              {/* Gloves */}
+              <circle cx="-22" cy="-5" r="4" fill="#e2e8f0" />
+              <circle cx="22" cy="15" r="4" fill="#e2e8f0" />
+            </g>
+            {/* Rotation arrow with glow */}
+            <path d="M125,80 A25,25 0 0 1 165,80" fill="none" stroke="url(#amtAppRotateGrad)" strokeWidth="2.5" markerEnd="url(#amtAppArrowGreen)" filter="url(#amtAppStarGlow)" />
+          </svg>
+          <p style={{ fontSize: '10px', color: '#94a3b8', textAlign: 'center', marginTop: '4px' }}>
+            Self-rotation in microgravity
+          </p>
+        </div>
       )
     },
     {
@@ -865,27 +1455,88 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, gamePha
       description: "Aerial drones and falling robots use reaction wheels and limb movements to self-right.",
       details: "Boston Dynamics robots use rapid limb movements to reorient during falls. Some drones have internal reaction wheels that spin up to control orientation without aerodynamic surfaces.",
       animation: (
-        <svg width="200" height="150" className="mx-auto">
-          {/* Robot body */}
-          <rect x="70" y="40" width="60" height="50" rx="5" fill="#64748b" />
-          {/* Screen face */}
-          <rect x="80" y="50" width="40" height="25" rx="2" fill="#1e293b" />
-          <circle cx="90" cy="60" r="3" fill="#22c55e" />
-          <circle cx="110" cy="60" r="3" fill="#22c55e" />
-          {/* Limbs in motion */}
-          <line x1="70" y1="60" x2="40" y2="30" stroke="#94a3b8" strokeWidth="6" />
-          <line x1="130" y1="60" x2="160" y2="90" stroke="#94a3b8" strokeWidth="6" />
-          <line x1="85" y1="90" x2="75" y2="120" stroke="#94a3b8" strokeWidth="6" />
-          <line x1="115" y1="90" x2="125" y2="120" stroke="#94a3b8" strokeWidth="6" />
-          {/* Rotation indicator */}
-          <path d="M40,75 Q50,95 70,85" fill="none" stroke="#f59e0b" strokeWidth="2" markerEnd="url(#arrowOrange)" />
-          <defs>
-            <marker id="arrowOrange" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-              <path d="M0,0 L0,6 L9,3 z" fill="#f59e0b" />
-            </marker>
-          </defs>
-          <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="10">Rapid limb adjustment</text>
-        </svg>
+        <div style={{ position: 'relative' }}>
+          <svg width="200" height="130" className="mx-auto" style={{ overflow: 'visible' }}>
+            <defs>
+              {/* Robot body gradient */}
+              <linearGradient id="amtAppRobotBody" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#94a3b8" />
+                <stop offset="30%" stopColor="#64748b" />
+                <stop offset="70%" stopColor="#475569" />
+                <stop offset="100%" stopColor="#334155" />
+              </linearGradient>
+              {/* Robot limb gradient */}
+              <linearGradient id="amtAppRobotLimb" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#cbd5e1" />
+                <stop offset="50%" stopColor="#94a3b8" />
+                <stop offset="100%" stopColor="#64748b" />
+              </linearGradient>
+              {/* Screen gradient */}
+              <linearGradient id="amtAppScreen" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#1e293b" />
+                <stop offset="100%" stopColor="#0f172a" />
+              </linearGradient>
+              {/* Eye glow */}
+              <radialGradient id="amtAppEyeGlow" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#4ade80" />
+                <stop offset="50%" stopColor="#22c55e" />
+                <stop offset="100%" stopColor="#16a34a" />
+              </radialGradient>
+              {/* Reaction wheel gradient */}
+              <radialGradient id="amtAppWheelGrad" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#fbbf24" />
+                <stop offset="50%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#d97706" />
+              </radialGradient>
+              {/* Arrow gradient */}
+              <linearGradient id="amtAppOrangeArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#f59e0b" />
+                <stop offset="100%" stopColor="#fbbf24" />
+              </linearGradient>
+              <marker id="amtAppArrowOrange" markerWidth="8" markerHeight="8" refX="7" refY="3" orient="auto">
+                <path d="M0,0 L0,6 L8,3 z" fill="#fbbf24" />
+              </marker>
+              <filter id="amtAppRobotGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            {/* Robot body */}
+            <rect x="70" y="30" width="60" height="50" rx="6" fill="url(#amtAppRobotBody)" />
+            {/* Body highlight */}
+            <rect x="72" y="32" width="56" height="3" rx="1" fill="#cbd5e1" opacity="0.4" />
+            {/* Screen face */}
+            <rect x="78" y="40" width="44" height="28" rx="3" fill="url(#amtAppScreen)" />
+            {/* Eyes with glow */}
+            <circle cx="90" cy="52" r="4" fill="url(#amtAppEyeGlow)" filter="url(#amtAppRobotGlow)" />
+            <circle cx="110" cy="52" r="4" fill="url(#amtAppEyeGlow)" filter="url(#amtAppRobotGlow)" />
+            {/* Eye highlights */}
+            <circle cx="88" cy="50" r="1" fill="white" opacity="0.8" />
+            <circle cx="108" cy="50" r="1" fill="white" opacity="0.8" />
+            {/* Reaction wheel inside body */}
+            <circle cx="100" cy="72" r="6" fill="url(#amtAppWheelGrad)" filter="url(#amtAppRobotGlow)">
+              <animateTransform attributeName="transform" type="rotate" from="0 100 72" to="360 100 72" dur="0.5s" repeatCount="indefinite" />
+            </circle>
+            {/* Limbs in asymmetric motion */}
+            <line x1="70" y1="50" x2="38" y2="22" stroke="url(#amtAppRobotLimb)" strokeWidth="7" strokeLinecap="round" />
+            <line x1="130" y1="50" x2="162" y2="78" stroke="url(#amtAppRobotLimb)" strokeWidth="7" strokeLinecap="round" />
+            <line x1="85" y1="80" x2="72" y2="110" stroke="url(#amtAppRobotLimb)" strokeWidth="7" strokeLinecap="round" />
+            <line x1="115" y1="80" x2="128" y2="110" stroke="url(#amtAppRobotLimb)" strokeWidth="7" strokeLinecap="round" />
+            {/* Hand/foot joints */}
+            <circle cx="38" cy="22" r="5" fill="#64748b" />
+            <circle cx="162" cy="78" r="5" fill="#64748b" />
+            <circle cx="72" cy="110" r="5" fill="#64748b" />
+            <circle cx="128" cy="110" r="5" fill="#64748b" />
+            {/* Rotation indicator */}
+            <path d="M35,65 Q48,85 68,75" fill="none" stroke="url(#amtAppOrangeArrow)" strokeWidth="2.5" markerEnd="url(#amtAppArrowOrange)" filter="url(#amtAppRobotGlow)" />
+          </svg>
+          <p style={{ fontSize: '10px', color: '#94a3b8', textAlign: 'center', marginTop: '4px' }}>
+            Rapid limb adjustment with reaction wheel
+          </p>
+        </div>
       )
     },
     {
@@ -894,21 +1545,92 @@ const AngularMomentumTransferRenderer: React.FC<Props> = ({ onGameEvent, gamePha
       description: "Skaters use arm and leg positions not just for speed, but also to initiate and control twist direction.",
       details: "A skater can start a spin in one direction, then use asymmetric arm movements to reverse it or add twisting rotations - all through angular momentum transfer between body parts.",
       animation: (
-        <svg width="200" height="150" className="mx-auto">
-          {/* Ice */}
-          <ellipse cx="100" cy="130" rx="80" ry="15" fill="#a5f3fc" opacity="0.4" />
-          {/* Skater */}
-          <circle cx="100" cy="45" r="12" fill="#fcd9b6" />
-          <ellipse cx="100" cy="75" rx="15" ry="25" fill="#ec4899" />
-          {/* Arms asymmetric */}
-          <line x1="85" y1="60" x2="55" y2="40" stroke="#fcd9b6" strokeWidth="4" />
-          <line x1="115" y1="60" x2="130" y2="80" stroke="#fcd9b6" strokeWidth="4" />
-          {/* Leg */}
-          <line x1="100" y1="100" x2="100" y2="125" stroke="#fcd9b6" strokeWidth="4" />
-          {/* Rotation arrows */}
-          <path d="M65,75 A40,40 0 0 0 135,75" fill="none" stroke="#a855f7" strokeWidth="2" strokeDasharray="4 2" />
-          <text x="100" y="145" textAnchor="middle" fill="#94a3b8" fontSize="10">Asymmetric arms control twist</text>
-        </svg>
+        <div style={{ position: 'relative' }}>
+          <svg width="200" height="130" className="mx-auto" style={{ overflow: 'visible' }}>
+            <defs>
+              {/* Ice gradient */}
+              <radialGradient id="amtAppIceGrad" cx="50%" cy="50%" r="60%">
+                <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.6" />
+                <stop offset="50%" stopColor="#bae6fd" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.3" />
+              </radialGradient>
+              {/* Skin gradient */}
+              <radialGradient id="amtAppSkaterSkin" cx="40%" cy="40%" r="60%">
+                <stop offset="0%" stopColor="#fde68a" />
+                <stop offset="50%" stopColor="#fcd9b6" />
+                <stop offset="100%" stopColor="#f5c89a" />
+              </radialGradient>
+              {/* Dress gradient */}
+              <linearGradient id="amtAppDressGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#f472b6" />
+                <stop offset="30%" stopColor="#ec4899" />
+                <stop offset="70%" stopColor="#db2777" />
+                <stop offset="100%" stopColor="#be185d" />
+              </linearGradient>
+              {/* Spin trail gradient */}
+              <linearGradient id="amtAppSpinTrail" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#a855f7" stopOpacity="0" />
+                <stop offset="50%" stopColor="#c084fc" stopOpacity="0.6" />
+                <stop offset="100%" stopColor="#d8b4fe" stopOpacity="0.8" />
+              </linearGradient>
+              <filter id="amtAppSpinGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Ice sparkle filter */}
+              <filter id="amtAppSparkle">
+                <feGaussianBlur stdDeviation="0.5" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+            </defs>
+            {/* Ice rink */}
+            <ellipse cx="100" cy="115" rx="90" ry="18" fill="url(#amtAppIceGrad)" />
+            {/* Ice reflection/sparkles */}
+            <circle cx="60" cy="112" r="1" fill="white" filter="url(#amtAppSparkle)" opacity="0.6" />
+            <circle cx="120" cy="118" r="1.2" fill="white" filter="url(#amtAppSparkle)" opacity="0.5" />
+            <circle cx="150" cy="110" r="0.8" fill="white" filter="url(#amtAppSparkle)" opacity="0.7" />
+            <circle cx="40" cy="115" r="1" fill="white" filter="url(#amtAppSparkle)" opacity="0.4" />
+            {/* Spin trail effect */}
+            <ellipse cx="100" cy="70" rx="45" ry="35" fill="none" stroke="url(#amtAppSpinTrail)" strokeWidth="3" strokeDasharray="8 4" filter="url(#amtAppSpinGlow)" opacity="0.7">
+              <animateTransform attributeName="transform" type="rotate" from="0 100 70" to="360 100 70" dur="2s" repeatCount="indefinite" />
+            </ellipse>
+            {/* Skater */}
+            {/* Hair */}
+            <ellipse cx="100" cy="32" rx="10" ry="8" fill="#7c3aed" />
+            {/* Head */}
+            <circle cx="100" cy="38" r="10" fill="url(#amtAppSkaterSkin)" />
+            {/* Face details */}
+            <circle cx="96" cy="37" r="1.5" fill="#1e293b" />
+            <circle cx="104" cy="37" r="1.5" fill="#1e293b" />
+            <ellipse cx="100" cy="42" rx="2" ry="1" fill="#f87171" />
+            {/* Body/dress */}
+            <ellipse cx="100" cy="68" rx="14" ry="22" fill="url(#amtAppDressGrad)" />
+            {/* Dress sparkles */}
+            <circle cx="95" cy="60" r="1" fill="white" opacity="0.6" />
+            <circle cx="105" cy="70" r="0.8" fill="white" opacity="0.5" />
+            <circle cx="98" cy="80" r="1" fill="white" opacity="0.4" />
+            {/* Arms asymmetric */}
+            <line x1="86" y1="55" x2="52" y2="35" stroke="url(#amtAppSkaterSkin)" strokeWidth="5" strokeLinecap="round" />
+            <line x1="114" y1="55" x2="135" y2="72" stroke="url(#amtAppSkaterSkin)" strokeWidth="5" strokeLinecap="round" />
+            {/* Hands */}
+            <circle cx="52" cy="35" r="4" fill="url(#amtAppSkaterSkin)" />
+            <circle cx="135" cy="72" r="4" fill="url(#amtAppSkaterSkin)" />
+            {/* Skating leg */}
+            <line x1="100" y1="90" x2="100" y2="108" stroke="url(#amtAppSkaterSkin)" strokeWidth="5" strokeLinecap="round" />
+            {/* Skate blade */}
+            <path d="M95,108 L105,108 Q108,108 108,110 L92,110 Q92,108 95,108" fill="#94a3b8" />
+            <line x1="92" y1="110" x2="108" y2="110" stroke="#64748b" strokeWidth="1.5" />
+          </svg>
+          <p style={{ fontSize: '10px', color: '#94a3b8', textAlign: 'center', marginTop: '4px' }}>
+            Asymmetric arms control twist direction
+          </p>
+        </div>
       )
     }
   ];

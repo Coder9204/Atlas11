@@ -788,16 +788,148 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
             <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
-              {/* Background */}
-              <rect x="0" y="0" width="300" height="300" fill={premiumDesign.colors.background.secondary} rx="12" />
+              <defs>
+                {/* Premium background gradient */}
+                <linearGradient id="staticLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#030712" />
+                  <stop offset="50%" stopColor="#0a0f1a" />
+                  <stop offset="100%" stopColor="#030712" />
+                </linearGradient>
 
-              {/* Head */}
-              <ellipse cx="150" cy="200" rx="50" ry="60" fill="#FFD7B5" />
-              <ellipse cx="135" cy="185" rx="5" ry="7" fill="#333" />
-              <ellipse cx="165" cy="185" rx="5" ry="7" fill="#333" />
-              <path d="M140 210 Q150 220 160 210" stroke="#333" strokeWidth="2" fill="none" />
+                {/* Balloon gradient - neutral */}
+                <radialGradient id="staticBalloonNeutral" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#FF8888" />
+                  <stop offset="40%" stopColor="#FF6B6B" />
+                  <stop offset="70%" stopColor="#EF4444" />
+                  <stop offset="100%" stopColor="#DC2626" />
+                </radialGradient>
 
-              {/* Hair strands */}
+                {/* Balloon gradient - charged (negative) */}
+                <radialGradient id="staticBalloonCharged" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#F87171" />
+                  <stop offset="30%" stopColor="#EF4444" />
+                  <stop offset="60%" stopColor="#DC2626" />
+                  <stop offset="100%" stopColor="#991B1B" />
+                </radialGradient>
+
+                {/* Negative charge glow */}
+                <radialGradient id="staticNegativeGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#60A5FA" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#3B82F6" stopOpacity="0.7" />
+                  <stop offset="70%" stopColor="#2563EB" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#1D4ED8" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Positive charge glow */}
+                <radialGradient id="staticPositiveGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#FCA5A5" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#EF4444" stopOpacity="0.7" />
+                  <stop offset="70%" stopColor="#DC2626" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#B91C1C" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Skin tone gradient */}
+                <radialGradient id="staticSkinGrad" cx="40%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#FFE4C4" />
+                  <stop offset="50%" stopColor="#FFD7B5" />
+                  <stop offset="80%" stopColor="#F5C69A" />
+                  <stop offset="100%" stopColor="#E8B589" />
+                </radialGradient>
+
+                {/* Hair strand gradient */}
+                <linearGradient id="staticHairGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#A0522D" />
+                  <stop offset="50%" stopColor="#8B4513" />
+                  <stop offset="100%" stopColor="#654321" />
+                </linearGradient>
+
+                {/* Table wood gradient */}
+                <linearGradient id="staticWoodGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#A0522D" />
+                  <stop offset="30%" stopColor="#8B4513" />
+                  <stop offset="60%" stopColor="#704214" />
+                  <stop offset="100%" stopColor="#5C3317" />
+                </linearGradient>
+
+                {/* Paper gradient */}
+                <linearGradient id="staticPaperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#FFFEF0" />
+                  <stop offset="50%" stopColor="#F5F5DC" />
+                  <stop offset="100%" stopColor="#E8E8D0" />
+                </linearGradient>
+
+                {/* Electric field line gradient */}
+                <linearGradient id="staticFieldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#60A5FA" stopOpacity="0" />
+                  <stop offset="30%" stopColor="#3B82F6" stopOpacity="0.6" />
+                  <stop offset="50%" stopColor="#2563EB" stopOpacity="0.8" />
+                  <stop offset="70%" stopColor="#3B82F6" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#60A5FA" stopOpacity="0" />
+                </linearGradient>
+
+                {/* Balloon glow filter */}
+                <filter id="staticBalloonGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Charge symbol glow */}
+                <filter id="staticChargeGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Hair strand glow when charged */}
+                <filter id="staticHairGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="1.5" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Spark effect filter */}
+                <filter id="staticSparkGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Attraction field lines gradient */}
+                <linearGradient id="staticAttractionGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#60A5FA" stopOpacity="0.8" />
+                  <stop offset="50%" stopColor="#A78BFA" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#F472B6" stopOpacity="0.2" />
+                </linearGradient>
+              </defs>
+
+              {/* Premium background */}
+              <rect x="0" y="0" width="300" height="300" fill="url(#staticLabBg)" rx="12" />
+
+              {/* Subtle grid pattern */}
+              <pattern id="staticGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+              </pattern>
+              <rect x="0" y="0" width="300" height="300" fill="url(#staticGrid)" rx="12" />
+
+              {/* Head with premium gradient */}
+              <ellipse cx="150" cy="200" rx="50" ry="60" fill="url(#staticSkinGrad)" />
+              <ellipse cx="135" cy="185" rx="5" ry="7" fill="#2D2D2D" />
+              <ellipse cx="165" cy="185" rx="5" ry="7" fill="#2D2D2D" />
+              <ellipse cx="135" cy="183" rx="2" ry="3" fill="#FFFFFF" opacity="0.6" />
+              <ellipse cx="165" cy="183" rx="2" ry="3" fill="#FFFFFF" opacity="0.6" />
+              <path d="M140 210 Q150 218 160 210" stroke="#8B4513" strokeWidth="2" fill="none" strokeLinecap="round" />
+
+              {/* Hair strands with gradient and glow when charged */}
               {hairStrands.map((strand, i) => {
                 const startX = 100 + (i / hairStrands.length) * 100;
                 const startY = 145;
@@ -811,86 +943,179 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
                     y1={startY}
                     x2={endX}
                     y2={endY}
-                    stroke="#8B4513"
-                    strokeWidth="2"
+                    stroke="url(#staticHairGrad)"
+                    strokeWidth={balloonCharge < 0 ? "2.5" : "2"}
                     strokeLinecap="round"
+                    filter={balloonCharge < 0 ? "url(#staticHairGlow)" : undefined}
                   />
                 );
               })}
 
-              {/* Balloon */}
-              <g transform={`translate(150, 80)`}>
+              {/* Positive charge indicators on hair with glow */}
+              {balloonCharge < 0 && (
+                <>
+                  {[...Array(Math.min(Math.abs(balloonCharge), 4))].map((_, i) => (
+                    <g key={i} filter="url(#staticChargeGlow)">
+                      <circle
+                        cx={120 + i * 20}
+                        cy={130}
+                        r="8"
+                        fill="url(#staticPositiveGlow)"
+                      />
+                      <text
+                        x={120 + i * 20}
+                        y={135}
+                        textAnchor="middle"
+                        fill="#FFFFFF"
+                        fontSize="14"
+                        fontWeight="bold"
+                      >
+                        +
+                      </text>
+                    </g>
+                  ))}
+                </>
+              )}
+
+              {/* Balloon with premium styling */}
+              <g transform="translate(150, 80)">
+                {/* Balloon glow effect when charged */}
+                {balloonCharge < 0 && (
+                  <ellipse
+                    cx="0"
+                    cy="0"
+                    rx="50"
+                    ry="60"
+                    fill="url(#staticNegativeGlow)"
+                    opacity={Math.min(Math.abs(balloonCharge) * 0.1, 0.6)}
+                  />
+                )}
+                {/* Main balloon */}
                 <ellipse
                   cx="0"
                   cy="0"
                   rx="35"
                   ry="45"
-                  fill={balloonCharge < 0 ? '#EF4444' : '#FF6B6B'}
-                  stroke={balloonCharge < 0 ? '#B91C1C' : '#CC5555'}
+                  fill={balloonCharge < 0 ? "url(#staticBalloonCharged)" : "url(#staticBalloonNeutral)"}
+                  stroke={balloonCharge < 0 ? '#991B1B' : '#CC5555'}
                   strokeWidth="2"
+                  filter={balloonCharge < 0 ? "url(#staticBalloonGlow)" : undefined}
                 />
-                {/* Charge indicators on balloon */}
+                {/* Balloon highlight */}
+                <ellipse cx="-12" cy="-15" rx="8" ry="12" fill="rgba(255,255,255,0.3)" />
+
+                {/* Negative charge indicators with glow */}
                 {balloonCharge < 0 && (
                   <>
                     {[...Array(Math.min(Math.abs(balloonCharge), 6))].map((_, i) => (
-                      <text
-                        key={i}
-                        x={-15 + (i % 3) * 15}
-                        y={-10 + Math.floor(i / 3) * 20}
-                        fill="#FFF"
-                        fontSize="14"
-                        fontWeight="bold"
-                      >
-                        −
-                      </text>
+                      <g key={i} filter="url(#staticChargeGlow)">
+                        <circle
+                          cx={-15 + (i % 3) * 15}
+                          cy={-15 + Math.floor(i / 3) * 25}
+                          r="7"
+                          fill="url(#staticNegativeGlow)"
+                        />
+                        <text
+                          x={-15 + (i % 3) * 15}
+                          y={-10 + Math.floor(i / 3) * 25}
+                          textAnchor="middle"
+                          fill="#FFFFFF"
+                          fontSize="14"
+                          fontWeight="bold"
+                        >
+                          -
+                        </text>
+                      </g>
                     ))}
                   </>
                 )}
-                {/* Balloon string */}
-                <line x1="0" y1="45" x2="0" y2="55" stroke="#888" strokeWidth="2" />
+                {/* Balloon string with gradient */}
+                <line x1="0" y1="45" x2="0" y2="60" stroke="#666" strokeWidth="2" strokeLinecap="round" />
+                <line x1="0" y1="60" x2="5" y2="70" stroke="#666" strokeWidth="1.5" />
               </g>
 
-              {/* Hair charge indicators (positive when balloon takes electrons) */}
-              {balloonCharge < 0 && (
-                <>
-                  {[...Array(Math.min(Math.abs(balloonCharge), 4))].map((_, i) => (
-                    <text
-                      key={i}
-                      x={120 + i * 20}
-                      y={135}
-                      fill={premiumDesign.colors.positive}
-                      fontSize="12"
-                      fontWeight="bold"
-                    >
-                      +
-                    </text>
-                  ))}
-                </>
-              )}
+              {/* Electric field lines when simulating attraction */}
+              {isSimulating && balloonCharge < -3 && paperPieces.map((piece, i) => {
+                if (!piece.attracted) return null;
+                const dx = 150 - piece.x;
+                const dy = 80 - piece.y;
+                const dist = Math.sqrt(dx * dx + dy * dy);
+                if (dist > 150) return null;
 
-              {/* Paper pieces */}
+                return (
+                  <line
+                    key={`field-${i}`}
+                    x1={piece.x + 6}
+                    y1={piece.y + 4}
+                    x2={150}
+                    y2={80}
+                    stroke="url(#staticAttractionGrad)"
+                    strokeWidth="1.5"
+                    strokeDasharray="4 2"
+                    opacity={0.6}
+                  />
+                );
+              })}
+
+              {/* Paper pieces with premium styling */}
               {paperPieces.map((piece, i) => (
-                <rect
-                  key={i}
-                  x={piece.x}
-                  y={piece.y}
-                  width="12"
-                  height="8"
-                  fill="#F5F5DC"
-                  stroke="#DDD"
-                  strokeWidth="0.5"
-                  transform={`rotate(${Math.random() * 30}, ${piece.x + 6}, ${piece.y + 4})`}
-                />
+                <g key={i} transform={`rotate(${(i * 17) % 30 - 15}, ${piece.x + 6}, ${piece.y + 4})`}>
+                  <rect
+                    x={piece.x}
+                    y={piece.y}
+                    width="12"
+                    height="8"
+                    fill="url(#staticPaperGrad)"
+                    stroke="#C4C4A0"
+                    strokeWidth="0.5"
+                    rx="1"
+                  />
+                  {/* Paper shadow */}
+                  <rect
+                    x={piece.x + 1}
+                    y={piece.y + 7}
+                    width="12"
+                    height="2"
+                    fill="rgba(0,0,0,0.2)"
+                    rx="1"
+                  />
+                </g>
               ))}
 
-              {/* Table surface */}
-              <rect x="40" y="270" width="220" height="20" fill="#8B4513" rx="2" />
+              {/* Table surface with wood grain effect */}
+              <rect x="40" y="270" width="220" height="25" fill="url(#staticWoodGrad)" rx="3" />
+              <rect x="40" y="270" width="220" height="3" fill="rgba(255,255,255,0.1)" rx="1" />
+              {/* Wood grain lines */}
+              {[60, 100, 140, 180, 220].map((x, i) => (
+                <line key={i} x1={x} y1="273" x2={x + 15} y2="292" stroke="rgba(0,0,0,0.15)" strokeWidth="1" />
+              ))}
 
-              {/* Labels */}
-              <text x="150" y="290" textAnchor="middle" fill="white" fontSize="10">
-                Paper pieces on table
-              </text>
+              {/* Spark effects when highly charged and simulating */}
+              {isSimulating && balloonCharge < -5 && (
+                <>
+                  <g filter="url(#staticSparkGlow)">
+                    <path
+                      d="M150 125 L155 130 L148 135 L158 145"
+                      stroke="#60A5FA"
+                      strokeWidth="2"
+                      fill="none"
+                      opacity="0.8"
+                    >
+                      <animate attributeName="opacity" values="0.8;0.2;0.8" dur="0.3s" repeatCount="indefinite" />
+                    </path>
+                  </g>
+                </>
+              )}
             </svg>
+            {/* Label moved outside SVG using typo system */}
+            <div style={{
+              textAlign: 'center',
+              marginTop: typo.elementGap,
+              fontSize: typo.small,
+              color: premiumDesign.colors.text.muted,
+            }}>
+              Paper pieces on table
+            </div>
           </div>
 
           {/* Controls */}
@@ -1275,71 +1500,243 @@ export default function StaticElectricityRenderer({ onGameEvent, gamePhase, onPh
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
             <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
-              {/* Background */}
-              <rect x="30" y="30" width="240" height="240" fill="rgba(99, 102, 241, 0.05)" rx="8" />
-              <rect x="30" y="30" width="240" height="240" fill="none" stroke="rgba(99, 102, 241, 0.3)" strokeWidth="2" rx="8" />
+              <defs>
+                {/* Premium lab background gradient */}
+                <linearGradient id="staticCoulombBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#030712" />
+                  <stop offset="50%" stopColor="#0a1628" />
+                  <stop offset="100%" stopColor="#030712" />
+                </linearGradient>
 
-              {/* Force lines between charges */}
+                {/* Positive charge gradient - warm */}
+                <radialGradient id="staticPositiveGrad" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#FCA5A5" />
+                  <stop offset="30%" stopColor="#F87171" />
+                  <stop offset="60%" stopColor="#EF4444" />
+                  <stop offset="100%" stopColor="#B91C1C" />
+                </radialGradient>
+
+                {/* Negative charge gradient - cool */}
+                <radialGradient id="staticNegativeGrad" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#93C5FD" />
+                  <stop offset="30%" stopColor="#60A5FA" />
+                  <stop offset="60%" stopColor="#3B82F6" />
+                  <stop offset="100%" stopColor="#1D4ED8" />
+                </radialGradient>
+
+                {/* Positive outer glow */}
+                <radialGradient id="staticPositiveOuterGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#EF4444" stopOpacity="0.6" />
+                  <stop offset="50%" stopColor="#DC2626" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#B91C1C" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Negative outer glow */}
+                <radialGradient id="staticNegativeOuterGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#3B82F6" stopOpacity="0.6" />
+                  <stop offset="50%" stopColor="#2563EB" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#1D4ED8" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Attraction force line gradient */}
+                <linearGradient id="staticAttractionLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#10B981" stopOpacity="0.2" />
+                  <stop offset="30%" stopColor="#34D399" stopOpacity="0.8" />
+                  <stop offset="50%" stopColor="#6EE7B7" stopOpacity="1" />
+                  <stop offset="70%" stopColor="#34D399" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#10B981" stopOpacity="0.2" />
+                </linearGradient>
+
+                {/* Repulsion force line gradient */}
+                <linearGradient id="staticRepulsionLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#EF4444" stopOpacity="0.2" />
+                  <stop offset="30%" stopColor="#F87171" stopOpacity="0.8" />
+                  <stop offset="50%" stopColor="#FCA5A5" stopOpacity="1" />
+                  <stop offset="70%" stopColor="#F87171" stopOpacity="0.8" />
+                  <stop offset="100%" stopColor="#EF4444" stopOpacity="0.2" />
+                </linearGradient>
+
+                {/* Electric field gradient */}
+                <linearGradient id="staticFieldLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0" />
+                  <stop offset="30%" stopColor="#A78BFA" stopOpacity="0.5" />
+                  <stop offset="50%" stopColor="#C4B5FD" stopOpacity="0.7" />
+                  <stop offset="70%" stopColor="#A78BFA" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
+                </linearGradient>
+
+                {/* Charge glow filter */}
+                <filter id="staticChargeBlur" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="4" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Force line glow */}
+                <filter id="staticForceGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Pulsing animation for charges */}
+                <filter id="staticPulse" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2">
+                    <animate attributeName="stdDeviation" values="2;4;2" dur="1.5s" repeatCount="indefinite" />
+                  </feGaussianBlur>
+                </filter>
+              </defs>
+
+              {/* Premium background */}
+              <rect x="0" y="0" width="300" height="300" fill="url(#staticCoulombBg)" rx="12" />
+
+              {/* Subtle grid pattern */}
+              <pattern id="staticCoulombGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+              </pattern>
+              <rect x="0" y="0" width="300" height="300" fill="url(#staticCoulombGrid)" rx="12" />
+
+              {/* Simulation area with premium border */}
+              <rect x="30" y="30" width="240" height="240" fill="rgba(99, 102, 241, 0.03)" rx="12" />
+              <rect x="30" y="30" width="240" height="240" fill="none" stroke="rgba(99, 102, 241, 0.2)" strokeWidth="1.5" rx="12" />
+              {/* Corner accents */}
+              <path d="M30 50 L30 30 L50 30" fill="none" stroke="rgba(99, 102, 241, 0.5)" strokeWidth="2" />
+              <path d="M250 30 L270 30 L270 50" fill="none" stroke="rgba(99, 102, 241, 0.5)" strokeWidth="2" />
+              <path d="M270 250 L270 270 L250 270" fill="none" stroke="rgba(99, 102, 241, 0.5)" strokeWidth="2" />
+              <path d="M50 270 L30 270 L30 250" fill="none" stroke="rgba(99, 102, 241, 0.5)" strokeWidth="2" />
+
+              {/* Force lines between charges with premium styling */}
               {chargedObjects.map((obj1, i) =>
                 chargedObjects.slice(i + 1).map((obj2, j) => {
                   const isAttracting = obj1.charge * obj2.charge < 0;
+                  const dx = obj2.x - obj1.x;
+                  const dy = obj2.y - obj1.y;
+                  const dist = Math.sqrt(dx * dx + dy * dy);
+                  const midX = (obj1.x + obj2.x) / 2;
+                  const midY = (obj1.y + obj2.y) / 2;
+
                   return (
-                    <line
-                      key={`${i}-${j}`}
-                      x1={obj1.x}
-                      y1={obj1.y}
-                      x2={obj2.x}
-                      y2={obj2.y}
-                      stroke={isAttracting ? premiumDesign.colors.success : premiumDesign.colors.error}
-                      strokeWidth="1"
-                      strokeDasharray={isAttracting ? "none" : "5,5"}
-                      opacity="0.4"
-                    />
+                    <g key={`${i}-${j}`} filter="url(#staticForceGlow)">
+                      <line
+                        x1={obj1.x}
+                        y1={obj1.y}
+                        x2={obj2.x}
+                        y2={obj2.y}
+                        stroke={isAttracting ? "url(#staticAttractionLineGrad)" : "url(#staticRepulsionLineGrad)"}
+                        strokeWidth="2"
+                        strokeDasharray={isAttracting ? "none" : "8,4"}
+                        opacity="0.8"
+                      />
+                      {/* Force direction arrows */}
+                      {isAttracting ? (
+                        <>
+                          {/* Arrows pointing toward each other */}
+                          <polygon
+                            points={`${midX - 4},${midY - 4} ${midX + 4},${midY} ${midX - 4},${midY + 4}`}
+                            fill="#34D399"
+                            transform={`rotate(${Math.atan2(dy, dx) * 180 / Math.PI}, ${midX}, ${midY})`}
+                          />
+                        </>
+                      ) : (
+                        <>
+                          {/* Arrows pointing away */}
+                          <polygon
+                            points={`${midX + 4},${midY - 4} ${midX - 4},${midY} ${midX + 4},${midY + 4}`}
+                            fill="#F87171"
+                            transform={`rotate(${Math.atan2(dy, dx) * 180 / Math.PI}, ${midX}, ${midY})`}
+                          />
+                        </>
+                      )}
+                    </g>
                   );
                 })
               )}
 
-              {/* Charged objects */}
+              {/* Charged objects with premium styling */}
               {chargedObjects.map((obj) => (
                 <g key={obj.id}>
-                  {/* Glow effect */}
+                  {/* Outer pulsing glow */}
                   <circle
                     cx={obj.x}
                     cy={obj.y}
-                    r="25"
-                    fill={obj.charge > 0 ? 'rgba(239, 68, 68, 0.2)' : 'rgba(59, 130, 246, 0.2)'}
+                    r="30"
+                    fill={obj.charge > 0 ? "url(#staticPositiveOuterGlow)" : "url(#staticNegativeOuterGlow)"}
+                    filter="url(#staticPulse)"
                   />
-                  {/* Main circle */}
+                  {/* Inner glow ring */}
+                  <circle
+                    cx={obj.x}
+                    cy={obj.y}
+                    r="24"
+                    fill="none"
+                    stroke={obj.charge > 0 ? "rgba(239, 68, 68, 0.3)" : "rgba(59, 130, 246, 0.3)"}
+                    strokeWidth="2"
+                  />
+                  {/* Main charge circle with gradient */}
                   <circle
                     cx={obj.x}
                     cy={obj.y}
                     r="18"
-                    fill={obj.charge > 0 ? premiumDesign.colors.positive : premiumDesign.colors.negative}
-                    stroke="white"
+                    fill={obj.charge > 0 ? "url(#staticPositiveGrad)" : "url(#staticNegativeGrad)"}
+                    stroke="rgba(255,255,255,0.6)"
                     strokeWidth="2"
+                    filter="url(#staticChargeBlur)"
+                  />
+                  {/* Highlight */}
+                  <circle
+                    cx={obj.x - 5}
+                    cy={obj.y - 5}
+                    r="5"
+                    fill="rgba(255,255,255,0.3)"
                   />
                   {/* Charge sign */}
                   <text
                     x={obj.x}
-                    y={obj.y + 6}
+                    y={obj.y + 7}
                     textAnchor="middle"
                     fill="white"
-                    fontSize="20"
+                    fontSize="22"
                     fontWeight="bold"
+                    style={{ textShadow: '0 0 10px rgba(0,0,0,0.5)' }}
                   >
-                    {obj.charge > 0 ? '+' : '−'}
+                    {obj.charge > 0 ? '+' : '-'}
                   </text>
                 </g>
               ))}
-
-              {/* Legend */}
-              <g transform="translate(40, 250)">
-                <circle cx="0" cy="0" r="8" fill={premiumDesign.colors.positive} />
-                <text x="15" y="4" fill="white" fontSize="10">Positive</text>
-                <circle cx="80" cy="0" r="8" fill={premiumDesign.colors.negative} />
-                <text x="95" y="4" fill="white" fontSize="10">Negative</text>
-              </g>
             </svg>
+            {/* Legend moved outside SVG */}
+            <div style={{
+              display: 'flex',
+              justifyContent: 'center',
+              gap: premiumDesign.spacing.lg,
+              marginTop: typo.elementGap,
+              fontSize: typo.small,
+            }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{
+                  width: '14px',
+                  height: '14px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #FCA5A5 0%, #EF4444 50%, #B91C1C 100%)',
+                  boxShadow: '0 0 8px rgba(239, 68, 68, 0.5)',
+                }} />
+                <span style={{ color: premiumDesign.colors.text.secondary }}>Positive</span>
+              </div>
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{
+                  width: '14px',
+                  height: '14px',
+                  borderRadius: '50%',
+                  background: 'linear-gradient(135deg, #93C5FD 0%, #3B82F6 50%, #1D4ED8 100%)',
+                  boxShadow: '0 0 8px rgba(59, 130, 246, 0.5)',
+                }} />
+                <span style={{ color: premiumDesign.colors.text.secondary }}>Negative</span>
+              </div>
+            </div>
           </div>
 
           {/* Controls */}

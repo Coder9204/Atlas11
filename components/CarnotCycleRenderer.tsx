@@ -526,111 +526,426 @@ const CarnotCycleRenderer: React.FC<Props> = ({ currentPhase, onPhaseComplete })
     const dotX = points[currentPoint].x + (points[nextPoint].x - points[currentPoint].x) * progress;
     const dotY = points[currentPoint].y + (points[nextPoint].y - points[currentPoint].y) * progress;
 
+    // Work area path (closed cycle)
+    const workAreaPath = `
+      M${points[0].x},${points[0].y}
+      Q${(points[0].x + points[1].x) / 2},${points[0].y + 15} ${points[1].x},${points[1].y}
+      Q${points[1].x + 30},${(points[1].y + points[2].y) / 2} ${points[2].x},${points[2].y}
+      Q${(points[2].x + points[3].x) / 2},${points[2].y + 10} ${points[3].x},${points[3].y}
+      Q${points[3].x - 20},${(points[3].y + points[0].y) / 2} ${points[0].x},${points[0].y}
+      Z
+    `;
+
     return (
-      <svg width={size} height={size} className="mx-auto">
-        <defs>
-          <linearGradient id="pvBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#0f172a" />
-            <stop offset="100%" stopColor="#1e293b" />
-          </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+      <div style={{ position: 'relative', display: 'inline-block' }}>
+        <svg width={size} height={size} className="mx-auto">
+          <defs>
+            {/* Premium background gradient with depth */}
+            <linearGradient id="carnotPVBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#020617" />
+              <stop offset="25%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="75%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect x="0" y="0" width={size} height={size} fill="url(#pvBgGrad)" rx="12" />
+            {/* Hot reservoir gradient (red-orange flame) */}
+            <linearGradient id="carnotHotReservoir" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
 
-        {/* Grid */}
-        {[1, 2, 3, 4].map(i => (
-          <React.Fragment key={i}>
-            <line x1={padding + w * i / 5} y1={padding} x2={padding + w * i / 5} y2={size - padding} stroke="#334155" strokeWidth="0.5" />
-            <line x1={padding} y1={padding + h * i / 5} x2={size - padding} y2={padding + h * i / 5} stroke="#334155" strokeWidth="0.5" />
-          </React.Fragment>
-        ))}
+            {/* Cold reservoir gradient (blue-cyan ice) */}
+            <linearGradient id="carnotColdReservoir" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#67e8f9" />
+              <stop offset="25%" stopColor="#22d3ee" />
+              <stop offset="50%" stopColor="#0ea5e9" />
+              <stop offset="75%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
 
-        {/* Axes */}
-        <line x1={padding} y1={padding} x2={padding} y2={size - padding + 10} stroke="#64748b" strokeWidth="2" />
-        <line x1={padding - 10} y1={size - padding} x2={size - padding} y2={size - padding} stroke="#64748b" strokeWidth="2" />
+            {/* Isothermal expansion gradient (hot process) */}
+            <linearGradient id="carnotIsothermalHot" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="25%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#fca5a5" />
+              <stop offset="75%" stopColor="#f87171" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
 
-        {/* Axis labels */}
-        <text x={padding - 25} y={size / 2} fill="#94a3b8" fontSize="12" transform={`rotate(-90, ${padding - 25}, ${size / 2})`} textAnchor="middle">Pressure (P)</text>
-        <text x={size / 2} y={size - 8} fill="#94a3b8" fontSize="12" textAnchor="middle">Volume (V)</text>
+            {/* Adiabatic expansion gradient (hot to cold transition) */}
+            <linearGradient id="carnotAdiabaticExp" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="25%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#facc15" />
+              <stop offset="75%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
 
-        {/* Isotherms (dashed curves) */}
-        <path d={`M${padding + w * 0.15},${padding + h * 0.1} Q${padding + w * 0.4},${padding + h * 0.18} ${padding + w * 0.7},${padding + h * 0.22}`}
-              fill="none" stroke="#ef4444" strokeWidth="1" strokeDasharray="4 2" opacity="0.4" />
-        <text x={padding + w * 0.72} y={padding + h * 0.2} fill="#ef4444" fontSize="9" opacity="0.6">T_H = {hotTemp}K</text>
+            {/* Isothermal compression gradient (cold process) */}
+            <linearGradient id="carnotIsothermalCold" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="25%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#93c5fd" />
+              <stop offset="75%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
 
-        <path d={`M${padding + w * 0.45},${padding + h * 0.65} Q${padding + w * 0.65},${padding + h * 0.72} ${padding + w * 0.9},${padding + h * 0.75}`}
-              fill="none" stroke="#3b82f6" strokeWidth="1" strokeDasharray="4 2" opacity="0.4" />
-        <text x={padding + w * 0.92} y={padding + h * 0.73} fill="#3b82f6" fontSize="9" opacity="0.6">T_C = {coldTemp}K</text>
+            {/* Adiabatic compression gradient (cold to hot transition) */}
+            <linearGradient id="carnotAdiabaticComp" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#8b5cf6" />
+              <stop offset="25%" stopColor="#a78bfa" />
+              <stop offset="50%" stopColor="#c4b5fd" />
+              <stop offset="75%" stopColor="#a78bfa" />
+              <stop offset="100%" stopColor="#8b5cf6" />
+            </linearGradient>
 
-        {/* Carnot cycle path with glow */}
-        {/* 1→2: Isothermal expansion (red) */}
-        <path d={`M${points[0].x},${points[0].y} Q${(points[0].x + points[1].x) / 2},${points[0].y + 15} ${points[1].x},${points[1].y}`}
-              fill="none" stroke="#ef4444" strokeWidth="3" filter="url(#glow)" />
+            {/* Work area shading gradient */}
+            <linearGradient id="carnotWorkArea" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.15" />
+              <stop offset="50%" stopColor="#10b981" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0.15" />
+            </linearGradient>
 
-        {/* 2→3: Adiabatic expansion (orange) */}
-        <path d={`M${points[1].x},${points[1].y} Q${points[1].x + 30},${(points[1].y + points[2].y) / 2} ${points[2].x},${points[2].y}`}
-              fill="none" stroke="#f59e0b" strokeWidth="3" filter="url(#glow)" />
+            {/* State point radial gradients */}
+            <radialGradient id="carnotStatePoint1" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </radialGradient>
 
-        {/* 3→4: Isothermal compression (blue) */}
-        <path d={`M${points[2].x},${points[2].y} Q${(points[2].x + points[3].x) / 2},${points[2].y + 10} ${points[3].x},${points[3].y}`}
-              fill="none" stroke="#3b82f6" strokeWidth="3" filter="url(#glow)" />
+            <radialGradient id="carnotStatePoint2" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fde047" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#b45309" />
+            </radialGradient>
 
-        {/* 4→1: Adiabatic compression (purple) */}
-        <path d={`M${points[3].x},${points[3].y} Q${points[3].x - 20},${(points[3].y + points[0].y) / 2} ${points[0].x},${points[0].y}`}
-              fill="none" stroke="#8b5cf6" strokeWidth="3" filter="url(#glow)" />
+            <radialGradient id="carnotStatePoint3" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </radialGradient>
 
-        {/* State points */}
+            <radialGradient id="carnotStatePoint4" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#c4b5fd" />
+              <stop offset="50%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#6d28d9" />
+            </radialGradient>
+
+            {/* Animated dot glow */}
+            <radialGradient id="carnotDotGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="1" />
+              <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Heat flow arrow gradients */}
+            <linearGradient id="carnotHeatFlowIn" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="1" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0.8" />
+            </linearGradient>
+
+            <linearGradient id="carnotHeatFlowOut" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="1" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.3" />
+            </linearGradient>
+
+            <linearGradient id="carnotWorkFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#10b981" stopOpacity="1" />
+              <stop offset="100%" stopColor="#34d399" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Axis gradient */}
+            <linearGradient id="carnotAxisGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
+
+            {/* Premium glow filter */}
+            <filter id="carnotGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Intense glow for animated dot */}
+            <filter id="carnotIntenseGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur1" />
+              <feGaussianBlur stdDeviation="2" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft inner glow for state points */}
+            <filter id="carnotStateGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow markers with gradients */}
+            <marker id="carnotArrowRed" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+              <path d="M0,0 L0,8 L10,4 z" fill="url(#carnotHotReservoir)" />
+            </marker>
+            <marker id="carnotArrowBlue" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+              <path d="M0,0 L0,8 L10,4 z" fill="url(#carnotColdReservoir)" />
+            </marker>
+            <marker id="carnotArrowGreen" markerWidth="10" markerHeight="8" refX="9" refY="4" orient="auto">
+              <path d="M0,0 L0,8 L10,4 z" fill="#22c55e" />
+            </marker>
+          </defs>
+
+          {/* Premium dark background with gradient */}
+          <rect x="0" y="0" width={size} height={size} fill="url(#carnotPVBgGrad)" rx="16" />
+
+          {/* Subtle grid pattern */}
+          {[1, 2, 3, 4].map(i => (
+            <React.Fragment key={i}>
+              <line
+                x1={padding + w * i / 5} y1={padding}
+                x2={padding + w * i / 5} y2={size - padding}
+                stroke="#334155" strokeWidth="0.5" opacity="0.5"
+              />
+              <line
+                x1={padding} y1={padding + h * i / 5}
+                x2={size - padding} y2={padding + h * i / 5}
+                stroke="#334155" strokeWidth="0.5" opacity="0.5"
+              />
+            </React.Fragment>
+          ))}
+
+          {/* Work area shading (enclosed area = net work output) */}
+          <path d={workAreaPath} fill="url(#carnotWorkArea)" stroke="none" />
+
+          {/* Premium axes with gradient */}
+          <line x1={padding} y1={padding - 5} x2={padding} y2={size - padding + 10} stroke="url(#carnotAxisGrad)" strokeWidth="2.5" strokeLinecap="round" />
+          <line x1={padding - 10} y1={size - padding} x2={size - padding + 5} y2={size - padding} stroke="url(#carnotAxisGrad)" strokeWidth="2.5" strokeLinecap="round" />
+
+          {/* Axis arrow heads */}
+          <polygon points={`${padding - 4},${padding} ${padding + 4},${padding} ${padding},${padding - 8}`} fill="#94a3b8" />
+          <polygon points={`${size - padding},${size - padding - 4} ${size - padding},${size - padding + 4} ${size - padding + 8},${size - padding}`} fill="#94a3b8" />
+
+          {/* Hot isotherm reference curve */}
+          <path
+            d={`M${padding + w * 0.15},${padding + h * 0.08} Q${padding + w * 0.4},${padding + h * 0.16} ${padding + w * 0.72},${padding + h * 0.20}`}
+            fill="none" stroke="url(#carnotIsothermalHot)" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.5"
+          />
+
+          {/* Cold isotherm reference curve */}
+          <path
+            d={`M${padding + w * 0.42},${padding + h * 0.68} Q${padding + w * 0.65},${padding + h * 0.74} ${padding + w * 0.92},${padding + h * 0.78}`}
+            fill="none" stroke="url(#carnotIsothermalCold)" strokeWidth="1.5" strokeDasharray="6 3" opacity="0.5"
+          />
+
+          {/* Carnot cycle paths with premium gradients and glow */}
+          {/* 1 to 2: Isothermal expansion at T_H (absorbing Q_H) */}
+          <path
+            d={`M${points[0].x},${points[0].y} Q${(points[0].x + points[1].x) / 2},${points[0].y + 15} ${points[1].x},${points[1].y}`}
+            fill="none" stroke="url(#carnotIsothermalHot)" strokeWidth="4" strokeLinecap="round" filter="url(#carnotGlow)"
+          />
+
+          {/* 2 to 3: Adiabatic expansion (temperature drops from T_H to T_C) */}
+          <path
+            d={`M${points[1].x},${points[1].y} Q${points[1].x + 30},${(points[1].y + points[2].y) / 2} ${points[2].x},${points[2].y}`}
+            fill="none" stroke="url(#carnotAdiabaticExp)" strokeWidth="4" strokeLinecap="round" filter="url(#carnotGlow)"
+          />
+
+          {/* 3 to 4: Isothermal compression at T_C (rejecting Q_C) */}
+          <path
+            d={`M${points[2].x},${points[2].y} Q${(points[2].x + points[3].x) / 2},${points[2].y + 10} ${points[3].x},${points[3].y}`}
+            fill="none" stroke="url(#carnotIsothermalCold)" strokeWidth="4" strokeLinecap="round" filter="url(#carnotGlow)"
+          />
+
+          {/* 4 to 1: Adiabatic compression (temperature rises from T_C to T_H) */}
+          <path
+            d={`M${points[3].x},${points[3].y} Q${points[3].x - 20},${(points[3].y + points[0].y) / 2} ${points[0].x},${points[0].y}`}
+            fill="none" stroke="url(#carnotAdiabaticComp)" strokeWidth="4" strokeLinecap="round" filter="url(#carnotGlow)"
+          />
+
+          {/* State points with premium radial gradients */}
+          {points.map((p, i) => (
+            <g key={i}>
+              {/* Outer glow ring */}
+              <circle cx={p.x} cy={p.y} r="12" fill="none" stroke={cycleStages[i].color} strokeWidth="1" opacity="0.3" />
+              {/* Main state point */}
+              <circle
+                cx={p.x} cy={p.y} r="9"
+                fill={`url(#carnotStatePoint${i + 1})`}
+                stroke="white" strokeWidth="2"
+                filter="url(#carnotStateGlow)"
+              />
+              {/* State number (moved outside) */}
+            </g>
+          ))}
+
+          {/* Animated position dot with intense glow */}
+          {animated && isAnimating && (
+            <g>
+              {/* Outer pulse ring */}
+              <circle cx={dotX} cy={dotY} r="18" fill="none" stroke={cycleStages[currentPoint].color} strokeWidth="2" opacity="0.3">
+                <animate attributeName="r" values="12;20;12" dur="1s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.5;0.1;0.5" dur="1s" repeatCount="indefinite" />
+              </circle>
+              {/* Main animated dot */}
+              <circle
+                cx={dotX} cy={dotY} r="11"
+                fill="url(#carnotDotGlow)"
+                stroke="white" strokeWidth="2.5"
+                filter="url(#carnotIntenseGlow)"
+              >
+                <animate attributeName="opacity" values="1;0.7;1" dur="0.5s" repeatCount="indefinite" />
+              </circle>
+            </g>
+          )}
+
+          {/* Premium heat flow visualization */}
+          {showHeatFlow && (
+            <g>
+              {/* Hot reservoir indicator (top) */}
+              <rect x={size/2 - 35} y="5" width="70" height="18" rx="9" fill="url(#carnotHotReservoir)" opacity="0.8" />
+
+              {/* Q_H flow arrow */}
+              <path d="M140,23 L140,38" stroke="url(#carnotHeatFlowIn)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#carnotArrowRed)" />
+
+              {/* Cold reservoir indicator (bottom) */}
+              <rect x={size/2 - 35} y={size - 23} width="70" height="18" rx="9" fill="url(#carnotColdReservoir)" opacity="0.8" />
+
+              {/* Q_C flow arrow */}
+              <path d={`M140,${size - 38} L140,${size - 23}`} stroke="url(#carnotHeatFlowOut)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#carnotArrowBlue)" />
+
+              {/* Work output arrow (right side) */}
+              <rect x={size - 25} y={size/2 - 12} width="20" height="24" rx="4" fill="url(#carnotWorkFlow)" opacity="0.6" />
+              <path d={`M${size - 40},${size/2} L${size - 25},${size/2}`} stroke="url(#carnotWorkFlow)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#carnotArrowGreen)" />
+            </g>
+          )}
+        </svg>
+
+        {/* External labels using typo system */}
+        <div style={{
+          position: 'absolute',
+          top: '50%',
+          left: '-8px',
+          transform: 'translateY(-50%) rotate(-90deg)',
+          fontSize: typo.small,
+          color: colors.textSecondary,
+          fontWeight: 500,
+          letterSpacing: '0.5px',
+          whiteSpace: 'nowrap'
+        }}>
+          Pressure (P)
+        </div>
+        <div style={{
+          position: 'absolute',
+          bottom: '-4px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          fontSize: typo.small,
+          color: colors.textSecondary,
+          fontWeight: 500,
+          letterSpacing: '0.5px'
+        }}>
+          Volume (V)
+        </div>
+
+        {/* State point labels */}
         {points.map((p, i) => (
-          <g key={i}>
-            <circle cx={p.x} cy={p.y} r="8" fill={cycleStages[i].color} stroke="white" strokeWidth="2" />
-            <text x={p.x + 12} y={p.y - 10} fill="white" fontSize="11" fontWeight="bold">{i + 1}</text>
-          </g>
+          <div
+            key={i}
+            style={{
+              position: 'absolute',
+              left: `${p.x + 14}px`,
+              top: `${p.y - 18}px`,
+              fontSize: typo.body,
+              fontWeight: 700,
+              color: colors.textPrimary,
+              textShadow: '0 1px 3px rgba(0,0,0,0.5)'
+            }}
+          >
+            {i + 1}
+          </div>
         ))}
 
-        {/* Animated position dot */}
-        {animated && isAnimating && (
-          <circle cx={dotX} cy={dotY} r="10" fill={cycleStages[currentPoint].color} stroke="white" strokeWidth="2" filter="url(#glow)">
-            <animate attributeName="opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
-          </circle>
-        )}
+        {/* Temperature labels */}
+        <div style={{
+          position: 'absolute',
+          right: '8px',
+          top: `${padding + h * 0.15}px`,
+          fontSize: typo.label,
+          color: colors.hotColor,
+          fontWeight: 600,
+          opacity: 0.8
+        }}>
+          T_H = {hotTemp}K
+        </div>
+        <div style={{
+          position: 'absolute',
+          right: '8px',
+          bottom: `${padding + h * 0.15}px`,
+          fontSize: typo.label,
+          color: colors.coldColor,
+          fontWeight: 600,
+          opacity: 0.8
+        }}>
+          T_C = {coldTemp}K
+        </div>
 
-        {/* Heat flow arrows */}
+        {/* Heat flow labels */}
         {showHeatFlow && (
           <>
-            {/* Q_H in (top) */}
-            <path d="M130,15 L130,35" stroke="#ef4444" strokeWidth="3" markerEnd="url(#arrowRed)" />
-            <text x="130" y="10" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="bold">Q_H</text>
-
-            {/* Q_C out (bottom) */}
-            <path d="M180,245 L180,265" stroke="#3b82f6" strokeWidth="3" markerEnd="url(#arrowBlue)" />
-            <text x="180" y="278" textAnchor="middle" fill="#3b82f6" fontSize="10" fontWeight="bold">Q_C</text>
-
-            {/* Work out arrow */}
-            <path d="M250,120 L270,120" stroke="#22c55e" strokeWidth="3" markerEnd="url(#arrowGreen)" />
-            <text x="260" y="110" textAnchor="middle" fill="#22c55e" fontSize="10" fontWeight="bold">W</text>
+            <div style={{
+              position: 'absolute',
+              left: '50%',
+              top: '2px',
+              transform: 'translateX(-50%)',
+              fontSize: typo.label,
+              color: colors.hotColor,
+              fontWeight: 700,
+              textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+            }}>
+              Q_H (heat in)
+            </div>
+            <div style={{
+              position: 'absolute',
+              left: '50%',
+              bottom: '2px',
+              transform: 'translateX(-50%)',
+              fontSize: typo.label,
+              color: colors.coldColor,
+              fontWeight: 700,
+              textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+            }}>
+              Q_C (heat out)
+            </div>
+            <div style={{
+              position: 'absolute',
+              right: '2px',
+              top: '50%',
+              transform: 'translateY(-50%)',
+              fontSize: typo.label,
+              color: colors.work,
+              fontWeight: 700,
+              textShadow: '0 1px 2px rgba(0,0,0,0.5)'
+            }}>
+              W
+            </div>
           </>
         )}
-
-        <defs>
-          <marker id="arrowRed" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L8,3 z" fill="#ef4444" />
-          </marker>
-          <marker id="arrowBlue" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L8,3 z" fill="#3b82f6" />
-          </marker>
-          <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L8,3 z" fill="#22c55e" />
-          </marker>
-        </defs>
-      </svg>
+      </div>
     );
   };
 

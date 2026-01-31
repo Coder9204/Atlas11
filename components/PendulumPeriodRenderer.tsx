@@ -707,7 +707,20 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
     const bobX = pivotX + scaledLength * Math.sin(angleRad);
     const bobY = pivotY + scaledLength * Math.cos(angleRad);
 
-    const bobColors = ['#60a5fa', '#f59e0b', '#ef4444'];
+    // Premium bob colors with gradient stops
+    const bobColorSets = [
+      { light: '#93c5fd', mid: '#60a5fa', dark: '#2563eb', glow: '#60a5fa' }, // Blue
+      { light: '#fcd34d', mid: '#f59e0b', dark: '#b45309', glow: '#f59e0b' }, // Amber
+      { light: '#fca5a5', mid: '#ef4444', dark: '#b91c1c', glow: '#ef4444' }, // Red
+    ];
+    const bobColorSet = bobColorSets[bobMass - 1];
+
+    // Motion trail positions (previous angles for trail effect)
+    const trailAngles = isSwinging ? [
+      pendulumAngle * 0.7,
+      pendulumAngle * 0.4,
+      pendulumAngle * 0.15,
+    ] : [];
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: space.md }}>
@@ -715,73 +728,232 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
           width={svgWidth}
           height={svgHeight}
           style={{
-            background: `linear-gradient(180deg, ${colors.bgTertiary} 0%, ${colors.bgSecondary} 100%)`,
             borderRadius: radius.lg,
             border: `1px solid ${colors.border}`
           }}
         >
-          {/* Support beam */}
-          <rect x={pivotX - 40} y={pivotY - 20} width="80" height="10" fill={colors.borderLight} rx="5" />
+          {/* Premium Definitions */}
+          <defs>
+            {/* Background gradient with depth */}
+            <linearGradient id="pendBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1a1a24"/>
+              <stop offset="25%" stopColor="#16161e"/>
+              <stop offset="50%" stopColor="#121218"/>
+              <stop offset="75%" stopColor="#0f0f14"/>
+              <stop offset="100%" stopColor="#0a0a0f"/>
+            </linearGradient>
 
-          {/* Pivot point */}
-          <circle cx={pivotX} cy={pivotY} r="10" fill={colors.border} stroke={colors.borderLight} strokeWidth="2" />
+            {/* Support beam metallic gradient */}
+            <linearGradient id="pendBeamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4a4a58"/>
+              <stop offset="25%" stopColor="#3a3a48"/>
+              <stop offset="50%" stopColor="#4d4d5c"/>
+              <stop offset="75%" stopColor="#3a3a48"/>
+              <stop offset="100%" stopColor="#2a2a36"/>
+            </linearGradient>
 
-          {/* String/rod */}
+            {/* Pivot point metallic gradient */}
+            <radialGradient id="pendPivotGrad" cx="35%" cy="35%">
+              <stop offset="0%" stopColor="#6b7280"/>
+              <stop offset="40%" stopColor="#4b5563"/>
+              <stop offset="70%" stopColor="#374151"/>
+              <stop offset="100%" stopColor="#1f2937"/>
+            </radialGradient>
+
+            {/* String/rod gradient */}
+            <linearGradient id="pendStringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6b7280"/>
+              <stop offset="50%" stopColor="#9ca3af"/>
+              <stop offset="100%" stopColor="#6b7280"/>
+            </linearGradient>
+
+            {/* Bob 3D radial gradient */}
+            <radialGradient id="pendBobGrad" cx="30%" cy="25%">
+              <stop offset="0%" stopColor={bobColorSet.light}/>
+              <stop offset="35%" stopColor={bobColorSet.mid}/>
+              <stop offset="70%" stopColor={bobColorSet.mid}/>
+              <stop offset="100%" stopColor={bobColorSet.dark}/>
+            </radialGradient>
+
+            {/* Bob highlight (top shine) */}
+            <radialGradient id="pendBobHighlight" cx="35%" cy="20%">
+              <stop offset="0%" stopColor="white" stopOpacity="0.6"/>
+              <stop offset="50%" stopColor="white" stopOpacity="0.1"/>
+              <stop offset="100%" stopColor="white" stopOpacity="0"/>
+            </radialGradient>
+
+            {/* Angle arc gradient */}
+            <linearGradient id="pendArcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colors.primary} stopOpacity="0.3"/>
+              <stop offset="50%" stopColor={colors.primary} stopOpacity="0.9"/>
+              <stop offset="100%" stopColor={colors.primary} stopOpacity="0.3"/>
+            </linearGradient>
+
+            {/* Bob glow filter */}
+            <filter id="pendBobGlow" x="-80%" y="-80%" width="260%" height="260%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="6" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            {/* Pivot glow filter */}
+            <filter id="pendPivotGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            {/* Shadow filter for bob */}
+            <filter id="pendShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feDropShadow dx="3" dy="6" stdDeviation="4" floodColor="#000" floodOpacity="0.4"/>
+            </filter>
+
+            {/* Motion blur for trail */}
+            <filter id="pendMotionBlur" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3"/>
+            </filter>
+          </defs>
+
+          {/* Background with gradient */}
+          <rect width={svgWidth} height={svgHeight} fill="url(#pendBgGrad)"/>
+
+          {/* Subtle grid lines for depth */}
+          <g opacity="0.1">
+            {[...Array(6)].map((_, i) => (
+              <line key={`h${i}`} x1="0" y1={i * svgHeight / 5} x2={svgWidth} y2={i * svgHeight / 5} stroke={colors.textTertiary} strokeWidth="0.5"/>
+            ))}
+            {[...Array(8)].map((_, i) => (
+              <line key={`v${i}`} x1={i * svgWidth / 7} y1="0" x2={i * svgWidth / 7} y2={svgHeight} stroke={colors.textTertiary} strokeWidth="0.5"/>
+            ))}
+          </g>
+
+          {/* Support beam with metallic look */}
+          <rect x={pivotX - 45} y={pivotY - 22} width="90" height="14" fill="url(#pendBeamGrad)" rx="4" stroke="#5a5a68" strokeWidth="1"/>
+          {/* Beam highlight */}
+          <rect x={pivotX - 43} y={pivotY - 20} width="86" height="3" fill="white" opacity="0.15" rx="1.5"/>
+
+          {/* Shadow beneath pendulum on "ground" */}
+          <ellipse
+            cx={pivotX}
+            cy={svgHeight - 25}
+            rx={bobRadius * 1.8}
+            ry={bobRadius * 0.4}
+            fill={bobColorSet.glow}
+            opacity={0.15}
+            filter="url(#pendMotionBlur)"
+          />
+
+          {/* Motion trail when swinging */}
+          {isSwinging && trailAngles.map((trailAngle, i) => {
+            const trailRad = (trailAngle * Math.PI) / 180;
+            const trailX = pivotX + scaledLength * Math.sin(trailRad);
+            const trailY = pivotY + scaledLength * Math.cos(trailRad);
+            return (
+              <circle
+                key={`trail${i}`}
+                cx={trailX}
+                cy={trailY}
+                r={bobRadius * (0.5 - i * 0.12)}
+                fill={bobColorSet.glow}
+                opacity={0.15 - i * 0.04}
+                filter="url(#pendMotionBlur)"
+              />
+            );
+          })}
+
+          {/* String/rod with gradient */}
           <line
             x1={pivotX}
             y1={pivotY}
             x2={bobX}
             y2={bobY}
-            stroke={colors.textSecondary}
+            stroke="url(#pendStringGrad)"
             strokeWidth="3"
             strokeLinecap="round"
           />
-
-          {/* Bob glow */}
-          <circle
-            cx={bobX}
-            cy={bobY}
-            r={bobRadius + 8}
-            fill={`${bobColors[bobMass - 1]}20`}
+          {/* String highlight */}
+          <line
+            x1={pivotX - 0.5}
+            y1={pivotY}
+            x2={bobX - 0.5}
+            y2={bobY}
+            stroke="white"
+            strokeWidth="0.8"
+            strokeLinecap="round"
+            opacity="0.2"
           />
 
-          {/* Bob */}
+          {/* Pivot point with 3D gradient */}
+          <circle cx={pivotX} cy={pivotY} r="12" fill="url(#pendPivotGrad)" filter="url(#pendPivotGlow)"/>
+          {/* Pivot highlight */}
+          <circle cx={pivotX - 3} cy={pivotY - 3} r="4" fill="white" opacity="0.3"/>
+          {/* Pivot inner ring */}
+          <circle cx={pivotX} cy={pivotY} r="4" fill="#1f2937" stroke="#374151" strokeWidth="1"/>
+
+          {/* Bob with shadow */}
+          <circle
+            cx={bobX + 3}
+            cy={bobY + 6}
+            r={bobRadius}
+            fill="#000"
+            opacity="0.25"
+            filter="url(#pendMotionBlur)"
+          />
+
+          {/* Bob with 3D gradient and glow */}
           <circle
             cx={bobX}
             cy={bobY}
             r={bobRadius}
-            fill={bobColors[bobMass - 1]}
-            stroke={colors.textPrimary}
-            strokeWidth="2"
+            fill="url(#pendBobGrad)"
+            filter="url(#pendBobGlow)"
+          />
+          {/* Bob 3D highlight */}
+          <circle
+            cx={bobX}
+            cy={bobY}
+            r={bobRadius}
+            fill="url(#pendBobHighlight)"
+          />
+          {/* Bob edge ring */}
+          <circle
+            cx={bobX}
+            cy={bobY}
+            r={bobRadius - 1}
+            fill="none"
+            stroke={bobColorSet.dark}
+            strokeWidth="1"
+            opacity="0.5"
           />
 
-          {/* Angle arc */}
+          {/* Angle arc with gradient */}
           {Math.abs(pendulumAngle) > 2 && (
             <path
               d={`M ${pivotX} ${pivotY + 50} A 50 50 0 0 ${pendulumAngle > 0 ? 1 : 0} ${pivotX + 50 * Math.sin(angleRad)} ${pivotY + 50 * Math.cos(angleRad)}`}
               fill="none"
-              stroke={colors.primary}
-              strokeWidth="2"
-              strokeDasharray="6,4"
-              opacity="0.8"
+              stroke="url(#pendArcGrad)"
+              strokeWidth="2.5"
+              strokeDasharray="8,4"
             />
           )}
-
-          {/* Length label */}
-          <text x={pivotX + 55} y={pivotY + scaledLength / 2} fill={colors.textSecondary} fontSize="13" fontWeight="500">
-            L = {(pendulumLength / 200).toFixed(2)}m
-          </text>
-
-          {/* Period display */}
-          {measuredPeriod !== null && (
-            <g>
-              <rect x={pivotX - 90} y={svgHeight - 45} width="180" height="30" fill={colors.bgPrimary} rx="8" opacity="0.9" />
-              <text x={pivotX} y={svgHeight - 24} fill={colors.primary} fontSize="14" textAnchor="middle" fontWeight="700">
-                T = {measuredPeriod.toFixed(2)}s (theory: {theoreticalPeriod(pendulumLength).toFixed(2)}s)
-              </text>
-            </g>
-          )}
         </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', width: svgWidth, padding: `0 ${space.sm}` }}>
+          <span style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 500 }}>
+            L = {(pendulumLength / 200).toFixed(2)}m
+          </span>
+          {measuredPeriod !== null && (
+            <span style={{ fontSize: typo.small, color: colors.primary, fontWeight: 600 }}>
+              T = {measuredPeriod.toFixed(2)}s (theory: {theoreticalPeriod(pendulumLength).toFixed(2)}s)
+            </span>
+          )}
+        </div>
 
         {showControls && (
           <div style={{
@@ -1596,80 +1768,271 @@ const PendulumPeriodRenderer: React.FC<PendulumPeriodRendererProps> = ({
               </div>
 
               {/* Pendulum visualization */}
-              <svg
-                width={svgWidth}
-                height={svgHeight}
-                style={{
-                  background: twistPlanet === 'earth'
-                    ? `linear-gradient(180deg, #1e3a5f 0%, #0f172a 100%)`
-                    : `linear-gradient(180deg, #1f1f1f 0%, #0a0a0a 100%)`,
-                  borderRadius: radius.lg,
-                  border: `1px solid ${colors.border}`,
-                  display: 'block',
-                  margin: '0 auto'
-                }}
-              >
-                {/* Stars for moon */}
-                {twistPlanet === 'moon' && (
-                  <>
-                    <circle cx="50" cy="30" r="1" fill="white" opacity="0.8" />
-                    <circle cx="100" cy="60" r="1.5" fill="white" opacity="0.6" />
-                    <circle cx="280" cy="40" r="1" fill="white" opacity="0.7" />
-                    <circle cx="310" cy="80" r="1.2" fill="white" opacity="0.5" />
-                    <circle cx="30" cy="100" r="1" fill="white" opacity="0.6" />
-                  </>
-                )}
+              <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: space.sm }}>
+                <svg
+                  width={svgWidth}
+                  height={svgHeight}
+                  style={{
+                    borderRadius: radius.lg,
+                    border: `1px solid ${colors.border}`,
+                    display: 'block'
+                  }}
+                >
+                  {/* Premium Definitions for Twist Phase */}
+                  <defs>
+                    {/* Earth sky gradient */}
+                    <linearGradient id="pendTwistEarthBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#1e3a5f"/>
+                      <stop offset="25%" stopColor="#172e4d"/>
+                      <stop offset="50%" stopColor="#12243d"/>
+                      <stop offset="75%" stopColor="#0d1a2d"/>
+                      <stop offset="100%" stopColor="#0f172a"/>
+                    </linearGradient>
 
-                {/* Support beam */}
-                <rect x={pivotX - 40} y={pivotY - 20} width="80" height="10" fill={colors.borderLight} rx="5" />
+                    {/* Moon sky gradient */}
+                    <linearGradient id="pendTwistMoonBg" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#1f1f1f"/>
+                      <stop offset="25%" stopColor="#181818"/>
+                      <stop offset="50%" stopColor="#121212"/>
+                      <stop offset="75%" stopColor="#0c0c0c"/>
+                      <stop offset="100%" stopColor="#0a0a0a"/>
+                    </linearGradient>
 
-                {/* Pivot point */}
-                <circle cx={pivotX} cy={pivotY} r="10" fill={colors.border} stroke={colors.borderLight} strokeWidth="2" />
+                    {/* Support beam metallic gradient */}
+                    <linearGradient id="pendTwistBeamGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#5a5a68"/>
+                      <stop offset="25%" stopColor="#4a4a58"/>
+                      <stop offset="50%" stopColor="#5d5d6c"/>
+                      <stop offset="75%" stopColor="#4a4a58"/>
+                      <stop offset="100%" stopColor="#3a3a48"/>
+                    </linearGradient>
 
-                {/* String/rod */}
-                <line
-                  x1={pivotX}
-                  y1={pivotY}
-                  x2={bobX}
-                  y2={bobY}
-                  stroke={colors.textSecondary}
-                  strokeWidth="3"
-                  strokeLinecap="round"
-                />
+                    {/* Pivot metallic gradient */}
+                    <radialGradient id="pendTwistPivotGrad" cx="35%" cy="35%">
+                      <stop offset="0%" stopColor="#7b8490"/>
+                      <stop offset="40%" stopColor="#5b6370"/>
+                      <stop offset="70%" stopColor="#414955"/>
+                      <stop offset="100%" stopColor="#2a323d"/>
+                    </radialGradient>
 
-                {/* Bob glow */}
-                <circle
-                  cx={bobX}
-                  cy={bobY}
-                  r={bobRadius + 8}
-                  fill={twistPlanet === 'earth' ? '#3b82f620' : '#9ca3af20'}
-                />
+                    {/* Earth bob 3D gradient (blue) */}
+                    <radialGradient id="pendTwistEarthBobGrad" cx="30%" cy="25%">
+                      <stop offset="0%" stopColor="#93c5fd"/>
+                      <stop offset="35%" stopColor="#60a5fa"/>
+                      <stop offset="70%" stopColor="#3b82f6"/>
+                      <stop offset="100%" stopColor="#1d4ed8"/>
+                    </radialGradient>
 
-                {/* Bob */}
-                <circle
-                  cx={bobX}
-                  cy={bobY}
-                  r={bobRadius}
-                  fill={twistPlanet === 'earth' ? '#3b82f6' : '#9ca3af'}
-                  stroke={colors.textPrimary}
-                  strokeWidth="2"
-                />
+                    {/* Moon bob 3D gradient (silver) */}
+                    <radialGradient id="pendTwistMoonBobGrad" cx="30%" cy="25%">
+                      <stop offset="0%" stopColor="#d1d5db"/>
+                      <stop offset="35%" stopColor="#9ca3af"/>
+                      <stop offset="70%" stopColor="#6b7280"/>
+                      <stop offset="100%" stopColor="#4b5563"/>
+                    </radialGradient>
 
-                {/* Planet label */}
-                <text x={pivotX} y={30} fill={colors.textPrimary} fontSize="16" textAnchor="middle" fontWeight="700">
-                  {twistPlanet === 'earth' ? '🌍 Earth' : '🌙 Moon'}
-                </text>
+                    {/* Bob highlight */}
+                    <radialGradient id="pendTwistBobHighlight" cx="35%" cy="20%">
+                      <stop offset="0%" stopColor="white" stopOpacity="0.55"/>
+                      <stop offset="50%" stopColor="white" stopOpacity="0.1"/>
+                      <stop offset="100%" stopColor="white" stopOpacity="0"/>
+                    </radialGradient>
 
-                {/* Period display */}
-                {twistMeasuredPeriod !== null && (
-                  <g>
-                    <rect x={pivotX - 70} y={svgHeight - 40} width="140" height="28" fill={colors.bgPrimary} rx="8" opacity="0.9" />
-                    <text x={pivotX} y={svgHeight - 20} fill={colors.primary} fontSize="14" textAnchor="middle" fontWeight="700">
+                    {/* String gradient */}
+                    <linearGradient id="pendTwistStringGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#6b7280"/>
+                      <stop offset="50%" stopColor="#9ca3af"/>
+                      <stop offset="100%" stopColor="#6b7280"/>
+                    </linearGradient>
+
+                    {/* Bob glow filter */}
+                    <filter id="pendTwistBobGlow" x="-80%" y="-80%" width="260%" height="260%">
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="5" result="blur"/>
+                      <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+
+                    {/* Star glow filter */}
+                    <filter id="pendTwistStarGlow" x="-100%" y="-100%" width="300%" height="300%">
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/>
+                      <feMerge>
+                        <feMergeNode in="blur"/>
+                        <feMergeNode in="SourceGraphic"/>
+                      </feMerge>
+                    </filter>
+
+                    {/* Shadow filter */}
+                    <filter id="pendTwistShadow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feDropShadow dx="2" dy="5" stdDeviation="3" floodColor="#000" floodOpacity="0.35"/>
+                    </filter>
+
+                    {/* Motion blur */}
+                    <filter id="pendTwistMotionBlur" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur in="SourceGraphic" stdDeviation="2.5"/>
+                    </filter>
+                  </defs>
+
+                  {/* Background with gradient */}
+                  <rect
+                    width={svgWidth}
+                    height={svgHeight}
+                    fill={twistPlanet === 'earth' ? 'url(#pendTwistEarthBg)' : 'url(#pendTwistMoonBg)'}
+                  />
+
+                  {/* Stars for moon - enhanced with glow */}
+                  {twistPlanet === 'moon' && (
+                    <>
+                      <circle cx="50" cy="40" r="1.2" fill="white" opacity="0.9" filter="url(#pendTwistStarGlow)"/>
+                      <circle cx="100" cy="70" r="1.8" fill="white" opacity="0.7" filter="url(#pendTwistStarGlow)"/>
+                      <circle cx="280" cy="50" r="1.3" fill="white" opacity="0.8" filter="url(#pendTwistStarGlow)"/>
+                      <circle cx="310" cy="90" r="1.5" fill="white" opacity="0.6" filter="url(#pendTwistStarGlow)"/>
+                      <circle cx="30" cy="110" r="1.1" fill="white" opacity="0.7" filter="url(#pendTwistStarGlow)"/>
+                      <circle cx="180" cy="30" r="0.8" fill="white" opacity="0.5"/>
+                      <circle cx="250" cy="100" r="0.7" fill="white" opacity="0.4"/>
+                      <circle cx="70" cy="140" r="0.9" fill="white" opacity="0.5"/>
+                    </>
+                  )}
+
+                  {/* Subtle atmosphere glow for Earth */}
+                  {twistPlanet === 'earth' && (
+                    <ellipse
+                      cx={svgWidth / 2}
+                      cy={svgHeight + 80}
+                      rx={svgWidth * 0.8}
+                      ry={100}
+                      fill="#3b82f6"
+                      opacity="0.08"
+                    />
+                  )}
+
+                  {/* Support beam with metallic look */}
+                  <rect x={pivotX - 45} y={pivotY - 22} width="90" height="14" fill="url(#pendTwistBeamGrad)" rx="4" stroke="#5a5a68" strokeWidth="1"/>
+                  {/* Beam highlight */}
+                  <rect x={pivotX - 43} y={pivotY - 20} width="86" height="3" fill="white" opacity="0.12" rx="1.5"/>
+
+                  {/* Ground shadow */}
+                  <ellipse
+                    cx={pivotX}
+                    cy={svgHeight - 20}
+                    rx={bobRadius * 1.6}
+                    ry={bobRadius * 0.35}
+                    fill={twistPlanet === 'earth' ? '#3b82f6' : '#9ca3af'}
+                    opacity={0.12}
+                    filter="url(#pendTwistMotionBlur)"
+                  />
+
+                  {/* Motion trail when swinging */}
+                  {twistIsSwinging && [0.7, 0.4, 0.15].map((mult, i) => {
+                    const trailRad = (twistAngle * mult * Math.PI) / 180;
+                    const trailX = pivotX + scaledLength * Math.sin(trailRad);
+                    const trailY = pivotY + scaledLength * Math.cos(trailRad);
+                    return (
+                      <circle
+                        key={`twistTrail${i}`}
+                        cx={trailX}
+                        cy={trailY}
+                        r={bobRadius * (0.45 - i * 0.1)}
+                        fill={twistPlanet === 'earth' ? '#3b82f6' : '#9ca3af'}
+                        opacity={0.12 - i * 0.03}
+                        filter="url(#pendTwistMotionBlur)"
+                      />
+                    );
+                  })}
+
+                  {/* String/rod with gradient */}
+                  <line
+                    x1={pivotX}
+                    y1={pivotY}
+                    x2={bobX}
+                    y2={bobY}
+                    stroke="url(#pendTwistStringGrad)"
+                    strokeWidth="3"
+                    strokeLinecap="round"
+                  />
+                  {/* String highlight */}
+                  <line
+                    x1={pivotX - 0.5}
+                    y1={pivotY}
+                    x2={bobX - 0.5}
+                    y2={bobY}
+                    stroke="white"
+                    strokeWidth="0.7"
+                    strokeLinecap="round"
+                    opacity="0.18"
+                  />
+
+                  {/* Pivot point with 3D gradient */}
+                  <circle cx={pivotX} cy={pivotY} r="12" fill="url(#pendTwistPivotGrad)"/>
+                  {/* Pivot highlight */}
+                  <circle cx={pivotX - 3} cy={pivotY - 3} r="4" fill="white" opacity="0.25"/>
+                  {/* Pivot inner ring */}
+                  <circle cx={pivotX} cy={pivotY} r="4" fill="#1f2937" stroke="#374151" strokeWidth="1"/>
+
+                  {/* Bob shadow */}
+                  <circle
+                    cx={bobX + 2}
+                    cy={bobY + 5}
+                    r={bobRadius}
+                    fill="#000"
+                    opacity="0.2"
+                    filter="url(#pendTwistMotionBlur)"
+                  />
+
+                  {/* Bob with 3D gradient and glow */}
+                  <circle
+                    cx={bobX}
+                    cy={bobY}
+                    r={bobRadius}
+                    fill={twistPlanet === 'earth' ? 'url(#pendTwistEarthBobGrad)' : 'url(#pendTwistMoonBobGrad)'}
+                    filter="url(#pendTwistBobGlow)"
+                  />
+                  {/* Bob 3D highlight */}
+                  <circle
+                    cx={bobX}
+                    cy={bobY}
+                    r={bobRadius}
+                    fill="url(#pendTwistBobHighlight)"
+                  />
+                  {/* Bob edge ring */}
+                  <circle
+                    cx={bobX}
+                    cy={bobY}
+                    r={bobRadius - 1}
+                    fill="none"
+                    stroke={twistPlanet === 'earth' ? '#1d4ed8' : '#4b5563'}
+                    strokeWidth="1"
+                    opacity="0.4"
+                  />
+                </svg>
+
+                {/* Labels moved outside SVG using typo system */}
+                <div style={{
+                  display: 'flex',
+                  justifyContent: 'space-between',
+                  alignItems: 'center',
+                  width: svgWidth,
+                  padding: `0 ${space.sm}`
+                }}>
+                  <span style={{
+                    fontSize: typo.small,
+                    color: colors.textPrimary,
+                    fontWeight: 600,
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: space.xs
+                  }}>
+                    {twistPlanet === 'earth' ? '🌍 Earth' : '🌙 Moon'}
+                  </span>
+                  {twistMeasuredPeriod !== null && (
+                    <span style={{ fontSize: typo.small, color: colors.primary, fontWeight: 600 }}>
                       T = {twistMeasuredPeriod.toFixed(2)}s
-                    </text>
-                  </g>
-                )}
-              </svg>
+                    </span>
+                  )}
+                </div>
+              </div>
 
               {/* Control button */}
               <div style={{ marginTop: space.md, display: 'flex', justifyContent: 'center' }}>

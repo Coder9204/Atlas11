@@ -508,42 +508,156 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
       <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-slate-700/50">
         <svg width={simWidth} height={simHeight} className="mx-auto">
           <defs>
-            <linearGradient id="waterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#0369a1" stopOpacity="0.9" />
+            {/* Premium water depth gradient with 6 color stops */}
+            <linearGradient id="cartWaterDepth" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.7" />
+              <stop offset="20%" stopColor="#0ea5e9" stopOpacity="0.75" />
+              <stop offset="40%" stopColor="#0284c7" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#0369a1" stopOpacity="0.85" />
+              <stop offset="80%" stopColor="#075985" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0.95" />
             </linearGradient>
-            <linearGradient id="bottleGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#88c0d0" stopOpacity="0.3" />
-              <stop offset="50%" stopColor="#88c0d0" stopOpacity="0.1" />
-              <stop offset="100%" stopColor="#88c0d0" stopOpacity="0.3" />
+
+            {/* Premium glass bottle gradient with 5 color stops */}
+            <linearGradient id="cartBottleGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.4" />
+              <stop offset="25%" stopColor="#67e8f9" stopOpacity="0.15" />
+              <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.08" />
+              <stop offset="75%" stopColor="#67e8f9" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#a5f3fc" stopOpacity="0.4" />
             </linearGradient>
+
+            {/* Glass reflection highlight */}
+            <linearGradient id="cartGlassHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#ffffff" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Diver tube glass effect with 4 color stops */}
+            <linearGradient id="cartDiverTube" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#d1d5db" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#f3f4f6" stopOpacity="0.95" />
+              <stop offset="70%" stopColor="#f3f4f6" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#9ca3af" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Diver cap gradient */}
+            <radialGradient id="cartDiverCap" cx="40%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </radialGradient>
+
+            {/* Air bubble gradient with glow */}
+            <radialGradient id="cartAirBubble" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+              <stop offset="40%" stopColor="#e0f2fe" stopOpacity="0.85" />
+              <stop offset="70%" stopColor="#bae6fd" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.5" />
+            </radialGradient>
+
+            {/* Pressure arrow gradient */}
+            <linearGradient id="cartPressureArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f472b6" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#ec4899" stopOpacity="1" />
+              <stop offset="100%" stopColor="#f472b6" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Buoyancy force gradient */}
+            <linearGradient id="cartBuoyancyForce" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#4ade80" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Weight force gradient */}
+            <linearGradient id="cartWeightForce" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* Ambient bubble glow filter */}
+            <filter id="cartBubbleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Diver glow filter */}
+            <filter id="cartDiverGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Pressure indicator glow */}
+            <filter id="cartPressureGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Water surface shimmer */}
+            <filter id="cartWaterShimmer" x="0%" y="0%" width="100%" height="100%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
           </defs>
 
-          {/* Bottle outline */}
+          {/* Bottle outline with glass effect */}
           <rect
             x={bottleX - (isSqueezing ? 5 : 0)}
             y={bottleY}
             width={bottleWidth + (isSqueezing ? 10 : 0)}
             height={bottleHeight}
             rx={20}
-            fill="url(#bottleGrad)"
-            stroke="#88c0d0"
-            strokeWidth={3}
+            fill="url(#cartBottleGlass)"
+            stroke="#67e8f9"
+            strokeWidth={2}
             style={{ transition: 'all 0.1s ease' }}
           />
 
-          {/* Water inside bottle */}
+          {/* Glass highlight reflection */}
+          <rect
+            x={bottleX + 5 - (isSqueezing ? 4 : 0)}
+            y={bottleY + 5}
+            width={15}
+            height={bottleHeight - 30}
+            rx={8}
+            fill="url(#cartGlassHighlight)"
+            style={{ transition: 'all 0.1s ease' }}
+          />
+
+          {/* Water inside bottle with depth gradient */}
           <rect
             x={bottleX + 5 - (isSqueezing ? 4 : 0)}
             y={bottleY + 10}
             width={bottleWidth - 10 + (isSqueezing ? 8 : 0)}
             height={bottleHeight - 20}
             rx={15}
-            fill="url(#waterGrad)"
+            fill="url(#cartWaterDepth)"
+            filter="url(#cartWaterShimmer)"
             style={{ transition: 'all 0.1s ease' }}
           />
 
-          {/* Animated bubbles */}
+          {/* Water surface highlight */}
+          <ellipse
+            cx={simWidth / 2}
+            cy={bottleY + 18}
+            rx={(bottleWidth - 20 + (isSqueezing ? 8 : 0)) / 2}
+            ry={4}
+            fill="#38bdf8"
+            opacity={0.4}
+            style={{ transition: 'all 0.1s ease' }}
+          />
+
+          {/* Animated bubbles with glow */}
           {[...Array(8)].map((_, i) => {
             const bubbleYPos = ((animationTime * 30 + i * 45) % (bottleHeight - 40)) + bottleY + 20;
             const bubbleXPos = bottleX + 20 + (i % 3) * 35 + Math.sin(animationTime * 2 + i) * 5;
@@ -553,59 +667,147 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
                 cx={bubbleXPos}
                 cy={bottleY + bottleHeight - (bubbleYPos - bottleY)}
                 r={2 + (i % 3)}
-                fill="white"
-                opacity={0.3}
+                fill="url(#cartAirBubble)"
+                filter="url(#cartBubbleGlow)"
+                opacity={0.6}
               />
             );
           })}
 
-          {/* The Diver */}
-          <g transform={`translate(${diverX}, ${diverY})`}>
-            <rect x={-8} y={-25} width={16} height={50} rx={4} fill="#e5e7eb" stroke="#9ca3af" strokeWidth={1} />
-            <ellipse cx={0} cy={-30} rx={10} ry={8} fill="#ef4444" />
-            <ellipse cx={0} cy={-5} rx={bubbleRadius * 0.5} ry={bubbleRadius} fill="white" opacity={0.8} />
-            <rect x={-3} y={25} width={6} height={8} fill="#6b7280" />
+          {/* The Diver with premium glass effect */}
+          <g transform={`translate(${diverX}, ${diverY})`} filter="url(#cartDiverGlow)">
+            {/* Diver tube body with glass effect */}
+            <rect x={-8} y={-25} width={16} height={50} rx={4} fill="url(#cartDiverTube)" stroke="#9ca3af" strokeWidth={1} />
+
+            {/* Glass tube highlight */}
+            <rect x={-6} y={-23} width={4} height={46} rx={2} fill="white" opacity={0.3} />
+
+            {/* Diver cap with gradient */}
+            <ellipse cx={0} cy={-30} rx={10} ry={8} fill="url(#cartDiverCap)" />
+            <ellipse cx={-3} cy={-32} rx={3} ry={2} fill="white" opacity={0.4} />
+
+            {/* Air bubble inside diver with premium gradient */}
+            <ellipse
+              cx={0}
+              cy={-5}
+              rx={bubbleRadius * 0.5}
+              ry={bubbleRadius}
+              fill="url(#cartAirBubble)"
+              filter="url(#cartBubbleGlow)"
+            />
+
+            {/* Bubble highlight */}
+            <ellipse
+              cx={-bubbleRadius * 0.15}
+              cy={-5 - bubbleRadius * 0.3}
+              rx={bubbleRadius * 0.15}
+              ry={bubbleRadius * 0.25}
+              fill="white"
+              opacity={0.7}
+            />
+
+            {/* Weight at bottom */}
+            <rect x={-3} y={25} width={6} height={8} rx={1} fill="#4b5563" stroke="#374151" strokeWidth={0.5} />
           </g>
 
-          {/* Force arrows */}
+          {/* Force arrows with gradients */}
           {showForces && (
             <g transform={`translate(${diverX + 40}, ${diverY})`}>
-              <line x1={0} y1={0} x2={0} y2={-netForce * 500} stroke="#22c55e" strokeWidth={3} />
-              <text x={5} y={-netForce * 250} fill="#22c55e" fontSize={10}>F_b</text>
-              <line x1={20} y1={0} x2={20} y2={30} stroke="#fbbf24" strokeWidth={3} />
-              <polygon points="20,35 15,25 25,25" fill="#fbbf24" />
-              <text x={25} y={25} fill="#fbbf24" fontSize={10}>W</text>
+              {/* Buoyancy force arrow */}
+              <line x1={0} y1={0} x2={0} y2={-netForce * 500} stroke="url(#cartBuoyancyForce)" strokeWidth={4} strokeLinecap="round" />
+              <polygon
+                points={`0,${-netForce * 500 - 8} -5,${-netForce * 500 + 2} 5,${-netForce * 500 + 2}`}
+                fill="#4ade80"
+              />
+
+              {/* Weight force arrow */}
+              <line x1={20} y1={0} x2={20} y2={30} stroke="url(#cartWeightForce)" strokeWidth={4} strokeLinecap="round" />
+              <polygon points="20,38 15,28 25,28" fill="#f59e0b" />
             </g>
           )}
 
-          {/* Pressure indicators */}
+          {/* Premium pressure indicators with glow */}
           {isSqueezing && (
-            <>
-              <polygon points={`${bottleX - 20},${bottleY + bottleHeight / 2} ${bottleX - 5},${bottleY + bottleHeight / 2 - 10} ${bottleX - 5},${bottleY + bottleHeight / 2 + 10}`} fill="#f472b6" />
-              <polygon points={`${bottleX + bottleWidth + 20},${bottleY + bottleHeight / 2} ${bottleX + bottleWidth + 5},${bottleY + bottleHeight / 2 - 10} ${bottleX + bottleWidth + 5},${bottleY + bottleHeight / 2 + 10}`} fill="#f472b6" />
-            </>
-          )}
+            <g filter="url(#cartPressureGlow)">
+              {/* Left pressure arrow */}
+              <polygon
+                points={`${bottleX - 25},${bottleY + bottleHeight / 2} ${bottleX - 5},${bottleY + bottleHeight / 2 - 12} ${bottleX - 5},${bottleY + bottleHeight / 2 + 12}`}
+                fill="url(#cartPressureArrow)"
+              />
+              <polygon
+                points={`${bottleX - 22},${bottleY + bottleHeight / 2} ${bottleX - 8},${bottleY + bottleHeight / 2 - 8} ${bottleX - 8},${bottleY + bottleHeight / 2 + 8}`}
+                fill="#ec4899"
+              />
 
-          <text x={simWidth / 2} y={simHeight - 10} fill="#94a3b8" fontSize={12} textAnchor="middle">
-            {isSqueezing ? 'Squeezing! Pressure increased!' : 'Click and hold to squeeze bottle'}
-          </text>
+              {/* Right pressure arrow */}
+              <polygon
+                points={`${bottleX + bottleWidth + 25},${bottleY + bottleHeight / 2} ${bottleX + bottleWidth + 5},${bottleY + bottleHeight / 2 - 12} ${bottleX + bottleWidth + 5},${bottleY + bottleHeight / 2 + 12}`}
+                fill="url(#cartPressureArrow)"
+              />
+              <polygon
+                points={`${bottleX + bottleWidth + 22},${bottleY + bottleHeight / 2} ${bottleX + bottleWidth + 8},${bottleY + bottleHeight / 2 - 8} ${bottleX + bottleWidth + 8},${bottleY + bottleHeight / 2 + 8}`}
+                fill="#ec4899"
+              />
+
+              {/* Pressure indicator bar */}
+              <rect
+                x={simWidth / 2 - 40}
+                y={bottleY - 25}
+                width={80}
+                height={8}
+                rx={4}
+                fill="#1e293b"
+                stroke="#334155"
+                strokeWidth={1}
+              />
+              <rect
+                x={simWidth / 2 - 38}
+                y={bottleY - 23}
+                width={76 * (pressure - 1) * 2}
+                height={4}
+                rx={2}
+                fill="url(#cartPressureArrow)"
+              />
+            </g>
+          )}
         </svg>
 
+        {/* Status label outside SVG */}
+        <div className="text-center mt-2 mb-4">
+          <span style={{ fontSize: typo.small, color: colors.textSecondary }}>
+            {isSqueezing ? 'Squeezing! Pressure increased!' : 'Click and hold to squeeze bottle'}
+          </span>
+        </div>
+
         {/* Data panel */}
-        <div className="grid grid-cols-3 gap-2 mt-4">
+        <div className="grid grid-cols-3 gap-2">
           <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-            <div className="text-xs text-pink-400">Pressure</div>
-            <div className="text-lg font-bold text-white">{pressure.toFixed(2)} atm</div>
+            <div style={{ fontSize: typo.label, color: '#f472b6' }}>Pressure</div>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary }}>{pressure.toFixed(2)} atm</div>
           </div>
           <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-            <div className="text-xs text-cyan-400">Bubble Size</div>
-            <div className="text-lg font-bold text-white">{(bubbleSize * 100).toFixed(0)}%</div>
+            <div style={{ fontSize: typo.label, color: '#22d3ee' }}>Bubble Size</div>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary }}>{(bubbleSize * 100).toFixed(0)}%</div>
           </div>
           <div className="bg-slate-900/50 rounded-lg p-3 text-center">
-            <div className={`text-xs ${netForce > 0 ? 'text-emerald-400' : 'text-amber-400'}`}>Net Force</div>
-            <div className="text-lg font-bold text-white">{netForce > 0 ? 'Rising' : 'Sinking'}</div>
+            <div style={{ fontSize: typo.label, color: netForce > 0 ? '#4ade80' : '#fbbf24' }}>Net Force</div>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary }}>{netForce > 0 ? 'Rising' : 'Sinking'}</div>
           </div>
         </div>
+
+        {/* Force legend outside SVG */}
+        {showForces && (
+          <div className="flex justify-center gap-6 mt-3">
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full" style={{ background: 'linear-gradient(to top, #22c55e, #4ade80)' }} />
+              <span style={{ fontSize: typo.label, color: colors.textSecondary }}>Buoyancy (Fb)</span>
+            </div>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-full" style={{ background: 'linear-gradient(to bottom, #fbbf24, #f59e0b)' }} />
+              <span style={{ fontSize: typo.label, color: colors.textSecondary }}>Weight (W)</span>
+            </div>
+          </div>
+        )}
       </div>
     );
   };
@@ -627,85 +829,248 @@ const CartesianDiverRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPha
       <div className="bg-gradient-to-b from-slate-800/50 to-slate-900/50 rounded-2xl p-4 border border-amber-700/30">
         <svg width={simWidth} height={simHeight} className="mx-auto">
           <defs>
-            <linearGradient id="waterGrad2" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.8" />
-              <stop offset="100%" stopColor="#0369a1" stopOpacity="0.9" />
+            {/* Premium water depth gradient for twist */}
+            <linearGradient id="cartTwistWaterDepth" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.7" />
+              <stop offset="20%" stopColor="#0ea5e9" stopOpacity="0.75" />
+              <stop offset="40%" stopColor="#0284c7" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#0369a1" stopOpacity="0.85" />
+              <stop offset="80%" stopColor="#075985" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0.95" />
+            </linearGradient>
+
+            {/* Premium glass bottle gradient for twist */}
+            <linearGradient id="cartTwistBottleGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.25" />
+              <stop offset="25%" stopColor="#fbbf24" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.05" />
+              <stop offset="75%" stopColor="#fbbf24" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#fcd34d" stopOpacity="0.25" />
+            </linearGradient>
+
+            {/* Diver 1 cap - Green */}
+            <radialGradient id="cartDiver1Cap" cx="40%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#16a34a" />
+            </radialGradient>
+
+            {/* Diver 2 cap - Blue */}
+            <radialGradient id="cartDiver2Cap" cx="40%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#2563eb" />
+            </radialGradient>
+
+            {/* Diver 3 cap - Red */}
+            <radialGradient id="cartDiver3Cap" cx="40%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </radialGradient>
+
+            {/* Twist tube glass gradient */}
+            <linearGradient id="cartTwistTubeGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#d1d5db" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#f3f4f6" stopOpacity="0.95" />
+              <stop offset="70%" stopColor="#f3f4f6" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#9ca3af" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Air bubble gradient for twist */}
+            <radialGradient id="cartTwistAirBubble" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.95" />
+              <stop offset="40%" stopColor="#e0f2fe" stopOpacity="0.85" />
+              <stop offset="70%" stopColor="#bae6fd" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#7dd3fc" stopOpacity="0.5" />
+            </radialGradient>
+
+            {/* Twist pressure glow filter */}
+            <filter id="cartTwistPressureGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Twist diver glow filter */}
+            <filter id="cartTwistDiverGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Twist bubble glow */}
+            <filter id="cartTwistBubbleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glass highlight for twist */}
+            <linearGradient id="cartTwistGlassHighlight" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#ffffff" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
             </linearGradient>
           </defs>
 
-          {/* Bottle */}
+          {/* Bottle with amber-tinted glass effect */}
           <rect
             x={bottleX - (isTwistSqueezing ? 5 : 0)}
             y={bottleY}
             width={bottleWidth + (isTwistSqueezing ? 10 : 0)}
             height={bottleHeight}
             rx={20}
-            fill="rgba(136, 192, 208, 0.1)"
-            stroke="#88c0d0"
-            strokeWidth={3}
+            fill="url(#cartTwistBottleGlass)"
+            stroke="#fbbf24"
+            strokeWidth={2}
             style={{ transition: 'all 0.1s ease' }}
           />
 
-          {/* Water */}
+          {/* Glass highlight reflection */}
+          <rect
+            x={bottleX + 5 - (isTwistSqueezing ? 4 : 0)}
+            y={bottleY + 5}
+            width={15}
+            height={bottleHeight - 30}
+            rx={8}
+            fill="url(#cartTwistGlassHighlight)"
+            style={{ transition: 'all 0.1s ease' }}
+          />
+
+          {/* Water with depth gradient */}
           <rect
             x={bottleX + 5 - (isTwistSqueezing ? 4 : 0)}
             y={bottleY + 10}
             width={bottleWidth - 10 + (isTwistSqueezing ? 8 : 0)}
             height={bottleHeight - 20}
             rx={15}
-            fill="url(#waterGrad2)"
+            fill="url(#cartTwistWaterDepth)"
+            style={{ transition: 'all 0.1s ease' }}
+          />
+
+          {/* Water surface highlight */}
+          <ellipse
+            cx={simWidth / 2}
+            cy={bottleY + 18}
+            rx={(bottleWidth - 20 + (isTwistSqueezing ? 8 : 0)) / 2}
+            ry={4}
+            fill="#38bdf8"
+            opacity={0.4}
             style={{ transition: 'all 0.1s ease' }}
           />
 
           {/* Diver 1 - Large bubble (green) */}
-          <g transform={`translate(${bottleX + 35}, ${bottleY + 30 + diver1Pos * (bottleHeight - 80)})`}>
-            <rect x={-6} y={-20} width={12} height={40} rx={3} fill="#e5e7eb" stroke="#22c55e" strokeWidth={2} />
-            <ellipse cx={0} cy={-25} rx={8} ry={6} fill="#22c55e" />
-            <ellipse cx={0} cy={-2} rx={4 + bubble1Size * 6} ry={6 + bubble1Size * 8} fill="white" opacity={0.8} />
-            <text x={0} y={35} fill="#22c55e" fontSize={10} textAnchor="middle">Large</text>
+          <g transform={`translate(${bottleX + 35}, ${bottleY + 30 + diver1Pos * (bottleHeight - 80)})`} filter="url(#cartTwistDiverGlow)">
+            <rect x={-6} y={-20} width={12} height={40} rx={3} fill="url(#cartTwistTubeGlass)" stroke="#22c55e" strokeWidth={2} />
+            <rect x={-4} y={-18} width={3} height={36} rx={1.5} fill="white" opacity={0.3} />
+            <ellipse cx={0} cy={-25} rx={8} ry={6} fill="url(#cartDiver1Cap)" />
+            <ellipse cx={-2} cy={-27} rx={2} ry={1.5} fill="white" opacity={0.4} />
+            <ellipse cx={0} cy={-2} rx={4 + bubble1Size * 6} ry={6 + bubble1Size * 8} fill="url(#cartTwistAirBubble)" filter="url(#cartTwistBubbleGlow)" />
+            <ellipse cx={-1 - bubble1Size * 2} cy={-2 - bubble1Size * 3} rx={bubble1Size * 1.5} ry={bubble1Size * 2} fill="white" opacity={0.5} />
           </g>
 
           {/* Diver 2 - Medium bubble (blue) */}
-          <g transform={`translate(${bottleX + 75}, ${bottleY + 30 + diver2Pos * (bottleHeight - 80)})`}>
-            <rect x={-6} y={-20} width={12} height={40} rx={3} fill="#e5e7eb" stroke="#3b82f6" strokeWidth={2} />
-            <ellipse cx={0} cy={-25} rx={8} ry={6} fill="#3b82f6" />
-            <ellipse cx={0} cy={-2} rx={4 + bubble2Size * 6} ry={6 + bubble2Size * 8} fill="white" opacity={0.8} />
-            <text x={0} y={35} fill="#3b82f6" fontSize={10} textAnchor="middle">Med</text>
+          <g transform={`translate(${bottleX + 75}, ${bottleY + 30 + diver2Pos * (bottleHeight - 80)})`} filter="url(#cartTwistDiverGlow)">
+            <rect x={-6} y={-20} width={12} height={40} rx={3} fill="url(#cartTwistTubeGlass)" stroke="#3b82f6" strokeWidth={2} />
+            <rect x={-4} y={-18} width={3} height={36} rx={1.5} fill="white" opacity={0.3} />
+            <ellipse cx={0} cy={-25} rx={8} ry={6} fill="url(#cartDiver2Cap)" />
+            <ellipse cx={-2} cy={-27} rx={2} ry={1.5} fill="white" opacity={0.4} />
+            <ellipse cx={0} cy={-2} rx={4 + bubble2Size * 6} ry={6 + bubble2Size * 8} fill="url(#cartTwistAirBubble)" filter="url(#cartTwistBubbleGlow)" />
+            <ellipse cx={-1 - bubble2Size * 2} cy={-2 - bubble2Size * 3} rx={bubble2Size * 1.5} ry={bubble2Size * 2} fill="white" opacity={0.5} />
           </g>
 
           {/* Diver 3 - Small bubble (red) */}
-          <g transform={`translate(${bottleX + 115}, ${bottleY + 30 + diver3Pos * (bottleHeight - 80)})`}>
-            <rect x={-6} y={-20} width={12} height={40} rx={3} fill="#e5e7eb" stroke="#ef4444" strokeWidth={2} />
-            <ellipse cx={0} cy={-25} rx={8} ry={6} fill="#ef4444" />
-            <ellipse cx={0} cy={-2} rx={4 + bubble3Size * 6} ry={6 + bubble3Size * 8} fill="white" opacity={0.8} />
-            <text x={0} y={35} fill="#ef4444" fontSize={10} textAnchor="middle">Small</text>
+          <g transform={`translate(${bottleX + 115}, ${bottleY + 30 + diver3Pos * (bottleHeight - 80)})`} filter="url(#cartTwistDiverGlow)">
+            <rect x={-6} y={-20} width={12} height={40} rx={3} fill="url(#cartTwistTubeGlass)" stroke="#ef4444" strokeWidth={2} />
+            <rect x={-4} y={-18} width={3} height={36} rx={1.5} fill="white" opacity={0.3} />
+            <ellipse cx={0} cy={-25} rx={8} ry={6} fill="url(#cartDiver3Cap)" />
+            <ellipse cx={-2} cy={-27} rx={2} ry={1.5} fill="white" opacity={0.4} />
+            <ellipse cx={0} cy={-2} rx={4 + bubble3Size * 6} ry={6 + bubble3Size * 8} fill="url(#cartTwistAirBubble)" filter="url(#cartTwistBubbleGlow)" />
+            <ellipse cx={-1 - bubble3Size * 2} cy={-2 - bubble3Size * 3} rx={bubble3Size * 1.5} ry={bubble3Size * 2} fill="white" opacity={0.5} />
           </g>
 
-          {/* Pressure arrows */}
+          {/* Premium pressure arrows with glow */}
           {isTwistSqueezing && (
-            <>
-              <polygon points={`${bottleX - 20},${bottleY + bottleHeight / 2} ${bottleX - 5},${bottleY + bottleHeight / 2 - 10} ${bottleX - 5},${bottleY + bottleHeight / 2 + 10}`} fill="#f472b6" />
-              <polygon points={`${bottleX + bottleWidth + 20},${bottleY + bottleHeight / 2} ${bottleX + bottleWidth + 5},${bottleY + bottleHeight / 2 - 10} ${bottleX + bottleWidth + 5},${bottleY + bottleHeight / 2 + 10}`} fill="#f472b6" />
-            </>
-          )}
+            <g filter="url(#cartTwistPressureGlow)">
+              {/* Left pressure arrow */}
+              <polygon
+                points={`${bottleX - 25},${bottleY + bottleHeight / 2} ${bottleX - 5},${bottleY + bottleHeight / 2 - 12} ${bottleX - 5},${bottleY + bottleHeight / 2 + 12}`}
+                fill="#f472b6"
+                opacity={0.5}
+              />
+              <polygon
+                points={`${bottleX - 22},${bottleY + bottleHeight / 2} ${bottleX - 8},${bottleY + bottleHeight / 2 - 8} ${bottleX - 8},${bottleY + bottleHeight / 2 + 8}`}
+                fill="#ec4899"
+              />
 
-          <text x={simWidth / 2} y={simHeight - 10} fill="#94a3b8" fontSize={12} textAnchor="middle">
-            {isTwistSqueezing ? 'Watch which diver sinks first!' : 'Squeeze gently to compare'}
-          </text>
+              {/* Right pressure arrow */}
+              <polygon
+                points={`${bottleX + bottleWidth + 25},${bottleY + bottleHeight / 2} ${bottleX + bottleWidth + 5},${bottleY + bottleHeight / 2 - 12} ${bottleX + bottleWidth + 5},${bottleY + bottleHeight / 2 + 12}`}
+                fill="#f472b6"
+                opacity={0.5}
+              />
+              <polygon
+                points={`${bottleX + bottleWidth + 22},${bottleY + bottleHeight / 2} ${bottleX + bottleWidth + 8},${bottleY + bottleHeight / 2 - 8} ${bottleX + bottleWidth + 8},${bottleY + bottleHeight / 2 + 8}`}
+                fill="#ec4899"
+              />
+
+              {/* Pressure indicator bar */}
+              <rect
+                x={simWidth / 2 - 50}
+                y={bottleY - 25}
+                width={100}
+                height={8}
+                rx={4}
+                fill="#1e293b"
+                stroke="#334155"
+                strokeWidth={1}
+              />
+              <rect
+                x={simWidth / 2 - 48}
+                y={bottleY - 23}
+                width={96 * (twistPressure - 1) * 3.3}
+                height={4}
+                rx={2}
+                fill="#ec4899"
+              />
+            </g>
+          )}
         </svg>
 
-        <div className="grid grid-cols-3 gap-2 mt-4 text-center">
+        {/* Status label outside SVG */}
+        <div className="text-center mt-2 mb-3">
+          <span style={{ fontSize: typo.small, color: colors.textSecondary }}>
+            {isTwistSqueezing ? 'Watch which diver sinks first!' : 'Squeeze gently to compare'}
+          </span>
+        </div>
+
+        {/* Diver labels outside SVG */}
+        <div className="grid grid-cols-3 gap-2 mb-3 text-center">
+          <div style={{ fontSize: typo.label, color: '#22c55e', fontWeight: 600 }}>Large Bubble</div>
+          <div style={{ fontSize: typo.label, color: '#3b82f6', fontWeight: 600 }}>Medium Bubble</div>
+          <div style={{ fontSize: typo.label, color: '#ef4444', fontWeight: 600 }}>Small Bubble</div>
+        </div>
+
+        {/* Data panel */}
+        <div className="grid grid-cols-3 gap-2 text-center">
           <div className="bg-emerald-900/30 rounded-lg p-2 border border-emerald-700/30">
-            <div className="text-xs text-emerald-400">Large Bubble</div>
-            <div className="text-sm font-bold text-white">{(bubble1Size * 100).toFixed(0)}%</div>
+            <div style={{ fontSize: typo.label, color: '#4ade80' }}>Bubble Size</div>
+            <div style={{ fontSize: typo.body, fontWeight: 700, color: colors.textPrimary }}>{(bubble1Size * 100).toFixed(0)}%</div>
           </div>
           <div className="bg-blue-900/30 rounded-lg p-2 border border-blue-700/30">
-            <div className="text-xs text-blue-400">Medium Bubble</div>
-            <div className="text-sm font-bold text-white">{(bubble2Size * 100).toFixed(0)}%</div>
+            <div style={{ fontSize: typo.label, color: '#60a5fa' }}>Bubble Size</div>
+            <div style={{ fontSize: typo.body, fontWeight: 700, color: colors.textPrimary }}>{(bubble2Size * 100).toFixed(0)}%</div>
           </div>
           <div className="bg-red-900/30 rounded-lg p-2 border border-red-700/30">
-            <div className="text-xs text-red-400">Small Bubble</div>
-            <div className="text-sm font-bold text-white">{(bubble3Size * 100).toFixed(0)}%</div>
+            <div style={{ fontSize: typo.label, color: '#f87171' }}>Bubble Size</div>
+            <div style={{ fontSize: typo.body, fontWeight: 700, color: colors.textPrimary }}>{(bubble3Size * 100).toFixed(0)}%</div>
           </div>
         </div>
       </div>

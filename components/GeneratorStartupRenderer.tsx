@@ -495,202 +495,547 @@ export default function GeneratorStartupRenderer({
   const renderGeneratorVisualization = () => {
     const rotationSpeed = rpm / 30; // Visual rotation
     const engineRunning = rpm > 100;
+    const syncProgress = Math.min(100, (frequency / 60) * 100);
+    const powerOutput = generatorState === 'online' ? 100 : syncProgress * 0.8;
 
     return (
-      <svg viewBox="0 0 400 300" className="w-full h-64">
-        <defs>
-          <linearGradient id="engineGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#374151" />
-            <stop offset="100%" stopColor="#1f2937" />
-          </linearGradient>
-          <linearGradient id="genGrad" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#1d4ed8" />
-          </linearGradient>
-        </defs>
+      <div className="relative">
+        <svg viewBox="0 0 400 260" className="w-full h-56">
+          <defs>
+            {/* Premium engine block gradient */}
+            <linearGradient id="genEngineBlock" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="25%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#3f4a5c" />
+              <stop offset="75%" stopColor="#2d3748" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect width="400" height="300" fill="#1e293b" rx="12" />
+            {/* Generator housing metallic gradient */}
+            <linearGradient id="genHousingMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="20%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="80%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
 
-        {/* Diesel Engine Block */}
-        <rect x="40" y="80" width="120" height="140" fill="url(#engineGrad)" rx="8" stroke="#4b5563" strokeWidth="2" />
-        <text x="100" y="70" textAnchor="middle" fill="#94a3b8" fontSize="11">DIESEL ENGINE</text>
+            {/* Flywheel metallic gradient */}
+            <radialGradient id="genFlywheelMetal" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="30%" stopColor="#64748b" />
+              <stop offset="60%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </radialGradient>
 
-        {/* Engine cylinders */}
-        {[0, 1, 2].map((i) => (
-          <g key={i}>
-            <rect x={55 + i * 35} y="95" width="25" height="50" fill="#1f2937" rx="3" />
-            {engineRunning && (
-              <rect
-                x={55 + i * 35}
-                y={95 + Math.sin((animationFrame + i * 40) * rotationSpeed * 0.1) * 15 + 15}
-                width="25"
-                height="20"
-                fill="#ef4444"
-                opacity={0.6 + Math.sin((animationFrame + i * 40) * 0.1) * 0.3}
-                rx="2"
-              />
-            )}
-          </g>
-        ))}
+            {/* Copper winding gradient */}
+            <linearGradient id="genCopperWinding" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="30%" stopColor="#f59e0b" />
+              <stop offset="60%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
 
-        {/* Flywheel */}
-        <g transform={`translate(160, 150) rotate(${animationFrame * rotationSpeed * 0.5})`}>
-          <circle cx="0" cy="0" r="35" fill="#475569" stroke="#64748b" strokeWidth="3" />
-          <circle cx="0" cy="0" r="25" fill="#374151" />
-          <line x1="-30" y1="0" x2="30" y2="0" stroke="#64748b" strokeWidth="2" />
-          <line x1="0" y1="-30" x2="0" y2="30" stroke="#64748b" strokeWidth="2" />
-        </g>
-        <text x="160" y="200" textAnchor="middle" fill="#94a3b8" fontSize="9">FLYWHEEL</text>
+            {/* Combustion glow gradient */}
+            <radialGradient id="genCombustionGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="40%" stopColor="#f97316" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#ef4444" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+            </radialGradient>
 
-        {/* Coupling */}
-        <rect x="190" y="140" width="30" height="20" fill="#6b7280" rx="4" />
+            {/* Power output glow */}
+            <radialGradient id="genPowerGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+              <stop offset="30%" stopColor="#22c55e" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#16a34a" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+            </radialGradient>
 
-        {/* Generator */}
-        <rect x="220" y="90" width="100" height="120" fill="url(#genGrad)" rx="8" stroke="#60a5fa" strokeWidth="2" />
-        <text x="270" y="80" textAnchor="middle" fill="#94a3b8" fontSize="11">GENERATOR</text>
+            {/* Sync indicator gradient */}
+            <linearGradient id="genSyncIndicator" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
 
-        {/* Generator windings */}
-        <g transform={`translate(270, 150) rotate(${animationFrame * rotationSpeed * 0.5})`}>
-          <circle cx="0" cy="0" r="40" fill="none" stroke="#93c5fd" strokeWidth="2" strokeDasharray="10,5" />
-          {[0, 60, 120, 180, 240, 300].map((angle, i) => (
-            <rect
-              key={i}
-              x="-5"
-              y="-35"
-              width="10"
-              height="20"
-              fill="#fbbf24"
-              transform={`rotate(${angle})`}
-            />
+            {/* Background lab gradient */}
+            <linearGradient id="genLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="genCombustionBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="genPowerOutputGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="genRotorGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width="400" height="260" fill="url(#genLabBg)" rx="12" />
+
+          {/* Diesel Engine Block */}
+          <rect x="30" y="60" width="110" height="120" fill="url(#genEngineBlock)" rx="8" stroke="#64748b" strokeWidth="2" />
+
+          {/* Engine top detail */}
+          <rect x="40" y="55" width="90" height="8" fill="#475569" rx="2" />
+
+          {/* Engine cylinders with combustion */}
+          {[0, 1, 2].map((i) => (
+            <g key={i}>
+              <rect x={45 + i * 32} y="75" width="24" height="45" fill="#1f2937" rx="3" stroke="#374151" strokeWidth="1" />
+              {engineRunning && (
+                <ellipse
+                  cx={57 + i * 32}
+                  cy={85 + Math.sin((animationFrame + i * 40) * rotationSpeed * 0.1) * 10 + 10}
+                  rx="10"
+                  ry={8 + Math.sin((animationFrame + i * 40) * 0.1) * 3}
+                  fill="url(#genCombustionGlow)"
+                  filter="url(#genCombustionBlur)"
+                  opacity={0.7 + Math.sin((animationFrame + i * 40) * 0.15) * 0.3}
+                />
+              )}
+            </g>
           ))}
-        </g>
 
-        {/* Output cables */}
-        {frequency > 50 && (
-          <g>
-            <line x1="320" y1="130" x2="370" y2="130" stroke="#22c55e" strokeWidth="4" />
-            <line x1="320" y1="170" x2="370" y2="170" stroke="#22c55e" strokeWidth="4" />
-            <rect x="355" y="115" width="35" height="70" fill="#1f2937" rx="4" stroke="#22c55e" strokeWidth="2" />
-            <text x="372" y="145" textAnchor="middle" fill="#22c55e" fontSize="10">OUTPUT</text>
-            <text x="372" y="160" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">
-              {frequency.toFixed(1)} Hz
-            </text>
+          {/* Engine exhaust pipes */}
+          <rect x="45" y="125" width="80" height="8" fill="#475569" rx="2" />
+          {engineRunning && (
+            <g opacity={0.5 + Math.sin(animationFrame * 0.1) * 0.2}>
+              <circle cx="130" cy="129" r="3" fill="#6b7280" />
+              <circle cx="138" cy="127 + Math.sin(animationFrame * 0.2) * 2" r="2" fill="#9ca3af" opacity="0.6" />
+            </g>
+          )}
+
+          {/* Flywheel with spinning visualization */}
+          <g transform={`translate(150, 120) rotate(${animationFrame * rotationSpeed * 0.5})`}>
+            <circle cx="0" cy="0" r="35" fill="url(#genFlywheelMetal)" stroke="#94a3b8" strokeWidth="2" />
+            <circle cx="0" cy="0" r="28" fill="#374151" stroke="#475569" strokeWidth="1" />
+            <circle cx="0" cy="0" r="8" fill="#64748b" />
+            {/* Flywheel spokes */}
+            {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => (
+              <line
+                key={i}
+                x1="10"
+                y1="0"
+                x2="26"
+                y2="0"
+                stroke="#64748b"
+                strokeWidth="3"
+                transform={`rotate(${angle})`}
+              />
+            ))}
+            {/* Flywheel weight markers */}
+            {[0, 90, 180, 270].map((angle, i) => (
+              <circle
+                key={i}
+                cx="30"
+                cy="0"
+                r="4"
+                fill="#475569"
+                stroke="#64748b"
+                strokeWidth="1"
+                transform={`rotate(${angle})`}
+              />
+            ))}
           </g>
-        )}
 
-        {/* Status indicators */}
-        <rect x="40" y="235" width="320" height="50" fill="#0f172a" rx="8" />
+          {/* Coupling shaft */}
+          <rect x="180" y="112" width="25" height="16" fill="#6b7280" rx="3" />
+          <rect x="185" y="115" width="15" height="10" fill="#475569" rx="2" />
 
-        <g transform="translate(60, 250)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">STATE</text>
-          <text x="0" y="18" fill={
+          {/* Generator Housing */}
+          <rect x="205" y="70" width="95" height="100" fill="url(#genHousingMetal)" rx="8" stroke="#93c5fd" strokeWidth="2" />
+
+          {/* Generator cooling fins */}
+          {[0, 1, 2, 3, 4].map((i) => (
+            <rect key={i} x="295" y={78 + i * 18} width="8" height="12" fill="#1d4ed8" rx="1" />
+          ))}
+
+          {/* Generator rotor with spinning windings */}
+          <g transform={`translate(252, 120) rotate(${animationFrame * rotationSpeed * 0.5})`}>
+            <circle cx="0" cy="0" r="38" fill="none" stroke="#93c5fd" strokeWidth="1" strokeDasharray="8,4" opacity="0.5" />
+            <circle cx="0" cy="0" r="30" fill="#1e3a5f" stroke="#3b82f6" strokeWidth="1" />
+            {/* Rotor windings */}
+            {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+              <g key={i} transform={`rotate(${angle})`}>
+                <rect
+                  x="-4"
+                  y="-28"
+                  width="8"
+                  height="16"
+                  fill="url(#genCopperWinding)"
+                  rx="2"
+                  filter={rpm > 1500 ? "url(#genRotorGlow)" : undefined}
+                />
+              </g>
+            ))}
+            <circle cx="0" cy="0" r="10" fill="#475569" stroke="#64748b" strokeWidth="1" />
+          </g>
+
+          {/* Power Output section */}
+          {frequency > 30 && (
+            <g>
+              {/* Output cables with glow */}
+              <line x1="300" y1="100" x2="345" y2="100" stroke={frequency > 50 ? "#22c55e" : "#f59e0b"} strokeWidth="4" filter={frequency > 50 ? "url(#genPowerOutputGlow)" : undefined} />
+              <line x1="300" y1="140" x2="345" y2="140" stroke={frequency > 50 ? "#22c55e" : "#f59e0b"} strokeWidth="4" filter={frequency > 50 ? "url(#genPowerOutputGlow)" : undefined} />
+
+              {/* Output terminal box */}
+              <rect x="340" y="85" width="45" height="70" fill="#0f172a" rx="4" stroke={frequency > 50 ? "#22c55e" : "#f59e0b"} strokeWidth="2" />
+
+              {/* Power meter inside terminal */}
+              <rect x="348" y="93" width="30" height="8" fill="#1f2937" rx="2" />
+              <rect x="348" y="93" width={powerOutput * 0.3} height="8" fill={frequency > 50 ? "#22c55e" : "#f59e0b"} rx="2" />
+
+              {/* Power indicator LED */}
+              {generatorState === 'online' && (
+                <circle cx="363" cy="145" r="4" fill="url(#genPowerGlow)" filter="url(#genPowerOutputGlow)">
+                  <animate attributeName="opacity" values="1;0.5;1" dur="1s" repeatCount="indefinite" />
+                </circle>
+              )}
+            </g>
+          )}
+
+          {/* Synchronization indicator bar */}
+          <g transform="translate(30, 195)">
+            <rect x="0" y="0" width="340" height="20" fill="#0f172a" rx="4" stroke="#334155" strokeWidth="1" />
+            <rect x="2" y="2" width="336" height="16" fill="#1f2937" rx="3" />
+            {/* Sync progress fill */}
+            <rect x="2" y="2" width={syncProgress * 3.36} height="16" fill="url(#genSyncIndicator)" rx="3" opacity="0.9" />
+            {/* Target marker at 60Hz */}
+            <line x1="336" y1="0" x2="336" y2="20" stroke="#22c55e" strokeWidth="2" strokeDasharray="3,2" />
+          </g>
+
+          {/* Status panel */}
+          <rect x="30" y="220" width="340" height="32" fill="#0f172a" rx="6" stroke="#334155" strokeWidth="1" />
+
+          {/* Status LED indicators */}
+          <circle cx="50" cy="236" r="5" fill={
             generatorState === 'stopped' ? '#ef4444' :
             generatorState === 'cranking' ? '#f59e0b' :
             generatorState === 'warmup' ? '#fbbf24' :
             generatorState === 'sync' ? '#3b82f6' : '#22c55e'
-          } fontSize="12" fontWeight="bold">
-            {generatorState.toUpperCase()}
-          </text>
-        </g>
+          }>
+            {generatorState !== 'stopped' && (
+              <animate attributeName="opacity" values="1;0.4;1" dur={generatorState === 'online' ? "2s" : "0.5s"} repeatCount="indefinite" />
+            )}
+          </circle>
+        </svg>
 
-        <g transform="translate(140, 250)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">RPM</text>
-          <text x="0" y="18" fill="#ffffff" fontSize="12" fontWeight="bold">{rpm.toFixed(0)}</text>
-        </g>
-
-        <g transform="translate(200, 250)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">FREQ</text>
-          <text x="0" y="18" fill="#ffffff" fontSize="12" fontWeight="bold">{frequency.toFixed(1)} Hz</text>
-        </g>
-
-        <g transform="translate(270, 250)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">TIME</text>
-          <text x="0" y="18" fill="#ffffff" fontSize="12" fontWeight="bold">{startupTime.toFixed(1)}s</text>
-        </g>
-      </svg>
+        {/* Status labels outside SVG using typo system */}
+        <div className="absolute bottom-2 left-0 right-0 flex justify-between px-8" style={{ fontSize: typo.small }}>
+          <div className="flex items-center gap-6">
+            <div className="text-center">
+              <div className="text-slate-500 uppercase tracking-wide" style={{ fontSize: typo.label }}>State</div>
+              <div className={`font-bold ${
+                generatorState === 'stopped' ? 'text-red-400' :
+                generatorState === 'cranking' ? 'text-amber-400' :
+                generatorState === 'warmup' ? 'text-yellow-400' :
+                generatorState === 'sync' ? 'text-blue-400' : 'text-emerald-400'
+              }`}>{generatorState.toUpperCase()}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-slate-500 uppercase tracking-wide" style={{ fontSize: typo.label }}>RPM</div>
+              <div className="font-bold text-white">{rpm.toFixed(0)}</div>
+            </div>
+            <div className="text-center">
+              <div className="text-slate-500 uppercase tracking-wide" style={{ fontSize: typo.label }}>Frequency</div>
+              <div className="font-bold text-white">{frequency.toFixed(1)} Hz</div>
+            </div>
+            <div className="text-center">
+              <div className="text-slate-500 uppercase tracking-wide" style={{ fontSize: typo.label }}>Time</div>
+              <div className="font-bold text-white">{startupTime.toFixed(1)}s</div>
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 
   const renderFrequencyDroopVisualization = () => {
     const targetFreq = 60;
     const droopPercentage = ((targetFreq - frequencyDroop) / targetFreq) * 100;
+    const governorResponse = isLoadApplied ? Math.min(100, loadPercentage * 1.2) : 0;
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-64">
-        <defs>
-          <linearGradient id="freqGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#22c55e" />
-            <stop offset="50%" stopColor="#eab308" />
-            <stop offset="100%" stopColor="#ef4444" />
-          </linearGradient>
-        </defs>
+      <div className="relative">
+        <svg viewBox="0 0 400 240" className="w-full h-52">
+          <defs>
+            {/* Frequency meter gradient */}
+            <linearGradient id="genFreqMeterGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#84cc16" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect width="400" height="280" fill="#1e293b" rx="12" />
+            {/* Load bar gradient */}
+            <linearGradient id="genLoadBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="40%" stopColor="#8b5cf6" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
 
-        {/* Title */}
-        <text x="200" y="25" textAnchor="middle" fill="#ffffff" fontSize="14" fontWeight="bold">
-          Frequency Droop During Load Pickup
-        </text>
+            {/* Governor response gradient */}
+            <linearGradient id="genGovernorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" />
+              <stop offset="50%" stopColor="#0891b2" />
+              <stop offset="100%" stopColor="#0e7490" />
+            </linearGradient>
 
-        {/* Frequency meter */}
-        <rect x="50" y="50" width="300" height="120" fill="#0f172a" rx="8" />
+            {/* Danger zone glow */}
+            <linearGradient id="genDangerZone" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#dc2626" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.1" />
+            </linearGradient>
 
-        {/* Target frequency line */}
-        <line x1="70" y1="80" x2="330" y2="80" stroke="#22c55e" strokeWidth="2" strokeDasharray="5,5" />
-        <text x="60" y="85" textAnchor="end" fill="#22c55e" fontSize="10">60 Hz</text>
+            {/* Safe zone glow */}
+            <linearGradient id="genSafeZone" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#16a34a" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.2" />
+            </linearGradient>
 
-        {/* Danger zone */}
-        <rect x="70" y="130" width="260" height="30" fill="rgba(239, 68, 68, 0.2)" rx="4" />
-        <text x="60" y="148" textAnchor="end" fill="#ef4444" fontSize="9">55 Hz</text>
-        <text x="340" y="148" fill="#ef4444" fontSize="9">DANGER</text>
+            {/* Digital display gradient */}
+            <linearGradient id="genDigitalDisplay" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="50%" stopColor="#111827" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
 
-        {/* Current frequency line */}
-        <line
-          x1="70"
-          y1={80 + (60 - frequencyDroop) * 10}
-          x2="330"
-          y2={80 + (60 - frequencyDroop) * 10}
-          stroke="#fbbf24"
-          strokeWidth="3"
-        >
-          {isLoadApplied && <animate attributeName="y1" values={`${80 + (60 - frequencyDroop) * 10};${85 + (60 - frequencyDroop) * 10};${80 + (60 - frequencyDroop) * 10}`} dur="0.5s" repeatCount="indefinite" />}
-        </line>
+            {/* Panel background */}
+            <linearGradient id="genPanelBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        {/* Frequency readout */}
-        <rect x="140" y="90" width="120" height="50" fill="#1f2937" rx="8" />
-        <text x="200" y="120" textAnchor="middle" fill={frequencyDroop < 57 ? '#ef4444' : frequencyDroop < 59 ? '#fbbf24' : '#22c55e'} fontSize="24" fontWeight="bold">
-          {frequencyDroop.toFixed(1)} Hz
-        </text>
-        <text x="200" y="135" textAnchor="middle" fill="#94a3b8" fontSize="10">
-          {droopPercentage.toFixed(1)}% droop
-        </text>
+            {/* Glow filters */}
+            <filter id="genFreqGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* Load indicator */}
-        <rect x="50" y="190" width="300" height="30" fill="#374151" rx="8" />
-        <rect
-          x="50"
-          y="190"
-          width={loadPercentage * 3}
-          height="30"
-          fill={loadPercentage > 80 ? '#ef4444' : loadPercentage > 50 ? '#f59e0b' : '#3b82f6'}
-          rx="8"
-        />
-        <text x="200" y="210" textAnchor="middle" fill="#ffffff" fontSize="12" fontWeight="bold">
-          LOAD: {loadPercentage}%
-        </text>
+            <filter id="genDangerGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* Explanation */}
-        <text x="200" y="245" textAnchor="middle" fill="#94a3b8" fontSize="11">
-          {isLoadApplied
-            ? `Governor compensating for ${loadPercentage}% load...`
-            : 'Apply load to see frequency droop'}
-        </text>
-        <text x="200" y="265" textAnchor="middle" fill="#64748b" fontSize="10">
-          {frequencyDroop < 57 ? 'CRITICAL: Equipment may disconnect!' : frequencyDroop < 59 ? 'Governor working hard' : 'Frequency stable'}
-        </text>
-      </svg>
+            <filter id="genDigitalGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width="400" height="240" fill="url(#genPanelBg)" rx="12" />
+
+          {/* Frequency meter panel */}
+          <rect x="20" y="15" width="220" height="140" fill="#0f172a" rx="8" stroke="#334155" strokeWidth="1" />
+
+          {/* Safe zone (58-62 Hz) */}
+          <rect x="30" y="25" width="200" height="30" fill="url(#genSafeZone)" rx="4" />
+
+          {/* Danger zone (below 57 Hz) */}
+          <rect x="30" y="95" width="200" height="50" fill="url(#genDangerZone)" rx="4" />
+
+          {/* Frequency scale lines */}
+          {[60, 59, 58, 57, 56, 55].map((freq, i) => (
+            <g key={freq}>
+              <line
+                x1="30"
+                y1={25 + i * 20}
+                x2="230"
+                y2={25 + i * 20}
+                stroke={freq >= 58 ? "#22c55e" : freq >= 56 ? "#f59e0b" : "#ef4444"}
+                strokeWidth="1"
+                strokeDasharray={freq === 60 ? "0" : "3,3"}
+                opacity={freq === 60 ? 1 : 0.5}
+              />
+            </g>
+          ))}
+
+          {/* Current frequency indicator line */}
+          <line
+            x1="30"
+            y1={25 + (60 - frequencyDroop) * 20}
+            x2="230"
+            y2={25 + (60 - frequencyDroop) * 20}
+            stroke={frequencyDroop < 57 ? "#ef4444" : frequencyDroop < 59 ? "#fbbf24" : "#22c55e"}
+            strokeWidth="4"
+            filter="url(#genFreqGlow)"
+          >
+            {isLoadApplied && (
+              <animate
+                attributeName="y1"
+                values={`${25 + (60 - frequencyDroop) * 20};${27 + (60 - frequencyDroop) * 20};${25 + (60 - frequencyDroop) * 20}`}
+                dur="0.3s"
+                repeatCount="indefinite"
+              />
+            )}
+          </line>
+
+          {/* Digital frequency display */}
+          <rect x="250" y="15" width="130" height="70" fill="url(#genDigitalDisplay)" rx="8" stroke="#334155" strokeWidth="1" />
+          <rect x="258" y="23" width="114" height="54" fill="#0a0f1a" rx="4" />
+
+          {/* Frequency readout segments */}
+          <g filter="url(#genDigitalGlow)">
+            {/* Main frequency value - no text element, handled outside SVG */}
+          </g>
+
+          {/* Governor response meter */}
+          <rect x="250" y="95" width="130" height="60" fill="#0f172a" rx="8" stroke="#334155" strokeWidth="1" />
+          <rect x="260" y="115" width="110" height="12" fill="#1f2937" rx="3" />
+          <rect
+            x="260"
+            y="115"
+            width={governorResponse * 1.1}
+            height="12"
+            fill="url(#genGovernorGrad)"
+            rx="3"
+            filter={governorResponse > 50 ? "url(#genFreqGlow)" : undefined}
+          />
+
+          {/* Governor activity indicator */}
+          {isLoadApplied && (
+            <circle cx="375" cy="105" r="4" fill="#06b6d4">
+              <animate attributeName="opacity" values="1;0.3;1" dur="0.5s" repeatCount="indefinite" />
+            </circle>
+          )}
+
+          {/* Load bar section */}
+          <rect x="20" y="165" width="360" height="55" fill="#0f172a" rx="8" stroke="#334155" strokeWidth="1" />
+
+          {/* Load bar track */}
+          <rect x="30" y="190" width="340" height="20" fill="#1f2937" rx="6" />
+
+          {/* Load bar fill with gradient */}
+          <rect
+            x="30"
+            y="190"
+            width={loadPercentage * 3.4}
+            height="20"
+            fill="url(#genLoadBarGrad)"
+            rx="6"
+            style={{ clipPath: `inset(0 ${100 - loadPercentage}% 0 0)` }}
+          />
+
+          {/* Load percentage markers */}
+          {[25, 50, 75, 100].map((mark) => (
+            <line
+              key={mark}
+              x1={30 + mark * 3.4}
+              y1="188"
+              x2={30 + mark * 3.4}
+              y2="212"
+              stroke="#475569"
+              strokeWidth="1"
+            />
+          ))}
+
+          {/* Danger threshold indicator at 80% */}
+          <line x1="302" y1="185" x2="302" y2="215" stroke="#ef4444" strokeWidth="2" strokeDasharray="3,2" />
+
+          {/* Warning LED for high load */}
+          {loadPercentage > 80 && (
+            <circle cx="350" cy="175" r="5" fill="#ef4444" filter="url(#genDangerGlow)">
+              <animate attributeName="opacity" values="1;0.3;1" dur="0.3s" repeatCount="indefinite" />
+            </circle>
+          )}
+        </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div className="absolute top-4 left-0 right-0 px-6">
+          {/* Frequency scale labels */}
+          <div className="absolute left-6 top-3 flex flex-col gap-3" style={{ fontSize: typo.label }}>
+            {[60, 59, 58, 57, 56, 55].map((freq) => (
+              <div
+                key={freq}
+                className={`${freq >= 58 ? 'text-emerald-400' : freq >= 56 ? 'text-amber-400' : 'text-red-400'}`}
+                style={{ lineHeight: '20px' }}
+              >
+                {freq}Hz
+              </div>
+            ))}
+          </div>
+        </div>
+
+        {/* Digital frequency display overlay */}
+        <div className="absolute top-6 right-6 text-center" style={{ width: '130px' }}>
+          <div
+            className={`font-mono font-bold ${
+              frequencyDroop < 57 ? 'text-red-400' : frequencyDroop < 59 ? 'text-amber-400' : 'text-emerald-400'
+            }`}
+            style={{ fontSize: typo.heading, textShadow: '0 0 10px currentColor' }}
+          >
+            {frequencyDroop.toFixed(1)}
+          </div>
+          <div className="text-slate-500" style={{ fontSize: typo.label }}>HERTZ</div>
+          <div className="text-slate-400 mt-1" style={{ fontSize: typo.label }}>
+            {droopPercentage.toFixed(1)}% droop
+          </div>
+        </div>
+
+        {/* Governor label */}
+        <div className="absolute right-6" style={{ top: '95px', width: '130px' }}>
+          <div className="text-cyan-400 font-medium text-center" style={{ fontSize: typo.label }}>
+            GOVERNOR RESPONSE
+          </div>
+        </div>
+
+        {/* Load label */}
+        <div className="absolute bottom-14 left-8 right-8 flex justify-between items-center">
+          <div className="text-slate-400 font-medium" style={{ fontSize: typo.small }}>LOAD</div>
+          <div className="text-white font-bold" style={{ fontSize: typo.body }}>{loadPercentage}%</div>
+        </div>
+
+        {/* Status message */}
+        <div className="absolute bottom-2 left-0 right-0 text-center">
+          <div className="text-slate-500" style={{ fontSize: typo.small }}>
+            {isLoadApplied
+              ? frequencyDroop < 57
+                ? 'CRITICAL: Equipment protection may engage!'
+                : frequencyDroop < 59
+                ? `Governor compensating for ${loadPercentage}% load...`
+                : 'Frequency stable - governor maintaining control'
+              : 'Adjust load slider and apply to see frequency droop'}
+          </div>
+        </div>
+      </div>
     );
   };
 

@@ -458,7 +458,7 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
     }, 0);
   };
 
-  // Spring visualization
+  // Spring visualization with premium SVG graphics
   const renderSpring = (width: number, height: number) => {
     const pivotX = width / 2;
     const pivotY = 40;
@@ -483,88 +483,337 @@ const ElasticPotentialEnergyRenderer: React.FC<Props> = ({ onGameEvent, gamePhas
     const currentPE = 0.5 * springConstant * currentDisp * currentDisp;
     const pePercent = maxPE > 0 ? Math.min(100, (currentPE / maxPE) * 100) : 0;
 
+    // Determine compression state for visual indicators
+    const isCompressed = currentDisp > 0.02;
+    const compressionIntensity = Math.min(1, currentDisp / 0.25);
+
     return (
+    <div className="relative" style={{ width, height: height + 60 }}>
       <svg width={width} height={height} className="overflow-visible">
         <defs>
-          <linearGradient id="springGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#22c55e" />
-            <stop offset="50%" stopColor="#10b981" />
-            <stop offset="100%" stopColor="#22c55e" />
+          {/* Premium metallic spring gradient with 6 color stops */}
+          <linearGradient id="epeSpringMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#059669" />
+            <stop offset="20%" stopColor="#34d399" />
+            <stop offset="40%" stopColor="#6ee7b7" />
+            <stop offset="60%" stopColor="#34d399" />
+            <stop offset="80%" stopColor="#10b981" />
+            <stop offset="100%" stopColor="#059669" />
           </linearGradient>
-          <filter id="springGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="2" result="blur" />
-            <feMerge><feMergeNode in="blur" /><feMergeNode in="SourceGraphic" /></feMerge>
+
+          {/* Energy storage gradient - represents stored potential energy */}
+          <linearGradient id="epeEnergyStorage" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#064e3b" />
+            <stop offset="25%" stopColor="#047857" />
+            <stop offset="50%" stopColor="#10b981" />
+            <stop offset="75%" stopColor="#34d399" />
+            <stop offset="100%" stopColor="#6ee7b7" />
+          </linearGradient>
+
+          {/* Energy bar gradient with smooth color transition */}
+          <linearGradient id="epeEnergyBar" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10b981" />
+            <stop offset="33%" stopColor="#22c55e" />
+            <stop offset="66%" stopColor="#4ade80" />
+            <stop offset="100%" stopColor="#86efac" />
+          </linearGradient>
+
+          {/* Mass block gradient with depth */}
+          <linearGradient id="epeMassBlock" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#fbbf24" />
+            <stop offset="30%" stopColor="#f59e0b" />
+            <stop offset="70%" stopColor="#d97706" />
+            <stop offset="100%" stopColor="#b45309" />
+          </linearGradient>
+
+          {/* Wall mount brushed metal */}
+          <linearGradient id="epeWallMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#374151" />
+            <stop offset="25%" stopColor="#4b5563" />
+            <stop offset="50%" stopColor="#6b7280" />
+            <stop offset="75%" stopColor="#4b5563" />
+            <stop offset="100%" stopColor="#374151" />
+          </linearGradient>
+
+          {/* Compression indicator gradient - warm colors for compression */}
+          <linearGradient id="epeCompressionIndicator" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.9" />
+            <stop offset="50%" stopColor="#ef4444" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.9" />
+          </linearGradient>
+
+          {/* Background gradient for depth */}
+          <linearGradient id="epeLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* Spring glow filter with blur + merge */}
+          <filter id="epeSpringGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
           </filter>
+
+          {/* Energy glow filter for energy bar */}
+          <filter id="epeEnergyGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Mass block shadow filter */}
+          <filter id="epeMassShadow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Compression energy radial glow */}
+          <radialGradient id="epeCompressionGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#10b981" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#059669" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Hatching pattern for wall */}
+          <pattern id="epeWallPattern" width="10" height="10" patternUnits="userSpaceOnUse">
+            <path d="M0,10 L10,0" stroke="#94a3b8" strokeWidth="1" strokeOpacity="0.5" />
+          </pattern>
         </defs>
 
-        {/* Background */}
-        <rect x="0" y="0" width={width} height={height} fill="#0f172a" rx="12" />
+        {/* Premium dark lab background */}
+        <rect x="0" y="0" width={width} height={height} fill="url(#epeLabBg)" rx="12" />
 
-        {/* Wall mount */}
-        <rect x={pivotX - 40} y="15" width="80" height="25" fill="#475569" rx="4" />
-        <pattern id="wallPattern" width="10" height="10" patternUnits="userSpaceOnUse">
-          <path d="M0,10 L10,0" stroke="#64748b" strokeWidth="1" />
+        {/* Subtle grid pattern */}
+        <pattern id="epeLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.3" />
         </pattern>
-        <rect x={pivotX - 40} y="15" width="80" height="25" fill="url(#wallPattern)" />
+        <rect x="0" y="0" width={width} height={height} fill="url(#epeLabGrid)" rx="12" />
 
-        {/* Spring */}
+        {/* Wall mount with metallic gradient */}
+        <rect x={pivotX - 40} y="15" width="80" height="25" fill="url(#epeWallMetal)" rx="4" />
+        <rect x={pivotX - 40} y="15" width="80" height="25" fill="url(#epeWallPattern)" rx="4" />
+        {/* Wall mount highlight */}
+        <rect x={pivotX - 38} y="17" width="76" height="3" fill="#9ca3af" opacity="0.3" rx="1" />
+
+        {/* Energy storage visualization - ambient glow around spring when compressed */}
+        {isCompressed && (
+          <ellipse
+            cx={pivotX}
+            cy={pivotY + springLength / 2}
+            rx={40 + compressionIntensity * 15}
+            ry={springLength / 2 + 10}
+            fill="url(#epeCompressionGlow)"
+            opacity={compressionIntensity * 0.8}
+          />
+        )}
+
+        {/* Spring with metallic gradient and glow */}
         <path
           d={springPath}
           fill="none"
-          stroke="url(#springGradient)"
-          strokeWidth="5"
+          stroke="url(#epeSpringMetal)"
+          strokeWidth="6"
           strokeLinecap="round"
-          filter="url(#springGlow)"
+          filter="url(#epeSpringGlow)"
+        />
+        {/* Spring highlight for 3D effect */}
+        <path
+          d={springPath}
+          fill="none"
+          stroke="#a7f3d0"
+          strokeWidth="2"
+          strokeLinecap="round"
+          opacity="0.4"
         />
 
-        {/* Mass block */}
+        {/* Mass block with gradient and shadow */}
         <rect
           x={pivotX - 30}
           y={pivotY + springLength}
           width="60"
           height="40"
           rx="6"
-          fill="#f59e0b"
-          stroke="#d97706"
-          strokeWidth="2"
+          fill="url(#epeMassBlock)"
+          filter="url(#epeMassShadow)"
         />
-        <text x={pivotX} y={pivotY + springLength + 25} textAnchor="middle" fill="#1e293b" fontSize="12" fontWeight="bold">
-          1 kg
-        </text>
+        {/* Mass block highlight */}
+        <rect
+          x={pivotX - 28}
+          y={pivotY + springLength + 2}
+          width="56"
+          height="8"
+          rx="4"
+          fill="#fcd34d"
+          opacity="0.4"
+        />
 
-        {/* Displacement indicator */}
+        {/* Compression/Extension indicators */}
+        {isCompressed && (
+          <>
+            {/* Compression arrows */}
+            <g opacity={compressionIntensity}>
+              <path
+                d={`M ${pivotX - 50} ${pivotY + springLength / 2 - 15} L ${pivotX - 35} ${pivotY + springLength / 2} L ${pivotX - 50} ${pivotY + springLength / 2 + 15}`}
+                fill="none"
+                stroke="url(#epeCompressionIndicator)"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              <path
+                d={`M ${pivotX + 50} ${pivotY + springLength / 2 - 15} L ${pivotX + 35} ${pivotY + springLength / 2} L ${pivotX + 50} ${pivotY + springLength / 2 + 15}`}
+                fill="none"
+                stroke="url(#epeCompressionIndicator)"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            </g>
+          </>
+        )}
+
+        {/* Displacement indicator with gradient line */}
         <line x1={pivotX + 50} y1={pivotY + baseLength} x2={pivotX + 80} y2={pivotY + baseLength} stroke="#64748b" strokeWidth="1" strokeDasharray="4" />
         <line x1={pivotX + 50} y1={pivotY + springLength + 20} x2={pivotX + 80} y2={pivotY + springLength + 20} stroke="#22c55e" strokeWidth="1" strokeDasharray="4" />
         {Math.abs(currentDisp) > 0.01 && (
           <>
-            <line x1={pivotX + 65} y1={pivotY + baseLength} x2={pivotX + 65} y2={pivotY + springLength + 20} stroke="#22c55e" strokeWidth="2" />
-            <text x={pivotX + 75} y={pivotY + (baseLength + springLength + 20) / 2} fill="#22c55e" fontSize="11" fontWeight="bold">
-              x = {(currentDisp * 100).toFixed(1)} cm
-            </text>
+            <line x1={pivotX + 65} y1={pivotY + baseLength} x2={pivotX + 65} y2={pivotY + springLength + 20} stroke="url(#epeEnergyBar)" strokeWidth="2" />
+            {/* Arrow heads for displacement */}
+            <path
+              d={`M ${pivotX + 60} ${pivotY + baseLength + 5} L ${pivotX + 65} ${pivotY + baseLength} L ${pivotX + 70} ${pivotY + baseLength + 5}`}
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth="2"
+            />
+            <path
+              d={`M ${pivotX + 60} ${pivotY + springLength + 15} L ${pivotX + 65} ${pivotY + springLength + 20} L ${pivotX + 70} ${pivotY + springLength + 15}`}
+              fill="none"
+              stroke="#22c55e"
+              strokeWidth="2"
+            />
           </>
         )}
 
-        {/* Energy bar */}
+        {/* Energy bar with premium gradient */}
         {showEnergyBars && (
           <g transform={`translate(20, ${height - 80})`}>
-            <rect x="0" y="0" width="100" height="60" rx="8" fill="#1e293b" stroke="#334155" />
-            <text x="50" y="15" textAnchor="middle" fill="#94a3b8" fontSize="10">Elastic PE</text>
-            <rect x="10" y="22" width="80" height="12" rx="3" fill="#334155" />
-            <rect x="10" y="22" width={80 * pePercent / 100} height="12" rx="3" fill="#22c55e" />
-            <text x="50" y="50" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">
-              {currentPE.toFixed(2)} J
-            </text>
+            {/* Energy bar container with subtle glow */}
+            <rect x="0" y="0" width="100" height="60" rx="8" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+            {/* Energy bar background */}
+            <rect x="10" y="22" width="80" height="14" rx="4" fill="#0f172a" />
+            {/* Energy bar fill with gradient */}
+            <rect
+              x="10"
+              y="22"
+              width={80 * pePercent / 100}
+              height="14"
+              rx="4"
+              fill="url(#epeEnergyBar)"
+              filter={pePercent > 50 ? "url(#epeEnergyGlow)" : undefined}
+            />
+            {/* Energy bar highlight */}
+            <rect
+              x="10"
+              y="22"
+              width={80 * pePercent / 100}
+              height="4"
+              rx="2"
+              fill="#86efac"
+              opacity="0.3"
+            />
+            {/* Energy storage particles when high energy */}
+            {pePercent > 60 && (
+              <>
+                <circle cx={15 + Math.random() * 70} cy={29} r="2" fill="#6ee7b7" opacity="0.6">
+                  <animate attributeName="opacity" values="0.6;0.2;0.6" dur="1s" repeatCount="indefinite" />
+                </circle>
+                <circle cx={15 + Math.random() * 70} cy={29} r="1.5" fill="#a7f3d0" opacity="0.5">
+                  <animate attributeName="opacity" values="0.5;0.1;0.5" dur="0.8s" repeatCount="indefinite" />
+                </circle>
+              </>
+            )}
           </g>
         )}
-
-        {/* Formula */}
-        <text x={width - 20} y="35" textAnchor="end" fill="#94a3b8" fontSize="12" fontFamily="monospace">
-          PE = ½kx²
-        </text>
-        <text x={width - 20} y="55" textAnchor="end" fill="#22c55e" fontSize="11" fontFamily="monospace">
-          = ½ × {springConstant} × {currentDisp.toFixed(2)}²
-        </text>
       </svg>
+
+      {/* External text labels using typo system */}
+      <div className="relative" style={{ marginTop: '-60px', padding: '0 12px' }}>
+        {/* Mass label */}
+        <div
+          className="absolute text-amber-900 font-bold"
+          style={{
+            fontSize: typo.label,
+            left: '50%',
+            transform: 'translateX(-50%)',
+            top: `${pivotY + springLength + 22}px`,
+            pointerEvents: 'none',
+          }}
+        >
+          1 kg
+        </div>
+
+        {/* Displacement label */}
+        {Math.abs(currentDisp) > 0.01 && (
+          <div
+            className="absolute text-emerald-400 font-bold"
+            style={{
+              fontSize: typo.small,
+              right: '10px',
+              top: `${pivotY + (baseLength + springLength + 20) / 2 - 6}px`,
+              pointerEvents: 'none',
+            }}
+          >
+            x = {(currentDisp * 100).toFixed(1)} cm
+          </div>
+        )}
+
+        {/* Energy bar label */}
+        {showEnergyBars && (
+          <div
+            className="absolute"
+            style={{
+              left: '20px',
+              bottom: '20px',
+              pointerEvents: 'none',
+            }}
+          >
+            <div className="text-slate-400" style={{ fontSize: typo.label, textAlign: 'center', width: '100px' }}>
+              Elastic PE
+            </div>
+            <div className="text-emerald-400 font-bold" style={{ fontSize: typo.body, textAlign: 'center', width: '100px', marginTop: '28px' }}>
+              {currentPE.toFixed(2)} J
+            </div>
+          </div>
+        )}
+
+        {/* Formula labels */}
+        <div
+          className="absolute"
+          style={{
+            right: '12px',
+            top: '20px',
+            textAlign: 'right',
+            pointerEvents: 'none',
+          }}
+        >
+          <div className="text-slate-400 font-mono" style={{ fontSize: typo.small }}>
+            PE = ½kx²
+          </div>
+          <div className="text-emerald-400 font-mono" style={{ fontSize: typo.label, marginTop: '4px' }}>
+            = ½ × {springConstant} × {currentDisp.toFixed(2)}²
+          </div>
+        </div>
+      </div>
+    </div>
     );
   };
 

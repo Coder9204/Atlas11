@@ -565,7 +565,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
     );
   }
 
-  // Render field visualization
+  // Render field visualization with premium SVG graphics
   function renderFieldVisualization(
     chargeList: Charge[],
     vectors: FieldVector[],
@@ -573,16 +573,144 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
     showVec: boolean,
     showLines: boolean
   ) {
+    // Generate equipotential lines (circles around charges)
+    const generateEquipotentialLines = () => {
+      const equipotentials: { cx: number; cy: number; r: number; potential: number }[] = [];
+      chargeList.forEach(charge => {
+        // Draw equipotential circles at different radii
+        [30, 50, 70, 90].forEach((r, i) => {
+          equipotentials.push({
+            cx: charge.x,
+            cy: charge.y,
+            r,
+            potential: charge.q / r * 100
+          });
+        });
+      });
+      return equipotentials;
+    };
+
+    const equipotentials = generateEquipotentialLines();
+
     return (
       <svg viewBox="0 0 300 300" style={{ width: '100%', maxHeight: 350 }}>
-        {/* Background */}
-        <rect x="20" y="20" width="260" height="260" fill="rgba(16, 185, 129, 0.05)" rx="8" />
-        <rect x="20" y="20" width="260" height="260" fill="none" stroke="rgba(16, 185, 129, 0.3)" strokeWidth="2" rx="8" />
-
-        {/* Arrow marker definition */}
         <defs>
+          {/* Premium background gradient */}
+          <linearGradient id="efmLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a1628" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a1628" />
+            <stop offset="100%" stopColor="#030712" />
+          </linearGradient>
+
+          {/* Field area gradient */}
+          <linearGradient id="efmFieldArea" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#064e3b" stopOpacity="0.1" />
+            <stop offset="25%" stopColor="#047857" stopOpacity="0.08" />
+            <stop offset="50%" stopColor="#10b981" stopOpacity="0.05" />
+            <stop offset="75%" stopColor="#047857" stopOpacity="0.08" />
+            <stop offset="100%" stopColor="#064e3b" stopOpacity="0.1" />
+          </linearGradient>
+
+          {/* Positive charge gradient (red/warm) */}
+          <radialGradient id="efmPositiveCharge" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#fca5a5" />
+            <stop offset="20%" stopColor="#f87171" />
+            <stop offset="45%" stopColor="#ef4444" />
+            <stop offset="70%" stopColor="#dc2626" />
+            <stop offset="90%" stopColor="#b91c1c" />
+            <stop offset="100%" stopColor="#991b1b" />
+          </radialGradient>
+
+          {/* Negative charge gradient (blue/cool) */}
+          <radialGradient id="efmNegativeCharge" cx="35%" cy="35%" r="65%">
+            <stop offset="0%" stopColor="#93c5fd" />
+            <stop offset="20%" stopColor="#60a5fa" />
+            <stop offset="45%" stopColor="#3b82f6" />
+            <stop offset="70%" stopColor="#2563eb" />
+            <stop offset="90%" stopColor="#1d4ed8" />
+            <stop offset="100%" stopColor="#1e40af" />
+          </radialGradient>
+
+          {/* Positive charge outer glow */}
+          <radialGradient id="efmPositiveGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+            <stop offset="30%" stopColor="#f87171" stopOpacity="0.4" />
+            <stop offset="60%" stopColor="#fca5a5" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#fecaca" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Negative charge outer glow */}
+          <radialGradient id="efmNegativeGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
+            <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.4" />
+            <stop offset="60%" stopColor="#93c5fd" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#dbeafe" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Field line gradient (cyan to emerald) */}
+          <linearGradient id="efmFieldLine" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.9" />
+            <stop offset="25%" stopColor="#14b8a6" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#10b981" stopOpacity="0.7" />
+            <stop offset="75%" stopColor="#14b8a6" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.9" />
+          </linearGradient>
+
+          {/* Field vector gradient */}
+          <linearGradient id="efmVectorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
+            <stop offset="30%" stopColor="#34d399" stopOpacity="0.7" />
+            <stop offset="60%" stopColor="#6ee7b7" stopOpacity="0.9" />
+            <stop offset="100%" stopColor="#a7f3d0" stopOpacity="1" />
+          </linearGradient>
+
+          {/* Equipotential line gradient */}
+          <linearGradient id="efmEquipotential" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#a855f7" stopOpacity="0.5" />
+            <stop offset="25%" stopColor="#c084fc" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#d8b4fe" stopOpacity="0.3" />
+            <stop offset="75%" stopColor="#c084fc" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#a855f7" stopOpacity="0.5" />
+          </linearGradient>
+
+          {/* Charge glow filter */}
+          <filter id="efmChargeGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Field line glow filter */}
+          <filter id="efmLineGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Vector arrow glow filter */}
+          <filter id="efmVectorGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="1" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Subtle inner shadow for field area */}
+          <filter id="efmInnerShadow" x="-10%" y="-10%" width="120%" height="120%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feComposite in="SourceGraphic" in2="blur" operator="over" />
+          </filter>
+
+          {/* Arrow marker with gradient fill */}
           <marker
-            id="fieldArrow"
+            id="efmFieldArrow"
             markerWidth="10"
             markerHeight="10"
             refX="9"
@@ -590,10 +718,12 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
             orient="auto"
             markerUnits="strokeWidth"
           >
-            <path d="M0,0 L0,6 L9,3 z" fill="#10B981" />
+            <path d="M0,0 L0,6 L9,3 z" fill="#6ee7b7" />
           </marker>
+
+          {/* Field line direction marker */}
           <marker
-            id="lineArrow"
+            id="efmLineArrow"
             markerWidth="6"
             markerHeight="6"
             refX="5"
@@ -601,24 +731,56 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
             orient="auto"
             markerUnits="strokeWidth"
           >
-            <path d="M0,0 L0,6 L6,3 z" fill="#06B6D4" />
+            <path d="M0,0 L0,6 L6,3 z" fill="#22d3ee" />
           </marker>
+
+          {/* Grid pattern */}
+          <pattern id="efmGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
+          </pattern>
         </defs>
 
-        {/* Field lines */}
+        {/* Premium dark background */}
+        <rect width="300" height="300" fill="url(#efmLabBg)" />
+
+        {/* Subtle grid pattern */}
+        <rect width="300" height="300" fill="url(#efmGrid)" />
+
+        {/* Field visualization area with gradient */}
+        <rect x="20" y="20" width="260" height="260" fill="url(#efmFieldArea)" rx="12" filter="url(#efmInnerShadow)" />
+        <rect x="20" y="20" width="260" height="260" fill="none" stroke="url(#efmFieldLine)" strokeWidth="2" rx="12" strokeOpacity="0.5" />
+
+        {/* Equipotential lines (dashed circles) */}
+        {equipotentials.map((eq, i) => (
+          <circle
+            key={`equi-${i}`}
+            cx={eq.cx}
+            cy={eq.cy}
+            r={eq.r}
+            fill="none"
+            stroke="url(#efmEquipotential)"
+            strokeWidth="1"
+            strokeDasharray="4 4"
+            opacity={0.4}
+          />
+        ))}
+
+        {/* Field lines with premium gradient and glow */}
         {showLines && lines.map((line, i) => (
           <polyline
             key={`line-${i}`}
             points={line.map(p => `${p.x},${p.y}`).join(' ')}
             fill="none"
-            stroke="#06B6D4"
-            strokeWidth="1.5"
-            strokeOpacity="0.7"
-            markerMid="url(#lineArrow)"
+            stroke="url(#efmFieldLine)"
+            strokeWidth="2"
+            strokeLinecap="round"
+            strokeLinejoin="round"
+            filter="url(#efmLineGlow)"
+            markerMid="url(#efmLineArrow)"
           />
         ))}
 
-        {/* Field vectors */}
+        {/* Field vectors with gradient and glow */}
         {showVec && vectors.map((v, i) => {
           const maxLen = 15;
           const scale = Math.min(maxLen, v.magnitude * 0.1);
@@ -627,6 +789,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
 
           const endX = v.x + (v.ex / mag) * scale;
           const endY = v.y + (v.ey / mag) * scale;
+          const opacity = Math.min(1, v.magnitude * 0.025);
 
           return (
             <line
@@ -635,47 +798,132 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
               y1={v.y}
               x2={endX}
               y2={endY}
-              stroke="#10B981"
-              strokeWidth="1.5"
-              markerEnd="url(#fieldArrow)"
-              opacity={Math.min(1, v.magnitude * 0.02)}
+              stroke="url(#efmVectorGrad)"
+              strokeWidth="2"
+              strokeLinecap="round"
+              markerEnd="url(#efmFieldArrow)"
+              filter="url(#efmVectorGlow)"
+              opacity={opacity}
             />
           );
         })}
 
-        {/* Charges */}
+        {/* Charges with premium gradients and glow effects */}
         {chargeList.map(charge => (
-          <g key={charge.id}>
-            {/* Glow */}
+          <g key={charge.id} filter="url(#efmChargeGlow)">
+            {/* Outer glow layer */}
             <circle
               cx={charge.x}
               cy={charge.y}
-              r="22"
+              r="28"
+              fill={charge.q > 0 ? 'url(#efmPositiveGlow)' : 'url(#efmNegativeGlow)'}
+            />
+            {/* Inner glow layer */}
+            <circle
+              cx={charge.x}
+              cy={charge.y}
+              r="20"
               fill={charge.q > 0 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(59, 130, 246, 0.3)'}
             />
-            {/* Main circle */}
+            {/* Main charge circle with gradient */}
             <circle
               cx={charge.x}
               cy={charge.y}
               r="15"
-              fill={charge.q > 0 ? premiumDesign.colors.positive : premiumDesign.colors.negative}
-              stroke="white"
+              fill={charge.q > 0 ? 'url(#efmPositiveCharge)' : 'url(#efmNegativeCharge)'}
+              stroke="rgba(255,255,255,0.8)"
               strokeWidth="2"
+            />
+            {/* Highlight reflection */}
+            <ellipse
+              cx={charge.x - 4}
+              cy={charge.y - 4}
+              rx="5"
+              ry="3"
+              fill="rgba(255,255,255,0.4)"
+              transform={`rotate(-30 ${charge.x - 4} ${charge.y - 4})`}
             />
             {/* Sign */}
             <text
               x={charge.x}
-              y={charge.y + 5}
+              y={charge.y + 6}
               textAnchor="middle"
               fill="white"
-              fontSize="16"
+              fontSize="18"
               fontWeight="bold"
+              style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
             >
               {charge.q > 0 ? '+' : '−'}
             </text>
           </g>
         ))}
+
       </svg>
+    );
+  }
+
+  // Wrapper component for field visualization with external labels
+  function renderFieldVisualizationWithLabels(
+    chargeList: Charge[],
+    vectors: FieldVector[],
+    lines: { x: number; y: number }[][],
+    showVec: boolean,
+    showLines: boolean
+  ) {
+    return (
+      <div style={{ position: 'relative' }}>
+        {/* External label using typo system */}
+        {chargeList.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            top: typo.elementGap,
+            left: typo.elementGap,
+            padding: `${premiumDesign.spacing.xs}px ${premiumDesign.spacing.sm}px`,
+            background: 'rgba(0,0,0,0.7)',
+            borderRadius: premiumDesign.radius.sm,
+            border: '1px solid rgba(110, 231, 183, 0.3)',
+            backdropFilter: 'blur(4px)',
+            zIndex: 10,
+          }}>
+            <span style={{
+              fontSize: typo.label,
+              fontWeight: 600,
+              color: '#6ee7b7',
+              fontFamily: premiumDesign.typography.fontFamily,
+              letterSpacing: '0.5px',
+            }}>
+              E-FIELD
+            </span>
+          </div>
+        )}
+        {/* Field strength legend */}
+        {chargeList.length > 0 && (
+          <div style={{
+            position: 'absolute',
+            bottom: typo.elementGap,
+            right: typo.elementGap,
+            padding: `${premiumDesign.spacing.xs}px ${premiumDesign.spacing.sm}px`,
+            background: 'rgba(0,0,0,0.7)',
+            borderRadius: premiumDesign.radius.sm,
+            border: '1px solid rgba(255,255,255,0.1)',
+            backdropFilter: 'blur(4px)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: premiumDesign.spacing.sm,
+            zIndex: 10,
+          }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#ef4444' }} />
+              <span style={{ fontSize: typo.label, color: premiumDesign.colors.text.muted }}>+</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '4px' }}>
+              <div style={{ width: 8, height: 8, borderRadius: '50%', background: '#3b82f6' }} />
+              <span style={{ fontSize: typo.label, color: premiumDesign.colors.text.muted }}>-</span>
+            </div>
+          </div>
+        )}
+        {renderFieldVisualization(chargeList, vectors, lines, showVec, showLines)}
+      </div>
     );
   }
 
@@ -869,7 +1117,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
-            {renderFieldVisualization(charges, fieldVectors, fieldLines, showVectors, showFieldLines)}
+            {renderFieldVisualizationWithLabels(charges, fieldVectors, fieldLines, showVectors, showFieldLines)}
           </div>
 
           {/* Controls */}
@@ -1246,7 +1494,7 @@ export default function ElectricFieldMappingRenderer({ onGameEvent, gamePhase, o
             padding: premiumDesign.spacing.lg,
             border: '1px solid rgba(255,255,255,0.1)',
           }}>
-            {renderFieldVisualization(dipoleCharges, dipoleVectors, dipoleFieldLines, true, true)}
+            {renderFieldVisualizationWithLabels(dipoleCharges, dipoleVectors, dipoleFieldLines, true, true)}
           </div>
 
           {/* Controls */}

@@ -650,17 +650,16 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
             `${idx === 0 ? 'M' : 'L'} ${p.x} ${p.y}`
           ).join(' ');
 
-          const color = charge.q > 0 ? '#ef4444' : '#3b82f6';
-
           lines.push(
             <path
               key={`field-${chargeIndex}-${i}`}
               d={pathD}
               fill="none"
-              stroke={color}
-              strokeWidth="1.5"
-              opacity="0.6"
-              markerEnd={charge.q > 0 ? "url(#arrowRed)" : undefined}
+              stroke={charge.q > 0 ? 'url(#elecPlayFieldLineRedGrad)' : 'url(#elecPlayFieldLineBlueGrad)'}
+              strokeWidth="2"
+              strokeLinecap="round"
+              opacity="0.7"
+              markerEnd={charge.q > 0 ? "url(#elecPlayArrowRed)" : undefined}
             />
           );
         }
@@ -700,7 +699,8 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
             y2={endY}
             stroke="#22c55e"
             strokeWidth="2"
-            markerEnd="url(#arrowGreen)"
+            strokeLinecap="round"
+            markerEnd="url(#elecPlayArrowGreen)"
             opacity="0.7"
           />
         );
@@ -733,24 +733,78 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
       <div className="backdrop-blur-xl bg-white/5 border border-white/10 rounded-3xl p-6 md:p-8 max-w-2xl shadow-2xl">
         <svg viewBox="0 0 500 300" className="w-full max-w-md mx-auto mb-6">
           <defs>
-            <radialGradient id="chargeGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+            {/* Premium gradient for positive charge - 3D effect */}
+            <radialGradient id="elecHookPosGrad" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </radialGradient>
+            {/* Glow filter for positive charge */}
+            <filter id="elecHookPosGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feFlood floodColor="#ef4444" floodOpacity="0.6" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Test charge gradient - 3D effect */}
+            <radialGradient id="elecHookTestGrad" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#166534" />
+            </radialGradient>
+            {/* Glow filter for test charge */}
+            <filter id="elecHookTestGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#22c55e" floodOpacity="0.5" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Field line gradient */}
+            <linearGradient id="elecHookFieldLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
+            </linearGradient>
+            {/* Arrow marker with gradient */}
+            <marker id="elecHookArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+              <path d="M0,0 L10,5 L0,10 L2,5 Z" fill="#ef4444" />
+            </marker>
+            {/* Force arrow marker */}
+            <marker id="elecHookForceArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+              <path d="M0,0 L10,5 L0,10 L2,5 Z" fill="#4ade80" />
+            </marker>
+            {/* Grid pattern */}
+            <pattern id="elecHookGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+              <path d="M 25 0 L 0 0 0 25" fill="none" stroke="#1e3a5f" strokeWidth="0.5" opacity="0.5" />
+            </pattern>
+            {/* Outer glow for charge */}
+            <radialGradient id="elecHookChargeAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="#ef4444" stopOpacity="0.1" />
               <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
             </radialGradient>
-            <marker id="hookArrow" markerWidth="8" markerHeight="8" refX="7" refY="4" orient="auto">
-              <path d="M0,0 L8,4 L0,8 Z" fill="#ef4444" />
-            </marker>
           </defs>
 
-          {/* Background */}
-          <rect x="0" y="0" width="500" height="300" fill="#0f172a" rx="12" />
+          {/* Background with grid */}
+          <rect x="0" y="0" width="500" height="300" fill="#0a0f1a" rx="12" />
+          <rect x="0" y="0" width="500" height="300" fill="url(#elecHookGrid)" rx="12" />
+
+          {/* Subtle radial background glow */}
+          <circle cx="250" cy="150" r="140" fill="url(#elecHookChargeAura)">
+            <animate attributeName="r" values="120;150;120" dur="3s" repeatCount="indefinite" />
+          </circle>
 
           {/* Animated field lines radiating from center */}
           {[0, 1, 2, 3, 4, 5, 6, 7].map(i => {
             const angle = (i * 45) * Math.PI / 180;
             const pulseOffset = Math.sin(animationTime * 2 + i * 0.5) * 10;
-            const startR = 40;
-            const endR = 120 + pulseOffset;
+            const startR = 45;
+            const endR = 125 + pulseOffset;
             return (
               <line
                 key={`line-${i}`}
@@ -758,43 +812,44 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
                 y1={150 + Math.sin(angle) * startR}
                 x2={250 + Math.cos(angle) * endR}
                 y2={150 + Math.sin(angle) * endR}
-                stroke="#ef4444"
-                strokeWidth="2"
-                markerEnd="url(#hookArrow)"
-                opacity="0.7"
+                stroke="url(#elecHookFieldLineGrad)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                markerEnd="url(#elecHookArrow)"
+                opacity={0.7 + Math.sin(animationTime + i) * 0.2}
               />
             );
           })}
 
-          {/* Glow effect */}
-          <circle cx="250" cy="150" r="80" fill="url(#chargeGlow)">
-            <animate attributeName="r" values="60;80;60" dur="2s" repeatCount="indefinite" />
+          {/* Central positive charge with premium glow */}
+          <circle cx="250" cy="150" r="32" fill="url(#elecHookPosGrad)" filter="url(#elecHookPosGlow)">
+            <animate attributeName="r" values="30;34;30" dur="2s" repeatCount="indefinite" />
           </circle>
+          <text x="250" y="160" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>+</text>
 
-          {/* Central positive charge */}
-          <circle cx="250" cy="150" r="30" fill="#ef4444" stroke="#fca5a5" strokeWidth="3" />
-          <text x="250" y="160" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">+</text>
-
-          {/* Test charge being pushed */}
+          {/* Test charge being pushed with premium styling */}
           <g transform={`translate(${350 + Math.sin(animationTime * 3) * 20}, 150)`}>
-            <circle r="12" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
-            <text y="5" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">q</text>
+            <circle r="14" fill="url(#elecHookTestGrad)" filter="url(#elecHookTestGlow)" />
+            <text y="5" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>q</text>
           </g>
 
-          {/* Force arrow */}
-          <path
-            d={`M ${320 + Math.sin(animationTime * 3) * 20} 150 L ${380 + Math.sin(animationTime * 3) * 20} 150`}
+          {/* Force arrow with enhanced styling */}
+          <line
+            x1={320 + Math.sin(animationTime * 3) * 20}
+            y1={150}
+            x2={385 + Math.sin(animationTime * 3) * 20}
+            y2={150}
             stroke="#4ade80"
             strokeWidth="3"
-            markerEnd="url(#hookArrow)"
-            opacity="0.8"
+            strokeLinecap="round"
+            markerEnd="url(#elecHookForceArrow)"
+            opacity="0.9"
           />
-
-          {/* Equation */}
-          <text x="250" y="260" textAnchor="middle" fill="#94a3b8" fontSize="20">
-            E = F/q = kQ/r^2
-          </text>
         </svg>
+        {/* Equation moved outside SVG using typo system */}
+        <p className="text-center text-slate-400 font-mono" style={{ fontSize: typo.body }}>
+          E = F/q = kQ/r<sup>2</sup>
+        </p>
 
         <p className="text-xl text-slate-300 mb-4">
           Invisible force fields surround every charge...
@@ -835,30 +890,85 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
           The test charge experiences a force pulling it toward the source.
         </p>
         <svg viewBox="0 0 400 150" className="w-full max-w-sm mx-auto my-4">
-          <rect x="0" y="0" width="400" height="150" fill="#1e293b" rx="8" />
-
-          {/* Negative source charge */}
-          <circle cx="100" cy="75" r="30" fill="#3b82f6" stroke="#93c5fd" strokeWidth="2" />
-          <text x="100" y="85" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold">-</text>
-          <text x="100" y="125" textAnchor="middle" fill="#93c5fd" fontSize="12">Source: -Q</text>
-
-          {/* Test charge */}
-          <circle cx="280" cy="75" r="15" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
-          <text x="280" y="81" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">+</text>
-          <text x="280" y="125" textAnchor="middle" fill="#4ade80" fontSize="12">Test: +q</text>
-
-          {/* Force arrow pointing left */}
           <defs>
-            <marker id="arrowGreenPredict" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-              <path d="M0,0 L6,3 L0,6 Z" fill="#4ade80" />
+            {/* Premium gradient for negative charge - 3D effect */}
+            <radialGradient id="elecPredictNegGrad" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </radialGradient>
+            {/* Glow filter for negative charge */}
+            <filter id="elecPredictNegGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feFlood floodColor="#3b82f6" floodOpacity="0.5" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Test charge gradient */}
+            <radialGradient id="elecPredictTestGrad" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#166534" />
+            </radialGradient>
+            {/* Glow filter for test charge */}
+            <filter id="elecPredictTestGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#22c55e" floodOpacity="0.4" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Force arrow gradient */}
+            <linearGradient id="elecPredictForceGrad" x1="100%" y1="0%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
+            {/* Arrow marker */}
+            <marker id="elecPredictArrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 L2,4 Z" fill="#4ade80" />
             </marker>
+            {/* Grid pattern */}
+            <pattern id="elecPredictGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#334155" strokeWidth="0.5" opacity="0.4" />
+            </pattern>
+            {/* Blue charge aura */}
+            <radialGradient id="elecPredictBlueAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </radialGradient>
           </defs>
-          <path d="M250,75 L180,75" stroke="#4ade80" strokeWidth="3" markerEnd="url(#arrowGreenPredict)" />
-          <text x="215" y="65" textAnchor="middle" fill="#4ade80" fontSize="12">F</text>
 
-          {/* Question mark for field direction */}
-          <text x="215" y="100" textAnchor="middle" fill="#fbbf24" fontSize="24">E = ?</text>
+          <rect x="0" y="0" width="400" height="150" fill="#0f172a" rx="8" />
+          <rect x="0" y="0" width="400" height="150" fill="url(#elecPredictGrid)" rx="8" />
+
+          {/* Blue charge aura */}
+          <circle cx="100" cy="75" r="60" fill="url(#elecPredictBlueAura)" />
+
+          {/* Negative source charge with premium styling */}
+          <circle cx="100" cy="75" r="30" fill="url(#elecPredictNegGrad)" filter="url(#elecPredictNegGlow)" />
+          <text x="100" y="88" textAnchor="middle" fill="white" fontSize="32" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>-</text>
+
+          {/* Test charge with premium styling */}
+          <circle cx="280" cy="75" r="15" fill="url(#elecPredictTestGrad)" filter="url(#elecPredictTestGlow)" />
+          <text x="280" y="81" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold" style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}>+</text>
+
+          {/* Force arrow with gradient */}
+          <line x1="250" y1="75" x2="175" y2="75" stroke="url(#elecPredictForceGrad)" strokeWidth="4" strokeLinecap="round" markerEnd="url(#elecPredictArrow)" />
         </svg>
+        {/* Labels moved outside SVG using typo system */}
+        <div className="flex justify-between max-w-sm mx-auto px-4 mb-2">
+          <span className="text-blue-400" style={{ fontSize: typo.small }}>Source: -Q</span>
+          <span className="text-green-400" style={{ fontSize: typo.small }}>Test: +q</span>
+        </div>
+        <div className="flex justify-center items-center gap-4 mb-2">
+          <span className="text-green-400 font-medium" style={{ fontSize: typo.small }}>F (force)</span>
+          <span className="text-yellow-400 font-bold" style={{ fontSize: typo.bodyLarge }}>E = ?</span>
+        </div>
         <p className="text-cyan-400 font-medium">
           What is the direction of the electric field at the test charge's location?
         </p>
@@ -931,31 +1041,124 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
             onMouseLeave={handleMouseUp}
           >
             <defs>
-              <marker id="arrowRed" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                <path d="M0,0 L6,3 L0,6 Z" fill="#ef4444" />
-              </marker>
-              <marker id="arrowBlue" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                <path d="M0,0 L6,3 L0,6 Z" fill="#3b82f6" />
-              </marker>
-              <marker id="arrowGreen" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-                <path d="M0,0 L6,3 L0,6 Z" fill="#22c55e" />
-              </marker>
-              <radialGradient id="posGrad" cx="50%" cy="50%" r="50%">
+              {/* Premium positive charge gradient - 3D sphere effect */}
+              <radialGradient id="elecPlayPosGrad" cx="35%" cy="35%" r="60%">
                 <stop offset="0%" stopColor="#fca5a5" />
-                <stop offset="100%" stopColor="#ef4444" />
+                <stop offset="40%" stopColor="#ef4444" />
+                <stop offset="100%" stopColor="#991b1b" />
               </radialGradient>
-              <radialGradient id="negGrad" cx="50%" cy="50%" r="50%">
+              {/* Premium negative charge gradient - 3D sphere effect */}
+              <radialGradient id="elecPlayNegGrad" cx="35%" cy="35%" r="60%">
                 <stop offset="0%" stopColor="#93c5fd" />
-                <stop offset="100%" stopColor="#3b82f6" />
+                <stop offset="40%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#1e40af" />
+              </radialGradient>
+              {/* Test charge gradient */}
+              <radialGradient id="elecPlayTestGrad" cx="35%" cy="35%" r="60%">
+                <stop offset="0%" stopColor="#86efac" />
+                <stop offset="40%" stopColor="#22c55e" />
+                <stop offset="100%" stopColor="#166534" />
+              </radialGradient>
+              {/* Glow filter for positive charges */}
+              <filter id="elecPlayPosGlow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feFlood floodColor="#ef4444" floodOpacity="0.5" />
+                <feComposite in2="blur" operator="in" />
+                <feMerge>
+                  <feMergeNode />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Glow filter for negative charges */}
+              <filter id="elecPlayNegGlow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feFlood floodColor="#3b82f6" floodOpacity="0.5" />
+                <feComposite in2="blur" operator="in" />
+                <feMerge>
+                  <feMergeNode />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Glow filter for test charge */}
+              <filter id="elecPlayTestGlow" x="-80%" y="-80%" width="260%" height="260%">
+                <feGaussianBlur stdDeviation="4" result="blur" />
+                <feFlood floodColor="#22c55e" floodOpacity="0.4" />
+                <feComposite in2="blur" operator="in" />
+                <feMerge>
+                  <feMergeNode />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Active drag glow */}
+              <filter id="elecPlayDragGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="6" result="blur" />
+                <feFlood floodColor="#fbbf24" floodOpacity="0.6" />
+                <feComposite in2="blur" operator="in" />
+                <feMerge>
+                  <feMergeNode />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Field line gradients */}
+              <linearGradient id="elecPlayFieldLineRedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#ef4444" stopOpacity="0.2" />
+              </linearGradient>
+              <linearGradient id="elecPlayFieldLineBlueGrad" x1="100%" y1="0%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.8" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.2" />
+              </linearGradient>
+              {/* Arrow markers with better styling */}
+              <marker id="elecPlayArrowRed" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 L2,4 Z" fill="#ef4444" />
+              </marker>
+              <marker id="elecPlayArrowBlue" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 L2,4 Z" fill="#3b82f6" />
+              </marker>
+              <marker id="elecPlayArrowGreen" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 L2,4 Z" fill="#22c55e" />
+              </marker>
+              <marker id="elecPlayArrowYellow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+                <path d="M0,0 L8,4 L0,8 L2,4 Z" fill="#fbbf24" />
+              </marker>
+              {/* Grid pattern */}
+              <pattern id="elecPlayGrid" width="40" height="40" patternUnits="userSpaceOnUse">
+                <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#1e3a5f" strokeWidth="0.5" opacity="0.6" />
+              </pattern>
+              {/* Equipotential line glow */}
+              <filter id="elecPlayEquipotGlow" x="-20%" y="-20%" width="140%" height="140%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feFlood floodColor="#a855f7" floodOpacity="0.3" />
+                <feComposite in2="blur" operator="in" />
+                <feMerge>
+                  <feMergeNode />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+              {/* Charge auras */}
+              <radialGradient id="elecPlayPosAura" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#ef4444" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+              </radialGradient>
+              <radialGradient id="elecPlayNegAura" cx="50%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
               </radialGradient>
             </defs>
 
-            {/* Grid */}
-            {[...Array(13)].map((_, i) => (
-              <g key={`grid-${i}`}>
-                <line x1={i * 40} y1="0" x2={i * 40} y2="400" stroke="#334155" strokeWidth="0.5" />
-                <line x1="0" y1={i * 40} x2="500" y2={i * 40} stroke="#334155" strokeWidth="0.5" />
-              </g>
+            {/* Background with premium grid */}
+            <rect x="0" y="0" width="500" height="400" fill="#0a0f1a" />
+            <rect x="0" y="0" width="500" height="400" fill="url(#elecPlayGrid)" />
+
+            {/* Charge auras (ambient glow behind charges) */}
+            {sourceCharges.map(charge => (
+              <circle
+                key={`aura-${charge.id}`}
+                cx={charge.x}
+                cy={charge.y}
+                r={50 + Math.sin(animationTime * 2) * 5}
+                fill={charge.q > 0 ? 'url(#elecPlayPosAura)' : 'url(#elecPlayNegAura)'}
+              />
             ))}
 
             {/* Field lines */}
@@ -964,31 +1167,31 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
             {/* Field vectors */}
             {renderFieldVectors()}
 
-            {/* Source charges */}
+            {/* Source charges with premium 3D styling */}
             {sourceCharges.map(charge => (
               <g key={charge.id}>
                 <circle
                   cx={charge.x}
                   cy={charge.y}
                   r={20 + Math.sin(animationTime * 3) * 2}
-                  fill={charge.q > 0 ? 'url(#posGrad)' : 'url(#negGrad)'}
-                  stroke={charge.q > 0 ? '#fca5a5' : '#93c5fd'}
-                  strokeWidth="2"
+                  fill={charge.q > 0 ? 'url(#elecPlayPosGrad)' : 'url(#elecPlayNegGrad)'}
+                  filter={charge.q > 0 ? 'url(#elecPlayPosGlow)' : 'url(#elecPlayNegGlow)'}
                 />
                 <text
                   x={charge.x}
-                  y={charge.y + 7}
+                  y={charge.y + (charge.q > 0 ? 8 : 10)}
                   textAnchor="middle"
                   fill="white"
-                  fontSize="24"
+                  fontSize={charge.q > 0 ? '24' : '28'}
                   fontWeight="bold"
+                  style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}
                 >
                   {charge.q > 0 ? '+' : '-'}
                 </text>
               </g>
             ))}
 
-            {/* Test charge (draggable) */}
+            {/* Test charge (draggable) with premium styling */}
             <g
               onMouseDown={() => setIsDraggingTestCharge(true)}
               style={{ cursor: 'grab' }}
@@ -996,10 +1199,9 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
               <circle
                 cx={testChargePos.x}
                 cy={testChargePos.y}
-                r="15"
-                fill="#22c55e"
-                stroke={isDraggingTestCharge ? '#fbbf24' : '#4ade80'}
-                strokeWidth={isDraggingTestCharge ? 4 : 2}
+                r="16"
+                fill="url(#elecPlayTestGrad)"
+                filter={isDraggingTestCharge ? 'url(#elecPlayDragGlow)' : 'url(#elecPlayTestGlow)'}
               />
               <text
                 x={testChargePos.x}
@@ -1009,29 +1211,32 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
                 fontSize="14"
                 fontWeight="bold"
                 className="pointer-events-none"
+                style={{ textShadow: '0 1px 2px rgba(0,0,0,0.5)' }}
               >
                 q
               </text>
 
-              {/* Field vector at test charge */}
+              {/* Field vector at test charge with enhanced styling */}
               {E > 1e6 && (
                 <line
                   x1={testChargePos.x}
                   y1={testChargePos.y}
-                  x2={testChargePos.x + (Ex / E) * 30}
-                  y2={testChargePos.y + (Ey / E) * 30}
+                  x2={testChargePos.x + (Ex / E) * 35}
+                  y2={testChargePos.y + (Ey / E) * 35}
                   stroke="#fbbf24"
                   strokeWidth="3"
-                  markerEnd="url(#arrowGreen)"
+                  strokeLinecap="round"
+                  markerEnd="url(#elecPlayArrowYellow)"
                   className="pointer-events-none"
+                  opacity="0.9"
                 />
               )}
             </g>
-
-            <text x="250" y="390" textAnchor="middle" fill="#64748b" fontSize="12">
-              Drag the test charge (q) to explore the field
-            </text>
           </svg>
+          {/* Instruction text moved outside SVG using typo system */}
+          <p className="text-center text-slate-500 mt-2" style={{ fontSize: typo.small }}>
+            Drag the test charge (q) to explore the field
+          </p>
         </div>
 
         {/* Configuration selector */}
@@ -1198,23 +1403,93 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
       <h2 className="text-2xl font-bold text-purple-400 mb-6">The Twist Challenge</h2>
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <svg viewBox="0 0 400 200" className="w-full max-w-md mx-auto mb-4">
-          <rect x="0" y="0" width="400" height="200" fill="#1e293b" rx="8" />
+          <defs>
+            {/* Premium positive charge gradient */}
+            <radialGradient id="elecTwistPredPosGrad" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </radialGradient>
+            {/* Premium negative charge gradient */}
+            <radialGradient id="elecTwistPredNegGrad" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </radialGradient>
+            {/* Positive glow */}
+            <filter id="elecTwistPredPosGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feFlood floodColor="#ef4444" floodOpacity="0.5" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Negative glow */}
+            <filter id="elecTwistPredNegGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feFlood floodColor="#3b82f6" floodOpacity="0.5" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Question mark glow */}
+            <filter id="elecTwistPredQGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feFlood floodColor="#fbbf24" floodOpacity="0.6" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Grid pattern */}
+            <pattern id="elecTwistPredGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#334155" strokeWidth="0.5" opacity="0.4" />
+            </pattern>
+            {/* Charge auras */}
+            <radialGradient id="elecTwistPredPosAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="elecTwistPredNegAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </radialGradient>
+          </defs>
 
-          {/* Dipole charges */}
-          <circle cx="130" cy="100" r="25" fill="#ef4444" stroke="#fca5a5" strokeWidth="2" />
-          <text x="130" y="110" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">+</text>
+          <rect x="0" y="0" width="400" height="200" fill="#0f172a" rx="8" />
+          <rect x="0" y="0" width="400" height="200" fill="url(#elecTwistPredGrid)" rx="8" />
 
-          <circle cx="270" cy="100" r="25" fill="#3b82f6" stroke="#93c5fd" strokeWidth="2" />
-          <text x="270" y="110" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">-</text>
+          {/* Charge auras */}
+          <circle cx="130" cy="100" r="50" fill="url(#elecTwistPredPosAura)" />
+          <circle cx="270" cy="100" r="50" fill="url(#elecTwistPredNegAura)" />
 
-          {/* Question mark in between */}
-          <text x="200" y="110" textAnchor="middle" fill="#fbbf24" fontSize="36">?</text>
+          {/* Connection line hint */}
+          <line x1="155" y1="100" x2="245" y2="100" stroke="#475569" strokeWidth="2" strokeDasharray="5,5" opacity="0.5" />
 
-          {/* Labels */}
-          <text x="130" y="150" textAnchor="middle" fill="#fca5a5" fontSize="12">+Q</text>
-          <text x="270" y="150" textAnchor="middle" fill="#93c5fd" fontSize="12">-Q</text>
-          <text x="200" y="180" textAnchor="middle" fill="#94a3b8" fontSize="12">Electric Dipole</text>
+          {/* Dipole charges with premium styling */}
+          <circle cx="130" cy="100" r="25" fill="url(#elecTwistPredPosGrad)" filter="url(#elecTwistPredPosGlow)" />
+          <text x="130" y="110" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>+</text>
+
+          <circle cx="270" cy="100" r="25" fill="url(#elecTwistPredNegGrad)" filter="url(#elecTwistPredNegGlow)" />
+          <text x="270" y="112" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>-</text>
+
+          {/* Animated question mark */}
+          <text x="200" y="115" textAnchor="middle" fill="#fbbf24" fontSize="40" fontWeight="bold" filter="url(#elecTwistPredQGlow)">
+            ?
+            <animate attributeName="opacity" values="1;0.6;1" dur="1.5s" repeatCount="indefinite" />
+          </text>
         </svg>
+        {/* Labels moved outside SVG using typo system */}
+        <div className="flex justify-between max-w-md mx-auto px-8 mb-2">
+          <span className="text-red-400 font-medium" style={{ fontSize: typo.small }}>+Q</span>
+          <span className="text-slate-400" style={{ fontSize: typo.small }}>Electric Dipole</span>
+          <span className="text-blue-400 font-medium" style={{ fontSize: typo.small }}>-Q</span>
+        </div>
 
         <p className="text-lg text-slate-300 mb-4">
           A positive charge (+Q) and negative charge (-Q) of equal magnitude are separated by a small distance, forming an electric dipole.
@@ -1280,9 +1555,91 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
 
       <div className="bg-slate-800/50 rounded-2xl p-6 max-w-2xl mb-6">
         <svg viewBox="0 0 500 300" className="w-full">
-          <rect x="0" y="0" width="500" height="300" fill="#0f172a" rx="12" />
+          <defs>
+            {/* Premium positive charge gradient */}
+            <radialGradient id="elecTwistPlayPosGrad" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#991b1b" />
+            </radialGradient>
+            {/* Premium negative charge gradient */}
+            <radialGradient id="elecTwistPlayNegGrad" cx="35%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </radialGradient>
+            {/* Positive glow filter */}
+            <filter id="elecTwistPlayPosGlow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feFlood floodColor="#ef4444" floodOpacity="0.5" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Negative glow filter */}
+            <filter id="elecTwistPlayNegGlow" x="-60%" y="-60%" width="220%" height="220%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feFlood floodColor="#3b82f6" floodOpacity="0.5" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+            {/* Field line gradient */}
+            <linearGradient id="elecTwistPlayFieldGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#a855f7" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8" />
+            </linearGradient>
+            {/* Arrow gradient */}
+            <linearGradient id="elecTwistPlayArrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
+            {/* Arrow marker */}
+            <marker id="elecTwistPlayArrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <path d="M0,0 L8,4 L0,8 L2,4 Z" fill="#22c55e" />
+            </marker>
+            {/* Grid pattern */}
+            <pattern id="elecTwistPlayGrid" width="25" height="25" patternUnits="userSpaceOnUse">
+              <path d="M 25 0 L 0 0 0 25" fill="none" stroke="#1e3a5f" strokeWidth="0.5" opacity="0.5" />
+            </pattern>
+            {/* Charge auras */}
+            <radialGradient id="elecTwistPlayPosAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+            </radialGradient>
+            <radialGradient id="elecTwistPlayNegAura" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </radialGradient>
+            {/* Field line glow */}
+            <filter id="elecTwistPlayLineGlow" x="-10%" y="-50%" width="120%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feFlood floodColor="#a855f7" floodOpacity="0.3" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
 
-          {/* Dipole field lines */}
+          <rect x="0" y="0" width="500" height="300" fill="#0a0f1a" rx="12" />
+          <rect x="0" y="0" width="500" height="300" fill="url(#elecTwistPlayGrid)" rx="12" />
+
+          {/* Charge auras */}
+          <circle cx="150" cy="150" r="60" fill="url(#elecTwistPlayPosAura)">
+            <animate attributeName="r" values="55;65;55" dur="3s" repeatCount="indefinite" />
+          </circle>
+          <circle cx="350" cy="150" r="60" fill="url(#elecTwistPlayNegAura)">
+            <animate attributeName="r" values="55;65;55" dur="3s" repeatCount="indefinite" />
+          </circle>
+
+          {/* Dipole field lines with gradient */}
           {[0, 1, 2, 3, 4, 5].map(i => {
             const yOffset = (i - 2.5) * 30;
             const amplitude = 40 + Math.abs(i - 2.5) * 20;
@@ -1292,41 +1649,49 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
                 d={`M 150 ${150 + yOffset}
                     Q 250 ${150 + yOffset - amplitude * Math.sign(yOffset || 1)} 350 ${150 + yOffset}`}
                 fill="none"
-                stroke="#ef4444"
-                strokeWidth="2"
-                opacity="0.6"
+                stroke="url(#elecTwistPlayFieldGrad)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                opacity="0.7"
+                filter="url(#elecTwistPlayLineGlow)"
               />
             );
           })}
 
-          {/* Field arrows along middle line */}
-          {[180, 220, 260, 300].map(x => (
-            <g key={`arrow-${x}`}>
-              <line x1={x} y1="150" x2={x + 20} y2="150" stroke="#22c55e" strokeWidth="3" />
-              <polygon points={`${x + 25},150 ${x + 18},145 ${x + 18},155`} fill="#22c55e" />
-            </g>
+          {/* Field arrows along middle line with enhanced styling */}
+          {[180, 215, 250, 285].map(x => (
+            <line
+              key={`arrow-${x}`}
+              x1={x}
+              y1="150"
+              x2={x + 25}
+              y2="150"
+              stroke="url(#elecTwistPlayArrowGrad)"
+              strokeWidth="3"
+              strokeLinecap="round"
+              markerEnd="url(#elecTwistPlayArrow)"
+            />
           ))}
 
-          {/* Positive charge */}
-          <circle cx="150" cy="150" r="25" fill="#ef4444" stroke="#fca5a5" strokeWidth="3">
+          {/* Positive charge with premium styling */}
+          <circle cx="150" cy="150" r="25" fill="url(#elecTwistPlayPosGrad)" filter="url(#elecTwistPlayPosGlow)">
             <animate attributeName="r" values="23;27;23" dur="2s" repeatCount="indefinite" />
           </circle>
-          <text x="150" y="158" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">+</text>
+          <text x="150" y="158" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>+</text>
 
-          {/* Negative charge */}
-          <circle cx="350" cy="150" r="25" fill="#3b82f6" stroke="#93c5fd" strokeWidth="3">
+          {/* Negative charge with premium styling */}
+          <circle cx="350" cy="150" r="25" fill="url(#elecTwistPlayNegGrad)" filter="url(#elecTwistPlayNegGlow)">
             <animate attributeName="r" values="23;27;23" dur="2s" repeatCount="indefinite" />
           </circle>
-          <text x="350" y="158" textAnchor="middle" fill="white" fontSize="24" fontWeight="bold">-</text>
-
-          {/* Labels */}
-          <text x="250" y="40" textAnchor="middle" fill="#22c55e" fontSize="16" fontWeight="bold">
-            Field points from + to -
-          </text>
-          <text x="250" y="280" textAnchor="middle" fill="#94a3b8" fontSize="12">
-            Fields from both charges reinforce at the midpoint
-          </text>
+          <text x="350" y="160" textAnchor="middle" fill="white" fontSize="28" fontWeight="bold" style={{ textShadow: '0 2px 4px rgba(0,0,0,0.5)' }}>-</text>
         </svg>
+        {/* Labels moved outside SVG using typo system */}
+        <p className="text-center text-green-400 font-bold mt-3" style={{ fontSize: typo.body }}>
+          Field points from + to -
+        </p>
+        <p className="text-center text-slate-400 mt-1" style={{ fontSize: typo.small }}>
+          Fields from both charges reinforce at the midpoint
+        </p>
 
         <div className="mt-4 space-y-3 text-slate-300">
           <div className="flex items-start gap-3">

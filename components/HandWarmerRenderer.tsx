@@ -487,7 +487,7 @@ export default function HandWarmerRenderer({
     return "#ef4444";
   };
 
-  // Render temperature graph
+  // Render temperature graph - Premium SVG
   const renderTemperatureGraph = () => {
     const graphWidth = 280;
     const graphHeight = 100;
@@ -502,49 +502,124 @@ export default function HandWarmerRenderer({
       return `${x},${y}`;
     }).join(" ");
 
+    // Create fill area points
+    const fillPoints = temperatureHistory.length > 0
+      ? `${padding},${graphHeight - padding} ${points} ${padding + ((temperatureHistory.length - 1) / 50) * (graphWidth - 2 * padding)},${graphHeight - padding}`
+      : '';
+
     return (
-      <svg viewBox={`0 0 ${graphWidth} ${graphHeight}`} style={{ width: '100%', maxWidth: '280px', background: '#1e293b', borderRadius: '8px' }}>
-        {/* Grid lines */}
-        {[0, 25, 50].map((temp, i) => {
-          const y = graphHeight - padding - ((temp - minHistoryTemp) / (maxHistoryTemp - minHistoryTemp)) * (graphHeight - 2 * padding);
-          return (
-            <g key={i}>
-              <line x1={padding} y1={y} x2={graphWidth - padding} y2={y} stroke="#374151" strokeWidth="1" strokeDasharray="2,2" />
-              <text x={padding - 5} y={y + 4} fontSize="8" fill="#94a3b8" textAnchor="end">{temp}C</text>
-            </g>
-          );
-        })}
+      <div style={{ width: '100%', maxWidth: '280px' }}>
+        <div style={{
+          fontSize: typo.small,
+          fontWeight: 'bold',
+          color: '#e2e8f0',
+          textAlign: 'center',
+          marginBottom: '6px'
+        }}>
+          Temperature vs Time
+        </div>
+        <svg viewBox={`0 0 ${graphWidth} ${graphHeight}`} style={{ width: '100%', borderRadius: '8px' }}>
+          <defs>
+            {/* Graph background gradient */}
+            <linearGradient id="warmGraphBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        {/* Temperature line */}
-        <polyline
-          points={points}
-          fill="none"
-          stroke={getTempColor(chemicalTemp)}
-          strokeWidth="2"
-        />
+            {/* Temperature line gradient */}
+            <linearGradient id="warmTempLineGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="30%" stopColor="#22c55e" />
+              <stop offset="60%" stopColor="#eab308" />
+              <stop offset="80%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
 
-        {/* Current temperature dot */}
-        {temperatureHistory.length > 0 && (
-          <circle
-            cx={padding + ((temperatureHistory.length - 1) / 50) * (graphWidth - 2 * padding)}
-            cy={graphHeight - padding - ((temperatureHistory[temperatureHistory.length - 1] - minHistoryTemp) / (maxHistoryTemp - minHistoryTemp)) * (graphHeight - 2 * padding)}
-            r="4"
-            fill={getTempColor(chemicalTemp)}
+            {/* Area fill gradient */}
+            <linearGradient id="warmAreaFill" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={getTempColor(chemicalTemp)} stopOpacity="0.4" />
+              <stop offset="50%" stopColor={getTempColor(chemicalTemp)} stopOpacity="0.2" />
+              <stop offset="100%" stopColor={getTempColor(chemicalTemp)} stopOpacity="0" />
+            </linearGradient>
+
+            {/* Dot glow filter */}
+            <filter id="warmDotGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width={graphWidth} height={graphHeight} fill="url(#warmGraphBg)" rx="8" />
+
+          {/* Grid lines */}
+          {[0, 25, 50].map((temp, i) => {
+            const y = graphHeight - padding - ((temp - minHistoryTemp) / (maxHistoryTemp - minHistoryTemp)) * (graphHeight - 2 * padding);
+            return (
+              <g key={i}>
+                <line x1={padding} y1={y} x2={graphWidth - padding} y2={y} stroke="#374151" strokeWidth="1" strokeDasharray="3,3" />
+                <text x={padding - 3} y={y + 3} fontSize="7" fill="#64748b" textAnchor="end">{temp}C</text>
+              </g>
+            );
+          })}
+
+          {/* Area fill under the line */}
+          {temperatureHistory.length > 1 && (
+            <polygon
+              points={fillPoints}
+              fill="url(#warmAreaFill)"
+            />
+          )}
+
+          {/* Temperature line with gradient */}
+          <polyline
+            points={points}
+            fill="none"
+            stroke={getTempColor(chemicalTemp)}
+            strokeWidth="2.5"
+            strokeLinecap="round"
+            strokeLinejoin="round"
           />
-        )}
 
-        {/* Labels */}
-        <text x={graphWidth / 2} y={graphHeight - 2} fontSize="9" fill="#94a3b8" textAnchor="middle">Time</text>
-        <text x={graphWidth / 2} y={12} fontSize="10" fill="#e2e8f0" textAnchor="middle" fontWeight="bold">Temperature vs Time</text>
-      </svg>
+          {/* Current temperature dot with glow */}
+          {temperatureHistory.length > 0 && (
+            <g filter="url(#warmDotGlow)">
+              <circle
+                cx={padding + ((temperatureHistory.length - 1) / 50) * (graphWidth - 2 * padding)}
+                cy={graphHeight - padding - ((temperatureHistory[temperatureHistory.length - 1] - minHistoryTemp) / (maxHistoryTemp - minHistoryTemp)) * (graphHeight - 2 * padding)}
+                r="5"
+                fill={getTempColor(chemicalTemp)}
+              />
+              <circle
+                cx={padding + ((temperatureHistory.length - 1) / 50) * (graphWidth - 2 * padding)}
+                cy={graphHeight - padding - ((temperatureHistory[temperatureHistory.length - 1] - minHistoryTemp) / (maxHistoryTemp - minHistoryTemp)) * (graphHeight - 2 * padding)}
+                r="2.5"
+                fill="#ffffff"
+              />
+            </g>
+          )}
+        </svg>
+        <div style={{
+          fontSize: typo.label,
+          color: '#64748b',
+          textAlign: 'center',
+          marginTop: '4px'
+        }}>
+          Time Elapsed
+        </div>
+      </div>
     );
   };
 
-  // Render iron oxidation animation
+  // Render iron oxidation animation - Premium SVG
   const renderIronOxidationAnimation = () => {
-    const ironParticles = [];
-    const oxygenParticles = [];
-    const rustParticles = [];
+    const ironParticles: { x: number; y: number; opacity: number }[] = [];
+    const oxygenParticles: { x: number; y: number; opacity: number }[] = [];
+    const rustParticles: { x: number; y: number; opacity: number }[] = [];
 
     // Generate particles based on reaction progress
     for (let i = 0; i < 8; i++) {
@@ -582,91 +657,250 @@ export default function HandWarmerRenderer({
     }
 
     return (
-      <svg viewBox="0 0 160 160" style={{ width: '100%', maxWidth: '160px' }}>
-        <rect width="160" height="160" fill="#1e293b" rx="8" />
+      <div style={{ width: '100%', maxWidth: '160px' }}>
+        <svg viewBox="0 0 160 140" style={{ width: '100%' }}>
+          <defs>
+            {/* Iron particle gradient */}
+            <radialGradient id="warmIronGrad" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#6b7280" />
+              <stop offset="70%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </radialGradient>
 
-        {/* Iron particles */}
-        {ironParticles.map((p, i) => (
-          <circle key={`iron-${i}`} cx={p.x} cy={p.y} r="8" fill="#6b7280" opacity={p.opacity} />
-        ))}
+            {/* Oxygen particle gradient */}
+            <radialGradient id="warmOxygenGrad" cx="40%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="40%" stopColor="#60a5fa" />
+              <stop offset="70%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#2563eb" />
+            </radialGradient>
 
-        {/* Oxygen particles */}
-        {oxygenParticles.map((p, i) => (
-          <circle key={`oxygen-${i}`} cx={p.x} cy={p.y} r="5" fill="#3b82f6" opacity={p.opacity} />
-        ))}
+            {/* Rust particle gradient */}
+            <radialGradient id="warmRustGrad" cx="40%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="30%" stopColor="#f59e0b" />
+              <stop offset="60%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </radialGradient>
 
-        {/* Rust particles */}
-        {rustParticles.map((p, i) => (
-          <circle key={`rust-${i}`} cx={p.x} cy={p.y} r="10" fill="#b45309" opacity={p.opacity} />
-        ))}
+            {/* Heat wave gradient */}
+            <linearGradient id="warmOxidHeatGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#f97316" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#fbbf24" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#fef3c7" stopOpacity="0" />
+            </linearGradient>
 
-        {/* Heat waves when reacting */}
-        {isReacting && heatOutput > 5 && (
-          <g>
-            {[0, 1, 2].map((i) => {
-              const offset = (animationFrame + i * 20) % 40;
-              return (
-                <path
-                  key={i}
-                  d={`M ${60 + i * 20} ${30 - offset} Q ${65 + i * 20} ${25 - offset} ${60 + i * 20} ${20 - offset}`}
-                  fill="none"
-                  stroke="#ef4444"
-                  strokeWidth="2"
-                  opacity={(40 - offset) / 40}
-                />
-              );
-            })}
+            {/* Background gradient */}
+            <linearGradient id="warmOxidBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Particle glow filter */}
+            <filter id="warmParticleGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Heat glow filter */}
+            <filter id="warmOxidHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width="160" height="140" fill="url(#warmOxidBg)" rx="8" />
+
+          {/* Subtle center glow during reaction */}
+          {isReacting && (
+            <circle cx="80" cy="80" r="40" fill="#f97316" opacity={0.1 + heatOutput * 0.01} />
+          )}
+
+          {/* Iron particles with gradient */}
+          <g filter="url(#warmParticleGlow)">
+            {ironParticles.map((p, i) => (
+              <circle key={`iron-${i}`} cx={p.x} cy={p.y} r="9" fill="url(#warmIronGrad)" opacity={p.opacity} />
+            ))}
           </g>
-        )}
 
-        {/* Reaction equation */}
-        <text x="80" y="150" textAnchor="middle" fontSize="8" fill="#94a3b8">
-          4Fe + 3O2 = 2Fe2O3 + heat
-        </text>
-      </svg>
+          {/* Oxygen particles with gradient */}
+          <g filter="url(#warmParticleGlow)">
+            {oxygenParticles.map((p, i) => (
+              <circle key={`oxygen-${i}`} cx={p.x} cy={p.y} r="6" fill="url(#warmOxygenGrad)" opacity={p.opacity} />
+            ))}
+          </g>
+
+          {/* Rust particles with gradient */}
+          <g filter="url(#warmParticleGlow)">
+            {rustParticles.map((p, i) => (
+              <circle key={`rust-${i}`} cx={p.x} cy={p.y} r="11" fill="url(#warmRustGrad)" opacity={p.opacity} />
+            ))}
+          </g>
+
+          {/* Heat waves when reacting */}
+          {isReacting && heatOutput > 5 && (
+            <g filter="url(#warmOxidHeatGlow)">
+              {[0, 1, 2, 3].map((i) => {
+                const offset = (animationFrame + i * 15) % 40;
+                const baseX = 50 + i * 20;
+                return (
+                  <path
+                    key={i}
+                    d={`M ${baseX} ${35 - offset}
+                        Q ${baseX + 5} ${30 - offset} ${baseX} ${25 - offset}
+                        Q ${baseX - 5} ${20 - offset} ${baseX} ${15 - offset}`}
+                    fill="none"
+                    stroke="url(#warmOxidHeatGrad)"
+                    strokeWidth="2.5"
+                    opacity={(40 - offset) / 40}
+                    strokeLinecap="round"
+                  />
+                );
+              })}
+            </g>
+          )}
+        </svg>
+        {/* Reaction equation outside SVG */}
+        <div style={{
+          textAlign: 'center',
+          fontSize: typo.label,
+          color: '#94a3b8',
+          marginTop: '4px'
+        }}>
+          4Fe + 3O<sub>2</sub> = 2Fe<sub>2</sub>O<sub>3</sub> + heat
+        </div>
+      </div>
     );
   };
 
-  // Render heat output indicator
+  // Render heat output indicator - Premium SVG
   const renderHeatOutputIndicator = () => {
+    const indicatorHeight = 120;
+    const indicatorWidth = 60;
+    const fillHeight = Math.min(100, heatOutput * 3);
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
-        <div style={{ fontSize: '12px', color: '#94a3b8' }}>Heat Output</div>
-        <div style={{
-          width: '60px',
-          height: '120px',
-          background: '#1f2937',
-          borderRadius: '8px',
-          position: 'relative',
-          overflow: 'hidden',
-          border: '2px solid #374151'
-        }}>
-          <div style={{
-            position: 'absolute',
-            bottom: 0,
-            left: 0,
-            right: 0,
-            height: `${heatOutput * 3}%`,
-            background: `linear-gradient(to top, ${getTempColor(chemicalTemp)}, ${getTempColor(chemicalTemp)}88)`,
-            transition: 'height 0.3s'
-          }} />
+        <div style={{ fontSize: typo.small, color: '#94a3b8' }}>Heat Output</div>
+        <svg viewBox={`0 0 ${indicatorWidth} ${indicatorHeight}`} style={{ width: '60px', height: '120px' }}>
+          <defs>
+            {/* Heat output gradient */}
+            <linearGradient id="warmHeatOutputGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="25%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Indicator background gradient */}
+            <linearGradient id="warmIndicatorBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Heat glow for active state */}
+            <filter id="warmHeatIndicatorGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner glow */}
+            <radialGradient id="warmHeatInnerGlow" cx="50%" cy="0%" r="100%">
+              <stop offset="0%" stopColor={getTempColor(chemicalTemp)} stopOpacity="0.4" />
+              <stop offset="100%" stopColor={getTempColor(chemicalTemp)} stopOpacity="0" />
+            </radialGradient>
+          </defs>
+
+          {/* Background container */}
+          <rect
+            x="2"
+            y="2"
+            width={indicatorWidth - 4}
+            height={indicatorHeight - 4}
+            fill="url(#warmIndicatorBg)"
+            stroke="#334155"
+            strokeWidth="2"
+            rx="6"
+          />
+
+          {/* Inner track */}
+          <rect
+            x="8"
+            y="8"
+            width={indicatorWidth - 16}
+            height={indicatorHeight - 16}
+            fill="#0f172a"
+            rx="4"
+          />
+
+          {/* Heat fill with gradient */}
+          <rect
+            x="10"
+            y={indicatorHeight - 12 - (fillHeight * (indicatorHeight - 20) / 100)}
+            width={indicatorWidth - 20}
+            height={(fillHeight * (indicatorHeight - 20) / 100)}
+            fill="url(#warmHeatOutputGrad)"
+            rx="3"
+            filter={heatOutput > 10 ? "url(#warmHeatIndicatorGlow)" : undefined}
+          />
+
+          {/* Inner glow overlay */}
+          {heatOutput > 5 && (
+            <rect
+              x="10"
+              y={indicatorHeight - 12 - (fillHeight * (indicatorHeight - 20) / 100)}
+              width={indicatorWidth - 20}
+              height={(fillHeight * (indicatorHeight - 20) / 100)}
+              fill="url(#warmHeatInnerGlow)"
+              rx="3"
+            />
+          )}
+
           {/* Scale markers */}
-          {[0, 25, 50, 75, 100].map((val, i) => (
-            <div key={i} style={{
-              position: 'absolute',
-              bottom: `${val}%`,
-              left: 0,
-              right: 0,
-              borderTop: '1px solid #374151',
-              fontSize: '6px',
-              color: '#64748b',
-              paddingLeft: '2px'
-            }}>
-              {val > 0 && val < 100 ? `${val}%` : ''}
-            </div>
-          ))}
-        </div>
-        <div style={{ fontSize: '14px', fontWeight: 'bold', color: getTempColor(chemicalTemp) }}>
+          {[25, 50, 75].map((val) => {
+            const y = indicatorHeight - 12 - (val * (indicatorHeight - 20) / 100);
+            return (
+              <g key={val}>
+                <line
+                  x1="6"
+                  y1={y}
+                  x2="12"
+                  y2={y}
+                  stroke="#475569"
+                  strokeWidth="1"
+                />
+                <line
+                  x1={indicatorWidth - 12}
+                  y1={y}
+                  x2={indicatorWidth - 6}
+                  y2={y}
+                  stroke="#475569"
+                  strokeWidth="1"
+                />
+              </g>
+            );
+          })}
+        </svg>
+        <div style={{
+          fontSize: typo.body,
+          fontWeight: 'bold',
+          color: getTempColor(chemicalTemp)
+        }}>
           {heatOutput.toFixed(1)} W
         </div>
       </div>
@@ -742,261 +976,639 @@ export default function HandWarmerRenderer({
     );
   };
 
-  // Render hand warmer visualization (phase change)
+  // Render hand warmer visualization (phase change) - Premium SVG
   const renderHandWarmer = () => {
     const isLiquid = warmerState === "liquid";
     const isCrystallizing = warmerState === "crystallizing";
     const isSolid = warmerState === "solid";
 
     return (
-      <svg viewBox="0 0 400 400" className="w-full max-w-md mx-auto">
-        <rect width="400" height="400" fill="#1e293b" />
+      <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+        <svg viewBox="0 0 400 340" className="w-full">
+          <defs>
+            {/* Premium dark lab background gradient */}
+            <linearGradient id="warmLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-        <ellipse
-          cx="200"
-          cy="220"
-          rx="130"
-          ry="100"
-          fill={isLiquid ? "#0ea5e9" : isCrystallizing ? "#38bdf8" : "#64748b"}
-          stroke="#475569"
-          strokeWidth={3}
-          opacity={0.8}
-        />
+            {/* Hand warmer pack outer gradient */}
+            <linearGradient id="warmPackOuter" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="25%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#475569" />
+              <stop offset="75%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
 
-        {isLiquid && (
-          <>
-            <ellipse
-              cx={180 + Math.sin(animationFrame / 20) * 10}
-              cy={200}
-              rx={80}
-              ry={50}
-              fill="rgba(255,255,255,0.2)"
-            />
-            <ellipse
-              cx={220}
-              cy={240 + Math.cos(animationFrame / 15) * 5}
-              rx={60}
-              ry={30}
-              fill="rgba(255,255,255,0.15)"
-            />
-          </>
-        )}
+            {/* Supercooled liquid gradient */}
+            <radialGradient id="warmLiquidGrad" cx="40%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.95" />
+              <stop offset="30%" stopColor="#0ea5e9" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#0284c7" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0.8" />
+            </radialGradient>
 
-        {(isCrystallizing || isSolid) && (
-          <g>
-            {crystalPoints.map((point, i) => (
-              <g key={i} transform={`translate(${point.x}, ${point.y})`}>
-                <polygon
-                  points={`0,${-point.size} ${point.size * 0.866},${-point.size / 2} ${point.size * 0.866},${point.size / 2} 0,${point.size} ${-point.size * 0.866},${point.size / 2} ${-point.size * 0.866},${-point.size / 2}`}
-                  fill="rgba(255,255,255,0.8)"
-                  stroke="#94a3b8"
-                  strokeWidth={0.5}
-                />
-              </g>
+            {/* Crystallizing state gradient */}
+            <radialGradient id="warmCrystalGrad" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.95" />
+              <stop offset="25%" stopColor="#fde68a" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#fcd34d" stopOpacity="0.85" />
+              <stop offset="75%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.75" />
+            </radialGradient>
+
+            {/* Solid crystallized gradient */}
+            <radialGradient id="warmSolidGrad" cx="45%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#cbd5e1" stopOpacity="0.85" />
+              <stop offset="60%" stopColor="#94a3b8" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#64748b" stopOpacity="0.75" />
+            </radialGradient>
+
+            {/* Metal disc gradient */}
+            <radialGradient id="warmDiscGrad" cx="35%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </radialGradient>
+
+            {/* Heat radiation gradient */}
+            <linearGradient id="warmHeatRadiation" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#f97316" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#fbbf24" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#fef3c7" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Thermometer gradient */}
+            <linearGradient id="warmThermoGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="30%" stopColor="#22c55e" />
+              <stop offset="60%" stopColor="#eab308" />
+              <stop offset="80%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Crystal shimmer gradient */}
+            <linearGradient id="warmCrystalShimmer" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#e0f2fe" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="warmHeatGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="warmCrystalGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="warmDiscGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="warmWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Premium dark lab background */}
+          <rect width="400" height="340" fill="url(#warmLabBg)" />
+
+          {/* Subtle grid pattern for lab feel */}
+          <g opacity="0.05">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <line key={`vg-${i}`} x1={i * 20} y1="0" x2={i * 20} y2="340" stroke="#94a3b8" strokeWidth="0.5" />
+            ))}
+            {Array.from({ length: 17 }).map((_, i) => (
+              <line key={`hg-${i}`} x1="0" y1={i * 20} x2="400" y2={i * 20} stroke="#94a3b8" strokeWidth="0.5" />
             ))}
           </g>
-        )}
 
-        {/* Crystallization wave */}
-        {isCrystallizing && (
-          <circle
-            cx="200"
-            cy="180"
-            r={crystalWaveRadius}
-            fill="none"
-            stroke="rgba(255,255,255,0.4)"
-            strokeWidth="4"
+          {/* Hand warmer pack shadow */}
+          <ellipse
+            cx="205"
+            cy="195"
+            rx="135"
+            ry="105"
+            fill="#000"
+            opacity={0.3}
           />
-        )}
 
-        <g transform="translate(200, 180)">
-          <circle
-            r={20}
-            fill={discClicked ? "#475569" : "#64748b"}
-            stroke="#334155"
-            strokeWidth={2}
-            style={{ cursor: isLiquid ? "pointer" : "default" }}
-            onClick={isLiquid ? activateWarmer : undefined}
-          />
-          <circle r={15} fill="none" stroke="#94a3b8" strokeWidth={1} />
-          <circle r={8} fill="#94a3b8" />
-          {!discClicked && isLiquid && (
-            <text y={45} textAnchor="middle" fontSize="11" fill="#94a3b8">
-              Click disc to activate
-            </text>
-          )}
-        </g>
-
-        {isCrystallizing && (
+          {/* Hand warmer pack outer shell */}
           <ellipse
             cx="200"
-            cy="220"
-            rx={crystalProgress * 1.3}
-            ry={crystalProgress}
-            fill="none"
-            stroke="#ffffff"
-            strokeWidth={4}
-            opacity={0.6}
+            cy="190"
+            rx="135"
+            ry="105"
+            fill="url(#warmPackOuter)"
+            stroke="#334155"
+            strokeWidth={2}
           />
-        )}
 
-        {temperature > 30 && (
-          <g>
-            {[0, 1, 2].map((i) => {
-              const offset = (animationFrame + i * 30) % 60;
-              return (
-                <path
-                  key={i}
-                  d={`M ${150 + i * 50} ${120 - offset} Q ${160 + i * 50} ${110 - offset} ${150 + i * 50} ${100 - offset}`}
-                  fill="none"
-                  stroke={getTempColor(temperature)}
-                  strokeWidth={2}
-                  opacity={1 - offset / 60}
-                />
-              );
-            })}
+          {/* Hand warmer pack inner content area */}
+          <ellipse
+            cx="200"
+            cy="190"
+            rx="125"
+            ry="95"
+            fill={isLiquid ? "url(#warmLiquidGrad)" : isCrystallizing ? "url(#warmCrystalGrad)" : "url(#warmSolidGrad)"}
+            stroke="#475569"
+            strokeWidth={1}
+          />
+
+          {/* Liquid shimmer effects */}
+          {isLiquid && (
+            <g>
+              <ellipse
+                cx={175 + Math.sin(animationFrame / 20) * 12}
+                cy={175}
+                rx={75}
+                ry={45}
+                fill="rgba(255,255,255,0.15)"
+              />
+              <ellipse
+                cx={225}
+                cy={205 + Math.cos(animationFrame / 15) * 6}
+                rx={55}
+                ry={28}
+                fill="rgba(255,255,255,0.1)"
+              />
+              {/* Bubble effects */}
+              {[0, 1, 2].map((i) => {
+                const bubbleY = 220 - ((animationFrame + i * 40) % 80);
+                const bubbleX = 160 + i * 40 + Math.sin(animationFrame / 10 + i) * 5;
+                return (
+                  <circle
+                    key={`bubble-${i}`}
+                    cx={bubbleX}
+                    cy={bubbleY}
+                    r={3 + i}
+                    fill="rgba(255,255,255,0.2)"
+                    opacity={bubbleY > 140 ? 1 : 0}
+                  />
+                );
+              })}
+            </g>
+          )}
+
+          {/* Crystal formation during crystallization and solid state */}
+          {(isCrystallizing || isSolid) && (
+            <g filter="url(#warmCrystalGlow)">
+              {crystalPoints.map((point, i) => (
+                <g key={i} transform={`translate(${point.x}, ${point.y})`}>
+                  <polygon
+                    points={`0,${-point.size} ${point.size * 0.866},${-point.size / 2} ${point.size * 0.866},${point.size / 2} 0,${point.size} ${-point.size * 0.866},${point.size / 2} ${-point.size * 0.866},${-point.size / 2}`}
+                    fill="url(#warmCrystalShimmer)"
+                    stroke="#94a3b8"
+                    strokeWidth={0.5}
+                    opacity={0.85}
+                  />
+                </g>
+              ))}
+            </g>
+          )}
+
+          {/* Crystallization wave effect */}
+          {isCrystallizing && crystalWaveRadius > 0 && (
+            <g filter="url(#warmWaveGlow)">
+              <circle
+                cx="200"
+                cy="160"
+                r={crystalWaveRadius}
+                fill="none"
+                stroke="#fef3c7"
+                strokeWidth="3"
+                opacity={0.6 * (1 - crystalWaveRadius / 150)}
+              />
+              <circle
+                cx="200"
+                cy="160"
+                r={crystalWaveRadius * 0.7}
+                fill="none"
+                stroke="#fde68a"
+                strokeWidth="2"
+                opacity={0.4 * (1 - crystalWaveRadius / 150)}
+              />
+            </g>
+          )}
+
+          {/* Metal activation disc */}
+          <g transform="translate(200, 160)" filter={isLiquid ? "url(#warmDiscGlow)" : undefined}>
+            <circle
+              r={22}
+              fill="url(#warmDiscGrad)"
+              stroke={discClicked ? "#f59e0b" : "#64748b"}
+              strokeWidth={discClicked ? 3 : 2}
+              style={{ cursor: isLiquid ? "pointer" : "default" }}
+              onClick={isLiquid ? activateWarmer : undefined}
+            />
+            {/* Disc concentric rings */}
+            <circle r={17} fill="none" stroke="#94a3b8" strokeWidth={1} opacity={0.6} />
+            <circle r={10} fill="#94a3b8" opacity={0.8} />
+            <circle r={5} fill="#cbd5e1" />
+            {/* Disc highlight */}
+            <ellipse cx={-6} cy={-6} rx={4} ry={3} fill="rgba(255,255,255,0.3)" />
           </g>
-        )}
 
-        <g transform="translate(330, 200)">
-          <rect x={-25} y={-60} width={50} height={120} fill="#1f2937" stroke="#374151" rx={5} />
-          <rect
-            x={-15}
-            y={50 - (temperature - 15) * 2}
-            width={30}
-            height={(temperature - 15) * 2}
-            fill={getTempColor(temperature)}
-            rx={3}
-          />
-          <text x={0} y={-70} textAnchor="middle" fontSize="12" fill="#e2e8f0">
+          {/* Heat radiation waves when warm */}
+          {temperature > 30 && (
+            <g filter="url(#warmHeatGlow)">
+              {[0, 1, 2, 3, 4].map((i) => {
+                const offset = (animationFrame + i * 24) % 60;
+                const baseX = 130 + i * 35;
+                return (
+                  <path
+                    key={i}
+                    d={`M ${baseX} ${100 - offset}
+                        Q ${baseX + 8} ${90 - offset} ${baseX} ${80 - offset}
+                        Q ${baseX - 8} ${70 - offset} ${baseX} ${60 - offset}`}
+                    fill="none"
+                    stroke="url(#warmHeatRadiation)"
+                    strokeWidth={2.5}
+                    opacity={(60 - offset) / 60}
+                    strokeLinecap="round"
+                  />
+                );
+              })}
+            </g>
+          )}
+
+          {/* Premium temperature indicator */}
+          <g transform="translate(355, 170)">
+            {/* Thermometer body */}
+            <rect x={-18} y={-55} width={36} height={110} fill="#0f172a" stroke="#334155" strokeWidth={2} rx={8} />
+            {/* Inner track */}
+            <rect x={-10} y={-45} width={20} height={90} fill="#1e293b" rx={4} />
+            {/* Temperature fill with gradient */}
+            <rect
+              x={-8}
+              y={35 - Math.min(70, (temperature - 15) * 1.8)}
+              width={16}
+              height={Math.min(70, (temperature - 15) * 1.8)}
+              fill="url(#warmThermoGrad)"
+              rx={3}
+            />
+            {/* Scale marks */}
+            {[20, 30, 40, 50].map((t, i) => (
+              <g key={i}>
+                <line x1={-14} y1={35 - (t - 15) * 1.8} x2={-10} y2={35 - (t - 15) * 1.8} stroke="#64748b" strokeWidth={1} />
+              </g>
+            ))}
+            {/* Bulb at bottom */}
+            <circle cx={0} cy={50} r={12} fill={getTempColor(temperature)} />
+            <circle cx={0} cy={50} r={8} fill={getTempColor(temperature)} opacity={0.6} />
+          </g>
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        <div style={{ textAlign: 'center', marginTop: '12px' }}>
+          <div style={{
+            fontSize: typo.bodyLarge,
+            fontWeight: 'bold',
+            color: '#e2e8f0',
+            marginBottom: '4px'
+          }}>
+            {isLiquid ? "Supercooled Liquid (Ready)" :
+             isCrystallizing ? `Crystallizing... ${crystalProgress.toFixed(0)}%` :
+             "Crystallized (Releasing Heat)"}
+          </div>
+          <div style={{
+            fontSize: typo.small,
+            color: '#94a3b8',
+            marginBottom: '8px'
+          }}>
+            Latent Heat: {latentHeatFusion} kJ/kg | Melting Point: {meltingPoint}C
+          </div>
+          <div style={{
+            fontSize: typo.heading,
+            fontWeight: 'bold',
+            color: getTempColor(temperature)
+          }}>
             {temperature.toFixed(1)}C
-          </text>
-        </g>
-
-        <text x="200" y="350" textAnchor="middle" fontSize="14" fill="#e2e8f0" fontWeight="bold">
-          {isLiquid ? "Supercooled Liquid (Ready)" :
-           isCrystallizing ? `Crystallizing... ${crystalProgress.toFixed(0)}%` :
-           "Crystallized (Releasing Heat)"}
-        </text>
-
-        <text x="200" y="375" textAnchor="middle" fontSize="11" fill="#94a3b8">
-          Latent Heat: {latentHeatFusion} kJ/kg | Melting Point: {meltingPoint}C
-        </text>
-      </svg>
+          </div>
+          {!discClicked && isLiquid && (
+            <div style={{
+              fontSize: typo.small,
+              color: '#94a3b8',
+              marginTop: '8px'
+            }}>
+              Click the metal disc to activate
+            </div>
+          )}
+        </div>
+      </div>
     );
   };
 
-  // Render comparison visualization for twist
+  // Render comparison visualization for twist - Premium SVG
   const renderComparisonVisualization = () => {
     return (
-      <svg viewBox="0 0 400 300" className="w-full max-w-md mx-auto">
-        <rect width="400" height="300" fill="#1e293b" />
+      <div style={{ width: '100%', maxWidth: '400px', margin: '0 auto' }}>
+        <svg viewBox="0 0 400 220" className="w-full">
+          <defs>
+            {/* Background gradient */}
+            <linearGradient id="warmCompBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-        <ellipse
-          cx="200"
-          cy="120"
-          rx="100"
-          ry="70"
-          fill={
-            warmerType === "phase"
-              ? twistState === "inactive" ? "#0ea5e9" : twistState === "active" ? "#fbbf24" : "#64748b"
-              : twistState === "inactive" ? "#f97316" : twistState === "active" ? "#ef4444" : "#64748b"
-          }
-          stroke="#475569"
-          strokeWidth={2}
-          opacity={0.8}
-        />
+            {/* Phase warmer - inactive (blue liquid) */}
+            <radialGradient id="warmCompPhaseInactive" cx="40%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.95" />
+              <stop offset="40%" stopColor="#0ea5e9" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#0284c7" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#0c4a6e" stopOpacity="0.8" />
+            </radialGradient>
 
-        {/* Crystallization animation for phase warmer */}
-        {warmerType === "phase" && twistState === "active" && (
-          <g>
-            {Array.from({ length: 8 }).map((_, i) => {
-              const angle = (i / 8) * Math.PI * 2 + animationFrame / 20;
-              const radius = 30 + (100 - energyRemaining) * 0.4;
-              return (
-                <polygon
-                  key={i}
-                  points={`0,-5 4,-2 4,2 0,5 -4,2 -4,-2`}
-                  transform={`translate(${200 + Math.cos(angle) * radius}, ${120 + Math.sin(angle) * radius * 0.7})`}
-                  fill="rgba(255,255,255,0.8)"
-                />
-              );
-            })}
+            {/* Phase warmer - active (warm yellow) */}
+            <radialGradient id="warmCompPhaseActive" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.95" />
+              <stop offset="30%" stopColor="#fde68a" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#fcd34d" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.75" />
+            </radialGradient>
+
+            {/* Phase warmer - depleted (gray) */}
+            <radialGradient id="warmCompPhaseDepleted" cx="45%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#94a3b8" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#64748b" stopOpacity="0.75" />
+              <stop offset="100%" stopColor="#475569" stopOpacity="0.7" />
+            </radialGradient>
+
+            {/* Chemical warmer - inactive (orange) */}
+            <radialGradient id="warmCompChemInactive" cx="40%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#fed7aa" stopOpacity="0.95" />
+              <stop offset="40%" stopColor="#fdba74" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#f97316" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#c2410c" stopOpacity="0.8" />
+            </radialGradient>
+
+            {/* Chemical warmer - active (red hot) */}
+            <radialGradient id="warmCompChemActive" cx="50%" cy="40%" r="60%">
+              <stop offset="0%" stopColor="#fecaca" stopOpacity="0.95" />
+              <stop offset="30%" stopColor="#f87171" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#ef4444" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.75" />
+            </radialGradient>
+
+            {/* Crystal gradient */}
+            <linearGradient id="warmCompCrystal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#e0f2fe" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Rust particle gradient */}
+            <radialGradient id="warmCompRust" cx="40%" cy="35%" r="60%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#92400e" />
+            </radialGradient>
+
+            {/* Heat wave gradient */}
+            <linearGradient id="warmCompHeatWave" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#f97316" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#fbbf24" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#fef3c7" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Energy bar gradient - full */}
+            <linearGradient id="warmCompEnergyFull" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
+
+            {/* Energy bar gradient - medium */}
+            <linearGradient id="warmCompEnergyMed" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#ea580c" />
+              <stop offset="100%" stopColor="#f97316" />
+            </linearGradient>
+
+            {/* Energy bar gradient - low */}
+            <linearGradient id="warmCompEnergyLow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="50%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="warmCompGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="warmCompCrystalGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width="400" height="220" fill="url(#warmCompBg)" />
+
+          {/* Subtle grid */}
+          <g opacity="0.03">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <line key={`cv-${i}`} x1={i * 20} y1="0" x2={i * 20} y2="220" stroke="#94a3b8" strokeWidth="0.5" />
+            ))}
+            {Array.from({ length: 11 }).map((_, i) => (
+              <line key={`ch-${i}`} x1="0" y1={i * 20} x2="400" y2={i * 20} stroke="#94a3b8" strokeWidth="0.5" />
+            ))}
           </g>
-        )}
 
-        {/* Iron oxidation animation for chemical warmer */}
-        {warmerType === "chemical" && twistState === "active" && (
-          <g>
-            {Array.from({ length: 6 }).map((_, i) => {
-              const angle = (i / 6) * Math.PI * 2 + animationFrame / 15;
-              const radius = 40;
-              return (
-                <circle
-                  key={i}
-                  cx={200 + Math.cos(angle) * radius}
-                  cy={120 + Math.sin(angle) * radius * 0.6}
-                  r={5}
-                  fill="#b45309"
-                  opacity={0.8}
-                />
-              );
-            })}
-          </g>
-        )}
+          {/* Warmer pack shadow */}
+          <ellipse cx="205" cy="95" rx="105" ry="75" fill="#000" opacity={0.3} />
 
-        {twistState === "active" && (
-          <g>
-            {[0, 1, 2].map((i) => {
-              const offset = (animationFrame + i * 25) % 50;
-              return (
-                <path
-                  key={i}
-                  d={`M ${140 + i * 40} ${50 - offset} Q ${150 + i * 40} ${40 - offset} ${140 + i * 40} ${30 - offset}`}
-                  fill="none"
-                  stroke={getTempColor(twistTemperature)}
-                  strokeWidth={2}
-                  opacity={1 - offset / 50}
-                />
-              );
-            })}
-          </g>
-        )}
-
-        <text x="200" y="130" textAnchor="middle" fontSize="24" fill="#e2e8f0" fontWeight="bold">
-          {twistTemperature.toFixed(1)}C
-        </text>
-
-        <g transform="translate(100, 200)">
-          <text x="100" y="-10" textAnchor="middle" fontSize="12" fill="#94a3b8">
-            Energy Remaining: {energyRemaining.toFixed(0)}%
-          </text>
-          <rect width="200" height="20" fill="#1f2937" rx={5} />
-          <rect
-            width={energyRemaining * 2}
-            height="20"
-            fill={energyRemaining > 50 ? "#22c55e" : energyRemaining > 20 ? "#f97316" : "#ef4444"}
-            rx={5}
+          {/* Warmer pack - use appropriate gradient based on type and state */}
+          <ellipse
+            cx="200"
+            cy="90"
+            rx="105"
+            ry="75"
+            fill={
+              warmerType === "phase"
+                ? twistState === "inactive" ? "url(#warmCompPhaseInactive)"
+                : twistState === "active" ? "url(#warmCompPhaseActive)"
+                : "url(#warmCompPhaseDepleted)"
+                : twistState === "inactive" ? "url(#warmCompChemInactive)"
+                : twistState === "active" ? "url(#warmCompChemActive)"
+                : "url(#warmCompPhaseDepleted)"
+            }
+            stroke="#475569"
+            strokeWidth={2}
           />
-        </g>
 
-        <text x="200" y="250" textAnchor="middle" fontSize="14" fill="#e2e8f0" fontWeight="bold">
-          {warmerType === "phase" ? "Phase-Change (Reusable)" : "Chemical (Disposable)"}
-        </text>
-        <text x="200" y="270" textAnchor="middle" fontSize="11" fill="#94a3b8">
-          {warmerType === "phase"
-            ? "Sodium acetate crystallization"
-            : "4Fe + 3O2 = 2Fe2O3 + heat"}
-        </text>
+          {/* Crystallization animation for phase warmer */}
+          {warmerType === "phase" && twistState === "active" && (
+            <g filter="url(#warmCompCrystalGlow)">
+              {Array.from({ length: 10 }).map((_, i) => {
+                const angle = (i / 10) * Math.PI * 2 + animationFrame / 20;
+                const radius = 25 + (100 - energyRemaining) * 0.5;
+                const size = 4 + (100 - energyRemaining) * 0.03;
+                return (
+                  <polygon
+                    key={i}
+                    points={`0,${-size} ${size * 0.866},${-size / 2} ${size * 0.866},${size / 2} 0,${size} ${-size * 0.866},${size / 2} ${-size * 0.866},${-size / 2}`}
+                    transform={`translate(${200 + Math.cos(angle) * radius}, ${90 + Math.sin(angle) * radius * 0.7})`}
+                    fill="url(#warmCompCrystal)"
+                  />
+                );
+              })}
+            </g>
+          )}
 
-        <text x="200" y="290" textAnchor="middle" fontSize="12" fill={
-          twistState === "inactive" ? "#0ea5e9" :
-          twistState === "active" ? "#f97316" : "#64748b"
-        }>
-          {twistState === "inactive" ? "Ready" :
-           twistState === "active" ? "Heating..." : "Depleted"}
-        </text>
-      </svg>
+          {/* Iron oxidation animation for chemical warmer */}
+          {warmerType === "chemical" && twistState === "active" && (
+            <g filter="url(#warmCompCrystalGlow)">
+              {Array.from({ length: 8 }).map((_, i) => {
+                const angle = (i / 8) * Math.PI * 2 + animationFrame / 15;
+                const radius = 35 + Math.sin(animationFrame / 10 + i) * 5;
+                return (
+                  <circle
+                    key={i}
+                    cx={200 + Math.cos(angle) * radius}
+                    cy={90 + Math.sin(angle) * radius * 0.6}
+                    r={6}
+                    fill="url(#warmCompRust)"
+                    opacity={0.9}
+                  />
+                );
+              })}
+            </g>
+          )}
+
+          {/* Heat waves when active */}
+          {twistState === "active" && (
+            <g filter="url(#warmCompGlow)">
+              {[0, 1, 2, 3, 4].map((i) => {
+                const offset = (animationFrame + i * 20) % 50;
+                const baseX = 120 + i * 40;
+                return (
+                  <path
+                    key={i}
+                    d={`M ${baseX} ${30 - offset}
+                        Q ${baseX + 6} ${22 - offset} ${baseX} ${14 - offset}
+                        Q ${baseX - 6} ${6 - offset} ${baseX} ${-2 - offset}`}
+                    fill="none"
+                    stroke="url(#warmCompHeatWave)"
+                    strokeWidth="2.5"
+                    opacity={(50 - offset) / 50}
+                    strokeLinecap="round"
+                  />
+                );
+              })}
+            </g>
+          )}
+
+          {/* Energy bar background */}
+          <g transform="translate(100, 180)">
+            <rect width="200" height="16" fill="#0f172a" stroke="#334155" strokeWidth="1" rx={4} />
+            {/* Energy fill */}
+            <rect
+              width={energyRemaining * 2}
+              height="16"
+              fill={
+                energyRemaining > 50 ? "url(#warmCompEnergyFull)"
+                : energyRemaining > 20 ? "url(#warmCompEnergyMed)"
+                : "url(#warmCompEnergyLow)"
+              }
+              rx={4}
+            />
+            {/* Energy bar segments */}
+            {[25, 50, 75].map((val) => (
+              <line
+                key={val}
+                x1={val * 2}
+                y1="0"
+                x2={val * 2}
+                y2="16"
+                stroke="#0f172a"
+                strokeWidth="1"
+                opacity={0.5}
+              />
+            ))}
+          </g>
+        </svg>
+
+        {/* Text labels outside SVG */}
+        <div style={{ textAlign: 'center', marginTop: '12px' }}>
+          <div style={{
+            fontSize: typo.heading,
+            fontWeight: 'bold',
+            color: getTempColor(twistTemperature),
+            marginBottom: '4px'
+          }}>
+            {twistTemperature.toFixed(1)}C
+          </div>
+          <div style={{
+            fontSize: typo.small,
+            color: '#94a3b8',
+            marginBottom: '8px'
+          }}>
+            Energy Remaining: {energyRemaining.toFixed(0)}%
+          </div>
+          <div style={{
+            fontSize: typo.bodyLarge,
+            fontWeight: 'bold',
+            color: '#e2e8f0',
+            marginBottom: '4px'
+          }}>
+            {warmerType === "phase" ? "Phase-Change (Reusable)" : "Chemical (Disposable)"}
+          </div>
+          <div style={{
+            fontSize: typo.small,
+            color: '#94a3b8',
+            marginBottom: '4px'
+          }}>
+            {warmerType === "phase"
+              ? "Sodium acetate crystallization"
+              : "4Fe + 3O2 = 2Fe2O3 + heat"}
+          </div>
+          <div style={{
+            fontSize: typo.body,
+            fontWeight: '600',
+            color: twistState === "inactive" ? "#0ea5e9" :
+                   twistState === "active" ? "#f97316" : "#64748b"
+          }}>
+            {twistState === "inactive" ? "Ready" :
+             twistState === "active" ? "Heating..." : "Depleted"}
+          </div>
+        </div>
+      </div>
     );
   };
 

@@ -463,22 +463,89 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
             </p>
 
             <svg width="300" height="220" viewBox="0 0 300 220" style={{ margin: '0 auto', display: 'block' }}>
-              {/* Bathroom frame */}
-              <rect x="50" y="20" width="200" height="180" fill="#222" rx="5" />
+              <defs>
+                {/* Premium water flow gradient */}
+                <linearGradient id="showWaterFlow" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
+                  <stop offset="25%" stopColor="#60a5fa" stopOpacity="0.8" />
+                  <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.7" />
+                  <stop offset="75%" stopColor="#2563eb" stopOpacity="0.6" />
+                  <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.5" />
+                </linearGradient>
 
-              {/* Shower head */}
-              <rect x="120" y="25" width="60" height="15" fill="#888" rx="3" />
-              <ellipse cx="150" cy="45" rx="25" ry="8" fill="#666" />
+                {/* Curtain fabric gradient */}
+                <linearGradient id="showCurtainFabric" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#fca5a5" />
+                  <stop offset="20%" stopColor="#f87171" />
+                  <stop offset="50%" stopColor="#ef4444" />
+                  <stop offset="80%" stopColor="#dc2626" />
+                  <stop offset="100%" stopColor="#b91c1c" />
+                </linearGradient>
 
-              {/* Water droplets */}
+                {/* Shower enclosure background */}
+                <linearGradient id="showEnclosureBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#1e3a5f" />
+                  <stop offset="50%" stopColor="#0f2744" />
+                  <stop offset="100%" stopColor="#0a1929" />
+                </linearGradient>
+
+                {/* Chrome metal gradient for shower head and rod */}
+                <linearGradient id="showChromeMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#9ca3af" />
+                  <stop offset="30%" stopColor="#6b7280" />
+                  <stop offset="50%" stopColor="#9ca3af" />
+                  <stop offset="70%" stopColor="#4b5563" />
+                  <stop offset="100%" stopColor="#374151" />
+                </linearGradient>
+
+                {/* Water droplet glow */}
+                <radialGradient id="showWaterDropGlow" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
+                  <stop offset="40%" stopColor="#60a5fa" stopOpacity="0.7" />
+                  <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Glow filter for water */}
+                <filter id="showWaterGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Curtain glow filter */}
+                <filter id="showCurtainGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Person silhouette gradient */}
+                <radialGradient id="showPersonGrad" cx="50%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#6b7280" />
+                  <stop offset="100%" stopColor="#374151" />
+                </radialGradient>
+              </defs>
+
+              {/* Bathroom frame with premium gradient */}
+              <rect x="50" y="20" width="200" height="180" fill="url(#showEnclosureBg)" rx="5" />
+
+              {/* Shower head with chrome effect */}
+              <rect x="120" y="25" width="60" height="15" fill="url(#showChromeMetal)" rx="3" />
+              <ellipse cx="150" cy="45" rx="25" ry="8" fill="url(#showChromeMetal)" />
+
+              {/* Water droplets with glow */}
               {showerOn && Array.from({ length: 15 }).map((_, i) => (
                 <circle
                   key={i}
                   cx={125 + (i % 5) * 12}
                   cy={60 + (i * 20) % 120}
-                  r={2}
-                  fill={colors.water}
-                  opacity="0.6"
+                  r={2.5}
+                  fill="url(#showWaterDropGlow)"
+                  filter="url(#showWaterGlow)"
                 >
                   <animate
                     attributeName="cy"
@@ -489,39 +556,39 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
                 </circle>
               ))}
 
-              {/* Person silhouette */}
+              {/* Person silhouette with gradient */}
               <g transform="translate(150, 130)">
-                <ellipse cx="0" cy="-50" rx="15" ry="18" fill="#555" />
-                <ellipse cx="0" cy="0" rx="25" ry="40" fill="#555" />
+                <ellipse cx="0" cy="-50" rx="15" ry="18" fill="url(#showPersonGrad)" />
+                <ellipse cx="0" cy="0" rx="25" ry="40" fill="url(#showPersonGrad)" />
               </g>
 
-              {/* Shower curtain */}
+              {/* Shower curtain with fabric gradient and glow */}
               <path
                 d={`M 70 40 Q ${70 + curtainBulge} 100 ${70 + curtainBulge * 1.2} 160 Q ${70 + curtainBulge * 0.8} 180 70 195`}
                 fill="none"
-                stroke="#ff9999"
-                strokeWidth="4"
-                opacity="0.8"
+                stroke="url(#showCurtainFabric)"
+                strokeWidth="5"
+                filter="url(#showCurtainGlow)"
               />
               <path
                 d={`M 230 40 Q ${230 - curtainBulge} 100 ${230 - curtainBulge * 1.2} 160 Q ${230 - curtainBulge * 0.8} 180 230 195`}
                 fill="none"
-                stroke="#ff9999"
-                strokeWidth="4"
-                opacity="0.8"
+                stroke="url(#showCurtainFabric)"
+                strokeWidth="5"
+                filter="url(#showCurtainGlow)"
               />
 
-              {/* Curtain rod */}
-              <line x1="50" y1="40" x2="250" y2="40" stroke="#666" strokeWidth="4" />
-
-              {/* Labels */}
-              {showerOn && curtainBulge > 10 && (
-                <>
-                  <text x="40" y="130" fill={colors.accent} fontSize="10" textAnchor="end">Blowing in!</text>
-                  <text x="260" y="130" fill={colors.accent} fontSize="10" textAnchor="start">Blowing in!</text>
-                </>
-              )}
+              {/* Curtain rod with chrome effect */}
+              <line x1="50" y1="40" x2="250" y2="40" stroke="url(#showChromeMetal)" strokeWidth="5" />
             </svg>
+
+            {/* Labels moved outside SVG using typo system */}
+            {showerOn && curtainBulge > 10 && (
+              <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px', padding: '0 20px' }}>
+                <span style={{ color: colors.accent, fontSize: typo.small, fontWeight: 600 }}>Blowing in!</span>
+                <span style={{ color: colors.accent, fontSize: typo.small, fontWeight: 600 }}>Blowing in!</span>
+              </div>
+            )}
 
             <button
               onMouseDown={() => {
@@ -612,36 +679,74 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
         </p>
 
         <svg width="100%" height="120" viewBox="0 0 400 120" style={{ marginBottom: '20px' }}>
-          {/* Shower enclosure cross-section */}
-          <rect x="100" y="20" width="200" height="80" fill="#222" rx="5" />
-
-          {/* Pressure indicators */}
-          <g transform="translate(70, 60)">
-            <text fill={colors.highPressure} fontSize="12" textAnchor="middle">HIGH</text>
-            <text y="15" fill={colors.highPressure} fontSize="10" textAnchor="middle">Pressure</text>
-          </g>
-          <g transform="translate(200, 60)">
-            <text fill={colors.lowPressure} fontSize="12" textAnchor="middle">LOW</text>
-            <text y="15" fill={colors.lowPressure} fontSize="10" textAnchor="middle">Pressure</text>
-          </g>
-          <g transform="translate(330, 60)">
-            <text fill={colors.highPressure} fontSize="12" textAnchor="middle">HIGH</text>
-            <text y="15" fill={colors.highPressure} fontSize="10" textAnchor="middle">Pressure</text>
-          </g>
-
-          {/* Curtains bulging in */}
-          <path d="M 100 30 Q 130 60 100 90" fill="none" stroke="#ff9999" strokeWidth="3" />
-          <path d="M 300 30 Q 270 60 300 90" fill="none" stroke="#ff9999" strokeWidth="3" />
-
-          {/* Arrows showing curtain movement */}
-          <line x1="80" y1="60" x2="95" y2="60" stroke={colors.warning} strokeWidth="2" markerEnd="url(#arrowP)" />
-          <line x1="320" y1="60" x2="305" y2="60" stroke={colors.warning} strokeWidth="2" markerEnd="url(#arrowP)" />
           <defs>
-            <marker id="arrowP" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-              <polygon points="0 0, 8 3, 0 6" fill={colors.warning} />
+            {/* Shower enclosure gradient */}
+            <linearGradient id="showPredictEnclosure" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="50%" stopColor="#0f2744" />
+              <stop offset="100%" stopColor="#0a1929" />
+            </linearGradient>
+
+            {/* Curtain gradient */}
+            <linearGradient id="showPredictCurtain" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#f87171" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Low pressure glow */}
+            <radialGradient id="showPredictLowP" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+            </radialGradient>
+
+            {/* High pressure glow */}
+            <radialGradient id="showPredictHighP" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Curtain glow filter */}
+            <filter id="showPredictCurtainGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <marker id="showPredictArrow" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#fbbf24" />
             </marker>
           </defs>
+
+          {/* Shower enclosure cross-section with gradient */}
+          <rect x="100" y="20" width="200" height="80" fill="url(#showPredictEnclosure)" rx="5" />
+
+          {/* Pressure zones with radial gradients */}
+          <ellipse cx="200" cy="60" rx="60" ry="35" fill="url(#showPredictLowP)" />
+          <ellipse cx="60" cy="60" rx="35" ry="30" fill="url(#showPredictHighP)" />
+          <ellipse cx="340" cy="60" rx="35" ry="30" fill="url(#showPredictHighP)" />
+
+          {/* Curtains bulging in with gradient and glow */}
+          <path d="M 100 30 Q 130 60 100 90" fill="none" stroke="url(#showPredictCurtain)" strokeWidth="4" filter="url(#showPredictCurtainGlow)" />
+          <path d="M 300 30 Q 270 60 300 90" fill="none" stroke="url(#showPredictCurtain)" strokeWidth="4" filter="url(#showPredictCurtainGlow)" />
+
+          {/* Arrows showing curtain movement with animation */}
+          <line x1="75" y1="60" x2="95" y2="60" stroke="#fbbf24" strokeWidth="2.5" markerEnd="url(#showPredictArrow)">
+            <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite" />
+          </line>
+          <line x1="325" y1="60" x2="305" y2="60" stroke="#fbbf24" strokeWidth="2.5" markerEnd="url(#showPredictArrow)">
+            <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite" />
+          </line>
         </svg>
+
+        {/* Pressure labels moved outside SVG */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '16px', padding: '0 20px' }}>
+          <span style={{ color: colors.highPressure, fontSize: typo.small, fontWeight: 600, textAlign: 'center' }}>HIGH<br/>Pressure</span>
+          <span style={{ color: colors.lowPressure, fontSize: typo.small, fontWeight: 600, textAlign: 'center' }}>LOW<br/>Pressure</span>
+          <span style={{ color: colors.highPressure, fontSize: typo.small, fontWeight: 600, textAlign: 'center' }}>HIGH<br/>Pressure</span>
+        </div>
 
         <p style={{ color: colors.text, fontSize: '18px', fontWeight: '600', marginBottom: '16px', textAlign: 'center' }}>
           What PRIMARILY causes the low pressure inside?
@@ -758,37 +863,141 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
           {/* Shower visualization */}
           <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
             <svg width="100%" height="220" viewBox="0 0 400 220">
-              {/* Shower enclosure */}
-              <rect x="100" y="20" width="200" height="180" fill="#1a3a5c" rx="5" opacity="0.3" />
+              <defs>
+                {/* Premium water flow gradient - warm/cool based on temp */}
+                <linearGradient id="showPlayWaterFlow" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor={waterTemp > 40 ? '#fca5a5' : '#93c5fd'} stopOpacity="0.9" />
+                  <stop offset="30%" stopColor={waterTemp > 40 ? '#f87171' : '#60a5fa'} stopOpacity="0.8" />
+                  <stop offset="60%" stopColor={waterTemp > 40 ? '#ef4444' : '#3b82f6'} stopOpacity="0.7" />
+                  <stop offset="100%" stopColor={waterTemp > 40 ? '#dc2626' : '#2563eb'} stopOpacity="0.5" />
+                </linearGradient>
 
-              {/* Pressure fields */}
+                {/* Curtain fabric gradient */}
+                <linearGradient id="showPlayCurtainFabric" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#fca5a5" />
+                  <stop offset="25%" stopColor="#f87171" />
+                  <stop offset="50%" stopColor="#ef4444" />
+                  <stop offset="75%" stopColor="#dc2626" />
+                  <stop offset="100%" stopColor="#b91c1c" />
+                </linearGradient>
+
+                {/* Shower enclosure background */}
+                <linearGradient id="showPlayEnclosureBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.4" />
+                  <stop offset="50%" stopColor="#0f2744" stopOpacity="0.3" />
+                  <stop offset="100%" stopColor="#0a1929" stopOpacity="0.4" />
+                </linearGradient>
+
+                {/* Chrome metal gradient */}
+                <linearGradient id="showPlayChromeMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#9ca3af" />
+                  <stop offset="30%" stopColor="#6b7280" />
+                  <stop offset="50%" stopColor="#9ca3af" />
+                  <stop offset="70%" stopColor="#4b5563" />
+                  <stop offset="100%" stopColor="#374151" />
+                </linearGradient>
+
+                {/* Low pressure zone gradient */}
+                <radialGradient id="showLowPressureZone" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.3" />
+                  <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.15" />
+                  <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+                </radialGradient>
+
+                {/* High pressure zone gradient */}
+                <radialGradient id="showHighPressureZone" cx="50%" cy="50%" r="50%">
+                  <stop offset="0%" stopColor="#f97316" stopOpacity="0.25" />
+                  <stop offset="50%" stopColor="#ea580c" stopOpacity="0.12" />
+                  <stop offset="100%" stopColor="#c2410c" stopOpacity="0" />
+                </radialGradient>
+
+                {/* Air flow gradient */}
+                <linearGradient id="showAirFlowGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+                  <stop offset="0%" stopColor="#00d4ff" stopOpacity="0.8" />
+                  <stop offset="50%" stopColor="#00d4ff" stopOpacity="0.4" />
+                  <stop offset="100%" stopColor="#00d4ff" stopOpacity="0.1" />
+                </linearGradient>
+
+                {/* Convection gradient for hot air */}
+                <linearGradient id="showConvectionGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+                  <stop offset="0%" stopColor="#ff6b6b" stopOpacity="0.1" />
+                  <stop offset="50%" stopColor="#ff6b6b" stopOpacity="0.5" />
+                  <stop offset="100%" stopColor="#ff6b6b" stopOpacity="0.8" />
+                </linearGradient>
+
+                {/* Water droplet glow */}
+                <filter id="showPlayWaterGlow" x="-100%" y="-100%" width="300%" height="300%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Curtain glow */}
+                <filter id="showPlayCurtainGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="3" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Pressure field glow */}
+                <filter id="showPressureGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="8" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+
+                {/* Arrow marker for Bernoulli effect */}
+                <marker id="showArrowMarker" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                  <polygon points="0 0, 10 3.5, 0 7" fill="#00d4ff" />
+                </marker>
+
+                <marker id="showPressureArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                  <polygon points="0 0, 8 3, 0 6" fill="#fbbf24" />
+                </marker>
+              </defs>
+
+              {/* Shower enclosure with premium gradient */}
+              <rect x="100" y="20" width="200" height="180" fill="url(#showPlayEnclosureBg)" rx="5" />
+
+              {/* Pressure fields with premium gradients */}
               {showPressureField && waterFlow > 0 && (
                 <>
                   {/* Low pressure inside */}
-                  <ellipse cx="200" cy="110" rx={60 + bulge} ry="70" fill={colors.lowPressure} opacity="0.15" />
-                  <text x="200" y="110" fill={colors.lowPressure} fontSize="11" textAnchor="middle" opacity="0.8">
-                    Low P
-                  </text>
+                  <ellipse cx="200" cy="110" rx={60 + bulge} ry="70" fill="url(#showLowPressureZone)" filter="url(#showPressureGlow)" />
 
                   {/* High pressure outside */}
-                  <ellipse cx="60" cy="110" rx="40" ry="50" fill={colors.highPressure} opacity="0.15" />
-                  <ellipse cx="340" cy="110" rx="40" ry="50" fill={colors.highPressure} opacity="0.15" />
+                  <ellipse cx="60" cy="110" rx="40" ry="50" fill="url(#showHighPressureZone)" filter="url(#showPressureGlow)" />
+                  <ellipse cx="340" cy="110" rx="40" ry="50" fill="url(#showHighPressureZone)" filter="url(#showPressureGlow)" />
+
+                  {/* Bernoulli effect arrows - pressure pushing curtain inward */}
+                  <line x1="50" y1="110" x2="85" y2="110" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#showPressureArrow)" opacity="0.7">
+                    <animate attributeName="opacity" values="0.5;0.9;0.5" dur="1.5s" repeatCount="indefinite" />
+                  </line>
+                  <line x1="350" y1="110" x2="315" y2="110" stroke="#fbbf24" strokeWidth="2" markerEnd="url(#showPressureArrow)" opacity="0.7">
+                    <animate attributeName="opacity" values="0.5;0.9;0.5" dur="1.5s" repeatCount="indefinite" />
+                  </line>
                 </>
               )}
 
-              {/* Shower head */}
-              <rect x="170" y="25" width="60" height="12" fill="#888" rx="3" />
-              <ellipse cx="200" cy="42" rx="25" ry="8" fill="#666" />
+              {/* Shower head with chrome effect */}
+              <rect x="170" y="25" width="60" height="12" fill="url(#showPlayChromeMetal)" rx="3" />
+              <ellipse cx="200" cy="42" rx="25" ry="8" fill="url(#showPlayChromeMetal)" />
 
-              {/* Water droplets */}
+              {/* Water droplets with gradient and glow */}
               {waterFlow > 0 && Array.from({ length: Math.floor(waterFlow / 5) }).map((_, i) => (
                 <circle
                   key={i}
                   cx={175 + (i % 5) * 10}
                   cy={50 + (i * 15) % 130}
-                  r={1.5}
-                  fill={waterTemp > 40 ? '#ff9999' : colors.water}
-                  opacity="0.7"
+                  r={2}
+                  fill="url(#showPlayWaterFlow)"
+                  filter="url(#showPlayWaterGlow)"
                 >
                   <animate
                     attributeName="cy"
@@ -799,64 +1008,109 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
                 </circle>
               ))}
 
-              {/* Air flow arrows */}
+              {/* Air flow streamlines */}
               {showAirflow && waterFlow > 0 && (
-                <g opacity="0.6">
-                  {/* Downward air entrainment */}
-                  {[165, 200, 235].map((x, i) => (
-                    <line key={i} x1={x} y1="60" x2={x} y2="150" stroke={colors.primary} strokeWidth="1.5" strokeDasharray="5,3">
-                      <animate attributeName="y1" values="60;80;60" dur="1s" repeatCount="indefinite" />
-                      <animate attributeName="y2" values="150;170;150" dur="1s" repeatCount="indefinite" />
-                    </line>
+                <g>
+                  {/* Downward air entrainment streamlines */}
+                  {[165, 185, 200, 215, 235].map((x, i) => (
+                    <g key={i}>
+                      <line
+                        x1={x}
+                        y1="55"
+                        x2={x}
+                        y2="160"
+                        stroke="url(#showAirFlowGrad)"
+                        strokeWidth="2"
+                        strokeDasharray="8,4"
+                        markerEnd="url(#showArrowMarker)"
+                      >
+                        <animate attributeName="stroke-dashoffset" values="0;-12" dur="0.8s" repeatCount="indefinite" />
+                      </line>
+                    </g>
                   ))}
-                  <text x="200" y="175" fill={colors.primary} fontSize="9" textAnchor="middle">Air dragged down</text>
 
-                  {/* Recirculating vortex */}
+                  {/* Recirculating vortex paths */}
                   <path
-                    d="M 140 180 Q 120 140 140 100 Q 160 80 200 80"
+                    d="M 130 180 Q 110 140 130 100 Q 150 70 180 65"
                     fill="none"
                     stroke={colors.secondary}
-                    strokeWidth="1"
-                    strokeDasharray="3,2"
-                  />
+                    strokeWidth="1.5"
+                    strokeDasharray="4,3"
+                    opacity="0.6"
+                  >
+                    <animate attributeName="stroke-dashoffset" values="0;-7" dur="1s" repeatCount="indefinite" />
+                  </path>
+                  <path
+                    d="M 270 180 Q 290 140 270 100 Q 250 70 220 65"
+                    fill="none"
+                    stroke={colors.secondary}
+                    strokeWidth="1.5"
+                    strokeDasharray="4,3"
+                    opacity="0.6"
+                  >
+                    <animate attributeName="stroke-dashoffset" values="0;-7" dur="1s" repeatCount="indefinite" />
+                  </path>
                 </g>
               )}
 
-              {/* Curtains */}
+              {/* Curtains with fabric gradient and glow */}
               <path
                 d={`M 100 40 Q ${100 + bulge * 0.8} 90 ${100 + bulge} 130 Q ${100 + bulge * 0.6} 170 100 195`}
                 fill="none"
-                stroke="#ff9999"
-                strokeWidth="4"
-                opacity="0.9"
+                stroke="url(#showPlayCurtainFabric)"
+                strokeWidth="5"
+                filter="url(#showPlayCurtainGlow)"
               />
               <path
                 d={`M 300 40 Q ${300 - bulge * 0.8} 90 ${300 - bulge} 130 Q ${300 - bulge * 0.6} 170 300 195`}
                 fill="none"
-                stroke="#ff9999"
-                strokeWidth="4"
-                opacity="0.9"
+                stroke="url(#showPlayCurtainFabric)"
+                strokeWidth="5"
+                filter="url(#showPlayCurtainGlow)"
               />
 
-              {/* Curtain rod */}
-              <line x1="90" y1="40" x2="310" y2="40" stroke="#666" strokeWidth="4" />
+              {/* Curtain rod with chrome effect */}
+              <line x1="90" y1="40" x2="310" y2="40" stroke="url(#showPlayChromeMetal)" strokeWidth="5" />
 
-              {/* Temperature/convection indicator */}
+              {/* Temperature/convection indicator with premium styling */}
               {waterTemp > 40 && waterFlow > 0 && (
                 <g>
-                  <path d="M 200 50 Q 180 30 200 10 Q 220 30 200 50" fill="none" stroke={colors.accent} strokeWidth="1" opacity="0.5" />
-                  <text x="200" y="5" fill={colors.accent} fontSize="8" textAnchor="middle">Hot air rising</text>
+                  <path d="M 200 50 Q 175 25 200 5 Q 225 25 200 50" fill="none" stroke="url(#showConvectionGrad)" strokeWidth="2" opacity="0.7">
+                    <animate attributeName="opacity" values="0.4;0.8;0.4" dur="2s" repeatCount="indefinite" />
+                  </path>
+                  <path d="M 185 55 Q 165 35 185 15" fill="none" stroke="url(#showConvectionGrad)" strokeWidth="1.5" opacity="0.5">
+                    <animate attributeName="opacity" values="0.3;0.6;0.3" dur="2.5s" repeatCount="indefinite" />
+                  </path>
+                  <path d="M 215 55 Q 235 35 215 15" fill="none" stroke="url(#showConvectionGrad)" strokeWidth="1.5" opacity="0.5">
+                    <animate attributeName="opacity" values="0.3;0.6;0.3" dur="2.5s" repeatCount="indefinite" />
+                  </path>
                 </g>
               )}
-
-              {/* Effect indicators */}
-              <g transform="translate(320, 30)">
-                <text fill={colors.text} fontSize="10">Effects:</text>
-                <text y="15" fill={colors.primary} fontSize="9">Flow: {flowEffect.toFixed(1)}</text>
-                <text y="28" fill={colors.accent} fontSize="9">Temp: {tempEffect.toFixed(1)}</text>
-                <text y="41" fill={colors.warning} fontSize="9">Total: {(flowEffect + tempEffect).toFixed(1)}</text>
-              </g>
             </svg>
+
+            {/* Labels moved outside SVG using typo system */}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginTop: '8px', padding: '0 8px' }}>
+              {/* Pressure and airflow labels */}
+              {showPressureField && waterFlow > 0 && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-start' }}>
+                  <span style={{ color: colors.lowPressure, fontSize: typo.label, fontWeight: 600 }}>Low P (inside)</span>
+                  <span style={{ color: colors.highPressure, fontSize: typo.label, fontWeight: 600 }}>High P (outside)</span>
+                </div>
+              )}
+              {showAirflow && waterFlow > 0 && (
+                <span style={{ color: colors.primary, fontSize: typo.label, fontWeight: 600 }}>Air dragged down</span>
+              )}
+              {waterTemp > 40 && waterFlow > 0 && (
+                <span style={{ color: colors.accent, fontSize: typo.label, fontWeight: 600 }}>Hot air rising</span>
+              )}
+              {/* Effect indicators */}
+              <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', alignItems: 'flex-end' }}>
+                <span style={{ color: colors.text, fontSize: typo.label, fontWeight: 600 }}>Effects:</span>
+                <span style={{ color: colors.primary, fontSize: typo.label }}>Flow: {flowEffect.toFixed(1)}</span>
+                <span style={{ color: colors.accent, fontSize: typo.label }}>Temp: {tempEffect.toFixed(1)}</span>
+                <span style={{ color: colors.warning, fontSize: typo.label }}>Total: {(flowEffect + tempEffect).toFixed(1)}</span>
+              </div>
+            </div>
           </div>
 
           {/* Controls */}
@@ -1057,20 +1311,69 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
         </p>
 
         <svg width="100%" height="120" viewBox="0 0 400 120" style={{ marginBottom: '20px' }}>
-          {/* Cold shower */}
+          <defs>
+            {/* Cold shower gradient */}
+            <linearGradient id="showTwistColdBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="50%" stopColor="#164e63" />
+              <stop offset="100%" stopColor="#0f2744" />
+            </linearGradient>
+
+            {/* Hot shower gradient */}
+            <linearGradient id="showTwistHotBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7f1d1d" />
+              <stop offset="50%" stopColor="#991b1b" />
+              <stop offset="100%" stopColor="#450a0a" />
+            </linearGradient>
+
+            {/* Cold glow */}
+            <radialGradient id="showTwistColdGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+              <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Hot glow */}
+            <radialGradient id="showTwistHotGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Glow filter */}
+            <filter id="showTwistGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Cold shower with gradient */}
           <g transform="translate(100, 60)">
-            <rect x="-40" y="-40" width="80" height="80" fill="#1a3a5c" rx="5" />
-            <circle cx="0" cy="0" r="5" fill={colors.primary} />
-            <text y="55" fill={colors.primary} fontSize="11" textAnchor="middle">Cold (15°C)</text>
+            <rect x="-40" y="-40" width="80" height="80" fill="url(#showTwistColdBg)" rx="8" />
+            <circle cx="0" cy="0" r="12" fill="url(#showTwistColdGlow)" filter="url(#showTwistGlow)">
+              <animate attributeName="r" values="10;14;10" dur="2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="0" cy="0" r="5" fill="#22d3ee" />
           </g>
-          {/* Hot shower */}
+          {/* Hot shower with gradient */}
           <g transform="translate(300, 60)">
-            <rect x="-40" y="-40" width="80" height="80" fill="#3a1a1a" rx="5" />
-            <circle cx="0" cy="0" r="5" fill={colors.accent} />
-            <text y="55" fill={colors.accent} fontSize="11" textAnchor="middle">Hot (45°C)</text>
+            <rect x="-40" y="-40" width="80" height="80" fill="url(#showTwistHotBg)" rx="8" />
+            <circle cx="0" cy="0" r="12" fill="url(#showTwistHotGlow)" filter="url(#showTwistGlow)">
+              <animate attributeName="r" values="10;14;10" dur="2s" repeatCount="indefinite" />
+            </circle>
+            <circle cx="0" cy="0" r="5" fill="#ef4444" />
           </g>
-          <text x="200" y="60" fill={colors.textSecondary} fontSize="14" textAnchor="middle">vs</text>
+          <text x="200" y="65" fill={colors.textSecondary} fontSize="16" fontWeight="600" textAnchor="middle">vs</text>
         </svg>
+
+        {/* Temperature labels moved outside SVG */}
+        <div style={{ display: 'flex', justifyContent: 'space-around', marginBottom: '16px' }}>
+          <span style={{ color: colors.primary, fontSize: typo.small, fontWeight: 600 }}>Cold (15°C)</span>
+          <span style={{ color: colors.accent, fontSize: typo.small, fontWeight: 600 }}>Hot (45°C)</span>
+        </div>
 
         <p style={{ color: colors.text, fontSize: '18px', fontWeight: '600', marginBottom: '16px', textAlign: 'center' }}>
           Which causes MORE curtain movement?
@@ -1189,73 +1492,187 @@ const ShowerCurtainRenderer: React.FC<ShowerCurtainRendererProps> = ({ currentPh
 
         {/* Visualization */}
         <div style={{ background: colors.background, borderRadius: '12px', padding: '10px', marginBottom: '16px' }}>
-          <svg width="100%" height="200" viewBox="0 0 400 200">
-            {/* Shower enclosure */}
-            <rect x="100" y="20" width="200" height="160" fill={tempMode === 'hot' ? '#3a2a2a' : '#2a2a3a'} rx="5" />
+          <svg width="100%" height="180" viewBox="0 0 400 180">
+            <defs>
+              {/* Cold enclosure gradient */}
+              <linearGradient id="showTwistPlayColdBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#1e3a5f" stopOpacity="0.6" />
+                <stop offset="50%" stopColor="#164e63" stopOpacity="0.5" />
+                <stop offset="100%" stopColor="#0f2744" stopOpacity="0.6" />
+              </linearGradient>
 
-            {/* Shower head */}
-            <ellipse cx="200" cy="35" rx="25" ry="8" fill="#666" />
+              {/* Hot enclosure gradient */}
+              <linearGradient id="showTwistPlayHotBg" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#7f1d1d" stopOpacity="0.5" />
+                <stop offset="50%" stopColor="#991b1b" stopOpacity="0.4" />
+                <stop offset="100%" stopColor="#450a0a" stopOpacity="0.5" />
+              </linearGradient>
 
-            {/* Water droplets */}
+              {/* Water gradient - cold */}
+              <linearGradient id="showTwistPlayColdWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#93c5fd" stopOpacity="0.9" />
+                <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.5" />
+              </linearGradient>
+
+              {/* Water gradient - hot */}
+              <linearGradient id="showTwistPlayHotWater" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.9" />
+                <stop offset="50%" stopColor="#f87171" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#ef4444" stopOpacity="0.5" />
+              </linearGradient>
+
+              {/* Curtain gradient */}
+              <linearGradient id="showTwistPlayCurtain" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#fca5a5" />
+                <stop offset="25%" stopColor="#f87171" />
+                <stop offset="50%" stopColor="#ef4444" />
+                <stop offset="75%" stopColor="#dc2626" />
+                <stop offset="100%" stopColor="#b91c1c" />
+              </linearGradient>
+
+              {/* Chrome metal gradient */}
+              <linearGradient id="showTwistPlayChrome" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" stopColor="#9ca3af" />
+                <stop offset="50%" stopColor="#6b7280" />
+                <stop offset="100%" stopColor="#4b5563" />
+              </linearGradient>
+
+              {/* Air flow gradient */}
+              <linearGradient id="showTwistPlayAirFlow" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" stopColor="#00d4ff" stopOpacity="0.7" />
+                <stop offset="100%" stopColor="#00d4ff" stopOpacity="0.2" />
+              </linearGradient>
+
+              {/* Convection gradient */}
+              <linearGradient id="showTwistPlayConvection" x1="0%" y1="100%" x2="0%" y2="0%">
+                <stop offset="0%" stopColor="#ff6b6b" stopOpacity="0.2" />
+                <stop offset="100%" stopColor="#ff6b6b" stopOpacity="0.8" />
+              </linearGradient>
+
+              {/* Glow filters */}
+              <filter id="showTwistPlayWaterGlow" x="-100%" y="-100%" width="300%" height="300%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              <filter id="showTwistPlayCurtainGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="3" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Arrow marker */}
+              <marker id="showTwistPlayArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+                <polygon points="0 0, 8 3, 0 6" fill="#00d4ff" />
+              </marker>
+            </defs>
+
+            {/* Shower enclosure with temperature-based gradient */}
+            <rect x="100" y="15" width="200" height="145" fill={tempMode === 'hot' ? 'url(#showTwistPlayHotBg)' : 'url(#showTwistPlayColdBg)'} rx="5" />
+
+            {/* Shower head with chrome effect */}
+            <ellipse cx="200" cy="28" rx="25" ry="8" fill="url(#showTwistPlayChrome)" />
+
+            {/* Water droplets with gradient and glow */}
             {Array.from({ length: 12 }).map((_, i) => (
               <circle
                 key={i}
                 cx={175 + (i % 5) * 10}
-                cy={45 + (i * 12) % 100}
-                r={1.5}
-                fill={tempMode === 'hot' ? '#ff9999' : colors.water}
-                opacity="0.7"
+                cy={38 + (i * 12) % 90}
+                r={2}
+                fill={tempMode === 'hot' ? 'url(#showTwistPlayHotWater)' : 'url(#showTwistPlayColdWater)'}
+                filter="url(#showTwistPlayWaterGlow)"
               >
                 <animate
                   attributeName="cy"
-                  values={`${45 + (i * 12) % 100};${170}`}
+                  values={`${38 + (i * 12) % 90};${150}`}
                   dur={`${0.3 + Math.random() * 0.3}s`}
                   repeatCount="indefinite"
                 />
               </circle>
             ))}
 
-            {/* Entrainment arrows (both) */}
+            {/* Entrainment arrows (both modes) */}
             {[170, 200, 230].map((x, i) => (
-              <line key={i} x1={x} y1="50" x2={x} y2="140" stroke={colors.primary} strokeWidth="1" strokeDasharray="4,2" opacity="0.5" />
+              <line
+                key={i}
+                x1={x}
+                y1="45"
+                x2={x}
+                y2="130"
+                stroke="url(#showTwistPlayAirFlow)"
+                strokeWidth="2"
+                strokeDasharray="6,3"
+                markerEnd="url(#showTwistPlayArrow)"
+              >
+                <animate attributeName="stroke-dashoffset" values="0;-9" dur="0.8s" repeatCount="indefinite" />
+              </line>
             ))}
 
-            {/* Convection arrows (hot only) */}
+            {/* Convection arrows (hot only) with premium styling */}
             {tempMode === 'hot' && (
               <g>
-                <path d="M 200 50 Q 180 30 200 15 Q 220 30 200 50" fill="none" stroke={colors.accent} strokeWidth="1.5" opacity="0.6" />
-                <path d="M 180 70 Q 160 40 180 20" fill="none" stroke={colors.accent} strokeWidth="1" opacity="0.4" />
-                <path d="M 220 70 Q 240 40 220 20" fill="none" stroke={colors.accent} strokeWidth="1" opacity="0.4" />
-                <text x="200" y="8" fill={colors.accent} fontSize="9" textAnchor="middle">Rising hot air</text>
+                <path d="M 200 45 Q 175 20 200 5 Q 225 20 200 45" fill="none" stroke="url(#showTwistPlayConvection)" strokeWidth="2.5">
+                  <animate attributeName="opacity" values="0.5;0.9;0.5" dur="2s" repeatCount="indefinite" />
+                </path>
+                <path d="M 180 60 Q 155 30 180 10" fill="none" stroke="url(#showTwistPlayConvection)" strokeWidth="1.5" opacity="0.6">
+                  <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.5s" repeatCount="indefinite" />
+                </path>
+                <path d="M 220 60 Q 245 30 220 10" fill="none" stroke="url(#showTwistPlayConvection)" strokeWidth="1.5" opacity="0.6">
+                  <animate attributeName="opacity" values="0.3;0.7;0.3" dur="2.5s" repeatCount="indefinite" />
+                </path>
               </g>
             )}
 
-            {/* Curtains - more bulge for hot */}
+            {/* Curtains with fabric gradient and glow - more bulge for hot */}
             {(() => {
               const bulge = tempMode === 'hot' ? 35 : 20;
               return (
                 <>
                   <path
-                    d={`M 100 40 Q ${100 + bulge * 0.8} 80 ${100 + bulge} 110 Q ${100 + bulge * 0.6} 150 100 175`}
+                    d={`M 100 35 Q ${100 + bulge * 0.8} 70 ${100 + bulge} 100 Q ${100 + bulge * 0.6} 135 100 155`}
                     fill="none"
-                    stroke="#ff9999"
-                    strokeWidth="4"
+                    stroke="url(#showTwistPlayCurtain)"
+                    strokeWidth="5"
+                    filter="url(#showTwistPlayCurtainGlow)"
                   />
                   <path
-                    d={`M 300 40 Q ${300 - bulge * 0.8} 80 ${300 - bulge} 110 Q ${300 - bulge * 0.6} 150 300 175`}
+                    d={`M 300 35 Q ${300 - bulge * 0.8} 70 ${300 - bulge} 100 Q ${300 - bulge * 0.6} 135 300 155`}
                     fill="none"
-                    stroke="#ff9999"
-                    strokeWidth="4"
+                    stroke="url(#showTwistPlayCurtain)"
+                    strokeWidth="5"
+                    filter="url(#showTwistPlayCurtainGlow)"
                   />
                 </>
               );
             })()}
-
-            {/* Labels */}
-            <text x="200" y="195" fill={colors.text} fontSize="12" textAnchor="middle" fontWeight="600">
-              Curtain bulge: {tempMode === 'hot' ? 'HIGH' : 'MODERATE'}
-            </text>
           </svg>
+
+          {/* Labels moved outside SVG using typo system */}
+          <div style={{ textAlign: 'center', marginTop: '8px' }}>
+            <span style={{
+              color: colors.text,
+              fontSize: typo.body,
+              fontWeight: 600,
+              padding: '6px 16px',
+              background: tempMode === 'hot' ? `${colors.accent}20` : `${colors.primary}20`,
+              borderRadius: '8px',
+              border: `1px solid ${tempMode === 'hot' ? colors.accent : colors.primary}40`
+            }}>
+              Curtain bulge: {tempMode === 'hot' ? 'HIGH' : 'MODERATE'}
+            </span>
+          </div>
+          {tempMode === 'hot' && (
+            <div style={{ textAlign: 'center', marginTop: '6px' }}>
+              <span style={{ color: colors.accent, fontSize: typo.small }}>Rising hot air</span>
+            </div>
+          )}
         </div>
 
         {/* Explanation */}

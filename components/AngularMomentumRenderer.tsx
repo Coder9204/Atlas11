@@ -314,43 +314,322 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
       <div className="bg-gradient-to-b from-purple-900/30 to-slate-900/50 rounded-2xl p-6 border border-slate-700/50">
         <svg viewBox="0 0 360 300" className="w-full max-w-[360px] mx-auto block">
           <defs>
-            <radialGradient id="spinGlow" cx="50%" cy="50%" r="50%">
-              <stop offset="0%" stopColor="#8B5CF6" stopOpacity="0.4" />
-              <stop offset="100%" stopColor="#8B5CF6" stopOpacity="0" />
+            {/* Premium background gradient */}
+            <linearGradient id="angMomLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Platform/stage gradient with 3D depth */}
+            <radialGradient id="angMomPlatform" cx="50%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#334155" />
+              <stop offset="40%" stopColor="#1e293b" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
             </radialGradient>
+
+            {/* Platform rim highlight */}
+            <linearGradient id="angMomPlatformRim" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Pole/stand metallic gradient */}
+            <linearGradient id="angMomPole" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#334155" />
+              <stop offset="25%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="75%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Body gradient with 3D shading */}
+            <radialGradient id="angMomBody" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="30%" stopColor="#475569" />
+              <stop offset="70%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </radialGradient>
+
+            {/* Head gradient with premium 3D effect */}
+            <radialGradient id="angMomHead" cx="35%" cy="30%" r="65%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="30%" stopColor="#64748b" />
+              <stop offset="60%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </radialGradient>
+
+            {/* Arm gradient */}
+            <linearGradient id="angMomArm" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="30%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Weight gradient - pink/magenta with 3D sphere effect */}
+            <radialGradient id="angMomWeight" cx="30%" cy="25%" r="65%">
+              <stop offset="0%" stopColor="#f9a8d4" />
+              <stop offset="20%" stopColor="#f472b6" />
+              <stop offset="50%" stopColor="#ec4899" />
+              <stop offset="80%" stopColor="#db2777" />
+              <stop offset="100%" stopColor="#9d174d" />
+            </radialGradient>
+
+            {/* Weight without weights - subtle gray */}
+            <radialGradient id="angMomWeightNone" cx="30%" cy="25%" r="65%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#334155" />
+            </radialGradient>
+
+            {/* Spin glow effect - purple aura */}
+            <radialGradient id="angMomSpinGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#8b5cf6" stopOpacity="0.4" />
+              <stop offset="60%" stopColor="#7c3aed" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Motion blur / rotation trail */}
+            <linearGradient id="angMomMotionTrail" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0" />
+              <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Angular momentum vector arrow gradient */}
+            <linearGradient id="angMomVectorArrow" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#7c3aed" />
+              <stop offset="30%" stopColor="#8b5cf6" />
+              <stop offset="60%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#c084fc" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="angMomGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="angMomWeightGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="angMomSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" />
+            </filter>
+
+            {/* Shadow filter for depth */}
+            <filter id="angMomShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="0" dy="4" stdDeviation="4" floodColor="#000" floodOpacity="0.4" />
+            </filter>
           </defs>
-          <ellipse cx="180" cy="270" rx="140" ry="25" fill="#1E1E28" stroke="#2A2A3A" strokeWidth="1" />
-          {isSpinning && <ellipse cx="180" cy="160" rx={70 + armLength} ry={25 + armLength/3} fill="url(#spinGlow)" />}
-          <ellipse cx="180" cy="250" rx="28" ry="10" fill="#334155" />
-          <rect x="174" y="190" width="12" height="60" fill="#475569" rx="2" />
-          <g transform={`translate(180, 155) rotate(${personRotation})`}>
-            <ellipse cx="0" cy="20" rx="26" ry="38" fill="#475569" stroke="#64748B" strokeWidth="2" />
-            <circle cx="0" cy="-28" r="22" fill="#64748B" stroke="#94A3B8" strokeWidth="2" />
-            <circle cx="-7" cy="-32" r="4" fill="#1E293B" />
-            <circle cx="7" cy="-32" r="4" fill="#1E293B" />
-            <line x1="-22" y1="2" x2={-22 - armLength} y2="2" stroke="#94A3B8" strokeWidth="10" strokeLinecap="round" />
-            <circle cx={-22 - armLength} cy="2" r={weightSize} fill={hasWeights ? '#EC4899' : '#64748B'} stroke={hasWeights ? '#F472B6' : '#475569'} strokeWidth="2" />
-            <line x1="22" y1="2" x2={22 + armLength} y2="2" stroke="#94A3B8" strokeWidth="10" strokeLinecap="round" />
-            <circle cx={22 + armLength} cy="2" r={weightSize} fill={hasWeights ? '#EC4899' : '#64748B'} stroke={hasWeights ? '#F472B6' : '#475569'} strokeWidth="2" />
+
+          {/* Premium background */}
+          <rect width="360" height="300" fill="url(#angMomLabBg)" />
+
+          {/* Subtle grid pattern for lab feel */}
+          <pattern id="angMomGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+          </pattern>
+          <rect width="360" height="300" fill="url(#angMomGrid)" />
+
+          {/* Floor/ground ellipse with depth */}
+          <ellipse cx="180" cy="275" rx="150" ry="22" fill="url(#angMomPlatform)" />
+          <ellipse cx="180" cy="275" rx="150" ry="22" fill="none" stroke="url(#angMomPlatformRim)" strokeWidth="1.5" />
+          <ellipse cx="180" cy="275" rx="145" ry="18" fill="none" stroke="#475569" strokeWidth="0.5" strokeOpacity="0.3" />
+
+          {/* Spin glow when spinning */}
+          {isSpinning && (
+            <ellipse
+              cx="180" cy="160"
+              rx={75 + armLength}
+              ry={28 + armLength/3}
+              fill="url(#angMomSpinGlow)"
+              filter="url(#angMomSoftGlow)"
+            >
+              <animate attributeName="opacity" values="0.4;0.7;0.4" dur="0.5s" repeatCount="indefinite" />
+            </ellipse>
+          )}
+
+          {/* Base/stand ellipse */}
+          <ellipse cx="180" cy="252" rx="32" ry="12" fill="url(#angMomPlatform)" stroke="#475569" strokeWidth="1" />
+          <ellipse cx="180" cy="250" rx="30" ry="10" fill="url(#angMomPlatform)" />
+          <ellipse cx="180" cy="248" rx="26" ry="8" fill="#1e293b" stroke="#334155" strokeWidth="0.5" />
+
+          {/* Pole/stand with metallic gradient */}
+          <rect x="172" y="192" width="16" height="58" fill="url(#angMomPole)" rx="3" />
+          <rect x="174" y="194" width="2" height="54" fill="#94a3b8" fillOpacity="0.3" rx="1" />
+
+          {/* Angular momentum vector (L) pointing up when spinning */}
+          {isSpinning && (
+            <g filter="url(#angMomGlow)">
+              {/* Vector line */}
+              <line
+                x1="180" y1="90"
+                x2="180" y2="20"
+                stroke="url(#angMomVectorArrow)"
+                strokeWidth="4"
+                strokeLinecap="round"
+              />
+              {/* Arrowhead */}
+              <polygon
+                points="180,8 172,24 180,18 188,24"
+                fill="url(#angMomVectorArrow)"
+              />
+              {/* Pulsing glow */}
+              <circle cx="180" cy="14" r="6" fill="#c084fc" fillOpacity="0.5">
+                <animate attributeName="r" values="4;8;4" dur="1s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.3;0.6;0.3" dur="1s" repeatCount="indefinite" />
+              </circle>
+            </g>
+          )}
+
+          {/* Rotating figure group */}
+          <g transform={`translate(180, 155) rotate(${personRotation})`} filter="url(#angMomShadow)">
+            {/* Motion trails when spinning fast */}
+            {isSpinning && speedRatio > 1.3 && (
+              <>
+                <ellipse cx="0" cy="2" rx={armLength + 30} ry="8" fill="url(#angMomMotionTrail)" opacity="0.3">
+                  <animate attributeName="opacity" values="0.1;0.3;0.1" dur="0.3s" repeatCount="indefinite" />
+                </ellipse>
+              </>
+            )}
+
+            {/* Body - torso with 3D gradient */}
+            <ellipse cx="0" cy="20" rx="26" ry="38" fill="url(#angMomBody)" />
+            <ellipse cx="-8" cy="10" rx="8" ry="18" fill="#64748b" fillOpacity="0.3" />
+
+            {/* Head with premium 3D effect */}
+            <circle cx="0" cy="-28" r="22" fill="url(#angMomHead)" />
+            {/* Head highlight */}
+            <ellipse cx="-6" cy="-34" rx="8" ry="6" fill="#cbd5e1" fillOpacity="0.25" />
+
+            {/* Eyes */}
+            <circle cx="-7" cy="-32" r="4" fill="#0f172a" />
+            <circle cx="7" cy="-32" r="4" fill="#0f172a" />
+            {/* Eye highlights */}
+            <circle cx="-8" cy="-33" r="1.5" fill="#94a3b8" />
+            <circle cx="6" cy="-33" r="1.5" fill="#94a3b8" />
+
+            {/* Left arm with gradient */}
+            <line
+              x1="-22" y1="2"
+              x2={-22 - armLength} y2="2"
+              stroke="url(#angMomArm)"
+              strokeWidth="10"
+              strokeLinecap="round"
+            />
+            {/* Arm highlight line */}
+            <line
+              x1="-22" y1="0"
+              x2={-22 - armLength} y2="0"
+              stroke="#94a3b8"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeOpacity="0.4"
+            />
+
+            {/* Left weight with 3D sphere effect */}
+            <g filter={hasWeights ? "url(#angMomWeightGlow)" : undefined}>
+              <circle
+                cx={-22 - armLength} cy="2"
+                r={weightSize}
+                fill={hasWeights ? "url(#angMomWeight)" : "url(#angMomWeightNone)"}
+              />
+              {/* Weight highlight */}
+              <ellipse
+                cx={-22 - armLength - weightSize * 0.25}
+                cy={2 - weightSize * 0.3}
+                rx={weightSize * 0.3}
+                ry={weightSize * 0.2}
+                fill="white"
+                fillOpacity={hasWeights ? "0.4" : "0.2"}
+              />
+            </g>
+
+            {/* Right arm with gradient */}
+            <line
+              x1="22" y1="2"
+              x2={22 + armLength} y2="2"
+              stroke="url(#angMomArm)"
+              strokeWidth="10"
+              strokeLinecap="round"
+            />
+            {/* Arm highlight line */}
+            <line
+              x1="22" y1="0"
+              x2={22 + armLength} y2="0"
+              stroke="#94a3b8"
+              strokeWidth="2"
+              strokeLinecap="round"
+              strokeOpacity="0.4"
+            />
+
+            {/* Right weight with 3D sphere effect */}
+            <g filter={hasWeights ? "url(#angMomWeightGlow)" : undefined}>
+              <circle
+                cx={22 + armLength} cy="2"
+                r={weightSize}
+                fill={hasWeights ? "url(#angMomWeight)" : "url(#angMomWeightNone)"}
+              />
+              {/* Weight highlight */}
+              <ellipse
+                cx={22 + armLength - weightSize * 0.25}
+                cy={2 - weightSize * 0.3}
+                rx={weightSize * 0.3}
+                ry={weightSize * 0.2}
+                fill="white"
+                fillOpacity={hasWeights ? "0.4" : "0.2"}
+              />
+            </g>
           </g>
         </svg>
+
+        {/* Stats display with React divs - using typo system */}
         <div className="grid grid-cols-3 gap-2 mt-4">
-          <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-            <div className="text-xs text-slate-400 mb-1">SPIN SPEED</div>
-            <div className="text-lg font-bold text-white">{calculatedOmega.toFixed(1)} rad/s</div>
+          <div className="bg-slate-800/50 rounded-lg p-3 text-center border border-slate-700/30">
+            <div style={{ fontSize: typo.label, color: colors.textMuted, marginBottom: '4px', fontWeight: 600, letterSpacing: '0.05em' }}>SPIN SPEED</div>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary }}>{calculatedOmega.toFixed(1)} rad/s</div>
           </div>
-          <div className="bg-slate-800/50 rounded-lg p-3 text-center">
-            <div className="text-xs text-slate-400 mb-1">MOMENT I</div>
-            <div className="text-lg font-bold text-amber-400">{momentOfInertia.toFixed(2)} kg·m²</div>
+          <div className="bg-slate-800/50 rounded-lg p-3 text-center border border-slate-700/30">
+            <div style={{ fontSize: typo.label, color: colors.textMuted, marginBottom: '4px', fontWeight: 600, letterSpacing: '0.05em' }}>MOMENT I</div>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.warning }}>{momentOfInertia.toFixed(2)} kg·m²</div>
           </div>
-          <div className={`rounded-lg p-3 text-center ${speedRatio > 1.2 ? 'bg-emerald-500/20 border border-emerald-500/40' : 'bg-slate-800/50'}`}>
-            <div className="text-xs text-slate-400 mb-1">SPEED GAIN</div>
-            <div className={`text-lg font-bold ${speedRatio > 1.2 ? 'text-emerald-400' : 'text-white'}`}>{speedRatio.toFixed(1)}×</div>
+          <div
+            className="rounded-lg p-3 text-center"
+            style={{
+              backgroundColor: speedRatio > 1.2 ? 'rgba(16, 185, 129, 0.15)' : 'rgba(51, 65, 85, 0.5)',
+              border: speedRatio > 1.2 ? `1px solid rgba(16, 185, 129, 0.4)` : '1px solid rgba(51, 65, 85, 0.3)'
+            }}
+          >
+            <div style={{ fontSize: typo.label, color: colors.textMuted, marginBottom: '4px', fontWeight: 600, letterSpacing: '0.05em' }}>SPEED GAIN</div>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: speedRatio > 1.2 ? colors.success : colors.textPrimary }}>{speedRatio.toFixed(1)}×</div>
           </div>
         </div>
-        <div className="mt-4 p-4 bg-purple-500/10 rounded-xl border border-purple-500/30 text-center">
-          <span className="text-xs text-purple-400 font-medium">ANGULAR MOMENTUM (CONSERVED)</span>
-          <div className="text-xl font-bold text-purple-400 mt-1">L = {angularMomentum.toFixed(2)} kg·m²/s ✓</div>
+
+        {/* Angular momentum conservation display */}
+        <div
+          className="mt-4 p-4 rounded-xl text-center"
+          style={{
+            backgroundColor: 'rgba(139, 92, 246, 0.1)',
+            border: `1px solid rgba(139, 92, 246, 0.3)`
+          }}
+        >
+          <span style={{ fontSize: typo.label, color: colors.primary, fontWeight: 600, letterSpacing: '0.05em' }}>ANGULAR MOMENTUM (CONSERVED)</span>
+          <div style={{ fontSize: typo.heading, fontWeight: 700, color: colors.primary, marginTop: '4px' }}>L = {angularMomentum.toFixed(2)} kg·m²/s ✓</div>
         </div>
       </div>
     );

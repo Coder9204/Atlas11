@@ -598,28 +598,84 @@ export default function PowerFactorRenderer({
         A 1000W motor and a 1000W heater both say "1000W" but the motor actually draws more current. Why?
       </p>
 
-      <svg viewBox="0 0 400 220" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '32px' }}>
-        <rect width="400" height="220" fill="#1e293b" rx="12" />
+      <svg viewBox="0 0 400 220" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+        <defs>
+          {/* Premium background gradient */}
+          <linearGradient id="pfHookBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
 
-        {/* Heater */}
-        <rect x="40" y="60" width="120" height="100" fill="rgba(239, 68, 68, 0.1)" stroke="#ef4444" strokeWidth="2" rx="8" />
-        <text x="100" y="90" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="bold">Heater</text>
-        <text x="100" y="115" textAnchor="middle" fill="#ef4444" fontSize="20" fontWeight="bold">1000W</text>
-        <text x="100" y="140" textAnchor="middle" fill="#94a3b8" fontSize="11">Current: 8.3A</text>
+          {/* Heater glow gradient */}
+          <radialGradient id="pfHeaterGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#ef4444" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+          </radialGradient>
 
-        {/* Motor */}
-        <rect x="240" y="60" width="120" height="100" fill="rgba(59, 130, 246, 0.1)" stroke="#3b82f6" strokeWidth="2" rx="8" />
-        <text x="300" y="90" textAnchor="middle" fill="#f8fafc" fontSize="14" fontWeight="bold">Motor</text>
-        <text x="300" y="115" textAnchor="middle" fill="#3b82f6" fontSize="20" fontWeight="bold">1000W</text>
-        <text x="300" y="140" textAnchor="middle" fill="#f59e0b" fontSize="11">Current: 10.4A!</text>
+          {/* Motor glow gradient */}
+          <radialGradient id="pfMotorGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.15" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+          </radialGradient>
 
-        {/* Question mark */}
-        <text x="200" y="130" textAnchor="middle" fill="#f59e0b" fontSize="36" fontWeight="bold">?</text>
+          {/* Question mark glow */}
+          <radialGradient id="pfQuestionGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.6" />
+            <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+          </radialGradient>
 
-        {/* Power factor labels */}
-        <text x="100" y="180" textAnchor="middle" fill="#22c55e" fontSize="12">PF = 1.0</text>
-        <text x="300" y="180" textAnchor="middle" fill="#ef4444" fontSize="12">PF = 0.8</text>
+          {/* Glow filters */}
+          <filter id="pfCardGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="pfTextGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <rect width="400" height="220" fill="url(#pfHookBg)" rx="12" />
+
+        {/* Heater with glow */}
+        <ellipse cx="100" cy="110" rx="80" ry="60" fill="url(#pfHeaterGlow)" />
+        <rect x="40" y="60" width="120" height="100" fill="rgba(239, 68, 68, 0.1)" stroke="#ef4444" strokeWidth="2" rx="8" filter="url(#pfCardGlow)" />
+
+        {/* Motor with glow */}
+        <ellipse cx="300" cy="110" rx="80" ry="60" fill="url(#pfMotorGlow)" />
+        <rect x="240" y="60" width="120" height="100" fill="rgba(59, 130, 246, 0.1)" stroke="#3b82f6" strokeWidth="2" rx="8" filter="url(#pfCardGlow)" />
+
+        {/* Question mark with glow */}
+        <ellipse cx="200" cy="115" rx="30" ry="30" fill="url(#pfQuestionGlow)" />
+        <text x="200" y="130" textAnchor="middle" fill="#f59e0b" fontSize="36" fontWeight="bold" filter="url(#pfTextGlow)">?</text>
       </svg>
+
+      {/* Labels moved outside SVG */}
+      <div style={{ display: 'flex', justifyContent: 'space-around', maxWidth: '500px', margin: '0 auto 32px', padding: '0 20px' }}>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: typo.body, fontWeight: 'bold', color: '#f8fafc' }}>Heater</div>
+          <div style={{ fontSize: typo.heading, fontWeight: 'bold', color: '#ef4444' }}>1000W</div>
+          <div style={{ fontSize: typo.small, color: '#94a3b8' }}>Current: 8.3A</div>
+          <div style={{ fontSize: typo.small, color: '#22c55e', marginTop: '4px' }}>PF = 1.0</div>
+        </div>
+        <div style={{ textAlign: 'center' }}>
+          <div style={{ fontSize: typo.body, fontWeight: 'bold', color: '#f8fafc' }}>Motor</div>
+          <div style={{ fontSize: typo.heading, fontWeight: 'bold', color: '#3b82f6' }}>1000W</div>
+          <div style={{ fontSize: typo.small, color: '#f59e0b' }}>Current: 10.4A!</div>
+          <div style={{ fontSize: typo.small, color: '#ef4444', marginTop: '4px' }}>PF = 0.8</div>
+        </div>
+      </div>
 
       <div style={{
         background: 'rgba(30, 41, 59, 0.8)',
@@ -780,16 +836,70 @@ export default function PowerFactorRenderer({
         </div>
 
         {/* Waveform SVG */}
-        <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '24px' }}>
-          <rect width="400" height="200" fill="#0f172a" rx="12" />
+        <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+          <defs>
+            {/* Premium background gradient */}
+            <linearGradient id="pfWaveBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#020617" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
 
-          {/* Grid lines */}
-          <line x1="50" y1="100" x2="350" y2="100" stroke="#334155" strokeWidth="1" />
-          {[100, 150, 200, 250, 300].map(x => (
-            <line key={x} x1={x} y1="40" x2={x} y2="160" stroke="#334155" strokeWidth="1" strokeDasharray="4" />
-          ))}
+            {/* Voltage waveform gradient */}
+            <linearGradient id="pfVoltageGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1d4ed8" />
+              <stop offset="25%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#60a5fa" />
+              <stop offset="75%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
 
-          {/* Voltage waveform (blue) */}
+            {/* Current waveform gradient - resistive (green) */}
+            <linearGradient id="pfCurrentResistiveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#15803d" />
+              <stop offset="25%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#4ade80" />
+              <stop offset="75%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+
+            {/* Current waveform gradient - inductive (orange) */}
+            <linearGradient id="pfCurrentInductiveGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#d97706" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="75%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Waveform glow filter */}
+            <filter id="pfWaveGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Phase angle glow */}
+            <radialGradient id="pfPhaseGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Grid pattern */}
+            <pattern id="pfGridPattern" width="50" height="40" patternUnits="userSpaceOnUse">
+              <rect width="50" height="40" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.5" />
+            </pattern>
+          </defs>
+
+          <rect width="400" height="200" fill="url(#pfWaveBg)" rx="12" />
+          <rect x="50" y="30" width="300" height="140" fill="url(#pfGridPattern)" opacity="0.5" />
+
+          {/* Center line with gradient */}
+          <line x1="50" y1="100" x2="350" y2="100" stroke="#475569" strokeWidth="1" />
+
+          {/* Voltage waveform (blue) with glow */}
           <path
             d={`M 50 100 ${Array.from({ length: 60 }, (_, i) => {
               const x = 50 + i * 5;
@@ -797,11 +907,13 @@ export default function PowerFactorRenderer({
               return `L ${x} ${y}`;
             }).join(' ')}`}
             fill="none"
-            stroke="#3b82f6"
+            stroke="url(#pfVoltageGrad)"
             strokeWidth="3"
+            strokeLinecap="round"
+            filter="url(#pfWaveGlow)"
           />
 
-          {/* Current waveform (orange/green based on load) */}
+          {/* Current waveform with glow */}
           <path
             d={`M 50 100 ${Array.from({ length: 60 }, (_, i) => {
               const x = 50 + i * 5;
@@ -810,28 +922,53 @@ export default function PowerFactorRenderer({
               return `L ${x} ${y}`;
             }).join(' ')}`}
             fill="none"
-            stroke={loadType === 'resistive' ? '#22c55e' : '#f59e0b'}
+            stroke={loadType === 'resistive' ? 'url(#pfCurrentResistiveGrad)' : 'url(#pfCurrentInductiveGrad)'}
             strokeWidth="3"
+            strokeLinecap="round"
+            filter="url(#pfWaveGlow)"
           />
 
-          {/* Legend */}
-          <rect x="260" y="15" width="130" height="55" fill="rgba(15, 23, 42, 0.9)" rx="6" />
-          <line x1="270" y1="32" x2="300" y2="32" stroke="#3b82f6" strokeWidth="3" />
-          <text x="310" y="36" fill="#94a3b8" fontSize="11">Voltage</text>
-          <line x1="270" y1="52" x2="300" y2="52" stroke={loadType === 'resistive' ? '#22c55e' : '#f59e0b'} strokeWidth="3" />
-          <text x="310" y="56" fill="#94a3b8" fontSize="11">Current</text>
-
-          {/* Phase shift indicator */}
+          {/* Phase shift indicator with glow */}
           {currentAngle > 0 && (
             <>
-              <path d="M 150 170 L 175 170" stroke="#f59e0b" strokeWidth="2" markerEnd="url(#arrow)" />
-              <text x="162" y="185" textAnchor="middle" fill="#f59e0b" fontSize="10">lag</text>
+              <ellipse cx="162" cy="175" rx="25" ry="15" fill="url(#pfPhaseGlow)" />
+              <path d="M 140 175 L 180 175" stroke="#f59e0b" strokeWidth="2" markerEnd="url(#arrow)" />
+              <polygon points="180,175 174,172 174,178" fill="#f59e0b" />
             </>
           )}
         </svg>
 
+        {/* Legend moved outside SVG */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: '24px',
+          marginBottom: '24px',
+          padding: '12px',
+          background: 'rgba(15, 23, 42, 0.8)',
+          borderRadius: '8px',
+          maxWidth: '300px',
+          margin: '0 auto 24px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '24px', height: '3px', background: 'linear-gradient(90deg, #1d4ed8, #60a5fa, #1d4ed8)', borderRadius: '2px' }} />
+            <span style={{ fontSize: typo.small, color: '#94a3b8' }}>Voltage</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{
+              width: '24px',
+              height: '3px',
+              background: loadType === 'resistive'
+                ? 'linear-gradient(90deg, #15803d, #4ade80, #15803d)'
+                : 'linear-gradient(90deg, #d97706, #fbbf24, #d97706)',
+              borderRadius: '2px'
+            }} />
+            <span style={{ fontSize: typo.small, color: '#94a3b8' }}>Current {currentAngle > 0 && '(lag)'}</span>
+          </div>
+        </div>
+
         {/* Load Type Selector */}
-        <div style={{ display: 'flex', gap: '12px', marginBottom: '24px' }}>
+        <div style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
           <button
             onClick={() => handleLoadTypeChange('resistive')}
             style={{
@@ -847,7 +984,7 @@ export default function PowerFactorRenderer({
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            🔥 Heater<br />
+            Heater<br />
             <span style={{ fontSize: '11px', color: '#94a3b8' }}>Resistive Load</span>
           </button>
           <button
@@ -865,9 +1002,140 @@ export default function PowerFactorRenderer({
               WebkitTapHighlightColor: 'transparent',
             }}
           >
-            ⚙️ Motor<br />
+            Motor<br />
             <span style={{ fontSize: '11px', color: '#94a3b8' }}>Inductive Load</span>
           </button>
+        </div>
+
+        {/* Phasor Diagram */}
+        <div style={{
+          background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 100%)',
+          borderRadius: '12px',
+          padding: '16px',
+          marginBottom: '16px',
+        }}>
+          <div style={{ fontSize: typo.small, color: '#94a3b8', textAlign: 'center', marginBottom: '8px' }}>
+            Phasor Diagram - Phase Angle: {currentAngle}deg
+          </div>
+          <svg viewBox="0 0 200 120" style={{ width: '100%', maxWidth: '250px', height: 'auto', margin: '0 auto', display: 'block' }}>
+            <defs>
+              {/* Phasor background */}
+              <radialGradient id="pfPhasorBg" cx="25%" cy="50%" r="80%">
+                <stop offset="0%" stopColor="#1e293b" />
+                <stop offset="100%" stopColor="#0f172a" />
+              </radialGradient>
+
+              {/* Voltage phasor gradient */}
+              <linearGradient id="pfVoltagePhasor" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="#1d4ed8" />
+                <stop offset="50%" stopColor="#3b82f6" />
+                <stop offset="100%" stopColor="#60a5fa" />
+              </linearGradient>
+
+              {/* Current phasor gradient - changes based on load */}
+              <linearGradient id="pfCurrentPhasor" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor={loadType === 'resistive' ? '#15803d' : '#d97706'} />
+                <stop offset="50%" stopColor={loadType === 'resistive' ? '#22c55e' : '#f59e0b'} />
+                <stop offset="100%" stopColor={loadType === 'resistive' ? '#4ade80' : '#fbbf24'} />
+              </linearGradient>
+
+              {/* Phasor glow */}
+              <filter id="pfPhasorGlow" x="-50%" y="-50%" width="200%" height="200%">
+                <feGaussianBlur stdDeviation="2" result="blur" />
+                <feMerge>
+                  <feMergeNode in="blur" />
+                  <feMergeNode in="SourceGraphic" />
+                </feMerge>
+              </filter>
+
+              {/* Arc glow */}
+              <radialGradient id="pfArcGlow" cx="0%" cy="50%" r="50%">
+                <stop offset="0%" stopColor="#a855f7" stopOpacity="0.3" />
+                <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
+              </radialGradient>
+
+              {/* Arrow markers */}
+              <marker id="pfVoltageArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill="#60a5fa" />
+              </marker>
+              <marker id="pfCurrentArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+                <polygon points="0 0, 10 3.5, 0 7" fill={loadType === 'resistive' ? '#4ade80' : '#fbbf24'} />
+              </marker>
+            </defs>
+
+            <rect width="200" height="120" fill="url(#pfPhasorBg)" rx="8" />
+
+            {/* Reference circle */}
+            <circle cx="50" cy="60" r="45" fill="none" stroke="#334155" strokeWidth="1" strokeDasharray="4 2" />
+
+            {/* Phase angle arc with glow */}
+            {currentAngle > 0 && (
+              <>
+                <ellipse cx="50" cy="60" rx="25" ry="25" fill="url(#pfArcGlow)" />
+                <path
+                  d={`M 75 60 A 25 25 0 0 1 ${50 + 25 * Math.cos((-currentAngle * Math.PI) / 180)} ${60 + 25 * Math.sin((-currentAngle * Math.PI) / 180)}`}
+                  fill="none"
+                  stroke="#a855f7"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              </>
+            )}
+
+            {/* Voltage phasor (horizontal, reference) */}
+            <line
+              x1="50"
+              y1="60"
+              x2="95"
+              y2="60"
+              stroke="url(#pfVoltagePhasor)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              markerEnd="url(#pfVoltageArrow)"
+              filter="url(#pfPhasorGlow)"
+            />
+
+            {/* Current phasor (rotated by phase angle) */}
+            <line
+              x1="50"
+              y1="60"
+              x2={50 + 45 * Math.cos((-currentAngle * Math.PI) / 180)}
+              y2={60 + 45 * Math.sin((-currentAngle * Math.PI) / 180)}
+              stroke="url(#pfCurrentPhasor)"
+              strokeWidth="4"
+              strokeLinecap="round"
+              markerEnd="url(#pfCurrentArrow)"
+              filter="url(#pfPhasorGlow)"
+            />
+
+            {/* Origin dot */}
+            <circle cx="50" cy="60" r="4" fill="#f8fafc" />
+          </svg>
+
+          {/* Phasor legend */}
+          <div style={{ display: 'flex', justifyContent: 'center', gap: '16px', marginTop: '8px' }}>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: '16px', height: '3px', background: 'linear-gradient(90deg, #1d4ed8, #60a5fa)', borderRadius: '2px' }} />
+              <span style={{ fontSize: typo.label, color: '#94a3b8' }}>V</span>
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{
+                width: '16px',
+                height: '3px',
+                background: loadType === 'resistive'
+                  ? 'linear-gradient(90deg, #15803d, #4ade80)'
+                  : 'linear-gradient(90deg, #d97706, #fbbf24)',
+                borderRadius: '2px'
+              }} />
+              <span style={{ fontSize: typo.label, color: '#94a3b8' }}>I</span>
+            </div>
+            {currentAngle > 0 && (
+              <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+                <div style={{ width: '16px', height: '3px', background: '#a855f7', borderRadius: '2px' }} />
+                <span style={{ fontSize: typo.label, color: '#94a3b8' }}>phi</span>
+              </div>
+            )}
+          </div>
         </div>
 
         <div style={{
@@ -920,27 +1188,92 @@ export default function PowerFactorRenderer({
         padding: '20px',
         marginBottom: '24px',
       }}>
-        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '12px', marginBottom: '12px', textAlign: 'center' }}>
+        <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: typo.small, marginBottom: '12px', textAlign: 'center' }}>
           The Power Triangle
         </div>
-        <svg viewBox="0 0 300 150" style={{ width: '100%', maxWidth: '300px', margin: '0 auto', display: 'block' }}>
-          {/* Triangle */}
-          <line x1="50" y1="120" x2="250" y2="120" stroke="white" strokeWidth="3" />
-          <line x1="250" y1="120" x2="250" y2="40" stroke="white" strokeWidth="3" />
-          <line x1="50" y1="120" x2="250" y2="40" stroke="white" strokeWidth="3" strokeDasharray="8" />
+        <svg viewBox="0 0 300 130" style={{ width: '100%', maxWidth: '300px', margin: '0 auto', display: 'block' }}>
+          <defs>
+            {/* Triangle fill gradient */}
+            <linearGradient id="pfTriangleFill" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(255, 255, 255, 0.05)" />
+              <stop offset="50%" stopColor="rgba(255, 255, 255, 0.15)" />
+              <stop offset="100%" stopColor="rgba(255, 255, 255, 0.05)" />
+            </linearGradient>
 
-          {/* Labels */}
-          <text x="150" y="140" textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">Real Power (W)</text>
-          <text x="280" y="85" textAnchor="start" fill="white" fontSize="12" fontWeight="bold">Reactive</text>
-          <text x="280" y="100" textAnchor="start" fill="white" fontSize="12">(VAR)</text>
-          <text x="120" y="70" textAnchor="middle" fill="#fcd34d" fontSize="12" fontWeight="bold">Apparent</text>
-          <text x="120" y="85" textAnchor="middle" fill="#fcd34d" fontSize="12">(VA)</text>
+            {/* Real power line gradient (green) */}
+            <linearGradient id="pfRealPowerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
 
-          {/* Angle */}
-          <path d="M 80 120 A 30 30 0 0 0 95 105" fill="none" stroke="white" strokeWidth="2" />
-          <text x="105" y="115" fill="white" fontSize="10">phi</text>
+            {/* Reactive power line gradient (orange) */}
+            <linearGradient id="pfReactivePowerGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
+
+            {/* Apparent power line gradient (purple/gold) */}
+            <linearGradient id="pfApparentPowerGrad" x1="0%" y1="100%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="50%" stopColor="#fde68a" />
+              <stop offset="100%" stopColor="#fcd34d" />
+            </linearGradient>
+
+            {/* Glow filter for lines */}
+            <filter id="pfTriangleGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Angle arc glow */}
+            <radialGradient id="pfAngleGlow" cx="0%" cy="100%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#ffffff" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+
+          {/* Triangle fill */}
+          <polygon points="50,110 250,110 250,30" fill="url(#pfTriangleFill)" />
+
+          {/* Real Power - horizontal (green with glow) */}
+          <line x1="50" y1="110" x2="250" y2="110" stroke="url(#pfRealPowerGrad)" strokeWidth="4" strokeLinecap="round" filter="url(#pfTriangleGlow)" />
+
+          {/* Reactive Power - vertical (orange with glow) */}
+          <line x1="250" y1="110" x2="250" y2="30" stroke="url(#pfReactivePowerGrad)" strokeWidth="4" strokeLinecap="round" filter="url(#pfTriangleGlow)" />
+
+          {/* Apparent Power - hypotenuse (gold/dashed with glow) */}
+          <line x1="50" y1="110" x2="250" y2="30" stroke="url(#pfApparentPowerGrad)" strokeWidth="4" strokeLinecap="round" strokeDasharray="8 4" filter="url(#pfTriangleGlow)" />
+
+          {/* Angle arc with glow */}
+          <ellipse cx="50" cy="110" rx="40" ry="40" fill="url(#pfAngleGlow)" />
+          <path d="M 90 110 A 40 40 0 0 0 72 78" fill="none" stroke="white" strokeWidth="2" strokeLinecap="round" />
+
+          {/* Phi symbol */}
+          <text x="85" y="95" fill="white" fontSize="14" fontStyle="italic" fontWeight="bold">phi</text>
         </svg>
-        <div style={{ color: 'white', fontSize: '16px', textAlign: 'center', marginTop: '12px' }}>
+
+        {/* Labels moved outside SVG */}
+        <div style={{ display: 'flex', justifyContent: 'space-around', marginTop: '16px', flexWrap: 'wrap', gap: '8px' }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: '24px', height: '4px', background: 'linear-gradient(90deg, #22c55e, #4ade80, #22c55e)', margin: '0 auto 4px', borderRadius: '2px' }} />
+            <span style={{ fontSize: typo.small, color: 'white', fontWeight: 'bold' }}>Real (W)</span>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: '24px', height: '4px', background: 'linear-gradient(90deg, #f59e0b, #fbbf24, #f59e0b)', margin: '0 auto 4px', borderRadius: '2px' }} />
+            <span style={{ fontSize: typo.small, color: 'white', fontWeight: 'bold' }}>Reactive (VAR)</span>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ width: '24px', height: '4px', background: 'linear-gradient(90deg, #fcd34d, #fde68a, #fcd34d)', margin: '0 auto 4px', borderRadius: '2px', borderStyle: 'dashed' }} />
+            <span style={{ fontSize: typo.small, color: '#fcd34d', fontWeight: 'bold' }}>Apparent (VA)</span>
+          </div>
+        </div>
+
+        <div style={{ color: 'white', fontSize: typo.body, textAlign: 'center', marginTop: '12px', fontWeight: 600 }}>
           Power Factor = cos(phi) = Real / Apparent
         </div>
       </div>
@@ -1133,33 +1466,101 @@ export default function PowerFactorRenderer({
       </div>
 
       {/* Visual representation */}
-      <svg viewBox="0 0 400 120" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '24px' }}>
-        <rect width="400" height="120" fill="#0f172a" rx="12" />
+      <svg viewBox="0 0 400 100" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+        <defs>
+          {/* Background gradient */}
+          <linearGradient id="pfCapBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
 
-        {/* Motor reactive power bar */}
-        <rect x="50" y="30" width="100" height="30" fill="rgba(239, 68, 68, 0.3)" stroke="#ef4444" strokeWidth="2" rx="4" />
-        <text x="100" y="50" textAnchor="middle" fill="#ef4444" fontSize="10" fontWeight="bold">Motor -37 VAR</text>
+          {/* Motor bar gradient (red/lagging) */}
+          <linearGradient id="pfMotorBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#f87171" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#ef4444" stopOpacity="0.4" />
+          </linearGradient>
 
-        {/* Plus sign */}
-        <text x="175" y="50" textAnchor="middle" fill="#94a3b8" fontSize="20">+</text>
+          {/* Capacitor bar gradient (green/leading) */}
+          <linearGradient id="pfCapBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#4ade80" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0.4" />
+          </linearGradient>
 
-        {/* Capacitor reactive power bar */}
-        <rect x="200" y="30" width={Math.min(capacitorSize * 2.7, 100)} height="30" fill="rgba(34, 197, 94, 0.3)" stroke="#22c55e" strokeWidth="2" rx="4" />
-        <text x="250" y="50" textAnchor="middle" fill="#22c55e" fontSize="10" fontWeight="bold">Cap +{capacitorSize} VAR</text>
+          {/* Result glow */}
+          <radialGradient id="pfResultGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={effectivePhaseAngle < 10 ? '#22c55e' : '#f59e0b'} stopOpacity="0.4" />
+            <stop offset="100%" stopColor={effectivePhaseAngle < 10 ? '#22c55e' : '#f59e0b'} stopOpacity="0" />
+          </radialGradient>
 
-        {/* Equals sign */}
-        <text x="325" y="50" textAnchor="middle" fill="#94a3b8" fontSize="20">=</text>
+          {/* Bar glow filter */}
+          <filter id="pfBarGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
 
-        {/* Net result */}
-        <text x="365" y="50" textAnchor="middle" fill={effectivePhaseAngle < 10 ? '#22c55e' : '#f59e0b'} fontSize="14" fontWeight="bold">
+          {/* Operator glow */}
+          <filter id="pfOpGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="1" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+        </defs>
+
+        <rect width="400" height="100" fill="url(#pfCapBg)" rx="12" />
+
+        {/* Motor reactive power bar with glow */}
+        <rect x="30" y="30" width="100" height="40" fill="url(#pfMotorBarGrad)" stroke="#ef4444" strokeWidth="2" rx="6" filter="url(#pfBarGlow)" />
+
+        {/* Plus sign with glow */}
+        <text x="155" y="58" textAnchor="middle" fill="#64748b" fontSize="24" fontWeight="bold" filter="url(#pfOpGlow)">+</text>
+
+        {/* Capacitor reactive power bar with dynamic width and glow */}
+        <rect x="180" y="30" width={Math.max(Math.min(capacitorSize * 2.5, 100), 10)} height="40" fill="url(#pfCapBarGrad)" stroke="#22c55e" strokeWidth="2" rx="6" filter="url(#pfBarGlow)" />
+
+        {/* Equals sign with glow */}
+        <text x="305" y="58" textAnchor="middle" fill="#64748b" fontSize="24" fontWeight="bold" filter="url(#pfOpGlow)">=</text>
+
+        {/* Net result with glow */}
+        <ellipse cx="355" cy="50" rx="30" ry="25" fill="url(#pfResultGlow)" />
+        <text x="355" y="58" textAnchor="middle" fill={effectivePhaseAngle < 10 ? '#4ade80' : '#fbbf24'} fontSize="18" fontWeight="bold" filter="url(#pfBarGlow)">
           {effectivePhaseAngle.toFixed(0)}deg
         </text>
-
-        {/* Label */}
-        <text x="200" y="100" textAnchor="middle" fill="#94a3b8" fontSize="11">
-          Leading VAR from capacitor cancels lagging VAR from motor
-        </text>
       </svg>
+
+      {/* Labels moved outside SVG */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        maxWidth: '500px',
+        margin: '0 auto 16px',
+        padding: '0 10px',
+        fontSize: typo.small
+      }}>
+        <div style={{ textAlign: 'center', flex: 1 }}>
+          <span style={{ color: '#ef4444', fontWeight: 'bold' }}>Motor -37 VAR</span>
+        </div>
+        <div style={{ width: '30px' }} />
+        <div style={{ textAlign: 'center', flex: 1 }}>
+          <span style={{ color: '#22c55e', fontWeight: 'bold' }}>Cap +{capacitorSize} VAR</span>
+        </div>
+        <div style={{ width: '30px' }} />
+        <div style={{ textAlign: 'center', flex: 1 }}>
+          <span style={{ color: effectivePhaseAngle < 10 ? '#22c55e' : '#f59e0b', fontWeight: 'bold' }}>Net Phase</span>
+        </div>
+      </div>
+
+      <p style={{ textAlign: 'center', color: '#94a3b8', fontSize: typo.small, marginBottom: '24px' }}>
+        Leading VAR from capacitor cancels lagging VAR from motor
+      </p>
 
       {/* Capacitor slider */}
       <div style={{ marginBottom: '24px' }}>

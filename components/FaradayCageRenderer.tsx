@@ -323,205 +323,389 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
     const chargeOscillation = Math.sin(timeRef.current * 3);
 
     return (
-      <svg viewBox="0 0 500 320" className="w-full h-64">
-        <defs>
-          <linearGradient id="cageGradient" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor="#f59e0b" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#d97706" stopOpacity="0.9" />
-          </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill="#fbbf24" />
-          </marker>
-        </defs>
+      <>
+        <svg viewBox="0 0 500 320" className="w-full h-64">
+          <defs>
+            {/* Premium metallic cage frame gradient */}
+            <linearGradient id="faraCageFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="75%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
 
-        <rect width="500" height="320" fill="#0f172a" />
+            {/* Brushed metal mesh gradient */}
+            <linearGradient id="faraMeshMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="20%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="40%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="80%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0.8" />
+            </linearGradient>
 
-        {/* Title */}
-        <text x="250" y="25" textAnchor="middle" className="fill-white text-sm font-bold">
-          Faraday Cage Shielding Simulation
-        </text>
+            {/* Electric field wave gradient */}
+            <linearGradient id="faraFieldWave" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#fcd34d" stopOpacity="1" />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.3" />
+            </linearGradient>
 
-        {/* External field source indicator */}
-        <g transform="translate(30, 160)">
-          <rect x="-15" y="-50" width="30" height="100" rx="4" fill="#374151" stroke="#6b7280" strokeWidth="2" />
-          <circle cx="0" cy="0" r="15" fill="#ef4444" opacity={0.5 + fieldStrength / 200}>
-            <animate attributeName="r" values="12;18;12" dur={`${2 / waveSpeed}s`} repeatCount="indefinite" />
-          </circle>
-          <text x="0" y="70" textAnchor="middle" className="fill-gray-400 text-xs">EM Source</text>
-          <text x="0" y="85" textAnchor="middle" className="fill-amber-400 text-xs font-bold">{fieldStrength}%</text>
-        </g>
+            {/* Blocked field gradient (red) */}
+            <linearGradient id="faraBlockedField" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.2" />
+              <stop offset="50%" stopColor="#f87171" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.2" />
+            </linearGradient>
 
-        {/* Electric field lines (external) */}
-        {[...Array(numFieldLines)].map((_, i) => {
-          const yOffset = (i - numFieldLines / 2) * 15;
-          const baseY = 160 + yOffset;
-          const blocked = cageEnabled;
-          const waveOffset = Math.sin(timeRef.current * waveSpeed * 2 + i * 0.5) * 8;
+            {/* Electron glow (blue) */}
+            <radialGradient id="faraElectronGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="1" />
+              <stop offset="40%" stopColor="#3b82f6" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#2563eb" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+            </radialGradient>
 
-          return (
-            <g key={`field-${i}`}>
-              {/* Incoming field line with wave */}
-              <path
-                d={`M 60 ${baseY} Q 100 ${baseY + waveOffset} 140 ${baseY} Q 180 ${baseY - waveOffset} ${blocked ? 220 : 400} ${baseY}`}
-                fill="none"
-                stroke={blocked ? '#ef4444' : '#fbbf24'}
-                strokeWidth="2"
-                strokeDasharray={blocked ? '5,5' : 'none'}
-                opacity={blocked ? 0.3 : 0.8}
-                markerEnd={blocked ? '' : 'url(#arrowhead)'}
-              />
-              {/* Blocked indicator */}
-              {blocked && (
-                <circle cx="220" cy={baseY} r="4" fill="#ef4444" opacity="0.6">
-                  <animate attributeName="opacity" values="0.3;0.8;0.3" dur="0.5s" repeatCount="indefinite" />
-                </circle>
-              )}
-            </g>
-          );
-        })}
+            {/* Positive charge glow (red) */}
+            <radialGradient id="faraPositiveGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f87171" stopOpacity="1" />
+              <stop offset="40%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#dc2626" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+            </radialGradient>
 
-        {/* Faraday cage structure */}
-        {cageEnabled && (
-          <g>
-            {/* Cage frame */}
-            <rect x="220" y="80" width="160" height="160" rx="8" fill="none" stroke="url(#cageGradient)" strokeWidth="6" />
+            {/* Protected interior glow */}
+            <radialGradient id="faraShieldedGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#22c55e" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+            </radialGradient>
 
-            {/* Mesh lines - vertical */}
-            {[...Array(Math.ceil(160 / meshSpacing))].map((_, i) => (
-              <line
-                key={`v${i}`}
-                x1={228 + i * meshSpacing}
-                y1="80"
-                x2={228 + i * meshSpacing}
-                y2="240"
-                stroke="#f59e0b"
-                strokeWidth="1.5"
-                opacity="0.7"
-              />
-            ))}
+            {/* EM source glow */}
+            <radialGradient id="faraSourceGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity="1" />
+              <stop offset="30%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#dc2626" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+            </radialGradient>
 
-            {/* Mesh lines - horizontal */}
-            {[...Array(Math.ceil(160 / meshSpacing))].map((_, i) => (
-              <line
-                key={`h${i}`}
-                x1="220"
-                y1={88 + i * meshSpacing}
-                x2="380"
-                y2={88 + i * meshSpacing}
-                stroke="#f59e0b"
-                strokeWidth="1.5"
-                opacity="0.7"
-              />
-            ))}
+            {/* Background gradient */}
+            <linearGradient id="faraBackground" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#020617" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-            {/* Charge redistribution visualization - electrons moving on surface */}
-            {[...Array(6)].map((_, i) => {
-              const baseX = 223;
-              const baseY = 100 + i * 25;
-              const offset = chargeOscillation * 4;
-              return (
-                <g key={`charge-left-${i}`}>
-                  <circle
-                    cx={baseX + offset}
-                    cy={baseY}
-                    r="5"
-                    fill="#3b82f6"
-                    filter="url(#glow)"
-                  />
-                  <text x={baseX + offset} y={baseY + 3} textAnchor="middle" className="fill-white text-xs font-bold">-</text>
-                </g>
-              );
-            })}
-            {[...Array(6)].map((_, i) => {
-              const baseX = 377;
-              const baseY = 100 + i * 25;
-              const offset = -chargeOscillation * 4;
-              return (
-                <g key={`charge-right-${i}`}>
-                  <circle
-                    cx={baseX + offset}
-                    cy={baseY}
-                    r="5"
-                    fill="#ef4444"
-                    filter="url(#glow)"
-                  />
-                  <text x={baseX + offset} y={baseY + 3} textAnchor="middle" className="fill-white text-xs font-bold">+</text>
-                </g>
-              );
-            })}
+            {/* Info panel gradient */}
+            <linearGradient id="faraInfoPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-            {/* Zero field indicator inside */}
-            <g transform="translate(300, 160)">
-              <circle cx="0" cy="0" r="30" fill="#22c55e" fillOpacity="0.15" stroke="#22c55e" strokeWidth="1" strokeDasharray="4,2" />
-              <text x="0" y="-5" textAnchor="middle" className="fill-green-400 text-xs font-bold">E = 0</text>
-              <text x="0" y="10" textAnchor="middle" className="fill-green-300 text-xs">SHIELDED</text>
-            </g>
+            {/* Electric field glow filter */}
+            <filter id="faraFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Charge particle glow filter */}
+            <filter id="faraChargeGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft inner glow for shielded area */}
+            <filter id="faraInnerGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Source pulse glow */}
+            <filter id="faraSourcePulse" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <marker id="faraArrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="url(#faraFieldWave)" />
+            </marker>
+          </defs>
+
+          {/* Premium background */}
+          <rect width="500" height="320" fill="url(#faraBackground)" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="faraGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect width="500" height="320" fill="url(#faraGrid)" />
+
+          {/* External field source indicator */}
+          <g transform="translate(30, 160)">
+            {/* Source housing with metallic look */}
+            <rect x="-18" y="-55" width="36" height="110" rx="6" fill="url(#faraInfoPanel)" stroke="#475569" strokeWidth="2" />
+            <rect x="-14" y="-51" width="28" height="102" rx="4" fill="#1f2937" />
+
+            {/* Glowing emission point */}
+            <circle cx="0" cy="0" r="20" fill="url(#faraSourceGlow)" filter="url(#faraSourcePulse)" opacity={0.5 + fieldStrength / 200}>
+              <animate attributeName="r" values="15;22;15" dur={`${2 / waveSpeed}s`} repeatCount="indefinite" />
+            </circle>
+            <circle cx="0" cy="0" r="8" fill="#ef4444">
+              <animate attributeName="opacity" values="0.7;1;0.7" dur={`${1 / waveSpeed}s`} repeatCount="indefinite" />
+            </circle>
           </g>
-        )}
 
-        {/* Phone inside cage area */}
-        <g transform="translate(280, 130)">
-          <rect x="0" y="0" width="40" height="65" rx="6" fill="#374151" stroke="#6b7280" strokeWidth="2" />
-          <rect x="5" y="8" width="30" height="40" fill="#1f2937" />
-          {/* Signal bars */}
-          <g transform="translate(10, 15)">
-            {[...Array(4)].map((_, i) => {
-              const barHeight = 5 + i * 4;
-              const barStrength = (i + 1) * 25;
-              const visible = signalStrength >= barStrength;
-              return (
-                <rect
-                  key={i}
-                  x={i * 6}
-                  y={20 - barHeight}
-                  width="4"
-                  height={barHeight}
-                  fill={visible ? '#22c55e' : '#4b5563'}
-                  rx="1"
+          {/* Electric field lines (external) with premium glow */}
+          {[...Array(numFieldLines)].map((_, i) => {
+            const yOffset = (i - numFieldLines / 2) * 15;
+            const baseY = 160 + yOffset;
+            const blocked = cageEnabled;
+            const waveOffset = Math.sin(timeRef.current * waveSpeed * 2 + i * 0.5) * 8;
+
+            return (
+              <g key={`field-${i}`}>
+                {/* Glow layer for field line */}
+                <path
+                  d={`M 60 ${baseY} Q 100 ${baseY + waveOffset} 140 ${baseY} Q 180 ${baseY - waveOffset} ${blocked ? 220 : 400} ${baseY}`}
+                  fill="none"
+                  stroke={blocked ? '#ef4444' : '#fbbf24'}
+                  strokeWidth="6"
+                  strokeDasharray={blocked ? '5,5' : 'none'}
+                  opacity={blocked ? 0.1 : 0.2}
+                  filter="url(#faraFieldGlow)"
                 />
-              );
-            })}
+                {/* Main field line */}
+                <path
+                  d={`M 60 ${baseY} Q 100 ${baseY + waveOffset} 140 ${baseY} Q 180 ${baseY - waveOffset} ${blocked ? 220 : 400} ${baseY}`}
+                  fill="none"
+                  stroke={blocked ? 'url(#faraBlockedField)' : 'url(#faraFieldWave)'}
+                  strokeWidth="2.5"
+                  strokeDasharray={blocked ? '5,5' : 'none'}
+                  opacity={blocked ? 0.5 : 0.9}
+                  markerEnd={blocked ? '' : 'url(#faraArrowhead)'}
+                />
+                {/* Blocked indicator with glow */}
+                {blocked && (
+                  <g>
+                    <circle cx="220" cy={baseY} r="8" fill="url(#faraPositiveGlow)" opacity="0.3" />
+                    <circle cx="220" cy={baseY} r="4" fill="#ef4444" opacity="0.8">
+                      <animate attributeName="opacity" values="0.4;0.9;0.4" dur="0.5s" repeatCount="indefinite" />
+                    </circle>
+                  </g>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Faraday cage structure with premium metallic look */}
+          {cageEnabled && (
+            <g>
+              {/* Protected interior glow */}
+              <ellipse cx="300" cy="160" rx="70" ry="70" fill="url(#faraShieldedGlow)" filter="url(#faraInnerGlow)" />
+
+              {/* Cage frame with metallic gradient */}
+              <rect x="220" y="80" width="160" height="160" rx="8" fill="none" stroke="url(#faraCageFrame)" strokeWidth="8" />
+              <rect x="224" y="84" width="152" height="152" rx="6" fill="none" stroke="#fcd34d" strokeWidth="1" strokeOpacity="0.3" />
+
+              {/* Premium mesh lines - vertical with metallic sheen */}
+              {[...Array(Math.ceil(160 / meshSpacing))].map((_, i) => (
+                <line
+                  key={`v${i}`}
+                  x1={228 + i * meshSpacing}
+                  y1="80"
+                  x2={228 + i * meshSpacing}
+                  y2="240"
+                  stroke="url(#faraMeshMetal)"
+                  strokeWidth="2"
+                />
+              ))}
+
+              {/* Premium mesh lines - horizontal with metallic sheen */}
+              {[...Array(Math.ceil(160 / meshSpacing))].map((_, i) => (
+                <line
+                  key={`h${i}`}
+                  x1="220"
+                  y1={88 + i * meshSpacing}
+                  x2="380"
+                  y2={88 + i * meshSpacing}
+                  stroke="url(#faraMeshMetal)"
+                  strokeWidth="2"
+                />
+              ))}
+
+              {/* Charge redistribution visualization - electrons with premium glow */}
+              {[...Array(6)].map((_, i) => {
+                const baseX = 223;
+                const baseY = 100 + i * 25;
+                const offset = chargeOscillation * 4;
+                return (
+                  <g key={`charge-left-${i}`}>
+                    <circle
+                      cx={baseX + offset}
+                      cy={baseY}
+                      r="10"
+                      fill="url(#faraElectronGlow)"
+                      filter="url(#faraChargeGlow)"
+                    />
+                    <circle
+                      cx={baseX + offset}
+                      cy={baseY}
+                      r="5"
+                      fill="#3b82f6"
+                    />
+                  </g>
+                );
+              })}
+              {[...Array(6)].map((_, i) => {
+                const baseX = 377;
+                const baseY = 100 + i * 25;
+                const offset = -chargeOscillation * 4;
+                return (
+                  <g key={`charge-right-${i}`}>
+                    <circle
+                      cx={baseX + offset}
+                      cy={baseY}
+                      r="10"
+                      fill="url(#faraPositiveGlow)"
+                      filter="url(#faraChargeGlow)"
+                    />
+                    <circle
+                      cx={baseX + offset}
+                      cy={baseY}
+                      r="5"
+                      fill="#ef4444"
+                    />
+                  </g>
+                );
+              })}
+
+              {/* Zero field indicator inside with premium styling */}
+              <g transform="translate(300, 160)">
+                <circle cx="0" cy="0" r="35" fill="url(#faraShieldedGlow)" />
+                <circle cx="0" cy="0" r="30" fill="none" stroke="#22c55e" strokeWidth="2" strokeDasharray="4,2" strokeOpacity="0.8" />
+              </g>
+            </g>
+          )}
+
+          {/* Phone inside cage area with premium styling */}
+          <g transform="translate(280, 130)">
+            <rect x="0" y="0" width="40" height="65" rx="6" fill="url(#faraInfoPanel)" stroke="#6b7280" strokeWidth="2" />
+            <rect x="5" y="8" width="30" height="40" fill="#0f172a" rx="2" />
+            {/* Signal bars */}
+            <g transform="translate(10, 15)">
+              {[...Array(4)].map((_, i) => {
+                const barHeight = 5 + i * 4;
+                const barStrength = (i + 1) * 25;
+                const visible = signalStrength >= barStrength;
+                return (
+                  <rect
+                    key={i}
+                    x={i * 6}
+                    y={20 - barHeight}
+                    width="4"
+                    height={barHeight}
+                    fill={visible ? '#22c55e' : '#4b5563'}
+                    rx="1"
+                    opacity={visible ? 1 : 0.4}
+                  />
+                );
+              })}
+            </g>
           </g>
-          <text x="20" y="58" textAnchor="middle" className={`text-xs font-bold ${signalStrength > 30 ? 'fill-green-400' : 'fill-red-400'}`}>
-            {signalStrength > 30 ? 'OK' : 'NO SIG'}
-          </text>
-        </g>
 
-        {/* Info panels */}
-        <g>
-          {/* Field strength outside */}
-          <rect x="10" y="260" width="120" height="50" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="1" />
-          <text x="70" y="280" textAnchor="middle" className="fill-gray-400 text-xs">External Field</text>
-          <text x="70" y="298" textAnchor="middle" className="fill-amber-400 text-sm font-bold">{fieldStrength}%</text>
-        </g>
-
-        <g>
-          {/* Field strength inside */}
-          <rect x="370" y="260" width="120" height="50" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="1" />
-          <text x="430" y="280" textAnchor="middle" className="fill-gray-400 text-xs">Inside Field</text>
-          <text x="430" y="298" textAnchor="middle" className={`text-sm font-bold ${cageEnabled ? 'fill-green-400' : 'fill-amber-400'}`}>
-            {cageEnabled ? `${signalStrength}%` : `${fieldStrength}%`}
-          </text>
-        </g>
-
-        {/* Shielding effectiveness */}
-        {cageEnabled && (
+          {/* Premium info panels */}
           <g>
-            <rect x="190" y="260" width="120" height="50" rx="8" fill="#052e16" stroke="#22c55e" strokeWidth="1" />
-            <text x="250" y="280" textAnchor="middle" className="fill-green-400 text-xs">Shielding</text>
-            <text x="250" y="298" textAnchor="middle" className="fill-green-300 text-sm font-bold">
-              {Math.round((1 - signalStrength / fieldStrength) * 100)}%
-            </text>
+            {/* Field strength outside */}
+            <rect x="10" y="260" width="120" height="50" rx="10" fill="url(#faraInfoPanel)" stroke="#374151" strokeWidth="1" />
+            <rect x="12" y="262" width="116" height="46" rx="8" fill="none" stroke="#475569" strokeWidth="0.5" strokeOpacity="0.5" />
           </g>
+
+          <g>
+            {/* Field strength inside */}
+            <rect x="370" y="260" width="120" height="50" rx="10" fill="url(#faraInfoPanel)" stroke="#374151" strokeWidth="1" />
+            <rect x="372" y="262" width="116" height="46" rx="8" fill="none" stroke="#475569" strokeWidth="0.5" strokeOpacity="0.5" />
+          </g>
+
+          {/* Shielding effectiveness panel */}
+          {cageEnabled && (
+            <g>
+              <rect x="190" y="260" width="120" height="50" rx="10" fill="#052e16" stroke="#22c55e" strokeWidth="1" />
+              <rect x="192" y="262" width="116" height="46" rx="8" fill="none" stroke="#4ade80" strokeWidth="0.5" strokeOpacity="0.3" />
+            </g>
+          )}
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        <div style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 16px', marginTop: '-60px', position: 'relative', zIndex: 10 }}>
+          <div style={{ textAlign: 'center', width: '120px' }}>
+            <p style={{ fontSize: typo.small, color: '#94a3b8', margin: 0 }}>External Field</p>
+            <p style={{ fontSize: typo.bodyLarge, color: '#f59e0b', fontWeight: 'bold', margin: 0 }}>{fieldStrength}%</p>
+          </div>
+          {cageEnabled && (
+            <div style={{ textAlign: 'center', width: '120px' }}>
+              <p style={{ fontSize: typo.small, color: '#4ade80', margin: 0 }}>Shielding</p>
+              <p style={{ fontSize: typo.bodyLarge, color: '#86efac', fontWeight: 'bold', margin: 0 }}>
+                {Math.round((1 - signalStrength / fieldStrength) * 100)}%
+              </p>
+            </div>
+          )}
+          <div style={{ textAlign: 'center', width: '120px' }}>
+            <p style={{ fontSize: typo.small, color: '#94a3b8', margin: 0 }}>Inside Field</p>
+            <p style={{ fontSize: typo.bodyLarge, color: cageEnabled ? '#4ade80' : '#f59e0b', fontWeight: 'bold', margin: 0 }}>
+              {cageEnabled ? `${signalStrength}%` : `${fieldStrength}%`}
+            </p>
+          </div>
+        </div>
+
+        {/* Phone signal status label */}
+        <div style={{
+          position: 'absolute',
+          top: '195px',
+          left: '50%',
+          transform: 'translateX(-50%)',
+          textAlign: 'center'
+        }}>
+          <p style={{
+            fontSize: typo.small,
+            color: signalStrength > 30 ? '#4ade80' : '#ef4444',
+            fontWeight: 'bold',
+            margin: 0
+          }}>
+            {signalStrength > 30 ? 'SIGNAL OK' : 'NO SIGNAL'}
+          </p>
+        </div>
+
+        {/* E = 0 indicator when shielded */}
+        {cageEnabled && (
+          <div style={{
+            position: 'absolute',
+            top: '145px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            textAlign: 'center'
+          }}>
+            <p style={{ fontSize: typo.body, color: '#4ade80', fontWeight: 'bold', margin: 0 }}>E = 0</p>
+            <p style={{ fontSize: typo.label, color: '#86efac', margin: 0 }}>SHIELDED</p>
+          </div>
         )}
-      </svg>
+      </>
     );
   };
 
@@ -536,7 +720,10 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
         case 'sphere':
           return (
             <g>
-              <ellipse cx="280" cy="160" rx="80" ry="80" fill="none" stroke="#f59e0b" strokeWidth="4" />
+              {/* Sphere with metallic gradient */}
+              <ellipse cx="280" cy="160" rx="80" ry="80" fill="none" stroke="url(#faraTwistCageFrame)" strokeWidth="5" />
+              {/* Interior glow */}
+              <ellipse cx="280" cy="160" rx="70" ry="70" fill="url(#faraTwistInterior)" />
               {/* Mesh pattern for sphere */}
               {[...Array(8)].map((_, i) => (
                 <ellipse
@@ -546,9 +733,8 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                   rx={80 - i * 2}
                   ry={Math.max(5, 80 - i * 20)}
                   fill="none"
-                  stroke="#f59e0b"
-                  strokeWidth="1"
-                  opacity="0.5"
+                  stroke="url(#faraTwistMesh)"
+                  strokeWidth="1.5"
                 />
               ))}
               {[...Array(12)].map((_, i) => {
@@ -560,34 +746,39 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                     y1={80}
                     x2={280 + Math.cos(angle) * 80}
                     y2={240}
-                    stroke="#f59e0b"
-                    strokeWidth="1"
-                    opacity="0.5"
+                    stroke="url(#faraTwistMesh)"
+                    strokeWidth="1.5"
                   />
                 );
               })}
-              {/* Gap visualization */}
+              {/* Gap visualization with glow */}
               {gapSize !== 'none' && (
-                <rect
-                  x="260"
-                  y={gapSize === 'large' ? 120 : 140}
-                  width="40"
-                  height={gapSize === 'large' ? 80 : 40}
-                  fill="#0f172a"
-                  stroke="#ef4444"
-                  strokeWidth="2"
-                  strokeDasharray="4,2"
-                />
+                <g>
+                  <rect
+                    x="260"
+                    y={gapSize === 'large' ? 120 : 140}
+                    width="40"
+                    height={gapSize === 'large' ? 80 : 40}
+                    fill="url(#faraTwistBackground)"
+                    stroke="url(#faraTwistGapGlow)"
+                    strokeWidth="3"
+                    strokeDasharray="4,2"
+                    filter="url(#faraTwistGapFilter)"
+                  />
+                </g>
               )}
             </g>
           );
         case 'cylinder':
           return (
             <g>
-              <ellipse cx="280" cy="90" rx="70" ry="20" fill="none" stroke="#f59e0b" strokeWidth="3" />
-              <ellipse cx="280" cy="230" rx="70" ry="20" fill="none" stroke="#f59e0b" strokeWidth="3" />
-              <line x1="210" y1="90" x2="210" y2="230" stroke="#f59e0b" strokeWidth="3" />
-              <line x1="350" y1="90" x2="350" y2="230" stroke="#f59e0b" strokeWidth="3" />
+              {/* Interior glow */}
+              <ellipse cx="280" cy="160" rx="60" ry="65" fill="url(#faraTwistInterior)" />
+              {/* Cylinder with metallic look */}
+              <ellipse cx="280" cy="90" rx="70" ry="20" fill="none" stroke="url(#faraTwistCageFrame)" strokeWidth="4" />
+              <ellipse cx="280" cy="230" rx="70" ry="20" fill="none" stroke="url(#faraTwistCageFrame)" strokeWidth="4" />
+              <line x1="210" y1="90" x2="210" y2="230" stroke="url(#faraTwistCageFrame)" strokeWidth="4" />
+              <line x1="350" y1="90" x2="350" y2="230" stroke="url(#faraTwistCageFrame)" strokeWidth="4" />
               {/* Mesh lines */}
               {[...Array(6)].map((_, i) => (
                 <ellipse
@@ -597,9 +788,8 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                   rx="70"
                   ry="8"
                   fill="none"
-                  stroke="#f59e0b"
-                  strokeWidth="1"
-                  opacity="0.5"
+                  stroke="url(#faraTwistMesh)"
+                  strokeWidth="1.5"
                 />
               ))}
               {[...Array(8)].map((_, i) => {
@@ -612,9 +802,8 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                     y1="90"
                     x2={x}
                     y2="230"
-                    stroke="#f59e0b"
-                    strokeWidth="1"
-                    opacity="0.5"
+                    stroke="url(#faraTwistMesh)"
+                    strokeWidth="1.5"
                   />
                 );
               })}
@@ -625,10 +814,11 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                   y={gapSize === 'large' ? 130 : 150}
                   width="40"
                   height={gapSize === 'large' ? 60 : 30}
-                  fill="#0f172a"
-                  stroke="#ef4444"
-                  strokeWidth="2"
+                  fill="url(#faraTwistBackground)"
+                  stroke="url(#faraTwistGapGlow)"
+                  strokeWidth="3"
                   strokeDasharray="4,2"
+                  filter="url(#faraTwistGapFilter)"
                 />
               )}
             </g>
@@ -636,7 +826,11 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
         default: // box
           return (
             <g>
-              <rect x="220" y="90" width="120" height="140" rx="4" fill="none" stroke="#f59e0b" strokeWidth="4" />
+              {/* Interior glow */}
+              <rect x="230" y="100" width="100" height="120" rx="4" fill="url(#faraTwistInterior)" />
+              {/* Box frame with metallic gradient */}
+              <rect x="220" y="90" width="120" height="140" rx="6" fill="none" stroke="url(#faraTwistCageFrame)" strokeWidth="5" />
+              <rect x="224" y="94" width="112" height="132" rx="4" fill="none" stroke="#fcd34d" strokeWidth="0.5" strokeOpacity="0.3" />
               {/* Mesh */}
               {[...Array(Math.ceil(120 / (twistMeshSize + 5)))].map((_, i) => (
                 <line
@@ -645,9 +839,8 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                   y1="90"
                   x2={228 + i * (twistMeshSize + 5)}
                   y2="230"
-                  stroke="#f59e0b"
-                  strokeWidth="1"
-                  opacity="0.6"
+                  stroke="url(#faraTwistMesh)"
+                  strokeWidth="1.5"
                 />
               ))}
               {[...Array(Math.ceil(140 / (twistMeshSize + 5)))].map((_, i) => (
@@ -657,22 +850,22 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
                   y1={98 + i * (twistMeshSize + 5)}
                   x2="340"
                   y2={98 + i * (twistMeshSize + 5)}
-                  stroke="#f59e0b"
-                  strokeWidth="1"
-                  opacity="0.6"
+                  stroke="url(#faraTwistMesh)"
+                  strokeWidth="1.5"
                 />
               ))}
-              {/* Gap */}
+              {/* Gap with glow */}
               {gapSize !== 'none' && (
                 <rect
                   x="265"
                   y={gapSize === 'large' ? 130 : 150}
                   width="30"
                   height={gapSize === 'large' ? 60 : 30}
-                  fill="#0f172a"
-                  stroke="#ef4444"
-                  strokeWidth="2"
+                  fill="url(#faraTwistBackground)"
+                  stroke="url(#faraTwistGapGlow)"
+                  strokeWidth="3"
                   strokeDasharray="4,2"
+                  filter="url(#faraTwistGapFilter)"
                 />
               )}
             </g>
@@ -681,99 +874,298 @@ const FaradayCageRenderer: React.FC<FaradayCageRendererProps> = ({
     };
 
     return (
-      <svg viewBox="0 0 500 320" className="w-full h-64">
-        <rect width="500" height="320" fill="#0f172a" />
+      <>
+        <svg viewBox="0 0 500 320" className="w-full h-64">
+          <defs>
+            {/* Premium background gradient */}
+            <linearGradient id="faraTwistBackground" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#020617" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        <text x="250" y="25" textAnchor="middle" className="fill-white text-sm font-bold">
-          Mesh Size vs Wavelength
-        </text>
+            {/* Metallic cage frame gradient */}
+            <linearGradient id="faraTwistCageFrame" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="75%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
 
-        {/* Incoming waves */}
-        {[...Array(4)].map((_, i) => {
-          const x = 40 + i * 40;
-          const waveHeight = twistWavelength * 0.8;
-          return (
-            <path
-              key={i}
-              d={`M ${x} ${160 - waveHeight / 2 + waveY}
-                  C ${x + 20} ${160 - waveHeight / 2 + waveY},
-                    ${x + 20} ${160 + waveHeight / 2 + waveY},
-                    ${x + 40} ${160 + waveHeight / 2 + waveY}
-                  C ${x + 60} ${160 + waveHeight / 2 + waveY},
-                    ${x + 60} ${160 - waveHeight / 2 + waveY},
-                    ${x + 80} ${160 - waveHeight / 2 + waveY}`}
-              fill="none"
-              stroke="#3b82f6"
-              strokeWidth="3"
-              opacity={1 - i * 0.15}
-            />
-          );
-        })}
+            {/* Brushed metal mesh gradient */}
+            <linearGradient id="faraTwistMesh" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5" />
+              <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#fcd34d" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.5" />
+            </linearGradient>
 
-        {/* Wavelength indicator */}
-        <g transform="translate(60, 260)">
-          <line x1="0" y1="0" x2={twistWavelength} y2="0" stroke="#3b82f6" strokeWidth="2" />
-          <line x1="0" y1="-5" x2="0" y2="5" stroke="#3b82f6" strokeWidth="2" />
-          <line x1={twistWavelength} y1="-5" x2={twistWavelength} y2="5" stroke="#3b82f6" strokeWidth="2" />
-          <text x={twistWavelength / 2} y="15" textAnchor="middle" className="fill-blue-400 text-xs">
-            wavelength = {twistWavelength}mm
-          </text>
-        </g>
+            {/* Wave gradient (blue) */}
+            <linearGradient id="faraTwistWave" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#93c5fd" stopOpacity="1" />
+              <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.3" />
+            </linearGradient>
 
-        {/* Cage shape */}
-        {renderCageShape()}
+            {/* Leak wave gradient (red) */}
+            <linearGradient id="faraTwistLeak" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#f87171" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
+            </linearGradient>
 
-        {/* Mesh size indicator */}
-        <g transform="translate(380, 260)">
-          <rect x="0" y="-5" width={twistMeshSize} height={twistMeshSize} fill="none" stroke="#f59e0b" strokeWidth="2" />
-          <text x={twistMeshSize / 2 + 30} y="5" className="fill-amber-400 text-xs">
-            mesh = {twistMeshSize}mm
-          </text>
-        </g>
+            {/* Gap glow gradient */}
+            <linearGradient id="faraTwistGapGlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#f87171" stopOpacity="1" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.5" />
+            </linearGradient>
 
-        {/* Penetrating waves (if effectiveness is low) */}
-        {penetrates && (
-          <g className="animate-pulse">
-            <path
-              d={`M 360 ${155 + waveY} Q 400 ${155 + waveY} 440 ${165 + waveY}`}
-              fill="none"
-              stroke="#ef4444"
-              strokeWidth="2"
-              opacity="0.7"
-            />
-            <text x="420" y="145" className="fill-red-400 text-xs font-bold">LEAK!</text>
+            {/* Protected interior glow */}
+            <radialGradient id="faraTwistInterior" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={penetrates ? '#ef4444' : '#4ade80'} stopOpacity="0.15" />
+              <stop offset="70%" stopColor={penetrates ? '#dc2626' : '#22c55e'} stopOpacity="0.05" />
+              <stop offset="100%" stopColor={penetrates ? '#b91c1c' : '#16a34a'} stopOpacity="0" />
+            </radialGradient>
+
+            {/* Safe indicator glow */}
+            <radialGradient id="faraTwistSafeGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#22c55e" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Info panel gradient */}
+            <linearGradient id="faraTwistInfoPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Wave glow filter */}
+            <filter id="faraTwistWaveGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Gap warning filter */}
+            <filter id="faraTwistGapFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner glow for safe area */}
+            <filter id="faraTwistInnerGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Premium background */}
+          <rect width="500" height="320" fill="url(#faraTwistBackground)" />
+
+          {/* Subtle grid pattern */}
+          <pattern id="faraTwistGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect width="500" height="320" fill="url(#faraTwistGrid)" />
+
+          {/* Incoming waves with premium glow */}
+          {[...Array(4)].map((_, i) => {
+            const x = 40 + i * 40;
+            const waveHeight = twistWavelength * 0.8;
+            return (
+              <g key={i}>
+                {/* Glow layer */}
+                <path
+                  d={`M ${x} ${160 - waveHeight / 2 + waveY}
+                      C ${x + 20} ${160 - waveHeight / 2 + waveY},
+                        ${x + 20} ${160 + waveHeight / 2 + waveY},
+                        ${x + 40} ${160 + waveHeight / 2 + waveY}
+                      C ${x + 60} ${160 + waveHeight / 2 + waveY},
+                        ${x + 60} ${160 - waveHeight / 2 + waveY},
+                        ${x + 80} ${160 - waveHeight / 2 + waveY}`}
+                  fill="none"
+                  stroke="#3b82f6"
+                  strokeWidth="8"
+                  opacity={0.15 - i * 0.03}
+                  filter="url(#faraTwistWaveGlow)"
+                />
+                {/* Main wave */}
+                <path
+                  d={`M ${x} ${160 - waveHeight / 2 + waveY}
+                      C ${x + 20} ${160 - waveHeight / 2 + waveY},
+                        ${x + 20} ${160 + waveHeight / 2 + waveY},
+                        ${x + 40} ${160 + waveHeight / 2 + waveY}
+                      C ${x + 60} ${160 + waveHeight / 2 + waveY},
+                        ${x + 60} ${160 - waveHeight / 2 + waveY},
+                        ${x + 80} ${160 - waveHeight / 2 + waveY}`}
+                  fill="none"
+                  stroke="url(#faraTwistWave)"
+                  strokeWidth="3"
+                  opacity={1 - i * 0.15}
+                />
+              </g>
+            );
+          })}
+
+          {/* Cage shape */}
+          {renderCageShape()}
+
+          {/* Penetrating waves with glow (if effectiveness is low) */}
+          {penetrates && (
+            <g>
+              {/* Glow layer */}
+              <path
+                d={`M 360 ${155 + waveY} Q 400 ${155 + waveY} 440 ${165 + waveY}`}
+                fill="none"
+                stroke="#ef4444"
+                strokeWidth="8"
+                opacity="0.3"
+                filter="url(#faraTwistWaveGlow)"
+              />
+              {/* Main leak wave */}
+              <path
+                d={`M 360 ${155 + waveY} Q 400 ${155 + waveY} 440 ${165 + waveY}`}
+                fill="none"
+                stroke="url(#faraTwistLeak)"
+                strokeWidth="3"
+                opacity="0.9"
+              >
+                <animate attributeName="opacity" values="0.6;1;0.6" dur="0.5s" repeatCount="indefinite" />
+              </path>
+            </g>
+          )}
+
+          {/* Shielded indicator with glow */}
+          {!penetrates && (
+            <g transform="translate(280, 160)">
+              <circle cx="0" cy="0" r="30" fill="url(#faraTwistSafeGlow)" filter="url(#faraTwistInnerGlow)" />
+              <circle cx="0" cy="0" r="25" fill="none" stroke="#22c55e" strokeWidth="2" strokeOpacity="0.6" />
+            </g>
+          )}
+
+          {/* Premium effectiveness panel */}
+          <g>
+            <rect x="350" y="70" width="140" height="70" rx="10" fill="url(#faraTwistInfoPanel)" stroke="#374151" strokeWidth="1" />
+            <rect x="352" y="72" width="136" height="66" rx="8" fill="none" stroke="#475569" strokeWidth="0.5" strokeOpacity="0.3" />
           </g>
-        )}
 
-        {/* Shielded indicator */}
-        {!penetrates && (
-          <g transform="translate(280, 160)">
-            <circle cx="0" cy="0" r="25" fill="#22c55e" fillOpacity="0.2" />
-            <text x="0" y="5" textAnchor="middle" className="fill-green-400 text-sm font-bold">SAFE</text>
+          {/* Premium rule indicator */}
+          <g>
+            <rect x="10" y="70" width="140" height="50" rx="10" fill={twistMeshSize < twistWavelength ? '#052e16' : '#450a0a'} stroke={twistMeshSize < twistWavelength ? '#22c55e' : '#ef4444'} strokeWidth="1" />
+            <rect x="12" y="72" width="136" height="46" rx="8" fill="none" stroke={twistMeshSize < twistWavelength ? '#4ade80' : '#f87171'} strokeWidth="0.5" strokeOpacity="0.3" />
           </g>
-        )}
+        </svg>
 
-        {/* Effectiveness panel */}
-        <rect x="350" y="70" width="140" height="70" rx="8" fill="#1f2937" stroke="#374151" strokeWidth="1" />
-        <text x="420" y="95" textAnchor="middle" className="fill-gray-400 text-xs">Shielding Effectiveness</text>
-        <text
-          x="420"
-          y="125"
-          textAnchor="middle"
-          className={`text-2xl font-bold ${effectiveness > 80 ? 'fill-green-400' : effectiveness > 40 ? 'fill-yellow-400' : 'fill-red-400'}`}
-        >
-          {effectiveness}%
-        </text>
+        {/* Text labels outside SVG using typo system */}
+        <div style={{ marginTop: '-80px', position: 'relative', zIndex: 10, padding: '0 16px' }}>
+          {/* Rule indicator text */}
+          <div style={{
+            position: 'absolute',
+            top: '-180px',
+            left: '16px',
+            width: '140px',
+            textAlign: 'center'
+          }}>
+            <p style={{
+              fontSize: typo.small,
+              color: twistMeshSize < twistWavelength ? '#4ade80' : '#f87171',
+              margin: 0
+            }}>
+              mesh {twistMeshSize < twistWavelength ? '<' : '>'} wavelength
+            </p>
+            <p style={{
+              fontSize: typo.body,
+              color: twistMeshSize < twistWavelength ? '#86efac' : '#fca5a5',
+              fontWeight: 'bold',
+              margin: 0
+            }}>
+              {twistMeshSize < twistWavelength ? 'BLOCKS' : 'LEAKS'}
+            </p>
+          </div>
 
-        {/* Rule indicator */}
-        <rect x="10" y="70" width="140" height="50" rx="8" fill={twistMeshSize < twistWavelength ? '#052e16' : '#450a0a'} stroke={twistMeshSize < twistWavelength ? '#22c55e' : '#ef4444'} strokeWidth="1" />
-        <text x="80" y="90" textAnchor="middle" className={twistMeshSize < twistWavelength ? 'fill-green-400 text-xs' : 'fill-red-400 text-xs'}>
-          mesh {twistMeshSize < twistWavelength ? '<' : '>'} wavelength
-        </text>
-        <text x="80" y="108" textAnchor="middle" className={twistMeshSize < twistWavelength ? 'fill-green-300 text-xs font-bold' : 'fill-red-300 text-xs font-bold'}>
-          {twistMeshSize < twistWavelength ? 'BLOCKS' : 'LEAKS'}
-        </text>
-      </svg>
+          {/* Effectiveness panel text */}
+          <div style={{
+            position: 'absolute',
+            top: '-180px',
+            right: '16px',
+            width: '140px',
+            textAlign: 'center'
+          }}>
+            <p style={{ fontSize: typo.small, color: '#94a3b8', margin: 0 }}>Shielding Effectiveness</p>
+            <p style={{
+              fontSize: typo.heading,
+              color: effectiveness > 80 ? '#4ade80' : effectiveness > 40 ? '#fbbf24' : '#f87171',
+              fontWeight: 'bold',
+              margin: 0
+            }}>
+              {effectiveness}%
+            </p>
+          </div>
+
+          {/* Safe/Leak indicator */}
+          {!penetrates ? (
+            <div style={{
+              position: 'absolute',
+              top: '-110px',
+              left: '50%',
+              transform: 'translateX(-50%)',
+              textAlign: 'center'
+            }}>
+              <p style={{ fontSize: typo.bodyLarge, color: '#4ade80', fontWeight: 'bold', margin: 0 }}>SAFE</p>
+            </div>
+          ) : (
+            <div style={{
+              position: 'absolute',
+              top: '-115px',
+              right: '40px',
+              textAlign: 'center'
+            }}>
+              <p style={{ fontSize: typo.body, color: '#f87171', fontWeight: 'bold', margin: 0 }}>LEAK!</p>
+            </div>
+          )}
+
+          {/* Wavelength indicator */}
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: `${twistWavelength}px`,
+                height: '2px',
+                background: '#3b82f6',
+                marginBottom: '4px',
+                position: 'relative'
+              }}>
+                <div style={{ position: 'absolute', left: 0, top: '-4px', width: '2px', height: '10px', background: '#3b82f6' }} />
+                <div style={{ position: 'absolute', right: 0, top: '-4px', width: '2px', height: '10px', background: '#3b82f6' }} />
+              </div>
+              <p style={{ fontSize: typo.small, color: '#60a5fa', margin: 0 }}>wavelength = {twistWavelength}mm</p>
+            </div>
+            <div style={{ textAlign: 'center' }}>
+              <div style={{
+                width: `${twistMeshSize}px`,
+                height: `${twistMeshSize}px`,
+                border: '2px solid #f59e0b',
+                marginBottom: '4px'
+              }} />
+              <p style={{ fontSize: typo.small, color: '#fbbf24', margin: 0 }}>mesh = {twistMeshSize}mm</p>
+            </div>
+          </div>
+        </div>
+      </>
     );
   };
 

@@ -528,6 +528,142 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
     );
   }
 
+  // Premium SVG definitions for circuit visualization
+  const renderSVGDefs = () => (
+    <defs>
+      {/* Capacitor plate gradient - metallic blue */}
+      <linearGradient id="rctcCapacitorPlate" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#67e8f9" />
+        <stop offset="25%" stopColor="#22d3ee" />
+        <stop offset="50%" stopColor="#06b6d4" />
+        <stop offset="75%" stopColor="#0891b2" />
+        <stop offset="100%" stopColor="#0e7490" />
+      </linearGradient>
+
+      {/* Capacitor charge glow */}
+      <radialGradient id="rctcCapacitorGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#67e8f9" stopOpacity="0.8" />
+        <stop offset="40%" stopColor="#22d3ee" stopOpacity="0.5" />
+        <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.2" />
+        <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Resistor body gradient - warm red/orange */}
+      <linearGradient id="rctcResistorBody" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fca5a5" />
+        <stop offset="20%" stopColor="#f87171" />
+        <stop offset="50%" stopColor="#ef4444" />
+        <stop offset="80%" stopColor="#dc2626" />
+        <stop offset="100%" stopColor="#b91c1c" />
+      </linearGradient>
+
+      {/* Resistor bands pattern */}
+      <linearGradient id="rctcResistorBands" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#ef4444" />
+        <stop offset="15%" stopColor="#ef4444" />
+        <stop offset="15%" stopColor="#fbbf24" />
+        <stop offset="25%" stopColor="#fbbf24" />
+        <stop offset="25%" stopColor="#ef4444" />
+        <stop offset="45%" stopColor="#ef4444" />
+        <stop offset="45%" stopColor="#a855f7" />
+        <stop offset="55%" stopColor="#a855f7" />
+        <stop offset="55%" stopColor="#ef4444" />
+        <stop offset="75%" stopColor="#ef4444" />
+        <stop offset="75%" stopColor="#fbbf24" />
+        <stop offset="85%" stopColor="#fbbf24" />
+        <stop offset="85%" stopColor="#ef4444" />
+        <stop offset="100%" stopColor="#ef4444" />
+      </linearGradient>
+
+      {/* Battery/power supply gradient */}
+      <linearGradient id="rctcBatteryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#fde047" />
+        <stop offset="25%" stopColor="#facc15" />
+        <stop offset="50%" stopColor="#eab308" />
+        <stop offset="75%" stopColor="#ca8a04" />
+        <stop offset="100%" stopColor="#a16207" />
+      </linearGradient>
+
+      {/* Circuit wire gradient - copper */}
+      <linearGradient id="rctcWireCopper" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#f59e0b" />
+        <stop offset="30%" stopColor="#fbbf24" />
+        <stop offset="50%" stopColor="#fcd34d" />
+        <stop offset="70%" stopColor="#fbbf24" />
+        <stop offset="100%" stopColor="#f59e0b" />
+      </linearGradient>
+
+      {/* Voltage curve gradient - cyan to purple */}
+      <linearGradient id="rctcVoltageGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#06b6d4" />
+        <stop offset="50%" stopColor="#8b5cf6" />
+        <stop offset="100%" stopColor="#a855f7" />
+      </linearGradient>
+
+      {/* Graph background gradient */}
+      <linearGradient id="rctcGraphBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#0c4a6e" stopOpacity="0.2" />
+        <stop offset="50%" stopColor="#1e3a5f" stopOpacity="0.15" />
+        <stop offset="100%" stopColor="#0f172a" stopOpacity="0.1" />
+      </linearGradient>
+
+      {/* Current flow particle gradient */}
+      <radialGradient id="rctcCurrentParticle" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+        <stop offset="40%" stopColor="#fbbf24" stopOpacity="0.8" />
+        <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Switch contact gradient */}
+      <linearGradient id="rctcSwitchContact" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#10b981" />
+        <stop offset="50%" stopColor="#059669" />
+        <stop offset="100%" stopColor="#047857" />
+      </linearGradient>
+
+      {/* Glow filters */}
+      <filter id="rctcCapacitorGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="rctcCurrentGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="rctcVoltageGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="1.5" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      <filter id="rctcSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2" />
+      </filter>
+
+      {/* Lab background gradient */}
+      <linearGradient id="rctcLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#030712" />
+        <stop offset="50%" stopColor="#0a0f1a" />
+        <stop offset="100%" stopColor="#030712" />
+      </linearGradient>
+
+      {/* Grid pattern */}
+      <pattern id="rctcLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+        <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+      </pattern>
+    </defs>
+  );
+
   // Render voltage graph
   function renderVoltageGraph(history: { time: number; voltage: number }[], maxVoltage: number, isCharge: boolean) {
     const width = 240;
@@ -555,50 +691,37 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
 
     return (
       <svg viewBox={`0 0 ${width} ${height}`} style={{ width: '100%', maxHeight: 150 }}>
-        {/* Background */}
+        {renderSVGDefs()}
+
+        {/* Premium background */}
         <rect x={padding} y={padding} width={width - 2 * padding} height={height - 2 * padding}
-          fill="rgba(6, 182, 212, 0.05)" stroke="rgba(6, 182, 212, 0.3)" strokeWidth="1" />
+          fill="url(#rctcGraphBg)" stroke="url(#rctcVoltageGradient)" strokeWidth="1" rx="3" />
 
         {/* Time constant vertical lines */}
         {tauMarkers.map(marker => (
           <g key={marker.n}>
             <line x1={marker.x} y1={padding} x2={marker.x} y2={height - padding}
-              stroke="rgba(255,255,255,0.1)" strokeWidth="1" strokeDasharray="3,3" />
-            <text x={marker.x} y={height - 8} textAnchor="middle" fill="rgba(255,255,255,0.5)" fontSize="8">
-              {marker.n}τ
-            </text>
+              stroke="rgba(139, 92, 246, 0.3)" strokeWidth="1" strokeDasharray="3,3" />
           </g>
         ))}
-
-        {/* Y-axis labels */}
-        <text x={padding - 5} y={padding + 5} textAnchor="end" fill="rgba(255,255,255,0.5)" fontSize="8">
-          {maxVoltage}V
-        </text>
-        <text x={padding - 5} y={height - padding} textAnchor="end" fill="rgba(255,255,255,0.5)" fontSize="8">
-          0V
-        </text>
 
         {/* 63% line for charging */}
         {isCharge && (
           <g>
             <line x1={padding} y1={height - padding - 0.632 * (height - 2 * padding)}
               x2={width - padding} y2={height - padding - 0.632 * (height - 2 * padding)}
-              stroke={premiumDesign.colors.success} strokeWidth="1" strokeDasharray="4,4" opacity="0.5" />
-            <text x={width - padding + 3} y={height - padding - 0.632 * (height - 2 * padding) + 3}
-              fill={premiumDesign.colors.success} fontSize="7">63%</text>
+              stroke={premiumDesign.colors.success} strokeWidth="1.5" strokeDasharray="4,4" opacity="0.7"
+              filter="url(#rctcSoftGlow)" />
           </g>
         )}
 
-        {/* Voltage curve */}
+        {/* Voltage curve with glow */}
         {history.length > 1 && (
-          <polyline points={pathPoints} fill="none" stroke={premiumDesign.colors.capacitor}
-            strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+          <g filter="url(#rctcVoltageGlowFilter)">
+            <polyline points={pathPoints} fill="none" stroke="url(#rctcVoltageGradient)"
+              strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+          </g>
         )}
-
-        {/* Axes labels */}
-        <text x={width / 2} y={height - 2} textAnchor="middle" fill="white" fontSize="9">Time</text>
-        <text x={8} y={height / 2} textAnchor="middle" fill="white" fontSize="9"
-          transform={`rotate(-90, 8, ${height / 2})`}>Voltage</text>
       </svg>
     );
   }
@@ -825,66 +948,146 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
             flexDirection: 'column',
             gap: premiumDesign.spacing.md,
           }}>
-            {/* Circuit Diagram */}
+            {/* Circuit Diagram - Premium SVG */}
             <div style={{
               background: premiumDesign.colors.background.card,
               borderRadius: premiumDesign.radius.xl,
               padding: premiumDesign.spacing.lg,
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
-              <svg viewBox="0 0 280 140" style={{ width: '100%', maxHeight: 160 }}>
-                {/* Circuit path */}
-                <rect x="30" y="20" width="220" height="100" fill="none"
-                  stroke={isCharging ? premiumDesign.colors.capacitor : '#666'} strokeWidth="2" rx="5" />
+              <svg viewBox="0 0 300 120" style={{ width: '100%', maxHeight: 140 }}>
+                {renderSVGDefs()}
 
-                {/* Battery */}
-                <g transform="translate(15, 50)">
-                  <rect x="0" y="0" width="15" height="40" fill={premiumDesign.colors.background.tertiary}
-                    stroke={premiumDesign.colors.voltage} strokeWidth="2" rx="2" />
-                  <text x="7.5" y="55" textAnchor="middle" fill={premiumDesign.colors.voltage} fontSize="10">
-                    {supplyVoltage}V
-                  </text>
+                {/* Lab background */}
+                <rect width="300" height="120" fill="url(#rctcLabBg)" rx="4" />
+                <rect width="300" height="120" fill="url(#rctcLabGrid)" rx="4" />
+
+                {/* Circuit wire path with copper gradient */}
+                <path d="M 25,35 L 25,20 L 275,20 L 275,100 L 25,100 L 25,65"
+                  fill="none" stroke="url(#rctcWireCopper)" strokeWidth="2.5" strokeLinecap="round" />
+
+                {/* Current flow particles (animated when charging) */}
+                {isCharging && [0, 1, 2, 3].map(i => {
+                  const offset = (Date.now() / 50 + i * 25) % 100;
+                  const pos = offset / 100;
+                  // Calculate position along circuit path
+                  let x, y;
+                  if (pos < 0.25) {
+                    x = 25 + (pos / 0.25) * 250;
+                    y = 20;
+                  } else if (pos < 0.5) {
+                    x = 275;
+                    y = 20 + ((pos - 0.25) / 0.25) * 80;
+                  } else if (pos < 0.75) {
+                    x = 275 - ((pos - 0.5) / 0.25) * 250;
+                    y = 100;
+                  } else {
+                    x = 25;
+                    y = 100 - ((pos - 0.75) / 0.25) * 80;
+                  }
+                  return (
+                    <circle key={i} cx={x} cy={y} r="3"
+                      fill="url(#rctcCurrentParticle)" filter="url(#rctcCurrentGlowFilter)" />
+                  );
+                })}
+
+                {/* Battery with gradient */}
+                <g transform="translate(10, 35)">
+                  <rect x="0" y="0" width="18" height="30" fill="url(#rctcBatteryGradient)" rx="2"
+                    stroke="#a16207" strokeWidth="1" />
+                  <rect x="5" y="-3" width="8" height="4" fill="#fbbf24" rx="1" />
+                  <text x="9" y="18" textAnchor="middle" fill="#78350f" fontSize="8" fontWeight="bold">+</text>
+                  <text x="9" y="28" textAnchor="middle" fill="#78350f" fontSize="8" fontWeight="bold">-</text>
                 </g>
 
-                {/* Resistor */}
-                <g transform="translate(80, 8)">
-                  <rect x="0" y="0" width="50" height="16" fill={premiumDesign.colors.background.tertiary}
-                    stroke={premiumDesign.colors.resistor} strokeWidth="2" rx="2" />
-                  <text x="25" y="28" textAnchor="middle" fill={premiumDesign.colors.resistor} fontSize="9">
-                    R={resistance}kΩ
-                  </text>
+                {/* Resistor with colored bands */}
+                <g transform="translate(90, 10)">
+                  {/* Lead wires */}
+                  <line x1="-10" y1="10" x2="0" y2="10" stroke="url(#rctcWireCopper)" strokeWidth="2" />
+                  <line x1="60" y1="10" x2="70" y2="10" stroke="url(#rctcWireCopper)" strokeWidth="2" />
+                  {/* Resistor body */}
+                  <rect x="0" y="2" width="60" height="16" fill="url(#rctcResistorBands)" rx="3"
+                    stroke="#991b1b" strokeWidth="1" />
+                  {/* 3D effect */}
+                  <rect x="0" y="2" width="60" height="3" fill="rgba(255,255,255,0.2)" rx="3" />
                 </g>
 
-                {/* Capacitor */}
-                <g transform="translate(180, 5)">
-                  <line x1="0" y1="8" x2="0" y2="22" stroke={premiumDesign.colors.capacitor} strokeWidth="3" />
-                  <line x1="10" y1="8" x2="10" y2="22" stroke={premiumDesign.colors.capacitor} strokeWidth="3" />
-                  {/* Fill indicator */}
-                  <rect x="1" y={22 - chargePercent * 0.14} width="8" height={chargePercent * 0.14}
-                    fill={premiumDesign.colors.capacitor} opacity="0.5" />
-                  <text x="5" y="35" textAnchor="middle" fill={premiumDesign.colors.capacitor} fontSize="9">
-                    C={capacitance}μF
-                  </text>
+                {/* Capacitor with charge visualization */}
+                <g transform="translate(235, 10)">
+                  {/* Capacitor plates */}
+                  <rect x="0" y="0" width="4" height="20" fill="url(#rctcCapacitorPlate)" rx="1"
+                    filter={chargePercent > 20 ? "url(#rctcCapacitorGlowFilter)" : undefined} />
+                  <rect x="12" y="0" width="4" height="20" fill="url(#rctcCapacitorPlate)" rx="1"
+                    filter={chargePercent > 20 ? "url(#rctcCapacitorGlowFilter)" : undefined} />
+                  {/* Charge glow between plates */}
+                  {chargePercent > 5 && (
+                    <ellipse cx="8" cy="10" rx={3 + chargePercent / 30} ry={8}
+                      fill="url(#rctcCapacitorGlow)" opacity={Math.min(0.8, chargePercent / 100)} />
+                  )}
+                  {/* Electric field lines when charging */}
+                  {chargePercent > 10 && isCharging && (
+                    <g opacity={chargePercent / 150}>
+                      <line x1="5" y1="5" x2="11" y2="5" stroke="#67e8f9" strokeWidth="0.5" strokeDasharray="2,2" />
+                      <line x1="5" y1="10" x2="11" y2="10" stroke="#67e8f9" strokeWidth="0.5" strokeDasharray="2,2" />
+                      <line x1="5" y1="15" x2="11" y2="15" stroke="#67e8f9" strokeWidth="0.5" strokeDasharray="2,2" />
+                    </g>
+                  )}
+                  {/* Lead wires */}
+                  <line x1="2" y1="-10" x2="2" y2="0" stroke="url(#rctcWireCopper)" strokeWidth="2" />
+                  <line x1="14" y1="20" x2="14" y2="30" stroke="url(#rctcWireCopper)" strokeWidth="2" />
                 </g>
 
-                {/* Switch */}
-                <g transform="translate(230, 60)">
-                  <circle cx="0" cy="0" r="4" fill={isCharging ? premiumDesign.colors.success : '#666'} />
-                  <line x1="0" y1="0" x2={isCharging ? "20" : "15"} y2={isCharging ? "0" : "-10"}
-                    stroke={isCharging ? premiumDesign.colors.success : '#666'} strokeWidth="2" />
-                  <circle cx="20" cy="0" r="4" fill={isCharging ? premiumDesign.colors.success : '#666'} />
+                {/* Switch with premium styling */}
+                <g transform="translate(260, 55)">
+                  <circle cx="0" cy="0" r="5" fill={isCharging ? "url(#rctcSwitchContact)" : '#4b5563'}
+                    stroke={isCharging ? '#059669' : '#374151'} strokeWidth="1.5" />
+                  <line x1="0" y1="0" x2={isCharging ? "18" : "12"} y2={isCharging ? "0" : "-12"}
+                    stroke={isCharging ? "url(#rctcSwitchContact)" : '#6b7280'} strokeWidth="2.5" strokeLinecap="round" />
+                  <circle cx="18" cy="0" r="5" fill={isCharging ? "url(#rctcSwitchContact)" : '#4b5563'}
+                    stroke={isCharging ? '#059669' : '#374151'} strokeWidth="1.5" />
+                  {/* Spark effect when just closed */}
+                  {isCharging && (
+                    <circle cx="9" cy="0" r="2" fill="#fef08a" filter="url(#rctcCurrentGlowFilter)" opacity="0.8" />
+                  )}
                 </g>
-
-                {/* Voltage display */}
-                <text x="140" y="85" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">
-                  Vc = {capacitorVoltage.toFixed(2)}V ({chargePercent.toFixed(1)}%)
-                </text>
-
-                {/* Time constant display */}
-                <text x="140" y="105" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="10">
-                  τ = R × C = {timeConstant.toFixed(2)}s | Time: {elapsedTime.toFixed(2)}s ({(elapsedTime / timeConstant).toFixed(2)}τ)
-                </text>
               </svg>
+
+              {/* Labels outside SVG using typo system */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: '8px',
+                fontSize: typo.small,
+              }}>
+                <span style={{ color: premiumDesign.colors.voltage }}>{supplyVoltage}V</span>
+                <span style={{ color: premiumDesign.colors.resistor }}>R = {resistance}kOhm</span>
+                <span style={{ color: premiumDesign.colors.capacitor }}>C = {capacitance}uF</span>
+              </div>
+
+              {/* Voltage and Time Status Display */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: typo.elementGap,
+                padding: '10px 14px',
+                background: 'rgba(6, 182, 212, 0.1)',
+                borderRadius: premiumDesign.radius.md,
+                border: '1px solid rgba(6, 182, 212, 0.2)',
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: typo.label, color: premiumDesign.colors.text.muted }}>Capacitor Voltage</div>
+                  <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: premiumDesign.colors.capacitor }}>
+                    {capacitorVoltage.toFixed(2)}V ({chargePercent.toFixed(1)}%)
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: typo.label, color: premiumDesign.colors.text.muted }}>Time Elapsed</div>
+                  <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: premiumDesign.colors.secondary }}>
+                    {elapsedTime.toFixed(2)}s ({(elapsedTime / timeConstant).toFixed(2)}tau)
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Voltage Graph */}
@@ -894,10 +1097,35 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
               padding: premiumDesign.spacing.lg,
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
-              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.sm, fontSize: '14px' }}>
+              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.sm, fontSize: typo.body }}>
                 Voltage vs Time (Charging Curve)
               </h4>
               {renderVoltageGraph(chargeHistory, supplyVoltage, true)}
+              {/* Graph axis labels outside SVG */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: '6px',
+                fontSize: typo.label,
+                color: premiumDesign.colors.text.muted,
+              }}>
+                <span>0</span>
+                <span style={{ color: premiumDesign.colors.capacitor }}>1tau</span>
+                <span style={{ color: premiumDesign.colors.capacitor }}>2tau</span>
+                <span style={{ color: premiumDesign.colors.capacitor }}>3tau</span>
+                <span style={{ color: premiumDesign.colors.capacitor }}>4tau</span>
+                <span style={{ color: premiumDesign.colors.capacitor }}>5tau</span>
+              </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: '4px',
+                fontSize: typo.label,
+                color: premiumDesign.colors.text.secondary,
+              }}>
+                <span>Y: {supplyVoltage}V max</span>
+                <span>X: Time (tau = {timeConstant.toFixed(2)}s)</span>
+              </div>
             </div>
           </div>
 
@@ -1237,66 +1465,165 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
             flexDirection: 'column',
             gap: premiumDesign.spacing.md,
           }}>
-            {/* Circuit Diagram */}
+            {/* Circuit Diagram - Premium Discharge SVG */}
             <div style={{
               background: premiumDesign.colors.background.card,
               borderRadius: premiumDesign.radius.xl,
               padding: premiumDesign.spacing.lg,
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
-              <svg viewBox="0 0 280 140" style={{ width: '100%', maxHeight: 160 }}>
-                {/* Circuit path (no battery) */}
-                <rect x="60" y="20" width="160" height="100" fill="none"
-                  stroke={isDischarging ? premiumDesign.colors.secondary : '#666'} strokeWidth="2" rx="5" />
+              <svg viewBox="0 0 280 120" style={{ width: '100%', maxHeight: 140 }}>
+                {renderSVGDefs()}
 
-                {/* Resistor */}
-                <g transform="translate(95, 8)">
-                  <rect x="0" y="0" width="50" height="16" fill={premiumDesign.colors.background.tertiary}
-                    stroke={premiumDesign.colors.resistor} strokeWidth="2" rx="2" />
-                  <text x="25" y="28" textAnchor="middle" fill={premiumDesign.colors.resistor} fontSize="9">
-                    R={resistance}kΩ
-                  </text>
+                {/* Additional gradient for discharge/purple theme */}
+                <defs>
+                  <linearGradient id="rctcDischargeCapacitor" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#c084fc" />
+                    <stop offset="25%" stopColor="#a855f7" />
+                    <stop offset="50%" stopColor="#9333ea" />
+                    <stop offset="75%" stopColor="#7c3aed" />
+                    <stop offset="100%" stopColor="#6d28d9" />
+                  </linearGradient>
+                  <radialGradient id="rctcDischargeGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#e879f9" stopOpacity="0.9" />
+                    <stop offset="40%" stopColor="#c084fc" stopOpacity="0.5" />
+                    <stop offset="70%" stopColor="#a855f7" stopOpacity="0.2" />
+                    <stop offset="100%" stopColor="#9333ea" stopOpacity="0" />
+                  </radialGradient>
+                  <radialGradient id="rctcBulbGlow" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#fef08a" />
+                    <stop offset="30%" stopColor="#fde047" />
+                    <stop offset="60%" stopColor="#facc15" />
+                    <stop offset="100%" stopColor="#eab308" stopOpacity="0.3" />
+                  </radialGradient>
+                </defs>
+
+                {/* Lab background */}
+                <rect width="280" height="120" fill="url(#rctcLabBg)" rx="4" />
+                <rect width="280" height="120" fill="url(#rctcLabGrid)" rx="4" />
+
+                {/* Circuit wire path */}
+                <path d="M 55,60 L 55,20 L 225,20 L 225,100 L 55,100 L 55,60"
+                  fill="none" stroke="url(#rctcWireCopper)" strokeWidth="2.5" strokeLinecap="round" />
+
+                {/* Current flow particles (animated when discharging) */}
+                {isDischarging && dischargePercent > 5 && [0, 1, 2].map(i => {
+                  const offset = (Date.now() / 60 + i * 33) % 100;
+                  const pos = offset / 100;
+                  // Calculate position along circuit path (reverse direction for discharge)
+                  let x, y;
+                  if (pos < 0.25) {
+                    x = 55;
+                    y = 60 - (pos / 0.25) * 40;
+                  } else if (pos < 0.5) {
+                    x = 55 + ((pos - 0.25) / 0.25) * 170;
+                    y = 20;
+                  } else if (pos < 0.75) {
+                    x = 225;
+                    y = 20 + ((pos - 0.5) / 0.25) * 80;
+                  } else {
+                    x = 225 - ((pos - 0.75) / 0.25) * 170;
+                    y = 100;
+                  }
+                  return (
+                    <circle key={i} cx={x} cy={y} r={2 + dischargePercent / 50}
+                      fill="url(#rctcCurrentParticle)" filter="url(#rctcCurrentGlowFilter)"
+                      opacity={dischargePercent / 100} />
+                  );
+                })}
+
+                {/* Resistor with colored bands */}
+                <g transform="translate(100, 10)">
+                  <line x1="-10" y1="10" x2="0" y2="10" stroke="url(#rctcWireCopper)" strokeWidth="2" />
+                  <line x1="50" y1="10" x2="60" y2="10" stroke="url(#rctcWireCopper)" strokeWidth="2" />
+                  <rect x="0" y="2" width="50" height="16" fill="url(#rctcResistorBands)" rx="3"
+                    stroke="#991b1b" strokeWidth="1" />
+                  <rect x="0" y="2" width="50" height="3" fill="rgba(255,255,255,0.2)" rx="3" />
                 </g>
 
-                {/* Capacitor with charge indicator */}
-                <g transform="translate(180, 5)">
-                  <line x1="0" y1="8" x2="0" y2="22" stroke={premiumDesign.colors.secondary} strokeWidth="3" />
-                  <line x1="10" y1="8" x2="10" y2="22" stroke={premiumDesign.colors.secondary} strokeWidth="3" />
-                  {/* Charge level */}
-                  <rect x="1" y={22 - dischargePercent * 0.14} width="8" height={dischargePercent * 0.14}
-                    fill={premiumDesign.colors.secondary} opacity="0.6" />
-                  <text x="5" y="35" textAnchor="middle" fill={premiumDesign.colors.secondary} fontSize="9">
-                    C={capacitance}μF
-                  </text>
-                </g>
-
-                {/* Light bulb showing discharge */}
-                <g transform="translate(60, 55)">
-                  <circle cx="0" cy="0" r="12" fill={`rgba(139, 92, 246, ${dischargePercent / 150})`}
-                    stroke={premiumDesign.colors.secondary} strokeWidth="2" />
-                  {dischargePercent > 10 && (
-                    <text x="0" y="4" textAnchor="middle" fill="white" fontSize="10">💡</text>
+                {/* Capacitor with discharge visualization */}
+                <g transform="translate(195, 10)">
+                  <rect x="0" y="0" width="4" height="20" fill="url(#rctcDischargeCapacitor)" rx="1"
+                    filter={dischargePercent > 20 ? "url(#rctcCapacitorGlowFilter)" : undefined} />
+                  <rect x="12" y="0" width="4" height="20" fill="url(#rctcDischargeCapacitor)" rx="1"
+                    filter={dischargePercent > 20 ? "url(#rctcCapacitorGlowFilter)" : undefined} />
+                  {/* Remaining charge glow */}
+                  {dischargePercent > 5 && (
+                    <ellipse cx="8" cy="10" rx={2 + dischargePercent / 40} ry={6}
+                      fill="url(#rctcDischargeGlow)" opacity={dischargePercent / 120} />
                   )}
+                  {/* Charge level indicator */}
+                  <rect x="5" y={20 - dischargePercent * 0.18} width="6" height={dischargePercent * 0.18}
+                    fill="#c084fc" opacity="0.4" rx="1" />
                 </g>
 
-                {/* Switch indicator */}
-                <g transform="translate(200, 110)">
-                  <circle cx="0" cy="0" r="4" fill={isDischarging ? premiumDesign.colors.secondary : '#666'} />
-                  <line x1="0" y1="0" x2={isDischarging ? "18" : "12"} y2={isDischarging ? "0" : "-8"}
-                    stroke={isDischarging ? premiumDesign.colors.secondary : '#666'} strokeWidth="2" />
-                  <circle cx="18" cy="0" r="4" fill={isDischarging ? premiumDesign.colors.secondary : '#666'} />
+                {/* Light bulb with glow effect */}
+                <g transform="translate(55, 60)">
+                  {/* Outer glow when lit */}
+                  {dischargePercent > 10 && (
+                    <circle cx="0" cy="0" r={14 + dischargePercent / 20} fill="url(#rctcBulbGlow)"
+                      opacity={dischargePercent / 200} filter="url(#rctcSoftGlow)" />
+                  )}
+                  {/* Bulb glass */}
+                  <circle cx="0" cy="0" r="12" fill={`rgba(254, 240, 138, ${dischargePercent / 150})`}
+                    stroke="#ca8a04" strokeWidth="1.5" />
+                  {/* Filament */}
+                  <path d="M -4,-2 Q 0,-6 4,-2 Q 0,2 -4,-2" fill="none"
+                    stroke={dischargePercent > 20 ? '#fef08a' : '#78350f'} strokeWidth="1.5"
+                    filter={dischargePercent > 30 ? "url(#rctcCurrentGlowFilter)" : undefined} />
+                  {/* Base */}
+                  <rect x="-5" y="8" width="10" height="6" fill="#78350f" rx="1" />
+                  <line x1="-4" y1="10" x2="4" y2="10" stroke="#a16207" strokeWidth="1" />
+                  <line x1="-4" y1="12" x2="4" y2="12" stroke="#a16207" strokeWidth="1" />
                 </g>
 
-                {/* Voltage display */}
-                <text x="140" y="85" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">
-                  Vc = {dischargeVoltage.toFixed(2)}V ({dischargePercent.toFixed(1)}%)
-                </text>
-
-                {/* Time display */}
-                <text x="140" y="105" textAnchor="middle" fill={premiumDesign.colors.text.secondary} fontSize="10">
-                  Time: {dischargeTime.toFixed(2)}s ({(dischargeTime / timeConstant).toFixed(2)}τ)
-                </text>
+                {/* Switch with premium styling */}
+                <g transform="translate(180, 95)">
+                  <circle cx="0" cy="0" r="4" fill={isDischarging ? "url(#rctcSwitchContact)" : '#4b5563'}
+                    stroke={isDischarging ? '#059669' : '#374151'} strokeWidth="1" />
+                  <line x1="0" y1="0" x2={isDischarging ? "16" : "10"} y2={isDischarging ? "0" : "-8"}
+                    stroke={isDischarging ? "url(#rctcSwitchContact)" : '#6b7280'} strokeWidth="2" strokeLinecap="round" />
+                  <circle cx="16" cy="0" r="4" fill={isDischarging ? "url(#rctcSwitchContact)" : '#4b5563'}
+                    stroke={isDischarging ? '#059669' : '#374151'} strokeWidth="1" />
+                </g>
               </svg>
+
+              {/* Labels outside SVG using typo system */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: '8px',
+                fontSize: typo.small,
+              }}>
+                <span style={{ color: '#fbbf24' }}>Bulb: {dischargePercent > 10 ? 'ON' : 'OFF'}</span>
+                <span style={{ color: premiumDesign.colors.resistor }}>R = {resistance}kOhm</span>
+                <span style={{ color: premiumDesign.colors.secondary }}>C = {capacitance}uF</span>
+              </div>
+
+              {/* Voltage and Time Status Display */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                alignItems: 'center',
+                marginTop: typo.elementGap,
+                padding: '10px 14px',
+                background: 'rgba(139, 92, 246, 0.1)',
+                borderRadius: premiumDesign.radius.md,
+                border: '1px solid rgba(139, 92, 246, 0.2)',
+              }}>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: typo.label, color: premiumDesign.colors.text.muted }}>Remaining Voltage</div>
+                  <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: premiumDesign.colors.secondary }}>
+                    {dischargeVoltage.toFixed(2)}V ({dischargePercent.toFixed(1)}%)
+                  </div>
+                </div>
+                <div style={{ textAlign: 'center' }}>
+                  <div style={{ fontSize: typo.label, color: premiumDesign.colors.text.muted }}>Discharge Time</div>
+                  <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: premiumDesign.colors.capacitor }}>
+                    {dischargeTime.toFixed(2)}s ({(dischargeTime / timeConstant).toFixed(2)}tau)
+                  </div>
+                </div>
+              </div>
             </div>
 
             {/* Discharge Graph */}
@@ -1306,10 +1633,35 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
               padding: premiumDesign.spacing.lg,
               border: '1px solid rgba(255,255,255,0.1)',
             }}>
-              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.sm, fontSize: '14px' }}>
+              <h4 style={{ color: premiumDesign.colors.text.primary, marginBottom: premiumDesign.spacing.sm, fontSize: typo.body }}>
                 Voltage vs Time (Discharge Curve)
               </h4>
               {renderVoltageGraph(dischargeHistory, supplyVoltage, false)}
+              {/* Graph axis labels outside SVG */}
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: '6px',
+                fontSize: typo.label,
+                color: premiumDesign.colors.text.muted,
+              }}>
+                <span>0</span>
+                <span style={{ color: premiumDesign.colors.secondary }}>1tau</span>
+                <span style={{ color: premiumDesign.colors.secondary }}>2tau</span>
+                <span style={{ color: premiumDesign.colors.secondary }}>3tau</span>
+                <span style={{ color: premiumDesign.colors.secondary }}>4tau</span>
+                <span style={{ color: premiumDesign.colors.secondary }}>5tau</span>
+              </div>
+              <div style={{
+                display: 'flex',
+                justifyContent: 'space-between',
+                marginTop: '4px',
+                fontSize: typo.label,
+                color: premiumDesign.colors.text.secondary,
+              }}>
+                <span>Y: {supplyVoltage}V max</span>
+                <span>X: Time (tau = {timeConstant.toFixed(2)}s)</span>
+              </div>
             </div>
           </div>
 
@@ -1327,10 +1679,10 @@ export default function RCTimeConstantRenderer({ onGameEvent, gamePhase, onPhase
               border: '1px solid rgba(255,255,255,0.1)',
               textAlign: 'center',
             }}>
-              <div style={{ color: premiumDesign.colors.text.muted, fontSize: '12px' }}>
-                Time Constant τ
+              <div style={{ color: premiumDesign.colors.text.muted, fontSize: typo.small }}>
+                Time Constant tau
               </div>
-              <div style={{ color: premiumDesign.colors.secondary, fontSize: '24px', fontWeight: 700 }}>
+              <div style={{ color: premiumDesign.colors.secondary, fontSize: typo.heading, fontWeight: 700 }}>
                 {timeConstant.toFixed(2)} s
               </div>
             </div>

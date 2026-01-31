@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 
 interface SnellsLawRendererProps {
   phase: 'hook' | 'predict' | 'play' | 'review' | 'twist_predict' | 'twist_play' | 'twist_review' | 'transfer' | 'test' | 'mastery';
@@ -7,21 +7,51 @@ interface SnellsLawRendererProps {
   onIncorrectAnswer?: () => void;
 }
 
+// ============================================================================
+// SNELL'S LAW - Premium Design System (Apple/Airbnb Quality)
+// ============================================================================
+
 const colors = {
-  textPrimary: '#f8fafc',
-  textSecondary: '#e2e8f0',
-  textMuted: '#94a3b8',
+  // Backgrounds
+  bgDeep: '#030712',
   bgPrimary: '#0f172a',
   bgCard: 'rgba(30, 41, 59, 0.9)',
   bgDark: 'rgba(15, 23, 42, 0.95)',
+  bgElevated: '#1e293b',
+  bgHover: '#334155',
+
+  // Text
+  textPrimary: '#f8fafc',
+  textSecondary: '#e2e8f0',
+  textMuted: '#94a3b8',
+  textTertiary: '#64748b',
+
+  // Brand
   accent: '#8b5cf6',
   accentGlow: 'rgba(139, 92, 246, 0.4)',
+  primary: '#3b82f6',
+
+  // Semantic
   success: '#10b981',
+  successLight: '#34d399',
   warning: '#f59e0b',
+  warningLight: '#fbbf24',
   error: '#ef4444',
+
+  // Physics-specific
   beam: '#fbbf24',
+  beamLight: '#fcd34d',
+  beamDark: '#d97706',
   water: '#60a5fa',
+  waterLight: '#93c5fd',
+  waterDark: '#2563eb',
   oil: '#84cc16',
+  oilLight: '#a3e635',
+  oilDark: '#65a30d',
+  glass: '#94a3b8',
+  glassLight: '#cbd5e1',
+  glassDark: '#64748b',
+  air: '#e0f2fe',
 };
 
 const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
@@ -53,7 +83,7 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
-  // Responsive typography
+  // Responsive typography system
   const typo = {
     title: isMobile ? '28px' : '36px',
     heading: isMobile ? '20px' : '24px',
@@ -61,6 +91,8 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
     body: isMobile ? '14px' : '16px',
     small: isMobile ? '12px' : '14px',
     label: isMobile ? '10px' : '12px',
+    svgLabel: isMobile ? '11px' : '13px',
+    svgValue: isMobile ? '12px' : '14px',
     pagePadding: isMobile ? '16px' : '24px',
     cardPadding: isMobile ? '12px' : '16px',
     sectionGap: isMobile ? '16px' : '20px',
@@ -221,7 +253,7 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
 
   const refractedAngle = calculateRefractedAngle();
 
-  // Render the beam experiment visualization
+  // Premium SVG visualization with gradients and glow effects
   const renderVisualization = () => {
     const centerX = 150;
     const centerY = 140;
@@ -236,107 +268,334 @@ const RefractionRenderer: React.FC<SnellsLawRendererProps> = ({
     const refractedEndX = centerX + Math.sin(refractedRad) * beamLength;
     const refractedEndY = centerY + Math.cos(refractedRad) * beamLength;
 
-    const mediumColor = medium === 'water' ? colors.water : medium === 'oil' ? colors.oil : '#94a3b8';
+    // Medium-specific colors
+    const getMediumColors = () => {
+      switch (medium) {
+        case 'water':
+          return { main: colors.water, light: colors.waterLight, dark: colors.waterDark };
+        case 'oil':
+          return { main: colors.oil, light: colors.oilLight, dark: colors.oilDark };
+        case 'glass':
+          return { main: colors.glass, light: colors.glassLight, dark: colors.glassDark };
+        default:
+          return { main: colors.water, light: colors.waterLight, dark: colors.waterDark };
+      }
+    };
+    const mediumColors = getMediumColors();
+
+    // Arc radius for angle indicators
+    const arcRadius = 35;
 
     return (
-      <svg width="300" height="280" viewBox="0 0 300 280">
-        {/* Background */}
-        <rect x="0" y="0" width="300" height="280" fill={colors.bgPrimary} />
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
+        {/* Legend outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '16px',
+          justifyContent: 'center',
+          padding: '8px 16px',
+          background: colors.bgElevated,
+          borderRadius: '8px',
+          border: `1px solid ${colors.bgHover}`,
+        }}>
+          <span style={{ fontSize: typo.small, color: colors.textMuted }}>
+            <span style={{ color: colors.air }}>Air</span> n=1.00
+          </span>
+          <span style={{ fontSize: typo.small, color: colors.textMuted }}>
+            <span style={{ color: mediumColors.main }}>{medium.charAt(0).toUpperCase() + medium.slice(1)}</span> n={refractiveIndices[medium].toFixed(2)}
+          </span>
+        </div>
 
-        {/* Air region (top) */}
-        <rect x="0" y="0" width="300" height={centerY} fill="rgba(100, 150, 200, 0.1)" />
-        <text x="20" y="30" fill={colors.textMuted} fontSize="12">Air (n=1.00)</text>
+        <svg width="300" height="260" viewBox="0 0 300 260">
+          {/* Premium defs section */}
+          <defs>
+            {/* Background gradient with depth */}
+            <linearGradient id="snellBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a"/>
+              <stop offset="50%" stopColor="#0a0f1a"/>
+              <stop offset="100%" stopColor="#030712"/>
+            </linearGradient>
 
-        {/* Medium region (bottom) */}
-        <rect x="0" y={centerY} width="300" height={280 - centerY} fill={mediumColor} opacity="0.3" />
-        <text x="20" y={centerY + 25} fill={colors.textMuted} fontSize="12">
-          {medium.charAt(0).toUpperCase() + medium.slice(1)} (n={refractiveIndices[medium].toFixed(2)})
-        </text>
+            {/* Air medium gradient - subtle atmosphere */}
+            <linearGradient id="snellAirGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.air} stopOpacity="0.08"/>
+              <stop offset="50%" stopColor={colors.air} stopOpacity="0.05"/>
+              <stop offset="100%" stopColor={colors.air} stopOpacity="0.02"/>
+            </linearGradient>
 
-        {/* Interface line */}
-        <line x1="0" y1={centerY} x2="300" y2={centerY} stroke={colors.textMuted} strokeWidth="2" />
+            {/* Water medium gradient */}
+            <linearGradient id="snellWaterGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.waterDark} stopOpacity="0.15"/>
+              <stop offset="50%" stopColor={colors.water} stopOpacity="0.25"/>
+              <stop offset="100%" stopColor={colors.waterLight} stopOpacity="0.35"/>
+            </linearGradient>
 
-        {/* Normal line (dashed) */}
-        <line
-          x1={centerX}
-          y1={centerY - 100}
-          x2={centerX}
-          y2={centerY + 100}
-          stroke={colors.textMuted}
-          strokeWidth="1"
-          strokeDasharray="5,5"
-        />
-        <text x={centerX + 5} y={centerY - 85} fill={colors.textMuted} fontSize="10">Normal</text>
+            {/* Oil medium gradient */}
+            <linearGradient id="snellOilGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.oilDark} stopOpacity="0.15"/>
+              <stop offset="50%" stopColor={colors.oil} stopOpacity="0.25"/>
+              <stop offset="100%" stopColor={colors.oilLight} stopOpacity="0.35"/>
+            </linearGradient>
 
-        {/* Incident beam */}
-        <line
-          x1={incidentEndX}
-          y1={incidentEndY}
-          x2={centerX}
-          y2={centerY}
-          stroke={colors.beam}
-          strokeWidth="4"
-        />
-        <polygon
-          points={`${centerX},${centerY} ${centerX - 8},${centerY - 15} ${centerX + 2},${centerY - 12}`}
-          fill={colors.beam}
-          transform={`rotate(${-incidentAngle}, ${centerX}, ${centerY})`}
-        />
+            {/* Glass medium gradient */}
+            <linearGradient id="snellGlassGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.glassDark} stopOpacity="0.2"/>
+              <stop offset="50%" stopColor={colors.glass} stopOpacity="0.3"/>
+              <stop offset="100%" stopColor={colors.glassLight} stopOpacity="0.4"/>
+            </linearGradient>
 
-        {/* Refracted beam */}
-        <line
-          x1={centerX}
-          y1={centerY}
-          x2={refractedEndX}
-          y2={refractedEndY}
-          stroke={colors.beam}
-          strokeWidth="4"
-        />
+            {/* Light beam gradient */}
+            <linearGradient id="snellBeamGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colors.beamDark}/>
+              <stop offset="30%" stopColor={colors.beam}/>
+              <stop offset="50%" stopColor={colors.beamLight}/>
+              <stop offset="70%" stopColor={colors.beam}/>
+              <stop offset="100%" stopColor={colors.beamDark}/>
+            </linearGradient>
 
-        {/* Angle arcs if measurements shown */}
+            {/* Interface line gradient */}
+            <linearGradient id="snellInterfaceGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colors.textMuted} stopOpacity="0.2"/>
+              <stop offset="30%" stopColor={colors.textMuted} stopOpacity="0.8"/>
+              <stop offset="50%" stopColor={colors.textSecondary} stopOpacity="1"/>
+              <stop offset="70%" stopColor={colors.textMuted} stopOpacity="0.8"/>
+              <stop offset="100%" stopColor={colors.textMuted} stopOpacity="0.2"/>
+            </linearGradient>
+
+            {/* Normal line gradient */}
+            <linearGradient id="snellNormalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={colors.accent} stopOpacity="0.1"/>
+              <stop offset="30%" stopColor={colors.accent} stopOpacity="0.6"/>
+              <stop offset="50%" stopColor={colors.accent} stopOpacity="0.8"/>
+              <stop offset="70%" stopColor={colors.accent} stopOpacity="0.6"/>
+              <stop offset="100%" stopColor={colors.accent} stopOpacity="0.1"/>
+            </linearGradient>
+
+            {/* Incident angle arc gradient */}
+            <linearGradient id="snellIncidentArcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colors.warning} stopOpacity="0.5"/>
+              <stop offset="50%" stopColor={colors.warningLight} stopOpacity="1"/>
+              <stop offset="100%" stopColor={colors.warning} stopOpacity="0.5"/>
+            </linearGradient>
+
+            {/* Refracted angle arc gradient */}
+            <linearGradient id="snellRefractedArcGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={colors.success} stopOpacity="0.5"/>
+              <stop offset="50%" stopColor={colors.successLight} stopOpacity="1"/>
+              <stop offset="100%" stopColor={colors.success} stopOpacity="0.5"/>
+            </linearGradient>
+
+            {/* Light beam glow filter */}
+            <filter id="snellBeamGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="4" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            {/* Soft glow for interface */}
+            <filter id="snellInterfaceGlow" x="-10%" y="-100%" width="120%" height="300%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="2" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            {/* Incidence point glow */}
+            <filter id="snellPointGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+
+            {/* Arc glow filter */}
+            <filter id="snellArcGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur in="SourceGraphic" stdDeviation="1.5" result="blur"/>
+              <feMerge>
+                <feMergeNode in="blur"/>
+                <feMergeNode in="SourceGraphic"/>
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background with gradient */}
+          <rect x="0" y="0" width="300" height="260" fill="url(#snellBgGrad)" rx="8"/>
+
+          {/* Air region (top) with atmosphere effect */}
+          <rect x="0" y="0" width="300" height={centerY} fill="url(#snellAirGrad)" rx="8 8 0 0"/>
+
+          {/* Medium region (bottom) with realistic gradient */}
+          <rect
+            x="0"
+            y={centerY}
+            width="300"
+            height={260 - centerY}
+            fill={`url(#snell${medium.charAt(0).toUpperCase() + medium.slice(1)}Grad)`}
+          />
+
+          {/* Interface transition zone */}
+          <rect
+            x="0"
+            y={centerY - 3}
+            width="300"
+            height="6"
+            fill="url(#snellInterfaceGrad)"
+            opacity="0.5"
+          />
+
+          {/* Interface line with glow */}
+          <line
+            x1="0"
+            y1={centerY}
+            x2="300"
+            y2={centerY}
+            stroke="url(#snellInterfaceGrad)"
+            strokeWidth="2"
+            filter="url(#snellInterfaceGlow)"
+          />
+
+          {/* Normal line (dashed) with gradient */}
+          <line
+            x1={centerX}
+            y1={centerY - 100}
+            x2={centerX}
+            y2={centerY + 100}
+            stroke="url(#snellNormalGrad)"
+            strokeWidth="1.5"
+            strokeDasharray="6,4"
+          />
+
+          {/* Angle arcs - always visible for clarity */}
+          {/* Incident angle arc */}
+          <path
+            d={`M ${centerX} ${centerY - arcRadius} A ${arcRadius} ${arcRadius} 0 0 0 ${centerX - Math.sin(incidentRad) * arcRadius} ${centerY - Math.cos(incidentRad) * arcRadius}`}
+            fill="none"
+            stroke="url(#snellIncidentArcGrad)"
+            strokeWidth="2.5"
+            filter="url(#snellArcGlow)"
+          />
+
+          {/* Refracted angle arc */}
+          <path
+            d={`M ${centerX} ${centerY + arcRadius} A ${arcRadius} ${arcRadius} 0 0 1 ${centerX + Math.sin(refractedRad) * arcRadius} ${centerY + Math.cos(refractedRad) * arcRadius}`}
+            fill="none"
+            stroke="url(#snellRefractedArcGrad)"
+            strokeWidth="2.5"
+            filter="url(#snellArcGlow)"
+          />
+
+          {/* Incident beam with glow */}
+          <line
+            x1={incidentEndX}
+            y1={incidentEndY}
+            x2={centerX}
+            y2={centerY}
+            stroke={colors.beam}
+            strokeWidth="5"
+            strokeLinecap="round"
+            filter="url(#snellBeamGlow)"
+          />
+          <line
+            x1={incidentEndX}
+            y1={incidentEndY}
+            x2={centerX}
+            y2={centerY}
+            stroke="url(#snellBeamGrad)"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+
+          {/* Arrow head for incident beam */}
+          <polygon
+            points={`${centerX},${centerY} ${centerX - 6},${centerY - 12} ${centerX + 4},${centerY - 10}`}
+            fill={colors.beam}
+            transform={`rotate(${-incidentAngle}, ${centerX}, ${centerY})`}
+            filter="url(#snellBeamGlow)"
+          />
+
+          {/* Refracted beam with glow */}
+          <line
+            x1={centerX}
+            y1={centerY}
+            x2={refractedEndX}
+            y2={refractedEndY}
+            stroke={colors.beam}
+            strokeWidth="5"
+            strokeLinecap="round"
+            filter="url(#snellBeamGlow)"
+          />
+          <line
+            x1={centerX}
+            y1={centerY}
+            x2={refractedEndX}
+            y2={refractedEndY}
+            stroke="url(#snellBeamGrad)"
+            strokeWidth="3"
+            strokeLinecap="round"
+          />
+
+          {/* Incidence point with glow */}
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r="5"
+            fill={colors.beamLight}
+            filter="url(#snellPointGlow)"
+          />
+          <circle
+            cx={centerX}
+            cy={centerY}
+            r="3"
+            fill="#fff"
+          />
+        </svg>
+
+        {/* Measurements outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '16px',
+          justifyContent: 'center',
+          padding: '10px 16px',
+          background: colors.bgElevated,
+          borderRadius: '8px',
+          border: `1px solid ${colors.bgHover}`,
+        }}>
+          <span style={{ fontSize: typo.svgValue, color: colors.warning, fontWeight: 600 }}>
+            Incident: {incidentAngle.toFixed(0)}deg
+          </span>
+          <span style={{ fontSize: typo.svgValue, color: colors.success, fontWeight: 600 }}>
+            Refracted: {refractedAngle.toFixed(1)}deg
+          </span>
+        </div>
+
+        {/* Extended Snell's Law display when measurements shown */}
         {showMeasurements && (
-          <>
-            {/* Incident angle arc */}
-            <path
-              d={`M ${centerX} ${centerY - 40} A 40 40 0 0 0 ${centerX - Math.sin(incidentRad) * 40} ${centerY - Math.cos(incidentRad) * 40}`}
-              fill="none"
-              stroke={colors.warning}
-              strokeWidth="2"
-            />
-            <text
-              x={centerX - 25}
-              y={centerY - 45}
-              fill={colors.warning}
-              fontSize="12"
-            >
-              θ₁={incidentAngle.toFixed(0)}°
-            </text>
-
-            {/* Refracted angle arc */}
-            <path
-              d={`M ${centerX} ${centerY + 40} A 40 40 0 0 1 ${centerX + Math.sin(refractedRad) * 40} ${centerY + Math.cos(refractedRad) * 40}`}
-              fill="none"
-              stroke={colors.success}
-              strokeWidth="2"
-            />
-            <text
-              x={centerX + 25}
-              y={centerY + 55}
-              fill={colors.success}
-              fontSize="12"
-            >
-              θ₂={refractedAngle.toFixed(1)}°
-            </text>
-          </>
+          <div style={{
+            padding: '12px 16px',
+            background: `linear-gradient(135deg, ${colors.bgElevated} 0%, ${colors.bgHover} 100%)`,
+            borderRadius: '10px',
+            border: `1px solid ${colors.accent}30`,
+            textAlign: 'center',
+          }}>
+            <p style={{ fontSize: typo.small, color: colors.textSecondary, margin: 0 }}>
+              <span style={{ color: colors.accent, fontWeight: 600 }}>Snells Law:</span>{' '}
+              sin({incidentAngle}deg) / sin({refractedAngle.toFixed(1)}deg) ={' '}
+              <span style={{ color: colors.beamLight, fontWeight: 600 }}>
+                {(Math.sin(incidentRad) / Math.sin(refractedRad * Math.PI / 180)).toFixed(2)}
+              </span>{' '}
+              ~ n2/n1
+            </p>
+          </div>
         )}
-
-        {/* Snell's Law display */}
-        {showMeasurements && (
-          <text x="150" y="270" textAnchor="middle" fill={colors.textSecondary} fontSize="11">
-            sin({incidentAngle}°)/sin({refractedAngle.toFixed(1)}°) = {(Math.sin(incidentRad) / Math.sin(refractedRad * Math.PI / 180)).toFixed(2)} ≈ n₂/n₁
-          </text>
-        )}
-      </svg>
+      </div>
     );
   };
 
