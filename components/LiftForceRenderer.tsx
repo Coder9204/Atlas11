@@ -290,7 +290,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
     }, 0);
   };
 
-  // Render airfoil with streamlines
+  // Render airfoil with streamlines - Premium SVG graphics
   const renderAirfoilVisualization = (width: number = 500, height: number = 300, showControls: boolean = false) => {
     const centerX = width / 2;
     const centerY = height / 2;
@@ -303,13 +303,6 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
     // Scale forces for visualization
     const liftScale = Math.min(lift / 50000, 1) * 80;
     const dragScale = Math.min(drag / 10000, 1) * 50;
-
-    // Pressure distribution colors
-    const getPressureColor = (position: number, surface: 'upper' | 'lower') => {
-      const baseHue = surface === 'upper' ? 240 : 0; // Blue for low pressure (upper), Red for high pressure (lower)
-      const intensity = Math.abs(cl) * (surface === 'upper' ? 1 : 0.5);
-      return `hsl(${baseHue}, ${70 + intensity * 20}%, ${50 - intensity * 20}%)`;
-    };
 
     // Generate airfoil path based on shape
     const getAirfoilPath = () => {
@@ -341,14 +334,14 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
       }
     };
 
-    // Generate streamlines
+    // Generate streamlines with pressure-based coloring
     const generateStreamlines = () => {
       const lines = [];
-      const numLines = 8;
+      const numLines = 10;
       const speedFactor = airspeed / 150;
 
       for (let i = 0; i < numLines; i++) {
-        const yOffset = (i - numLines / 2) * 25;
+        const yOffset = (i - numLines / 2) * 22;
         const isUpper = yOffset < 0;
         const deflection = isUpper ? -angleOfAttack * 0.8 : angleOfAttack * 0.3;
         const flowOffset = (animationFrame * speedFactor * 3) % 100;
@@ -362,15 +355,19 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
                        Q ${centerX + 100} ${centerY + yOffset + deflection + turbulence}
                          ${centerX + 200 + flowOffset} ${centerY + yOffset + deflection * 0.5}`;
 
+        // Use pressure-based gradient for streamlines
+        const gradientId = isUpper ? 'liftStreamlineUpper' : 'liftStreamlineLower';
+
         lines.push(
           <path
             key={`stream-${i}`}
             d={pathD}
             fill="none"
-            stroke={stalling && isUpper ? '#ef4444' : '#60a5fa'}
-            strokeWidth={1.5}
-            strokeOpacity={0.6}
-            strokeDasharray={stalling && isUpper ? "5,5" : "none"}
+            stroke={stalling && isUpper ? 'url(#liftStallGradient)' : `url(#${gradientId})`}
+            strokeWidth={2}
+            strokeOpacity={0.8}
+            strokeDasharray={stalling && isUpper ? "8,4" : "none"}
+            filter={stalling && isUpper ? undefined : "url(#liftStreamGlow)"}
           />
         );
       }
@@ -379,12 +376,202 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
 
     return (
       <svg width={width} height={height} className="overflow-visible">
-        {/* Background */}
-        <rect x="0" y="0" width={width} height={height} fill="#0f172a" rx="12" />
+        {/* Comprehensive defs section with premium gradients and filters */}
+        <defs>
+          {/* Background gradient */}
+          <linearGradient id="liftBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+
+          {/* Premium airfoil body gradient - 3D metallic effect */}
+          <linearGradient id="liftAirfoilBody" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#94a3b8" />
+            <stop offset="15%" stopColor="#cbd5e1" />
+            <stop offset="35%" stopColor="#94a3b8" />
+            <stop offset="50%" stopColor="#64748b" />
+            <stop offset="75%" stopColor="#475569" />
+            <stop offset="100%" stopColor="#334155" />
+          </linearGradient>
+
+          {/* Airfoil highlight gradient */}
+          <linearGradient id="liftAirfoilHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#e2e8f0" stopOpacity="0" />
+            <stop offset="20%" stopColor="#f1f5f9" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#ffffff" stopOpacity="0.6" />
+            <stop offset="80%" stopColor="#f1f5f9" stopOpacity="0.3" />
+            <stop offset="100%" stopColor="#e2e8f0" stopOpacity="0" />
+          </linearGradient>
+
+          {/* Upper surface low pressure gradient (blue tones) */}
+          <radialGradient id="liftLowPressure" cx="50%" cy="100%" r="100%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
+            <stop offset="30%" stopColor="#2563eb" stopOpacity="0.4" />
+            <stop offset="60%" stopColor="#1d4ed8" stopOpacity="0.25" />
+            <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Lower surface high pressure gradient (red/orange tones) */}
+          <radialGradient id="liftHighPressure" cx="50%" cy="0%" r="100%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.5" />
+            <stop offset="30%" stopColor="#dc2626" stopOpacity="0.35" />
+            <stop offset="60%" stopColor="#b91c1c" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#991b1b" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Streamline gradient for upper surface (faster flow = blue) */}
+          <linearGradient id="liftStreamlineUpper" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+            <stop offset="25%" stopColor="#3b82f6" stopOpacity="0.7" />
+            <stop offset="50%" stopColor="#2563eb" stopOpacity="0.9" />
+            <stop offset="75%" stopColor="#3b82f6" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.3" />
+          </linearGradient>
+
+          {/* Streamline gradient for lower surface (slower flow = cyan) */}
+          <linearGradient id="liftStreamlineLower" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.3" />
+            <stop offset="25%" stopColor="#06b6d4" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#0891b2" stopOpacity="0.8" />
+            <stop offset="75%" stopColor="#06b6d4" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.3" />
+          </linearGradient>
+
+          {/* Stall turbulence gradient */}
+          <linearGradient id="liftStallGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.4" />
+            <stop offset="25%" stopColor="#f87171" stopOpacity="0.7" />
+            <stop offset="50%" stopColor="#ef4444" stopOpacity="0.9" />
+            <stop offset="75%" stopColor="#dc2626" stopOpacity="0.7" />
+            <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.4" />
+          </linearGradient>
+
+          {/* Lift force arrow gradient (green) */}
+          <linearGradient id="liftForceGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#166534" />
+            <stop offset="30%" stopColor="#16a34a" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="70%" stopColor="#4ade80" />
+            <stop offset="100%" stopColor="#86efac" />
+          </linearGradient>
+
+          {/* Drag force arrow gradient (red) */}
+          <linearGradient id="liftDragGradient" x1="100%" y1="0%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#7f1d1d" />
+            <stop offset="30%" stopColor="#b91c1c" />
+            <stop offset="50%" stopColor="#ef4444" />
+            <stop offset="70%" stopColor="#f87171" />
+            <stop offset="100%" stopColor="#fca5a5" />
+          </linearGradient>
+
+          {/* Flaps/slats gradient */}
+          <linearGradient id="liftControlSurface" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#6b7280" />
+            <stop offset="30%" stopColor="#4b5563" />
+            <stop offset="70%" stopColor="#374151" />
+            <stop offset="100%" stopColor="#1f2937" />
+          </linearGradient>
+
+          {/* Ground gradient */}
+          <linearGradient id="liftGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#374151" />
+            <stop offset="50%" stopColor="#1f2937" />
+            <stop offset="100%" stopColor="#111827" />
+          </linearGradient>
+
+          {/* Stall warning gradient */}
+          <linearGradient id="liftStallWarning" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#7f1d1d" />
+            <stop offset="20%" stopColor="#991b1b" />
+            <stop offset="50%" stopColor="#dc2626" />
+            <stop offset="80%" stopColor="#991b1b" />
+            <stop offset="100%" stopColor="#7f1d1d" />
+          </linearGradient>
+
+          {/* Glow filters */}
+          <filter id="liftStreamGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="liftForceGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="4" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="liftAirfoilGlow" x="-20%" y="-20%" width="140%" height="140%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="liftPressureGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="8" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="liftStallPulse" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Arrow markers with gradients */}
+          <marker id="liftArrowLift" markerWidth="12" markerHeight="12" refX="10" refY="4" orient="auto">
+            <path d="M0,0 L0,8 L12,4 z" fill="url(#liftForceGradient)" />
+          </marker>
+          <marker id="liftArrowDrag" markerWidth="12" markerHeight="12" refX="2" refY="4" orient="auto">
+            <path d="M12,0 L12,8 L0,4 z" fill="url(#liftDragGradient)" />
+          </marker>
+        </defs>
+
+        {/* Premium background */}
+        <rect x="0" y="0" width={width} height={height} fill="url(#liftBgGradient)" rx="12" />
+
+        {/* Subtle grid pattern */}
+        <pattern id="liftGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+        </pattern>
+        <rect x="0" y="0" width={width} height={height} fill="url(#liftGrid)" rx="12" />
 
         {/* Ground for ground effect */}
         {groundEffect && (
-          <rect x="0" y={height - 30} width={width} height="30" fill="#374151" />
+          <g>
+            <rect x="0" y={height - 35} width={width} height="35" fill="url(#liftGroundGradient)" />
+            <line x1="0" y1={height - 35} x2={width} y2={height - 35} stroke="#4b5563" strokeWidth="2" />
+            {/* Ground effect vortex indicators */}
+            {[0.2, 0.4, 0.6, 0.8].map((pos, i) => (
+              <ellipse
+                key={`vortex-${i}`}
+                cx={width * pos}
+                cy={height - 20}
+                rx={15}
+                ry={8}
+                fill="none"
+                stroke="#06b6d4"
+                strokeWidth="1"
+                strokeOpacity={0.3}
+                strokeDasharray="4,4"
+              />
+            ))}
+          </g>
         )}
 
         {/* Streamlines */}
@@ -392,43 +579,40 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
           {generateStreamlines()}
         </g>
 
-        {/* Pressure distribution visualization */}
-        <defs>
-          <linearGradient id="upperPressure" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor={getPressureColor(0, 'upper')} stopOpacity="0.3" />
-            <stop offset="100%" stopColor={getPressureColor(1, 'upper')} stopOpacity="0.7" />
-          </linearGradient>
-          <linearGradient id="lowerPressure" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={getPressureColor(0, 'lower')} stopOpacity="0.3" />
-            <stop offset="100%" stopColor={getPressureColor(1, 'lower')} stopOpacity="0.5" />
-          </linearGradient>
-        </defs>
-
         {/* Airfoil with rotation for angle of attack */}
         <g transform={`rotate(${-angleOfAttack}, ${centerX}, ${centerY})`}>
-          {/* Upper surface pressure zone */}
+          {/* Upper surface pressure zone with glow */}
           <ellipse
             cx={centerX}
-            cy={centerY - 25}
-            rx={chordLength * 0.4}
-            ry={20}
-            fill="url(#upperPressure)"
+            cy={centerY - 30}
+            rx={chordLength * 0.45}
+            ry={25 + cl * 10}
+            fill="url(#liftLowPressure)"
+            filter="url(#liftPressureGlow)"
           />
-          {/* Lower surface pressure zone */}
+          {/* Lower surface pressure zone with glow */}
           <ellipse
             cx={centerX}
-            cy={centerY + 20}
+            cy={centerY + 25}
             rx={chordLength * 0.4}
-            ry={15}
-            fill="url(#lowerPressure)"
+            ry={18 + cl * 5}
+            fill="url(#liftHighPressure)"
+            filter="url(#liftPressureGlow)"
           />
 
-          {/* Airfoil body */}
+          {/* Airfoil body with 3D gradient */}
           <path
             d={getAirfoilPath()}
-            fill="#64748b"
+            fill="url(#liftAirfoilBody)"
             stroke="#94a3b8"
-            strokeWidth="2"
+            strokeWidth="1.5"
+            filter="url(#liftAirfoilGlow)"
+          />
+          {/* Airfoil highlight overlay */}
+          <path
+            d={getAirfoilPath()}
+            fill="url(#liftAirfoilHighlight)"
+            stroke="none"
           />
 
           {/* Flaps */}
@@ -436,13 +620,17 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
             <g transform={`translate(${centerX + chordLength * 0.3}, ${centerY})`}>
               <rect
                 x="0"
-                y="-3"
-                width="30"
-                height="8"
-                fill="#475569"
-                stroke="#64748b"
+                y="-4"
+                width="32"
+                height="10"
+                fill="url(#liftControlSurface)"
+                stroke="#6b7280"
+                strokeWidth="1"
+                rx="2"
                 transform="rotate(25)"
               />
+              {/* Flap hinge */}
+              <circle cx="0" cy="0" r="3" fill="#4b5563" stroke="#6b7280" />
             </g>
           )}
 
@@ -450,82 +638,159 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
           {slatsDeployed && (
             <g transform={`translate(${centerX - chordLength * 0.45}, ${centerY - 5})`}>
               <rect
-                x="-15"
-                y="-5"
-                width="20"
-                height="6"
-                fill="#475569"
-                stroke="#64748b"
+                x="-18"
+                y="-6"
+                width="22"
+                height="8"
+                fill="url(#liftControlSurface)"
+                stroke="#6b7280"
+                strokeWidth="1"
+                rx="2"
                 transform="rotate(-10)"
               />
+              {/* Slat gap indicator */}
+              <line x1="-5" y1="-2" x2="-5" y2="4" stroke="#06b6d4" strokeWidth="2" strokeOpacity="0.5" />
             </g>
           )}
         </g>
 
-        {/* Force vectors */}
+        {/* Force vectors with premium styling */}
         <g transform={`translate(${centerX}, ${centerY})`}>
-          {/* Lift vector (upward) */}
-          <line
-            x1="0"
-            y1="0"
-            x2="0"
-            y2={-liftScale}
-            stroke="#22c55e"
-            strokeWidth="4"
-            markerEnd="url(#arrowLift)"
-          />
-          <text x="10" y={-liftScale / 2} fill="#22c55e" fontSize="12" fontWeight="bold">
-            L = {(lift / 1000).toFixed(1)} kN
-          </text>
+          {/* Lift vector (upward) with glow */}
+          {liftScale > 5 && (
+            <g filter="url(#liftForceGlow)">
+              <line
+                x1="0"
+                y1="0"
+                x2="0"
+                y2={-liftScale}
+                stroke="url(#liftForceGradient)"
+                strokeWidth="6"
+                strokeLinecap="round"
+                markerEnd="url(#liftArrowLift)"
+              />
+            </g>
+          )}
 
-          {/* Drag vector (backward) */}
-          <line
-            x1="0"
-            y1="0"
-            x2={-dragScale}
-            y2="0"
-            stroke="#ef4444"
-            strokeWidth="3"
-            markerEnd="url(#arrowDrag)"
-          />
-          <text x={-dragScale - 10} y="15" fill="#ef4444" fontSize="11" textAnchor="end">
-            D = {(drag / 1000).toFixed(2)} kN
-          </text>
+          {/* Drag vector (backward) with glow */}
+          {dragScale > 3 && (
+            <g filter="url(#liftForceGlow)">
+              <line
+                x1="0"
+                y1="0"
+                x2={-dragScale}
+                y2="0"
+                stroke="url(#liftDragGradient)"
+                strokeWidth="4"
+                strokeLinecap="round"
+                markerEnd="url(#liftArrowDrag)"
+              />
+            </g>
+          )}
+
+          {/* Center point indicator */}
+          <circle cx="0" cy="0" r="4" fill="#f8fafc" stroke="#64748b" strokeWidth="1" />
         </g>
 
-        {/* Stall warning */}
+        {/* Stall warning with pulsing effect */}
         {stalling && (
-          <g>
-            <rect x={width / 2 - 60} y="10" width="120" height="30" fill="#dc2626" rx="5" />
-            <text x={width / 2} y="30" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">
-              STALL WARNING
-            </text>
+          <g filter="url(#liftStallPulse)">
+            <rect
+              x={width / 2 - 70}
+              y="12"
+              width="140"
+              height="32"
+              fill="url(#liftStallWarning)"
+              rx="6"
+              stroke="#fca5a5"
+              strokeWidth="2"
+            />
           </g>
         )}
-
-        {/* Legend */}
-        <g transform={`translate(${width - 120}, 20)`}>
-          <rect x="-10" y="-5" width="115" height="70" fill="#1e293b" rx="5" opacity="0.8" />
-          <circle cx="5" cy="10" r="6" fill="#3b82f6" />
-          <text x="15" y="14" fill="#94a3b8" fontSize="10">Low Pressure</text>
-          <circle cx="5" cy="30" r="6" fill="#ef4444" />
-          <text x="15" y="34" fill="#94a3b8" fontSize="10">High Pressure</text>
-          <line x1="0" y1="50" x2="15" y2="50" stroke="#60a5fa" strokeWidth="2" />
-          <text x="20" y="54" fill="#94a3b8" fontSize="10">Streamlines</text>
-        </g>
-
-        {/* Arrow markers */}
-        <defs>
-          <marker id="arrowLift" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#22c55e" />
-          </marker>
-          <marker id="arrowDrag" markerWidth="10" markerHeight="10" refX="0" refY="3" orient="auto">
-            <path d="M9,0 L9,6 L0,3 z" fill="#ef4444" />
-          </marker>
-        </defs>
       </svg>
     );
   };
+
+  // Render labels outside SVG using typo system
+  const renderVisualizationLabels = (lift: number, drag: number, stalling: boolean) => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'space-between',
+      alignItems: 'center',
+      padding: `${typo.elementGap} ${typo.cardPadding}`,
+      marginTop: typo.elementGap
+    }}>
+      {/* Lift label */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{
+          width: '12px',
+          height: '12px',
+          background: 'linear-gradient(135deg, #22c55e, #4ade80)',
+          borderRadius: '3px'
+        }} />
+        <span style={{ fontSize: typo.small, color: '#22c55e', fontWeight: 600 }}>
+          Lift: {(lift / 1000).toFixed(1)} kN
+        </span>
+      </div>
+
+      {/* Drag label */}
+      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+        <div style={{
+          width: '12px',
+          height: '12px',
+          background: 'linear-gradient(135deg, #ef4444, #f87171)',
+          borderRadius: '3px'
+        }} />
+        <span style={{ fontSize: typo.small, color: '#ef4444', fontWeight: 600 }}>
+          Drag: {(drag / 1000).toFixed(2)} kN
+        </span>
+      </div>
+
+      {/* Stall indicator */}
+      {stalling && (
+        <div style={{
+          padding: '4px 12px',
+          background: 'linear-gradient(135deg, #dc2626, #991b1b)',
+          borderRadius: '6px',
+          animation: 'pulse 1s ease-in-out infinite'
+        }}>
+          <span style={{ fontSize: typo.small, color: '#fff', fontWeight: 700 }}>
+            STALL WARNING
+          </span>
+        </div>
+      )}
+    </div>
+  );
+
+  // Render legend outside SVG
+  const renderVisualizationLegend = () => (
+    <div style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: typo.elementGap,
+      padding: typo.cardPadding,
+      background: 'rgba(30, 41, 59, 0.6)',
+      borderRadius: '8px',
+      marginTop: typo.elementGap
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ width: '10px', height: '10px', background: '#3b82f6', borderRadius: '50%' }} />
+        <span style={{ fontSize: typo.label, color: '#94a3b8' }}>Low Pressure</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ width: '10px', height: '10px', background: '#ef4444', borderRadius: '50%' }} />
+        <span style={{ fontSize: typo.label, color: '#94a3b8' }}>High Pressure</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ width: '20px', height: '2px', background: 'linear-gradient(90deg, #3b82f6, #2563eb)' }} />
+        <span style={{ fontSize: typo.label, color: '#94a3b8' }}>Upper Streamlines</span>
+      </div>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+        <div style={{ width: '20px', height: '2px', background: 'linear-gradient(90deg, #06b6d4, #0891b2)' }} />
+        <span style={{ fontSize: typo.label, color: '#94a3b8' }}>Lower Streamlines</span>
+      </div>
+    </div>
+  );
 
   const renderHook = () => (
     <div className="flex flex-col items-center justify-center min-h-[80vh] py-8 px-6">
@@ -547,10 +812,11 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
 
       {/* Premium card */}
       <div className="w-full max-w-2xl backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
-        <div className="flex justify-center mb-4">
+        <div className="flex justify-center mb-2">
           {renderAirfoilVisualization(450, 250)}
         </div>
-        <p className="text-gray-300 text-center leading-relaxed mb-4">
+        {renderVisualizationLegend()}
+        <p className="text-gray-300 text-center leading-relaxed mt-4">
           Watch how air flows around an airfoil, creating pressure differences that generate lift!
         </p>
       </div>
@@ -582,6 +848,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
           An airplane wing is moving through the air. What primarily causes the upward lift force?
         </p>
         {renderAirfoilVisualization(400, 200)}
+        {renderVisualizationLegend()}
       </div>
       <div className="grid gap-3 w-full max-w-xl">
         {[
@@ -638,26 +905,28 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
         <h2 className="text-2xl font-bold text-white mb-4">Lift Force Laboratory</h2>
 
         {/* Main visualization */}
-        <div className="bg-slate-800/50 rounded-2xl p-4 mb-6">
+        <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
           {renderAirfoilVisualization(isMobile ? 350 : 500, isMobile ? 220 : 300)}
+          {renderVisualizationLabels(lift, drag, stalling)}
+          {renderVisualizationLegend()}
         </div>
 
         {/* Real-time calculations display */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 w-full max-w-3xl">
-          <div className="bg-slate-800/70 rounded-xl p-3 text-center">
+          <div className="bg-gradient-to-br from-emerald-900/40 to-green-900/40 rounded-xl p-3 text-center border border-emerald-500/20">
             <div className="text-2xl font-bold text-green-400">{(lift / 1000).toFixed(1)} kN</div>
             <div className="text-xs text-slate-400">Lift Force</div>
           </div>
-          <div className="bg-slate-800/70 rounded-xl p-3 text-center">
+          <div className="bg-gradient-to-br from-red-900/40 to-rose-900/40 rounded-xl p-3 text-center border border-red-500/20">
             <div className="text-2xl font-bold text-red-400">{(drag / 1000).toFixed(2)} kN</div>
             <div className="text-xs text-slate-400">Drag Force</div>
           </div>
-          <div className="bg-slate-800/70 rounded-xl p-3 text-center">
+          <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/40 rounded-xl p-3 text-center border border-cyan-500/20">
             <div className="text-2xl font-bold text-cyan-400">{cl.toFixed(2)}</div>
             <div className="text-xs text-slate-400">Lift Coefficient (Cl)</div>
           </div>
-          <div className="bg-slate-800/70 rounded-xl p-3 text-center">
-            <div className={`text-2xl font-bold ${stalling ? 'text-red-500' : 'text-emerald-400'}`}>
+          <div className={`rounded-xl p-3 text-center border ${stalling ? 'bg-gradient-to-br from-red-900/50 to-rose-900/50 border-red-500/40' : 'bg-gradient-to-br from-emerald-900/40 to-teal-900/40 border-emerald-500/20'}`}>
+            <div className={`text-2xl font-bold ${stalling ? 'text-red-500 animate-pulse' : 'text-emerald-400'}`}>
               {stalling ? 'STALL!' : 'Normal'}
             </div>
             <div className="text-xs text-slate-400">Flight Status</div>
@@ -884,6 +1153,7 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
 
   const renderTwistPlay = () => {
     const lift = calculateLift();
+    const drag = calculateDrag();
     const cl = calculateCl(angleOfAttack, airfoilShape, flapsDeployed, slatsDeployed);
     const stalling = isStalling();
     const stallAngle = slatsDeployed ? 18 : 15;
@@ -893,21 +1163,23 @@ const LiftForceRenderer: React.FC<LiftForceRendererProps> = ({ phase, onPhaseCom
         <h2 className="text-2xl font-bold text-purple-400 mb-4">Advanced Aerodynamics Lab</h2>
 
         {/* Visualization */}
-        <div className="bg-slate-800/50 rounded-2xl p-4 mb-6">
+        <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
           {renderAirfoilVisualization(isMobile ? 350 : 500, isMobile ? 220 : 300)}
+          {renderVisualizationLabels(lift, drag, stalling)}
+          {renderVisualizationLegend()}
         </div>
 
         {/* Stats display */}
         <div className="grid grid-cols-3 gap-4 mb-6 w-full max-w-2xl">
-          <div className="bg-slate-800/70 rounded-xl p-3 text-center">
+          <div className="bg-gradient-to-br from-emerald-900/40 to-green-900/40 rounded-xl p-3 text-center border border-emerald-500/20">
             <div className="text-xl font-bold text-green-400">{(lift / 1000).toFixed(1)} kN</div>
             <div className="text-xs text-slate-400">Lift</div>
           </div>
-          <div className="bg-slate-800/70 rounded-xl p-3 text-center">
+          <div className="bg-gradient-to-br from-cyan-900/40 to-blue-900/40 rounded-xl p-3 text-center border border-cyan-500/20">
             <div className="text-xl font-bold text-cyan-400">{cl.toFixed(2)}</div>
             <div className="text-xs text-slate-400">Cl</div>
           </div>
-          <div className="bg-slate-800/70 rounded-xl p-3 text-center">
+          <div className="bg-gradient-to-br from-amber-900/40 to-orange-900/40 rounded-xl p-3 text-center border border-amber-500/20">
             <div className="text-xl font-bold text-amber-400">{stallAngle}deg</div>
             <div className="text-xs text-slate-400">Stall Angle</div>
           </div>

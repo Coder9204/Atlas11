@@ -436,434 +436,805 @@ const LCResonanceRenderer: React.FC<LCResonanceRendererProps> = ({ onGameEvent }
       return points.join(' ');
     }, [resonantFrequency, qFactor, centerX]);
 
-    // Current frequency marker position
-    const freqMarkerX = centerX - 100 + ((inputFrequency - 500) / 1200) * 200;
+    // Resonance curve fill area
+    const resonanceCurveFillPoints = useMemo(() => {
+      const startX = centerX - 100;
+      const baseY = 360;
+      return `${startX},${baseY} ${resonanceCurvePoints} ${centerX + 100},${baseY}`;
+    }, [resonanceCurvePoints, centerX]);
 
     return (
-      <svg
-        width="100%"
-        height="100%"
-        viewBox={`0 0 ${svgWidth} ${svgHeight}`}
-        style={{ maxWidth: svgWidth, margin: '0 auto', display: 'block' }}
-      >
-        {/* === DEFINITIONS === */}
-        <defs>
-          {/* Capacitor plate gradient */}
-          <linearGradient id="capacitorPlateGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#1e40af" />
-            <stop offset="30%" stopColor="#3b82f6" />
-            <stop offset="50%" stopColor="#60a5fa" />
-            <stop offset="70%" stopColor="#3b82f6" />
-            <stop offset="100%" stopColor="#1e40af" />
-          </linearGradient>
+      <div style={{ position: 'relative', width: '100%', maxWidth: svgWidth, margin: '0 auto' }}>
+        <svg
+          width="100%"
+          height="100%"
+          viewBox={`0 0 ${svgWidth} ${svgHeight}`}
+          style={{ display: 'block' }}
+        >
+          {/* === COMPREHENSIVE DEFINITIONS === */}
+          <defs>
+            {/* Premium capacitor plate gradient - 3D metallic blue */}
+            <linearGradient id="lcrCapacitorPlate" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="15%" stopColor="#60a5fa" />
+              <stop offset="40%" stopColor="#3b82f6" />
+              <stop offset="60%" stopColor="#2563eb" />
+              <stop offset="85%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
 
-          {/* Inductor coil gradient */}
-          <linearGradient id="inductorCoilGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#c2410c" />
-            <stop offset="30%" stopColor="#ea580c" />
-            <stop offset="50%" stopColor="#fb923c" />
-            <stop offset="70%" stopColor="#ea580c" />
-            <stop offset="100%" stopColor="#c2410c" />
-          </linearGradient>
+            {/* Capacitor plate side edge for 3D effect */}
+            <linearGradient id="lcrCapacitorEdge" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e3a8a" />
+              <stop offset="30%" stopColor="#1e40af" />
+              <stop offset="70%" stopColor="#1e40af" />
+              <stop offset="100%" stopColor="#1e3a8a" />
+            </linearGradient>
 
-          {/* Energy glow */}
-          <radialGradient id="energyGlow" cx="50%" cy="50%" r="50%">
-            <stop offset="0%" stopColor="#a855f7" stopOpacity="0.8" />
-            <stop offset="70%" stopColor="#a855f7" stopOpacity="0.3" />
-            <stop offset="100%" stopColor="#a855f7" stopOpacity="0" />
-          </radialGradient>
+            {/* Premium inductor coil gradient - copper metallic */}
+            <linearGradient id="lcrInductorCoil" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="20%" stopColor="#f59e0b" />
+              <stop offset="40%" stopColor="#d97706" />
+              <stop offset="60%" stopColor="#b45309" />
+              <stop offset="80%" stopColor="#92400e" />
+              <stop offset="100%" stopColor="#78350f" />
+            </linearGradient>
 
-          {/* Electric field gradient */}
-          <linearGradient id="electricFieldGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
-            <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.8" />
-            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
-          </linearGradient>
+            {/* Inductor coil highlight for metallic shine */}
+            <linearGradient id="lcrInductorHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0" />
+              <stop offset="30%" stopColor="#fef3c7" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#fef3c7" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#fef3c7" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#fef3c7" stopOpacity="0" />
+            </linearGradient>
 
-          {/* Magnetic field gradient */}
-          <linearGradient id="magneticFieldGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#f97316" stopOpacity="0" />
-            <stop offset="50%" stopColor="#fb923c" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#f97316" stopOpacity="0" />
-          </linearGradient>
+            {/* Energy glow radial - purple for energy flow */}
+            <radialGradient id="lcrEnergyGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#c084fc" stopOpacity="1" />
+              <stop offset="25%" stopColor="#a855f7" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#9333ea" stopOpacity="0.5" />
+              <stop offset="75%" stopColor="#7c3aed" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
+            </radialGradient>
 
-          {/* Filters */}
-          <filter id="lcGlow" x="-50%" y="-50%" width="200%" height="200%">
-            <feGaussianBlur stdDeviation="3" result="blur" />
-            <feMerge>
-              <feMergeNode in="blur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
+            {/* Electric field gradient between capacitor plates */}
+            <linearGradient id="lcrElectricField" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#3b82f6" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#2563eb" stopOpacity="0.5" />
+              <stop offset="75%" stopColor="#3b82f6" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.9" />
+            </linearGradient>
 
-          <filter id="componentShadow" x="-20%" y="-20%" width="140%" height="140%">
-            <feDropShadow dx="2" dy="3" stdDeviation="3" floodOpacity="0.3" />
-          </filter>
-        </defs>
+            {/* Magnetic field gradient around inductor */}
+            <radialGradient id="lcrMagneticField" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fb923c" stopOpacity="0" />
+              <stop offset="40%" stopColor="#f97316" stopOpacity="0.4" />
+              <stop offset="70%" stopColor="#ea580c" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#c2410c" stopOpacity="0.3" />
+            </radialGradient>
 
-        {/* === BACKGROUND === */}
-        <rect width={svgWidth} height={svgHeight} fill={colors.bgSurface} rx="12" />
+            {/* Resonance curve gradient fill */}
+            <linearGradient id="lcrResonanceFill" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#16a34a" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0.05" />
+            </linearGradient>
 
-        {/* Grid pattern */}
-        <pattern id="lcGrid" width="20" height="20" patternUnits="userSpaceOnUse">
-          <path d="M 20 0 L 0 0 0 20" fill="none" stroke={colors.bgElevated} strokeWidth="0.5" opacity="0.4" />
-        </pattern>
-        <rect width={svgWidth} height={svgHeight} fill="url(#lcGrid)" rx="12" />
+            {/* Resonance peak glow */}
+            <radialGradient id="lcrResonancePeakGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#16a34a" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+            </radialGradient>
 
-        {/* === LC CIRCUIT SCHEMATIC === */}
-        <g transform="translate(0, 20)">
-          {/* Circuit outline */}
-          <rect
-            x={centerX - 120}
-            y={60}
-            width={240}
-            height={180}
-            rx="8"
-            fill="none"
-            stroke={colors.bgElevated}
-            strokeWidth="3"
-          />
+            {/* Wire gradient - premium metallic silver */}
+            <linearGradient id="lcrWire" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="30%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#475569" />
+              <stop offset="70%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#94a3b8" />
+            </linearGradient>
 
-          {/* === CAPACITOR (C) === */}
-          <g filter="url(#componentShadow)">
-            {/* Capacitor plates */}
+            {/* Background gradient */}
+            <linearGradient id="lcrBackground" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Current particle gradient */}
+            <radialGradient id="lcrCurrentParticle" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#e9d5ff" stopOpacity="1" />
+              <stop offset="30%" stopColor="#c084fc" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#a855f7" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#7c3aed" stopOpacity="0" />
+            </radialGradient>
+
+            {/* === GLOW FILTERS === */}
+
+            {/* Main component glow filter */}
+            <filter id="lcrComponentGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Electric field glow */}
+            <filter id="lcrElectricGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Magnetic field glow */}
+            <filter id="lcrMagneticGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Energy particle glow */}
+            <filter id="lcrParticleGlow" x="-200%" y="-200%" width="500%" height="500%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Resonance peak glow filter */}
+            <filter id="lcrResonanceGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Component shadow */}
+            <filter id="lcrShadow" x="-20%" y="-20%" width="140%" height="160%">
+              <feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.5" />
+            </filter>
+
+            {/* Inner glow for panels */}
+            <filter id="lcrInnerGlow" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Grid pattern */}
+            <pattern id="lcrGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="#334155" strokeWidth="0.5" opacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* === BACKGROUND === */}
+          <rect width={svgWidth} height={svgHeight} fill="url(#lcrBackground)" rx="12" />
+          <rect width={svgWidth} height={svgHeight} fill="url(#lcrGrid)" rx="12" />
+
+          {/* === LC CIRCUIT SCHEMATIC === */}
+          <g transform="translate(0, 20)">
+            {/* Circuit outline with gradient */}
             <rect
-              x={centerX - 100}
-              y={90}
-              width={60}
-              height={8}
-              rx="2"
-              fill="url(#capacitorPlateGradient)"
-            />
-            <rect
-              x={centerX - 100}
-              y={115}
-              width={60}
-              height={8}
-              rx="2"
-              fill="url(#capacitorPlateGradient)"
-            />
-
-            {/* Electric field between plates (when charged) */}
-            {showEnergyAnimation && capacitorEnergy > 0.1 && (
-              <g opacity={capacitorEnergy}>
-                {[0, 1, 2, 3].map(i => (
-                  <line
-                    key={i}
-                    x1={centerX - 90 + i * 15}
-                    y1={100}
-                    x2={centerX - 90 + i * 15}
-                    y2={113}
-                    stroke="#60a5fa"
-                    strokeWidth="2"
-                    strokeDasharray="3,2"
-                  />
-                ))}
-                {/* Energy glow */}
-                <ellipse
-                  cx={centerX - 70}
-                  cy={106}
-                  rx={35}
-                  ry={15}
-                  fill="url(#electricFieldGradient)"
-                  filter="url(#lcGlow)"
-                />
-              </g>
-            )}
-
-            {/* Capacitor label */}
-            <text x={centerX - 70} y={145} textAnchor="middle" fill={colors.capacitor} fontSize="14" fontWeight="700">
-              C
-            </text>
-            <text x={centerX - 70} y={160} textAnchor="middle" fill={colors.textMuted} fontSize="10">
-              {capacitance} pF
-            </text>
-          </g>
-
-          {/* === INDUCTOR (L) === */}
-          <g filter="url(#componentShadow)">
-            {/* Inductor coil (simplified representation) */}
-            <path
-              d={`M ${centerX + 40} 94
-                  Q ${centerX + 55} 94, ${centerX + 55} 106
-                  Q ${centerX + 55} 118, ${centerX + 70} 118
-                  Q ${centerX + 85} 118, ${centerX + 85} 106
-                  Q ${centerX + 85} 94, ${centerX + 100} 94`}
-              fill="none"
-              stroke="url(#inductorCoilGradient)"
-              strokeWidth="6"
-              strokeLinecap="round"
-            />
-
-            {/* Coil turns detail */}
-            {[0, 1, 2].map(i => (
-              <ellipse
-                key={i}
-                cx={centerX + 55 + i * 20}
-                cy={106}
-                rx={10}
-                ry={15}
-                fill="none"
-                stroke={colors.inductor}
-                strokeWidth="3"
-              />
-            ))}
-
-            {/* Magnetic field (when current flows) */}
-            {showEnergyAnimation && inductorEnergy > 0.1 && (
-              <g opacity={inductorEnergy}>
-                {[0, 1, 2].map(i => (
-                  <ellipse
-                    key={i}
-                    cx={centerX + 70}
-                    cy={106}
-                    rx={25 + i * 10}
-                    ry={30 + i * 8}
-                    fill="none"
-                    stroke="#fb923c"
-                    strokeWidth="1.5"
-                    strokeDasharray="4,4"
-                    opacity={0.6 - i * 0.15}
-                  />
-                ))}
-              </g>
-            )}
-
-            {/* Inductor label */}
-            <text x={centerX + 70} y={145} textAnchor="middle" fill={colors.inductor} fontSize="14" fontWeight="700">
-              L
-            </text>
-            <text x={centerX + 70} y={160} textAnchor="middle" fill={colors.textMuted} fontSize="10">
-              {inductance} µH
-            </text>
-          </g>
-
-          {/* === CONNECTING WIRES === */}
-          <g stroke={colors.textMuted} strokeWidth="3" fill="none">
-            {/* Top wire */}
-            <path d={`M ${centerX - 120} 60 L ${centerX - 120} 94 L ${centerX - 100} 94`} />
-            <path d={`M ${centerX - 40} 94 L ${centerX + 40} 94`} />
-            <path d={`M ${centerX + 100} 94 L ${centerX + 120} 94 L ${centerX + 120} 60`} />
-
-            {/* Bottom wire */}
-            <path d={`M ${centerX - 120} 240 L ${centerX - 120} 119 L ${centerX - 100} 119`} />
-            <path d={`M ${centerX - 40} 119 L ${centerX + 40} 119`} />
-            <path d={`M ${centerX + 100} 119 L ${centerX + 120} 119 L ${centerX + 120} 240`} />
-          </g>
-
-          {/* === CURRENT FLOW ANIMATION === */}
-          {showEnergyAnimation && responseAtFrequency > 10 && (
-            <g>
-              {[0, 1, 2, 3].map(i => {
-                const progress = ((animPhase * 2 + i * 0.8) % (Math.PI * 2)) / (Math.PI * 2);
-                // Path around the circuit
-                let x, y;
-                if (progress < 0.25) {
-                  // Top left to top right
-                  x = centerX - 120 + progress * 4 * 240;
-                  y = 60;
-                } else if (progress < 0.5) {
-                  // Top right down
-                  x = centerX + 120;
-                  y = 60 + (progress - 0.25) * 4 * 180;
-                } else if (progress < 0.75) {
-                  // Bottom right to left
-                  x = centerX + 120 - (progress - 0.5) * 4 * 240;
-                  y = 240;
-                } else {
-                  // Bottom left up
-                  x = centerX - 120;
-                  y = 240 - (progress - 0.75) * 4 * 180;
-                }
-                return (
-                  <circle
-                    key={i}
-                    cx={x}
-                    cy={y}
-                    r="5"
-                    fill={colors.energy}
-                    opacity={responseAtFrequency / 150}
-                  >
-                    <animate
-                      attributeName="r"
-                      values="5;7;5"
-                      dur="0.5s"
-                      repeatCount="indefinite"
-                    />
-                  </circle>
-                );
-              })}
-            </g>
-          )}
-
-          {/* === ENERGY BARS === */}
-          {showEnergyAnimation && (
-            <g transform={`translate(${centerX - 130}, 180)`}>
-              <rect x={0} y={0} width={60} height={50} rx="6" fill="rgba(15,23,42,0.9)" />
-              <text x={30} y={14} textAnchor="middle" fill={colors.capacitor} fontSize="9" fontWeight="600">
-                E (electric)
-              </text>
-              <rect x={8} y={20} width={44} height={8} rx="2" fill={colors.bgElevated} />
-              <rect
-                x={8}
-                y={20}
-                width={44 * capacitorEnergy}
-                height={8}
-                rx="2"
-                fill={colors.capacitor}
-              />
-              <text x={30} y={42} textAnchor="middle" fill={colors.textMuted} fontSize="8">
-                {Math.round(capacitorEnergy * 100)}%
-              </text>
-            </g>
-          )}
-
-          {showEnergyAnimation && (
-            <g transform={`translate(${centerX + 70}, 180)`}>
-              <rect x={0} y={0} width={60} height={50} rx="6" fill="rgba(15,23,42,0.9)" />
-              <text x={30} y={14} textAnchor="middle" fill={colors.inductor} fontSize="9" fontWeight="600">
-                E (magnetic)
-              </text>
-              <rect x={8} y={20} width={44} height={8} rx="2" fill={colors.bgElevated} />
-              <rect
-                x={8}
-                y={20}
-                width={44 * inductorEnergy}
-                height={8}
-                rx="2"
-                fill={colors.inductor}
-              />
-              <text x={30} y={42} textAnchor="middle" fill={colors.textMuted} fontSize="8">
-                {Math.round(inductorEnergy * 100)}%
-              </text>
-            </g>
-          )}
-        </g>
-
-        {/* === RESONANCE CURVE === */}
-        {showResonanceCurve && (
-          <g transform="translate(0, 30)">
-            {/* Background */}
-            <rect
-              x={centerX - 110}
-              y={280}
-              width={220}
-              height={100}
+              x={centerX - 120}
+              y={60}
+              width={240}
+              height={180}
               rx="8"
-              fill="rgba(15,23,42,0.95)"
-              stroke={colors.bgElevated}
-              strokeWidth="1"
-            />
-
-            {/* Axis labels */}
-            <text x={centerX} y={295} textAnchor="middle" fill={colors.textSecondary} fontSize="10" fontWeight="600">
-              RESONANCE CURVE
-            </text>
-
-            {/* Frequency axis */}
-            <line x1={centerX - 100} y1={360} x2={centerX + 100} y2={360} stroke={colors.textMuted} strokeWidth="1" />
-            <text x={centerX - 95} y={375} fill={colors.textMuted} fontSize="8">500</text>
-            <text x={centerX} y={375} textAnchor="middle" fill={colors.textMuted} fontSize="8">1100</text>
-            <text x={centerX + 95} y={375} textAnchor="end" fill={colors.textMuted} fontSize="8">1700 kHz</text>
-
-            {/* Response curve */}
-            <polyline
-              points={resonanceCurvePoints}
               fill="none"
-              stroke={colors.resonance}
-              strokeWidth="2"
-              strokeLinecap="round"
-              strokeLinejoin="round"
+              stroke="url(#lcrWire)"
+              strokeWidth="4"
+              filter="url(#lcrShadow)"
             />
 
-            {/* Resonant frequency marker */}
-            <line
-              x1={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}
-              y1={300}
-              x2={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}
-              y2={360}
-              stroke={colors.resonance}
-              strokeWidth="2"
-              strokeDasharray="4,4"
-            />
-            <circle
-              cx={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}
-              cy={302}
-              r="5"
-              fill={colors.resonance}
-            />
+            {/* === CAPACITOR (C) - Premium 3D Design === */}
+            <g filter="url(#lcrShadow)">
+              {/* Top plate with 3D effect */}
+              <rect
+                x={centerX - 100}
+                y={88}
+                width={60}
+                height={12}
+                rx="2"
+                fill="url(#lcrCapacitorPlate)"
+              />
+              {/* Top plate edge highlight */}
+              <rect
+                x={centerX - 100}
+                y={88}
+                width={60}
+                height={2}
+                rx="1"
+                fill="url(#lcrCapacitorEdge)"
+                opacity="0.6"
+              />
 
-            {/* Resonant frequency label */}
-            <text
-              x={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}
-              y={295}
-              textAnchor="middle"
-              fill={colors.resonance}
-              fontSize="10"
-              fontWeight="700"
-            >
-              f₀ = {resonantFrequency} kHz
-            </text>
+              {/* Bottom plate with 3D effect */}
+              <rect
+                x={centerX - 100}
+                y={113}
+                width={60}
+                height={12}
+                rx="2"
+                fill="url(#lcrCapacitorPlate)"
+              />
+              {/* Bottom plate edge highlight */}
+              <rect
+                x={centerX - 100}
+                y={123}
+                width={60}
+                height={2}
+                rx="1"
+                fill="url(#lcrCapacitorEdge)"
+                opacity="0.6"
+              />
+
+              {/* Electric field between plates (when charged) */}
+              {showEnergyAnimation && capacitorEnergy > 0.1 && (
+                <g opacity={capacitorEnergy} filter="url(#lcrElectricGlow)">
+                  {/* Field lines */}
+                  {[0, 1, 2, 3, 4].map(i => (
+                    <line
+                      key={i}
+                      x1={centerX - 92 + i * 12}
+                      y1={101}
+                      x2={centerX - 92 + i * 12}
+                      y2={112}
+                      stroke="url(#lcrElectricField)"
+                      strokeWidth="2"
+                      strokeLinecap="round"
+                    >
+                      <animate
+                        attributeName="strokeDasharray"
+                        values="0,20;10,10;0,20"
+                        dur="0.8s"
+                        repeatCount="indefinite"
+                      />
+                    </line>
+                  ))}
+                  {/* Energy glow between plates */}
+                  <ellipse
+                    cx={centerX - 70}
+                    cy={106}
+                    rx={35}
+                    ry={12}
+                    fill="url(#lcrEnergyGlow)"
+                  />
+                </g>
+              )}
+            </g>
+
+            {/* === INDUCTOR (L) - Premium Copper Coil === */}
+            <g filter="url(#lcrShadow)">
+              {/* Coil turns with metallic copper effect */}
+              {[0, 1, 2, 3].map(i => (
+                <g key={i}>
+                  {/* Back of coil (darker) */}
+                  <ellipse
+                    cx={centerX + 48 + i * 18}
+                    cy={106}
+                    rx={9}
+                    ry={18}
+                    fill="none"
+                    stroke="#78350f"
+                    strokeWidth="6"
+                    strokeLinecap="round"
+                  />
+                  {/* Front of coil (gradient) */}
+                  <ellipse
+                    cx={centerX + 48 + i * 18}
+                    cy={106}
+                    rx={9}
+                    ry={18}
+                    fill="none"
+                    stroke="url(#lcrInductorCoil)"
+                    strokeWidth="5"
+                    strokeLinecap="round"
+                    strokeDasharray="28 28"
+                    strokeDashoffset="0"
+                  />
+                  {/* Metallic highlight on each turn */}
+                  <ellipse
+                    cx={centerX + 48 + i * 18}
+                    cy={106}
+                    rx={9}
+                    ry={18}
+                    fill="none"
+                    stroke="url(#lcrInductorHighlight)"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeDasharray="14 42"
+                    strokeDashoffset="7"
+                  />
+                </g>
+              ))}
+
+              {/* Connecting ends */}
+              <line
+                x1={centerX + 38}
+                y1={94}
+                x2={centerX + 48}
+                y2={94}
+                stroke="url(#lcrInductorCoil)"
+                strokeWidth="5"
+                strokeLinecap="round"
+              />
+              <line
+                x1={centerX + 102}
+                y1={94}
+                x2={centerX + 112}
+                y2={94}
+                stroke="url(#lcrInductorCoil)"
+                strokeWidth="5"
+                strokeLinecap="round"
+              />
+
+              {/* Magnetic field (when current flows) */}
+              {showEnergyAnimation && inductorEnergy > 0.1 && (
+                <g opacity={inductorEnergy} filter="url(#lcrMagneticGlow)">
+                  {[0, 1, 2].map(i => (
+                    <ellipse
+                      key={i}
+                      cx={centerX + 75}
+                      cy={106}
+                      rx={30 + i * 12}
+                      ry={35 + i * 10}
+                      fill="none"
+                      stroke="url(#lcrMagneticField)"
+                      strokeWidth="2"
+                      opacity={0.7 - i * 0.2}
+                    >
+                      <animate
+                        attributeName="strokeDasharray"
+                        values="10,5;5,10;10,5"
+                        dur="1s"
+                        repeatCount="indefinite"
+                      />
+                    </ellipse>
+                  ))}
+                </g>
+              )}
+            </g>
+
+            {/* === CONNECTING WIRES with premium gradient === */}
+            <g stroke="url(#lcrWire)" strokeWidth="4" fill="none" strokeLinecap="round" strokeLinejoin="round">
+              {/* Top wire */}
+              <path d={`M ${centerX - 120} 60 L ${centerX - 120} 94 L ${centerX - 100} 94`} />
+              <path d={`M ${centerX - 40} 94 L ${centerX + 38} 94`} />
+              <path d={`M ${centerX + 112} 94 L ${centerX + 120} 94 L ${centerX + 120} 60`} />
+
+              {/* Bottom wire */}
+              <path d={`M ${centerX - 120} 240 L ${centerX - 120} 119 L ${centerX - 100} 119`} />
+              <path d={`M ${centerX - 40} 119 L ${centerX + 38} 119`} />
+              <path d={`M ${centerX + 112} 119 L ${centerX + 120} 119 L ${centerX + 120} 240`} />
+            </g>
+
+            {/* === CURRENT FLOW ANIMATION === */}
+            {showEnergyAnimation && responseAtFrequency > 10 && (
+              <g filter="url(#lcrParticleGlow)">
+                {[0, 1, 2, 3, 4, 5].map(i => {
+                  const progress = ((animPhase * 2 + i * 0.6) % (Math.PI * 2)) / (Math.PI * 2);
+                  let x, y;
+                  if (progress < 0.25) {
+                    x = centerX - 120 + progress * 4 * 240;
+                    y = 60;
+                  } else if (progress < 0.5) {
+                    x = centerX + 120;
+                    y = 60 + (progress - 0.25) * 4 * 180;
+                  } else if (progress < 0.75) {
+                    x = centerX + 120 - (progress - 0.5) * 4 * 240;
+                    y = 240;
+                  } else {
+                    x = centerX - 120;
+                    y = 240 - (progress - 0.75) * 4 * 180;
+                  }
+                  return (
+                    <circle
+                      key={i}
+                      cx={x}
+                      cy={y}
+                      r="6"
+                      fill="url(#lcrCurrentParticle)"
+                      opacity={Math.min(1, responseAtFrequency / 80)}
+                    >
+                      <animate
+                        attributeName="r"
+                        values="4;7;4"
+                        dur="0.4s"
+                        repeatCount="indefinite"
+                      />
+                    </circle>
+                  );
+                })}
+              </g>
+            )}
+
+            {/* === ENERGY OSCILLATION VISUALIZATION === */}
+            {showEnergyAnimation && (
+              <>
+                {/* Capacitor energy indicator */}
+                <g transform={`translate(${centerX - 135}, 175)`}>
+                  <rect x={0} y={0} width={70} height={58} rx="8" fill="rgba(15,23,42,0.95)" stroke="#3b82f6" strokeWidth="1" filter="url(#lcrInnerGlow)" />
+                  <rect x={10} y={28} width={50} height={10} rx="3" fill="#1e293b" />
+                  <rect
+                    x={10}
+                    y={28}
+                    width={50 * capacitorEnergy}
+                    height={10}
+                    rx="3"
+                    fill="url(#lcrCapacitorPlate)"
+                  />
+                  {capacitorEnergy > 0.5 && (
+                    <rect
+                      x={10}
+                      y={28}
+                      width={50 * capacitorEnergy}
+                      height={10}
+                      rx="3"
+                      fill="#60a5fa"
+                      opacity={0.4}
+                      filter="url(#lcrComponentGlow)"
+                    />
+                  )}
+                </g>
+
+                {/* Inductor energy indicator */}
+                <g transform={`translate(${centerX + 65}, 175)`}>
+                  <rect x={0} y={0} width={70} height={58} rx="8" fill="rgba(15,23,42,0.95)" stroke="#f97316" strokeWidth="1" filter="url(#lcrInnerGlow)" />
+                  <rect x={10} y={28} width={50} height={10} rx="3" fill="#1e293b" />
+                  <rect
+                    x={10}
+                    y={28}
+                    width={50 * inductorEnergy}
+                    height={10}
+                    rx="3"
+                    fill="url(#lcrInductorCoil)"
+                  />
+                  {inductorEnergy > 0.5 && (
+                    <rect
+                      x={10}
+                      y={28}
+                      width={50 * inductorEnergy}
+                      height={10}
+                      rx="3"
+                      fill="#fb923c"
+                      opacity={0.4}
+                      filter="url(#lcrComponentGlow)"
+                    />
+                  )}
+                </g>
+              </>
+            )}
           </g>
-        )}
 
-        {/* === INFO PANELS === */}
+          {/* === RESONANCE CURVE with premium styling === */}
+          {showResonanceCurve && (
+            <g transform="translate(0, 30)">
+              {/* Background panel */}
+              <rect
+                x={centerX - 115}
+                y={275}
+                width={230}
+                height={110}
+                rx="10"
+                fill="rgba(15,23,42,0.97)"
+                stroke="#334155"
+                strokeWidth="1"
+                filter="url(#lcrShadow)"
+              />
 
-        {/* Resonant frequency - Top left */}
+              {/* Frequency axis */}
+              <line x1={centerX - 100} y1={365} x2={centerX + 100} y2={365} stroke="#475569" strokeWidth="1" />
+
+              {/* Response curve fill */}
+              <polygon
+                points={resonanceCurveFillPoints}
+                fill="url(#lcrResonanceFill)"
+              />
+
+              {/* Response curve line */}
+              <polyline
+                points={resonanceCurvePoints}
+                fill="none"
+                stroke="#22c55e"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#lcrResonanceGlow)"
+              />
+
+              {/* Resonant frequency marker */}
+              <line
+                x1={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}
+                y1={295}
+                x2={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}
+                y2={365}
+                stroke="#4ade80"
+                strokeWidth="2"
+                strokeDasharray="6,4"
+                filter="url(#lcrResonanceGlow)"
+              />
+
+              {/* Resonance peak indicator */}
+              <circle
+                cx={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}
+                cy={295}
+                r="8"
+                fill="url(#lcrResonancePeakGlow)"
+                filter="url(#lcrResonanceGlow)"
+              >
+                <animate
+                  attributeName="r"
+                  values="6;9;6"
+                  dur="1.5s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+              <circle
+                cx={centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}
+                cy={295}
+                r="4"
+                fill="#4ade80"
+              />
+            </g>
+          )}
+
+          {/* === RESONANCE FREQUENCY INDICATOR - Top Left === */}
+          {showLabels && (
+            <g transform="translate(10, 10)">
+              <rect x={0} y={0} width={105} height={60} rx="8" fill="rgba(15,23,42,0.97)" stroke="#22c55e" strokeWidth="1.5" filter="url(#lcrShadow)" />
+              <circle cx={90} cy={12} r="4" fill="#22c55e" opacity="0.8">
+                <animate attributeName="opacity" values="0.4;1;0.4" dur="2s" repeatCount="indefinite" />
+              </circle>
+            </g>
+          )}
+
+          {/* === Q FACTOR - Top Right === */}
+          {showLabels && (
+            <g transform={`translate(${svgWidth - 90}, 10)`}>
+              <rect x={0} y={0} width={80} height={60} rx="8" fill="rgba(15,23,42,0.97)" stroke="#a855f7" strokeWidth="1" filter="url(#lcrShadow)" />
+            </g>
+          )}
+
+          {/* === STATION TUNED - Bottom Center === */}
+          {showLabels && closestStation && signalQuality > 30 && (
+            <g transform={`translate(${centerX - 75}, ${svgHeight - 50})`}>
+              <rect x={0} y={0} width={150} height={40} rx="8" fill="rgba(34,197,94,0.2)" stroke="#22c55e" strokeWidth="1.5" filter="url(#lcrShadow)" />
+              {/* Signal strength bars */}
+              {[0, 1, 2, 3, 4].map(i => (
+                <rect
+                  key={i}
+                  x={125 + i * 5}
+                  y={28 - i * 4}
+                  width={3}
+                  height={8 + i * 4}
+                  rx="1"
+                  fill={signalQuality > (i + 1) * 20 ? '#22c55e' : '#334155'}
+                />
+              ))}
+            </g>
+          )}
+
+          {/* === FORMULA - Bottom Left === */}
+          {showLabels && (
+            <g transform={`translate(10, ${svgHeight - 45})`}>
+              <rect x={0} y={0} width={115} height={35} rx="8" fill="rgba(168,85,247,0.2)" stroke="#a855f7" strokeWidth="1" filter="url(#lcrShadow)" />
+            </g>
+          )}
+        </svg>
+
+        {/* === TEXT LABELS OUTSIDE SVG using typo system === */}
         {showLabels && (
-          <g transform="translate(10, 10)">
-            <rect x={0} y={0} width={100} height={55} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.resonance} strokeWidth="1" />
-            <text x={50} y={16} textAnchor="middle" fill={colors.textSecondary} fontSize="9" fontWeight="600">
-              RESONANCE
-            </text>
-            <text x={50} y={38} textAnchor="middle" fill={colors.resonance} fontSize="18" fontWeight="700">
-              {resonantFrequency}
-            </text>
-            <text x={50} y={50} textAnchor="middle" fill={colors.textMuted} fontSize="9">
-              kHz
-            </text>
-          </g>
-        )}
+          <>
+            {/* Resonance frequency label */}
+            <div style={{
+              position: 'absolute',
+              top: isMobile ? '18px' : '20px',
+              left: isMobile ? '18px' : '20px',
+              width: isMobile ? '90px' : '95px',
+              textAlign: 'center',
+              pointerEvents: 'none'
+            }}>
+              <div style={{ fontSize: typo.label, color: colors.textSecondary, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                RESONANCE
+              </div>
+              <div style={{ fontSize: isMobile ? '22px' : '26px', color: colors.resonance, fontWeight: 700, lineHeight: 1.2 }}>
+                {resonantFrequency}
+              </div>
+              <div style={{ fontSize: typo.label, color: colors.textMuted }}>
+                kHz
+              </div>
+            </div>
 
-        {/* Q Factor - Top right */}
-        {showLabels && (
-          <g transform={`translate(${svgWidth - 85}, 10)`}>
-            <rect x={0} y={0} width={75} height={55} rx="6" fill="rgba(15,23,42,0.95)" stroke={colors.bgElevated} strokeWidth="1" />
-            <text x={37} y={16} textAnchor="middle" fill={colors.textSecondary} fontSize="9" fontWeight="600">
-              Q FACTOR
-            </text>
-            <text x={37} y={38} textAnchor="middle" fill={colors.energy} fontSize="18" fontWeight="700">
-              {qFactor}
-            </text>
-            <text x={37} y={50} textAnchor="middle" fill={colors.textMuted} fontSize="9">
-              (selectivity)
-            </text>
-          </g>
-        )}
+            {/* Q Factor label */}
+            <div style={{
+              position: 'absolute',
+              top: isMobile ? '18px' : '20px',
+              right: isMobile ? '18px' : '20px',
+              width: isMobile ? '70px' : '70px',
+              textAlign: 'center',
+              pointerEvents: 'none'
+            }}>
+              <div style={{ fontSize: typo.label, color: colors.textSecondary, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                Q FACTOR
+              </div>
+              <div style={{ fontSize: isMobile ? '22px' : '26px', color: colors.energy, fontWeight: 700, lineHeight: 1.2 }}>
+                {qFactor}
+              </div>
+              <div style={{ fontSize: typo.label, color: colors.textMuted }}>
+                selectivity
+              </div>
+            </div>
 
-        {/* Station tuned - Bottom center */}
-        {showLabels && closestStation && signalQuality > 30 && (
-          <g transform={`translate(${centerX - 70}, ${svgHeight - 45})`}>
-            <rect x={0} y={0} width={140} height={35} rx="6" fill="rgba(34,197,94,0.15)" stroke={colors.success} strokeWidth="1" />
-            <text x={70} y={15} textAnchor="middle" fill={colors.success} fontSize="11" fontWeight="700">
-              {closestStation.genre} {closestStation.name}
-            </text>
-            <text x={70} y={28} textAnchor="middle" fill={colors.textMuted} fontSize="10">
-              {closestStation.freq} kHz • Signal: {Math.round(signalQuality)}%
-            </text>
-          </g>
-        )}
+            {/* Capacitor energy label */}
+            {showEnergyAnimation && (
+              <div style={{
+                position: 'absolute',
+                top: isMobile ? '198px' : '208px',
+                left: isMobile ? `${centerX - 127}px` : `${centerX - 127}px`,
+                width: '60px',
+                textAlign: 'center',
+                pointerEvents: 'none'
+              }}>
+                <div style={{ fontSize: typo.label, color: colors.capacitor, fontWeight: 600 }}>
+                  E (electric)
+                </div>
+                <div style={{ fontSize: typo.small, color: colors.textMuted, marginTop: '22px' }}>
+                  {Math.round(capacitorEnergy * 100)}%
+                </div>
+              </div>
+            )}
 
-        {/* Formula - Bottom left */}
-        {showLabels && (
-          <g transform={`translate(10, ${svgHeight - 40})`}>
-            <rect x={0} y={0} width={110} height={30} rx="6" fill="rgba(168,85,247,0.15)" stroke={colors.energy} strokeWidth="1" />
-            <text x={55} y={20} textAnchor="middle" fill={colors.textPrimary} fontSize="11" fontWeight="600">
-              f = 1/(2π√LC)
-            </text>
-          </g>
+            {/* Inductor energy label */}
+            {showEnergyAnimation && (
+              <div style={{
+                position: 'absolute',
+                top: isMobile ? '198px' : '208px',
+                left: isMobile ? `${centerX + 73}px` : `${centerX + 73}px`,
+                width: '60px',
+                textAlign: 'center',
+                pointerEvents: 'none'
+              }}>
+                <div style={{ fontSize: typo.label, color: colors.inductor, fontWeight: 600 }}>
+                  E (magnetic)
+                </div>
+                <div style={{ fontSize: typo.small, color: colors.textMuted, marginTop: '22px' }}>
+                  {Math.round(inductorEnergy * 100)}%
+                </div>
+              </div>
+            )}
+
+            {/* Component labels - C and L */}
+            <div style={{
+              position: 'absolute',
+              top: isMobile ? '155px' : '165px',
+              left: `${centerX - 80}px`,
+              textAlign: 'center',
+              pointerEvents: 'none'
+            }}>
+              <div style={{ fontSize: typo.body, color: colors.capacitor, fontWeight: 700 }}>C</div>
+              <div style={{ fontSize: typo.label, color: colors.textMuted }}>{capacitance} pF</div>
+            </div>
+
+            <div style={{
+              position: 'absolute',
+              top: isMobile ? '155px' : '165px',
+              left: `${centerX + 58}px`,
+              textAlign: 'center',
+              pointerEvents: 'none'
+            }}>
+              <div style={{ fontSize: typo.body, color: colors.inductor, fontWeight: 700 }}>L</div>
+              <div style={{ fontSize: typo.label, color: colors.textMuted }}>{inductance} µH</div>
+            </div>
+
+            {/* Resonance curve labels */}
+            {showResonanceCurve && (
+              <>
+                <div style={{
+                  position: 'absolute',
+                  top: isMobile ? '310px' : '320px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  textAlign: 'center',
+                  pointerEvents: 'none'
+                }}>
+                  <div style={{ fontSize: typo.small, color: colors.textSecondary, fontWeight: 600, textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+                    RESONANCE CURVE
+                  </div>
+                </div>
+
+                {/* Resonant frequency on curve */}
+                <div style={{
+                  position: 'absolute',
+                  top: isMobile ? '323px' : '333px',
+                  left: `${centerX - 100 + ((resonantFrequency - 500) / 1200) * 200}px`,
+                  transform: 'translateX(-50%)',
+                  textAlign: 'center',
+                  pointerEvents: 'none'
+                }}>
+                  <div style={{ fontSize: typo.small, color: colors.resonance, fontWeight: 700 }}>
+                    f0 = {resonantFrequency} kHz
+                  </div>
+                </div>
+
+                {/* Frequency axis labels */}
+                <div style={{
+                  position: 'absolute',
+                  bottom: isMobile ? '52px' : '50px',
+                  left: `${centerX - 95}px`,
+                  fontSize: typo.label,
+                  color: colors.textMuted,
+                  pointerEvents: 'none'
+                }}>500</div>
+                <div style={{
+                  position: 'absolute',
+                  bottom: isMobile ? '52px' : '50px',
+                  left: '50%',
+                  transform: 'translateX(-50%)',
+                  fontSize: typo.label,
+                  color: colors.textMuted,
+                  pointerEvents: 'none'
+                }}>1100</div>
+                <div style={{
+                  position: 'absolute',
+                  bottom: isMobile ? '52px' : '50px',
+                  right: `${svgWidth - centerX - 95}px`,
+                  fontSize: typo.label,
+                  color: colors.textMuted,
+                  pointerEvents: 'none'
+                }}>1700 kHz</div>
+              </>
+            )}
+
+            {/* Station tuned label */}
+            {closestStation && signalQuality > 30 && (
+              <div style={{
+                position: 'absolute',
+                bottom: isMobile ? '18px' : '20px',
+                left: '50%',
+                transform: 'translateX(-50%)',
+                width: '140px',
+                textAlign: 'center',
+                pointerEvents: 'none'
+              }}>
+                <div style={{ fontSize: typo.small, color: colors.success, fontWeight: 700 }}>
+                  {closestStation.genre} {closestStation.name}
+                </div>
+                <div style={{ fontSize: typo.label, color: colors.textMuted }}>
+                  {closestStation.freq} kHz - Signal: {Math.round(signalQuality)}%
+                </div>
+              </div>
+            )}
+
+            {/* Formula label */}
+            <div style={{
+              position: 'absolute',
+              bottom: isMobile ? '22px' : '23px',
+              left: isMobile ? '18px' : '20px',
+              width: '105px',
+              textAlign: 'center',
+              pointerEvents: 'none'
+            }}>
+              <div style={{ fontSize: typo.small, color: colors.textPrimary, fontWeight: 600 }}>
+                f = 1/(2pi * sqrt(LC))
+              </div>
+            </div>
+          </>
         )}
-      </svg>
+      </div>
     );
   };
 

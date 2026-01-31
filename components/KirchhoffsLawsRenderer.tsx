@@ -568,108 +568,346 @@ const KirchhoffsLawsRenderer: React.FC<Props> = ({
   // RENDER FUNCTIONS
   // =============================================
 
+  // Premium SVG definitions for circuit visualization
+  const renderCircuitDefs = () => (
+    <defs>
+      {/* Premium wire metallic gradient */}
+      <linearGradient id="kirchWireGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#475569" />
+        <stop offset="25%" stopColor="#64748b" />
+        <stop offset="50%" stopColor="#94a3b8" />
+        <stop offset="75%" stopColor="#64748b" />
+        <stop offset="100%" stopColor="#475569" />
+      </linearGradient>
+
+      {/* Vertical wire gradient */}
+      <linearGradient id="kirchWireVertical" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#475569" />
+        <stop offset="25%" stopColor="#64748b" />
+        <stop offset="50%" stopColor="#94a3b8" />
+        <stop offset="75%" stopColor="#64748b" />
+        <stop offset="100%" stopColor="#475569" />
+      </linearGradient>
+
+      {/* Battery positive terminal gradient */}
+      <linearGradient id="kirchBatteryPos" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#ef4444" />
+        <stop offset="30%" stopColor="#f87171" />
+        <stop offset="50%" stopColor="#fca5a5" />
+        <stop offset="70%" stopColor="#f87171" />
+        <stop offset="100%" stopColor="#ef4444" />
+      </linearGradient>
+
+      {/* Battery negative terminal gradient */}
+      <linearGradient id="kirchBatteryNeg" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#14532d" />
+        <stop offset="30%" stopColor="#166534" />
+        <stop offset="50%" stopColor="#22c55e" />
+        <stop offset="70%" stopColor="#166534" />
+        <stop offset="100%" stopColor="#14532d" />
+      </linearGradient>
+
+      {/* Battery body gradient */}
+      <linearGradient id="kirchBatteryBody" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#1e293b" />
+        <stop offset="20%" stopColor="#334155" />
+        <stop offset="50%" stopColor="#475569" />
+        <stop offset="80%" stopColor="#334155" />
+        <stop offset="100%" stopColor="#1e293b" />
+      </linearGradient>
+
+      {/* Resistor R1 gradient (blue) */}
+      <linearGradient id="kirchResistorBlue" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#1e3a8a" />
+        <stop offset="25%" stopColor="#2563eb" />
+        <stop offset="50%" stopColor="#3b82f6" />
+        <stop offset="75%" stopColor="#60a5fa" />
+        <stop offset="100%" stopColor="#3b82f6" />
+      </linearGradient>
+
+      {/* Resistor R2 gradient (amber) */}
+      <linearGradient id="kirchResistorAmber" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#78350f" />
+        <stop offset="25%" stopColor="#b45309" />
+        <stop offset="50%" stopColor="#f59e0b" />
+        <stop offset="75%" stopColor="#fbbf24" />
+        <stop offset="100%" stopColor="#f59e0b" />
+      </linearGradient>
+
+      {/* Resistor R3 gradient (purple) */}
+      <linearGradient id="kirchResistorPurple" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#581c87" />
+        <stop offset="25%" stopColor="#7c3aed" />
+        <stop offset="50%" stopColor="#a855f7" />
+        <stop offset="75%" stopColor="#c084fc" />
+        <stop offset="100%" stopColor="#a855f7" />
+      </linearGradient>
+
+      {/* Node glow gradient */}
+      <radialGradient id="kirchNodeGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+        <stop offset="40%" stopColor="#22c55e" stopOpacity="0.8" />
+        <stop offset="70%" stopColor="#16a34a" stopOpacity="0.4" />
+        <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Current flow electron gradient */}
+      <radialGradient id="kirchElectronGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+        <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.9" />
+        <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.5" />
+        <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Premium background gradient */}
+      <linearGradient id="kirchBgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#0f172a" />
+        <stop offset="30%" stopColor="#1e293b" />
+        <stop offset="70%" stopColor="#1e293b" />
+        <stop offset="100%" stopColor="#0f172a" />
+      </linearGradient>
+
+      {/* Node glow filter */}
+      <filter id="kirchNodeGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Current flow glow filter */}
+      <filter id="kirchCurrentGlow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Resistor inner shadow filter */}
+      <filter id="kirchResistorShadow" x="-20%" y="-20%" width="140%" height="140%">
+        <feGaussianBlur stdDeviation="1.5" result="blur" />
+        <feComposite in="SourceGraphic" in2="blur" operator="over" />
+      </filter>
+
+      {/* Battery glow filter */}
+      <filter id="kirchBatteryGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Voltage indicator gradient */}
+      <linearGradient id="kirchVoltageGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#06b6d4" stopOpacity="0" />
+        <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.7" />
+        <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
+        <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.7" />
+        <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+      </linearGradient>
+
+      {/* Animated current dash pattern */}
+      <pattern id="kirchCurrentPattern" patternUnits="userSpaceOnUse" width="8" height="4">
+        <rect width="4" height="4" fill="#fbbf24" opacity="0.8" />
+      </pattern>
+
+      {/* Grid pattern for background */}
+      <pattern id="kirchGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+        <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.3" />
+      </pattern>
+    </defs>
+  );
+
+  // Premium resistor symbol component
+  const renderResistor = (x: number, y: number, width: number, height: number, gradientId: string, label: string, value: number) => (
+    <g filter="url(#kirchResistorShadow)">
+      {/* Resistor body with zigzag pattern */}
+      <rect x={x} y={y} width={width} height={height} fill={`url(#${gradientId})`} rx="3" />
+      {/* Metallic band indicators */}
+      <line x1={x + 2} y1={y + height * 0.25} x2={x + width - 2} y2={y + height * 0.25} stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+      <line x1={x + 2} y1={y + height * 0.5} x2={x + width - 2} y2={y + height * 0.5} stroke="rgba(255,255,255,0.2)" strokeWidth="1" />
+      <line x1={x + 2} y1={y + height * 0.75} x2={x + width - 2} y2={y + height * 0.75} stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+      {/* Highlight */}
+      <rect x={x + 1} y={y + 1} width={width - 2} height={3} fill="rgba(255,255,255,0.2)" rx="2" />
+    </g>
+  );
+
   const renderCircuit = (showAnimation: boolean = true, width: number = 400, height: number = 300) => {
     const currents = calculateCurrents();
     const voltages = calculateVoltages();
 
     return (
       <svg width={width} height={height} className="mx-auto">
-        <defs>
-          <marker id="arrowYellow" markerWidth="10" markerHeight="10" refX="9" refY="3" orient="auto">
-            <path d="M0,0 L0,6 L9,3 z" fill="#eab308" />
-          </marker>
-        </defs>
+        {renderCircuitDefs()}
 
-        {/* Background */}
-        <rect x="0" y="0" width={width} height={height} fill="#1e293b" rx="12" />
+        {/* Premium background with gradient and grid */}
+        <rect x="0" y="0" width={width} height={height} fill="url(#kirchBgGradient)" rx="12" />
+        <rect x="0" y="0" width={width} height={height} fill="url(#kirchGridPattern)" rx="12" />
 
-        {/* Battery */}
-        <rect x="30" y="100" width="20" height="100" fill="none" stroke="#64748b" strokeWidth="2" />
-        <line x1="25" y1="130" x2="55" y2="130" stroke="#ef4444" strokeWidth="3" />
-        <line x1="30" y1="150" x2="50" y2="150" stroke="#22c55e" strokeWidth="2" />
-        <text x="40" y="85" textAnchor="middle" fill="#94a3b8" fontSize="12">+</text>
-        <text x="40" y="220" textAnchor="middle" fill="#94a3b8" fontSize="12">-</text>
-        <text x="40" y="260" textAnchor="middle" fill="#fbbf24" fontSize="14" fontWeight="bold">{voltage1}V</text>
+        {/* Battery with premium styling */}
+        <g filter="url(#kirchBatteryGlow)">
+          <rect x="28" y="98" width="24" height="104" fill="url(#kirchBatteryBody)" rx="4" stroke="#475569" strokeWidth="1" />
+          {/* Positive terminal */}
+          <rect x="32" y="115" width="16" height="8" fill="url(#kirchBatteryPos)" rx="2" />
+          <rect x="36" y="110" width="8" height="5" fill="url(#kirchBatteryPos)" rx="1" />
+          {/* Negative terminal */}
+          <rect x="32" y="177" width="16" height="5" fill="url(#kirchBatteryNeg)" rx="1" />
+          {/* Battery label highlight */}
+          <rect x="30" y="135" width="20" height="30" fill="rgba(0,0,0,0.3)" rx="2" />
+        </g>
 
-        {/* Top wire */}
-        <line x1="50" y1="100" x2="120" y2="100" stroke="#64748b" strokeWidth="2" />
+        {/* Wires with metallic gradient */}
+        {/* Top wire from battery to Node A */}
+        <line x1="52" y1="100" x2="112" y2="100" stroke="url(#kirchWireGradient)" strokeWidth="3" strokeLinecap="round" />
+        {/* Wire from Node A to R1 */}
+        <line x1="120" y1="108" x2="120" y2="120" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
+        {/* Wire from R1 to Node B */}
+        <line x1="120" y1="180" x2="120" y2="192" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
+        {/* Bottom wire from Node B to battery */}
+        <line x1="112" y1="200" x2="52" y2="200" stroke="url(#kirchWireGradient)" strokeWidth="3" strokeLinecap="round" />
+        {/* Battery vertical connections */}
+        <line x1="40" y1="100" x2="40" y2="115" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
+        <line x1="40" y1="185" x2="40" y2="200" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
+        {/* Top wire from Node A to R2-R3 branch */}
+        <line x1="128" y1="100" x2="242" y2="100" stroke="url(#kirchWireGradient)" strokeWidth="3" strokeLinecap="round" />
+        {/* Wire from top to R2 */}
+        <line x1="250" y1="100" x2="250" y2="110" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
+        {/* Wire from R2 to Node C */}
+        <line x1="250" y1="160" x2="250" y2="165" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
+        {/* Wire from Node C to R3 */}
+        <line x1="250" y1="171" x2="250" y2="175" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
+        {/* Wire from R3 to bottom */}
+        <line x1="250" y1="225" x2="250" y2="240" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
+        {/* Bottom return wires */}
+        <line x1="250" y1="240" x2="128" y2="240" stroke="url(#kirchWireGradient)" strokeWidth="3" strokeLinecap="round" />
+        <line x1="120" y1="240" x2="120" y2="208" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
 
-        {/* Node A */}
-        <circle cx="120" cy="100" r="8" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
-        <text x="120" y="80" textAnchor="middle" fill="#4ade80" fontSize="12" fontWeight="bold">A</text>
+        {/* Node A with glow effect */}
+        <g filter="url(#kirchNodeGlowFilter)">
+          <circle cx="120" cy="100" r="10" fill="url(#kirchNodeGlow)" />
+          <circle cx="120" cy="100" r="6" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
+        </g>
 
-        {/* R1 branch */}
-        <rect x="110" y="120" width="20" height="60" fill="#3b82f6" rx="3" />
-        <text x="120" y="155" textAnchor="middle" fill="white" fontSize="10">R1</text>
-        <text x="145" y="155" textAnchor="start" fill="#60a5fa" fontSize="11">{resistance1}O</text>
-        <line x1="120" y1="108" x2="120" y2="120" stroke="#64748b" strokeWidth="2" />
-        <line x1="120" y1="180" x2="120" y2="200" stroke="#64748b" strokeWidth="2" />
+        {/* Node B with glow effect */}
+        <g filter="url(#kirchNodeGlowFilter)">
+          <circle cx="120" cy="200" r="10" fill="url(#kirchNodeGlow)" />
+          <circle cx="120" cy="200" r="6" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
+        </g>
 
-        {/* Node B */}
-        <circle cx="120" cy="200" r="8" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
-        <text x="120" y="225" textAnchor="middle" fill="#4ade80" fontSize="12" fontWeight="bold">B</text>
+        {/* Node C with glow effect (smaller) */}
+        <g filter="url(#kirchNodeGlowFilter)">
+          <circle cx="250" cy="168" r="8" fill="url(#kirchNodeGlow)" />
+          <circle cx="250" cy="168" r="5" fill="#22c55e" stroke="#4ade80" strokeWidth="1.5" />
+        </g>
 
-        {/* Bottom wire */}
-        <line x1="120" y1="200" x2="50" y2="200" stroke="#64748b" strokeWidth="2" />
+        {/* Resistor R1 with premium styling */}
+        {renderResistor(108, 120, 24, 60, 'kirchResistorBlue', 'R1', resistance1)}
 
-        {/* Top wire to R2-R3 */}
-        <line x1="128" y1="100" x2="250" y2="100" stroke="#64748b" strokeWidth="2" />
+        {/* Resistor R2 with premium styling */}
+        {renderResistor(238, 110, 24, 50, 'kirchResistorAmber', 'R2', resistance2)}
 
-        {/* R2 */}
-        <rect x="240" y="110" width="20" height="50" fill="#f59e0b" rx="3" />
-        <text x="250" y="140" textAnchor="middle" fill="white" fontSize="10">R2</text>
-        <text x="275" y="140" textAnchor="start" fill="#fbbf24" fontSize="11">{resistance2}O</text>
-        <line x1="250" y1="100" x2="250" y2="110" stroke="#64748b" strokeWidth="2" />
+        {/* Resistor R3 with premium styling */}
+        {renderResistor(238, 175, 24, 50, 'kirchResistorPurple', 'R3', resistance3)}
 
-        {/* Node C */}
-        <circle cx="250" cy="165" r="6" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
-        <text x="270" y="168" textAnchor="start" fill="#4ade80" fontSize="10">C</text>
-
-        {/* R3 */}
-        <line x1="250" y1="160" x2="250" y2="170" stroke="#64748b" strokeWidth="2" />
-        <rect x="240" y="170" width="20" height="50" fill="#a855f7" rx="3" />
-        <text x="250" y="200" textAnchor="middle" fill="white" fontSize="10">R3</text>
-        <text x="275" y="200" textAnchor="start" fill="#c084fc" fontSize="11">{resistance3}O</text>
-        <line x1="250" y1="220" x2="250" y2="240" stroke="#64748b" strokeWidth="2" />
-
-        {/* Bottom return */}
-        <line x1="250" y1="240" x2="120" y2="240" stroke="#64748b" strokeWidth="2" />
-        <line x1="120" y1="240" x2="120" y2="208" stroke="#64748b" strokeWidth="2" />
-
-        {/* Animation */}
+        {/* Current flow animation with premium electrons */}
         {showAnimation && showCurrentFlow && (
-          <g>
-            <circle cx={70 + (animationOffset * 2) % 40} cy="100" r="3" fill="#fbbf24" />
-            <circle cx={120} cy={100 + (animationOffset * 2) % 80} r="3" fill="#fbbf24" />
-            <circle cx={170 + (animationOffset * 2) % 60} cy="100" r="3" fill="#fbbf24" />
-            <circle cx={250} cy={110 + (animationOffset * 2) % 130} r="3" fill="#fbbf24" />
+          <g filter="url(#kirchCurrentGlow)">
+            {/* Main current from battery */}
+            <circle cx={55 + (animationOffset * 2.5) % 55} cy="100" r="4" fill="url(#kirchElectronGlow)" />
+            <circle cx={55 + ((animationOffset + 10) * 2.5) % 55} cy="100" r="4" fill="url(#kirchElectronGlow)" />
+            {/* Current through R1 branch */}
+            <circle cx={120} cy={108 + (animationOffset * 2) % 85} r="4" fill="url(#kirchElectronGlow)" />
+            <circle cx={120} cy={108 + ((animationOffset + 20) * 2) % 85} r="4" fill="url(#kirchElectronGlow)" />
+            {/* Current to R2-R3 branch */}
+            <circle cx={130 + (animationOffset * 2.2) % 110} cy="100" r="4" fill="url(#kirchElectronGlow)" />
+            <circle cx={130 + ((animationOffset + 15) * 2.2) % 110} cy="100" r="4" fill="url(#kirchElectronGlow)" />
+            {/* Current through R2-R3 */}
+            <circle cx={250} cy={105 + (animationOffset * 1.8) % 130} r="4" fill="url(#kirchElectronGlow)" />
+            <circle cx={250} cy={105 + ((animationOffset + 25) * 1.8) % 130} r="4" fill="url(#kirchElectronGlow)" />
+            {/* Return current bottom */}
+            <circle cx={245 - (animationOffset * 2) % 120} cy="240" r="4" fill="url(#kirchElectronGlow)" />
+            <circle cx={115 - (animationOffset * 2.5) % 60} cy="200" r="4" fill="url(#kirchElectronGlow)" />
           </g>
         )}
 
+        {/* Voltage indicator arcs */}
+        {showAnimation && showCurrentFlow && (
+          <g opacity="0.6">
+            <path d="M 145 125 Q 160 150 145 175" fill="none" stroke="url(#kirchVoltageGradient)" strokeWidth="2" strokeDasharray="4,2" />
+            <path d="M 275 115 Q 290 135 275 155" fill="none" stroke="url(#kirchVoltageGradient)" strokeWidth="2" strokeDasharray="4,2" />
+            <path d="M 275 180 Q 290 200 275 220" fill="none" stroke="url(#kirchVoltageGradient)" strokeWidth="2" strokeDasharray="4,2" />
+          </g>
+        )}
+      </svg>
+    );
+  };
+
+  // Circuit labels rendered outside SVG using typo system
+  const renderCircuitLabels = () => {
+    const currents = calculateCurrents();
+    const voltages = calculateVoltages();
+
+    return (
+      <div className="mt-3 space-y-2">
+        {/* Node labels */}
+        <div className="flex justify-around text-center">
+          <div>
+            <span className="text-emerald-400 font-bold" style={{ fontSize: typo.small }}>Node A</span>
+          </div>
+          <div>
+            <span className="text-emerald-400 font-bold" style={{ fontSize: typo.small }}>Node B</span>
+          </div>
+          <div>
+            <span className="text-emerald-400 font-bold" style={{ fontSize: typo.small }}>Node C</span>
+          </div>
+        </div>
+
+        {/* Component values */}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="bg-blue-900/30 rounded-lg p-2">
+            <span className="text-blue-400 font-semibold" style={{ fontSize: typo.small }}>R1: {resistance1}Ohm</span>
+          </div>
+          <div className="bg-amber-900/30 rounded-lg p-2">
+            <span className="text-amber-400 font-semibold" style={{ fontSize: typo.small }}>R2: {resistance2}Ohm</span>
+          </div>
+          <div className="bg-purple-900/30 rounded-lg p-2">
+            <span className="text-purple-400 font-semibold" style={{ fontSize: typo.small }}>R3: {resistance3}Ohm</span>
+          </div>
+        </div>
+
         {/* Current values */}
-        <text x="90" y="155" textAnchor="end" fill="#fbbf24" fontSize="11">
-          I1={currents.i1.toFixed(3)}A
-        </text>
-        <text x={width - 30} y="155" textAnchor="end" fill="#fbbf24" fontSize="11">
-          I23={currents.i23.toFixed(3)}A
-        </text>
+        <div className="grid grid-cols-2 gap-2 text-center">
+          <div className="bg-yellow-900/30 rounded-lg p-2">
+            <span className="text-yellow-400 font-semibold" style={{ fontSize: typo.small }}>I1 = {currents.i1.toFixed(3)}A</span>
+          </div>
+          <div className="bg-yellow-900/30 rounded-lg p-2">
+            <span className="text-yellow-400 font-semibold" style={{ fontSize: typo.small }}>I23 = {currents.i23.toFixed(3)}A</span>
+          </div>
+        </div>
 
         {/* Voltage drops */}
-        <text x="145" y="115" textAnchor="start" fill="#60a5fa" fontSize="10">
-          V1={voltages.v1.toFixed(2)}V
-        </text>
-        <text x="285" y="135" textAnchor="start" fill="#fbbf24" fontSize="10">
-          V2={voltages.v2.toFixed(2)}V
-        </text>
-        <text x="285" y="195" textAnchor="start" fill="#c084fc" fontSize="10">
-          V3={voltages.v3.toFixed(2)}V
-        </text>
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="bg-cyan-900/30 rounded-lg p-2">
+            <span className="text-cyan-400" style={{ fontSize: typo.label }}>V1 = {voltages.v1.toFixed(2)}V</span>
+          </div>
+          <div className="bg-cyan-900/30 rounded-lg p-2">
+            <span className="text-cyan-400" style={{ fontSize: typo.label }}>V2 = {voltages.v2.toFixed(2)}V</span>
+          </div>
+          <div className="bg-cyan-900/30 rounded-lg p-2">
+            <span className="text-cyan-400" style={{ fontSize: typo.label }}>V3 = {voltages.v3.toFixed(2)}V</span>
+          </div>
+        </div>
 
-        {/* KCL label */}
-        <text x={width/2} y={height - 15} textAnchor="middle" fill="#94a3b8" fontSize="10">
-          KCL @ Node A: I_total = I1 + I23 = {(currents.i1 + currents.i23).toFixed(3)}A
-        </text>
-      </svg>
+        {/* KCL summary */}
+        <div className="bg-slate-700/50 rounded-lg p-2 text-center">
+          <span className="text-slate-300" style={{ fontSize: typo.small }}>
+            KCL @ Node A: I_total = I1 + I23 = <span className="text-cyan-400 font-bold">{(currents.i1 + currents.i23).toFixed(3)}A</span>
+          </span>
+        </div>
+      </div>
     );
   };
 
@@ -678,77 +916,175 @@ const KirchhoffsLawsRenderer: React.FC<Props> = ({
 
     return (
       <svg width={width} height={height} className="mx-auto">
-        <rect x="0" y="0" width={width} height={height} fill="#1e293b" rx="12" />
+        {renderCircuitDefs()}
 
-        {/* Battery 1 */}
-        <rect x="30" y="80" width="15" height="80" fill="none" stroke="#64748b" strokeWidth="2" />
-        <line x1="25" y1="100" x2="50" y2="100" stroke="#ef4444" strokeWidth="3" />
-        <line x1="28" y1="120" x2="47" y2="120" stroke="#22c55e" strokeWidth="2" />
-        <text x="37" y="70" textAnchor="middle" fill="#fbbf24" fontSize="12">{voltage1}V</text>
+        {/* Additional defs for multi-loop circuit */}
+        <defs>
+          {/* Loop indicator gradients */}
+          <linearGradient id="kirchLoop1Gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.1" />
+            <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.1" />
+          </linearGradient>
 
-        {/* Battery 2 */}
-        <rect x={width - 45} y="80" width="15" height="80" fill="none" stroke="#64748b" strokeWidth="2" />
-        <line x1={width - 50} y1="100" x2={width - 25} y2="100" stroke="#ef4444" strokeWidth="3" />
-        <line x1={width - 47} y1="120" x2={width - 28} y2="120" stroke="#22c55e" strokeWidth="2" />
-        <text x={width - 37} y="70" textAnchor="middle" fill="#fbbf24" fontSize="12">{voltage2}V</text>
+          <linearGradient id="kirchLoop2Gradient" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#a855f7" stopOpacity="0.1" />
+            <stop offset="50%" stopColor="#c084fc" stopOpacity="0.2" />
+            <stop offset="100%" stopColor="#a855f7" stopOpacity="0.1" />
+          </linearGradient>
+        </defs>
 
-        {/* Top wire left */}
-        <line x1="45" y1="60" x2="130" y2="60" stroke="#64748b" strokeWidth="2" />
+        {/* Premium background with gradient and grid */}
+        <rect x="0" y="0" width={width} height={height} fill="url(#kirchBgGradient)" rx="12" />
+        <rect x="0" y="0" width={width} height={height} fill="url(#kirchGridPattern)" rx="12" />
 
-        {/* R1 */}
-        <rect x="130" y="50" width="60" height="20" fill="#3b82f6" rx="3" />
-        <text x="160" y="65" textAnchor="middle" fill="white" fontSize="10">R1: {loopResistance1}O</text>
+        {/* Loop region indicators */}
+        <ellipse cx="110" cy="130" rx="80" ry="70" fill="url(#kirchLoop1Gradient)" stroke="#3b82f6" strokeWidth="1" strokeDasharray="5,3" opacity="0.5" />
+        <ellipse cx={width - 110} cy="130" rx="80" ry="70" fill="url(#kirchLoop2Gradient)" stroke="#a855f7" strokeWidth="1" strokeDasharray="5,3" opacity="0.5" />
 
-        {/* Node 1 */}
-        <circle cx="210" cy="60" r="8" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
-        <text x="210" y="45" textAnchor="middle" fill="#4ade80" fontSize="10">N1</text>
+        {/* Battery 1 with premium styling */}
+        <g filter="url(#kirchBatteryGlow)">
+          <rect x="28" y="78" width="19" height="84" fill="url(#kirchBatteryBody)" rx="3" stroke="#475569" strokeWidth="1" />
+          <rect x="31" y="95" width="13" height="6" fill="url(#kirchBatteryPos)" rx="1" />
+          <rect x="34" y="91" width="7" height="4" fill="url(#kirchBatteryPos)" rx="1" />
+          <rect x="31" y="143" width="13" height="4" fill="url(#kirchBatteryNeg)" rx="1" />
+        </g>
+
+        {/* Battery 2 with premium styling */}
+        <g filter="url(#kirchBatteryGlow)">
+          <rect x={width - 47} y="78" width="19" height="84" fill="url(#kirchBatteryBody)" rx="3" stroke="#475569" strokeWidth="1" />
+          <rect x={width - 44} y="95" width="13" height="6" fill="url(#kirchBatteryPos)" rx="1" />
+          <rect x={width - 41} y="91" width="7" height="4" fill="url(#kirchBatteryPos)" rx="1" />
+          <rect x={width - 44} y="143" width="13" height="4" fill="url(#kirchBatteryNeg)" rx="1" />
+        </g>
+
+        {/* Wires with metallic gradient */}
+        {/* Top wire left from Battery 1 */}
+        <line x1="37" y1="60" x2="37" y2="78" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
+        <line x1="37" y1="60" x2="130" y2="60" stroke="url(#kirchWireGradient)" strokeWidth="3" strokeLinecap="round" />
+
+        {/* R1 horizontal */}
+        {renderResistor(130, 48, 60, 24, 'kirchResistorBlue', 'R1', loopResistance1)}
+
+        {/* Wire from R1 to Node N1 */}
+        <line x1="190" y1="60" x2="200" y2="60" stroke="url(#kirchWireGradient)" strokeWidth="3" strokeLinecap="round" />
+
+        {/* Node N1 with glow effect */}
+        <g filter="url(#kirchNodeGlowFilter)">
+          <circle cx="210" cy="60" r="12" fill="url(#kirchNodeGlow)" />
+          <circle cx="210" cy="60" r="8" fill="#22c55e" stroke="#4ade80" strokeWidth="2" />
+        </g>
 
         {/* R2 vertical */}
-        <rect x="200" y="80" width="20" height="60" fill="#f59e0b" rx="3" />
-        <text x="210" y="115" textAnchor="middle" fill="white" fontSize="9">R2</text>
-        <text x="230" y="115" textAnchor="start" fill="#fbbf24" fontSize="10">{loopResistance2}O</text>
-        <line x1="210" y1="68" x2="210" y2="80" stroke="#64748b" strokeWidth="2" />
-        <line x1="210" y1="140" x2="210" y2="160" stroke="#64748b" strokeWidth="2" />
+        <line x1="210" y1="68" x2="210" y2="80" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
+        {renderResistor(198, 80, 24, 60, 'kirchResistorAmber', 'R2', loopResistance2)}
+        <line x1="210" y1="140" x2="210" y2="160" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
 
-        {/* Top wire right */}
-        <line x1="218" y1="60" x2="290" y2="60" stroke="#64748b" strokeWidth="2" />
+        {/* Wire from Node N1 to R3 */}
+        <line x1="220" y1="60" x2="290" y2="60" stroke="url(#kirchWireGradient)" strokeWidth="3" strokeLinecap="round" />
 
-        {/* R3 */}
-        <rect x="290" y="50" width="60" height="20" fill="#a855f7" rx="3" />
-        <text x="320" y="65" textAnchor="middle" fill="white" fontSize="10">R3: {loopResistance3}O</text>
+        {/* R3 horizontal */}
+        {renderResistor(290, 48, 60, 24, 'kirchResistorPurple', 'R3', loopResistance3)}
 
-        {/* Connect to Battery 2 */}
-        <line x1="350" y1="60" x2={width - 45} y2="60" stroke="#64748b" strokeWidth="2" />
-        <line x1={width - 37} y1="60" x2={width - 37} y2="80" stroke="#64748b" strokeWidth="2" />
+        {/* Wire from R3 to Battery 2 */}
+        <line x1="350" y1="60" x2={width - 37} y2="60" stroke="url(#kirchWireGradient)" strokeWidth="3" strokeLinecap="round" />
+        <line x1={width - 37} y1="60" x2={width - 37} y2="78" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
 
         {/* Bottom wires */}
-        <line x1="37" y1="160" x2="37" y2="200" stroke="#64748b" strokeWidth="2" />
-        <line x1="37" y1="200" x2="210" y2="200" stroke="#64748b" strokeWidth="2" />
-        <line x1="210" y1="160" x2="210" y2="200" stroke="#64748b" strokeWidth="2" />
-        <line x1="210" y1="200" x2={width - 37} y2="200" stroke="#64748b" strokeWidth="2" />
-        <line x1={width - 37} y1="160" x2={width - 37} y2="200" stroke="#64748b" strokeWidth="2" />
+        <line x1="37" y1="162" x2="37" y2="200" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
+        <line x1="37" y1="200" x2="210" y2="200" stroke="url(#kirchWireGradient)" strokeWidth="3" strokeLinecap="round" />
 
-        {/* Loop labels */}
-        <text x="100" y="130" textAnchor="middle" fill="#60a5fa" fontSize="11">Loop 1</text>
-        <text x="320" y="130" textAnchor="middle" fill="#c084fc" fontSize="11">Loop 2</text>
+        {/* Ground node indicator */}
+        <g filter="url(#kirchNodeGlowFilter)">
+          <circle cx="210" cy="160" r="8" fill="url(#kirchNodeGlow)" />
+          <circle cx="210" cy="160" r="5" fill="#22c55e" stroke="#4ade80" strokeWidth="1.5" />
+        </g>
 
-        {/* Current animation */}
+        <line x1="210" y1="168" x2="210" y2="200" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
+        <line x1="210" y1="200" x2={width - 37} y2="200" stroke="url(#kirchWireGradient)" strokeWidth="3" strokeLinecap="round" />
+        <line x1={width - 37} y1="162" x2={width - 37} y2="200" stroke="url(#kirchWireVertical)" strokeWidth="3" strokeLinecap="round" />
+
+        {/* Current animation with premium electrons */}
         {showMultiLoopFlow && (
-          <g>
-            <circle cx={60 + (animationOffset * 2) % 60} cy="60" r="3" fill="#fbbf24" />
-            <circle cx={280 + (animationOffset * 2) % 60} cy="60" r="3" fill="#fbbf24" />
-            <circle cx={210} cy={90 + (animationOffset * 2) % 50} r="3" fill="#fbbf24" />
+          <g filter="url(#kirchCurrentGlow)">
+            {/* Loop 1 current flow */}
+            <circle cx={45 + (animationOffset * 2.2) % 80} cy="60" r="4" fill="url(#kirchElectronGlow)" />
+            <circle cx={45 + ((animationOffset + 15) * 2.2) % 80} cy="60" r="4" fill="url(#kirchElectronGlow)" />
+            {/* Loop 2 current flow */}
+            <circle cx={280 + (animationOffset * 2.2) % 80} cy="60" r="4" fill="url(#kirchElectronGlow)" />
+            <circle cx={280 + ((animationOffset + 15) * 2.2) % 80} cy="60" r="4" fill="url(#kirchElectronGlow)" />
+            {/* Shared R2 current flow */}
+            <circle cx={210} cy={85 + (animationOffset * 2) % 70} r="5" fill="url(#kirchElectronGlow)" />
+            <circle cx={210} cy={85 + ((animationOffset + 20) * 2) % 70} r="5" fill="url(#kirchElectronGlow)" />
+            {/* Bottom return currents */}
+            <circle cx={200 - (animationOffset * 2) % 160} cy="200" r="4" fill="url(#kirchElectronGlow)" />
+            <circle cx={width - 50 - (animationOffset * 2) % 200} cy="200" r="4" fill="url(#kirchElectronGlow)" />
           </g>
         )}
 
-        {/* Current values */}
-        <text x={width / 2} y={height - 30} textAnchor="middle" fill="#94a3b8" fontSize="11">
-          I1 = {currents.i1.toFixed(3)}A | I2 = {currents.i2.toFixed(3)}A
-        </text>
-        <text x={width / 2} y={height - 12} textAnchor="middle" fill="#4ade80" fontSize="10">
-          KCL at N1: I1 + I2 = {currents.total.toFixed(3)}A (through R2)
-        </text>
+        {/* Voltage drop indicators on components */}
+        {showMultiLoopFlow && (
+          <g opacity="0.5">
+            <path d="M 130 40 Q 160 30 190 40" fill="none" stroke="url(#kirchVoltageGradient)" strokeWidth="2" strokeDasharray="4,2" />
+            <path d="M 230 85 Q 240 110 230 135" fill="none" stroke="url(#kirchVoltageGradient)" strokeWidth="2" strokeDasharray="4,2" />
+            <path d="M 290 40 Q 320 30 350 40" fill="none" stroke="url(#kirchVoltageGradient)" strokeWidth="2" strokeDasharray="4,2" />
+          </g>
+        )}
       </svg>
+    );
+  };
+
+  // Multi-loop circuit labels rendered outside SVG
+  const renderMultiLoopLabels = () => {
+    const currents = calculateMultiLoopCurrents();
+
+    return (
+      <div className="mt-3 space-y-2">
+        {/* Battery and node labels */}
+        <div className="flex justify-between text-center px-4">
+          <div className="bg-yellow-900/30 rounded-lg px-3 py-1">
+            <span className="text-yellow-400 font-semibold" style={{ fontSize: typo.small }}>V1: {voltage1}V</span>
+          </div>
+          <div className="bg-emerald-900/30 rounded-lg px-3 py-1">
+            <span className="text-emerald-400 font-semibold" style={{ fontSize: typo.small }}>Node N1</span>
+          </div>
+          <div className="bg-yellow-900/30 rounded-lg px-3 py-1">
+            <span className="text-yellow-400 font-semibold" style={{ fontSize: typo.small }}>V2: {voltage2}V</span>
+          </div>
+        </div>
+
+        {/* Resistor values */}
+        <div className="grid grid-cols-3 gap-2 text-center">
+          <div className="bg-blue-900/30 rounded-lg p-2">
+            <span className="text-blue-400 font-semibold" style={{ fontSize: typo.small }}>R1: {loopResistance1}Ohm</span>
+          </div>
+          <div className="bg-amber-900/30 rounded-lg p-2">
+            <span className="text-amber-400 font-semibold" style={{ fontSize: typo.small }}>R2: {loopResistance2}Ohm</span>
+          </div>
+          <div className="bg-purple-900/30 rounded-lg p-2">
+            <span className="text-purple-400 font-semibold" style={{ fontSize: typo.small }}>R3: {loopResistance3}Ohm</span>
+          </div>
+        </div>
+
+        {/* Loop current values */}
+        <div className="grid grid-cols-2 gap-2 text-center">
+          <div className="bg-blue-900/40 rounded-lg p-2 border border-blue-700/30">
+            <span className="text-blue-300" style={{ fontSize: typo.label }}>Loop 1:</span>
+            <span className="text-blue-400 font-bold ml-1" style={{ fontSize: typo.small }}>I1 = {currents.i1.toFixed(3)}A</span>
+          </div>
+          <div className="bg-purple-900/40 rounded-lg p-2 border border-purple-700/30">
+            <span className="text-purple-300" style={{ fontSize: typo.label }}>Loop 2:</span>
+            <span className="text-purple-400 font-bold ml-1" style={{ fontSize: typo.small }}>I2 = {currents.i2.toFixed(3)}A</span>
+          </div>
+        </div>
+
+        {/* KCL summary */}
+        <div className="bg-slate-700/50 rounded-lg p-2 text-center">
+          <span className="text-slate-300" style={{ fontSize: typo.small }}>
+            KCL at N1: I1 + I2 = <span className="text-cyan-400 font-bold">{currents.total.toFixed(3)}A</span> (through R2)
+          </span>
+        </div>
+      </div>
     );
   };
 
@@ -819,15 +1155,53 @@ const KirchhoffsLawsRenderer: React.FC<Props> = ({
           At a junction in a circuit where three wires meet, 5A flows in through wire 1 and 2A flows in through wire 2.
         </p>
         <svg width={isMobile ? 280 : 350} height={180} className="mx-auto mb-4">
-          <rect x="0" y="0" width={isMobile ? 280 : 350} height="180" fill="#1e293b" rx="12" />
-          <circle cx={isMobile ? 140 : 175} cy="90" r="15" fill="#22c55e" stroke="#4ade80" strokeWidth="3" />
-          <line x1="30" y1="60" x2={isMobile ? 125 : 160} y2="85" stroke="#fbbf24" strokeWidth="4" />
-          <text x="50" y="45" fill="#fbbf24" fontSize="14" fontWeight="bold">5A in</text>
-          <line x1="30" y1="130" x2={isMobile ? 125 : 160} y2="95" stroke="#fbbf24" strokeWidth="4" />
-          <text x="50" y="150" fill="#fbbf24" fontSize="14" fontWeight="bold">2A in</text>
-          <line x1={isMobile ? 155 : 190} y1="90" x2={isMobile ? 260 : 320} y2="90" stroke="#60a5fa" strokeWidth="4" />
-          <text x={isMobile ? 200 : 250} y="75" fill="#60a5fa" fontSize="14" fontWeight="bold">? A out</text>
+          {renderCircuitDefs()}
+
+          {/* Premium background */}
+          <rect x="0" y="0" width={isMobile ? 280 : 350} height="180" fill="url(#kirchBgGradient)" rx="12" />
+          <rect x="0" y="0" width={isMobile ? 280 : 350} height="180" fill="url(#kirchGridPattern)" rx="12" />
+
+          {/* Central junction node with glow */}
+          <g filter="url(#kirchNodeGlowFilter)">
+            <circle cx={isMobile ? 140 : 175} cy="90" r="20" fill="url(#kirchNodeGlow)" />
+            <circle cx={isMobile ? 140 : 175} cy="90" r="12" fill="#22c55e" stroke="#4ade80" strokeWidth="3" />
+          </g>
+
+          {/* Input wire 1 (5A) with gradient and arrow */}
+          <line x1="30" y1="55" x2={isMobile ? 120 : 155} y2="80" stroke="url(#kirchWireGradient)" strokeWidth="4" strokeLinecap="round" />
+          <polygon points={`${isMobile ? 122 : 157},${78} ${isMobile ? 115 : 148},${72} ${isMobile ? 118 : 152},${82}`} fill="#fbbf24" />
+
+          {/* Input wire 2 (2A) with gradient and arrow */}
+          <line x1="30" y1="135" x2={isMobile ? 120 : 155} y2="100" stroke="url(#kirchWireGradient)" strokeWidth="4" strokeLinecap="round" />
+          <polygon points={`${isMobile ? 122 : 157},${102} ${isMobile ? 115 : 148},${108} ${isMobile ? 118 : 152},${98}`} fill="#fbbf24" />
+
+          {/* Output wire (?) with gradient and arrow */}
+          <line x1={isMobile ? 160 : 195} y1="90" x2={isMobile ? 255 : 315} y2="90" stroke="url(#kirchWireGradient)" strokeWidth="4" strokeLinecap="round" />
+          <polygon points={`${isMobile ? 258 : 318},90 ${isMobile ? 250 : 310},84 ${isMobile ? 250 : 310},96`} fill="#60a5fa" />
+
+          {/* Current flow electrons animation hint */}
+          <g filter="url(#kirchCurrentGlow)" opacity="0.8">
+            <circle cx="50" cy="60" r="4" fill="url(#kirchElectronGlow)" />
+            <circle cx="75" cy="65" r="3" fill="url(#kirchElectronGlow)" />
+            <circle cx="50" cy="130" r="4" fill="url(#kirchElectronGlow)" />
+            <circle cx="70" cy="125" r="3" fill="url(#kirchElectronGlow)" />
+            <circle cx={isMobile ? 200 : 240} cy="90" r="4" fill="#60a5fa" />
+            <circle cx={isMobile ? 230 : 280} cy="90" r="3" fill="#60a5fa" />
+          </g>
         </svg>
+
+        {/* Labels outside SVG */}
+        <div className="flex justify-between w-full max-w-xs mx-auto mt-2 mb-4">
+          <div className="text-center">
+            <span className="text-yellow-400 font-bold" style={{ fontSize: typo.body }}>5A in</span>
+          </div>
+          <div className="text-center">
+            <span className="text-yellow-400 font-bold" style={{ fontSize: typo.body }}>2A in</span>
+          </div>
+          <div className="text-center">
+            <span className="text-blue-400 font-bold" style={{ fontSize: typo.body }}>? A out</span>
+          </div>
+        </div>
         <p className="text-lg text-cyan-400 font-medium">
           How much current flows out through wire 3?
         </p>
@@ -887,8 +1261,13 @@ const KirchhoffsLawsRenderer: React.FC<Props> = ({
         Interactive Circuit Lab
       </h2>
 
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
+      <div className="bg-slate-800/50 rounded-2xl p-4 mb-2">
         {renderCircuit(true, isMobile ? 340 : 450, isMobile ? 280 : 340)}
+      </div>
+
+      {/* Labels outside SVG using typo system */}
+      <div className="w-full max-w-2xl mb-4">
+        {renderCircuitLabels()}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-4 w-full max-w-2xl">
@@ -1135,8 +1514,13 @@ const KirchhoffsLawsRenderer: React.FC<Props> = ({
         Multi-Loop Circuit Lab
       </h2>
 
-      <div className="bg-slate-800/50 rounded-2xl p-4 mb-4">
+      <div className="bg-slate-800/50 rounded-2xl p-4 mb-2">
         {renderMultiLoopCircuit(isMobile ? 360 : 450, isMobile ? 280 : 320)}
+      </div>
+
+      {/* Labels outside SVG using typo system */}
+      <div className="w-full max-w-2xl mb-4">
+        {renderMultiLoopLabels()}
       </div>
 
       <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-4 w-full max-w-2xl">

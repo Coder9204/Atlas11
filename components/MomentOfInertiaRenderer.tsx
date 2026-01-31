@@ -308,91 +308,359 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
     }, 0);
   };
 
+  // Premium SVG defs for moment of inertia visualizations
+  const renderSvgDefs = () => (
+    <defs>
+      {/* === PREMIUM GRADIENTS === */}
+
+      {/* Ice rink surface gradient with depth */}
+      <linearGradient id="moiIceGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.2" />
+        <stop offset="25%" stopColor="#67e8f9" stopOpacity="0.4" />
+        <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.6" />
+        <stop offset="75%" stopColor="#67e8f9" stopOpacity="0.4" />
+        <stop offset="100%" stopColor="#a5f3fc" stopOpacity="0.2" />
+      </linearGradient>
+
+      {/* Premium dress gradient with 3D effect */}
+      <linearGradient id="moiDressGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#f472b6" />
+        <stop offset="20%" stopColor="#ec4899" />
+        <stop offset="50%" stopColor="#db2777" />
+        <stop offset="80%" stopColor="#be185d" />
+        <stop offset="100%" stopColor="#9d174d" />
+      </linearGradient>
+
+      {/* Skirt gradient with fabric sheen */}
+      <linearGradient id="moiSkirtGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#f9a8d4" />
+        <stop offset="15%" stopColor="#f472b6" />
+        <stop offset="50%" stopColor="#ec4899" />
+        <stop offset="85%" stopColor="#db2777" />
+        <stop offset="100%" stopColor="#be185d" />
+      </linearGradient>
+
+      {/* Skin tone gradient with 3D shading */}
+      <radialGradient id="moiSkinGradient" cx="30%" cy="30%" r="70%">
+        <stop offset="0%" stopColor="#fde4d4" />
+        <stop offset="50%" stopColor="#fcd9b6" />
+        <stop offset="100%" stopColor="#e0b090" />
+      </radialGradient>
+
+      {/* Hair gradient with shine */}
+      <linearGradient id="moiHairGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#a0522d" />
+        <stop offset="30%" stopColor="#8B4513" />
+        <stop offset="70%" stopColor="#654321" />
+        <stop offset="100%" stopColor="#5c4033" />
+      </linearGradient>
+
+      {/* Ice skate metallic gradient */}
+      <linearGradient id="moiSkateGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#ffffff" />
+        <stop offset="20%" stopColor="#f8f8f8" />
+        <stop offset="50%" stopColor="#e8e8e8" />
+        <stop offset="80%" stopColor="#d0d0d0" />
+        <stop offset="100%" stopColor="#c0c0c0" />
+      </linearGradient>
+
+      {/* Skate blade chrome gradient */}
+      <linearGradient id="moiBladeGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#e8e8e8" />
+        <stop offset="30%" stopColor="#d0d0d0" />
+        <stop offset="50%" stopColor="#a0a0a0" />
+        <stop offset="70%" stopColor="#c0c0c0" />
+        <stop offset="100%" stopColor="#909090" />
+      </linearGradient>
+
+      {/* Rotation trail gradient */}
+      <linearGradient id="moiRotationTrailGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#6366f1" stopOpacity="0" />
+        <stop offset="25%" stopColor="#8b5cf6" stopOpacity="0.6" />
+        <stop offset="50%" stopColor="#a78bfa" stopOpacity="0.8" />
+        <stop offset="75%" stopColor="#8b5cf6" stopOpacity="0.6" />
+        <stop offset="100%" stopColor="#6366f1" stopOpacity="0" />
+      </linearGradient>
+
+      {/* Angular velocity arc gradient */}
+      <linearGradient id="moiVelocityGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+        <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.2" />
+        <stop offset="30%" stopColor="#22d3ee" stopOpacity="0.7" />
+        <stop offset="50%" stopColor="#67e8f9" stopOpacity="1" />
+        <stop offset="70%" stopColor="#22d3ee" stopOpacity="0.7" />
+        <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.2" />
+      </linearGradient>
+
+      {/* Axis of rotation gradient */}
+      <linearGradient id="moiAxisGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+        <stop offset="0%" stopColor="#fbbf24" stopOpacity="0" />
+        <stop offset="20%" stopColor="#f59e0b" stopOpacity="0.8" />
+        <stop offset="50%" stopColor="#d97706" stopOpacity="1" />
+        <stop offset="80%" stopColor="#f59e0b" stopOpacity="0.8" />
+        <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+      </linearGradient>
+
+      {/* Mass distribution radial gradient */}
+      <radialGradient id="moiMassDistribution" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#ec4899" stopOpacity="0.8" />
+        <stop offset="40%" stopColor="#db2777" stopOpacity="0.5" />
+        <stop offset="70%" stopColor="#be185d" stopOpacity="0.3" />
+        <stop offset="100%" stopColor="#9d174d" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Speed particle glow gradient */}
+      <radialGradient id="moiParticleGlow" cx="50%" cy="50%" r="50%">
+        <stop offset="0%" stopColor="#a78bfa" stopOpacity="1" />
+        <stop offset="30%" stopColor="#8b5cf6" stopOpacity="0.7" />
+        <stop offset="60%" stopColor="#7c3aed" stopOpacity="0.4" />
+        <stop offset="100%" stopColor="#6d28d9" stopOpacity="0" />
+      </radialGradient>
+
+      {/* Solid disk 3D gradient */}
+      <radialGradient id="moiSolidDiskGradient" cx="30%" cy="30%" r="70%">
+        <stop offset="0%" stopColor="#f9a8d4" />
+        <stop offset="30%" stopColor="#ec4899" />
+        <stop offset="60%" stopColor="#db2777" />
+        <stop offset="100%" stopColor="#9d174d" />
+      </radialGradient>
+
+      {/* Ring/hoop gradient with 3D depth */}
+      <linearGradient id="moiRingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+        <stop offset="0%" stopColor="#67e8f9" />
+        <stop offset="25%" stopColor="#22d3ee" />
+        <stop offset="50%" stopColor="#06b6d4" />
+        <stop offset="75%" stopColor="#0891b2" />
+        <stop offset="100%" stopColor="#0e7490" />
+      </linearGradient>
+
+      {/* === GLOW FILTERS === */}
+
+      {/* Rotation glow filter */}
+      <filter id="moiRotationGlow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="3" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Axis glow filter */}
+      <filter id="moiAxisGlow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="2" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Speed particle glow filter */}
+      <filter id="moiParticleBlur" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="2" />
+      </filter>
+
+      {/* Intense velocity glow */}
+      <filter id="moiVelocityGlow" x="-100%" y="-100%" width="300%" height="300%">
+        <feGaussianBlur stdDeviation="4" result="blur" />
+        <feMerge>
+          <feMergeNode in="blur" />
+          <feMergeNode in="blur" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+
+      {/* Mass distribution blur */}
+      <filter id="moiMassBlur" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="8" />
+      </filter>
+
+      {/* Skater shadow filter */}
+      <filter id="moiShadow" x="-50%" y="-50%" width="200%" height="200%">
+        <feGaussianBlur stdDeviation="3" result="shadow" />
+        <feOffset dx="2" dy="4" result="offsetShadow" />
+        <feMerge>
+          <feMergeNode in="offsetShadow" />
+          <feMergeNode in="SourceGraphic" />
+        </feMerge>
+      </filter>
+    </defs>
+  );
+
   const renderSkater = (extension: number, rot: number, size: number = 200) => {
     const centerX = size / 2;
     const centerY = size / 2 + 20;
     const armLength = 25 + extension * 40; // Arm length based on extension
     const armAngle = 70 - extension * 60; // Angle from vertical
+    const intensity = Math.min(1, angularVelocity / 10);
+    const massRadius = 20 + extension * 35; // Mass distribution visualization radius
 
     return (
       <svg width={size} height={size + 40} className="overflow-visible">
-        {/* Ice surface */}
-        <ellipse cx={centerX} cy={size + 20} rx={80} ry={15} fill="url(#iceGradient)" opacity="0.5" />
+        {renderSvgDefs()}
 
-        {/* Rotation indicator */}
+        {/* === AXIS OF ROTATION === */}
         <g transform={`translate(${centerX}, ${centerY})`}>
-          {/* Rotation trail */}
-          <ellipse cx="0" cy="60" rx="50" ry="12" fill="none" stroke="rgba(99, 102, 241, 0.3)" strokeWidth="2" strokeDasharray="8 4" />
+          {/* Vertical axis line with glow */}
+          <line
+            x1="0" y1="-85"
+            x2="0" y2="75"
+            stroke="url(#moiAxisGradient)"
+            strokeWidth="3"
+            strokeDasharray="8 4"
+            filter="url(#moiAxisGlow)"
+            opacity="0.8"
+          />
+          {/* Axis endpoint markers */}
+          <circle cx="0" cy="-85" r="4" fill="#f59e0b" filter="url(#moiAxisGlow)" />
+          <circle cx="0" cy="75" r="4" fill="#f59e0b" filter="url(#moiAxisGlow)" />
+        </g>
 
-          {/* Speed indicators */}
+        {/* === MASS DISTRIBUTION VISUALIZATION === */}
+        <g transform={`translate(${centerX}, ${centerY})`}>
+          {/* Outer mass distribution ring - shows where mass is concentrated */}
+          <ellipse
+            cx="0" cy="0"
+            rx={massRadius} ry={massRadius * 0.3}
+            fill="url(#moiMassDistribution)"
+            filter="url(#moiMassBlur)"
+            opacity={0.4 + extension * 0.4}
+          />
+          {/* Mass concentration indicators */}
+          {extension > 0.3 && (
+            <>
+              <circle
+                cx={-massRadius * 0.8} cy="0"
+                r={4 + extension * 4}
+                fill="url(#moiParticleGlow)"
+                filter="url(#moiParticleBlur)"
+              />
+              <circle
+                cx={massRadius * 0.8} cy="0"
+                r={4 + extension * 4}
+                fill="url(#moiParticleGlow)"
+                filter="url(#moiParticleBlur)"
+              />
+            </>
+          )}
+        </g>
+
+        {/* === PREMIUM ICE SURFACE === */}
+        <ellipse
+          cx={centerX} cy={size + 20}
+          rx={80} ry={15}
+          fill="url(#moiIceGradient)"
+        />
+        {/* Ice reflection highlights */}
+        <ellipse
+          cx={centerX - 20} cy={size + 18}
+          rx={25} ry={4}
+          fill="#ffffff"
+          opacity="0.15"
+        />
+
+        {/* === ANGULAR VELOCITY INDICATOR === */}
+        <g transform={`translate(${centerX}, ${centerY})`}>
+          {/* Rotation trail ellipse with gradient */}
+          <ellipse
+            cx="0" cy="60"
+            rx="50" ry="12"
+            fill="none"
+            stroke="url(#moiRotationTrailGradient)"
+            strokeWidth={2 + intensity * 2}
+            strokeDasharray={isSpinning ? `${12 - intensity * 8} ${4 + intensity * 4}` : "8 4"}
+            filter="url(#moiRotationGlow)"
+          />
+
+          {/* Velocity arc showing speed */}
+          <path
+            d={`M -40 60 A 40 10 0 0 1 ${-40 + intensity * 80} 60`}
+            fill="none"
+            stroke="url(#moiVelocityGradient)"
+            strokeWidth={3 + intensity * 3}
+            strokeLinecap="round"
+            filter="url(#moiVelocityGlow)"
+            opacity={intensity}
+          />
+
+          {/* Speed indicator particles with glow */}
           {[0, 60, 120, 180, 240, 300].map((angle, i) => {
             const r = 45;
-            const intensity = Math.min(1, angularVelocity / 10);
+            const particleSize = 2 + intensity * 3;
             return (
-              <circle
-                key={i}
-                cx={Math.cos((angle + rot) * Math.PI / 180) * r}
-                cy={60 + Math.sin((angle + rot) * Math.PI / 180) * 12}
-                r={2 + intensity * 2}
-                fill={`rgba(99, 102, 241, ${0.3 + intensity * 0.5})`}
-              />
+              <g key={i}>
+                {/* Glow layer */}
+                <circle
+                  cx={Math.cos((angle + rot) * Math.PI / 180) * r}
+                  cy={60 + Math.sin((angle + rot) * Math.PI / 180) * 12}
+                  r={particleSize * 2}
+                  fill="url(#moiParticleGlow)"
+                  filter="url(#moiParticleBlur)"
+                  opacity={0.3 + intensity * 0.5}
+                />
+                {/* Core particle */}
+                <circle
+                  cx={Math.cos((angle + rot) * Math.PI / 180) * r}
+                  cy={60 + Math.sin((angle + rot) * Math.PI / 180) * 12}
+                  r={particleSize}
+                  fill="#a78bfa"
+                />
+              </g>
             );
           })}
         </g>
 
-        {/* Skater body */}
-        <g transform={`translate(${centerX}, ${centerY}) rotate(${rot * 0.5})`}>
-          {/* Head */}
-          <circle cx="0" cy="-55" r="15" fill="#fcd9b6" stroke="#e0b090" strokeWidth="2" />
-          <circle cx="-4" cy="-58" r="2" fill="#333" />
-          <circle cx="4" cy="-58" r="2" fill="#333" />
-          <ellipse cx="0" cy="-52" rx="3" ry="1.5" fill="#e88" />
+        {/* === SKATER BODY WITH PREMIUM GRADIENTS === */}
+        <g transform={`translate(${centerX}, ${centerY}) rotate(${rot * 0.5})`} filter="url(#moiShadow)">
+          {/* Head with 3D skin gradient */}
+          <circle cx="0" cy="-55" r="15" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="1.5" />
+          {/* Eyes */}
+          <ellipse cx="-5" cy="-58" rx="2.5" ry="2" fill="#2d3748" />
+          <ellipse cx="5" cy="-58" rx="2.5" ry="2" fill="#2d3748" />
+          <circle cx="-4" cy="-58" r="0.8" fill="#ffffff" />
+          <circle cx="6" cy="-58" r="0.8" fill="#ffffff" />
+          {/* Mouth */}
+          <ellipse cx="0" cy="-51" rx="4" ry="2" fill="#e88" opacity="0.8" />
 
-          {/* Hair */}
-          <path d="M-12,-62 Q-15,-75 0,-72 Q15,-75 12,-62" fill="#8B4513" />
+          {/* Hair with gradient */}
+          <path d="M-12,-62 Q-15,-75 0,-72 Q15,-75 12,-62" fill="url(#moiHairGradient)" />
+          {/* Hair shine */}
+          <path d="M-8,-66 Q-5,-70 2,-68" stroke="#c9a065" strokeWidth="2" fill="none" opacity="0.5" />
 
-          {/* Torso */}
-          <path d="M-15,-40 L-12,-10 L12,-10 L15,-40 Z" fill="url(#dressGradient)" />
+          {/* Torso with 3D dress gradient */}
+          <path d="M-15,-40 L-12,-10 L12,-10 L15,-40 Z" fill="url(#moiDressGradient)" />
+          {/* Dress highlight */}
+          <path d="M-10,-38 L-8,-12 L0,-10" stroke="#f9a8d4" strokeWidth="1" fill="none" opacity="0.4" />
 
-          {/* Skirt */}
-          <path d={`M-15,-10 Q-25,10 -30,40 L30,40 Q25,10 15,-10 Z`} fill="url(#skirtGradient)" />
+          {/* Skirt with fabric gradient */}
+          <path d={`M-15,-10 Q-25,10 -30,40 L30,40 Q25,10 15,-10 Z`} fill="url(#moiSkirtGradient)" />
+          {/* Skirt folds */}
+          <path d="M-10,-8 Q-15,15 -18,38" stroke="#be185d" strokeWidth="1" fill="none" opacity="0.3" />
+          <path d="M5,-8 Q8,15 12,38" stroke="#be185d" strokeWidth="1" fill="none" opacity="0.3" />
 
-          {/* Arms */}
+          {/* Arms with skin gradient */}
           <g transform={`rotate(${-armAngle})`}>
-            <rect x="-50" y="-5" width={armLength} height="8" rx="4" fill="#fcd9b6" />
-            <circle cx={-armLength + 5} cy="0" r="6" fill="#fcd9b6" />
+            <rect x="-50" y="-5" width={armLength} height="8" rx="4" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="0.5" />
+            <circle cx={-armLength + 5} cy="0" r="6" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="0.5" />
           </g>
           <g transform={`rotate(${armAngle})`}>
-            <rect x={50 - armLength} y="-5" width={armLength} height="8" rx="4" fill="#fcd9b6" />
-            <circle cx={armLength - 5} cy="0" r="6" fill="#fcd9b6" />
+            <rect x={50 - armLength} y="-5" width={armLength} height="8" rx="4" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="0.5" />
+            <circle cx={armLength - 5} cy="0" r="6" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="0.5" />
           </g>
 
-          {/* Legs */}
-          <rect x="-8" y="35" width="6" height="35" fill="#fcd9b6" />
-          <rect x="2" y="35" width="6" height="35" fill="#fcd9b6" />
+          {/* Legs with skin gradient */}
+          <rect x="-8" y="35" width="6" height="35" rx="2" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="0.5" />
+          <rect x="2" y="35" width="6" height="35" rx="2" fill="url(#moiSkinGradient)" stroke="#d4a574" strokeWidth="0.5" />
 
-          {/* Skates */}
-          <rect x="-12" y="68" width="14" height="6" rx="2" fill="#f8f8f8" />
-          <rect x="-2" y="68" width="14" height="6" rx="2" fill="#f8f8f8" />
-          <rect x="-12" y="73" width="16" height="2" fill="#c0c0c0" />
-          <rect x="-2" y="73" width="16" height="2" fill="#c0c0c0" />
+          {/* Premium skates with metallic gradient */}
+          <rect x="-12" y="68" width="14" height="6" rx="2" fill="url(#moiSkateGradient)" stroke="#b0b0b0" strokeWidth="0.5" />
+          <rect x="-2" y="68" width="14" height="6" rx="2" fill="url(#moiSkateGradient)" stroke="#b0b0b0" strokeWidth="0.5" />
+          {/* Chrome blades */}
+          <rect x="-12" y="73" width="16" height="2" rx="1" fill="url(#moiBladeGradient)" />
+          <rect x="-2" y="73" width="16" height="2" rx="1" fill="url(#moiBladeGradient)" />
+          {/* Blade edge highlight */}
+          <line x1="-11" y1="74" x2="3" y2="74" stroke="#ffffff" strokeWidth="0.5" opacity="0.6" />
+          <line x1="-1" y1="74" x2="11" y2="74" stroke="#ffffff" strokeWidth="0.5" opacity="0.6" />
         </g>
-
-        <defs>
-          <linearGradient id="iceGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.3" />
-            <stop offset="50%" stopColor="#67e8f9" stopOpacity="0.6" />
-            <stop offset="100%" stopColor="#a5f3fc" stopOpacity="0.3" />
-          </linearGradient>
-          <linearGradient id="dressGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ec4899" />
-            <stop offset="100%" stopColor="#be185d" />
-          </linearGradient>
-          <linearGradient id="skirtGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#f472b6" />
-            <stop offset="100%" stopColor="#db2777" />
-          </linearGradient>
-        </defs>
       </svg>
     );
   };
@@ -463,22 +731,60 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
           A <span className="text-pink-400 font-semibold">solid disk</span> and a <span className="text-cyan-400 font-semibold">ring</span> (hoop) have the same mass and radius. They roll down a ramp from the same height.
         </p>
         <div className="flex justify-center gap-8 my-6">
-          {/* Solid disk */}
+          {/* Solid disk with premium 3D gradient */}
           <div className="text-center">
             <svg width="80" height="80" viewBox="0 0 80 80">
-              <circle cx="40" cy="40" r="35" fill="#ec4899" opacity="0.8" stroke="#be185d" strokeWidth="2" />
+              <defs>
+                <radialGradient id="moiPredictDiskGrad" cx="30%" cy="30%" r="70%">
+                  <stop offset="0%" stopColor="#f9a8d4" />
+                  <stop offset="30%" stopColor="#ec4899" />
+                  <stop offset="60%" stopColor="#db2777" />
+                  <stop offset="100%" stopColor="#9d174d" />
+                </radialGradient>
+                <filter id="moiPredictDiskGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <circle cx="40" cy="40" r="35" fill="url(#moiPredictDiskGrad)" filter="url(#moiPredictDiskGlow)" />
+              {/* Center axis point */}
               <circle cx="40" cy="40" r="5" fill="#be185d" />
+              <circle cx="40" cy="40" r="2" fill="#ffffff" opacity="0.6" />
             </svg>
-            <p className="text-sm text-pink-400 mt-2">Solid Disk</p>
           </div>
-          {/* Ring */}
+          {/* Ring with premium gradient */}
           <div className="text-center">
             <svg width="80" height="80" viewBox="0 0 80 80">
-              <circle cx="40" cy="40" r="35" fill="none" stroke="#22d3ee" strokeWidth="8" />
+              <defs>
+                <linearGradient id="moiPredictRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                  <stop offset="0%" stopColor="#67e8f9" />
+                  <stop offset="25%" stopColor="#22d3ee" />
+                  <stop offset="50%" stopColor="#06b6d4" />
+                  <stop offset="75%" stopColor="#0891b2" />
+                  <stop offset="100%" stopColor="#0e7490" />
+                </linearGradient>
+                <filter id="moiPredictRingGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              <circle cx="40" cy="40" r="35" fill="none" stroke="url(#moiPredictRingGrad)" strokeWidth="8" filter="url(#moiPredictRingGlow)" />
+              {/* Center axis point */}
               <circle cx="40" cy="40" r="5" fill="#06b6d4" />
+              <circle cx="40" cy="40" r="2" fill="#ffffff" opacity="0.6" />
             </svg>
-            <p className="text-sm text-cyan-400 mt-2">Ring (Hoop)</p>
           </div>
+        </div>
+        {/* Labels outside SVG using typo system */}
+        <div className="flex justify-center gap-8">
+          <p style={{ fontSize: typo.small }} className="text-pink-400 font-medium">Solid Disk</p>
+          <p style={{ fontSize: typo.small }} className="text-cyan-400 font-medium">Ring (Hoop)</p>
         </div>
         <p className="text-lg text-cyan-400 font-medium">
           Which one reaches the bottom first?
@@ -542,19 +848,91 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
       <div className="flex flex-col items-center p-6">
         <h2 className="text-2xl font-bold text-white mb-4">Shape Comparison Lab</h2>
 
-        {/* Shape formulas */}
+        {/* Shape formulas with premium SVG icons */}
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mb-6 max-w-3xl w-full">
-          {[
-            { name: 'Solid Disk', formula: 'I = (1/2)MR^2', color: 'pink' },
-            { name: 'Ring (Hoop)', formula: 'I = MR^2', color: 'cyan' },
-            { name: 'Solid Sphere', formula: 'I = (2/5)MR^2', color: 'emerald' },
-            { name: 'Hollow Sphere', formula: 'I = (2/3)MR^2', color: 'amber' }
-          ].map((shape, idx) => (
-            <div key={idx} className={`bg-slate-800/50 rounded-xl p-3 border border-${shape.color}-500/30`}>
-              <p className={`text-${shape.color}-400 font-semibold text-sm`}>{shape.name}</p>
-              <p className="text-slate-300 text-xs mt-1 font-mono">{shape.formula}</p>
+          {/* Solid Disk */}
+          <div className="bg-slate-800/50 rounded-xl p-3 border border-pink-500/30">
+            <div className="flex justify-center mb-2">
+              <svg width="40" height="40" viewBox="0 0 40 40">
+                <defs>
+                  <radialGradient id="moiPlayDiskGrad" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" stopColor="#f9a8d4" />
+                    <stop offset="50%" stopColor="#ec4899" />
+                    <stop offset="100%" stopColor="#9d174d" />
+                  </radialGradient>
+                </defs>
+                <circle cx="20" cy="20" r="16" fill="url(#moiPlayDiskGrad)" />
+                <circle cx="20" cy="20" r="2" fill="#ffffff" opacity="0.6" />
+              </svg>
             </div>
-          ))}
+            <p style={{ fontSize: typo.small }} className="text-pink-400 font-semibold text-center">Solid Disk</p>
+            <p style={{ fontSize: typo.label }} className="text-slate-300 mt-1 font-mono text-center">I = (1/2)MR^2</p>
+          </div>
+
+          {/* Ring (Hoop) */}
+          <div className="bg-slate-800/50 rounded-xl p-3 border border-cyan-500/30">
+            <div className="flex justify-center mb-2">
+              <svg width="40" height="40" viewBox="0 0 40 40">
+                <defs>
+                  <linearGradient id="moiPlayRingGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#67e8f9" />
+                    <stop offset="50%" stopColor="#06b6d4" />
+                    <stop offset="100%" stopColor="#0e7490" />
+                  </linearGradient>
+                </defs>
+                <circle cx="20" cy="20" r="14" fill="none" stroke="url(#moiPlayRingGrad)" strokeWidth="4" />
+                <circle cx="20" cy="20" r="2" fill="#06b6d4" />
+              </svg>
+            </div>
+            <p style={{ fontSize: typo.small }} className="text-cyan-400 font-semibold text-center">Ring (Hoop)</p>
+            <p style={{ fontSize: typo.label }} className="text-slate-300 mt-1 font-mono text-center">I = MR^2</p>
+          </div>
+
+          {/* Solid Sphere */}
+          <div className="bg-slate-800/50 rounded-xl p-3 border border-emerald-500/30">
+            <div className="flex justify-center mb-2">
+              <svg width="40" height="40" viewBox="0 0 40 40">
+                <defs>
+                  <radialGradient id="moiPlaySphereGrad" cx="30%" cy="30%" r="70%">
+                    <stop offset="0%" stopColor="#6ee7b7" />
+                    <stop offset="40%" stopColor="#10b981" />
+                    <stop offset="100%" stopColor="#047857" />
+                  </radialGradient>
+                </defs>
+                <circle cx="20" cy="20" r="16" fill="url(#moiPlaySphereGrad)" />
+                {/* 3D highlight arc */}
+                <path d="M 10 16 Q 20 8 30 16" stroke="#a7f3d0" strokeWidth="1.5" fill="none" opacity="0.5" />
+                <circle cx="20" cy="20" r="2" fill="#ffffff" opacity="0.4" />
+              </svg>
+            </div>
+            <p style={{ fontSize: typo.small }} className="text-emerald-400 font-semibold text-center">Solid Sphere</p>
+            <p style={{ fontSize: typo.label }} className="text-slate-300 mt-1 font-mono text-center">I = (2/5)MR^2</p>
+          </div>
+
+          {/* Hollow Sphere */}
+          <div className="bg-slate-800/50 rounded-xl p-3 border border-amber-500/30">
+            <div className="flex justify-center mb-2">
+              <svg width="40" height="40" viewBox="0 0 40 40">
+                <defs>
+                  <linearGradient id="moiPlayHollowGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#fcd34d" />
+                    <stop offset="50%" stopColor="#f59e0b" />
+                    <stop offset="100%" stopColor="#b45309" />
+                  </linearGradient>
+                  <radialGradient id="moiPlayHollowInner" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#1e293b" />
+                    <stop offset="100%" stopColor="#0f172a" />
+                  </radialGradient>
+                </defs>
+                <circle cx="20" cy="20" r="16" fill="url(#moiPlayHollowGrad)" />
+                <circle cx="20" cy="20" r="10" fill="url(#moiPlayHollowInner)" />
+                {/* 3D highlight */}
+                <path d="M 8 14 Q 16 6 28 12" stroke="#fef3c7" strokeWidth="1" fill="none" opacity="0.4" />
+              </svg>
+            </div>
+            <p style={{ fontSize: typo.small }} className="text-amber-400 font-semibold text-center">Hollow Sphere</p>
+            <p style={{ fontSize: typo.label }} className="text-slate-300 mt-1 font-mono text-center">I = (2/3)MR^2</p>
+          </div>
         </div>
 
         <div className="bg-slate-800/50 rounded-2xl p-6 mb-4">
@@ -703,10 +1081,38 @@ const MomentOfInertiaRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
         <p className="text-lg text-slate-300 mb-4">
           A figure skater is spinning with arms extended. They then pull their arms in close to their body.
         </p>
-        <div className="flex justify-center gap-4 my-4">
+        <div className="flex justify-center items-center gap-4 my-4">
           {renderSkater(1, 0, 120)}
-          <div className="flex items-center text-2xl text-cyan-400">then</div>
+          {/* Premium transition arrow */}
+          <div className="flex flex-col items-center">
+            <svg width="60" height="40" viewBox="0 0 60 40">
+              <defs>
+                <linearGradient id="moiArrowGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+                  <stop offset="0%" stopColor="#22d3ee" stopOpacity="0.3" />
+                  <stop offset="50%" stopColor="#06b6d4" stopOpacity="1" />
+                  <stop offset="100%" stopColor="#22d3ee" stopOpacity="0.3" />
+                </linearGradient>
+                <filter id="moiArrowGlow" x="-50%" y="-50%" width="200%" height="200%">
+                  <feGaussianBlur stdDeviation="2" result="blur" />
+                  <feMerge>
+                    <feMergeNode in="blur" />
+                    <feMergeNode in="SourceGraphic" />
+                  </feMerge>
+                </filter>
+              </defs>
+              {/* Arrow shaft */}
+              <line x1="5" y1="20" x2="45" y2="20" stroke="url(#moiArrowGrad)" strokeWidth="3" strokeLinecap="round" filter="url(#moiArrowGlow)" />
+              {/* Arrow head */}
+              <polygon points="45,20 35,12 35,28" fill="#06b6d4" filter="url(#moiArrowGlow)" />
+            </svg>
+            <span style={{ fontSize: typo.label }} className="text-cyan-400 font-medium mt-1">then</span>
+          </div>
           {renderSkater(0, 0, 120)}
+        </div>
+        {/* Labels outside SVG */}
+        <div className="flex justify-center gap-16 mt-2 mb-4">
+          <span style={{ fontSize: typo.small }} className="text-slate-400">Arms Extended</span>
+          <span style={{ fontSize: typo.small }} className="text-slate-400">Arms Tucked</span>
         </div>
         <p className="text-lg text-cyan-400 font-medium">
           What happens to their spin speed?

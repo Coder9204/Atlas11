@@ -220,6 +220,13 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
     };
   }, [isAnimating]);
 
+  // Auto-start animation in hook phase for compass needle
+  useEffect(() => {
+    if (phase === 'hook') {
+      setIsAnimating(true);
+    }
+  }, [phase]);
+
   // Emit game events
   const emitEvent = useCallback((eventType: GameEvent['eventType'], details: Partial<GameEvent['details']> = {}) => {
     if (onGameEvent) {
@@ -556,90 +563,176 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
     const centerY = height / 2;
 
     return (
-      <svg width={width} height={height} className="mx-auto">
-        <defs>
-          <linearGradient id="wireGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="100%" stopColor="#dc2626" />
-          </linearGradient>
-        </defs>
+      <>
+        <svg width={width} height={height} className="mx-auto">
+          <defs>
+            {/* Premium copper wire gradient with metallic sheen */}
+            <linearGradient id="magfWireCopper" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#d97706" />
+              <stop offset="75%" stopColor="#b45309" />
+              <stop offset="100%" stopColor="#92400e" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect x="0" y="0" width={width} height={height} fill="#1e293b" rx="8" />
+            {/* Wire core gradient showing current */}
+            <radialGradient id="magfWireCore" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fef3c7" />
+              <stop offset="40%" stopColor="#fcd34d" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#b45309" />
+            </radialGradient>
 
-        {/* Current direction indicator */}
-        <text x={centerX} y="25" textAnchor="middle" fill="#94a3b8" fontSize="11">
-          Current: {wireCurrent.toFixed(1)} A (into page)
-        </text>
+            {/* Magnetic field line gradient - blue with intensity falloff */}
+            <linearGradient id="magfFieldLine" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#60a5fa" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#93c5fd" stopOpacity="0.7" />
+              <stop offset="75%" stopColor="#60a5fa" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.9" />
+            </linearGradient>
 
-        {/* Wire cross-section */}
-        <circle cx={centerX} cy={centerY} r="15" fill="url(#wireGrad)" stroke="#fca5a5" strokeWidth="2" />
-        <text x={centerX} y={centerY + 4} textAnchor="middle" fill="white" fontSize="12" fontWeight="bold">X</text>
+            {/* Test point glow gradient */}
+            <radialGradient id="magfTestPoint" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#16a34a" stopOpacity="0.5" />
+            </radialGradient>
 
-        {/* Concentric field lines */}
-        {showFieldLines && [30, 50, 70, 90, 110].map((r, i) => {
-          const fieldStrength = 1 / (r / 30);
-          return (
-            <g key={i}>
-              <circle
-                cx={centerX}
-                cy={centerY}
-                r={r}
-                fill="none"
-                stroke="#3b82f6"
-                strokeWidth={1.5 * fieldStrength}
-                strokeDasharray={r > 70 ? "8 4" : "none"}
-                opacity={0.5 + 0.3 * fieldStrength}
-              />
-              {/* Field direction arrows (clockwise for current into page) */}
-              {[0, 90, 180, 270].map((angle, j) => {
-                const arrowX = centerX + r * Math.cos((angle + animationTime * 30) * Math.PI / 180);
-                const arrowY = centerY + r * Math.sin((angle + animationTime * 30) * Math.PI / 180);
-                const tangentAngle = angle + 90 + animationTime * 30;
-                return (
-                  <g key={j} transform={`translate(${arrowX}, ${arrowY}) rotate(${tangentAngle})`}>
-                    <path d="M-6,0 L6,0 M3,-3 L6,0 L3,3" stroke="#60a5fa" strokeWidth="1.5" fill="none" />
-                  </g>
-                );
-              })}
-            </g>
-          );
-        })}
+            {/* Background gradient for lab environment */}
+            <linearGradient id="magfLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        {/* Test point */}
-        <circle cx={centerX + wireDistance * 1500} cy={centerY} r="6" fill="#22c55e" />
-        <text x={centerX + wireDistance * 1500} y={centerY - 12} textAnchor="middle" fill="#22c55e" fontSize="10">
-          B = {(currentField * 1e6).toFixed(1)} uT
-        </text>
+            {/* Arrow gradient for field direction */}
+            <linearGradient id="magfArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#93c5fd" />
+              <stop offset="100%" stopColor="#60a5fa" />
+            </linearGradient>
 
-        {/* Distance line */}
-        <line
-          x1={centerX + 20}
-          y1={centerY + 30}
-          x2={centerX + wireDistance * 1500}
-          y2={centerY + 30}
-          stroke="#94a3b8"
-          strokeWidth="1"
-          strokeDasharray="4 2"
-        />
-        <text x={centerX + wireDistance * 750 + 10} y={centerY + 45} textAnchor="middle" fill="#94a3b8" fontSize="10">
-          r = {(wireDistance * 100).toFixed(1)} cm
-        </text>
+            {/* Glow filter for field lines */}
+            <filter id="magfFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* Right-hand rule reminder */}
-        <g transform={`translate(${width - 70}, ${height - 50})`}>
-          <rect x="0" y="0" width="60" height="45" fill="#334155" rx="4" />
-          <text x="30" y="15" textAnchor="middle" fill="#94a3b8" fontSize="9">Right Hand</text>
-          <text x="30" y="28" textAnchor="middle" fill="#22c55e" fontSize="9">Thumb: I</text>
-          <text x="30" y="41" textAnchor="middle" fill="#3b82f6" fontSize="9">Curl: B</text>
-        </g>
+            {/* Glow filter for wire */}
+            <filter id="magfWireGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* Formula */}
-        <rect x="10" y={height - 40} width="140" height="30" fill="#0f172a" rx="4" />
-        <text x="80" y={height - 20} textAnchor="middle" fill="#f8fafc" fontSize="12" fontFamily="monospace">
-          B = u0I / (2pr)
-        </text>
-      </svg>
+            {/* Glow filter for test point */}
+            <filter id="magfTestGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Current flow indicator glow */}
+            <radialGradient id="magfCurrentGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="0.8" />
+              <stop offset="60%" stopColor="#fbbf24" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+            </radialGradient>
+          </defs>
+
+          {/* Background */}
+          <rect x="0" y="0" width={width} height={height} fill="url(#magfLabBg)" rx="8" />
+
+          {/* Wire cross-section with premium gradient and glow */}
+          <circle cx={centerX} cy={centerY} r="20" fill="url(#magfCurrentGlow)" filter="url(#magfWireGlow)" />
+          <circle cx={centerX} cy={centerY} r="15" fill="url(#magfWireCore)" stroke="url(#magfWireCopper)" strokeWidth="3" />
+          <text x={centerX} y={centerY + 5} textAnchor="middle" fill="#78350f" fontSize="14" fontWeight="bold">X</text>
+
+          {/* Concentric field lines with glow */}
+          {showFieldLines && [30, 50, 70, 90, 110].map((r, i) => {
+            const fieldStrength = 1 / (r / 30);
+            const glowIntensity = fieldStrength > 0.6 ? "url(#magfFieldGlow)" : undefined;
+            return (
+              <g key={i}>
+                <circle
+                  cx={centerX}
+                  cy={centerY}
+                  r={r}
+                  fill="none"
+                  stroke="url(#magfFieldLine)"
+                  strokeWidth={2 * fieldStrength}
+                  strokeDasharray={r > 70 ? "8 4" : "none"}
+                  opacity={0.5 + 0.4 * fieldStrength}
+                  filter={glowIntensity}
+                />
+                {/* Field direction arrows (clockwise for current into page) */}
+                {[0, 90, 180, 270].map((angle, j) => {
+                  const arrowX = centerX + r * Math.cos((angle + animationTime * 30) * Math.PI / 180);
+                  const arrowY = centerY + r * Math.sin((angle + animationTime * 30) * Math.PI / 180);
+                  const tangentAngle = angle + 90 + animationTime * 30;
+                  return (
+                    <g key={j} transform={`translate(${arrowX}, ${arrowY}) rotate(${tangentAngle})`}>
+                      <path d="M-6,0 L6,0 M3,-3 L6,0 L3,3" stroke="url(#magfArrow)" strokeWidth="2" fill="none" filter="url(#magfFieldGlow)" />
+                    </g>
+                  );
+                })}
+              </g>
+            );
+          })}
+
+          {/* Test point with glow */}
+          <circle cx={centerX + wireDistance * 1500} cy={centerY} r="8" fill="url(#magfTestPoint)" filter="url(#magfTestGlow)" />
+
+          {/* Distance line */}
+          <line
+            x1={centerX + 20}
+            y1={centerY + 35}
+            x2={centerX + wireDistance * 1500}
+            y2={centerY + 35}
+            stroke="#64748b"
+            strokeWidth="1"
+            strokeDasharray="4 2"
+          />
+
+          {/* Right-hand rule reminder */}
+          <g transform={`translate(${width - 75}, ${height - 55})`}>
+            <rect x="0" y="0" width="65" height="50" fill="#1e293b" stroke="#334155" strokeWidth="1" rx="6" />
+          </g>
+
+          {/* Formula box */}
+          <rect x="10" y={height - 45} width="150" height="35" fill="#0f172a" stroke="#334155" strokeWidth="1" rx="6" />
+          <text x="85" y={height - 22} textAnchor="middle" fill="#f8fafc" fontSize="12" fontFamily="monospace">
+            B = u0I / (2pr)
+          </text>
+        </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div className="flex justify-between items-start mt-2 px-2" style={{ fontSize: typo.small }}>
+          <div className="text-cyan-400">
+            Current: {wireCurrent.toFixed(1)} A (into page)
+          </div>
+          <div className="text-emerald-400">
+            B = {(currentField * 1e6).toFixed(1)} uT at r = {(wireDistance * 100).toFixed(1)} cm
+          </div>
+        </div>
+
+        {/* Right-hand rule label */}
+        <div className="flex justify-end mt-1 px-2" style={{ fontSize: typo.label }}>
+          <div className="text-center bg-slate-700/50 px-2 py-1 rounded">
+            <div className="text-slate-400">Right Hand</div>
+            <div className="text-emerald-400">Thumb: I</div>
+            <div className="text-blue-400">Curl: B</div>
+          </div>
+        </div>
+      </>
     );
   };
 
@@ -649,83 +742,176 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
     const centerY = height / 2;
 
     return (
-      <svg width={width} height={height} className="mx-auto">
-        <rect x="0" y="0" width={width} height={height} fill="#1e293b" rx="8" />
+      <>
+        <svg width={width} height={height} className="mx-auto">
+          <defs>
+            {/* Premium copper coil gradient */}
+            <linearGradient id="magfSolenoidCoil" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="30%" stopColor="#f59e0b" />
+              <stop offset="60%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
 
-        <text x={centerX} y="25" textAnchor="middle" fill="#94a3b8" fontSize="11">
-          Solenoid: {Math.round(electromagnetCoils)} turns, {electromagnetCurrent.toFixed(1)} A
-        </text>
+            {/* Iron core gradient with metallic sheen */}
+            <linearGradient id="magfIronCore" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="25%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="75%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
 
-        {/* Solenoid coils */}
-        <g transform={`translate(${centerX - 80}, ${centerY - 30})`}>
-          {Array.from({ length: 10 }).map((_, i) => (
-            <ellipse
-              key={i}
-              cx={i * 16 + 8}
-              cy="30"
-              rx="8"
-              ry="25"
-              fill="none"
-              stroke="#ef4444"
-              strokeWidth="2"
-            />
+            {/* North pole gradient - warm red */}
+            <radialGradient id="magfNorthPole" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </radialGradient>
+
+            {/* South pole gradient - cool blue */}
+            <radialGradient id="magfSouthPole" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#2563eb" />
+            </radialGradient>
+
+            {/* Internal field line gradient */}
+            <linearGradient id="magfInternalField" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#60a5fa" />
+              <stop offset="70%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* Background gradient */}
+            <linearGradient id="magfSolenoidBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Coil glow filter */}
+            <filter id="magfCoilGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Pole glow filter */}
+            <filter id="magfPoleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Field line glow */}
+            <filter id="magfFieldLineGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect x="0" y="0" width={width} height={height} fill="url(#magfSolenoidBg)" rx="8" />
+
+          {/* Iron core with metallic gradient */}
+          <g transform={`translate(${centerX - 80}, ${centerY - 30})`}>
+            <rect x="0" y="15" width="160" height="30" fill="url(#magfIronCore)" rx="4" opacity="0.8" />
+
+            {/* Solenoid coils with premium copper gradient */}
+            {Array.from({ length: 10 }).map((_, i) => (
+              <ellipse
+                key={i}
+                cx={i * 16 + 8}
+                cy="30"
+                rx="10"
+                ry="28"
+                fill="none"
+                stroke="url(#magfSolenoidCoil)"
+                strokeWidth="3"
+                filter="url(#magfCoilGlow)"
+              />
+            ))}
+          </g>
+
+          {/* Internal field lines with glow */}
+          {showFieldLines && [-15, 0, 15].map((offset, i) => (
+            <g key={i}>
+              <line
+                x1={centerX - 70}
+                y1={centerY + offset}
+                x2={centerX + 70}
+                y2={centerY + offset}
+                stroke="url(#magfInternalField)"
+                strokeWidth="3"
+                filter="url(#magfFieldLineGlow)"
+              />
+              {/* Arrows */}
+              <polygon
+                points={`${centerX + 60},${centerY + offset - 6} ${centerX + 72},${centerY + offset} ${centerX + 60},${centerY + offset + 6}`}
+                fill="#ef4444"
+                filter="url(#magfFieldLineGlow)"
+              />
+            </g>
           ))}
-          {/* Core */}
-          <rect x="0" y="20" width="160" height="20" fill="#64748b" opacity="0.3" />
-        </g>
 
-        {/* Internal field lines */}
-        {showFieldLines && [-15, 0, 15].map((offset, i) => (
-          <g key={i}>
-            <line
-              x1={centerX - 70}
-              y1={centerY + offset}
-              x2={centerX + 70}
-              y2={centerY + offset}
-              stroke="#3b82f6"
-              strokeWidth="2"
-            />
-            {/* Arrows */}
-            <polygon
-              points={`${centerX + 60},${centerY + offset - 5} ${centerX + 70},${centerY + offset} ${centerX + 60},${centerY + offset + 5}`}
-              fill="#3b82f6"
-            />
-          </g>
-        ))}
+          {/* External field (curved) with glow */}
+          {showFieldLines && (
+            <g>
+              <path
+                d={`M ${centerX + 70} ${centerY - 15} Q ${centerX + 130} ${centerY - 65} ${centerX} ${centerY - 80} Q ${centerX - 130} ${centerY - 65} ${centerX - 70} ${centerY - 15}`}
+                fill="none"
+                stroke="#60a5fa"
+                strokeWidth="2"
+                strokeDasharray="6 3"
+                filter="url(#magfFieldLineGlow)"
+                opacity="0.7"
+              />
+              <path
+                d={`M ${centerX + 70} ${centerY + 15} Q ${centerX + 130} ${centerY + 65} ${centerX} ${centerY + 80} Q ${centerX - 130} ${centerY + 65} ${centerX - 70} ${centerY + 15}`}
+                fill="none"
+                stroke="#60a5fa"
+                strokeWidth="2"
+                strokeDasharray="6 3"
+                filter="url(#magfFieldLineGlow)"
+                opacity="0.7"
+              />
+            </g>
+          )}
 
-        {/* External field (curved) */}
-        {showFieldLines && (
-          <g>
-            <path
-              d={`M ${centerX + 70} ${centerY - 15} Q ${centerX + 120} ${centerY - 60} ${centerX} ${centerY - 70} Q ${centerX - 120} ${centerY - 60} ${centerX - 70} ${centerY - 15}`}
-              fill="none"
-              stroke="#3b82f6"
-              strokeWidth="1.5"
-              strokeDasharray="4 2"
-            />
-            <path
-              d={`M ${centerX + 70} ${centerY + 15} Q ${centerX + 120} ${centerY + 60} ${centerX} ${centerY + 70} Q ${centerX - 120} ${centerY + 60} ${centerX - 70} ${centerY + 15}`}
-              fill="none"
-              stroke="#3b82f6"
-              strokeWidth="1.5"
-              strokeDasharray="4 2"
-            />
-          </g>
-        )}
+          {/* N and S pole indicators with glow */}
+          <circle cx={centerX + 95} cy={centerY} r="18" fill="url(#magfNorthPole)" filter="url(#magfPoleGlow)" opacity="0.6" />
+          <text x={centerX + 95} y={centerY + 6} textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">N</text>
 
-        {/* N and S poles */}
-        <text x={centerX + 90} y={centerY + 5} fill="#ef4444" fontSize="16" fontWeight="bold">N</text>
-        <text x={centerX - 100} y={centerY + 5} fill="#3b82f6" fontSize="16" fontWeight="bold">S</text>
+          <circle cx={centerX - 95} cy={centerY} r="18" fill="url(#magfSouthPole)" filter="url(#magfPoleGlow)" opacity="0.6" />
+          <text x={centerX - 95} y={centerY + 6} textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">S</text>
 
-        {/* Field strength */}
-        <rect x="10" y={height - 50} width="180" height="40" fill="#0f172a" rx="4" />
-        <text x="100" y={height - 32} textAnchor="middle" fill="#f8fafc" fontSize="11" fontFamily="monospace">
-          B = u0 * n * I
-        </text>
-        <text x="100" y={height - 16} textAnchor="middle" fill="#22c55e" fontSize="11">
-          = {(solenoidField * 1000).toFixed(2)} mT
-        </text>
-      </svg>
+          {/* Formula box */}
+          <rect x="10" y={height - 55} width="170" height="45" fill="#0f172a" stroke="#334155" strokeWidth="1" rx="6" />
+          <text x="95" y={height - 35} textAnchor="middle" fill="#f8fafc" fontSize="12" fontFamily="monospace">
+            B = u0 * n * I
+          </text>
+          <text x="95" y={height - 17} textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">
+            = {(solenoidField * 1000).toFixed(2)} mT
+          </text>
+        </svg>
+
+        {/* Label outside SVG using typo system */}
+        <div className="text-center mt-2" style={{ fontSize: typo.small }}>
+          <span className="text-slate-400">Solenoid: </span>
+          <span className="text-amber-400">{Math.round(electromagnetCoils)} turns</span>
+          <span className="text-slate-400">, </span>
+          <span className="text-cyan-400">{electromagnetCurrent.toFixed(1)} A</span>
+        </div>
+      </>
     );
   };
 
@@ -736,86 +922,211 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
     const fieldStrength = electromagnetCurrent * electromagnetCoils / 100;
 
     return (
-      <svg width={width} height={height} className="mx-auto">
-        <rect x="0" y="0" width={width} height={height} fill="#1e293b" rx="8" />
+      <>
+        <svg width={width} height={height} className="mx-auto">
+          <defs>
+            {/* Premium iron core gradient */}
+            <linearGradient id="magfElectroCore" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="25%" stopColor="#4b5563" />
+              <stop offset="50%" stopColor="#6b7280" />
+              <stop offset="75%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
 
-        <text x={centerX} y="20" textAnchor="middle" fill="#94a3b8" fontSize="11">
-          Electromagnet Control Panel
-        </text>
+            {/* Copper coil gradient - active */}
+            <linearGradient id="magfElectroCoilActive" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#ea580c" />
+              <stop offset="75%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
 
-        {/* Iron core */}
-        <rect x={centerX - 60} y={centerY - 20} width="120" height="40" fill="#4a5568" rx="4" />
-        <text x={centerX} y={centerY + 5} textAnchor="middle" fill="#94a3b8" fontSize="10">Iron Core</text>
+            {/* Copper coil gradient - inactive */}
+            <linearGradient id="magfElectroCoilInactive" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
 
-        {/* Coils visualization */}
-        <g transform={`translate(${centerX - 60}, ${centerY - 35})`}>
-          {Array.from({ length: Math.min(Math.round(electromagnetCoils / 10), 12) }).map((_, i) => (
-            <rect
-              key={i}
-              x={i * 10}
-              y="0"
-              width="8"
-              height="70"
-              fill="none"
-              stroke={electromagnetCurrent > 0 ? "#ef4444" : "#64748b"}
-              strokeWidth="2"
-              rx="2"
-            />
-          ))}
-        </g>
+            {/* North pole radial gradient */}
+            <radialGradient id="magfElectroNorth" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fecaca" />
+              <stop offset="40%" stopColor="#f87171" />
+              <stop offset="70%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0.8" />
+            </radialGradient>
 
-        {/* Magnetic field lines (proportional to strength) */}
-        {electromagnetCurrent > 0 && showFieldLines && Array.from({ length: Math.min(Math.round(fieldStrength), 5) }).map((_, i) => {
-          const offset = (i - 2) * 15;
-          return (
-            <g key={i}>
-              <line
-                x1={centerX - 50}
-                y1={centerY + offset}
-                x2={centerX + 50}
-                y2={centerY + offset}
-                stroke="#3b82f6"
-                strokeWidth={Math.max(1, 3 - Math.abs(offset) / 10)}
-                opacity={0.8}
+            {/* South pole radial gradient */}
+            <radialGradient id="magfElectroSouth" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#bfdbfe" />
+              <stop offset="40%" stopColor="#60a5fa" />
+              <stop offset="70%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#2563eb" stopOpacity="0.8" />
+            </radialGradient>
+
+            {/* Field line gradient */}
+            <linearGradient id="magfElectroField" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.5" />
+              <stop offset="30%" stopColor="#60a5fa" />
+              <stop offset="70%" stopColor="#f87171" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.5" />
+            </linearGradient>
+
+            {/* Power indicator gradient */}
+            <linearGradient id="magfPowerBar" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#86efac" />
+            </linearGradient>
+
+            {/* Paper clip metallic gradient */}
+            <linearGradient id="magfPaperClip" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#d1d5db" />
+              <stop offset="50%" stopColor="#9ca3af" />
+              <stop offset="100%" stopColor="#6b7280" />
+            </linearGradient>
+
+            {/* Background gradient */}
+            <linearGradient id="magfElectroBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Coil glow filter */}
+            <filter id="magfElectroCoilGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Pole glow filter */}
+            <filter id="magfElectroPoleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Field line glow */}
+            <filter id="magfElectroFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect x="0" y="0" width={width} height={height} fill="url(#magfElectroBg)" rx="8" />
+
+          {/* Iron core with premium gradient */}
+          <rect x={centerX - 65} y={centerY - 22} width="130" height="44" fill="url(#magfElectroCore)" rx="6" stroke="#1e293b" strokeWidth="2" />
+
+          {/* Coils visualization with gradient */}
+          <g transform={`translate(${centerX - 60}, ${centerY - 38})`}>
+            {Array.from({ length: Math.min(Math.round(electromagnetCoils / 10), 12) }).map((_, i) => (
+              <rect
+                key={i}
+                x={i * 10}
+                y="0"
+                width="8"
+                height="76"
+                fill="none"
+                stroke={electromagnetCurrent > 0 ? "url(#magfElectroCoilActive)" : "url(#magfElectroCoilInactive)"}
+                strokeWidth="3"
+                rx="3"
+                filter={electromagnetCurrent > 0 ? "url(#magfElectroCoilGlow)" : undefined}
               />
-              <polygon
-                points={`${centerX + 45},${centerY + offset - 4} ${centerX + 55},${centerY + offset} ${centerX + 45},${centerY + offset + 4}`}
-                fill="#3b82f6"
-              />
-            </g>
-          );
-        })}
-
-        {/* Poles */}
-        {electromagnetCurrent > 0 && (
-          <>
-            <circle cx={centerX + 80} cy={centerY} r="15" fill="#ef4444" opacity="0.3" />
-            <text x={centerX + 80} y={centerY + 5} textAnchor="middle" fill="#ef4444" fontSize="14" fontWeight="bold">N</text>
-            <circle cx={centerX - 80} cy={centerY} r="15" fill="#3b82f6" opacity="0.3" />
-            <text x={centerX - 80} y={centerY + 5} textAnchor="middle" fill="#3b82f6" fontSize="14" fontWeight="bold">S</text>
-          </>
-        )}
-
-        {/* Paper clips attracted */}
-        {electromagnetCurrent > 0 && fieldStrength > 0.5 && (
-          <g>
-            {Array.from({ length: Math.min(Math.round(fieldStrength * 2), 6) }).map((_, i) => (
-              <g key={i} transform={`translate(${centerX + 90 + (i % 2) * 15}, ${centerY + 30 + Math.floor(i / 2) * 12})`}>
-                <ellipse rx="5" ry="3" fill="#94a3b8" />
-              </g>
             ))}
           </g>
-        )}
 
-        {/* Power indicator */}
-        <rect x={width - 80} y={height - 60} width="70" height="50" fill="#0f172a" rx="4" />
-        <text x={width - 45} y={height - 42} textAnchor="middle" fill="#94a3b8" fontSize="9">Field Strength</text>
-        <rect x={width - 75} y={height - 35} width="60" height="8" fill="#334155" rx="2" />
-        <rect x={width - 75} y={height - 35} width={Math.min(fieldStrength * 12, 60)} height="8" fill="#22c55e" rx="2" />
-        <text x={width - 45} y={height - 12} textAnchor="middle" fill="#22c55e" fontSize="11" fontWeight="bold">
-          {fieldStrength > 0 ? 'ON' : 'OFF'}
-        </text>
-      </svg>
+          {/* Magnetic field lines (proportional to strength) with glow */}
+          {electromagnetCurrent > 0 && showFieldLines && Array.from({ length: Math.min(Math.round(fieldStrength), 5) }).map((_, i) => {
+            const offset = (i - 2) * 15;
+            return (
+              <g key={i}>
+                <line
+                  x1={centerX - 55}
+                  y1={centerY + offset}
+                  x2={centerX + 55}
+                  y2={centerY + offset}
+                  stroke="url(#magfElectroField)"
+                  strokeWidth={Math.max(2, 4 - Math.abs(offset) / 8)}
+                  opacity={0.9}
+                  filter="url(#magfElectroFieldGlow)"
+                />
+                <polygon
+                  points={`${centerX + 50},${centerY + offset - 5} ${centerX + 62},${centerY + offset} ${centerX + 50},${centerY + offset + 5}`}
+                  fill="#ef4444"
+                  filter="url(#magfElectroFieldGlow)"
+                />
+              </g>
+            );
+          })}
+
+          {/* Poles with premium gradients and glow */}
+          {electromagnetCurrent > 0 && (
+            <>
+              <circle cx={centerX + 85} cy={centerY} r="20" fill="url(#magfElectroNorth)" filter="url(#magfElectroPoleGlow)" opacity="0.7" />
+              <text x={centerX + 85} y={centerY + 6} textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">N</text>
+              <circle cx={centerX - 85} cy={centerY} r="20" fill="url(#magfElectroSouth)" filter="url(#magfElectroPoleGlow)" opacity="0.7" />
+              <text x={centerX - 85} y={centerY + 6} textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">S</text>
+            </>
+          )}
+
+          {/* Paper clips attracted with metallic gradient */}
+          {electromagnetCurrent > 0 && fieldStrength > 0.5 && (
+            <g>
+              {Array.from({ length: Math.min(Math.round(fieldStrength * 2), 6) }).map((_, i) => (
+                <g key={i} transform={`translate(${centerX + 95 + (i % 2) * 18}, ${centerY + 32 + Math.floor(i / 2) * 14})`}>
+                  <ellipse rx="7" ry="4" fill="url(#magfPaperClip)" stroke="#9ca3af" strokeWidth="0.5" />
+                </g>
+              ))}
+            </g>
+          )}
+
+          {/* Power indicator panel */}
+          <rect x={width - 85} y={height - 65} width="75" height="55" fill="#0f172a" stroke="#334155" strokeWidth="1" rx="6" />
+          <rect x={width - 80} y={height - 38} width="65" height="10" fill="#1e293b" rx="3" />
+          <rect
+            x={width - 80}
+            y={height - 38}
+            width={Math.min(fieldStrength * 13, 65)}
+            height="10"
+            fill="url(#magfPowerBar)"
+            rx="3"
+          />
+          <text
+            x={width - 47}
+            y={height - 14}
+            textAnchor="middle"
+            fill={fieldStrength > 0 ? '#4ade80' : '#64748b'}
+            fontSize="12"
+            fontWeight="bold"
+          >
+            {fieldStrength > 0 ? 'ON' : 'OFF'}
+          </text>
+        </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div className="flex justify-between items-center mt-2 px-2" style={{ fontSize: typo.small }}>
+          <div>
+            <span className="text-slate-400">Core: </span>
+            <span className="text-slate-300">Iron</span>
+          </div>
+          <div>
+            <span className="text-slate-400">Field Strength: </span>
+            <span className={fieldStrength > 0 ? 'text-emerald-400' : 'text-slate-500'}>{fieldStrength.toFixed(1)}</span>
+          </div>
+        </div>
+      </>
     );
   };
 
@@ -844,29 +1155,144 @@ const MagneticFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
       {/* Premium card */}
       <div className="w-full max-w-md backdrop-blur-xl bg-white/5 border border-white/10 rounded-2xl p-6 mb-8">
         <svg width={isMobile ? 280 : 340} height={180} className="mx-auto mb-4">
-          <rect x="0" y="0" width={isMobile ? 280 : 340} height="180" fill="#0f172a" rx="8" />
+          <defs>
+            {/* Premium bar magnet north pole gradient */}
+            <linearGradient id="magfBarNorth" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="25%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
 
-          {/* Bar magnet */}
-          <rect x={isMobile ? 90 : 120} y="70" width="40" height="40" fill="#ef4444" rx="4" />
-          <rect x={isMobile ? 130 : 160} y="70" width="40" height="40" fill="#3b82f6" rx="4" />
-          <text x={isMobile ? 110 : 140} y="95" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">N</text>
-          <text x={isMobile ? 150 : 180} y="95" textAnchor="middle" fill="white" fontSize="14" fontWeight="bold">S</text>
+            {/* Premium bar magnet south pole gradient */}
+            <linearGradient id="magfBarSouth" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="25%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
 
-          {/* Field lines */}
-          <path d={`M ${isMobile ? 90 : 120} 90 Q ${isMobile ? 50 : 70} 50 ${isMobile ? 170 : 200} 90`} fill="none" stroke="#60a5fa" strokeWidth="2" strokeDasharray="4 2" />
-          <path d={`M ${isMobile ? 90 : 120} 90 Q ${isMobile ? 50 : 70} 130 ${isMobile ? 170 : 200} 90`} fill="none" stroke="#60a5fa" strokeWidth="2" strokeDasharray="4 2" />
+            {/* Field line gradient */}
+            <linearGradient id="magfHookField" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="30%" stopColor="#a855f7" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#60a5fa" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.8" />
+            </linearGradient>
 
-          {/* Compass needle */}
+            {/* Compass body gradient */}
+            <radialGradient id="magfCompass" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </radialGradient>
+
+            {/* Compass needle gradient */}
+            <linearGradient id="magfNeedle" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#f8fafc" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Background gradient */}
+            <linearGradient id="magfHookBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#020617" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Glow filter for field lines */}
+            <filter id="magfHookFieldGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glow filter for magnet */}
+            <filter id="magfMagnetGlow" x="-25%" y="-25%" width="150%" height="150%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Compass needle animation glow */}
+            <filter id="magfNeedleGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect x="0" y="0" width={isMobile ? 280 : 340} height="180" fill="url(#magfHookBg)" rx="8" />
+
+          {/* Field lines with glow - curved from N to S */}
+          <path
+            d={`M ${isMobile ? 90 : 120} 90 Q ${isMobile ? 50 : 70} 40 ${isMobile ? 170 : 200} 90`}
+            fill="none"
+            stroke="url(#magfHookField)"
+            strokeWidth="2.5"
+            strokeDasharray="6 3"
+            filter="url(#magfHookFieldGlow)"
+          />
+          <path
+            d={`M ${isMobile ? 90 : 120} 90 Q ${isMobile ? 50 : 70} 140 ${isMobile ? 170 : 200} 90`}
+            fill="none"
+            stroke="url(#magfHookField)"
+            strokeWidth="2.5"
+            strokeDasharray="6 3"
+            filter="url(#magfHookFieldGlow)"
+          />
+          <path
+            d={`M ${isMobile ? 90 : 120} 90 Q ${isMobile ? 30 : 40} 90 ${isMobile ? 90 : 120} 90`}
+            fill="none"
+            stroke="url(#magfHookField)"
+            strokeWidth="2"
+            strokeDasharray="4 2"
+            filter="url(#magfHookFieldGlow)"
+            opacity="0.6"
+          />
+
+          {/* Bar magnet with premium gradients and glow */}
+          <g filter="url(#magfMagnetGlow)">
+            <rect x={isMobile ? 90 : 120} y="68" width="40" height="44" fill="url(#magfBarNorth)" rx="4" stroke="#fecaca" strokeWidth="1" />
+            <rect x={isMobile ? 130 : 160} y="68" width="40" height="44" fill="url(#magfBarSouth)" rx="4" stroke="#bfdbfe" strokeWidth="1" />
+          </g>
+          <text x={isMobile ? 110 : 140} y="95" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">N</text>
+          <text x={isMobile ? 150 : 180} y="95" textAnchor="middle" fill="white" fontSize="16" fontWeight="bold">S</text>
+
+          {/* Compass with animated needle */}
           <g transform={`translate(${isMobile ? 50 : 60}, 60)`}>
-            <circle r="12" fill="#334155" stroke="#64748b" strokeWidth="1" />
-            <line x1="-6" y1="0" x2="6" y2="0" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
-            <circle r="2" fill="#64748b" />
+            <circle r="16" fill="url(#magfCompass)" stroke="#64748b" strokeWidth="2" />
+            {/* Compass needle with gradient and glow - animated rotation */}
+            <g style={{ transform: `rotate(${Math.sin(animationTime * 2) * 15 + 30}deg)`, transformOrigin: 'center' }}>
+              <line x1="-10" y1="0" x2="10" y2="0" stroke="url(#magfNeedle)" strokeWidth="4" strokeLinecap="round" filter="url(#magfNeedleGlow)" />
+            </g>
+            <circle r="3" fill="#94a3b8" />
           </g>
 
-          <text x={isMobile ? 140 : 170} y="160" textAnchor="middle" fill="#94a3b8" fontSize="10">
-            Compasses reveal invisible field lines
-          </text>
+          {/* Additional compass showing field direction */}
+          <g transform={`translate(${isMobile ? 230 : 280}, 60)`}>
+            <circle r="14" fill="url(#magfCompass)" stroke="#64748b" strokeWidth="2" />
+            <g style={{ transform: `rotate(${Math.sin(animationTime * 2 + 1) * 10 - 20}deg)`, transformOrigin: 'center' }}>
+              <line x1="-8" y1="0" x2="8" y2="0" stroke="url(#magfNeedle)" strokeWidth="3" strokeLinecap="round" filter="url(#magfNeedleGlow)" />
+            </g>
+            <circle r="2" fill="#94a3b8" />
+          </g>
         </svg>
+
+        {/* Text label outside SVG using typo system */}
+        <p className="text-slate-400 text-center mb-4" style={{ fontSize: typo.small }}>
+          Compasses reveal invisible field lines
+        </p>
 
         <p className="text-gray-300 text-center leading-relaxed">
           A compass needle always points north... but bring a magnet close and it swings away! What invisible force reaches through space to push and pull?

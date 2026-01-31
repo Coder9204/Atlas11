@@ -559,59 +559,161 @@ export default function ThermalExpansionRenderer({
       case 'hook': // Hook/Introduction
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-orange-400">The Hidden Movement</h2>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-orange-400">The Hidden Movement</h2>
 
             <div className="bg-gray-800/50 rounded-xl p-6">
-              <p className="text-lg leading-relaxed">
+              <p style={{ fontSize: typo.bodyLarge }} className="leading-relaxed">
                 Every day, the Eiffel Tower grows <span className="text-orange-400 font-bold">15 centimeters taller</span> in summer
                 and shrinks back in winter. Steel railroad tracks can buckle into dangerous curves on hot days.
               </p>
 
               <div className="mt-4 p-4 bg-gray-900/50 rounded-lg">
-                <p className="text-gray-300">
+                <p style={{ fontSize: typo.body }} className="text-gray-300">
                   This invisible movement affects everything engineers build - bridges, buildings, pipelines, and precision instruments.
                   Understanding <span className="text-yellow-400">thermal expansion</span> is essential for safe design.
                 </p>
               </div>
             </div>
 
-            {/* Animated bridge expansion */}
+            {/* Animated bridge expansion with premium SVG graphics */}
             <div className="relative h-64 bg-gradient-to-b from-sky-400/20 to-gray-900/50 rounded-xl overflow-hidden">
               <svg viewBox="0 0 400 200" className="w-full h-full">
-                {/* Sun */}
-                <circle cx="50" cy="40" r="25" fill="#fbbf24" opacity="0.8">
+                <defs>
+                  {/* Premium sun gradient with glow */}
+                  <radialGradient id="thexSunGradient" cx="50%" cy="50%" r="50%">
+                    <stop offset="0%" stopColor="#fef3c7" />
+                    <stop offset="30%" stopColor="#fcd34d" />
+                    <stop offset="60%" stopColor="#fbbf24" />
+                    <stop offset="100%" stopColor="#f59e0b" />
+                  </radialGradient>
+
+                  {/* Sun glow filter */}
+                  <filter id="thexSunGlow" x="-100%" y="-100%" width="300%" height="300%">
+                    <feGaussianBlur stdDeviation="4" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+
+                  {/* Sun rays gradient */}
+                  <radialGradient id="thexSunRays" cx="50%" cy="50%" r="60%">
+                    <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.3" />
+                    <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.1" />
+                    <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+                  </radialGradient>
+
+                  {/* Bridge tower concrete gradient */}
+                  <linearGradient id="thexTowerGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#6b7280" />
+                    <stop offset="25%" stopColor="#4b5563" />
+                    <stop offset="50%" stopColor="#374151" />
+                    <stop offset="75%" stopColor="#4b5563" />
+                    <stop offset="100%" stopColor="#374151" />
+                  </linearGradient>
+
+                  {/* Bridge deck steel gradient */}
+                  <linearGradient id="thexSteelDeckGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#9ca3af" />
+                    <stop offset="20%" stopColor="#6b7280" />
+                    <stop offset="50%" stopColor="#4b5563" />
+                    <stop offset="80%" stopColor="#6b7280" />
+                    <stop offset="100%" stopColor="#374151" />
+                  </linearGradient>
+
+                  {/* Water gradient with depth effect */}
+                  <linearGradient id="thexWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                    <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.5" />
+                    <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.4" />
+                    <stop offset="70%" stopColor="#2563eb" stopOpacity="0.5" />
+                    <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.6" />
+                  </linearGradient>
+
+                  {/* Expansion joint glow */}
+                  <filter id="thexJointGlow" x="-50%" y="-50%" width="200%" height="200%">
+                    <feGaussianBlur stdDeviation="1" result="blur" />
+                    <feMerge>
+                      <feMergeNode in="blur" />
+                      <feMergeNode in="SourceGraphic" />
+                    </feMerge>
+                  </filter>
+
+                  {/* Heat shimmer effect for expansion */}
+                  <linearGradient id="thexHeatShimmer" x1="0%" y1="0%" x2="100%" y2="0%">
+                    <stop offset="0%" stopColor="#ef4444" stopOpacity="0" />
+                    <stop offset="50%" stopColor="#f97316" stopOpacity="0.3" />
+                    <stop offset="100%" stopColor="#ef4444" stopOpacity="0" />
+                  </linearGradient>
+                </defs>
+
+                {/* Sun rays outer glow */}
+                <circle cx="50" cy="40" r="40" fill="url(#thexSunRays)">
+                  <animate attributeName="r" values="40;45;40" dur="2s" repeatCount="indefinite"/>
+                </circle>
+
+                {/* Sun with premium gradient and glow */}
+                <circle cx="50" cy="40" r="25" fill="url(#thexSunGradient)" filter="url(#thexSunGlow)">
                   <animate attributeName="r" values="25;28;25" dur="2s" repeatCount="indefinite"/>
                 </circle>
 
-                {/* Bridge towers */}
-                <rect x="80" y="80" width="20" height="80" fill="#4b5563"/>
-                <rect x="300" y="80" width="20" height="80" fill="#4b5563"/>
+                {/* Bridge towers with gradient */}
+                <rect x="80" y="80" width="20" height="80" fill="url(#thexTowerGradient)" rx="2"/>
+                <rect x="300" y="80" width="20" height="80" fill="url(#thexTowerGradient)" rx="2"/>
 
-                {/* Bridge deck - animated expansion */}
-                <rect x="60" y="110" width="140" height="15" fill="#6b7280">
+                {/* Tower highlights */}
+                <rect x="80" y="80" width="4" height="80" fill="#9ca3af" opacity="0.3" rx="1"/>
+                <rect x="300" y="80" width="4" height="80" fill="#9ca3af" opacity="0.3" rx="1"/>
+
+                {/* Bridge deck left - animated expansion with gradient */}
+                <rect x="60" y="110" width="140" height="15" fill="url(#thexSteelDeckGradient)" rx="2">
                   <animate attributeName="width" values="140;145;140" dur="3s" repeatCount="indefinite"/>
                 </rect>
-                <rect x="205" y="110" width="140" height="15" fill="#6b7280">
+
+                {/* Bridge deck right - animated with gradient */}
+                <rect x="205" y="110" width="140" height="15" fill="url(#thexSteelDeckGradient)" rx="2">
                   <animate attributeName="x" values="205;202;205" dur="3s" repeatCount="indefinite"/>
                 </rect>
 
-                {/* Expansion joint gap */}
-                <rect x="199" y="110" width="6" height="15" fill="#1f2937">
+                {/* Heat shimmer effect above deck */}
+                <rect x="60" y="105" width="285" height="5" fill="url(#thexHeatShimmer)" opacity="0.5">
+                  <animate attributeName="opacity" values="0.5;0.8;0.5" dur="1.5s" repeatCount="indefinite"/>
+                </rect>
+
+                {/* Expansion joint gap with glow */}
+                <rect x="199" y="110" width="6" height="15" fill="#1f2937" filter="url(#thexJointGlow)">
                   <animate attributeName="width" values="6;3;6" dur="3s" repeatCount="indefinite"/>
                   <animate attributeName="x" values="199;200;199" dur="3s" repeatCount="indefinite"/>
                 </rect>
 
-                {/* Water */}
-                <rect x="0" y="160" width="400" height="40" fill="#3b82f6" opacity="0.4"/>
+                {/* Joint highlight indicator */}
+                <rect x="200" y="108" width="4" height="2" fill="#f59e0b" opacity="0.8" rx="1">
+                  <animate attributeName="width" values="4;2;4" dur="3s" repeatCount="indefinite"/>
+                  <animate attributeName="x" values="200;201;200" dur="3s" repeatCount="indefinite"/>
+                </rect>
 
-                {/* Labels */}
-                <text x="200" y="145" textAnchor="middle" fill="#9ca3af" fontSize="10">Expansion Joint</text>
-                <text x="200" y="185" textAnchor="middle" fill="#6b7280" fontSize="11">Gap changes with temperature</text>
+                {/* Water with gradient */}
+                <rect x="0" y="160" width="400" height="40" fill="url(#thexWaterGradient)"/>
+
+                {/* Water surface ripples */}
+                <ellipse cx="100" cy="165" rx="30" ry="3" fill="#93c5fd" opacity="0.3">
+                  <animate attributeName="rx" values="30;35;30" dur="2s" repeatCount="indefinite"/>
+                </ellipse>
+                <ellipse cx="280" cy="168" rx="25" ry="2" fill="#93c5fd" opacity="0.2">
+                  <animate attributeName="rx" values="25;30;25" dur="2.5s" repeatCount="indefinite"/>
+                </ellipse>
               </svg>
+
+              {/* Labels moved outside SVG using typo system */}
+              <div className="absolute bottom-12 left-1/2 -translate-x-1/2 text-center">
+                <p style={{ fontSize: typo.small }} className="text-gray-400">Expansion Joint</p>
+              </div>
+              <div className="absolute bottom-4 left-1/2 -translate-x-1/2 text-center">
+                <p style={{ fontSize: typo.small }} className="text-gray-500">Gap changes with temperature</p>
+              </div>
             </div>
 
             <div className="bg-orange-500/20 border border-orange-500/30 rounded-lg p-4">
-              <p className="text-orange-300 font-medium">
+              <p style={{ fontSize: typo.body }} className="text-orange-300 font-medium">
                 The Twist: Materials don't just expand uniformly - thermal stress builds up when expansion is restrained.
                 A constrained beam can generate hundreds of tons of force from just a 50C temperature change!
               </p>
@@ -622,40 +724,124 @@ export default function ThermalExpansionRenderer({
       case 'predict': // Prediction
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-blue-400">Make Your Prediction</h2>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-blue-400">Make Your Prediction</h2>
 
             <div className="bg-gray-800/50 rounded-xl p-6">
-              <p className="mb-4">
+              <p style={{ fontSize: typo.body }} className="mb-4">
                 A <span className="text-orange-400 font-bold">100-meter steel bridge</span> is installed on a cool spring day (20C).
                 In summer, the temperature reaches <span className="text-red-400 font-bold">60C</span> (a 40C increase).
               </p>
 
-              {/* Visualization */}
-              <div className="relative h-32 bg-gray-900/50 rounded-lg mb-4">
-                <svg className="w-full h-full" viewBox="0 0 400 100">
-                  {/* Before */}
-                  <rect x="30" y="40" width="150" height="20" fill="#6b7280" rx="2"/>
-                  <text x="105" y="35" textAnchor="middle" fill="#9ca3af" fontSize="10">Spring: 20C</text>
-                  <text x="105" y="75" textAnchor="middle" fill="#6b7280" fontSize="12">100.000 m</text>
-
-                  {/* Arrow */}
-                  <path d="M195 50 L215 50" stroke="#f59e0b" strokeWidth="2" markerEnd="url(#arrow)"/>
-                  <text x="205" y="40" textAnchor="middle" fill="#f59e0b" fontSize="10">+40C</text>
+              {/* Premium Visualization */}
+              <div className="relative h-36 bg-gray-900/50 rounded-lg mb-4 overflow-hidden">
+                <svg className="w-full h-full" viewBox="0 0 400 110">
                   <defs>
-                    <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-                      <polygon points="0 0, 10 3.5, 0 7" fill="#f59e0b"/>
+                    {/* Cool steel gradient (spring) */}
+                    <linearGradient id="thexCoolSteelGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#9ca3af" />
+                      <stop offset="25%" stopColor="#6b7280" />
+                      <stop offset="50%" stopColor="#4b5563" />
+                      <stop offset="75%" stopColor="#6b7280" />
+                      <stop offset="100%" stopColor="#374151" />
+                    </linearGradient>
+
+                    {/* Hot steel gradient (summer) */}
+                    <linearGradient id="thexHotSteelGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#fca5a5" />
+                      <stop offset="25%" stopColor="#f87171" />
+                      <stop offset="50%" stopColor="#ef4444" />
+                      <stop offset="75%" stopColor="#dc2626" />
+                      <stop offset="100%" stopColor="#b91c1c" />
+                    </linearGradient>
+
+                    {/* Arrow gradient */}
+                    <linearGradient id="thexArrowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.5" />
+                      <stop offset="50%" stopColor="#f59e0b" />
+                      <stop offset="100%" stopColor="#d97706" />
+                    </linearGradient>
+
+                    {/* Heat glow for hot bridge */}
+                    <filter id="thexPredictHeatGlow" x="-20%" y="-30%" width="140%" height="160%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Metal highlight */}
+                    <linearGradient id="thexPredictHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.25" />
+                      <stop offset="20%" stopColor="#ffffff" stopOpacity="0.05" />
+                      <stop offset="100%" stopColor="#000000" stopOpacity="0.15" />
+                    </linearGradient>
+
+                    {/* Premium arrow marker */}
+                    <marker id="thexPredictArrow" markerWidth="12" markerHeight="8" refX="10" refY="4" orient="auto">
+                      <polygon points="0 0, 12 4, 0 8" fill="url(#thexArrowGradient)"/>
                     </marker>
+
+                    {/* Question mark glow */}
+                    <filter id="thexQuestionGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
                   </defs>
 
-                  {/* After */}
-                  <rect x="230" y="40" width="160" height="20" fill="#ef4444" rx="2"/>
-                  <text x="310" y="35" textAnchor="middle" fill="#9ca3af" fontSize="10">Summer: 60C</text>
-                  <text x="310" y="75" textAnchor="middle" fill="#9ca3af" fontSize="12">100.??? m</text>
+                  {/* Before (Spring) bridge with gradient */}
+                  <rect x="30" y="42" width="145" height="22" fill="url(#thexCoolSteelGradient)" rx="3"/>
+                  <rect x="30" y="42" width="145" height="22" fill="url(#thexPredictHighlight)" rx="3"/>
+                  {/* End caps */}
+                  <rect x="30" y="42" width="6" height="22" fill="#4b5563" rx="2"/>
+                  <rect x="169" y="42" width="6" height="22" fill="#4b5563" rx="2"/>
+
+                  {/* Arrow with glow */}
+                  <path d="M190 53 L218 53" stroke="url(#thexArrowGradient)" strokeWidth="3" markerEnd="url(#thexPredictArrow)"/>
+
+                  {/* After (Summer) bridge - expanded with heat glow */}
+                  <g filter="url(#thexPredictHeatGlow)">
+                    <rect x="235" y="42" width="155" height="22" fill="url(#thexHotSteelGradient)" rx="3"/>
+                    <rect x="235" y="42" width="155" height="22" fill="url(#thexPredictHighlight)" rx="3"/>
+                    {/* End caps */}
+                    <rect x="235" y="42" width="6" height="22" fill="#b91c1c" rx="2"/>
+                    <rect x="384" y="42" width="6" height="22" fill="#b91c1c" rx="2"/>
+                  </g>
+
+                  {/* Expansion indicator with question mark */}
+                  <g filter="url(#thexQuestionGlow)">
+                    <text x="312" y="90" textAnchor="middle" fill="#fbbf24" fontSize="16" fontWeight="bold">???</text>
+                  </g>
+
+                  {/* Heat shimmer effect above hot bridge */}
+                  <rect x="235" y="36" width="155" height="6" fill="url(#thexArrowGradient)" opacity="0.3">
+                    <animate attributeName="opacity" values="0.2;0.4;0.2" dur="1.5s" repeatCount="indefinite"/>
+                  </rect>
                 </svg>
+
+                {/* Labels outside SVG */}
+                <div className="absolute top-1 left-12">
+                  <p style={{ fontSize: typo.label }} className="text-cyan-400">Spring: 20C</p>
+                </div>
+                <div className="absolute bottom-2 left-16">
+                  <p style={{ fontSize: typo.small }} className="text-gray-500">100.000 m</p>
+                </div>
+                <div className="absolute top-4 left-1/2 -translate-x-1/2">
+                  <p style={{ fontSize: typo.label }} className="text-amber-400 font-bold">+40C</p>
+                </div>
+                <div className="absolute top-1 right-12">
+                  <p style={{ fontSize: typo.label }} className="text-red-400">Summer: 60C</p>
+                </div>
+                <div className="absolute bottom-2 right-12">
+                  <p style={{ fontSize: typo.small }} className="text-gray-400">100.??? m</p>
+                </div>
               </div>
 
-              <p className="text-sm text-gray-400">
-                Steel has α = 12 × 10⁻⁶ per C. How much longer will the bridge become?
+              <p style={{ fontSize: typo.small }} className="text-gray-400">
+                Steel has alpha = 12 x 10^-6 per C. How much longer will the bridge become?
               </p>
             </div>
 
@@ -670,7 +856,7 @@ export default function ThermalExpansionRenderer({
                   key={option.id}
                   onClick={() => makePrediction(option.id)}
                   disabled={userPrediction !== null}
-                  style={{ zIndex: 10 }}
+                  style={{ zIndex: 10, fontSize: typo.body }}
                   className={`p-4 rounded-lg text-left transition-all ${
                     userPrediction === option.id
                       ? 'bg-blue-500/30 border-2 border-blue-500'
@@ -688,14 +874,14 @@ export default function ThermalExpansionRenderer({
               <div className={`p-4 rounded-lg ${
                 userPrediction === 'medium' ? 'bg-green-500/20 border border-green-500/30' : 'bg-orange-500/20 border border-orange-500/30'
               }`}>
-                <p className="font-medium">
+                <p style={{ fontSize: typo.body }} className="font-medium">
                   {userPrediction === 'medium'
                     ? 'Correct! Let\'s see the calculation...'
                     : 'Interesting guess! Let\'s calculate the actual expansion...'
                   }
                 </p>
-                <p className="text-sm text-gray-400 mt-2">
-                  ΔL = α × L₀ × ΔT = (12×10⁻⁶) × (100,000 mm) × (40C) = 48 mm
+                <p style={{ fontSize: typo.small }} className="text-gray-400 mt-2">
+                  Delta L = alpha x L0 x Delta T = (12 x 10^-6) x (100,000 mm) x (40C) = 48 mm
                 </p>
               </div>
             )}
@@ -703,14 +889,18 @@ export default function ThermalExpansionRenderer({
         );
 
       case 'play': // Observation/Experiment
+        // Calculate temperature color for gradient
+        const tempNormalized = (temperature + 40) / 140; // 0 at -40C, 1 at 100C
+        const tempColorHue = 240 - (tempNormalized * 240); // Blue (240) to Red (0)
+
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-green-400">Observe: Thermal Expansion</h2>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-green-400">Observe: Thermal Expansion</h2>
 
             <div className="bg-gray-800/50 rounded-xl p-4">
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">
+                  <label style={{ fontSize: typo.small }} className="block text-gray-400 mb-1">
                     Temperature: {temperature}C
                   </label>
                   <input
@@ -724,14 +914,14 @@ export default function ThermalExpansionRenderer({
                     }}
                     className="w-full"
                   />
-                  <div className="flex justify-between text-xs text-gray-500">
-                    <span>-40C</span>
-                    <span>20C (ref)</span>
-                    <span>100C</span>
+                  <div className="flex justify-between" style={{ fontSize: typo.label }}>
+                    <span className="text-blue-400">-40C</span>
+                    <span className="text-gray-500">20C (ref)</span>
+                    <span className="text-red-400">100C</span>
                   </div>
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">
+                  <label style={{ fontSize: typo.small }} className="block text-gray-400 mb-1">
                     Material: {currentMaterial.name}
                   </label>
                   <select
@@ -741,80 +931,273 @@ export default function ThermalExpansionRenderer({
                       logEvent('material_changed', { material: materials[Number(e.target.value)].name });
                     }}
                     className="w-full bg-gray-700 rounded p-2 text-white"
+                    style={{ fontSize: typo.body }}
                   >
                     {materials.map((mat, i) => (
-                      <option key={i} value={i}>{mat.name} (α = {mat.alpha}×10⁻⁶/C)</option>
+                      <option key={i} value={i}>{mat.name} (alpha = {mat.alpha} x 10^-6/C)</option>
                     ))}
                   </select>
                 </div>
               </div>
 
-              {/* Bar visualization */}
-              <div className="relative bg-gray-900/50 rounded-lg p-4">
-                <div className="mb-2 text-center text-sm text-gray-400">
-                  Initial Length: {initialLength} mm at 20C
+              {/* Premium SVG Bar Visualization */}
+              <div className="relative bg-gray-900/50 rounded-lg overflow-hidden" style={{ height: isMobile ? '180px' : '220px' }}>
+                <svg viewBox="0 0 500 180" className="w-full h-full" preserveAspectRatio="xMidYMid meet">
+                  <defs>
+                    {/* Reference bar gradient - neutral gray */}
+                    <linearGradient id="thexRefBarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#6b7280" stopOpacity="0.4" />
+                      <stop offset="30%" stopColor="#4b5563" stopOpacity="0.3" />
+                      <stop offset="70%" stopColor="#374151" stopOpacity="0.3" />
+                      <stop offset="100%" stopColor="#4b5563" stopOpacity="0.4" />
+                    </linearGradient>
+
+                    {/* Dynamic temperature-based gradient for metal bar */}
+                    <linearGradient id="thexMetalBarGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor={`hsl(${tempColorHue}, 80%, 70%)`} />
+                      <stop offset="20%" stopColor={`hsl(${tempColorHue}, 75%, 55%)`} />
+                      <stop offset="50%" stopColor={`hsl(${tempColorHue}, 70%, 45%)`} />
+                      <stop offset="80%" stopColor={`hsl(${tempColorHue}, 75%, 55%)`} />
+                      <stop offset="100%" stopColor={`hsl(${tempColorHue}, 70%, 40%)`} />
+                    </linearGradient>
+
+                    {/* Metal bar highlight for 3D effect */}
+                    <linearGradient id="thexMetalHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#ffffff" stopOpacity="0.3" />
+                      <stop offset="10%" stopColor="#ffffff" stopOpacity="0.1" />
+                      <stop offset="50%" stopColor="#000000" stopOpacity="0" />
+                      <stop offset="100%" stopColor="#000000" stopOpacity="0.2" />
+                    </linearGradient>
+
+                    {/* Heat glow filter for hot temperatures */}
+                    <filter id="thexHeatGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation={temperature > 50 ? "4" : "0"} result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Cold frost filter */}
+                    <filter id="thexFrostGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation={temperature < -20 ? "3" : "0"} result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Heat source gradient */}
+                    <radialGradient id="thexHeatSourceGradient" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#fef3c7" />
+                      <stop offset="30%" stopColor="#fbbf24" />
+                      <stop offset="60%" stopColor="#f59e0b" />
+                      <stop offset="100%" stopColor="#d97706" stopOpacity="0.5" />
+                    </radialGradient>
+
+                    {/* Heat source glow filter */}
+                    <filter id="thexHeatSourceGlow" x="-100%" y="-100%" width="300%" height="300%">
+                      <feGaussianBlur stdDeviation="5" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Cold source gradient */}
+                    <radialGradient id="thexColdSourceGradient" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#e0f2fe" />
+                      <stop offset="30%" stopColor="#7dd3fc" />
+                      <stop offset="60%" stopColor="#38bdf8" />
+                      <stop offset="100%" stopColor="#0284c7" stopOpacity="0.5" />
+                    </radialGradient>
+
+                    {/* Expansion indicator gradient */}
+                    <linearGradient id="thexExpansionArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#22c55e" stopOpacity="0" />
+                      <stop offset="50%" stopColor="#22c55e" />
+                      <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+                    </linearGradient>
+
+                    {/* Contraction indicator gradient */}
+                    <linearGradient id="thexContractionArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+                      <stop offset="50%" stopColor="#3b82f6" />
+                      <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+                    </linearGradient>
+
+                    {/* Grid pattern */}
+                    <pattern id="thexMeasureGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+                      <line x1="0" y1="0" x2="0" y2="20" stroke="#374151" strokeWidth="0.5" strokeOpacity="0.5" />
+                    </pattern>
+
+                    {/* Measurement tick marks */}
+                    <pattern id="thexRulerTicks" width="50" height="10" patternUnits="userSpaceOnUse">
+                      <line x1="0" y1="0" x2="0" y2="5" stroke="#6b7280" strokeWidth="1" />
+                      <line x1="25" y1="0" x2="25" y2="3" stroke="#4b5563" strokeWidth="0.5" />
+                    </pattern>
+                  </defs>
+
+                  {/* Background grid */}
+                  <rect x="30" y="30" width="440" height="120" fill="url(#thexMeasureGrid)" opacity="0.5" />
+
+                  {/* Reference bar (at 20C) */}
+                  <rect x="50" y="50" width="400" height="25" fill="url(#thexRefBarGradient)" rx="3" stroke="#4b5563" strokeWidth="1" strokeDasharray="4 2" />
+
+                  {/* Heat/Cold source indicator */}
+                  {temperature > 30 && (
+                    <g transform="translate(25, 105)">
+                      <circle r="15" fill="url(#thexHeatSourceGradient)" filter="url(#thexHeatSourceGlow)">
+                        <animate attributeName="r" values="14;16;14" dur="1s" repeatCount="indefinite" />
+                      </circle>
+                      {/* Heat waves */}
+                      <path d="M -8,8 Q -4,12 -8,16" stroke="#f97316" strokeWidth="2" fill="none" opacity="0.6">
+                        <animate attributeName="opacity" values="0.6;0.2;0.6" dur="0.8s" repeatCount="indefinite" />
+                      </path>
+                      <path d="M 0,10 Q 4,14 0,18" stroke="#f97316" strokeWidth="2" fill="none" opacity="0.4">
+                        <animate attributeName="opacity" values="0.4;0.1;0.4" dur="0.8s" repeatCount="indefinite" begin="0.2s" />
+                      </path>
+                      <path d="M 8,8 Q 12,12 8,16" stroke="#f97316" strokeWidth="2" fill="none" opacity="0.5">
+                        <animate attributeName="opacity" values="0.5;0.15;0.5" dur="0.8s" repeatCount="indefinite" begin="0.4s" />
+                      </path>
+                    </g>
+                  )}
+
+                  {temperature < -10 && (
+                    <g transform="translate(25, 105)">
+                      <circle r="15" fill="url(#thexColdSourceGradient)" filter="url(#thexHeatSourceGlow)">
+                        <animate attributeName="r" values="14;16;14" dur="1.5s" repeatCount="indefinite" />
+                      </circle>
+                      {/* Snowflake/frost indicator */}
+                      <path d="M 0,-10 L 0,10 M -8,-5 L 8,5 M -8,5 L 8,-5" stroke="#7dd3fc" strokeWidth="1.5" fill="none" opacity="0.7" />
+                    </g>
+                  )}
+
+                  {/* Expanded/contracted metal bar with premium styling */}
+                  <g filter={temperature > 50 ? "url(#thexHeatGlow)" : temperature < -20 ? "url(#thexFrostGlow)" : undefined}>
+                    <rect
+                      x={50}
+                      y="95"
+                      width={400 * (finalLength / initialLength)}
+                      height="35"
+                      fill="url(#thexMetalBarGradient)"
+                      rx="4"
+                      className="transition-all duration-300"
+                    />
+                    {/* Highlight overlay for 3D effect */}
+                    <rect
+                      x={50}
+                      y="95"
+                      width={400 * (finalLength / initialLength)}
+                      height="35"
+                      fill="url(#thexMetalHighlight)"
+                      rx="4"
+                      className="transition-all duration-300"
+                    />
+                    {/* End cap details */}
+                    <rect
+                      x={50}
+                      y="95"
+                      width="8"
+                      height="35"
+                      fill={`hsl(${tempColorHue}, 60%, 35%)`}
+                      rx="4"
+                      className="transition-all duration-300"
+                    />
+                    <rect
+                      x={50 + 400 * (finalLength / initialLength) - 8}
+                      y="95"
+                      width="8"
+                      height="35"
+                      fill={`hsl(${tempColorHue}, 60%, 35%)`}
+                      rx="4"
+                      className="transition-all duration-300"
+                    />
+                  </g>
+
+                  {/* Expansion/contraction arrows */}
+                  {expansion > 0 && (
+                    <g>
+                      <path
+                        d={`M ${50 + 400} 112 L ${50 + 400 * (finalLength / initialLength) + 10} 112`}
+                        stroke="url(#thexExpansionArrow)"
+                        strokeWidth="3"
+                        markerEnd="url(#thexArrowHead)"
+                      />
+                      <polygon
+                        points={`${50 + 400 * (finalLength / initialLength) + 15},112 ${50 + 400 * (finalLength / initialLength) + 5},107 ${50 + 400 * (finalLength / initialLength) + 5},117`}
+                        fill="#22c55e"
+                      />
+                    </g>
+                  )}
+
+                  {expansion < 0 && (
+                    <g>
+                      <path
+                        d={`M ${50 + 400 * (finalLength / initialLength)} 112 L ${50 + 400 - 10} 112`}
+                        stroke="url(#thexContractionArrow)"
+                        strokeWidth="3"
+                      />
+                      <polygon
+                        points={`${50 + 400 * (finalLength / initialLength) - 5},112 ${50 + 400 * (finalLength / initialLength) + 5},107 ${50 + 400 * (finalLength / initialLength) + 5},117`}
+                        fill="#3b82f6"
+                      />
+                    </g>
+                  )}
+
+                  {/* Ruler/measurement marks at bottom */}
+                  <rect x="50" y="145" width="400" height="8" fill="url(#thexRulerTicks)" />
+                  <line x1="50" y1="145" x2="450" y2="145" stroke="#6b7280" strokeWidth="1" />
+                </svg>
+
+                {/* Labels outside SVG */}
+                <div className="absolute top-2 left-1/2 -translate-x-1/2">
+                  <p style={{ fontSize: typo.small }} className="text-gray-400 text-center">
+                    Initial Length: {initialLength} mm at 20C
+                  </p>
                 </div>
 
-                {/* Reference bar */}
-                <div className="relative h-8 mb-2">
-                  <div
-                    className="absolute h-full bg-gray-600/50 border border-gray-500 rounded"
-                    style={{ width: '100%' }}
-                  />
-                  <div className="absolute inset-0 flex items-center justify-center text-xs text-gray-400">
-                    Reference at 20C
-                  </div>
+                <div className="absolute top-14 left-4">
+                  <p style={{ fontSize: typo.label }} className="text-gray-500">Reference at 20C</p>
                 </div>
 
-                {/* Expanded/contracted bar */}
-                <div className="relative h-12 mb-2">
-                  <div
-                    className="absolute h-full rounded transition-all duration-300"
-                    style={{
-                      width: `${100 * (finalLength / initialLength)}%`,
-                      backgroundColor: currentMaterial.color,
-                      left: expansion < 0 ? `${100 - (100 * finalLength / initialLength)}%` : 0
-                    }}
-                  />
-                  <div
-                    className="absolute inset-0 flex items-center justify-center text-sm font-medium"
-                    style={{ color: temperature > 50 ? '#1f2937' : '#ffffff' }}
-                  >
+                <div className="absolute bottom-8 left-1/2 -translate-x-1/2 text-center">
+                  <p style={{ fontSize: typo.body }} className="font-medium" style={{ color: temperature > 50 ? '#fbbf24' : temperature < -10 ? '#7dd3fc' : '#ffffff' }}>
                     {finalLength.toFixed(3)} mm at {temperature}C
-                  </div>
+                  </p>
                 </div>
+              </div>
 
-                {/* Change indicator */}
-                <div className={`text-center text-lg font-bold ${
-                  expansion > 0 ? 'text-red-400' : expansion < 0 ? 'text-blue-400' : 'text-gray-400'
-                }`}>
-                  {expansion > 0 ? '+' : ''}{expansion.toFixed(3)} mm
-                  ({expansion > 0 ? 'expansion' : expansion < 0 ? 'contraction' : 'no change'})
-                </div>
+              {/* Change indicator */}
+              <div className={`text-center mt-3 font-bold ${
+                expansion > 0 ? 'text-red-400' : expansion < 0 ? 'text-blue-400' : 'text-gray-400'
+              }`} style={{ fontSize: typo.bodyLarge }}>
+                {expansion > 0 ? '+' : ''}{expansion.toFixed(3)} mm
+                ({expansion > 0 ? 'expansion' : expansion < 0 ? 'contraction' : 'no change'})
               </div>
 
               {/* Stats panel */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
                 <div className="bg-gray-900/50 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-400">Temperature Change</p>
-                  <p className="text-lg font-bold text-orange-400">
+                  <p style={{ fontSize: typo.label }} className="text-gray-400">Temperature Change</p>
+                  <p style={{ fontSize: typo.bodyLarge }} className="font-bold text-orange-400">
                     {temperature - baseTemperature > 0 ? '+' : ''}{temperature - baseTemperature}C
                   </p>
                 </div>
                 <div className="bg-gray-900/50 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-400">Expansion Coef.</p>
-                  <p className="text-lg font-bold text-blue-400">{currentMaterial.alpha}</p>
-                  <p className="text-xs text-gray-500">×10⁻⁶/C</p>
+                  <p style={{ fontSize: typo.label }} className="text-gray-400">Expansion Coef.</p>
+                  <p style={{ fontSize: typo.bodyLarge }} className="font-bold text-blue-400">{currentMaterial.alpha}</p>
+                  <p style={{ fontSize: typo.label }} className="text-gray-500">x 10^-6/C</p>
                 </div>
                 <div className="bg-gray-900/50 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-400">Length Change</p>
-                  <p className="text-lg font-bold text-green-400">
+                  <p style={{ fontSize: typo.label }} className="text-gray-400">Length Change</p>
+                  <p style={{ fontSize: typo.bodyLarge }} className="font-bold text-green-400">
                     {expansion.toFixed(3)} mm
                   </p>
                 </div>
                 <div className="bg-gray-900/50 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-400">Strain</p>
-                  <p className="text-lg font-bold text-purple-400">
+                  <p style={{ fontSize: typo.label }} className="text-gray-400">Strain</p>
+                  <p style={{ fontSize: typo.bodyLarge }} className="font-bold text-purple-400">
                     {((expansion / initialLength) * 100).toFixed(4)}%
                   </p>
                 </div>
@@ -823,7 +1206,7 @@ export default function ThermalExpansionRenderer({
 
             <button
               onClick={() => setShowAtomicView(!showAtomicView)}
-              style={{ zIndex: 10 }}
+              style={{ zIndex: 10, fontSize: typo.body }}
               className="w-full p-3 bg-purple-500/20 border border-purple-500/30 rounded-lg text-purple-300 hover:bg-purple-500/30"
             >
               {showAtomicView ? 'Hide' : 'Show'} Atomic View
@@ -831,11 +1214,25 @@ export default function ThermalExpansionRenderer({
 
             {showAtomicView && (
               <div className="bg-gray-800/50 rounded-xl p-4">
-                <h3 className="text-lg font-medium text-purple-400 mb-3">Why Materials Expand</h3>
+                <h3 style={{ fontSize: typo.bodyLarge }} className="font-medium text-purple-400 mb-3">Why Materials Expand</h3>
                 <div className="flex gap-8 justify-center mb-4">
-                  {/* Cold atoms */}
+                  {/* Cold atoms with premium styling */}
                   <div className="text-center">
                     <svg viewBox="0 0 100 100" className="w-24 h-24">
+                      <defs>
+                        <radialGradient id="thexColdAtomGradient" cx="30%" cy="30%" r="70%">
+                          <stop offset="0%" stopColor="#93c5fd" />
+                          <stop offset="50%" stopColor="#3b82f6" />
+                          <stop offset="100%" stopColor="#1d4ed8" />
+                        </radialGradient>
+                        <filter id="thexAtomGlow" x="-50%" y="-50%" width="200%" height="200%">
+                          <feGaussianBlur stdDeviation="1.5" result="blur" />
+                          <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
+                      </defs>
                       {[0, 1, 2].map(row => (
                         [0, 1, 2].map(col => (
                           <circle
@@ -843,7 +1240,8 @@ export default function ThermalExpansionRenderer({
                             cx={20 + col * 25}
                             cy={20 + row * 25}
                             r="8"
-                            fill="#3b82f6"
+                            fill="url(#thexColdAtomGradient)"
+                            filter="url(#thexAtomGlow)"
                           >
                             <animate
                               attributeName="cx"
@@ -855,13 +1253,27 @@ export default function ThermalExpansionRenderer({
                         ))
                       ))}
                     </svg>
-                    <p className="text-sm text-blue-400">Cold: Small vibrations</p>
-                    <p className="text-xs text-gray-500">Atoms closer together</p>
+                    <p style={{ fontSize: typo.small }} className="text-blue-400">Cold: Small vibrations</p>
+                    <p style={{ fontSize: typo.label }} className="text-gray-500">Atoms closer together</p>
                   </div>
 
-                  {/* Hot atoms */}
+                  {/* Hot atoms with premium styling */}
                   <div className="text-center">
                     <svg viewBox="0 0 120 120" className="w-24 h-24">
+                      <defs>
+                        <radialGradient id="thexHotAtomGradient" cx="30%" cy="30%" r="70%">
+                          <stop offset="0%" stopColor="#fca5a5" />
+                          <stop offset="50%" stopColor="#ef4444" />
+                          <stop offset="100%" stopColor="#b91c1c" />
+                        </radialGradient>
+                        <filter id="thexHotAtomGlow" x="-50%" y="-50%" width="200%" height="200%">
+                          <feGaussianBlur stdDeviation="2" result="blur" />
+                          <feMerge>
+                            <feMergeNode in="blur" />
+                            <feMergeNode in="SourceGraphic" />
+                          </feMerge>
+                        </filter>
+                      </defs>
                       {[0, 1, 2].map(row => (
                         [0, 1, 2].map(col => {
                           const baseX = 25 + col * 30;
@@ -873,17 +1285,18 @@ export default function ThermalExpansionRenderer({
                               cx={baseX + offset}
                               cy={baseY + Math.cos(animationPhase + row) * 5}
                               r="8"
-                              fill="#ef4444"
+                              fill="url(#thexHotAtomGradient)"
+                              filter="url(#thexHotAtomGlow)"
                             />
                           );
                         })
                       ))}
                     </svg>
-                    <p className="text-sm text-red-400">Hot: Large vibrations</p>
-                    <p className="text-xs text-gray-500">Atoms pushed apart</p>
+                    <p style={{ fontSize: typo.small }} className="text-red-400">Hot: Large vibrations</p>
+                    <p style={{ fontSize: typo.label }} className="text-gray-500">Atoms pushed apart</p>
                   </div>
                 </div>
-                <p className="text-sm text-gray-400 text-center">
+                <p style={{ fontSize: typo.small }} className="text-gray-400 text-center">
                   Thermal expansion occurs because atoms vibrate more at higher temperatures,
                   pushing their neighbors farther away on average.
                 </p>
@@ -895,24 +1308,24 @@ export default function ThermalExpansionRenderer({
       case 'review': // Explanation
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-yellow-400">The Physics Revealed</h2>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-yellow-400">The Physics Revealed</h2>
 
             <div className="bg-gray-800/50 rounded-xl p-6">
-              <h3 className="text-xl font-bold text-orange-400 mb-4">Thermal Expansion Equations</h3>
+              <h3 style={{ fontSize: typo.bodyLarge }} className="font-bold text-orange-400 mb-4">Thermal Expansion Equations</h3>
 
               <div className="space-y-6">
                 {/* Linear expansion */}
                 <div className="bg-gray-900/50 rounded-lg p-4">
-                  <div className="text-center text-2xl font-mono text-blue-400 mb-2">
-                    ΔL = α × L₀ × ΔT
+                  <div className="text-center font-mono text-blue-400 mb-2" style={{ fontSize: isMobile ? '18px' : '22px' }}>
+                    Delta L = alpha x L0 x Delta T
                   </div>
-                  <p className="text-sm text-gray-300">
+                  <p style={{ fontSize: typo.small }} className="text-gray-300">
                     <span className="text-green-400">Length change</span> =
-                    <span className="text-purple-400"> expansion coefficient</span> ×
-                    <span className="text-blue-400"> original length</span> ×
+                    <span className="text-purple-400"> expansion coefficient</span> x
+                    <span className="text-blue-400"> original length</span> x
                     <span className="text-orange-400"> temperature change</span>
                   </p>
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p style={{ fontSize: typo.label }} className="text-gray-400 mt-2">
                     Linear expansion applies to any one dimension - length, width, or height.
                     Each dimension expands independently.
                   </p>
@@ -920,14 +1333,14 @@ export default function ThermalExpansionRenderer({
 
                 {/* Volumetric expansion */}
                 <div className="bg-gray-900/50 rounded-lg p-4">
-                  <div className="text-center text-2xl font-mono text-green-400 mb-2">
-                    ΔV = β × V₀ × ΔT <span className="text-gray-500 text-lg">(β ≈ 3α)</span>
+                  <div className="text-center font-mono text-green-400 mb-2" style={{ fontSize: isMobile ? '18px' : '22px' }}>
+                    Delta V = beta x V0 x Delta T <span className="text-gray-500" style={{ fontSize: isMobile ? '14px' : '16px' }}>(beta ~ 3 alpha)</span>
                   </div>
-                  <p className="text-sm text-gray-300">
+                  <p style={{ fontSize: typo.small }} className="text-gray-300">
                     Volume expands in <span className="text-yellow-400">three dimensions</span>,
-                    so β ≈ 3α for solids
+                    so beta ~ 3 alpha for solids
                   </p>
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p style={{ fontSize: typo.label }} className="text-gray-400 mt-2">
                     A cube that expands 0.1% in each dimension gains about 0.3% in volume.
                     This is why liquid thermometers work - the liquid expands more than the glass.
                   </p>
@@ -935,14 +1348,14 @@ export default function ThermalExpansionRenderer({
 
                 {/* Thermal stress */}
                 <div className="bg-gray-900/50 rounded-lg p-4">
-                  <div className="text-center text-2xl font-mono text-red-400 mb-2">
-                    σ = E × α × ΔT
+                  <div className="text-center font-mono text-red-400 mb-2" style={{ fontSize: isMobile ? '18px' : '22px' }}>
+                    sigma = E x alpha x Delta T
                   </div>
-                  <p className="text-sm text-gray-300">
+                  <p style={{ fontSize: typo.small }} className="text-gray-300">
                     When expansion is <span className="text-red-400">prevented</span>,
                     thermal stress builds up!
                   </p>
-                  <p className="text-xs text-gray-400 mt-2">
+                  <p style={{ fontSize: typo.label }} className="text-gray-400 mt-2">
                     E = Young's modulus (~200 GPa for steel). A 40C rise in restrained steel
                     creates ~96 MPa stress - enough to buckle railroad tracks!
                   </p>
@@ -952,16 +1365,16 @@ export default function ThermalExpansionRenderer({
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4">
-                <h4 className="text-blue-400 font-medium mb-2">Why Different α Values?</h4>
-                <p className="text-sm text-gray-300">
+                <h4 style={{ fontSize: typo.body }} className="text-blue-400 font-medium mb-2">Why Different alpha Values?</h4>
+                <p style={{ fontSize: typo.small }} className="text-gray-300">
                   The expansion coefficient depends on atomic bonding. Stronger bonds (like in ceramics)
-                  resist atomic displacement, giving lower α. Metals with weaker metallic bonds
+                  resist atomic displacement, giving lower alpha. Metals with weaker metallic bonds
                   expand more easily.
                 </p>
               </div>
               <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-4">
-                <h4 className="text-green-400 font-medium mb-2">The Invar Exception</h4>
-                <p className="text-sm text-gray-300">
+                <h4 style={{ fontSize: typo.body }} className="text-green-400 font-medium mb-2">The Invar Exception</h4>
+                <p style={{ fontSize: typo.small }} className="text-gray-300">
                   Invar (36% Ni, 64% Fe) has near-zero expansion because magnetic effects
                   counteract thermal expansion. This Nobel Prize discovery enables
                   precision instruments.
@@ -970,8 +1383,8 @@ export default function ThermalExpansionRenderer({
             </div>
 
             <div className="bg-orange-500/20 border border-orange-500/30 rounded-lg p-4">
-              <h4 className="text-orange-400 font-bold mb-2">The Deep Insight</h4>
-              <p className="text-gray-300">
+              <h4 style={{ fontSize: typo.body }} className="text-orange-400 font-bold mb-2">The Deep Insight</h4>
+              <p style={{ fontSize: typo.small }} className="text-gray-300">
                 Thermal expansion isn't just about making things bigger - it's about the
                 <strong> forces that develop when expansion is constrained</strong>.
                 Engineers must either allow movement (expansion joints) or design structures
@@ -984,17 +1397,17 @@ export default function ThermalExpansionRenderer({
       case 'twist_predict': // Interactive Exploration
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-cyan-400">Explore: Expansion Joints</h2>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-cyan-400">Explore: Expansion Joints</h2>
 
             <div className="bg-gray-800/50 rounded-xl p-4">
-              <p className="text-gray-300 mb-4">
+              <p style={{ fontSize: typo.body }} className="text-gray-300 mb-4">
                 Design an expansion joint for a steel bridge. The bridge is 200 meters long
                 and must handle temperatures from -30C to +50C.
               </p>
 
               <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">
+                  <label style={{ fontSize: typo.small }} className="block text-gray-400 mb-1">
                     Minimum Temperature: {temperature}C
                   </label>
                   <input
@@ -1007,7 +1420,7 @@ export default function ThermalExpansionRenderer({
                   />
                 </div>
                 <div>
-                  <label className="block text-sm text-gray-400 mb-1">
+                  <label style={{ fontSize: typo.small }} className="block text-gray-400 mb-1">
                     Bridge Length: {initialLength / 1000} m
                   </label>
                   <input
@@ -1022,17 +1435,84 @@ export default function ThermalExpansionRenderer({
                 </div>
               </div>
 
-              {/* Bridge visualization */}
+              {/* Premium Bridge Visualization */}
               <div className="relative bg-gradient-to-b from-sky-400/20 to-gray-900/50 rounded-lg h-48 overflow-hidden">
                 <svg viewBox="0 0 400 150" className="w-full h-full">
-                  {/* Water */}
-                  <rect x="0" y="120" width="400" height="30" fill="#3b82f6" opacity="0.3"/>
+                  <defs>
+                    {/* Sky gradient */}
+                    <linearGradient id="thexSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#0ea5e9" stopOpacity="0.2" />
+                      <stop offset="50%" stopColor="#0284c7" stopOpacity="0.1" />
+                      <stop offset="100%" stopColor="#1e3a5f" stopOpacity="0.3" />
+                    </linearGradient>
 
-                  {/* Towers */}
-                  <rect x="50" y="60" width="15" height="70" fill="#4b5563"/>
-                  <rect x="335" y="60" width="15" height="70" fill="#4b5563"/>
+                    {/* Premium water gradient */}
+                    <linearGradient id="thexTwistWaterGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.4" />
+                      <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.5" />
+                      <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0.6" />
+                    </linearGradient>
 
-                  {/* Bridge segments with gap */}
+                    {/* Concrete tower gradient */}
+                    <linearGradient id="thexTowerConcreteGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                      <stop offset="0%" stopColor="#78716c" />
+                      <stop offset="25%" stopColor="#57534e" />
+                      <stop offset="50%" stopColor="#44403c" />
+                      <stop offset="75%" stopColor="#57534e" />
+                      <stop offset="100%" stopColor="#44403c" />
+                    </linearGradient>
+
+                    {/* Steel deck gradient */}
+                    <linearGradient id="thexTwistDeckGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#9ca3af" />
+                      <stop offset="30%" stopColor="#6b7280" />
+                      <stop offset="70%" stopColor="#4b5563" />
+                      <stop offset="100%" stopColor="#374151" />
+                    </linearGradient>
+
+                    {/* Expansion joint glow */}
+                    <filter id="thexTwistJointGlow" x="-100%" y="-100%" width="300%" height="300%">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Temperature indicator glow */}
+                    <filter id="thexTempGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="3" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Joint highlight gradient */}
+                    <linearGradient id="thexJointHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#f59e0b" stopOpacity="0" />
+                      <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.8" />
+                      <stop offset="100%" stopColor="#f59e0b" stopOpacity="0" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Sky background */}
+                  <rect x="0" y="0" width="400" height="120" fill="url(#thexSkyGradient)" />
+
+                  {/* Water with gradient */}
+                  <rect x="0" y="120" width="400" height="30" fill="url(#thexTwistWaterGradient)"/>
+                  {/* Water surface highlights */}
+                  <ellipse cx="100" cy="125" rx="40" ry="3" fill="#93c5fd" opacity="0.2"/>
+                  <ellipse cx="300" cy="128" rx="35" ry="2" fill="#93c5fd" opacity="0.15"/>
+
+                  {/* Towers with gradient */}
+                  <rect x="50" y="60" width="15" height="70" fill="url(#thexTowerConcreteGradient)" rx="1"/>
+                  <rect x="335" y="60" width="15" height="70" fill="url(#thexTowerConcreteGradient)" rx="1"/>
+                  {/* Tower highlights */}
+                  <rect x="50" y="60" width="3" height="70" fill="#a8a29e" opacity="0.3"/>
+                  <rect x="335" y="60" width="3" height="70" fill="#a8a29e" opacity="0.3"/>
+
+                  {/* Bridge segments with premium gap visualization */}
                   {(() => {
                     const coldExpansion = calculateExpansion(-30, 12, initialLength);
                     const hotExpansion = calculateExpansion(50, 12, initialLength);
@@ -1043,63 +1523,95 @@ export default function ThermalExpansionRenderer({
 
                     return (
                       <>
-                        <rect x="65" y="85" width={130 - gapWidth/2} height="12" fill="#6b7280"/>
-                        <rect x={200 + gapWidth/2} y="85" width={135 - gapWidth/2} height="12" fill="#6b7280"/>
-                        <rect x={195 - gapWidth/2} y="85" width={gapWidth} height="12" fill="#1f2937"/>
+                        {/* Left deck segment */}
+                        <rect x="65" y="83" width={130 - gapWidth/2} height="14" fill="url(#thexTwistDeckGradient)" rx="2"/>
+                        {/* Left deck highlight */}
+                        <rect x="65" y="83" width={130 - gapWidth/2} height="3" fill="#d1d5db" opacity="0.2" rx="1"/>
 
-                        <text x="200" y="115" textAnchor="middle" fill="#f59e0b" fontSize="10">
-                          Gap: {gapWidth.toFixed(1)} mm
-                        </text>
+                        {/* Right deck segment */}
+                        <rect x={200 + gapWidth/2} y="83" width={135 - gapWidth/2} height="14" fill="url(#thexTwistDeckGradient)" rx="2"/>
+                        {/* Right deck highlight */}
+                        <rect x={200 + gapWidth/2} y="83" width={135 - gapWidth/2} height="3" fill="#d1d5db" opacity="0.2" rx="1"/>
+
+                        {/* Expansion joint gap with glow */}
+                        <rect x={195 - gapWidth/2} y="83" width={gapWidth + 10} height="14" fill="#0f172a"/>
+                        <rect x={198} y="80" width={4} height="2" fill="url(#thexJointHighlight)" filter="url(#thexTwistJointGlow)">
+                          <animate attributeName="opacity" values="0.6;1;0.6" dur="1.5s" repeatCount="indefinite"/>
+                        </rect>
                       </>
                     );
                   })()}
 
-                  {/* Temperature indicator */}
-                  <text x="30" y="30" fill={temperature < 0 ? '#3b82f6' : '#ef4444'} fontSize="14">
-                    {temperature}C
-                  </text>
+                  {/* Temperature indicator with glow */}
+                  <g filter="url(#thexTempGlow)">
+                    <circle cx="30" cy="25" r="18" fill={temperature < 0 ? '#1e40af' : '#dc2626'} opacity="0.3"/>
+                  </g>
                 </svg>
+
+                {/* Labels outside SVG */}
+                <div className="absolute top-2 left-6">
+                  <p style={{ fontSize: typo.bodyLarge }} className={`font-bold ${temperature < 0 ? 'text-blue-400' : 'text-red-400'}`}>
+                    {temperature}C
+                  </p>
+                </div>
+
+                {(() => {
+                  const coldExpansion = calculateExpansion(-30, 12, initialLength);
+                  const hotExpansion = calculateExpansion(50, 12, initialLength);
+                  const totalRange = hotExpansion - coldExpansion;
+                  const gapNeeded = Math.abs(totalRange);
+                  const currentExpansion = calculateExpansion(temperature, 12, initialLength);
+                  const gapWidth = Math.max(2, gapNeeded - (currentExpansion - coldExpansion)) / 10;
+
+                  return (
+                    <div className="absolute bottom-12 left-1/2 -translate-x-1/2">
+                      <p style={{ fontSize: typo.small }} className="text-amber-400 font-medium">
+                        Gap: {gapWidth.toFixed(1)} mm
+                      </p>
+                    </div>
+                  );
+                })()}
               </div>
 
               {/* Calculations */}
               <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-4">
                 <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-400">At -30C</p>
-                  <p className="text-lg font-bold text-blue-400">
+                  <p style={{ fontSize: typo.label }} className="text-gray-400">At -30C</p>
+                  <p style={{ fontSize: typo.bodyLarge }} className="font-bold text-blue-400">
                     {calculateExpansion(-30, 12, initialLength).toFixed(1)} mm
                   </p>
-                  <p className="text-xs text-gray-500">contracted</p>
+                  <p style={{ fontSize: typo.label }} className="text-gray-500">contracted</p>
                 </div>
                 <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-400">At +50C</p>
-                  <p className="text-lg font-bold text-red-400">
+                  <p style={{ fontSize: typo.label }} className="text-gray-400">At +50C</p>
+                  <p style={{ fontSize: typo.bodyLarge }} className="font-bold text-red-400">
                     +{calculateExpansion(50, 12, initialLength).toFixed(1)} mm
                   </p>
-                  <p className="text-xs text-gray-500">expanded</p>
+                  <p style={{ fontSize: typo.label }} className="text-gray-500">expanded</p>
                 </div>
                 <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-400">Total Range</p>
-                  <p className="text-lg font-bold text-green-400">
+                  <p style={{ fontSize: typo.label }} className="text-gray-400">Total Range</p>
+                  <p style={{ fontSize: typo.bodyLarge }} className="font-bold text-green-400">
                     {(calculateExpansion(50, 12, initialLength) - calculateExpansion(-30, 12, initialLength)).toFixed(1)} mm
                   </p>
                 </div>
                 <div className="bg-orange-500/20 border border-orange-500/30 rounded-lg p-3 text-center">
-                  <p className="text-xs text-gray-400">Gap Needed</p>
-                  <p className="text-lg font-bold text-orange-400">
+                  <p style={{ fontSize: typo.label }} className="text-gray-400">Gap Needed</p>
+                  <p style={{ fontSize: typo.bodyLarge }} className="font-bold text-orange-400">
                     {Math.abs(calculateExpansion(50, 12, initialLength) - calculateExpansion(-30, 12, initialLength)).toFixed(1)} mm
                   </p>
-                  <p className="text-xs text-gray-500">minimum</p>
+                  <p style={{ fontSize: typo.label }} className="text-gray-500">minimum</p>
                 </div>
               </div>
             </div>
 
             <div className="bg-gray-800/50 rounded-lg p-4">
-              <h3 className="text-lg font-medium text-yellow-400 mb-3">Engineering Considerations:</h3>
-              <div className="space-y-2 text-sm text-gray-300">
-                <p>• <strong>Safety factor:</strong> Real joints are sized 50-100% larger than calculated</p>
-                <p>• <strong>Multiple joints:</strong> Long bridges use several joints to distribute movement</p>
-                <p>• <strong>Bearing type:</strong> Sliding bearings allow movement; fixed bearings anchor one end</p>
-                <p>• <strong>Waterproofing:</strong> Joints must seal against rain while allowing movement</p>
+              <h3 style={{ fontSize: typo.bodyLarge }} className="font-medium text-yellow-400 mb-3">Engineering Considerations:</h3>
+              <div className="space-y-2 text-gray-300" style={{ fontSize: typo.small }}>
+                <p>* <strong>Safety factor:</strong> Real joints are sized 50-100% larger than calculated</p>
+                <p>* <strong>Multiple joints:</strong> Long bridges use several joints to distribute movement</p>
+                <p>* <strong>Bearing type:</strong> Sliding bearings allow movement; fixed bearings anchor one end</p>
+                <p>* <strong>Waterproofing:</strong> Joints must seal against rain while allowing movement</p>
               </div>
             </div>
           </div>
@@ -1108,83 +1620,213 @@ export default function ThermalExpansionRenderer({
       case 'twist_play': // Advanced: Water Anomaly
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-purple-400">Advanced: Water's Anomaly</h2>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-purple-400">Advanced: Water's Anomaly</h2>
 
             <div className="bg-gray-800/50 rounded-xl p-6">
-              <h3 className="text-lg font-medium text-blue-400 mb-4">Why Lakes Don't Freeze Solid</h3>
+              <h3 style={{ fontSize: typo.bodyLarge }} className="font-medium text-blue-400 mb-4">Why Lakes Don't Freeze Solid</h3>
 
-              <svg viewBox="0 0 400 250" className="w-full h-64">
-                {/* Background */}
-                <rect x="0" y="0" width="400" height="250" fill="#111827"/>
+              <div className="relative">
+                <svg viewBox="0 0 400 250" className="w-full h-64">
+                  <defs>
+                    {/* Background gradient */}
+                    <linearGradient id="thexLakeBgGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#0f172a" />
+                      <stop offset="100%" stopColor="#1e293b" />
+                    </linearGradient>
 
-                {/* Ice layer at top */}
-                <rect x="50" y="30" width="300" height="30" fill="#a5f3fc" opacity="0.8"/>
-                <text x="200" y="50" textAnchor="middle" fill="#0f172a" fontSize="10">Ice (0C)</text>
+                    {/* Ice layer gradient with crystalline effect */}
+                    <linearGradient id="thexIceGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.95" />
+                      <stop offset="30%" stopColor="#bae6fd" stopOpacity="0.9" />
+                      <stop offset="60%" stopColor="#7dd3fc" stopOpacity="0.85" />
+                      <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.8" />
+                    </linearGradient>
 
-                {/* Water layers with temperature gradient */}
-                <rect x="50" y="60" width="300" height="25" fill="#38bdf8" opacity="0.6"/>
-                <text x="360" y="75" fill="#38bdf8" fontSize="9">1-2C</text>
+                    {/* Ice glow filter */}
+                    <filter id="thexIceGlow" x="-10%" y="-10%" width="120%" height="120%">
+                      <feGaussianBlur stdDeviation="2" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
 
-                <rect x="50" y="85" width="300" height="30" fill="#0284c7" opacity="0.7"/>
-                <text x="360" y="102" fill="#0284c7" fontSize="9">3C</text>
+                    {/* Water layer gradients */}
+                    <linearGradient id="thexWaterLayer1" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#7dd3fc" stopOpacity="0.7" />
+                      <stop offset="100%" stopColor="#38bdf8" stopOpacity="0.6" />
+                    </linearGradient>
 
-                <rect x="50" y="115" width="300" height="50" fill="#1e40af" opacity="0.9"/>
-                <text x="360" y="145" fill="#3b82f6" fontSize="9">4C (densest!)</text>
-                <text x="200" y="145" textAnchor="middle" fill="#93c5fd" fontSize="11">Fish survive here</text>
+                    <linearGradient id="thexWaterLayer2" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#38bdf8" stopOpacity="0.75" />
+                      <stop offset="100%" stopColor="#0284c7" stopOpacity="0.7" />
+                    </linearGradient>
 
-                {/* Lake bottom */}
-                <rect x="50" y="165" width="300" height="30" fill="#78350f"/>
+                    <linearGradient id="thexWaterLayer3" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#0284c7" stopOpacity="0.9" />
+                      <stop offset="50%" stopColor="#1e40af" stopOpacity="0.95" />
+                      <stop offset="100%" stopColor="#1e3a8a" stopOpacity="1" />
+                    </linearGradient>
 
-                {/* Density graph */}
-                <g transform="translate(60, 195)">
-                  <line x1="0" y1="0" x2="280" y2="0" stroke="#4b5563" strokeWidth="1"/>
-                  <line x1="0" y1="0" x2="0" y2="-40" stroke="#4b5563" strokeWidth="1"/>
-                  <text x="140" y="15" textAnchor="middle" fill="#9ca3af" fontSize="8">Temperature (C)</text>
-                  <text x="-5" y="-20" textAnchor="end" fill="#9ca3af" fontSize="8">Density</text>
+                    {/* Lake bottom sediment gradient */}
+                    <linearGradient id="thexSedimentGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                      <stop offset="0%" stopColor="#92400e" />
+                      <stop offset="50%" stopColor="#78350f" />
+                      <stop offset="100%" stopColor="#451a03" />
+                    </linearGradient>
 
-                  {/* Curve showing max density at 4C */}
-                  <path
-                    d="M 0,-20 Q 30,-35 56,-38 Q 80,-35 120,-20"
-                    fill="none"
-                    stroke="#3b82f6"
-                    strokeWidth="2"
-                  />
-                  <circle cx="56" cy="-38" r="3" fill="#ef4444"/>
-                  <text x="56" y="-42" textAnchor="middle" fill="#ef4444" fontSize="8">4C</text>
+                    {/* Fish glow */}
+                    <filter id="thexFishGlow" x="-50%" y="-50%" width="200%" height="200%">
+                      <feGaussianBlur stdDeviation="1" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
 
-                  {/* Temperature labels */}
-                  <text x="0" y="8" textAnchor="middle" fill="#6b7280" fontSize="7">0</text>
-                  <text x="56" y="8" textAnchor="middle" fill="#6b7280" fontSize="7">4</text>
-                  <text x="140" y="8" textAnchor="middle" fill="#6b7280" fontSize="7">10</text>
-                </g>
-              </svg>
+                    {/* Density curve glow */}
+                    <filter id="thexCurveGlow" x="-20%" y="-20%" width="140%" height="140%">
+                      <feGaussianBlur stdDeviation="1.5" result="blur" />
+                      <feMerge>
+                        <feMergeNode in="blur" />
+                        <feMergeNode in="SourceGraphic" />
+                      </feMerge>
+                    </filter>
+
+                    {/* Max density point glow */}
+                    <radialGradient id="thexMaxDensityGlow" cx="50%" cy="50%" r="50%">
+                      <stop offset="0%" stopColor="#ef4444" />
+                      <stop offset="60%" stopColor="#dc2626" />
+                      <stop offset="100%" stopColor="#b91c1c" stopOpacity="0" />
+                    </radialGradient>
+
+                    {/* Graph line gradient */}
+                    <linearGradient id="thexDensityCurveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+                      <stop offset="0%" stopColor="#60a5fa" />
+                      <stop offset="40%" stopColor="#3b82f6" />
+                      <stop offset="60%" stopColor="#2563eb" />
+                      <stop offset="100%" stopColor="#1d4ed8" />
+                    </linearGradient>
+                  </defs>
+
+                  {/* Background */}
+                  <rect x="0" y="0" width="400" height="250" fill="url(#thexLakeBgGradient)"/>
+
+                  {/* Ice layer with crystalline gradient */}
+                  <rect x="50" y="30" width="300" height="30" fill="url(#thexIceGradient)" rx="2" filter="url(#thexIceGlow)"/>
+                  {/* Ice surface shimmer */}
+                  <rect x="50" y="30" width="300" height="5" fill="#f0f9ff" opacity="0.4" rx="1"/>
+
+                  {/* Water layers with gradients */}
+                  <rect x="50" y="60" width="300" height="25" fill="url(#thexWaterLayer1)"/>
+                  <rect x="50" y="85" width="300" height="30" fill="url(#thexWaterLayer2)"/>
+                  <rect x="50" y="115" width="300" height="50" fill="url(#thexWaterLayer3)"/>
+
+                  {/* Animated fish silhouettes */}
+                  <g filter="url(#thexFishGlow)">
+                    <ellipse cx="150" cy="140" rx="8" ry="4" fill="#93c5fd" opacity="0.6">
+                      <animate attributeName="cx" values="150;160;150" dur="3s" repeatCount="indefinite"/>
+                    </ellipse>
+                    <ellipse cx="250" cy="145" rx="6" ry="3" fill="#bae6fd" opacity="0.5">
+                      <animate attributeName="cx" values="250;240;250" dur="4s" repeatCount="indefinite"/>
+                    </ellipse>
+                  </g>
+
+                  {/* Lake bottom with gradient */}
+                  <rect x="50" y="165" width="300" height="30" fill="url(#thexSedimentGradient)"/>
+                  {/* Sediment texture dots */}
+                  <circle cx="80" cy="175" r="2" fill="#a16207" opacity="0.4"/>
+                  <circle cx="150" cy="180" r="1.5" fill="#a16207" opacity="0.3"/>
+                  <circle cx="280" cy="178" r="2" fill="#a16207" opacity="0.35"/>
+
+                  {/* Density graph with premium styling */}
+                  <g transform="translate(60, 195)">
+                    {/* Axis lines */}
+                    <line x1="0" y1="0" x2="280" y2="0" stroke="#4b5563" strokeWidth="1"/>
+                    <line x1="0" y1="0" x2="0" y2="-40" stroke="#4b5563" strokeWidth="1"/>
+
+                    {/* Grid lines */}
+                    <line x1="56" y1="0" x2="56" y2="-40" stroke="#374151" strokeWidth="0.5" strokeDasharray="2 2"/>
+
+                    {/* Density curve with gradient and glow */}
+                    <path
+                      d="M 0,-20 Q 30,-35 56,-38 Q 80,-35 120,-20"
+                      fill="none"
+                      stroke="url(#thexDensityCurveGradient)"
+                      strokeWidth="3"
+                      filter="url(#thexCurveGlow)"
+                    />
+
+                    {/* Max density point with glow */}
+                    <circle cx="56" cy="-38" r="6" fill="url(#thexMaxDensityGlow)" opacity="0.5"/>
+                    <circle cx="56" cy="-38" r="4" fill="#ef4444"/>
+
+                    {/* Axis tick marks */}
+                    <line x1="0" y1="0" x2="0" y2="4" stroke="#6b7280" strokeWidth="1"/>
+                    <line x1="56" y1="0" x2="56" y2="4" stroke="#6b7280" strokeWidth="1"/>
+                    <line x1="140" y1="0" x2="140" y2="4" stroke="#6b7280" strokeWidth="1"/>
+                  </g>
+                </svg>
+
+                {/* Labels outside SVG using typo system */}
+                <div className="absolute top-8 left-1/2 -translate-x-1/2">
+                  <p style={{ fontSize: typo.small }} className="text-slate-800 font-medium">Ice (0C)</p>
+                </div>
+                <div className="absolute top-16 right-4">
+                  <p style={{ fontSize: typo.label }} className="text-sky-400">1-2C</p>
+                </div>
+                <div className="absolute top-24 right-4">
+                  <p style={{ fontSize: typo.label }} className="text-sky-500">3C</p>
+                </div>
+                <div className="absolute top-32 right-4">
+                  <p style={{ fontSize: typo.label }} className="text-blue-400 font-bold">4C (densest!)</p>
+                </div>
+                <div className="absolute top-36 left-1/2 -translate-x-1/2">
+                  <p style={{ fontSize: typo.small }} className="text-blue-200">Fish survive here</p>
+                </div>
+                <div className="absolute bottom-16 left-16">
+                  <p style={{ fontSize: typo.label }} className="text-gray-400">Temperature (C)</p>
+                </div>
+                <div className="absolute bottom-20 left-8">
+                  <p style={{ fontSize: typo.label }} className="text-gray-400">Density</p>
+                </div>
+                <div className="absolute bottom-10 left-14">
+                  <p style={{ fontSize: typo.label }} className="text-gray-500">0</p>
+                </div>
+                <div className="absolute bottom-6 left-20">
+                  <p style={{ fontSize: typo.label }} className="text-red-400 font-bold">4C</p>
+                </div>
+                <div className="absolute bottom-10 left-36">
+                  <p style={{ fontSize: typo.label }} className="text-gray-500">10</p>
+                </div>
+              </div>
             </div>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4">
-                <h4 className="text-blue-400 font-medium mb-2">Normal Materials</h4>
-                <ul className="text-sm text-gray-300 space-y-1">
-                  <li>• Density increases as temperature decreases</li>
-                  <li>• Coldest material sinks to bottom</li>
-                  <li>• Would freeze from bottom up</li>
-                  <li>• All aquatic life would die each winter</li>
+                <h4 style={{ fontSize: typo.body }} className="text-blue-400 font-medium mb-2">Normal Materials</h4>
+                <ul style={{ fontSize: typo.small }} className="text-gray-300 space-y-1">
+                  <li>* Density increases as temperature decreases</li>
+                  <li>* Coldest material sinks to bottom</li>
+                  <li>* Would freeze from bottom up</li>
+                  <li>* All aquatic life would die each winter</li>
                 </ul>
               </div>
 
               <div className="bg-cyan-500/20 border border-cyan-500/30 rounded-lg p-4">
-                <h4 className="text-cyan-400 font-medium mb-2">Water's Anomaly</h4>
-                <ul className="text-sm text-gray-300 space-y-1">
-                  <li>• Maximum density at 4C (not 0C)</li>
-                  <li>• 4C water sinks, colder water rises</li>
-                  <li>• Ice forms on surface, insulating below</li>
-                  <li>• Deep water stays at 4C - life survives!</li>
+                <h4 style={{ fontSize: typo.body }} className="text-cyan-400 font-medium mb-2">Water's Anomaly</h4>
+                <ul style={{ fontSize: typo.small }} className="text-gray-300 space-y-1">
+                  <li>* Maximum density at 4C (not 0C)</li>
+                  <li>* 4C water sinks, colder water rises</li>
+                  <li>* Ice forms on surface, insulating below</li>
+                  <li>* Deep water stays at 4C - life survives!</li>
                 </ul>
               </div>
             </div>
 
             <div className="bg-purple-500/20 border border-purple-500/30 rounded-lg p-4">
-              <h4 className="text-purple-400 font-medium mb-2">The Molecular Explanation</h4>
-              <p className="text-sm text-gray-300">
+              <h4 style={{ fontSize: typo.body }} className="text-purple-400 font-medium mb-2">The Molecular Explanation</h4>
+              <p style={{ fontSize: typo.small }} className="text-gray-300">
                 Water molecules form hydrogen bonds that create an open, hexagonal structure in ice.
                 This structure is actually <strong>less dense</strong> than liquid water! As water cools
                 toward 0C, hydrogen bonding starts organizing the structure before freezing, making
@@ -1201,19 +1843,19 @@ export default function ThermalExpansionRenderer({
         return (
           <div className="space-y-6">
             <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold text-green-400">Knowledge Check</h2>
-              <div className="text-sm text-gray-400">
+              <h2 style={{ fontSize: typo.heading }} className="font-bold text-green-400">Knowledge Check</h2>
+              <div style={{ fontSize: typo.small }} className="text-gray-400">
                 Question {currentQuestion + 1} of {testQuestions.length} | Score: {score}
               </div>
             </div>
 
             <div className="bg-gray-800/50 rounded-xl p-6">
               <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-4 mb-4">
-                <p className="text-blue-300 text-sm font-medium mb-1">Scenario:</p>
-                <p className="text-gray-200">{question.scenario}</p>
+                <p style={{ fontSize: typo.small }} className="text-blue-300 font-medium mb-1">Scenario:</p>
+                <p style={{ fontSize: typo.body }} className="text-gray-200">{question.scenario}</p>
               </div>
 
-              <h3 className="text-lg font-medium text-white mb-4">{question.question}</h3>
+              <h3 style={{ fontSize: typo.bodyLarge }} className="font-medium text-white mb-4">{question.question}</h3>
 
               <div className="space-y-3">
                 {question.options.map((option, index) => (
@@ -1221,7 +1863,7 @@ export default function ThermalExpansionRenderer({
                     key={index}
                     onClick={() => handleAnswer(index)}
                     disabled={selectedAnswer !== null}
-                    style={{ zIndex: 10 }}
+                    style={{ zIndex: 10, fontSize: typo.body }}
                     className={`w-full p-4 rounded-lg text-left transition-all ${
                       selectedAnswer === null
                         ? 'bg-gray-700/50 hover:bg-gray-600/50 border border-gray-600'
@@ -1241,8 +1883,8 @@ export default function ThermalExpansionRenderer({
 
               {showExplanation && (
                 <div className="mt-6 p-4 bg-yellow-500/20 border border-yellow-500/30 rounded-lg">
-                  <h4 className="text-yellow-400 font-medium mb-2">Explanation:</h4>
-                  <p className="text-gray-300">{question.explanation}</p>
+                  <h4 style={{ fontSize: typo.body }} className="text-yellow-400 font-medium mb-2">Explanation:</h4>
+                  <p style={{ fontSize: typo.small }} className="text-gray-300">{question.explanation}</p>
                 </div>
               )}
             </div>
@@ -1250,7 +1892,7 @@ export default function ThermalExpansionRenderer({
             {showExplanation && (
               <button
                 onClick={nextQuestion}
-                style={{ zIndex: 10 }}
+                style={{ zIndex: 10, fontSize: typo.body }}
                 className="w-full py-3 bg-blue-600 hover:bg-blue-700 rounded-lg font-medium transition-colors"
               >
                 {currentQuestion < testQuestions.length - 1 ? 'Next Question' : 'Continue to Applications'}
@@ -1263,7 +1905,7 @@ export default function ThermalExpansionRenderer({
         const currentApp = applications[transferAppIndex];
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-purple-400">Real-World Applications</h2>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-purple-400">Real-World Applications</h2>
 
             <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
               {applications.map((app, index) => (
@@ -1283,8 +1925,8 @@ export default function ThermalExpansionRenderer({
                   }`}
                 >
                   <div className="text-3xl mb-2">{app.icon}</div>
-                  <p className="text-sm font-medium">{app.title}</p>
-                  <p className="text-xs text-gray-400 mt-1">{app.short}</p>
+                  <p style={{ fontSize: typo.small }} className="font-medium">{app.title}</p>
+                  <p style={{ fontSize: typo.label }} className="text-gray-400 mt-1">{app.short}</p>
                 </button>
               ))}
             </div>
@@ -1300,34 +1942,34 @@ export default function ThermalExpansionRenderer({
               <div className="flex items-start gap-4 mb-4">
                 <div className="text-4xl">{currentApp.icon}</div>
                 <div>
-                  <h3 className="text-xl font-bold" style={{ color: currentApp.color }}>
+                  <h3 style={{ fontSize: typo.bodyLarge, color: currentApp.color }} className="font-bold">
                     {currentApp.title}
                   </h3>
-                  <p className="text-sm text-gray-400 italic">{currentApp.tagline}</p>
+                  <p style={{ fontSize: typo.small }} className="text-gray-400 italic">{currentApp.tagline}</p>
                 </div>
               </div>
 
-              <p className="text-gray-300 mb-4">{currentApp.description}</p>
+              <p style={{ fontSize: typo.body }} className="text-gray-300 mb-4">{currentApp.description}</p>
 
               <div className="bg-gray-900/50 rounded-lg p-4 mb-4">
-                <h4 className="text-sm font-medium text-orange-400 mb-2">Physics Connection:</h4>
-                <p className="text-sm text-gray-300">{currentApp.connection}</p>
+                <h4 style={{ fontSize: typo.small }} className="font-medium text-orange-400 mb-2">Physics Connection:</h4>
+                <p style={{ fontSize: typo.small }} className="text-gray-300">{currentApp.connection}</p>
               </div>
 
               <div className="grid md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <h4 className="text-sm font-medium text-blue-400 mb-2">How It Works:</h4>
-                  <ul className="text-sm text-gray-300 space-y-1">
+                  <h4 style={{ fontSize: typo.small }} className="font-medium text-blue-400 mb-2">How It Works:</h4>
+                  <ul style={{ fontSize: typo.small }} className="text-gray-300 space-y-1">
                     {currentApp.howItWorks.map((item, i) => (
-                      <li key={i}>• {item}</li>
+                      <li key={i}>* {item}</li>
                     ))}
                   </ul>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-green-400 mb-2">Key Stats:</h4>
-                  <ul className="text-sm text-gray-300 space-y-1">
+                  <h4 style={{ fontSize: typo.small }} className="font-medium text-green-400 mb-2">Key Stats:</h4>
+                  <ul style={{ fontSize: typo.small }} className="text-gray-300 space-y-1">
                     {currentApp.stats.map((stat, i) => (
-                      <li key={i}>• {stat}</li>
+                      <li key={i}>* {stat}</li>
                     ))}
                   </ul>
                 </div>
@@ -1335,18 +1977,18 @@ export default function ThermalExpansionRenderer({
 
               <div className="grid md:grid-cols-2 gap-4 mb-4">
                 <div>
-                  <h4 className="text-sm font-medium text-purple-400 mb-2">Examples:</h4>
-                  <ul className="text-sm text-gray-300 space-y-1">
+                  <h4 style={{ fontSize: typo.small }} className="font-medium text-purple-400 mb-2">Examples:</h4>
+                  <ul style={{ fontSize: typo.small }} className="text-gray-300 space-y-1">
                     {currentApp.examples.map((ex, i) => (
-                      <li key={i}>• {ex}</li>
+                      <li key={i}>* {ex}</li>
                     ))}
                   </ul>
                 </div>
                 <div>
-                  <h4 className="text-sm font-medium text-cyan-400 mb-2">Industry Leaders:</h4>
+                  <h4 style={{ fontSize: typo.small }} className="font-medium text-cyan-400 mb-2">Industry Leaders:</h4>
                   <div className="flex flex-wrap gap-2">
                     {currentApp.companies.map((company, i) => (
-                      <span key={i} className="px-2 py-1 bg-gray-800 rounded text-xs text-gray-300">
+                      <span key={i} style={{ fontSize: typo.label }} className="px-2 py-1 bg-gray-800 rounded text-gray-300">
                         {company}
                       </span>
                     ))}
@@ -1355,8 +1997,8 @@ export default function ThermalExpansionRenderer({
               </div>
 
               <div className="bg-gray-900/50 rounded-lg p-4">
-                <h4 className="text-sm font-medium text-yellow-400 mb-2">Future Impact:</h4>
-                <p className="text-sm text-gray-300">{currentApp.futureImpact}</p>
+                <h4 style={{ fontSize: typo.small }} className="font-medium text-yellow-400 mb-2">Future Impact:</h4>
+                <p style={{ fontSize: typo.small }} className="text-gray-300">{currentApp.futureImpact}</p>
               </div>
             </div>
 
@@ -1378,20 +2020,20 @@ export default function ThermalExpansionRenderer({
       case 'mastery': // Summary
         return (
           <div className="space-y-6">
-            <h2 className="text-2xl font-bold text-yellow-400">Mastery Complete!</h2>
+            <h2 style={{ fontSize: typo.heading }} className="font-bold text-yellow-400">Mastery Complete!</h2>
 
             <div className="bg-gradient-to-br from-orange-500/20 to-red-500/20 rounded-xl p-6 border border-orange-500/30">
               <div className="text-center mb-6">
-                <div className="text-5xl mb-2">🌡️</div>
-                <h3 className="text-2xl font-bold text-orange-400">Thermal Expansion</h3>
-                <p className="text-gray-400">Materials in motion with temperature</p>
+                <div className="text-5xl mb-2">Thermometer Icon</div>
+                <h3 style={{ fontSize: typo.heading }} className="font-bold text-orange-400">Thermal Expansion</h3>
+                <p style={{ fontSize: typo.body }} className="text-gray-400">Materials in motion with temperature</p>
               </div>
 
               <div className="bg-gray-900/50 rounded-lg p-4 mb-4">
-                <h4 className="text-lg font-medium text-white mb-2">Your Score</h4>
+                <h4 style={{ fontSize: typo.bodyLarge }} className="font-medium text-white mb-2">Your Score</h4>
                 <div className="flex items-center gap-4">
                   <div className="text-4xl font-bold text-green-400">{score}/{testQuestions.length}</div>
-                  <div className="text-gray-400">
+                  <div style={{ fontSize: typo.body }} className="text-gray-400">
                     {score === testQuestions.length ? 'Perfect! You understand the expanding world!' :
                      score >= 8 ? 'Excellent grasp of thermal expansion!' :
                      score >= 6 ? 'Good understanding of the fundamentals!' :
@@ -1401,26 +2043,26 @@ export default function ThermalExpansionRenderer({
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-lg font-medium text-white">Key Equations Mastered:</h4>
+                <h4 style={{ fontSize: typo.bodyLarge }} className="font-medium text-white">Key Equations Mastered:</h4>
                 <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
                   <div className="bg-blue-500/20 border border-blue-500/30 rounded-lg p-3 text-center">
-                    <div className="text-lg font-mono text-blue-400">ΔL = αL₀ΔT</div>
-                    <p className="text-xs text-gray-400 mt-1">Linear Expansion</p>
+                    <div style={{ fontSize: typo.bodyLarge }} className="font-mono text-blue-400">Delta L = alpha L0 Delta T</div>
+                    <p style={{ fontSize: typo.label }} className="text-gray-400 mt-1">Linear Expansion</p>
                   </div>
                   <div className="bg-green-500/20 border border-green-500/30 rounded-lg p-3 text-center">
-                    <div className="text-lg font-mono text-green-400">ΔV = 3αV₀ΔT</div>
-                    <p className="text-xs text-gray-400 mt-1">Volume Expansion</p>
+                    <div style={{ fontSize: typo.bodyLarge }} className="font-mono text-green-400">Delta V = 3 alpha V0 Delta T</div>
+                    <p style={{ fontSize: typo.label }} className="text-gray-400 mt-1">Volume Expansion</p>
                   </div>
                   <div className="bg-red-500/20 border border-red-500/30 rounded-lg p-3 text-center">
-                    <div className="text-lg font-mono text-red-400">σ = EαΔT</div>
-                    <p className="text-xs text-gray-400 mt-1">Thermal Stress</p>
+                    <div style={{ fontSize: typo.bodyLarge }} className="font-mono text-red-400">sigma = E alpha Delta T</div>
+                    <p style={{ fontSize: typo.label }} className="text-gray-400 mt-1">Thermal Stress</p>
                   </div>
                 </div>
               </div>
 
               <div className="mt-6 p-4 bg-orange-500/20 border border-orange-500/30 rounded-lg">
-                <h4 className="text-orange-400 font-bold mb-2">The Big Picture:</h4>
-                <p className="text-gray-300">
+                <h4 style={{ fontSize: typo.body }} className="text-orange-400 font-bold mb-2">The Big Picture:</h4>
+                <p style={{ fontSize: typo.small }} className="text-gray-300">
                   Thermal expansion is invisible yet affects every structure we build.
                   Engineers must either accommodate movement with expansion joints, or design
                   for the enormous forces that develop when expansion is constrained.
