@@ -75,6 +75,42 @@ const DragForceRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPhaseCom
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Premium Design System
+  const colors = {
+    primary: '#3b82f6',       // blue-500 (air/fluid)
+    primaryDark: '#2563eb',   // blue-600
+    accent: '#f97316',        // orange-500
+    secondary: '#8b5cf6',     // violet-500
+    success: '#10b981',       // emerald-500
+    danger: '#ef4444',        // red-500
+    warning: '#f59e0b',       // amber-500
+    bgDark: '#020617',        // slate-950
+    bgCard: '#0f172a',        // slate-900
+    bgCardLight: '#1e293b',   // slate-800
+    textPrimary: '#f8fafc',   // slate-50
+    textSecondary: '#94a3b8', // slate-400
+    textMuted: '#64748b',     // slate-500
+    border: '#334155',        // slate-700
+    borderLight: '#475569',   // slate-600
+    // Theme-specific
+    dragForce: '#ef4444',     // red-500
+    velocity: '#22c55e',      // green-500
+    terminal: '#f59e0b',      // amber-500
+  };
+
+  const typo = {
+    title: isMobile ? '28px' : '36px',
+    heading: isMobile ? '20px' : '24px',
+    bodyLarge: isMobile ? '16px' : '18px',
+    body: isMobile ? '14px' : '16px',
+    small: isMobile ? '12px' : '14px',
+    label: isMobile ? '10px' : '12px',
+    pagePadding: isMobile ? '16px' : '24px',
+    cardPadding: isMobile ? '12px' : '16px',
+    sectionGap: isMobile ? '16px' : '20px',
+    elementGap: isMobile ? '8px' : '12px',
+  };
+
   // Sync with external phase control
   useEffect(() => {
     if (gamePhase && phaseOrder.includes(gamePhase as Phase) && gamePhase !== phase) {

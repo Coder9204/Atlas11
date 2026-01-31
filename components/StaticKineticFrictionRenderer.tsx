@@ -355,8 +355,31 @@ const StaticKineticFrictionRenderer: React.FC<StaticKineticFrictionRendererProps
   const [answeredQuestions, setAnsweredQuestions] = useState<Set<number>>(new Set());
   const [activeApp, setActiveApp] = useState(0);
   const [completedApps, setCompletedApps] = useState<Set<number>>(new Set());
+  const [isMobile, setIsMobile] = useState(false);
 
   const animationRef = useRef<number>();
+
+  // Responsive detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Responsive typography
+  const typo = {
+    title: isMobile ? '28px' : '36px',
+    heading: isMobile ? '20px' : '24px',
+    bodyLarge: isMobile ? '16px' : '18px',
+    body: isMobile ? '14px' : '16px',
+    small: isMobile ? '12px' : '14px',
+    label: isMobile ? '10px' : '12px',
+    pagePadding: isMobile ? '16px' : '24px',
+    cardPadding: isMobile ? '12px' : '16px',
+    sectionGap: isMobile ? '16px' : '20px',
+    elementGap: isMobile ? '8px' : '12px',
+  };
 
   const surfaceProperties: Record<Surface, { staticCoef: number; kineticCoef: number; color: string; name: string }> = {
     wood: { staticCoef: 0.5, kineticCoef: 0.3, color: '#8b7355', name: 'Wood' },

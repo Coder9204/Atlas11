@@ -54,6 +54,39 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
   const [activeAppTab, setActiveAppTab] = useState(0);
   const [isMobile, setIsMobile] = useState(false);
 
+  // ─────────────────────────────────────────────────────────────────────────
+  // PREMIUM DESIGN SYSTEM
+  // ─────────────────────────────────────────────────────────────────────────
+  const colors = {
+    primary: '#8b5cf6',       // violet-500
+    primaryDark: '#7c3aed',   // violet-600
+    accent: '#ec4899',        // pink-500
+    secondary: '#a855f7',     // purple-500
+    success: '#10b981',       // emerald-500
+    danger: '#ef4444',        // red-500
+    warning: '#f59e0b',       // amber-500
+    bgDark: '#020617',        // slate-950
+    bgCard: '#0f172a',        // slate-900
+    bgCardLight: '#1e293b',   // slate-800
+    textPrimary: '#f8fafc',   // slate-50
+    textSecondary: '#94a3b8', // slate-400
+    textMuted: '#64748b',     // slate-500
+    border: '#334155',        // slate-700
+  };
+
+  const typo = {
+    title: isMobile ? '28px' : '36px',
+    heading: isMobile ? '20px' : '24px',
+    bodyLarge: isMobile ? '16px' : '18px',
+    body: isMobile ? '14px' : '16px',
+    small: isMobile ? '12px' : '14px',
+    label: isMobile ? '10px' : '12px',
+    pagePadding: isMobile ? '16px' : '24px',
+    cardPadding: isMobile ? '12px' : '16px',
+    sectionGap: isMobile ? '16px' : '20px',
+    elementGap: isMobile ? '8px' : '12px'
+  };
+
   // Simulation state
   const [angle, setAngle] = useState(0);
   const [armExtension, setArmExtension] = useState(0.8);
@@ -355,8 +388,10 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
         </div>
       </div>
       <button
-        onClick={() => goToPhase('predict')}
+        onMouseDown={() => goToPhase('predict')}
+        onTouchEnd={(e) => { e.preventDefault(); goToPhase('predict'); }}
         className="mt-10 group relative px-10 py-5 bg-gradient-to-r from-purple-500 to-pink-600 text-white text-lg font-semibold rounded-2xl transition-all duration-300 hover:shadow-lg hover:shadow-purple-500/25 hover:scale-[1.02] active:scale-[0.98]"
+        style={{ minHeight: '48px' }}
       >
         <span className="relative z-10 flex items-center gap-3">
           Discover the Physics
@@ -390,8 +425,10 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
         ].map(option => (
           <button
             key={option.id}
-            onClick={() => handlePrediction(option.id)}
+            onMouseDown={() => handlePrediction(option.id)}
+            onTouchEnd={(e) => { e.preventDefault(); handlePrediction(option.id); }}
             disabled={showPredictionFeedback}
+            style={{ minHeight: '48px' }}
             className={`p-4 rounded-xl text-left transition-all duration-300 ${
               showPredictionFeedback && selectedPrediction === option.id
                 ? option.id === 'B' ? 'bg-emerald-600/40 border-2 border-emerald-400' : 'bg-red-600/40 border-2 border-red-400'
@@ -410,8 +447,10 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
             ✓ Correct! Angular momentum L = Iω is conserved. When I decreases, ω must increase!
           </p>
           <button
-            onClick={() => goToPhase('play')}
+            onMouseDown={() => goToPhase('play')}
+            onTouchEnd={(e) => { e.preventDefault(); goToPhase('play'); }}
             className="mt-4 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
+            style={{ minHeight: '48px' }}
           >
             Try the Experiment →
           </button>
@@ -450,7 +489,12 @@ const AngularMomentumRenderer: React.FC<Props> = ({ onGameEvent, gamePhase, onPh
           {isSpinning ? '⏹ Stop Spinning' : '▶ Start Spinning'}
         </button>
       </div>
-      <button onClick={() => goToPhase('review')} className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl">
+      <button
+        onMouseDown={() => goToPhase('review')}
+        onTouchEnd={(e) => { e.preventDefault(); goToPhase('review'); }}
+        className="mt-6 px-6 py-3 bg-gradient-to-r from-purple-600 to-pink-600 text-white font-semibold rounded-xl"
+        style={{ minHeight: '48px' }}
+      >
         Review the Physics →
       </button>
     </div>

@@ -187,6 +187,29 @@ function playSound(type: 'click' | 'success' | 'failure' | 'transition' | 'compl
 // MAIN COMPONENT
 // ─────────────────────────────────────────────────────────────────────────────
 export default function FractureMechanicsRenderer({ phase, onPhaseComplete, onCorrectAnswer, onIncorrectAnswer }: FractureMechanicsRendererProps) {
+  // Responsive detection
+  const [isMobile, setIsMobile] = useState(false);
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Responsive typography
+  const typo = {
+    title: isMobile ? '28px' : '36px',
+    heading: isMobile ? '20px' : '24px',
+    bodyLarge: isMobile ? '16px' : '18px',
+    body: isMobile ? '14px' : '16px',
+    small: isMobile ? '12px' : '14px',
+    label: isMobile ? '10px' : '12px',
+    pagePadding: isMobile ? '16px' : '24px',
+    cardPadding: isMobile ? '12px' : '16px',
+    sectionGap: isMobile ? '16px' : '20px',
+    elementGap: isMobile ? '8px' : '12px',
+  };
+
   // ─── State ───────────────────────────────────────────────────────────────────
   const [currentPhase, setCurrentPhase] = useState<Phase>(phase || 'hook');
   const [prediction, setPrediction] = useState<string | null>(null);

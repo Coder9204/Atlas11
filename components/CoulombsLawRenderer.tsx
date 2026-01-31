@@ -154,6 +154,43 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Premium Design System
+  const colors = {
+    primary: '#ef4444',       // red-500 (positive charge)
+    primaryDark: '#dc2626',   // red-600
+    accent: '#3b82f6',        // blue-500 (negative charge)
+    secondary: '#8b5cf6',     // violet-500
+    success: '#10b981',       // emerald-500
+    danger: '#ef4444',        // red-500
+    warning: '#f59e0b',       // amber-500
+    bgDark: '#020617',        // slate-950
+    bgCard: '#0f172a',        // slate-900
+    bgCardLight: '#1e293b',   // slate-800
+    textPrimary: '#f8fafc',   // slate-50
+    textSecondary: '#94a3b8', // slate-400
+    textMuted: '#64748b',     // slate-500
+    border: '#334155',        // slate-700
+    borderLight: '#475569',   // slate-600
+    // Theme-specific
+    positiveCharge: '#ef4444', // red-500
+    negativeCharge: '#3b82f6', // blue-500
+    fieldLines: '#a78bfa',     // violet-400
+    force: '#22c55e',          // green-500
+  };
+
+  const typo = {
+    title: isMobile ? '28px' : '36px',
+    heading: isMobile ? '20px' : '24px',
+    bodyLarge: isMobile ? '16px' : '18px',
+    body: isMobile ? '14px' : '16px',
+    small: isMobile ? '12px' : '14px',
+    label: isMobile ? '10px' : '12px',
+    pagePadding: isMobile ? '16px' : '24px',
+    cardPadding: isMobile ? '12px' : '16px',
+    sectionGap: isMobile ? '16px' : '20px',
+    elementGap: isMobile ? '8px' : '12px',
+  };
+
   // Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
@@ -161,39 +198,6 @@ const CoulombsLawRenderer: React.FC<CoulombsLawRendererProps> = ({ onGameEvent }
     }, 50);
     return () => clearInterval(interval);
   }, []);
-
-  // Design system - matches spec
-  const colors = {
-    primary: '#f59e0b',      // amber-500 for electrostatics
-    primaryDark: '#d97706',  // amber-600
-    accent: '#8b5cf6',       // violet-500
-    accentDark: '#7c3aed',   // violet-600
-    warning: '#f59e0b',      // amber-500
-    success: '#10b981',      // emerald-500
-    danger: '#ef4444',       // red-500
-    bgDark: '#020617',       // slate-950
-    bgCard: '#0f172a',       // slate-900
-    bgCardLight: '#1e293b',  // slate-800
-    border: '#334155',       // slate-700
-    textPrimary: '#f8fafc',  // slate-50
-    textSecondary: '#94a3b8', // slate-400
-    textMuted: '#64748b',    // slate-500
-    positive: '#ef4444',     // red for positive charges
-    negative: '#3b82f6',     // blue for negative charges
-  };
-
-  const typo = {
-    label: isMobile ? '9px' : '10px',
-    small: isMobile ? '11px' : '12px',
-    body: isMobile ? '12px' : '13px',
-    bodyLarge: isMobile ? '13px' : '14px',
-    heading: isMobile ? '18px' : '22px',
-    title: isMobile ? '24px' : '32px',
-    pagePadding: isMobile ? '12px' : '16px',
-    sectionGap: isMobile ? '12px' : '14px',
-    cardPadding: isMobile ? '10px' : '14px',
-    elementGap: isMobile ? '8px' : '10px',
-  };
 
   // Emit game event
   const emitGameEvent = useCallback((

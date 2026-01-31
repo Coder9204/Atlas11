@@ -32,6 +32,30 @@ const CleanroomYieldRenderer: React.FC<CleanroomYieldRendererProps> = ({
   onCorrectAnswer,
   onIncorrectAnswer,
 }) => {
+  const [isMobile, setIsMobile] = useState(false);
+
+  // Responsive detection
+  useEffect(() => {
+    const checkMobile = () => setIsMobile(window.innerWidth < 768);
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Responsive typography
+  const typo = {
+    title: isMobile ? '28px' : '36px',
+    heading: isMobile ? '20px' : '24px',
+    bodyLarge: isMobile ? '16px' : '18px',
+    body: isMobile ? '14px' : '16px',
+    small: isMobile ? '12px' : '14px',
+    label: isMobile ? '10px' : '12px',
+    pagePadding: isMobile ? '16px' : '24px',
+    cardPadding: isMobile ? '12px' : '16px',
+    sectionGap: isMobile ? '16px' : '20px',
+    elementGap: isMobile ? '8px' : '12px',
+  };
+
   // Simulation state
   const [defectDensity, setDefectDensity] = useState(0.5); // defects per cm^2
   const [dieArea, setDieArea] = useState(100); // mm^2

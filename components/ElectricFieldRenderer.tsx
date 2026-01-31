@@ -182,6 +182,20 @@ const ElectricFieldRenderer: React.FC<Props> = ({ onGameEvent }) => {
     return () => window.removeEventListener('resize', checkMobile);
   }, []);
 
+  // Responsive typography
+  const typo = {
+    title: isMobile ? '28px' : '36px',
+    heading: isMobile ? '20px' : '24px',
+    bodyLarge: isMobile ? '16px' : '18px',
+    body: isMobile ? '14px' : '16px',
+    small: isMobile ? '12px' : '14px',
+    label: isMobile ? '10px' : '12px',
+    pagePadding: isMobile ? '16px' : '24px',
+    cardPadding: isMobile ? '12px' : '16px',
+    sectionGap: isMobile ? '16px' : '20px',
+    elementGap: isMobile ? '8px' : '12px',
+  };
+
   // Animation loop
   useEffect(() => {
     const interval = setInterval(() => {
