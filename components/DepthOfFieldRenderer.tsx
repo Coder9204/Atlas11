@@ -436,7 +436,7 @@ export default function DepthOfFieldRenderer({
   const allAppsCompleted = completedApps.every(Boolean);
 
   // =============================================================================
-  // RAY CONE VISUALIZATION
+  // RAY CONE VISUALIZATION - Premium SVG Graphics
   // =============================================================================
   const renderRayConeVisualization = useCallback(() => {
     const width = isMobile ? 320 : 550;
@@ -464,95 +464,302 @@ export default function DepthOfFieldRenderer({
     // Determine if subject is in focus
     const subjectInFocus = Math.abs(subjectDistance - focusDistance) < 10;
 
+    // Bokeh particles for out-of-focus areas
+    const bokehParticles = [];
+    const bokehCount = Math.floor(apertureSize / 10);
+    for (let i = 0; i < bokehCount; i++) {
+      bokehParticles.push({
+        x: 20 + Math.random() * 60,
+        y: lensY - 80 + Math.random() * 160,
+        r: 3 + Math.random() * 8,
+        opacity: 0.1 + Math.random() * 0.3,
+      });
+    }
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: defined.spacing.md }}>
-        <svg width={width} height={height} style={{ overflow: 'visible' }}>
+        {/* SVG Labels moved outside */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: width,
+          paddingLeft: '20px',
+          paddingRight: '20px',
+        }}>
+          <span style={{ color: defined.colors.text.muted, fontSize: typo.label }}>Scene (objects)</span>
+          <span style={{ color: defined.colors.text.muted, fontSize: typo.label }}>Lens</span>
+          <span style={{ color: defined.colors.text.muted, fontSize: typo.label }}>Sensor</span>
+        </div>
+
+        <svg width={width} height={height - 30} style={{ overflow: 'visible' }}>
           <defs>
-            <linearGradient id="lensGradient" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(147, 197, 253, 0.1)" />
-              <stop offset="50%" stopColor="rgba(147, 197, 253, 0.4)" />
-              <stop offset="100%" stopColor="rgba(147, 197, 253, 0.1)" />
+            {/* Premium lab background gradient */}
+            <linearGradient id="dofLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0a0f1a" />
+              <stop offset="25%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="75%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#0a0f1a" />
             </linearGradient>
-            <filter id="blurFilter" x="-50%" y="-50%" width="200%" height="200%">
-              <feGaussianBlur stdDeviation="3" />
-            </filter>
-            <radialGradient id="cocGradient">
-              <stop offset="0%" stopColor="rgba(244, 114, 182, 0.8)" />
-              <stop offset="100%" stopColor="rgba(244, 114, 182, 0)" />
+
+            {/* Camera lens glass gradient with depth */}
+            <radialGradient id="dofLensGlass" cx="30%" cy="30%" r="80%">
+              <stop offset="0%" stopColor="#a5f3fc" stopOpacity="0.4" />
+              <stop offset="20%" stopColor="#67e8f9" stopOpacity="0.3" />
+              <stop offset="40%" stopColor="#22d3ee" stopOpacity="0.25" />
+              <stop offset="60%" stopColor="#06b6d4" stopOpacity="0.2" />
+              <stop offset="80%" stopColor="#0891b2" stopOpacity="0.15" />
+              <stop offset="100%" stopColor="#0e7490" stopOpacity="0.1" />
             </radialGradient>
+
+            {/* Lens edge metallic gradient */}
+            <linearGradient id="dofLensMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="25%" stopColor="#94a3b8" />
+              <stop offset="50%" stopColor="#64748b" />
+              <stop offset="75%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
+
+            {/* Aperture blade gradient */}
+            <linearGradient id="dofApertureBlades" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e1e1e" />
+              <stop offset="20%" stopColor="#3f3f3f" />
+              <stop offset="50%" stopColor="#2a2a2a" />
+              <stop offset="80%" stopColor="#3f3f3f" />
+              <stop offset="100%" stopColor="#1e1e1e" />
+            </linearGradient>
+
+            {/* Focus plane glow gradient */}
+            <linearGradient id="dofFocusPlane" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0" />
+              <stop offset="20%" stopColor="#22c55e" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#4ade80" stopOpacity="0.6" />
+              <stop offset="80%" stopColor="#22c55e" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Sensor gradient */}
+            <linearGradient id="dofSensorGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="30%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* Circle of confusion blur gradient */}
+            <radialGradient id="dofCoCGradient" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#f472b6" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#ec4899" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#db2777" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#be185d" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Sharp focus point gradient */}
+            <radialGradient id="dofSharpFocus" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#86efac" stopOpacity="1" />
+              <stop offset="40%" stopColor="#4ade80" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#22c55e" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Ray beam gradient - incoming */}
+            <linearGradient id="dofRayIn" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Ray beam gradient - to sensor (focused) */}
+            <linearGradient id="dofRayFocused" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+              <stop offset="50%" stopColor="#22c55e" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#16a34a" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* Ray beam gradient - to sensor (blurred) */}
+            <linearGradient id="dofRayBlurred" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f472b6" stopOpacity="1" />
+              <stop offset="50%" stopColor="#ec4899" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#db2777" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* Bokeh circle gradient */}
+            <radialGradient id="dofBokeh" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="60%" stopColor="#d97706" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#b45309" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Subject glow gradient */}
+            <radialGradient id="dofSubjectGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor={subjectInFocus ? '#86efac' : '#fcd34d'} stopOpacity="1" />
+              <stop offset="50%" stopColor={subjectInFocus ? '#4ade80' : '#fbbf24'} stopOpacity="0.6" />
+              <stop offset="100%" stopColor={subjectInFocus ? '#22c55e' : '#f59e0b'} stopOpacity="0" />
+            </radialGradient>
+
+            {/* Tree foliage gradient */}
+            <radialGradient id="dofTreeFoliage" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.7" />
+              <stop offset="70%" stopColor="#16a34a" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0.3" />
+            </radialGradient>
+
+            {/* Foreground object gradient */}
+            <linearGradient id="dofForegroundObj" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="30%" stopColor="#fbbf24" />
+              <stop offset="70%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Glow filter for lens */}
+            <filter id="dofLensGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Glow filter for focus point */}
+            <filter id="dofFocusGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft blur for bokeh effect */}
+            <filter id="dofBokehBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" />
+            </filter>
+
+            {/* Ray glow filter */}
+            <filter id="dofRayGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft glow for subject */}
+            <filter id="dofSubjectFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* CoC blur filter */}
+            <filter id="dofCoCBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
 
-          {/* Background */}
-          <rect width={width} height={height} fill={defined.colors.background.secondary} rx="12" />
+          {/* Premium dark lab background */}
+          <rect width={width} height={height - 30} fill="url(#dofLabBg)" rx="12" />
 
-          {/* Scene labels */}
-          <text x="30" y="25" fill={defined.colors.text.muted} fontSize="11">Scene (objects)</text>
-          <text x={lensX - 20} y="25" fill={defined.colors.text.muted} fontSize="11">Lens</text>
-          <text x={sensorX - 20} y="25" fill={defined.colors.text.muted} fontSize="11">Sensor</text>
+          {/* Subtle grid pattern for depth */}
+          <pattern id="dofLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.2" />
+          </pattern>
+          <rect width={width} height={height - 30} fill="url(#dofLabGrid)" rx="12" />
 
-          {/* Optical axis */}
-          <line x1="20" y1={lensY} x2={width - 20} y2={lensY} stroke={defined.colors.text.muted} strokeWidth="1" strokeDasharray="4,4" />
-
-          {/* Lens representation */}
-          <ellipse cx={lensX} cy={lensY} rx="8" ry={apertureRadius + 20} fill="url(#lensGradient)" stroke={defined.colors.lens.glass} strokeWidth="2" />
-
-          {/* Aperture blades indicator */}
-          <line x1={lensX} y1={lensY - apertureRadius} x2={lensX} y2={lensY - apertureRadius - 15} stroke={defined.colors.accent} strokeWidth="3" strokeLinecap="round" />
-          <line x1={lensX} y1={lensY + apertureRadius} x2={lensX} y2={lensY + apertureRadius + 15} stroke={defined.colors.accent} strokeWidth="3" strokeLinecap="round" />
-
-          {/* Sensor */}
-          <rect x={sensorX - 5} y={lensY - 80} width="10" height="160" fill="#1F2937" stroke={defined.colors.text.muted} strokeWidth="1" rx="2" />
-
-          {/* Background object (tree icon) */}
-          <g transform={`translate(${backgroundX}, ${lensY})`}>
-            <line x1="0" y1="0" x2="0" y2="-40" stroke="#166534" strokeWidth="4" />
-            <circle cx="0" cy="-50" r="15" fill="#22C55E" opacity="0.7" />
-            <text x="0" y="30" fill={defined.colors.text.muted} fontSize="9" textAnchor="middle">Far BG</text>
+          {/* Bokeh particles in background (out-of-focus aesthetic) */}
+          <g filter="url(#dofBokehBlur)">
+            {bokehParticles.map((p, i) => (
+              <circle key={i} cx={p.x} cy={p.y} r={p.r} fill="url(#dofBokeh)" opacity={p.opacity} />
+            ))}
           </g>
 
-          {/* Subject (person icon) */}
-          <g transform={`translate(${subjectX}, ${lensY})`}>
-            <circle cx="0" cy="-35" r="12" fill={subjectInFocus ? defined.colors.success : defined.colors.warning} />
-            <line x1="0" y1="-23" x2="0" y2="10" stroke={subjectInFocus ? defined.colors.success : defined.colors.warning} strokeWidth="3" />
-            <line x1="-15" y1="-10" x2="15" y2="-10" stroke={subjectInFocus ? defined.colors.success : defined.colors.warning} strokeWidth="3" />
-            <text x="0" y="30" fill={defined.colors.text.secondary} fontSize="9" textAnchor="middle">Subject</text>
-          </g>
+          {/* Optical axis with gradient effect */}
+          <line x1="20" y1={lensY} x2={width - 20} y2={lensY} stroke="#475569" strokeWidth="1" strokeDasharray="6,4" opacity="0.6" />
 
-          {/* Foreground object */}
-          <g transform={`translate(${foregroundX}, ${lensY})`}>
-            <rect x="-8" y="-20" width="16" height="30" fill="#F59E0B" opacity="0.7" rx="2" />
-            <text x="0" y="30" fill={defined.colors.text.muted} fontSize="9" textAnchor="middle">Near FG</text>
-          </g>
+          {/* Focus plane visualization */}
+          <rect x={focusedObjX - 2} y={lensY - 70} width="4" height="140" fill="url(#dofFocusPlane)" opacity="0.5" />
 
-          {/* Focus distance indicator */}
+          {/* Camera lens body - outer ring */}
+          <ellipse cx={lensX} cy={lensY} rx="18" ry={apertureRadius + 35} fill="url(#dofLensMetal)" stroke="#1e293b" strokeWidth="2" />
+
+          {/* Camera lens - glass element */}
+          <ellipse cx={lensX} cy={lensY} rx="12" ry={apertureRadius + 25} fill="url(#dofLensGlass)" filter="url(#dofLensGlow)" stroke="#67e8f9" strokeWidth="1" strokeOpacity="0.5" />
+
+          {/* Aperture opening visualization */}
+          <ellipse cx={lensX} cy={lensY} rx="4" ry={apertureRadius} fill="#030712" stroke="url(#dofApertureBlades)" strokeWidth="2" />
+
+          {/* Aperture blades indicator - top */}
           <g>
-            <line x1={focusedObjX} y1={lensY + 60} x2={focusedObjX} y2={lensY + 80} stroke={defined.colors.success} strokeWidth="2" />
-            <text x={focusedObjX} y={lensY + 95} fill={defined.colors.success} fontSize="10" textAnchor="middle">Focus plane</text>
+            <line x1={lensX - 6} y1={lensY - apertureRadius - 3} x2={lensX + 6} y2={lensY - apertureRadius - 3} stroke="#1e1e1e" strokeWidth="4" strokeLinecap="round" />
+            <line x1={lensX - 4} y1={lensY - apertureRadius - 3} x2={lensX + 4} y2={lensY - apertureRadius - 3} stroke="#4b4b4b" strokeWidth="2" strokeLinecap="round" />
+          </g>
+          {/* Aperture blades indicator - bottom */}
+          <g>
+            <line x1={lensX - 6} y1={lensY + apertureRadius + 3} x2={lensX + 6} y2={lensY + apertureRadius + 3} stroke="#1e1e1e" strokeWidth="4" strokeLinecap="round" />
+            <line x1={lensX - 4} y1={lensY + apertureRadius + 3} x2={lensX + 4} y2={lensY + apertureRadius + 3} stroke="#4b4b4b" strokeWidth="2" strokeLinecap="round" />
+          </g>
+
+          {/* Sensor with premium gradient */}
+          <rect x={sensorX - 6} y={lensY - 80} width="12" height="160" fill="url(#dofSensorGradient)" stroke="#6b7280" strokeWidth="1" rx="2" />
+          {/* Sensor active area glow */}
+          <rect x={sensorX - 4} y={lensY - 75} width="8" height="150" fill="#1f2937" stroke="#4b5563" strokeWidth="0.5" rx="1" opacity="0.8" />
+
+          {/* Background object (tree icon) with gradient */}
+          <g transform={`translate(${backgroundX}, ${lensY})`} filter="url(#dofBokehBlur)">
+            <line x1="0" y1="0" x2="0" y2="-40" stroke="#166534" strokeWidth="5" strokeLinecap="round" />
+            <circle cx="0" cy="-50" r="18" fill="url(#dofTreeFoliage)" />
+            <circle cx="-8" cy="-42" r="10" fill="url(#dofTreeFoliage)" opacity="0.8" />
+            <circle cx="8" cy="-42" r="10" fill="url(#dofTreeFoliage)" opacity="0.8" />
+          </g>
+
+          {/* Subject (person icon) with glow */}
+          <g transform={`translate(${subjectX}, ${lensY})`} filter="url(#dofSubjectFilter)">
+            <circle cx="0" cy="-35" r="14" fill="url(#dofSubjectGlow)" />
+            <circle cx="0" cy="-35" r="10" fill={subjectInFocus ? '#4ade80' : '#fbbf24'} />
+            <line x1="0" y1="-21" x2="0" y2="12" stroke={subjectInFocus ? '#22c55e' : '#f59e0b'} strokeWidth="4" strokeLinecap="round" />
+            <line x1="-16" y1="-8" x2="16" y2="-8" stroke={subjectInFocus ? '#22c55e' : '#f59e0b'} strokeWidth="4" strokeLinecap="round" />
+            <line x1="-8" y1="12" x2="-12" y2="30" stroke={subjectInFocus ? '#22c55e' : '#f59e0b'} strokeWidth="3" strokeLinecap="round" />
+            <line x1="8" y1="12" x2="12" y2="30" stroke={subjectInFocus ? '#22c55e' : '#f59e0b'} strokeWidth="3" strokeLinecap="round" />
+          </g>
+
+          {/* Foreground object with gradient */}
+          <g transform={`translate(${foregroundX}, ${lensY})`} filter="url(#dofBokehBlur)">
+            <rect x="-10" y="-25" width="20" height="40" fill="url(#dofForegroundObj)" rx="3" />
+            <rect x="-6" y="-20" width="12" height="30" fill="#fcd34d" opacity="0.4" rx="2" />
           </g>
 
           {/* Ray cone from subject through lens */}
           {showRayCone && (
-            <g opacity="0.7">
-              {/* Top ray */}
-              <line x1={subjectX} y1={lensY - 30} x2={lensX} y2={lensY - apertureRadius} stroke={defined.colors.lens.ray} strokeWidth="1.5" />
-              {/* Bottom ray */}
-              <line x1={subjectX} y1={lensY - 30} x2={lensX} y2={lensY + apertureRadius} stroke={defined.colors.lens.ray} strokeWidth="1.5" />
+            <g>
+              {/* Top ray - incoming */}
+              <line x1={subjectX} y1={lensY - 30} x2={lensX} y2={lensY - apertureRadius} stroke="url(#dofRayIn)" strokeWidth="2" filter="url(#dofRayGlow)" />
+              {/* Bottom ray - incoming */}
+              <line x1={subjectX} y1={lensY - 30} x2={lensX} y2={lensY + apertureRadius} stroke="url(#dofRayIn)" strokeWidth="2" filter="url(#dofRayGlow)" />
 
               {/* Rays to sensor - convergence depends on focus */}
               {subjectInFocus ? (
-                <>
-                  <line x1={lensX} y1={lensY - apertureRadius} x2={sensorX} y2={lensY - 20} stroke={defined.colors.lens.focus} strokeWidth="1.5" />
-                  <line x1={lensX} y1={lensY + apertureRadius} x2={sensorX} y2={lensY - 20} stroke={defined.colors.lens.focus} strokeWidth="1.5" />
-                  <circle cx={sensorX} cy={lensY - 20} r="4" fill={defined.colors.lens.focus} />
-                  <text x={sensorX + 15} y={lensY - 15} fill={defined.colors.success} fontSize="9">Sharp</text>
-                </>
+                <g>
+                  <line x1={lensX} y1={lensY - apertureRadius} x2={sensorX} y2={lensY - 20} stroke="url(#dofRayFocused)" strokeWidth="2" filter="url(#dofRayGlow)" />
+                  <line x1={lensX} y1={lensY + apertureRadius} x2={sensorX} y2={lensY - 20} stroke="url(#dofRayFocused)" strokeWidth="2" filter="url(#dofRayGlow)" />
+                  <circle cx={sensorX} cy={lensY - 20} r="6" fill="url(#dofSharpFocus)" filter="url(#dofFocusGlow)" />
+                </g>
               ) : (
-                <>
-                  <line x1={lensX} y1={lensY - apertureRadius} x2={sensorX} y2={lensY - 20 - subjectBlur / 2} stroke={defined.colors.lens.blur} strokeWidth="1.5" />
-                  <line x1={lensX} y1={lensY + apertureRadius} x2={sensorX} y2={lensY - 20 + subjectBlur / 2} stroke={defined.colors.lens.blur} strokeWidth="1.5" />
-                  <ellipse cx={sensorX} cy={lensY - 20} rx="3" ry={Math.max(4, subjectBlur / 2)} fill="url(#cocGradient)" />
-                  <text x={sensorX + 15} y={lensY - 15} fill={defined.colors.lens.blur} fontSize="9">CoC</text>
-                </>
+                <g>
+                  <line x1={lensX} y1={lensY - apertureRadius} x2={sensorX} y2={lensY - 20 - subjectBlur / 2} stroke="url(#dofRayBlurred)" strokeWidth="2" filter="url(#dofRayGlow)" />
+                  <line x1={lensX} y1={lensY + apertureRadius} x2={sensorX} y2={lensY - 20 + subjectBlur / 2} stroke="url(#dofRayBlurred)" strokeWidth="2" filter="url(#dofRayGlow)" />
+                  <ellipse cx={sensorX} cy={lensY - 20} rx="5" ry={Math.max(6, subjectBlur / 2)} fill="url(#dofCoCGradient)" filter="url(#dofCoCBlur)" />
+                </g>
               )}
             </g>
           )}
@@ -560,28 +767,91 @@ export default function DepthOfFieldRenderer({
           {/* Circle of Confusion indicators on sensor */}
           <g transform={`translate(${sensorX}, ${lensY})`}>
             {/* Background blur circle */}
-            <circle cx="0" cy="40" r={Math.max(2, Math.min(20, backgroundBlur / 2))} fill={defined.colors.lens.blur} opacity="0.5" />
-            <text x="20" y="45" fill={defined.colors.text.muted} fontSize="8">BG blur</text>
-
+            <circle cx="0" cy="40" r={Math.max(3, Math.min(22, backgroundBlur / 2))} fill="url(#dofCoCGradient)" filter="url(#dofCoCBlur)" opacity="0.7" />
             {/* Foreground blur circle */}
-            <circle cx="0" cy="-50" r={Math.max(2, Math.min(15, foregroundBlur / 2))} fill={defined.colors.lens.blur} opacity="0.5" />
-            <text x="20" y="-45" fill={defined.colors.text.muted} fontSize="8">FG blur</text>
-          </g>
-
-          {/* Aperture size label */}
-          <text x={lensX} y={height - 15} fill={defined.colors.accent} fontSize="11" textAnchor="middle">
-            Aperture: f/{(100 / apertureSize).toFixed(1)}
-          </text>
-
-          {/* Legend */}
-          <g transform={`translate(20, ${height - 60})`}>
-            <rect x="-5" y="-5" width="100" height="45" fill={defined.colors.background.card} rx="4" />
-            <circle cx="10" cy="8" r="5" fill={defined.colors.lens.focus} />
-            <text x="20" y="12" fill={defined.colors.text.secondary} fontSize="9">In focus</text>
-            <circle cx="10" cy="28" r="5" fill={defined.colors.lens.blur} />
-            <text x="20" y="32" fill={defined.colors.text.secondary} fontSize="9">Circle of confusion</text>
+            <circle cx="0" cy="-50" r={Math.max(3, Math.min(18, foregroundBlur / 2))} fill="url(#dofCoCGradient)" filter="url(#dofCoCBlur)" opacity="0.7" />
           </g>
         </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-around',
+          width: '100%',
+          maxWidth: width,
+          marginTop: '-8px',
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ color: defined.colors.text.muted, fontSize: typo.label }}>Far BG</span>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ color: defined.colors.text.secondary, fontSize: typo.label }}>Subject</span>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ color: defined.colors.text.muted, fontSize: typo.label }}>Near FG</span>
+          </div>
+          <div style={{ textAlign: 'center', marginLeft: 'auto' }}>
+            <span style={{ color: defined.colors.text.muted, fontSize: typo.label }}>BG blur</span>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <span style={{ color: defined.colors.text.muted, fontSize: typo.label }}>FG blur</span>
+          </div>
+        </div>
+
+        {/* Focus plane and sharp/blur status */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'center',
+          gap: defined.spacing.lg,
+          width: '100%',
+          maxWidth: width,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: defined.colors.success }} />
+            <span style={{ color: defined.colors.text.secondary, fontSize: typo.small }}>Focus plane</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <div style={{ width: '12px', height: '12px', borderRadius: '50%', background: subjectInFocus ? defined.colors.success : defined.colors.warning }} />
+            <span style={{ color: subjectInFocus ? defined.colors.success : defined.colors.warning, fontSize: typo.small }}>
+              {subjectInFocus ? 'Sharp' : 'Circle of Confusion'}
+            </span>
+          </div>
+        </div>
+
+        {/* Aperture indicator */}
+        <div style={{
+          background: defined.colors.background.card,
+          borderRadius: defined.radius.lg,
+          padding: `${defined.spacing.sm} ${defined.spacing.md}`,
+          display: 'flex',
+          alignItems: 'center',
+          gap: defined.spacing.md,
+        }}>
+          <span style={{ color: defined.colors.accent, fontSize: typo.body, fontWeight: defined.typography.weights.semibold }}>
+            Aperture: f/{(100 / apertureSize).toFixed(1)}
+          </span>
+          <span style={{ color: defined.colors.text.muted, fontSize: typo.label }}>
+            {apertureSize > 60 ? '(Wide - Shallow DOF)' : apertureSize > 30 ? '(Medium)' : '(Narrow - Deep DOF)'}
+          </span>
+        </div>
+
+        {/* Legend */}
+        <div style={{
+          display: 'flex',
+          gap: defined.spacing.md,
+          background: defined.colors.background.card,
+          padding: defined.spacing.sm,
+          borderRadius: defined.radius.md,
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'linear-gradient(135deg, #86efac 0%, #22c55e 100%)' }} />
+            <span style={{ color: defined.colors.text.secondary, fontSize: typo.label }}>In focus</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '10px', height: '10px', borderRadius: '50%', background: 'linear-gradient(135deg, #f472b6 0%, #ec4899 100%)' }} />
+            <span style={{ color: defined.colors.text.secondary, fontSize: typo.label }}>Circle of confusion</span>
+          </div>
+        </div>
 
         {/* Controls */}
         <div style={{
@@ -592,7 +862,7 @@ export default function DepthOfFieldRenderer({
           maxWidth: '550px',
         }}>
           <div style={{ background: defined.colors.background.card, padding: defined.spacing.md, borderRadius: defined.radius.lg }}>
-            <label style={{ color: defined.colors.accent, fontSize: defined.typography.sizes.sm, display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: defined.colors.accent, fontSize: typo.small, display: 'block', marginBottom: '4px' }}>
               Aperture: f/{(100 / apertureSize).toFixed(1)}
             </label>
             <input
@@ -603,12 +873,12 @@ export default function DepthOfFieldRenderer({
               onChange={(e) => setApertureSize(Number(e.target.value))}
               style={{ width: '100%' }}
             />
-            <div style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.xs, marginTop: '4px' }}>
+            <div style={{ color: defined.colors.text.muted, fontSize: typo.label, marginTop: '4px' }}>
               {apertureSize > 60 ? 'Wide (shallow DOF)' : apertureSize > 30 ? 'Medium' : 'Narrow (deep DOF)'}
             </div>
           </div>
           <div style={{ background: defined.colors.background.card, padding: defined.spacing.md, borderRadius: defined.radius.lg }}>
-            <label style={{ color: defined.colors.success, fontSize: defined.typography.sizes.sm, display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: defined.colors.success, fontSize: typo.small, display: 'block', marginBottom: '4px' }}>
               Subject Distance: {subjectDistance}
             </label>
             <input
@@ -621,7 +891,7 @@ export default function DepthOfFieldRenderer({
             />
           </div>
           <div style={{ background: defined.colors.background.card, padding: defined.spacing.md, borderRadius: defined.radius.lg }}>
-            <label style={{ color: defined.colors.primary, fontSize: defined.typography.sizes.sm, display: 'block', marginBottom: '4px' }}>
+            <label style={{ color: defined.colors.primary, fontSize: typo.small, display: 'block', marginBottom: '4px' }}>
               Focus Distance: {focusDistance}
             </label>
             <input
@@ -640,19 +910,20 @@ export default function DepthOfFieldRenderer({
           onClick={() => setShowRayCone(!showRayCone)}
           style={{
             padding: `${defined.spacing.sm} ${defined.spacing.md}`,
-            background: showRayCone ? defined.colors.primary : defined.colors.background.tertiary,
+            background: showRayCone ? `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.primaryDark})` : defined.colors.background.tertiary,
             color: defined.colors.text.primary,
             border: 'none',
             borderRadius: defined.radius.md,
             cursor: 'pointer',
-            fontSize: defined.typography.sizes.sm,
+            fontSize: typo.small,
+            boxShadow: showRayCone ? `0 4px 15px ${defined.colors.primary}40` : 'none',
           }}
         >
           {showRayCone ? 'Hide' : 'Show'} Ray Cone
         </button>
       </div>
     );
-  }, [isMobile, apertureSize, subjectDistance, focusDistance, showRayCone, getBlurAmount]);
+  }, [isMobile, apertureSize, subjectDistance, focusDistance, showRayCone, getBlurAmount, typo]);
 
   // =============================================================================
   // PHASE RENDERERS

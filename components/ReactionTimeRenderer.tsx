@@ -504,93 +504,312 @@ const ReactionTimeRenderer: React.FC<ReactionTimeRendererProps> = ({
   );
 
   // ─────────────────────────────────────────────────────────────────────────
-  // RULER DROP VISUALIZATION
+  // RULER DROP VISUALIZATION - PREMIUM SVG GRAPHICS
   // ─────────────────────────────────────────────────────────────────────────
 
   const renderRulerDrop = (showDistraction = false) => {
+    // Status text moved outside SVG for typo system
+    const getStatusText = () => {
+      switch (rulerState) {
+        case 'ready': return 'Click to Start';
+        case 'waiting': return 'Get Ready...';
+        case 'dropping': return 'CATCH IT!';
+        case 'caught': return 'Nice Catch!';
+        case 'missed': return 'Missed!';
+        default: return '';
+      }
+    };
+
+    const getStatusColor = () => {
+      switch (rulerState) {
+        case 'ready': return colors.neutral;
+        case 'waiting': return colors.accent;
+        case 'dropping': return colors.danger;
+        case 'caught': return colors.success;
+        case 'missed': return colors.danger;
+        default: return colors.neutral;
+      }
+    };
+
     return (
-      <svg viewBox="0 0 200 320" className="w-full h-64 md:h-80">
-        {/* Background */}
-        <rect x="0" y="0" width="200" height="320" fill="#F8FAFC" rx="10" />
+      <div style={{ position: 'relative' }}>
+        {/* Status label - outside SVG using typo system */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: typo.elementGap,
+          padding: '8px 16px',
+          borderRadius: '20px',
+          background: `linear-gradient(135deg, ${getStatusColor()}dd, ${getStatusColor()}99)`,
+          display: 'inline-block',
+          width: '100%',
+          boxShadow: `0 4px 20px ${getStatusColor()}40`
+        }}>
+          <span style={{
+            fontSize: typo.body,
+            fontWeight: 700,
+            color: 'white',
+            textShadow: '0 1px 2px rgba(0,0,0,0.3)'
+          }}>
+            {getStatusText()}
+          </span>
+        </div>
 
-        {/* Distraction overlay */}
-        {showDistraction && distractionType === 'visual' && rulerState === 'dropping' && (
-          <>
-            <circle cx={50 + Math.random() * 100} cy={50 + Math.random() * 200} r="20" fill={colors.danger} opacity="0.7">
-              <animate attributeName="opacity" values="0.7;0.3;0.7" dur="0.3s" repeatCount="indefinite" />
-            </circle>
-            <circle cx={30 + Math.random() * 140} cy={100 + Math.random() * 150} r="15" fill={colors.accent} opacity="0.6">
-              <animate attributeName="opacity" values="0.6;0.2;0.6" dur="0.25s" repeatCount="indefinite" />
-            </circle>
-          </>
-        )}
+        <svg viewBox="0 0 200 300" className="w-full h-64 md:h-80">
+          {/* Premium SVG Definitions */}
+          <defs>
+            {/* Lab background gradient */}
+            <linearGradient id="reactLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        {/* Hand at top (releasing) */}
-        <g transform="translate(100, 30)">
-          <ellipse cx="0" cy="0" rx="25" ry="15" fill={colors.hand} />
-          <rect x="-8" y="-5" width="16" height="20" fill={colors.hand} />
-          <text x="0" y="5" textAnchor="middle" fill={colors.neutral} fontSize="8">
-            {rulerState === 'waiting' ? '...' : rulerState === 'dropping' ? 'DROP!' : ''}
-          </text>
-        </g>
+            {/* Premium ruler wood gradient */}
+            <linearGradient id="reactRulerWood" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="20%" stopColor="#f59e0b" />
+              <stop offset="40%" stopColor="#fbbf24" />
+              <stop offset="60%" stopColor="#d97706" />
+              <stop offset="80%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
 
-        {/* Ruler */}
-        <g transform={`translate(100, ${50 + rulerPosition * 8})`}>
-          <rect x="-15" y="0" width="30" height="180" fill={colors.ruler} rx="3" stroke="#D97706" strokeWidth="2" />
+            {/* Ruler edge highlight */}
+            <linearGradient id="reactRulerEdge" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#92400e" />
+              <stop offset="50%" stopColor="#b45309" />
+              <stop offset="100%" stopColor="#92400e" />
+            </linearGradient>
 
-          {/* Ruler markings - dynamic based on rulerLength */}
-          {Array.from({ length: Math.floor(rulerLength / 5) + 1 }, (_, i) => i * 5).map(cm => (
-            <g key={cm} transform={`translate(0, ${cm * 6})`}>
-              <line x1="-15" y1="0" x2="-8" y2="0" stroke="#92400E" strokeWidth="1" />
-              <text x="-5" y="4" textAnchor="end" fill="#92400E" fontSize="8">{cm}</text>
-            </g>
-          ))}
+            {/* Hand skin gradient - realistic flesh tones */}
+            <radialGradient id="reactHandGradient" cx="40%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fcd9bd" />
+              <stop offset="30%" stopColor="#f5c9a6" />
+              <stop offset="60%" stopColor="#e8b896" />
+              <stop offset="100%" stopColor="#d4a574" />
+            </radialGradient>
 
-          <text x="8" y={rulerLength * 3} fill="#92400E" fontSize="8" fontWeight="bold">cm</text>
-        </g>
+            {/* Hand shadow gradient */}
+            <linearGradient id="reactHandShadow" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#d4a574" stopOpacity="0" />
+              <stop offset="100%" stopColor="#8b6914" stopOpacity="0.4" />
+            </linearGradient>
 
-        {/* Catch hand at bottom */}
-        <g transform="translate(100, 280)">
-          <ellipse cx="0" cy="0" rx="30" ry="18" fill={colors.hand} stroke="#D97706" strokeWidth="2" />
-          <rect x="-10" y="-8" width="20" height="15" fill={colors.hand} />
-          {rulerState === 'caught' && (
-            <text x="0" y="5" textAnchor="middle" fill={colors.success} fontSize="10" fontWeight="bold">CAUGHT!</text>
+            {/* Catch point indicator glow */}
+            <radialGradient id="reactCatchGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="1" />
+              <stop offset="40%" stopColor="#10b981" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#059669" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#047857" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Drop motion blur filter */}
+            <filter id="reactDropBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation={rulerState === 'dropping' ? '2' : '0'} />
+            </filter>
+
+            {/* Glow filter for caught state */}
+            <filter id="reactCatchFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Distraction glow filter */}
+            <filter id="reactDistractionGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Inner shadow for depth */}
+            <filter id="reactInnerShadow">
+              <feOffset dx="0" dy="2" />
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Grid pattern for background */}
+            <pattern id="reactLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* Premium dark lab background */}
+          <rect width="200" height="300" fill="url(#reactLabBg)" rx="10" />
+          <rect width="200" height="300" fill="url(#reactLabGrid)" rx="10" />
+
+          {/* Subtle corner accents */}
+          <circle cx="10" cy="10" r="30" fill="#6366f1" opacity="0.05" />
+          <circle cx="190" cy="290" r="40" fill="#8b5cf6" opacity="0.05" />
+
+          {/* Distraction overlay */}
+          {showDistraction && distractionType === 'visual' && rulerState === 'dropping' && (
+            <>
+              <circle cx="60" cy="100" r="25" fill="#ef4444" opacity="0.7" filter="url(#reactDistractionGlow)">
+                <animate attributeName="opacity" values="0.7;0.3;0.7" dur="0.3s" repeatCount="indefinite" />
+                <animate attributeName="r" values="25;30;25" dur="0.4s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="150" cy="180" r="20" fill="#a855f7" opacity="0.6" filter="url(#reactDistractionGlow)">
+                <animate attributeName="opacity" values="0.6;0.2;0.6" dur="0.25s" repeatCount="indefinite" />
+                <animate attributeName="r" values="20;25;20" dur="0.35s" repeatCount="indefinite" />
+              </circle>
+              <circle cx="40" cy="200" r="15" fill="#f59e0b" opacity="0.5" filter="url(#reactDistractionGlow)">
+                <animate attributeName="opacity" values="0.5;0.2;0.5" dur="0.2s" repeatCount="indefinite" />
+              </circle>
+            </>
           )}
-        </g>
 
-        {/* Status indicator */}
-        <g transform="translate(100, 10)">
-          <rect
-            x="-50"
-            y="-8"
-            width="100"
-            height="20"
-            fill={
-              rulerState === 'ready' ? colors.neutral :
-              rulerState === 'waiting' ? colors.accent :
-              rulerState === 'dropping' ? colors.danger :
-              rulerState === 'caught' ? colors.success : colors.danger
-            }
-            rx="10"
-          />
-          <text x="0" y="6" textAnchor="middle" fill="white" fontSize="10" fontWeight="bold">
-            {rulerState === 'ready' ? 'Click to Start' :
-             rulerState === 'waiting' ? 'Get Ready...' :
-             rulerState === 'dropping' ? 'CATCH IT!' :
-             rulerState === 'caught' ? 'Nice Catch!' : 'Missed!'}
-          </text>
-        </g>
-
-        {/* Math distraction */}
-        {showDistraction && distractionType === 'math' && (rulerState === 'waiting' || rulerState === 'dropping') && (
-          <g transform="translate(100, 160)">
-            <rect x="-40" y="-20" width="80" height="40" fill="white" stroke={colors.primary} strokeWidth="2" rx="5" />
-            <text x="0" y="5" textAnchor="middle" fill={colors.primary} fontSize="14" fontWeight="bold">
-              {mathProblem.a} + {mathProblem.b} = ?
-            </text>
+          {/* Top hand (releasing) */}
+          <g transform="translate(100, 25)">
+            {/* Hand shadow */}
+            <ellipse cx="2" cy="4" rx="26" ry="16" fill="#000" opacity="0.2" />
+            {/* Main palm */}
+            <ellipse cx="0" cy="0" rx="25" ry="15" fill="url(#reactHandGradient)" stroke="#c9a87c" strokeWidth="1" />
+            {/* Finger hints */}
+            <ellipse cx="-12" cy="8" rx="6" ry="4" fill="url(#reactHandGradient)" />
+            <ellipse cx="-4" cy="10" rx="5" ry="4" fill="url(#reactHandGradient)" />
+            <ellipse cx="4" cy="10" rx="5" ry="4" fill="url(#reactHandGradient)" />
+            <ellipse cx="12" cy="8" rx="6" ry="4" fill="url(#reactHandGradient)" />
+            {/* Finger creases */}
+            <path d="M-15,0 Q-10,3 -5,0" stroke="#c9a87c" strokeWidth="0.5" fill="none" opacity="0.5" />
+            <path d="M5,0 Q10,3 15,0" stroke="#c9a87c" strokeWidth="0.5" fill="none" opacity="0.5" />
           </g>
+
+          {/* Ruler with premium styling */}
+          <g transform={`translate(100, ${45 + rulerPosition * 8})`} filter={rulerState === 'dropping' ? 'url(#reactDropBlur)' : undefined}>
+            {/* Drop motion trail effect */}
+            {rulerState === 'dropping' && (
+              <>
+                <rect x="-15" y="-20" width="30" height="15" fill="#f59e0b" opacity="0.3" rx="2" />
+                <rect x="-15" y="-35" width="30" height="12" fill="#f59e0b" opacity="0.15" rx="2" />
+              </>
+            )}
+
+            {/* Main ruler body with wood texture */}
+            <rect x="-15" y="0" width="30" height="180" fill="url(#reactRulerWood)" rx="3" />
+
+            {/* Ruler border/edge */}
+            <rect x="-15" y="0" width="30" height="180" fill="none" stroke="url(#reactRulerEdge)" strokeWidth="2" rx="3" />
+
+            {/* Inner highlight */}
+            <rect x="-13" y="2" width="26" height="176" fill="none" stroke="#fcd34d" strokeWidth="0.5" rx="2" opacity="0.3" />
+
+            {/* Ruler measurement marks - enhanced */}
+            {Array.from({ length: Math.floor(rulerLength / 5) + 1 }, (_, i) => i * 5).map(cm => (
+              <g key={cm} transform={`translate(0, ${cm * 6})`}>
+                {/* Major tick mark */}
+                <line x1="-15" y1="0" x2="-6" y2="0" stroke="#78350f" strokeWidth="1.5" />
+                <line x1="15" y1="0" x2="6" y2="0" stroke="#78350f" strokeWidth="1.5" />
+                {/* Number label with background */}
+                <rect x="-5" y="-5" width="10" height="10" fill="#fef3c7" rx="2" opacity="0.8" />
+                <text x="0" y="3" textAnchor="middle" fill="#78350f" fontSize="7" fontWeight="bold">{cm}</text>
+              </g>
+            ))}
+
+            {/* Minor tick marks */}
+            {Array.from({ length: Math.floor(rulerLength) + 1 }, (_, i) => i).filter(cm => cm % 5 !== 0).map(cm => (
+              <g key={`minor-${cm}`} transform={`translate(0, ${cm * 6})`}>
+                <line x1="-15" y1="0" x2="-10" y2="0" stroke="#92400e" strokeWidth="0.5" />
+                <line x1="15" y1="0" x2="10" y2="0" stroke="#92400e" strokeWidth="0.5" />
+              </g>
+            ))}
+
+            {/* Catch point indicator when caught */}
+            {rulerState === 'caught' && catchDistance !== null && (
+              <g transform={`translate(0, ${Math.min(catchDistance * 6, 175)})`}>
+                <circle cx="0" cy="0" r="12" fill="url(#reactCatchGlow)" filter="url(#reactCatchFilter)">
+                  <animate attributeName="r" values="10;14;10" dur="1s" repeatCount="indefinite" />
+                </circle>
+                <line x1="-20" y1="0" x2="20" y2="0" stroke="#10b981" strokeWidth="2" strokeDasharray="4,2">
+                  <animate attributeName="stroke-opacity" values="1;0.5;1" dur="0.5s" repeatCount="indefinite" />
+                </line>
+              </g>
+            )}
+          </g>
+
+          {/* Bottom catch hand */}
+          <g transform="translate(100, 260)" filter={rulerState === 'caught' ? 'url(#reactCatchFilter)' : undefined}>
+            {/* Hand shadow */}
+            <ellipse cx="3" cy="5" rx="32" ry="20" fill="#000" opacity="0.2" />
+            {/* Main palm - slightly cupped for catching */}
+            <ellipse cx="0" cy="0" rx="30" ry="18" fill="url(#reactHandGradient)" stroke="#c9a87c" strokeWidth="1.5" />
+            {/* Finger shapes */}
+            <ellipse cx="-18" cy="-10" rx="8" ry="5" fill="url(#reactHandGradient)" />
+            <ellipse cx="-8" cy="-12" rx="7" ry="5" fill="url(#reactHandGradient)" />
+            <ellipse cx="2" cy="-13" rx="7" ry="5" fill="url(#reactHandGradient)" />
+            <ellipse cx="12" cy="-12" rx="7" ry="5" fill="url(#reactHandGradient)" />
+            <ellipse cx="20" cy="-8" rx="6" ry="4" fill="url(#reactHandGradient)" />
+            {/* Palm lines */}
+            <path d="M-15,5 Q0,10 15,5" stroke="#c9a87c" strokeWidth="0.5" fill="none" opacity="0.4" />
+            <path d="M-10,-2 Q-5,2 5,-2" stroke="#c9a87c" strokeWidth="0.5" fill="none" opacity="0.3" />
+            {/* Caught indicator glow */}
+            {rulerState === 'caught' && (
+              <circle cx="0" cy="0" r="35" fill="none" stroke="#10b981" strokeWidth="3" opacity="0.5">
+                <animate attributeName="r" values="30;40;30" dur="1s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="0.5;0.2;0.5" dur="1s" repeatCount="indefinite" />
+              </circle>
+            )}
+          </g>
+
+          {/* Math distraction overlay */}
+          {showDistraction && distractionType === 'math' && (rulerState === 'waiting' || rulerState === 'dropping') && (
+            <g transform="translate(100, 150)">
+              <rect x="-45" y="-25" width="90" height="50" fill="#0f172a" stroke="#6366f1" strokeWidth="2" rx="8" />
+              <rect x="-43" y="-23" width="86" height="46" fill="none" stroke="#818cf8" strokeWidth="1" rx="6" opacity="0.3" />
+            </g>
+          )}
+        </svg>
+
+        {/* Math problem label - outside SVG using typo system */}
+        {showDistraction && distractionType === 'math' && (rulerState === 'waiting' || rulerState === 'dropping') && (
+          <div style={{
+            position: 'absolute',
+            top: '50%',
+            left: '50%',
+            transform: 'translate(-50%, -50%)',
+            textAlign: 'center',
+            zIndex: 10
+          }}>
+            <span style={{
+              fontSize: typo.heading,
+              fontWeight: 700,
+              color: colors.primary,
+              textShadow: '0 2px 4px rgba(0,0,0,0.5)'
+            }}>
+              {mathProblem.a} + {mathProblem.b} = ?
+            </span>
+          </div>
         )}
-      </svg>
+
+        {/* Catch result label - outside SVG */}
+        {rulerState === 'caught' && (
+          <div style={{
+            position: 'absolute',
+            bottom: '15%',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            textAlign: 'center',
+            zIndex: 10
+          }}>
+            <span style={{
+              fontSize: typo.small,
+              fontWeight: 700,
+              color: colors.success,
+              background: 'rgba(16, 185, 129, 0.2)',
+              padding: '4px 12px',
+              borderRadius: '12px',
+              border: `1px solid ${colors.success}40`
+            }}>
+              CAUGHT!
+            </span>
+          </div>
+        )}
+      </div>
     );
   };
 

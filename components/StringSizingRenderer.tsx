@@ -598,42 +598,170 @@ export default function StringSizingRenderer({
         Too few panels and you lose power. Too many and you destroy your inverter. The sweet spot depends on physics!
       </p>
 
-      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '32px' }}>
-        <rect width="400" height="200" fill="#1e293b" rx="12" />
+      <svg viewBox="0 0 400 200" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+        <defs>
+          {/* Premium solar panel gradient - deep blue with cell texture effect */}
+          <linearGradient id="strPanelGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e3a8a" />
+            <stop offset="25%" stopColor="#1e40af" />
+            <stop offset="50%" stopColor="#2563eb" />
+            <stop offset="75%" stopColor="#1e40af" />
+            <stop offset="100%" stopColor="#1e3a8a" />
+          </linearGradient>
 
-        {/* Solar panels in series */}
+          {/* Solar cell shimmer gradient */}
+          <linearGradient id="strCellShimmer" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#60a5fa" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.3" />
+          </linearGradient>
+
+          {/* Panel frame metal gradient */}
+          <linearGradient id="strFrameGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#64748b" />
+            <stop offset="50%" stopColor="#94a3b8" />
+            <stop offset="100%" stopColor="#64748b" />
+          </linearGradient>
+
+          {/* Wire/connection gradient - golden energy flow */}
+          <linearGradient id="strWireGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ca8a04" />
+            <stop offset="30%" stopColor="#eab308" />
+            <stop offset="50%" stopColor="#fcd34d" />
+            <stop offset="70%" stopColor="#eab308" />
+            <stop offset="100%" stopColor="#ca8a04" />
+          </linearGradient>
+
+          {/* Background gradient */}
+          <linearGradient id="strBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="50%" stopColor="#1e293b" />
+            <stop offset="100%" stopColor="#0f172a" />
+          </linearGradient>
+
+          {/* Glow filter for panels */}
+          <filter id="strPanelGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Glow filter for connections */}
+          <filter id="strWireGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="1.5" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Voltage indicator glow */}
+          <radialGradient id="strVoltGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.8" />
+            <stop offset="60%" stopColor="#16a34a" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* Background */}
+        <rect width="400" height="200" fill="url(#strBgGrad)" rx="12" />
+
+        {/* Subtle grid pattern */}
+        <pattern id="strGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+        </pattern>
+        <rect width="400" height="200" fill="url(#strGrid)" rx="12" />
+
+        {/* Solar panels in series with premium rendering */}
         {[0, 1, 2, 3, 4].map(i => (
-          <g key={i} transform={`translate(${50 + i * 60}, 60)`}>
-            <rect width="50" height="70" fill="#1e40af" stroke="#3b82f6" strokeWidth="2" rx="4" />
-            <line x1="10" y1="15" x2="40" y2="15" stroke="#60a5fa" strokeWidth="1" />
-            <line x1="10" y1="30" x2="40" y2="30" stroke="#60a5fa" strokeWidth="1" />
-            <line x1="10" y1="45" x2="40" y2="45" stroke="#60a5fa" strokeWidth="1" />
-            <text x="25" y="65" textAnchor="middle" fill="#94a3b8" fontSize="10">40V</text>
+          <g key={i} transform={`translate(${50 + i * 60}, 55)`}>
+            {/* Panel shadow */}
+            <rect x="2" y="2" width="50" height="70" fill="#000" fillOpacity="0.3" rx="4" />
+            {/* Panel frame */}
+            <rect width="50" height="70" fill="url(#strFrameGrad)" rx="4" />
+            {/* Panel cells area */}
+            <rect x="3" y="3" width="44" height="64" fill="url(#strPanelGrad)" rx="2" filter="url(#strPanelGlow)" />
+            {/* Cell grid lines */}
+            <line x1="10" y1="12" x2="40" y2="12" stroke="url(#strCellShimmer)" strokeWidth="1" />
+            <line x1="10" y1="24" x2="40" y2="24" stroke="url(#strCellShimmer)" strokeWidth="1" />
+            <line x1="10" y1="36" x2="40" y2="36" stroke="url(#strCellShimmer)" strokeWidth="1" />
+            <line x1="10" y1="48" x2="40" y2="48" stroke="url(#strCellShimmer)" strokeWidth="1" />
+            {/* Vertical cell divisions */}
+            <line x1="25" y1="6" x2="25" y2="54" stroke="url(#strCellShimmer)" strokeWidth="0.5" />
+            {/* Connection terminals */}
+            <rect x="20" y="-4" width="10" height="6" fill="#475569" rx="1" />
+            <rect x="20" y="68" width="10" height="6" fill="#475569" rx="1" />
           </g>
         ))}
 
-        {/* Connection lines */}
-        <line x1="100" y1="95" x2="110" y2="95" stroke="#eab308" strokeWidth="2" />
-        <line x1="160" y1="95" x2="170" y2="95" stroke="#eab308" strokeWidth="2" />
-        <line x1="220" y1="95" x2="230" y2="95" stroke="#eab308" strokeWidth="2" />
-        <line x1="280" y1="95" x2="290" y2="95" stroke="#eab308" strokeWidth="2" />
-
-        {/* Plus signs */}
-        {[135, 195, 255].map((x, i) => (
-          <text key={i} x={x} y="100" textAnchor="middle" fill="#eab308" fontSize="16" fontWeight="bold">+</text>
+        {/* Connection wires between panels with glow */}
+        {[0, 1, 2, 3].map(i => (
+          <g key={`conn-${i}`}>
+            <line
+              x1={100 + i * 60} y1="90"
+              x2={110 + i * 60} y2="90"
+              stroke="url(#strWireGrad)"
+              strokeWidth="3"
+              filter="url(#strWireGlow)"
+              strokeLinecap="round"
+            />
+            {/* Plus sign with energy effect */}
+            <circle cx={105 + i * 60} cy="90" r="8" fill="#1e293b" stroke="url(#strWireGrad)" strokeWidth="1" />
+            <text
+              x={105 + i * 60} y="94"
+              textAnchor="middle"
+              fill="url(#strWireGrad)"
+              fontSize="14"
+              fontWeight="bold"
+            >+</text>
+          </g>
         ))}
 
-        {/* Equals */}
-        <text x="340" y="100" textAnchor="middle" fill="#f8fafc" fontSize="16">=</text>
+        {/* Voltage result indicator */}
+        <g transform="translate(340, 75)">
+          <ellipse cx="20" cy="15" rx="25" ry="20" fill="url(#strVoltGlow)" />
+          <rect x="0" y="0" width="40" height="30" fill="#0f172a" stroke="#22c55e" strokeWidth="2" rx="6" />
+        </g>
 
-        {/* Total */}
-        <text x="375" y="100" textAnchor="middle" fill="#22c55e" fontSize="18" fontWeight="bold">200V</text>
-
-        {/* Question */}
-        <text x="200" y="170" textAnchor="middle" fill="#f59e0b" fontSize="14">
-          But the inverter max is 450V... Can we add more?
-        </text>
+        {/* Equals sign */}
+        <g transform="translate(310, 82)">
+          <line x1="0" y1="0" x2="15" y2="0" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
+          <line x1="0" y1="8" x2="15" y2="8" stroke="#94a3b8" strokeWidth="2" strokeLinecap="round" />
+        </g>
       </svg>
+
+      {/* Voltage result label - moved outside SVG */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        alignItems: 'center',
+        gap: '8px',
+        marginBottom: '16px',
+      }}>
+        <span style={{ color: '#94a3b8', fontSize: typo.body }}>5 panels x 40V =</span>
+        <span style={{
+          color: '#22c55e',
+          fontSize: typo.heading,
+          fontWeight: 'bold',
+          textShadow: '0 0 10px rgba(34, 197, 94, 0.5)'
+        }}>200V</span>
+      </div>
+
+      {/* Question label - moved outside SVG */}
+      <div style={{
+        background: 'rgba(245, 158, 11, 0.1)',
+        border: '1px solid rgba(245, 158, 11, 0.3)',
+        borderRadius: '8px',
+        padding: '12px',
+        textAlign: 'center',
+        marginBottom: '16px',
+      }}>
+        <p style={{ color: '#fcd34d', fontSize: typo.body, margin: 0 }}>
+          But the inverter max is 450V... Can we add more?
+        </p>
+      </div>
 
       <div style={{
         background: 'rgba(30, 41, 59, 0.8)',
@@ -801,55 +929,195 @@ export default function StringSizingRenderer({
         </div>
       </div>
 
-      {/* Visual representation */}
-      <svg viewBox="0 0 400 120" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '24px' }}>
-        <rect width="400" height="120" fill="#0f172a" rx="12" />
+      {/* Visual representation - Premium SVG with inverter */}
+      <svg viewBox="0 0 400 180" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
+        <defs>
+          {/* Background gradient */}
+          <linearGradient id="strPlayBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
+
+          {/* MPPT range gradient - green zone */}
+          <linearGradient id="strMpptGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#15803d" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#22c55e" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#15803d" stopOpacity="0.4" />
+          </linearGradient>
+
+          {/* Danger zone gradient - red zone */}
+          <linearGradient id="strDangerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#dc2626" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#ef4444" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.6" />
+          </linearGradient>
+
+          {/* Voltage bar track gradient */}
+          <linearGradient id="strTrackGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="50%" stopColor="#334155" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+
+          {/* Inverter body gradient */}
+          <linearGradient id="strInverterGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#475569" />
+            <stop offset="30%" stopColor="#64748b" />
+            <stop offset="70%" stopColor="#475569" />
+            <stop offset="100%" stopColor="#334155" />
+          </linearGradient>
+
+          {/* Inverter display gradient */}
+          <linearGradient id="strDisplayGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+
+          {/* Marker glow filter */}
+          <filter id="strMarkerGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Status LED glow */}
+          <radialGradient id="strLedGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor={getStatusColor()} stopOpacity="1" />
+            <stop offset="50%" stopColor={getStatusColor()} stopOpacity="0.6" />
+            <stop offset="100%" stopColor={getStatusColor()} stopOpacity="0" />
+          </radialGradient>
+        </defs>
+
+        {/* Background */}
+        <rect width="400" height="180" fill="url(#strPlayBg)" rx="12" />
+
+        {/* Grid pattern */}
+        <pattern id="strPlayGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+          <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" />
+        </pattern>
+        <rect width="400" height="180" fill="url(#strPlayGrid)" rx="12" />
+
+        {/* Mini solar string visualization at top */}
+        <g transform="translate(20, 15)">
+          {Array.from({ length: Math.min(panelCount, 12) }).map((_, i) => (
+            <g key={`mini-panel-${i}`} transform={`translate(${i * 28}, 0)`}>
+              <rect width="24" height="30" fill="url(#strPanelGrad)" rx="2" stroke="#3b82f6" strokeWidth="0.5" />
+              <line x1="4" y1="8" x2="20" y2="8" stroke="#60a5fa" strokeWidth="0.5" opacity="0.5" />
+              <line x1="4" y1="16" x2="20" y2="16" stroke="#60a5fa" strokeWidth="0.5" opacity="0.5" />
+              <line x1="4" y1="24" x2="20" y2="24" stroke="#60a5fa" strokeWidth="0.5" opacity="0.5" />
+              {/* Connection wire to next panel */}
+              {i < Math.min(panelCount, 12) - 1 && (
+                <line x1="24" y1="15" x2="28" y2="15" stroke="#eab308" strokeWidth="1.5" />
+              )}
+            </g>
+          ))}
+          {/* Wire to inverter */}
+          <line x1={Math.min(panelCount, 12) * 28 - 4} y1="15" x2={Math.min(panelCount, 12) * 28 + 10} y2="15" stroke="#eab308" strokeWidth="2" />
+        </g>
+
+        {/* Inverter visualization */}
+        <g transform="translate(345, 8)">
+          {/* Inverter body */}
+          <rect width="45" height="44" fill="url(#strInverterGrad)" rx="4" stroke="#64748b" strokeWidth="1" />
+          {/* Display screen */}
+          <rect x="5" y="5" width="35" height="20" fill="url(#strDisplayGrad)" rx="2" />
+          {/* Status LED */}
+          <circle cx="22" cy="35" r="4" fill="url(#strLedGlow)" />
+          <circle cx="22" cy="35" r="2" fill={getStatusColor()} />
+          {/* Vent lines */}
+          <line x1="8" y1="28" x2="15" y2="28" stroke="#334155" strokeWidth="1" />
+          <line x1="8" y1="31" x2="15" y2="31" stroke="#334155" strokeWidth="1" />
+          <line x1="30" y1="28" x2="37" y2="28" stroke="#334155" strokeWidth="1" />
+          <line x1="30" y1="31" x2="37" y2="31" stroke="#334155" strokeWidth="1" />
+        </g>
 
         {/* Voltage bar scale */}
-        <rect x="20" y="50" width="360" height="30" fill="#1e293b" rx="4" />
+        <rect x="20" y="65" width="360" height="35" fill="url(#strTrackGrad)" rx="6" stroke="#475569" strokeWidth="1" />
 
         {/* MPPT range */}
         <rect
           x={20 + (inverterMpptMin / 500) * 360}
-          y="50"
+          y="67"
           width={((inverterMpptMax - inverterMpptMin) / 500) * 360}
-          height="30"
-          fill="rgba(34, 197, 94, 0.3)"
-          rx="0"
+          height="31"
+          fill="url(#strMpptGrad)"
         />
 
         {/* Danger zone */}
         <rect
           x={20 + (inverterMaxV / 500) * 360}
-          y="50"
+          y="67"
           width={360 - (inverterMaxV / 500) * 360}
-          height="30"
-          fill="rgba(239, 68, 68, 0.3)"
-          rx="0"
+          height="31"
+          fill="url(#strDangerGrad)"
         />
 
-        {/* Current voltage marker */}
-        <line
-          x1={20 + Math.min((stringVoltage / 500) * 360, 360)}
-          y1="45"
-          x2={20 + Math.min((stringVoltage / 500) * 360, 360)}
-          y2="85"
-          stroke={getStatusColor()}
-          strokeWidth="4"
-        />
+        {/* Current voltage marker with glow */}
+        <g filter="url(#strMarkerGlow)">
+          <line
+            x1={20 + Math.min((stringVoltage / 500) * 360, 360)}
+            y1="60"
+            x2={20 + Math.min((stringVoltage / 500) * 360, 360)}
+            y2="105"
+            stroke={getStatusColor()}
+            strokeWidth="4"
+            strokeLinecap="round"
+          />
+          {/* Marker arrow */}
+          <polygon
+            points={`${20 + Math.min((stringVoltage / 500) * 360, 360)},55 ${16 + Math.min((stringVoltage / 500) * 360, 360)},62 ${24 + Math.min((stringVoltage / 500) * 360, 360)},62`}
+            fill={getStatusColor()}
+          />
+        </g>
 
-        {/* Labels */}
-        <text x="20" y="100" fill="#64748b" fontSize="10">0V</text>
-        <text x={20 + (inverterMpptMin / 500) * 360} y="100" fill="#22c55e" fontSize="10">{inverterMpptMin}V</text>
-        <text x={20 + (inverterMpptMax / 500) * 360} y="100" fill="#22c55e" fontSize="10">{inverterMpptMax}V</text>
-        <text x={20 + (inverterMaxV / 500) * 360} y="100" fill="#ef4444" fontSize="10">{inverterMaxV}V MAX</text>
-
-        {/* Legend */}
-        <rect x="20" y="15" width="15" height="15" fill="rgba(34, 197, 94, 0.3)" />
-        <text x="40" y="26" fill="#94a3b8" fontSize="10">MPPT Range</text>
-        <rect x="150" y="15" width="15" height="15" fill="rgba(239, 68, 68, 0.3)" />
-        <text x="170" y="26" fill="#94a3b8" fontSize="10">Over-voltage Danger</text>
+        {/* Tick marks */}
+        {[0, 100, 200, 300, 400, 500].map(v => (
+          <line
+            key={v}
+            x1={20 + (v / 500) * 360}
+            y1="100"
+            x2={20 + (v / 500) * 360}
+            y2="105"
+            stroke="#64748b"
+            strokeWidth="1"
+          />
+        ))}
       </svg>
+
+      {/* Legend - moved outside SVG */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'center',
+        gap: '16px',
+        marginBottom: '12px',
+        flexWrap: 'wrap',
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ width: '12px', height: '12px', background: 'rgba(34, 197, 94, 0.4)', borderRadius: '2px' }} />
+          <span style={{ color: '#94a3b8', fontSize: typo.small }}>MPPT Range ({inverterMpptMin}V-{inverterMpptMax}V)</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ width: '12px', height: '12px', background: 'rgba(239, 68, 68, 0.4)', borderRadius: '2px' }} />
+          <span style={{ color: '#94a3b8', fontSize: typo.small }}>Danger Zone ({'>'}450V)</span>
+        </div>
+      </div>
+
+      {/* Voltage scale labels - moved outside SVG */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        maxWidth: '500px',
+        margin: '0 auto 24px',
+        padding: '0 20px',
+      }}>
+        <span style={{ color: '#64748b', fontSize: typo.label }}>0V</span>
+        <span style={{ color: '#22c55e', fontSize: typo.label }}>{inverterMpptMin}V</span>
+        <span style={{ color: '#22c55e', fontSize: typo.label }}>{inverterMpptMax}V</span>
+        <span style={{ color: '#ef4444', fontSize: typo.label }}>{inverterMaxV}V MAX</span>
+      </div>
 
       {/* Panel count slider */}
       <div style={{ marginBottom: '24px' }}>
@@ -1128,33 +1396,136 @@ export default function StringSizingRenderer({
         </div>
       </div>
 
-      {/* Temperature visualization */}
-      <svg viewBox="0 0 400 80" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '16px' }}>
-        <rect width="400" height="80" fill="#0f172a" rx="12" />
+      {/* Temperature visualization - Premium SVG */}
+      <svg viewBox="0 0 400 100" style={{ width: '100%', maxWidth: '500px', height: 'auto', marginBottom: '8px' }}>
+        <defs>
+          {/* Background gradient */}
+          <linearGradient id="strTempBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#020617" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="100%" stopColor="#020617" />
+          </linearGradient>
 
-        {/* Temperature scale */}
-        <rect x="40" y="30" width="320" height="20" fill="#1e293b" rx="10" />
+          {/* Cold zone gradient - blue */}
+          <linearGradient id="strColdGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#1e40af" stopOpacity="0.5" />
+            <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.6" />
+            <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.4" />
+          </linearGradient>
+
+          {/* Neutral zone gradient */}
+          <linearGradient id="strNeutralGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+            <stop offset="50%" stopColor="#4ade80" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#22c55e" stopOpacity="0.3" />
+          </linearGradient>
+
+          {/* Hot zone gradient - red */}
+          <linearGradient id="strHotGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#f87171" stopOpacity="0.4" />
+            <stop offset="50%" stopColor="#ef4444" stopOpacity="0.5" />
+            <stop offset="100%" stopColor="#dc2626" stopOpacity="0.6" />
+          </linearGradient>
+
+          {/* Temperature track gradient */}
+          <linearGradient id="strTempTrack" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#1e293b" />
+            <stop offset="50%" stopColor="#334155" />
+            <stop offset="100%" stopColor="#1e293b" />
+          </linearGradient>
+
+          {/* Marker glow */}
+          <radialGradient id="strTempMarkerGlow" cx="50%" cy="50%" r="50%">
+            <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#eab308" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#ca8a04" stopOpacity="0" />
+          </radialGradient>
+
+          {/* Marker glow filter */}
+          <filter id="strTempGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          {/* Thermometer gradient */}
+          <linearGradient id="strThermGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+            <stop offset="0%" stopColor="#3b82f6" />
+            <stop offset="50%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#ef4444" />
+          </linearGradient>
+        </defs>
+
+        {/* Background */}
+        <rect width="400" height="100" fill="url(#strTempBg)" rx="12" />
+
+        {/* Thermometer icon */}
+        <g transform="translate(15, 20)">
+          <rect x="4" y="0" width="8" height="50" fill="url(#strTempTrack)" rx="4" />
+          <rect x="5" y={50 - ((temperature + 20) / 80) * 45} width="6" height={((temperature + 20) / 80) * 45} fill="url(#strThermGrad)" rx="3" />
+          <circle cx="8" cy="55" r="10" fill={temperature < 25 ? '#3b82f6' : temperature > 35 ? '#ef4444' : '#22c55e'} />
+        </g>
+
+        {/* Temperature scale bar */}
+        <rect x="50" y="35" width="320" height="24" fill="url(#strTempTrack)" rx="12" stroke="#475569" strokeWidth="1" />
 
         {/* Cold zone */}
-        <rect x="40" y="30" width="100" height="20" fill="rgba(59, 130, 246, 0.3)" rx="10" />
+        <rect x="52" y="37" width="100" height="20" fill="url(#strColdGrad)" rx="10" />
+
+        {/* Neutral zone (STC area) */}
+        <rect x="152" y="37" width="80" height="20" fill="url(#strNeutralGrad)" />
 
         {/* Hot zone */}
-        <rect x="260" y="30" width="100" height="20" fill="rgba(239, 68, 68, 0.3)" />
-        <rect x="350" y="30" width="10" height="20" fill="rgba(239, 68, 68, 0.3)" rx="0 10 10 0" />
+        <rect x="268" y="37" width="100" height="20" fill="url(#strHotGrad)" rx="0" />
 
-        {/* Marker */}
-        <circle cx={40 + ((temperature + 20) / 80) * 320} cy="40" r="8" fill="#eab308" stroke="#fef3c7" strokeWidth="2" />
+        {/* STC indicator line */}
+        <line x1={50 + ((45) / 80) * 320} y1="32" x2={50 + ((45) / 80) * 320} y2="62" stroke="#22c55e" strokeWidth="2" strokeDasharray="3,2" />
 
-        {/* Labels */}
-        <text x="40" y="65" fill="#3b82f6" fontSize="10">-20C</text>
-        <text x="150" y="65" fill="#94a3b8" fontSize="10">25C (STC)</text>
-        <text x="340" y="65" fill="#ef4444" fontSize="10">60C</text>
+        {/* Temperature marker with glow */}
+        <g filter="url(#strTempGlow)">
+          <circle cx={50 + ((temperature + 20) / 80) * 320} cy="47" r="12" fill="url(#strTempMarkerGlow)" />
+          <circle cx={50 + ((temperature + 20) / 80) * 320} cy="47" r="8" fill="#eab308" stroke="#fef3c7" strokeWidth="2" />
+        </g>
 
-        {/* Voltage effect indicator */}
-        <text x="200" y="18" textAnchor="middle" fill="#94a3b8" fontSize="11">
-          {temperature < 25 ? 'Higher V' : temperature > 25 ? 'Lower V' : 'Rated V'}
-        </text>
+        {/* Snowflake icon for cold */}
+        <text x="35" y="80" fill="#3b82f6" fontSize="12">*</text>
+
+        {/* Sun icon for hot */}
+        <text x="375" y="80" fill="#ef4444" fontSize="12">*</text>
       </svg>
+
+      {/* Temperature labels - moved outside SVG */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        maxWidth: '500px',
+        margin: '0 auto 8px',
+        padding: '0 50px 0 50px',
+      }}>
+        <span style={{ color: '#3b82f6', fontSize: typo.small, fontWeight: 600 }}>-20C (Cold)</span>
+        <span style={{ color: '#22c55e', fontSize: typo.small, fontWeight: 600 }}>25C (STC)</span>
+        <span style={{ color: '#ef4444', fontSize: typo.small, fontWeight: 600 }}>60C (Hot)</span>
+      </div>
+
+      {/* Voltage effect indicator - moved outside SVG */}
+      <div style={{
+        textAlign: 'center',
+        marginBottom: '16px',
+        padding: '8px 16px',
+        background: temperature < 25 ? 'rgba(59, 130, 246, 0.1)' : temperature > 25 ? 'rgba(239, 68, 68, 0.1)' : 'rgba(34, 197, 94, 0.1)',
+        border: `1px solid ${temperature < 25 ? 'rgba(59, 130, 246, 0.3)' : temperature > 25 ? 'rgba(239, 68, 68, 0.3)' : 'rgba(34, 197, 94, 0.3)'}`,
+        borderRadius: '8px',
+      }}>
+        <span style={{
+          color: temperature < 25 ? '#60a5fa' : temperature > 25 ? '#f87171' : '#4ade80',
+          fontSize: typo.body,
+          fontWeight: 600
+        }}>
+          {temperature < 25 ? 'Higher Voltage (panels run cooler)' : temperature > 25 ? 'Lower Voltage (panels run hotter)' : 'Rated Voltage (at STC)'}
+        </span>
+      </div>
 
       {/* Temperature slider */}
       <div style={{ marginBottom: '16px' }}>

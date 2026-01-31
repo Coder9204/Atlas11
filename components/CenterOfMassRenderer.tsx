@@ -331,24 +331,95 @@ const CenterOfMassRenderer: React.FC<CenterOfMassRendererProps> = ({ onGameEvent
   }, [emit, playSound]);
 
   // ============================================================================
-  // VISUALIZATION - Using clarity-first approach
+  // VISUALIZATION - Using clarity-first approach with external labels
   // ============================================================================
-  const renderVisualization = (size: 'large' | 'medium' = 'large') => {
+
+  // Legend component using typo system - labels outside SVG
+  const renderVisualizationLegend = () => (
+    <div style={{
+      display: 'flex',
+      flexWrap: 'wrap',
+      gap: typo.elementGap,
+      justifyContent: 'center',
+      alignItems: 'center',
+      padding: typo.cardPadding,
+      background: colors.bgSurface,
+      borderRadius: '12px',
+      border: `1px solid ${colors.bgHover}`,
+      marginBottom: typo.elementGap,
+    }}>
+      <span style={{ fontSize: typo.small, color: colors.textMuted }}>
+        <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: '#22c55e', marginRight: '6px', verticalAlign: 'middle' }}/>
+        <strong style={{ color: '#4ade80' }}>Pivot</strong> (balance point)
+      </span>
+      {showCOM && (
+        <span style={{ fontSize: typo.small, color: colors.textMuted }}>
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: '#ef4444', marginRight: '6px', verticalAlign: 'middle' }}/>
+          <strong style={{ color: '#f87171' }}>COM</strong> (center of mass)
+        </span>
+      )}
+      <span style={{ fontSize: typo.small, color: colors.textMuted }}>
+        <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '4px', background: '#f59e0b', marginRight: '6px', verticalAlign: 'middle' }}/>
+        <strong style={{ color: '#fcd34d' }}>Heavy</strong> (fork side)
+      </span>
+      {hasClayAdded && (
+        <span style={{ fontSize: typo.small, color: colors.textMuted }}>
+          <span style={{ display: 'inline-block', width: '10px', height: '10px', borderRadius: '50%', background: '#a855f7', marginRight: '6px', verticalAlign: 'middle' }}/>
+          <strong style={{ color: '#c084fc' }}>Added</strong> (clay)
+        </span>
+      )}
+    </div>
+  );
+
+  // Status indicator using typo system - outside SVG
+  const renderVisualizationStatus = () => (
+    <div style={{
+      display: 'flex',
+      justifyContent: 'center',
+      alignItems: 'center',
+      gap: typo.elementGap,
+      padding: typo.cardPadding,
+      background: isBalanced ? colors.successBg : colors.errorBg,
+      border: `1px solid ${isBalanced ? colors.success : colors.error}30`,
+      borderRadius: '12px',
+      marginTop: typo.elementGap,
+    }}>
+      <span style={{
+        fontSize: typo.bodyLarge,
+        fontWeight: 700,
+        color: isBalanced ? colors.success : colors.error,
+      }}>
+        {isBalanced ? 'BALANCED' : 'FALLING'}
+      </span>
+      <span style={{ fontSize: typo.small, color: colors.textSecondary }}>
+        {comY < 0 ? 'COM below pivot = stable' : 'COM above pivot = unstable'}
+      </span>
+    </div>
+  );
+
+  const renderVisualization = (size: 'large' | 'medium' = 'large', showLabels: boolean = false) => {
     const { comY } = calculateBalance(clayPosition);
 
     return (
-      <CenterOfMassVisualization
-        comY={comY}
-        isBalanced={isBalanced}
-        tiltAngle={tiltAngle}
-        showCOM={showCOM}
-        hasWeight={hasClayAdded}
-        weightPosition={clayPosition}
-        timeRef={timeRef.current}
-        size={size}
-      />
+      <div>
+        {showLabels && renderVisualizationLegend()}
+        <CenterOfMassVisualization
+          comY={comY}
+          isBalanced={isBalanced}
+          tiltAngle={tiltAngle}
+          showCOM={showCOM}
+          hasWeight={hasClayAdded}
+          weightPosition={clayPosition}
+          timeRef={timeRef.current}
+          size={size}
+        />
+        {showLabels && renderVisualizationStatus()}
+      </div>
     );
   };
+
+  // Helper to get comY for status display
+  const comY = calculateBalance(clayPosition).comY;
 
   // ============================================================================
   // PHASE RENDERERS

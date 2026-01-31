@@ -420,148 +420,614 @@ const GPUPowerStatesRenderer: React.FC<GPUPowerStatesRendererProps> = ({
   // VISUALIZATION
   // ─────────────────────────────────────────────────────────────────────────────
   const renderPowerStateVisualization = () => {
-    const width = 400;
-    const height = 340;
+    const width = 500;
+    const height = 380;
 
-    // Calculate bar heights
-    const powerPercent = (currentPower / powerLimit) * 100;
-    const tempPercent = ((currentTemp - 35) / (thermalLimit - 35)) * 100;
-    const clockPercent = ((currentClock - 300) / 2400) * 100;
-    const voltagePercent = ((currentVoltage - 0.75) / 0.45) * 100;
+    // Calculate percentages for visualization
+    const powerPercent = Math.min(100, (currentPower / powerLimit) * 100);
+    const tempPercent = Math.min(100, ((currentTemp - 35) / (thermalLimit - 35)) * 100);
+    const clockPercent = Math.min(100, ((currentClock - 300) / 2400) * 100);
+    const voltagePercent = Math.min(100, ((currentVoltage - 0.75) / 0.45) * 100);
+
+    // State-dependent colors for GPU chip
+    const getGPUStateColor = () => {
+      if (limitingFactor === 'thermal') return 'url(#gpupsThermalState)';
+      if (limitingFactor === 'power') return 'url(#gpupsPowerState)';
+      if (workload > 70) return 'url(#gpupsHighLoad)';
+      if (workload > 30) return 'url(#gpupsMediumLoad)';
+      return 'url(#gpupsIdleState)';
+    };
+
+    // Animation offset for state transitions
+    const animOffset = (Date.now() / 50) % 360;
 
     return (
-      <svg
-        width="100%"
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
-        style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
-      >
-        <defs>
-          <linearGradient id="powerGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#22c55e" />
-            <stop offset="70%" stopColor="#eab308" />
-            <stop offset="100%" stopColor="#ef4444" />
-          </linearGradient>
-          <linearGradient id="tempGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#3b82f6" />
-            <stop offset="60%" stopColor="#f97316" />
-            <stop offset="100%" stopColor="#ef4444" />
-          </linearGradient>
-          <filter id="limitGlow">
-            <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
+        <svg
+          width="100%"
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          style={{ maxWidth: '520px' }}
+        >
+          <defs>
+            {/* === BACKGROUND GRADIENTS === */}
+            <linearGradient id="gpupsLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-        {/* Title */}
-        <text x={width/2} y={22} textAnchor="middle" fill={colors.textPrimary} fontSize={14} fontWeight="bold">
-          GPU Power State Monitor
-        </text>
+            {/* === GPU STATE GRADIENTS === */}
+            <linearGradient id="gpupsIdleState" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="25%" stopColor="#1d4ed8" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
 
-        {/* Workload indicator */}
-        <g transform="translate(30, 45)">
-          <text x={0} y={0} fill={colors.textSecondary} fontSize={11}>Workload: {workload}%</text>
-          <rect x={0} y={8} width={340} height={12} fill="rgba(255,255,255,0.1)" rx={4} />
-          <rect x={0} y={8} width={340 * workload / 100} height={12} fill={colors.accent} rx={4} />
-        </g>
+            <linearGradient id="gpupsMediumLoad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#065f46" />
+              <stop offset="25%" stopColor="#047857" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="75%" stopColor="#047857" />
+              <stop offset="100%" stopColor="#065f46" />
+            </linearGradient>
 
-        {/* Bar charts */}
-        <g transform="translate(50, 90)">
-          {/* Power bar */}
-          <g>
-            <text x={30} y={-5} textAnchor="middle" fill={colors.textSecondary} fontSize={10}>Power</text>
-            <rect x={10} y={0} width={40} height={140} fill="rgba(255,255,255,0.1)" rx={4} />
+            <linearGradient id="gpupsHighLoad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7c2d12" />
+              <stop offset="25%" stopColor="#c2410c" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="75%" stopColor="#c2410c" />
+              <stop offset="100%" stopColor="#7c2d12" />
+            </linearGradient>
+
+            <linearGradient id="gpupsThermalState" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7f1d1d" />
+              <stop offset="25%" stopColor="#b91c1c" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="75%" stopColor="#b91c1c" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </linearGradient>
+
+            <linearGradient id="gpupsPowerState" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#581c87" />
+              <stop offset="25%" stopColor="#7c3aed" />
+              <stop offset="50%" stopColor="#a855f7" />
+              <stop offset="75%" stopColor="#7c3aed" />
+              <stop offset="100%" stopColor="#581c87" />
+            </linearGradient>
+
+            {/* === POWER BAR GRADIENT === */}
+            <linearGradient id="gpupsPowerBarGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="40%" stopColor="#84cc16" />
+              <stop offset="60%" stopColor="#eab308" />
+              <stop offset="80%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* === TEMPERATURE GAUGE GRADIENT === */}
+            <linearGradient id="gpupsTempGaugeGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#0ea5e9" />
+              <stop offset="30%" stopColor="#06b6d4" />
+              <stop offset="50%" stopColor="#22d3ee" />
+              <stop offset="70%" stopColor="#f97316" />
+              <stop offset="85%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* === CLOCK SPEED GRADIENT === */}
+            <linearGradient id="gpupsClockGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="30%" stopColor="#2563eb" />
+              <stop offset="60%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#60a5fa" />
+            </linearGradient>
+
+            {/* === VOLTAGE GRADIENT === */}
+            <linearGradient id="gpupsVoltageGrad" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#4c1d95" />
+              <stop offset="30%" stopColor="#6d28d9" />
+              <stop offset="60%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#a78bfa" />
+            </linearGradient>
+
+            {/* === GPU CHIP METAL GRADIENT === */}
+            <linearGradient id="gpupsChipMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="20%" stopColor="#4b5563" />
+              <stop offset="50%" stopColor="#6b7280" />
+              <stop offset="80%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* === HEATSINK METAL GRADIENT === */}
+            <linearGradient id="gpupsHeatsinkMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#9ca3af" />
+              <stop offset="15%" stopColor="#6b7280" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="85%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#9ca3af" />
+            </linearGradient>
+
+            {/* === PCB GRADIENT === */}
+            <linearGradient id="gpupsPCB" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#064e3b" />
+              <stop offset="30%" stopColor="#065f46" />
+              <stop offset="70%" stopColor="#047857" />
+              <stop offset="100%" stopColor="#064e3b" />
+            </linearGradient>
+
+            {/* === WORKLOAD BAR GRADIENT === */}
+            <linearGradient id="gpupsWorkloadGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#fb923c" />
+              <stop offset="100%" stopColor="#fdba74" />
+            </linearGradient>
+
+            {/* === STATUS BOX GRADIENTS === */}
+            <linearGradient id="gpupsStatusNormal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(16, 185, 129, 0.3)" />
+              <stop offset="50%" stopColor="rgba(16, 185, 129, 0.15)" />
+              <stop offset="100%" stopColor="rgba(16, 185, 129, 0.3)" />
+            </linearGradient>
+
+            <linearGradient id="gpupsStatusPower" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(139, 92, 246, 0.3)" />
+              <stop offset="50%" stopColor="rgba(139, 92, 246, 0.15)" />
+              <stop offset="100%" stopColor="rgba(139, 92, 246, 0.3)" />
+            </linearGradient>
+
+            <linearGradient id="gpupsStatusThermal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(239, 68, 68, 0.3)" />
+              <stop offset="50%" stopColor="rgba(239, 68, 68, 0.15)" />
+              <stop offset="100%" stopColor="rgba(239, 68, 68, 0.3)" />
+            </linearGradient>
+
+            {/* === GLOW FILTERS === */}
+            <filter id="gpupsChipGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="gpupsLimitGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="gpupsBarGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="gpupsStatusGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="gpupsInnerShadow">
+              <feOffset dx="0" dy="2" />
+              <feGaussianBlur stdDeviation="2" result="shadow" />
+              <feComposite in="SourceGraphic" in2="shadow" operator="over" />
+            </filter>
+
+            {/* === GRID PATTERN === */}
+            <pattern id="gpupsGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.4" />
+            </pattern>
+          </defs>
+
+          {/* Background */}
+          <rect width={width} height={height} fill="url(#gpupsLabBg)" rx="12" />
+          <rect width={width} height={height} fill="url(#gpupsGridPattern)" rx="12" />
+
+          {/* === GPU VISUALIZATION SECTION === */}
+          <g transform="translate(30, 30)">
+            {/* PCB Board */}
+            <rect x="0" y="20" width="200" height="120" rx="6" fill="url(#gpupsPCB)" stroke="#065f46" strokeWidth="1" />
+
+            {/* PCB Traces */}
+            <g opacity="0.4">
+              <line x1="10" y1="40" x2="50" y2="40" stroke="#22c55e" strokeWidth="1" />
+              <line x1="10" y1="60" x2="40" y2="60" stroke="#22c55e" strokeWidth="1" />
+              <line x1="10" y1="80" x2="45" y2="80" stroke="#22c55e" strokeWidth="1" />
+              <line x1="10" y1="100" x2="50" y2="100" stroke="#22c55e" strokeWidth="1" />
+              <line x1="10" y1="120" x2="40" y2="120" stroke="#22c55e" strokeWidth="1" />
+              <line x1="150" y1="40" x2="190" y2="40" stroke="#22c55e" strokeWidth="1" />
+              <line x1="160" y1="60" x2="190" y2="60" stroke="#22c55e" strokeWidth="1" />
+              <line x1="155" y1="80" x2="190" y2="80" stroke="#22c55e" strokeWidth="1" />
+              <line x1="150" y1="100" x2="190" y2="100" stroke="#22c55e" strokeWidth="1" />
+              <line x1="160" y1="120" x2="190" y2="120" stroke="#22c55e" strokeWidth="1" />
+            </g>
+
+            {/* Heatsink Fins */}
+            <g transform="translate(50, 0)">
+              {[0, 12, 24, 36, 48, 60, 72, 84].map((offset, i) => (
+                <rect
+                  key={i}
+                  x={offset}
+                  y="10"
+                  width="8"
+                  height="20"
+                  fill="url(#gpupsHeatsinkMetal)"
+                  rx="1"
+                />
+              ))}
+            </g>
+
+            {/* GPU Die / Chip */}
             <rect
-              x={10}
-              y={140 - powerPercent * 1.4}
-              width={40}
-              height={powerPercent * 1.4}
-              fill="url(#powerGrad)"
-              rx={4}
-              filter={limitingFactor === 'power' ? 'url(#limitGlow)' : undefined}
+              x="55"
+              y="45"
+              width="90"
+              height="70"
+              rx="4"
+              fill="url(#gpupsChipMetal)"
+              stroke="#6b7280"
+              strokeWidth="1"
             />
-            <text x={30} y={155} textAnchor="middle" fill={colors.power} fontSize={11} fontWeight="bold">
-              {currentPower.toFixed(0)}W
-            </text>
-            <line x1={5} y1={140 - (powerLimit / 450 * 140)} x2={55} y2={140 - (powerLimit / 450 * 140)} stroke={colors.error} strokeWidth={2} strokeDasharray="4,2" />
+
+            {/* GPU Die Core with state-dependent color */}
+            <rect
+              x="65"
+              y="55"
+              width="70"
+              height="50"
+              rx="3"
+              fill={getGPUStateColor()}
+              filter={limitingFactor !== 'none' ? 'url(#gpupsChipGlow)' : undefined}
+            >
+              {limitingFactor !== 'none' && (
+                <animate
+                  attributeName="opacity"
+                  values="1;0.7;1"
+                  dur="0.5s"
+                  repeatCount="indefinite"
+                />
+              )}
+            </rect>
+
+            {/* GPU Die pattern */}
+            <g opacity="0.3">
+              {[0, 1, 2, 3, 4].map((row) => (
+                [0, 1, 2, 3, 4, 5].map((col) => (
+                  <rect
+                    key={`${row}-${col}`}
+                    x={70 + col * 10}
+                    y={60 + row * 9}
+                    width="7"
+                    height="6"
+                    fill="#fff"
+                    opacity={workload > (row * 6 + col) * 3.3 ? 0.4 : 0.1}
+                    rx="1"
+                  />
+                ))
+              ))}
+            </g>
+
+            {/* Memory chips */}
+            {[0, 1, 2, 3].map((i) => (
+              <rect
+                key={`mem-left-${i}`}
+                x="15"
+                y={35 + i * 25}
+                width="25"
+                height="15"
+                rx="2"
+                fill="#1f2937"
+                stroke="#374151"
+                strokeWidth="0.5"
+              />
+            ))}
+            {[0, 1, 2, 3].map((i) => (
+              <rect
+                key={`mem-right-${i}`}
+                x="160"
+                y={35 + i * 25}
+                width="25"
+                height="15"
+                rx="2"
+                fill="#1f2937"
+                stroke="#374151"
+                strokeWidth="0.5"
+              />
+            ))}
+
+            {/* VRM components */}
+            {[0, 1, 2].map((i) => (
+              <rect
+                key={`vrm-${i}`}
+                x={15 + i * 28}
+                y="125"
+                width="20"
+                height="10"
+                rx="1"
+                fill="#374151"
+                stroke="#4b5563"
+                strokeWidth="0.5"
+              />
+            ))}
           </g>
 
-          {/* Temperature bar */}
-          <g transform="translate(80, 0)">
-            <text x={30} y={-5} textAnchor="middle" fill={colors.textSecondary} fontSize={10}>Temp</text>
-            <rect x={10} y={0} width={40} height={140} fill="rgba(255,255,255,0.1)" rx={4} />
-            <rect
-              x={10}
-              y={140 - Math.min(100, tempPercent) * 1.4}
-              width={40}
-              height={Math.min(100, tempPercent) * 1.4}
-              fill="url(#tempGrad)"
-              rx={4}
-              filter={limitingFactor === 'thermal' ? 'url(#limitGlow)' : undefined}
+          {/* === TEMPERATURE GAUGE (Circular) === */}
+          <g transform="translate(250, 50)">
+            {/* Gauge background */}
+            <circle cx="50" cy="50" r="45" fill="none" stroke="#1e293b" strokeWidth="10" />
+
+            {/* Gauge fill */}
+            <circle
+              cx="50"
+              cy="50"
+              r="45"
+              fill="none"
+              stroke="url(#gpupsTempGaugeGrad)"
+              strokeWidth="10"
+              strokeLinecap="round"
+              strokeDasharray={`${tempPercent * 2.83} 283`}
+              transform="rotate(-90 50 50)"
+              filter={limitingFactor === 'thermal' ? 'url(#gpupsLimitGlow)' : undefined}
             />
-            <text x={30} y={155} textAnchor="middle" fill={colors.thermal} fontSize={11} fontWeight="bold">
-              {currentTemp.toFixed(0)}C
-            </text>
-            <line x1={5} y1={0} x2={55} y2={0} stroke={colors.error} strokeWidth={2} strokeDasharray="4,2" />
+
+            {/* Inner circle */}
+            <circle cx="50" cy="50" r="32" fill="#0f172a" stroke="#334155" strokeWidth="1" />
+
+            {/* Temperature needle */}
+            <g transform={`rotate(${-135 + tempPercent * 2.7} 50 50)`}>
+              <line x1="50" y1="50" x2="50" y2="25" stroke={limitingFactor === 'thermal' ? '#ef4444' : '#94a3b8'} strokeWidth="2" strokeLinecap="round" />
+              <circle cx="50" cy="50" r="4" fill={limitingFactor === 'thermal' ? '#ef4444' : '#64748b'} />
+            </g>
+
+            {/* Thermal limit marker */}
+            <g transform="rotate(135 50 50)">
+              <line x1="50" y1="8" x2="50" y2="15" stroke="#ef4444" strokeWidth="2" />
+            </g>
           </g>
 
-          {/* Clock bar */}
-          <g transform="translate(160, 0)">
-            <text x={30} y={-5} textAnchor="middle" fill={colors.textSecondary} fontSize={10}>Clock</text>
-            <rect x={10} y={0} width={40} height={140} fill="rgba(255,255,255,0.1)" rx={4} />
+          {/* === POWER LEVEL INDICATOR (Vertical) === */}
+          <g transform="translate(370, 30)">
+            {/* Background track */}
+            <rect x="0" y="0" width="30" height="120" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+
+            {/* Power fill */}
             <rect
-              x={10}
-              y={140 - clockPercent * 1.4}
-              width={40}
-              height={clockPercent * 1.4}
-              fill={colors.clock}
-              rx={4}
+              x="3"
+              y={120 - powerPercent * 1.14}
+              width="24"
+              height={powerPercent * 1.14}
+              rx="4"
+              fill="url(#gpupsPowerBarGrad)"
+              filter={limitingFactor === 'power' ? 'url(#gpupsLimitGlow)' : 'url(#gpupsBarGlow)'}
             />
-            <text x={30} y={155} textAnchor="middle" fill={colors.clock} fontSize={11} fontWeight="bold">
-              {currentClock.toFixed(0)}
-            </text>
-            <text x={30} y={167} textAnchor="middle" fill={colors.textMuted} fontSize={9}>MHz</text>
+
+            {/* Power limit line */}
+            <line
+              x1="-5"
+              y1={120 - (powerLimit / 450) * 114}
+              x2="35"
+              y2={120 - (powerLimit / 450) * 114}
+              stroke="#ef4444"
+              strokeWidth="2"
+              strokeDasharray="4,2"
+            />
+
+            {/* Scale markers */}
+            {[0, 25, 50, 75, 100].map((pct) => (
+              <g key={pct} transform={`translate(32, ${120 - pct * 1.14})`}>
+                <line x1="0" y1="0" x2="5" y2="0" stroke="#4b5563" strokeWidth="1" />
+              </g>
+            ))}
+
+            {/* Lightning bolt icon */}
+            <path
+              d="M15 -8 L12 0 L17 0 L13 10 L18 0 L13 0 Z"
+              fill={limitingFactor === 'power' ? '#a855f7' : '#f59e0b'}
+              transform="translate(0, -5)"
+            />
           </g>
 
-          {/* Voltage bar */}
-          <g transform="translate(240, 0)">
-            <text x={30} y={-5} textAnchor="middle" fill={colors.textSecondary} fontSize={10}>Voltage</text>
-            <rect x={10} y={0} width={40} height={140} fill="rgba(255,255,255,0.1)" rx={4} />
+          {/* === CLOCK & VOLTAGE BARS === */}
+          <g transform="translate(420, 30)">
+            {/* Clock Speed Bar */}
+            <rect x="0" y="0" width="20" height="120" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1" />
             <rect
-              x={10}
-              y={140 - voltagePercent * 1.4}
-              width={40}
-              height={voltagePercent * 1.4}
-              fill={colors.voltage}
-              rx={4}
+              x="2"
+              y={120 - clockPercent * 1.16}
+              width="16"
+              height={clockPercent * 1.16}
+              rx="3"
+              fill="url(#gpupsClockGrad)"
+              filter="url(#gpupsBarGlow)"
             />
-            <text x={30} y={155} textAnchor="middle" fill={colors.voltage} fontSize={11} fontWeight="bold">
-              {currentVoltage.toFixed(2)}V
-            </text>
-          </g>
-        </g>
 
-        {/* Status indicator */}
-        <g transform="translate(30, 270)">
-          <rect
-            width={340}
-            height={60}
-            fill={limitingFactor === 'none' ? 'rgba(16, 185, 129, 0.2)' : limitingFactor === 'power' ? 'rgba(239, 68, 68, 0.2)' : 'rgba(249, 115, 22, 0.2)'}
-            rx={8}
-            stroke={limitingFactor === 'none' ? colors.success : limitingFactor === 'power' ? colors.error : colors.thermal}
-            strokeWidth={2}
-          />
-          <text x={170} y={25} textAnchor="middle" fill={colors.textPrimary} fontSize={12} fontWeight="bold">
+            {/* Voltage Bar */}
+            <rect x="30" y="0" width="20" height="120" rx="4" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+            <rect
+              x="32"
+              y={120 - voltagePercent * 1.16}
+              width="16"
+              height={voltagePercent * 1.16}
+              rx="3"
+              fill="url(#gpupsVoltageGrad)"
+              filter="url(#gpupsBarGlow)"
+            />
+          </g>
+
+          {/* === WORKLOAD BAR === */}
+          <g transform="translate(30, 175)">
+            <rect x="0" y="0" width="440" height="20" rx="6" fill="#1e293b" stroke="#334155" strokeWidth="1" />
+            <rect
+              x="2"
+              y="2"
+              width={Math.max(0, workload * 4.36)}
+              height="16"
+              rx="4"
+              fill="url(#gpupsWorkloadGrad)"
+              filter="url(#gpupsBarGlow)"
+            />
+            {/* Workload segments */}
+            {[25, 50, 75].map((pct) => (
+              <line
+                key={pct}
+                x1={pct * 4.4}
+                y1="0"
+                x2={pct * 4.4}
+                y2="20"
+                stroke="#334155"
+                strokeWidth="1"
+              />
+            ))}
+          </g>
+
+          {/* === STATUS BOX === */}
+          <g transform="translate(30, 210)">
+            <rect
+              width="440"
+              height="55"
+              fill={limitingFactor === 'none' ? 'url(#gpupsStatusNormal)' : limitingFactor === 'power' ? 'url(#gpupsStatusPower)' : 'url(#gpupsStatusThermal)'}
+              rx="10"
+              stroke={limitingFactor === 'none' ? colors.success : limitingFactor === 'power' ? colors.voltage : colors.error}
+              strokeWidth="2"
+              filter="url(#gpupsStatusGlow)"
+            />
+
+            {/* Status icon */}
+            <g transform="translate(20, 27)">
+              {limitingFactor === 'none' ? (
+                <circle cx="0" cy="0" r="8" fill={colors.success} />
+              ) : limitingFactor === 'power' ? (
+                <path d="M0 -8 L-5 2 L-1 2 L-1 8 L5 -2 L1 -2 L1 -8 Z" fill={colors.voltage} />
+              ) : (
+                <path d="M0 -8 L-8 8 L8 8 Z M0 -4 L0 2 M0 5 L0 6" fill="none" stroke={colors.error} strokeWidth="2" />
+              )}
+            </g>
+          </g>
+
+          {/* === STATE TRANSITION ANIMATION RING === */}
+          {limitingFactor !== 'none' && (
+            <g transform="translate(100, 80)">
+              <circle
+                cx="0"
+                cy="0"
+                r="55"
+                fill="none"
+                stroke={limitingFactor === 'power' ? colors.voltage : colors.error}
+                strokeWidth="2"
+                strokeDasharray="10 5"
+                opacity="0.5"
+              >
+                <animateTransform
+                  attributeName="transform"
+                  type="rotate"
+                  from="0 0 0"
+                  to="360 0 0"
+                  dur="3s"
+                  repeatCount="indefinite"
+                />
+              </circle>
+            </g>
+          )}
+
+          {/* === METRIC VALUES (positioned near their indicators) === */}
+          {/* Temperature value in gauge center */}
+          <text x="300" y="105" textAnchor="middle" fill={limitingFactor === 'thermal' ? colors.error : colors.textPrimary} fontSize="16" fontWeight="bold">
+            {currentTemp.toFixed(0)}C
+          </text>
+
+          {/* Power value below power bar */}
+          <text x="385" y="165" textAnchor="middle" fill={limitingFactor === 'power' ? colors.voltage : colors.power} fontSize="12" fontWeight="bold">
+            {currentPower.toFixed(0)}W
+          </text>
+
+          {/* Clock value below clock bar */}
+          <text x="430" y="165" textAnchor="middle" fill={colors.clock} fontSize="10" fontWeight="bold">
+            {currentClock.toFixed(0)}
+          </text>
+
+          {/* Voltage value below voltage bar */}
+          <text x="460" y="165" textAnchor="middle" fill={colors.voltage} fontSize="10" fontWeight="bold">
+            {currentVoltage.toFixed(2)}V
+          </text>
+
+          {/* Workload percentage */}
+          <text x="250" y="192" textAnchor="middle" fill={colors.textSecondary} fontSize="10">
+            {workload}%
+          </text>
+
+          {/* Status text */}
+          <text x="250" y="235" textAnchor="middle" fill={colors.textPrimary} fontSize="13" fontWeight="bold">
             {limitingFactor === 'none' ? 'Operating Normally' : limitingFactor === 'power' ? 'POWER LIMITED' : 'THERMAL LIMITED'}
           </text>
-          <text x={170} y={45} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
+          <text x="250" y="253" textAnchor="middle" fill={colors.textSecondary} fontSize="11">
             {limitingFactor === 'none' ? 'GPU running at requested performance' : limitingFactor === 'power' ? `Throttling to stay under ${powerLimit}W TDP` : `Throttling to stay under ${thermalLimit}C`}
           </text>
-        </g>
-      </svg>
+
+          {/* === FORMULA DISPLAY === */}
+          <g transform="translate(30, 280)">
+            <rect x="0" y="0" width="440" height="35" rx="8" fill="rgba(249, 115, 22, 0.1)" stroke="rgba(249, 115, 22, 0.3)" strokeWidth="1" />
+            <text x="220" y="15" textAnchor="middle" fill={colors.accent} fontSize="11" fontWeight="bold">
+              P = CV²f
+            </text>
+            <text x="220" y="28" textAnchor="middle" fill={colors.textMuted} fontSize="9">
+              Power = Capacitance × Voltage² × Frequency
+            </text>
+          </g>
+
+          {/* Bar labels */}
+          <text x="385" y="25" textAnchor="middle" fill={colors.textMuted} fontSize="9">PWR</text>
+          <text x="430" y="25" textAnchor="middle" fill={colors.textMuted} fontSize="9">CLK</text>
+          <text x="460" y="25" textAnchor="middle" fill={colors.textMuted} fontSize="9">V</text>
+          <text x="300" y="30" textAnchor="middle" fill={colors.textMuted} fontSize="9">TEMP</text>
+        </svg>
+
+        {/* External labels using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '520px',
+          paddingLeft: typo.pagePadding,
+          paddingRight: typo.pagePadding
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.label, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>GPU State</div>
+            <div style={{
+              fontSize: typo.small,
+              fontWeight: 700,
+              color: limitingFactor === 'thermal' ? colors.error : limitingFactor === 'power' ? colors.voltage : workload > 70 ? colors.thermal : workload > 30 ? colors.success : colors.clock
+            }}>
+              {limitingFactor === 'thermal' ? 'Thermal Throttle' : limitingFactor === 'power' ? 'Power Throttle' : workload > 70 ? 'High Load' : workload > 30 ? 'Active' : 'Idle'}
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.label, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Workload</div>
+            <div style={{ fontSize: typo.small, fontWeight: 700, color: colors.accent }}>{workload}%</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.label, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Temperature</div>
+            <div style={{ fontSize: typo.small, fontWeight: 700, color: limitingFactor === 'thermal' ? colors.error : colors.thermal }}>{currentTemp.toFixed(0)}°C</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.label, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Power</div>
+            <div style={{ fontSize: typo.small, fontWeight: 700, color: limitingFactor === 'power' ? colors.voltage : colors.power }}>{currentPower.toFixed(0)}W</div>
+          </div>
+        </div>
+      </div>
     );
   };
 

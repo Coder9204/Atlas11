@@ -450,113 +450,478 @@ const EnergyPerTokenRenderer: React.FC<EnergyPerTokenRendererProps> = ({
 
   const renderVisualization = () => {
     const metrics = calculateMetrics();
-    const energyBarWidth = Math.min(200, metrics.totalEnergy * 10);
+    const energyBarWidth = Math.min(400, metrics.totalEnergy * 20);
     const tokenProgress = isGenerating ? generatedCount / outputTokens : 0;
+    const efficiencyPercent = Math.max(0, Math.min(100, 100 - (metrics.energyPerToken * 50)));
 
     return (
-      <svg width="100%" height="480" viewBox="0 0 500 480" style={{ maxWidth: '600px' }}>
-        <defs>
-          <linearGradient id="energyGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#ef4444" />
-            <stop offset="50%" stopColor="#f59e0b" />
-            <stop offset="100%" stopColor="#22c55e" />
-          </linearGradient>
-        </defs>
+      <div>
+        <svg width="100%" height="520" viewBox="0 0 500 520" style={{ maxWidth: '600px' }}>
+          <defs>
+            {/* Premium energy gradient with 6 color stops */}
+            <linearGradient id="eptEnergyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="20%" stopColor="#f97316" />
+              <stop offset="40%" stopColor="#f59e0b" />
+              <stop offset="60%" stopColor="#eab308" />
+              <stop offset="80%" stopColor="#84cc16" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect width="500" height="480" fill="#0f172a" rx="12" />
+            {/* Input token gradient - cool blue tones */}
+            <linearGradient id="eptInputGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="25%" stopColor="#2563eb" />
+              <stop offset="50%" stopColor="#1d4ed8" />
+              <stop offset="75%" stopColor="#1e40af" />
+              <stop offset="100%" stopColor="#1e3a8a" />
+            </linearGradient>
 
-        {/* Title */}
-        <text x="250" y="30" fill="#f8fafc" fontSize="16" fontWeight="bold" textAnchor="middle">
-          Energy Per Token Calculator
-        </text>
+            {/* Output token gradient - success green tones */}
+            <linearGradient id="eptOutputGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="25%" stopColor="#16a34a" />
+              <stop offset="50%" stopColor="#15803d" />
+              <stop offset="75%" stopColor="#166534" />
+              <stop offset="100%" stopColor="#14532d" />
+            </linearGradient>
 
-        {/* Token Flow Visualization */}
-        <g transform="translate(20, 50)">
-          <rect width="220" height="80" fill="rgba(59, 130, 246, 0.1)" rx="8" stroke="#3b82f6" strokeWidth="1" />
-          <text x="110" y="20" fill="#3b82f6" fontSize="11" fontWeight="bold" textAnchor="middle">INPUT TOKENS</text>
-          <text x="110" y="45" fill="#f8fafc" fontSize="24" fontWeight="bold" textAnchor="middle">{promptTokens.toLocaleString()}</text>
-          <text x="110" y="65" fill="#94a3b8" fontSize="10" textAnchor="middle">Prefill: {metrics.prefillTime.toFixed(2)}s</text>
-        </g>
+            {/* GPU power gradient - amber/orange heat */}
+            <linearGradient id="eptGpuHeatGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#78350f" />
+              <stop offset="25%" stopColor="#92400e" />
+              <stop offset="50%" stopColor="#b45309" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#f59e0b" />
+            </linearGradient>
 
-        <g transform="translate(260, 50)">
-          <rect width="220" height="80" fill="rgba(34, 197, 94, 0.1)" rx="8" stroke="#22c55e" strokeWidth="1" />
-          <text x="110" y="20" fill="#22c55e" fontSize="11" fontWeight="bold" textAnchor="middle">OUTPUT TOKENS</text>
-          <text x="110" y="45" fill="#f8fafc" fontSize="24" fontWeight="bold" textAnchor="middle">{outputTokens.toLocaleString()}</text>
-          <text x="110" y="65" fill="#94a3b8" fontSize="10" textAnchor="middle">Decode: {metrics.decodeTime.toFixed(2)}s</text>
-        </g>
+            {/* GPU active gradient */}
+            <linearGradient id="eptGpuActiveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#16a34a" />
+            </linearGradient>
 
-        {/* GPU Power Display */}
-        <g transform="translate(20, 145)">
-          <rect width="460" height="60" fill="rgba(30, 41, 59, 0.8)" rx="8" />
-          <text x="15" y="25" fill="#f59e0b" fontSize="11" fontWeight="bold">GPU CLUSTER</text>
+            {/* GPU idle gradient */}
+            <linearGradient id="eptGpuIdleGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
 
-          {/* GPU icons */}
-          {Array.from({ length: Math.min(numGPUs, 8) }).map((_, i) => (
-            <rect
-              key={i}
-              x={120 + i * 40}
-              y={15}
-              width="30"
-              height="30"
-              fill={isGenerating ? '#22c55e' : '#475569'}
-              rx="4"
-              opacity={isGenerating ? 0.5 + Math.sin(Date.now() / 200 + i) * 0.3 : 0.5}
-            />
-          ))}
+            {/* Power consumption graph gradient */}
+            <linearGradient id="eptPowerGraphGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.5" />
+            </linearGradient>
 
-          <text x="15" y="48" fill="#94a3b8" fontSize="10">
-            {numGPUs} GPUs x {gpuPower}W = {metrics.totalPower.toLocaleString()}W
-          </text>
-        </g>
+            {/* Efficiency meter gradient */}
+            <linearGradient id="eptEfficiencyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="33%" stopColor="#84cc16" />
+              <stop offset="66%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
 
-        {/* Energy Meter */}
-        <g transform="translate(20, 220)">
-          <rect width="460" height="90" fill="rgba(239, 68, 68, 0.1)" rx="8" stroke="#ef4444" strokeWidth="1" />
-          <text x="230" y="25" fill="#ef4444" fontSize="12" fontWeight="bold" textAnchor="middle">ENERGY CONSUMPTION</text>
+            {/* Token flow gradient */}
+            <linearGradient id="eptTokenFlowGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0" />
+              <stop offset="30%" stopColor="#06b6d4" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#22d3ee" stopOpacity="1" />
+              <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0" />
+            </linearGradient>
 
-          {/* Energy bar */}
-          <rect x="30" y="40" width="400" height="20" fill="#1e293b" rx="4" />
-          <rect x="30" y="40" width={Math.min(400, energyBarWidth * 2)} height="20" fill="url(#energyGrad)" rx="4" />
+            {/* Background gradient */}
+            <linearGradient id="eptBackgroundGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#0c1525" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-          <text x="230" y="75" fill="#f8fafc" fontSize="14" fontWeight="bold" textAnchor="middle">
-            {metrics.totalEnergy.toFixed(2)} Wh ({metrics.energyPerToken.toFixed(3)} mWh/token)
-          </text>
-        </g>
+            {/* Radial glow for energy meter */}
+            <radialGradient id="eptEnergyGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0" />
+            </radialGradient>
 
-        {/* Equivalents */}
-        <g transform="translate(20, 325)">
-          <rect width="220" height="70" fill="rgba(30, 41, 59, 0.8)" rx="8" />
-          <text x="110" y="20" fill="#94a3b8" fontSize="10" textAnchor="middle">EQUIVALENTS</text>
-          <text x="15" y="40" fill="#f8fafc" fontSize="10">Phone charges: {metrics.smartphoneCharges.toFixed(3)}</text>
-          <text x="15" y="55" fill="#f8fafc" fontSize="10">LED bulb: {metrics.ledBulbSeconds.toFixed(1)}s</text>
-        </g>
+            {/* Token pulse glow */}
+            <radialGradient id="eptTokenPulseGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="1" />
+              <stop offset="40%" stopColor="#06b6d4" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+            </radialGradient>
 
-        <g transform="translate(260, 325)">
-          <rect width="220" height="70" fill="rgba(30, 41, 59, 0.8)" rx="8" />
-          <text x="110" y="20" fill="#94a3b8" fontSize="10" textAnchor="middle">ENVIRONMENTAL</text>
-          <text x="15" y="40" fill="#f8fafc" fontSize="10">CO2: {metrics.co2Grams.toFixed(2)} grams</text>
-          <text x="15" y="55" fill="#f8fafc" fontSize="10">Cost: ${(metrics.costCents / 100).toFixed(4)}</text>
-        </g>
+            {/* Glow filter for energy elements */}
+            <filter id="eptEnergyGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* Generation Animation */}
-        {isGenerating && (
-          <g transform="translate(20, 410)">
-            <rect width="460" height="40" fill="rgba(34, 197, 94, 0.1)" rx="8" />
-            <rect width={460 * tokenProgress} height="40" fill="rgba(34, 197, 94, 0.3)" rx="8" />
-            <text x="230" y="25" fill="#22c55e" fontSize="12" fontWeight="bold" textAnchor="middle">
-              Generating: {generatedCount} / {outputTokens} tokens ({(tokenProgress * 100).toFixed(0)}%)
-            </text>
+            {/* Stronger glow for active elements */}
+            <filter id="eptActiveGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Soft inner glow */}
+            <filter id="eptInnerGlowFilter" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* GPU heat shimmer */}
+            <filter id="eptHeatShimmerFilter" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Token processing particle glow */}
+            <filter id="eptParticleGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
+
+          {/* Background */}
+          <rect width="500" height="520" fill="url(#eptBackgroundGradient)" rx="12" />
+
+          {/* Subtle grid pattern */}
+          <g opacity="0.1">
+            {Array.from({ length: 25 }).map((_, i) => (
+              <line key={`vgrid${i}`} x1={20 * i} y1="0" x2={20 * i} y2="520" stroke="#64748b" strokeWidth="0.5" />
+            ))}
+            {Array.from({ length: 26 }).map((_, i) => (
+              <line key={`hgrid${i}`} x1="0" y1={20 * i} x2="500" y2={20 * i} stroke="#64748b" strokeWidth="0.5" />
+            ))}
           </g>
-        )}
 
-        {/* Key Insight */}
-        <g transform="translate(20, 460)">
-          <text x="230" y="10" fill="#94a3b8" fontSize="10" textAnchor="middle">
-            Every token = memory movement = real joules = real cost
-          </text>
-        </g>
-      </svg>
+          {/* Token Flow Visualization - Input */}
+          <g transform="translate(20, 40)">
+            <rect width="220" height="85" fill="rgba(59, 130, 246, 0.1)" rx="10" stroke="url(#eptInputGradient)" strokeWidth="2" />
+            <rect x="2" y="2" width="216" height="81" fill="transparent" rx="8" stroke="rgba(59, 130, 246, 0.3)" strokeWidth="1" strokeDasharray="4 2" />
+
+            {/* Animated token particles */}
+            {isGenerating && Array.from({ length: 3 }).map((_, i) => (
+              <circle
+                key={`intoken${i}`}
+                r="3"
+                fill="url(#eptTokenPulseGlow)"
+                filter="url(#eptParticleGlowFilter)"
+              >
+                <animateMotion
+                  dur={`${0.8 + i * 0.2}s`}
+                  repeatCount="indefinite"
+                  path="M10,42 Q110,20 210,42"
+                />
+              </circle>
+            ))}
+          </g>
+
+          {/* Token Flow Visualization - Output */}
+          <g transform="translate(260, 40)">
+            <rect width="220" height="85" fill="rgba(34, 197, 94, 0.1)" rx="10" stroke="url(#eptOutputGradient)" strokeWidth="2" />
+            <rect x="2" y="2" width="216" height="81" fill="transparent" rx="8" stroke="rgba(34, 197, 94, 0.3)" strokeWidth="1" strokeDasharray="4 2" />
+
+            {/* Animated token particles */}
+            {isGenerating && Array.from({ length: 3 }).map((_, i) => (
+              <circle
+                key={`outtoken${i}`}
+                r="3"
+                fill="url(#eptTokenPulseGlow)"
+                filter="url(#eptParticleGlowFilter)"
+              >
+                <animateMotion
+                  dur={`${1 + i * 0.3}s`}
+                  repeatCount="indefinite"
+                  path="M10,42 Q110,60 210,42"
+                />
+              </circle>
+            ))}
+          </g>
+
+          {/* Token flow connecting arrow */}
+          <g transform="translate(240, 82)">
+            <line x1="0" y1="0" x2="20" y2="0" stroke="url(#eptTokenFlowGradient)" strokeWidth="3" filter="url(#eptEnergyGlowFilter)" />
+            <polygon points="20,0 15,-4 15,4" fill="#06b6d4" filter="url(#eptParticleGlowFilter)" />
+          </g>
+
+          {/* GPU Power Display */}
+          <g transform="translate(20, 140)">
+            <rect width="300" height="70" fill="rgba(30, 41, 59, 0.9)" rx="10" stroke="#475569" strokeWidth="1" />
+
+            {/* GPU icons with heat visualization */}
+            {Array.from({ length: Math.min(numGPUs, 8) }).map((_, i) => (
+              <g key={`gpu${i}`} transform={`translate(${15 + i * 35}, 15)`}>
+                <rect
+                  width="28"
+                  height="40"
+                  fill={isGenerating ? 'url(#eptGpuActiveGradient)' : 'url(#eptGpuIdleGradient)'}
+                  rx="4"
+                  filter={isGenerating ? 'url(#eptHeatShimmerFilter)' : undefined}
+                />
+                {/* Heat indicator bar */}
+                <rect
+                  x="4"
+                  y={40 - (isGenerating ? 30 : 10)}
+                  width="20"
+                  height={isGenerating ? 30 : 10}
+                  fill="url(#eptGpuHeatGradient)"
+                  rx="2"
+                  opacity={isGenerating ? 0.8 : 0.3}
+                />
+                {/* GPU chip detail */}
+                <rect x="8" y="8" width="12" height="8" fill="rgba(0,0,0,0.3)" rx="1" />
+              </g>
+            ))}
+          </g>
+
+          {/* Power Consumption Graph */}
+          <g transform="translate(330, 140)">
+            <rect width="150" height="70" fill="rgba(30, 41, 59, 0.9)" rx="10" stroke="#475569" strokeWidth="1" />
+
+            {/* Graph area */}
+            <rect x="10" y="15" width="130" height="40" fill="url(#eptPowerGraphGradient)" rx="4" />
+
+            {/* Power line visualization */}
+            <polyline
+              points={`10,55 ${10 + (130 * Math.min(1, metrics.totalPower / 5000))},${55 - (40 * Math.min(1, metrics.totalPower / 5000))}`}
+              fill="none"
+              stroke="#f59e0b"
+              strokeWidth="2"
+              filter="url(#eptEnergyGlowFilter)"
+            />
+            <circle
+              cx={10 + (130 * Math.min(1, metrics.totalPower / 5000))}
+              cy={55 - (40 * Math.min(1, metrics.totalPower / 5000))}
+              r="4"
+              fill="#f59e0b"
+              filter="url(#eptActiveGlowFilter)"
+            />
+          </g>
+
+          {/* Energy Meter */}
+          <g transform="translate(20, 225)">
+            <rect width="380" height="95" fill="rgba(239, 68, 68, 0.05)" rx="10" stroke="rgba(239, 68, 68, 0.3)" strokeWidth="2" />
+
+            {/* Glow background */}
+            <ellipse cx="190" cy="47" rx="180" ry="40" fill="url(#eptEnergyGlow)" opacity="0.3" />
+
+            {/* Energy bar background */}
+            <rect x="20" y="35" width="340" height="24" fill="#1e293b" rx="6" stroke="#334155" strokeWidth="1" />
+
+            {/* Energy bar fill with gradient */}
+            <rect
+              x="22"
+              y="37"
+              width={Math.max(0, Math.min(336, energyBarWidth * 0.84))}
+              height="20"
+              fill="url(#eptEnergyGradient)"
+              rx="4"
+              filter="url(#eptEnergyGlowFilter)"
+            />
+
+            {/* Energy bar segments */}
+            {Array.from({ length: 10 }).map((_, i) => (
+              <line
+                key={`seg${i}`}
+                x1={22 + i * 33.6}
+                y1="35"
+                x2={22 + i * 33.6}
+                y2="59"
+                stroke="rgba(0,0,0,0.2)"
+                strokeWidth="1"
+              />
+            ))}
+          </g>
+
+          {/* Efficiency Indicator */}
+          <g transform="translate(410, 225)">
+            <rect width="70" height="95" fill="rgba(30, 41, 59, 0.9)" rx="10" stroke="#475569" strokeWidth="1" />
+
+            {/* Efficiency meter background */}
+            <rect x="25" y="25" width="20" height="55" fill="#1e293b" rx="4" stroke="#334155" strokeWidth="1" />
+
+            {/* Efficiency level */}
+            <rect
+              x="27"
+              y={27 + (51 * (1 - efficiencyPercent / 100))}
+              width="16"
+              height={51 * (efficiencyPercent / 100)}
+              fill="url(#eptEfficiencyGradient)"
+              rx="2"
+              filter="url(#eptInnerGlowFilter)"
+            />
+
+            {/* Efficiency marker lines */}
+            {[0, 25, 50, 75, 100].map((mark) => (
+              <line
+                key={`mark${mark}`}
+                x1="20"
+                y1={80 - (mark * 0.51)}
+                x2="50"
+                y2={80 - (mark * 0.51)}
+                stroke="rgba(255,255,255,0.2)"
+                strokeWidth="1"
+              />
+            ))}
+          </g>
+
+          {/* Equivalents Cards */}
+          <g transform="translate(20, 335)">
+            <rect width="220" height="75" fill="rgba(30, 41, 59, 0.9)" rx="10" stroke="#475569" strokeWidth="1" />
+
+            {/* Phone icon */}
+            <rect x="15" y="25" width="18" height="30" fill="none" stroke="#94a3b8" strokeWidth="1.5" rx="3" />
+            <line x1="21" y1="50" x2="27" y2="50" stroke="#94a3b8" strokeWidth="1.5" />
+
+            {/* LED bulb icon */}
+            <ellipse cx="24" cy="58" rx="8" ry="10" fill="none" stroke="#fbbf24" strokeWidth="1.5" opacity="0.7" />
+          </g>
+
+          <g transform="translate(260, 335)">
+            <rect width="220" height="75" fill="rgba(30, 41, 59, 0.9)" rx="10" stroke="#475569" strokeWidth="1" />
+
+            {/* CO2 cloud icon */}
+            <ellipse cx="30" cy="35" rx="12" ry="8" fill="none" stroke="#94a3b8" strokeWidth="1.5" />
+            <ellipse cx="24" cy="40" rx="8" ry="6" fill="none" stroke="#94a3b8" strokeWidth="1.5" />
+
+            {/* Dollar icon */}
+            <circle cx="30" cy="58" r="8" fill="none" stroke="#22c55e" strokeWidth="1.5" />
+          </g>
+
+          {/* Token Processing Animation */}
+          {isGenerating && (
+            <g transform="translate(20, 425)">
+              <rect width="460" height="45" fill="rgba(34, 197, 94, 0.1)" rx="10" stroke="rgba(34, 197, 94, 0.4)" strokeWidth="2" />
+
+              {/* Progress bar background */}
+              <rect x="10" y="12" width="440" height="20" fill="#1e293b" rx="5" />
+
+              {/* Progress bar fill */}
+              <rect
+                x="12"
+                y="14"
+                width={Math.max(0, 436 * tokenProgress)}
+                height="16"
+                fill="url(#eptOutputGradient)"
+                rx="4"
+                filter="url(#eptEnergyGlowFilter)"
+              />
+
+              {/* Animated particles along progress */}
+              {Array.from({ length: 5 }).map((_, i) => (
+                <circle
+                  key={`prog${i}`}
+                  cx={12 + (436 * tokenProgress) - 10 - i * 15}
+                  cy="22"
+                  r="3"
+                  fill="#4ade80"
+                  opacity={Math.max(0, 1 - i * 0.2)}
+                  filter="url(#eptParticleGlowFilter)"
+                />
+              ))}
+            </g>
+          )}
+
+          {/* Key Insight Background */}
+          <g transform="translate(20, 485)">
+            <rect width="460" height="25" fill="rgba(148, 163, 184, 0.1)" rx="6" />
+          </g>
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        <div style={{ maxWidth: '600px', margin: '0 auto', marginTop: '-510px', pointerEvents: 'none' }}>
+          {/* Input Tokens Label */}
+          <div style={{ position: 'relative', top: '50px', left: '20px', width: '220px', textAlign: 'center' }}>
+            <div style={{ color: '#3b82f6', fontSize: typo.label, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Input Tokens</div>
+            <div style={{ color: '#f8fafc', fontSize: typo.heading, fontWeight: 'bold', marginTop: '4px' }}>{promptTokens.toLocaleString()}</div>
+            <div style={{ color: '#94a3b8', fontSize: typo.small, marginTop: '2px' }}>Prefill: {metrics.prefillTime.toFixed(2)}s</div>
+          </div>
+
+          {/* Output Tokens Label */}
+          <div style={{ position: 'relative', top: '-35px', left: '260px', width: '220px', textAlign: 'center' }}>
+            <div style={{ color: '#22c55e', fontSize: typo.label, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Output Tokens</div>
+            <div style={{ color: '#f8fafc', fontSize: typo.heading, fontWeight: 'bold', marginTop: '4px' }}>{outputTokens.toLocaleString()}</div>
+            <div style={{ color: '#94a3b8', fontSize: typo.small, marginTop: '2px' }}>Decode: {metrics.decodeTime.toFixed(2)}s</div>
+          </div>
+
+          {/* GPU Cluster Label */}
+          <div style={{ position: 'relative', top: '15px', left: '20px', width: '300px' }}>
+            <div style={{ color: '#f59e0b', fontSize: typo.label, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>GPU Cluster</div>
+            <div style={{ color: '#94a3b8', fontSize: typo.small, marginTop: '55px' }}>
+              {numGPUs} GPUs x {gpuPower}W = {metrics.totalPower.toLocaleString()}W
+            </div>
+          </div>
+
+          {/* Power Graph Label */}
+          <div style={{ position: 'relative', top: '-50px', left: '340px', width: '140px', textAlign: 'center' }}>
+            <div style={{ color: '#f59e0b', fontSize: typo.label, fontWeight: 'bold' }}>Power</div>
+            <div style={{ color: '#f8fafc', fontSize: typo.body, marginTop: '50px' }}>{metrics.totalPower.toLocaleString()}W</div>
+          </div>
+
+          {/* Energy Consumption Label */}
+          <div style={{ position: 'relative', top: '5px', left: '20px', width: '380px', textAlign: 'center' }}>
+            <div style={{ color: '#ef4444', fontSize: typo.label, fontWeight: 'bold', textTransform: 'uppercase', letterSpacing: '1px' }}>Energy Consumption</div>
+            <div style={{ color: '#f8fafc', fontSize: typo.bodyLarge, fontWeight: 'bold', marginTop: '60px' }}>
+              {metrics.totalEnergy.toFixed(2)} Wh ({metrics.energyPerToken.toFixed(3)} mWh/token)
+            </div>
+          </div>
+
+          {/* Efficiency Label */}
+          <div style={{ position: 'relative', top: '-85px', left: '410px', width: '70px', textAlign: 'center' }}>
+            <div style={{ color: '#94a3b8', fontSize: typo.label, fontWeight: 'bold' }}>Efficiency</div>
+            <div style={{ color: efficiencyPercent > 66 ? '#22c55e' : efficiencyPercent > 33 ? '#f59e0b' : '#ef4444', fontSize: typo.body, fontWeight: 'bold', marginTop: '75px' }}>
+              {efficiencyPercent.toFixed(0)}%
+            </div>
+          </div>
+
+          {/* Equivalents Labels */}
+          <div style={{ position: 'relative', top: '-15px', left: '20px', width: '220px' }}>
+            <div style={{ color: '#94a3b8', fontSize: typo.label, fontWeight: 'bold', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}>Equivalents</div>
+            <div style={{ color: '#f8fafc', fontSize: typo.small, marginTop: '25px', marginLeft: '50px' }}>Phone charges: {metrics.smartphoneCharges.toFixed(3)}</div>
+            <div style={{ color: '#f8fafc', fontSize: typo.small, marginTop: '4px', marginLeft: '50px' }}>LED bulb: {metrics.ledBulbSeconds.toFixed(1)}s</div>
+          </div>
+
+          {/* Environmental Labels */}
+          <div style={{ position: 'relative', top: '-75px', left: '260px', width: '220px' }}>
+            <div style={{ color: '#94a3b8', fontSize: typo.label, fontWeight: 'bold', textAlign: 'center', textTransform: 'uppercase', letterSpacing: '1px' }}>Environmental</div>
+            <div style={{ color: '#f8fafc', fontSize: typo.small, marginTop: '25px', marginLeft: '50px' }}>CO2: {metrics.co2Grams.toFixed(2)} grams</div>
+            <div style={{ color: '#f8fafc', fontSize: typo.small, marginTop: '4px', marginLeft: '50px' }}>Cost: ${(metrics.costCents / 100).toFixed(4)}</div>
+          </div>
+
+          {/* Generation Progress Label */}
+          {isGenerating && (
+            <div style={{ position: 'relative', top: '-20px', left: '20px', width: '460px', textAlign: 'center' }}>
+              <div style={{ color: '#22c55e', fontSize: typo.body, fontWeight: 'bold' }}>
+                Generating: {generatedCount} / {outputTokens} tokens ({(tokenProgress * 100).toFixed(0)}%)
+              </div>
+            </div>
+          )}
+
+          {/* Key Insight Label */}
+          <div style={{ position: 'relative', top: isGenerating ? '20px' : '65px', left: '20px', width: '460px', textAlign: 'center' }}>
+            <div style={{ color: '#94a3b8', fontSize: typo.small, fontStyle: 'italic' }}>
+              Every token = memory movement = real joules = real cost
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 

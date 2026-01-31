@@ -363,7 +363,6 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
 
       if (isIsotropic) {
         // Isotropic: rounded profile with undercut
-        const curveRadius = depth;
         return `
           M ${centerX - halfMask - undercut},${surfaceY}
           Q ${centerX - halfMask - undercut},${surfaceY + depth} ${centerX},${surfaceY + depth}
@@ -381,83 +380,281 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
       }
     };
 
+    // Calculate sidewall angle for indicator
+    const getSidewallPath = () => {
+      if (etchTime === 0) return '';
+      const depth = result.depth * scale;
+      const lateral = result.lateralEtch * scale;
+      const undercut = result.undercutAmount * scale;
+
+      if (isIsotropic) {
+        // For isotropic, show arc at 45 degrees
+        const startX = centerX - halfMask - undercut;
+        const startY = surfaceY;
+        return `M ${startX},${startY} L ${startX + 15},${startY} A 15 15 0 0 1 ${startX + 10.6},${startY + 10.6}`;
+      } else {
+        // For anisotropic, show near-vertical angle
+        const taper = lateral * 0.3;
+        const startX = centerX - halfMask - undercut * 0.1;
+        const startY = surfaceY;
+        const angleRad = Math.atan2(depth, taper);
+        const arcEndX = startX + 15 * Math.sin(angleRad);
+        const arcEndY = startY + 15 * Math.cos(angleRad);
+        return `M ${startX},${startY} L ${startX},${startY + 15} A 15 15 0 0 0 ${arcEndX},${arcEndY}`;
+      }
+    };
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+        {/* Title moved outside SVG using typo system */}
+        <div style={{
+          textAlign: 'center',
+          marginBottom: '4px',
+          padding: '8px 16px',
+          background: `linear-gradient(135deg, ${isIsotropic ? 'rgba(245, 158, 11, 0.2)' : 'rgba(96, 165, 250, 0.2)'} 0%, transparent 100%)`,
+          borderRadius: '8px',
+        }}>
+          <span style={{
+            color: isIsotropic ? colors.warning : colors.plasma,
+            fontSize: typo.bodyLarge,
+            fontWeight: 'bold'
+          }}>
+            {isIsotropic ? 'Isotropic Etch (Chemical)' : 'Anisotropic Etch (Plasma RIE)'}
+          </span>
+        </div>
+
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px' }}
+          style={{ borderRadius: '12px', maxWidth: '550px' }}
         >
           <defs>
-            <linearGradient id="materialGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+            {/* Premium background gradient */}
+            <linearGradient id="etchLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0a0f1a" />
+              <stop offset="30%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#1a1a2e" />
+              <stop offset="100%" stopColor="#0f0f1a" />
+            </linearGradient>
+
+            {/* Substrate material gradient - silicon wafer look */}
+            <linearGradient id="etchSubstrate" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#78716c" />
+              <stop offset="15%" stopColor="#64748b" />
+              <stop offset="40%" stopColor="#57534e" />
+              <stop offset="60%" stopColor="#64748b" />
+              <stop offset="85%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#44403c" />
+            </linearGradient>
+
+            {/* Substrate side/depth gradient */}
+            <linearGradient id="etchSubstrateDepth" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3f3f46" />
+              <stop offset="50%" stopColor="#52525b" />
+              <stop offset="100%" stopColor="#3f3f46" />
+            </linearGradient>
+
+            {/* Mask gradient - photoresist purple */}
+            <linearGradient id="etchMask" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a78bfa" />
+              <stop offset="30%" stopColor="#8b5cf6" />
+              <stop offset="70%" stopColor="#7c3aed" />
+              <stop offset="100%" stopColor="#6d28d9" />
+            </linearGradient>
+
+            {/* Etched area gradient - dark void */}
+            <linearGradient id="etchVoid" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#020617" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Plasma ion gradient - blue energy */}
+            <radialGradient id="etchPlasmaIon" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
+              <stop offset="40%" stopColor="#60a5fa" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#3b82f6" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#2563eb" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Plasma beam gradient */}
+            <linearGradient id="etchPlasmaBeam" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0" />
+              <stop offset="20%" stopColor="#93c5fd" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#bfdbfe" stopOpacity="0.9" />
+              <stop offset="80%" stopColor="#93c5fd" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Chemical etchant gradient - amber/orange */}
+            <radialGradient id="etchChemical" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fcd34d" stopOpacity="0.9" />
+              <stop offset="40%" stopColor="#fbbf24" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Passivation layer gradient - protective coating */}
+            <linearGradient id="etchPassivation" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22d3ee" stopOpacity="0" />
+              <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#22d3ee" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Sidewall angle indicator gradient */}
+            <linearGradient id="etchAngleIndicator" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#10b981" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Comparison diagram gradients */}
+            <linearGradient id="etchCompSubstrate" x1="0%" y1="0%" x2="0%" y2="100%">
               <stop offset="0%" stopColor="#64748b" />
-              <stop offset="100%" stopColor="#475569" />
+              <stop offset="50%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
             </linearGradient>
-            <linearGradient id="plasmaGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.plasma} stopOpacity="0.8" />
-              <stop offset="100%" stopColor={colors.plasma} stopOpacity="0.2" />
+
+            <linearGradient id="etchCompMask" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a78bfa" />
+              <stop offset="100%" stopColor="#7c3aed" />
             </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+
+            {/* Glow filters using feGaussianBlur + feMerge pattern */}
+            <filter id="etchPlasmaGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
-                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+
+            <filter id="etchIonGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="etchChemGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="etchMaskGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="etchDepthShadow">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Arrow markers with gradients */}
+            <marker id="etchArrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="url(#etchPlasmaBeam)" />
+            </marker>
+            <marker id="etchStartArrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+              <line x1="0" y1="3" x2="6" y2="3" stroke={colors.success} strokeWidth="1" />
+            </marker>
+            <marker id="etchEndArrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
+              <line x1="0" y1="3" x2="6" y2="3" stroke={colors.success} strokeWidth="1" />
+            </marker>
+
+            {/* Grid pattern for lab background */}
+            <pattern id="etchLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.4" />
+            </pattern>
           </defs>
 
-          {/* Title */}
-          <text x={centerX} y={25} fill={colors.textPrimary} fontSize={14} textAnchor="middle" fontWeight="bold">
-            {isIsotropic ? 'Isotropic Etch (Chemical)' : 'Anisotropic Etch (Plasma RIE)'}
-          </text>
+          {/* Premium lab background */}
+          <rect width={width} height={height} fill="url(#etchLabBg)" />
+          <rect width={width} height={height} fill="url(#etchLabGrid)" />
 
-          {/* Plasma/etchant arrows (only during etching) */}
+          {/* Plasma/etchant effects (only during etching) */}
           {etchTime > 0 && etchTime < 100 && (
-            <g filter="url(#glow)">
+            <g>
               {!isIsotropic && (
                 <>
-                  {[-30, -10, 10, 30].map((offset, i) => (
-                    <g key={i}>
+                  {/* Plasma ion beams with glow */}
+                  {[-30, -15, 0, 15, 30].map((offset, i) => (
+                    <g key={i} filter="url(#etchPlasmaGlow)">
+                      {/* Ion beam line */}
                       <line
                         x1={centerX + offset}
-                        y1={60}
+                        y1={40}
                         x2={centerX + offset}
-                        y2={surfaceY - 10}
-                        stroke={colors.plasma}
-                        strokeWidth={2}
-                        markerEnd="url(#arrow)"
+                        y2={surfaceY - 5}
+                        stroke="url(#etchPlasmaBeam)"
+                        strokeWidth={3}
+                        opacity={0.7}
+                      />
+                      {/* Animated ion particles */}
+                      <circle
+                        cx={centerX + offset}
+                        cy={50 + ((etchTime * 2 + i * 15) % 80)}
+                        r={4}
+                        fill="url(#etchPlasmaIon)"
+                        filter="url(#etchIonGlow)"
                       />
                       <circle
                         cx={centerX + offset}
-                        cy={80 + (etchTime % 30)}
+                        cy={70 + ((etchTime * 2 + i * 15 + 40) % 80)}
                         r={3}
-                        fill={colors.plasma}
+                        fill="url(#etchPlasmaIon)"
+                        filter="url(#etchIonGlow)"
+                        opacity={0.7}
                       />
                     </g>
                   ))}
-                  <text x={centerX} y={50} fill={colors.plasma} fontSize={10} textAnchor="middle">
-                    Ion Bombardment
-                  </text>
+                  {/* Passivation layer on sidewalls (if anisotropic and has depth) */}
+                  {etchTime > 10 && !isIsotropic && (
+                    <>
+                      <rect
+                        x={centerX - halfMask - 2}
+                        y={surfaceY}
+                        width={3}
+                        height={result.depth * scale}
+                        fill="url(#etchPassivation)"
+                        opacity={sidewallPassivation / 100}
+                      />
+                      <rect
+                        x={centerX + halfMask - 1}
+                        y={surfaceY}
+                        width={3}
+                        height={result.depth * scale}
+                        fill="url(#etchPassivation)"
+                        opacity={sidewallPassivation / 100}
+                      />
+                    </>
+                  )}
                 </>
               )}
               {isIsotropic && (
                 <>
-                  <text x={centerX} y={50} fill={colors.warning} fontSize={10} textAnchor="middle">
-                    Chemical Etchant (all directions)
-                  </text>
-                  {[0, 45, 90, 135, 180, 225, 270, 315].map((angle, i) => {
+                  {/* Chemical etchant particles spreading in all directions */}
+                  {[0, 30, 60, 90, 120, 150, 180, 210, 240, 270, 300, 330].map((angle, i) => {
                     const rad = (angle * Math.PI) / 180;
-                    const r = 40;
+                    const baseR = 25 + (etchTime / 100) * 30;
+                    const r = baseR + Math.sin(etchTime / 10 + i) * 5;
                     return (
                       <circle
                         key={i}
                         cx={centerX + Math.cos(rad) * r}
-                        cy={surfaceY + result.depth * scale / 2 + Math.sin(rad) * r}
-                        r={2}
-                        fill={colors.warning}
-                        opacity={0.6}
+                        cy={surfaceY + result.depth * scale / 2 + Math.sin(rad) * r * 0.6}
+                        r={3 + Math.sin(etchTime / 5 + i) * 1.5}
+                        fill="url(#etchChemical)"
+                        filter="url(#etchChemGlow)"
+                        opacity={0.8}
                       />
                     );
                   })}
@@ -466,38 +663,95 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
             </g>
           )}
 
-          {/* Substrate material */}
-          <rect x={centerX - 100} y={surfaceY} width={200} height={maxDepth} fill="url(#materialGrad)" />
-
-          {/* Etch profile (cut out from material) */}
-          <path
-            d={generateEtchProfile()}
-            fill={colors.etched}
-            stroke={colors.accent}
-            strokeWidth={1}
+          {/* Substrate base layer */}
+          <rect
+            x={centerX - 100}
+            y={surfaceY + maxDepth}
+            width={200}
+            height={8}
+            fill="#1e1e2e"
+            rx={2}
           />
 
-          {/* Mask on top */}
-          <rect x={centerX - 100} y={surfaceY - 15} width={100 - halfMask - 5} height={15} fill={colors.mask} rx={2} />
-          <rect x={centerX + halfMask + 5} y={surfaceY - 15} width={100 - halfMask - 5} height={15} fill={colors.mask} rx={2} />
-          <text x={centerX - 80} y={surfaceY - 5} fill={colors.textPrimary} fontSize={8}>Mask</text>
-          <text x={centerX + 60} y={surfaceY - 5} fill={colors.textPrimary} fontSize={8}>Mask</text>
+          {/* Substrate material with premium gradient */}
+          <rect
+            x={centerX - 100}
+            y={surfaceY}
+            width={200}
+            height={maxDepth}
+            fill="url(#etchSubstrate)"
+            filter="url(#etchDepthShadow)"
+          />
+
+          {/* Substrate edge highlights */}
+          <line x1={centerX - 100} y1={surfaceY} x2={centerX - 100} y2={surfaceY + maxDepth} stroke="#94a3b8" strokeWidth="0.5" opacity="0.3" />
+          <line x1={centerX + 100} y1={surfaceY} x2={centerX + 100} y2={surfaceY + maxDepth} stroke="#1e293b" strokeWidth="0.5" opacity="0.5" />
+
+          {/* Etch profile (cut out from material) with gradient void */}
+          <path
+            d={generateEtchProfile()}
+            fill="url(#etchVoid)"
+            stroke={colors.accent}
+            strokeWidth={1.5}
+            filter="url(#etchDepthShadow)"
+          />
+
+          {/* Sidewall angle indicator */}
+          {etchTime > 20 && (
+            <g opacity={0.8}>
+              <path
+                d={getSidewallPath()}
+                fill="none"
+                stroke="url(#etchAngleIndicator)"
+                strokeWidth={2}
+                strokeLinecap="round"
+              />
+            </g>
+          )}
+
+          {/* Mask with premium gradient and glow */}
+          <rect
+            x={centerX - 100}
+            y={surfaceY - 15}
+            width={100 - halfMask - 5}
+            height={15}
+            fill="url(#etchMask)"
+            rx={2}
+            filter="url(#etchMaskGlow)"
+          />
+          <rect
+            x={centerX + halfMask + 5}
+            y={surfaceY - 15}
+            width={100 - halfMask - 5}
+            height={15}
+            fill="url(#etchMask)"
+            rx={2}
+            filter="url(#etchMaskGlow)"
+          />
 
           {/* Dimension lines */}
           {etchTime > 0 && (
             <g>
               {/* Depth marker */}
               <line
-                x1={centerX + 80}
+                x1={centerX + 85}
                 y1={surfaceY}
-                x2={centerX + 80}
+                x2={centerX + 85}
                 y2={surfaceY + result.depth * scale}
                 stroke={colors.success}
-                strokeWidth={1}
-                markerStart="url(#startArrow)"
-                markerEnd="url(#endArrow)"
+                strokeWidth={1.5}
+                markerStart="url(#etchStartArrow)"
+                markerEnd="url(#etchEndArrow)"
               />
-              <text x={centerX + 90} y={surfaceY + result.depth * scale / 2} fill={colors.success} fontSize={9}>
+              <rect
+                x={centerX + 78}
+                y={surfaceY + result.depth * scale / 2 - 8}
+                width={36}
+                height={16}
+                fill="rgba(0,0,0,0.7)"
+                rx={4}
+              />
+              <text x={centerX + 96} y={surfaceY + result.depth * scale / 2 + 4} fill={colors.success} fontSize={9} textAnchor="middle" fontWeight="bold">
                 {result.depth.toFixed(0)}nm
               </text>
 
@@ -506,100 +760,140 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
                 <>
                   <line
                     x1={centerX - halfMask}
-                    y1={surfaceY + 5}
+                    y1={surfaceY + 8}
                     x2={centerX - halfMask - result.undercutAmount * scale}
-                    y2={surfaceY + 5}
+                    y2={surfaceY + 8}
                     stroke={colors.error}
-                    strokeWidth={1}
+                    strokeWidth={1.5}
+                    strokeDasharray="3,2"
+                  />
+                  <rect
+                    x={centerX - halfMask - result.undercutAmount * scale / 2 - 25}
+                    y={surfaceY + 14}
+                    width={50}
+                    height={14}
+                    fill="rgba(239, 68, 68, 0.2)"
+                    rx={3}
                   />
                   <text
                     x={centerX - halfMask - result.undercutAmount * scale / 2}
-                    y={surfaceY + 20}
+                    y={surfaceY + 25}
                     fill={colors.error}
                     fontSize={8}
                     textAnchor="middle"
+                    fontWeight="bold"
                   >
-                    Undercut: {result.undercutAmount.toFixed(0)}nm
+                    {result.undercutAmount.toFixed(0)}nm
                   </text>
                 </>
               )}
             </g>
           )}
 
-          {/* Arrow markers */}
-          <defs>
-            <marker id="arrow" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-              <polygon points="0 0, 10 3.5, 0 7" fill={colors.plasma} />
-            </marker>
-            <marker id="startArrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-              <line x1="0" y1="3" x2="6" y2="3" stroke={colors.success} strokeWidth="1" />
-            </marker>
-            <marker id="endArrow" markerWidth="6" markerHeight="6" refX="3" refY="3" orient="auto">
-              <line x1="0" y1="3" x2="6" y2="3" stroke={colors.success} strokeWidth="1" />
-            </marker>
-          </defs>
-
-          {/* Comparison diagram */}
-          <g transform="translate(340, 50)">
-            <text x={60} y={0} fill={colors.textSecondary} fontSize={11} textAnchor="middle">Profile Comparison</text>
-
+          {/* Comparison diagram with premium styling */}
+          <g transform="translate(340, 30)">
             {/* Isotropic example */}
-            <rect x={10} y={20} width={100} height={60} fill={colors.substrate} />
-            <rect x={10} y={20} width={100} height={60} fill={colors.material} />
-            <path d="M 30,20 Q 30,60 60,60 Q 90,60 90,20" fill={colors.etched} />
-            <rect x={10} y={10} width={20} height={10} fill={colors.mask} />
-            <rect x={90} y={10} width={20} height={10} fill={colors.mask} />
-            <text x={60} y={90} fill={colors.textMuted} fontSize={9} textAnchor="middle">Isotropic</text>
-            <text x={60} y={100} fill={colors.error} fontSize={8} textAnchor="middle">(Undercut)</text>
+            <rect x={10} y={30} width={100} height={60} fill="url(#etchCompSubstrate)" rx={2} />
+            <path d="M 30,30 Q 30,70 60,70 Q 90,70 90,30" fill="url(#etchVoid)" />
+            <rect x={10} y={20} width={20} height={10} fill="url(#etchCompMask)" rx={1} />
+            <rect x={90} y={20} width={20} height={10} fill="url(#etchCompMask)" rx={1} />
 
             {/* Anisotropic example */}
-            <rect x={10} y={120} width={100} height={60} fill={colors.material} />
-            <rect x={35} y={120} width={50} height={60} fill={colors.etched} />
-            <rect x={10} y={110} width={25} height={10} fill={colors.mask} />
-            <rect x={85} y={110} width={25} height={10} fill={colors.mask} />
-            <text x={60} y={190} fill={colors.textMuted} fontSize={9} textAnchor="middle">Anisotropic</text>
-            <text x={60} y={200} fill={colors.success} fontSize={8} textAnchor="middle">(Vertical)</text>
+            <rect x={10} y={130} width={100} height={60} fill="url(#etchCompSubstrate)" rx={2} />
+            <rect x={35} y={130} width={50} height={60} fill="url(#etchVoid)" />
+            <rect x={10} y={120} width={25} height={10} fill="url(#etchCompMask)" rx={1} />
+            <rect x={85} y={120} width={25} height={10} fill="url(#etchCompMask)" rx={1} />
           </g>
 
-          {/* Metrics panel */}
-          <rect x={20} y={320} width={200} height={90} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.accent} strokeWidth={1} />
-          <text x={30} y={340} fill={colors.textSecondary} fontSize={10}>ETCH METRICS</text>
+          {/* Metrics panel with premium styling */}
+          <rect x={15} y={320} width={210} height={90} fill="rgba(0,0,0,0.7)" rx={10} stroke={colors.accent} strokeWidth={1} strokeOpacity={0.5} />
+          <rect x={15} y={320} width={210} height={20} fill="rgba(249, 115, 22, 0.15)" rx={10} />
 
-          <text x={30} y={358} fill={colors.textPrimary} fontSize={10}>
-            Depth: {result.depth.toFixed(0)} nm
-          </text>
-          <text x={30} y={373} fill={colors.textPrimary} fontSize={10}>
-            Lateral: {result.lateralEtch.toFixed(1)} nm
-          </text>
-          <text x={30} y={388} fill={result.sidewallAngle > 80 ? colors.success : colors.warning} fontSize={10}>
-            Sidewall: {result.sidewallAngle.toFixed(0)} deg
-          </text>
-          <text x={30} y={403} fill={colors.accent} fontSize={10}>
-            Anisotropy: {result.anisotropyRatio === Infinity ? 'Perfect' : result.anisotropyRatio.toFixed(1) + ':1'}
-          </text>
-
-          {/* Quality indicator */}
-          <rect x={240} y={320} width={120} height={90} fill="rgba(0,0,0,0.4)" rx={8} />
-          <text x={300} y={340} fill={colors.textSecondary} fontSize={10} textAnchor="middle">Profile Quality</text>
-          <rect x={250} y={355} width={100} height={10} fill="rgba(255,255,255,0.1)" rx={3} />
+          {/* Quality indicator panel */}
+          <rect x={235} y={320} width={125} height={90} fill="rgba(0,0,0,0.5)" rx={10} stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
+          <rect x={245} y={355} width={105} height={12} fill="rgba(255,255,255,0.08)" rx={4} />
           <rect
-            x={250}
+            x={245}
             y={355}
-            width={result.profileQuality}
-            height={10}
+            width={result.profileQuality * 1.05}
+            height={12}
             fill={result.profileQuality > 70 ? colors.success : result.profileQuality > 40 ? colors.warning : colors.error}
-            rx={3}
+            rx={4}
           />
-          <text x={300} y={383} fill={colors.textPrimary} fontSize={12} textAnchor="middle">
-            {result.profileQuality.toFixed(0)}%
-          </text>
-          <text x={300} y={400} fill={result.profileQuality > 70 ? colors.success : colors.error} fontSize={10} textAnchor="middle">
-            {result.profileQuality > 70 ? 'Good Profile' : 'Poor Profile'}
-          </text>
         </svg>
 
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '16px',
+          justifyContent: 'center',
+          width: '100%',
+          maxWidth: '550px',
+          marginTop: '-95px',
+          padding: '0 20px',
+          position: 'relative',
+          zIndex: 10,
+        }}>
+          {/* Etch Metrics */}
+          <div style={{
+            flex: '1 1 180px',
+            minWidth: '180px',
+          }}>
+            <div style={{ color: colors.textSecondary, fontSize: typo.label, fontWeight: 'bold', marginBottom: '6px', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              Etch Metrics
+            </div>
+            <div style={{ color: colors.textPrimary, fontSize: typo.small, marginBottom: '3px' }}>
+              Depth: <span style={{ fontWeight: 'bold' }}>{result.depth.toFixed(0)} nm</span>
+            </div>
+            <div style={{ color: colors.textPrimary, fontSize: typo.small, marginBottom: '3px' }}>
+              Lateral: <span style={{ fontWeight: 'bold' }}>{result.lateralEtch.toFixed(1)} nm</span>
+            </div>
+            <div style={{ color: result.sidewallAngle > 80 ? colors.success : colors.warning, fontSize: typo.small, marginBottom: '3px' }}>
+              Sidewall: <span style={{ fontWeight: 'bold' }}>{result.sidewallAngle.toFixed(0)}°</span>
+            </div>
+            <div style={{ color: colors.accent, fontSize: typo.small }}>
+              Anisotropy: <span style={{ fontWeight: 'bold' }}>{result.anisotropyRatio === Infinity ? 'Perfect' : result.anisotropyRatio.toFixed(1) + ':1'}</span>
+            </div>
+          </div>
+
+          {/* Quality Indicator */}
+          <div style={{
+            flex: '1 1 100px',
+            minWidth: '100px',
+            textAlign: 'center',
+          }}>
+            <div style={{ color: colors.textSecondary, fontSize: typo.label, fontWeight: 'bold', marginBottom: '8px' }}>
+              Profile Quality
+            </div>
+            <div style={{ color: colors.textPrimary, fontSize: typo.heading, fontWeight: 'bold' }}>
+              {result.profileQuality.toFixed(0)}%
+            </div>
+            <div style={{ color: result.profileQuality > 70 ? colors.success : colors.error, fontSize: typo.small, fontWeight: 'bold' }}>
+              {result.profileQuality > 70 ? 'Good Profile' : 'Poor Profile'}
+            </div>
+          </div>
+
+          {/* Comparison Labels */}
+          <div style={{
+            flex: '1 1 100px',
+            minWidth: '100px',
+            textAlign: 'center',
+          }}>
+            <div style={{ color: colors.textSecondary, fontSize: typo.label, fontWeight: 'bold', marginBottom: '4px' }}>
+              Profile Comparison
+            </div>
+            <div style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '2px' }}>
+              Isotropic <span style={{ color: colors.error }}>(Undercut)</span>
+            </div>
+            <div style={{ marginTop: '50px', color: colors.textMuted, fontSize: typo.label }}>
+              Anisotropic <span style={{ color: colors.success }}>(Vertical)</span>
+            </div>
+          </div>
+        </div>
+
         {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px', marginTop: '8px' }}>
             <button
               onClick={() => {
                 setEtchTime(0);
@@ -610,11 +904,12 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.textMuted : colors.success,
+                background: isAnimating ? colors.textMuted : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: isAnimating ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
+                boxShadow: isAnimating ? 'none' : `0 4px 15px ${colors.success}40`,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -630,7 +925,7 @@ const EtchAnisotropyRenderer: React.FC<EtchAnisotropyRendererProps> = ({
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >

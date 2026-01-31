@@ -411,6 +411,17 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+        {/* Title label outside SVG */}
+        <div style={{
+          fontSize: typo.heading,
+          fontWeight: 700,
+          color: colors.textPrimary,
+          textAlign: 'center',
+          marginBottom: '4px'
+        }}>
+          6T SRAM Cell - Stored: <span style={{ color: storedBit === 1 ? colors.high : colors.low }}>{storedBit}</span>
+        </div>
+
         <svg
           width="100%"
           height={height}
@@ -418,130 +429,455 @@ const SRAMCellRenderer: React.FC<SRAMCellRendererProps> = ({
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
         >
-          {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
-            6T SRAM Cell - Stored: {storedBit}
-          </text>
+          <defs>
+            {/* Premium PMOS transistor gradient - blue-purple tones */}
+            <linearGradient id="sramPmosGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#a78bfa" />
+              <stop offset="25%" stopColor="#8b5cf6" />
+              <stop offset="50%" stopColor="#7c3aed" />
+              <stop offset="75%" stopColor="#6d28d9" />
+              <stop offset="100%" stopColor="#5b21b6" />
+            </linearGradient>
 
-          {/* VDD rail */}
-          <line x1={80} y1={50} x2={320} y2={50} stroke={colors.high} strokeWidth={3} />
-          <text x={200} y={45} fill={colors.high} fontSize={10} textAnchor="middle">VDD ({supplyVoltage.toFixed(1)}V)</text>
+            {/* Premium NMOS transistor gradient - purple-indigo tones */}
+            <linearGradient id="sramNmosGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#818cf8" />
+              <stop offset="25%" stopColor="#6366f1" />
+              <stop offset="50%" stopColor="#4f46e5" />
+              <stop offset="75%" stopColor="#4338ca" />
+              <stop offset="100%" stopColor="#3730a3" />
+            </linearGradient>
+
+            {/* Access transistor gradient - when inactive */}
+            <linearGradient id="sramAccessGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#a78bfa" />
+              <stop offset="30%" stopColor="#8b5cf6" />
+              <stop offset="70%" stopColor="#7c3aed" />
+              <stop offset="100%" stopColor="#6d28d9" />
+            </linearGradient>
+
+            {/* Access transistor gradient - when active (orange) */}
+            <linearGradient id="sramAccessActiveGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fdba74" />
+              <stop offset="25%" stopColor="#fb923c" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="75%" stopColor="#ea580c" />
+              <stop offset="100%" stopColor="#c2410c" />
+            </linearGradient>
+
+            {/* VDD power rail gradient - green */}
+            <linearGradient id="sramVddGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="25%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#16a34a" />
+              <stop offset="75%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#4ade80" />
+            </linearGradient>
+
+            {/* GND rail gradient - blue */}
+            <linearGradient id="sramGndGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="25%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#60a5fa" />
+            </linearGradient>
+
+            {/* Word line gradient - when inactive */}
+            <linearGradient id="sramWordlineGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
+
+            {/* Word line gradient - when active */}
+            <linearGradient id="sramWordlineActiveGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fdba74" />
+              <stop offset="25%" stopColor="#fb923c" />
+              <stop offset="50%" stopColor="#f97316" />
+              <stop offset="75%" stopColor="#fb923c" />
+              <stop offset="100%" stopColor="#fdba74" />
+            </linearGradient>
+
+            {/* Bit line gradient - cyan */}
+            <linearGradient id="sramBitlineGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#67e8f9" />
+              <stop offset="25%" stopColor="#22d3ee" />
+              <stop offset="50%" stopColor="#06b6d4" />
+              <stop offset="75%" stopColor="#0891b2" />
+              <stop offset="100%" stopColor="#0e7490" />
+            </linearGradient>
+
+            {/* Q node HIGH gradient - green glow */}
+            <radialGradient id="sramNodeHighGradient" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="30%" stopColor="#4ade80" />
+              <stop offset="60%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#16a34a" />
+            </radialGradient>
+
+            {/* Q node LOW gradient - blue glow */}
+            <radialGradient id="sramNodeLowGradient" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="30%" stopColor="#60a5fa" />
+              <stop offset="60%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#2563eb" />
+            </radialGradient>
+
+            {/* Cross-coupling wire gradient - amber */}
+            <linearGradient id="sramCrossCouple" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Metrics panel background gradient */}
+            <linearGradient id="sramMetricsBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Status indicator backgrounds */}
+            <linearGradient id="sramReadingBg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#06b6d4" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.1" />
+            </linearGradient>
+
+            <linearGradient id="sramWritingBg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f97316" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#f97316" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#f97316" stopOpacity="0.1" />
+            </linearGradient>
+
+            <linearGradient id="sramDisturbBg" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.1" />
+            </linearGradient>
+
+            {/* Transistor glow filter */}
+            <filter id="sramTransistorGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Node glow filter - stronger */}
+            <filter id="sramNodeGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Word line active glow */}
+            <filter id="sramWordlineGlow" x="-20%" y="-100%" width="140%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Bit line highlight glow */}
+            <filter id="sramBitlineGlow" x="-100%" y="-20%" width="300%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Status text glow */}
+            <filter id="sramStatusGlow" x="-20%" y="-50%" width="140%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Data storage pulse animation */}
+            <radialGradient id="sramStoragePulse" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.6">
+                <animate attributeName="stopOpacity" values="0.6;0.2;0.6" dur="2s" repeatCount="indefinite" />
+              </stop>
+              <stop offset="100%" stopColor="#f59e0b" stopOpacity="0">
+                <animate attributeName="stopOpacity" values="0;0.3;0" dur="2s" repeatCount="indefinite" />
+              </stop>
+            </radialGradient>
+          </defs>
+
+          {/* Background grid pattern */}
+          <pattern id="sramGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
+          <rect width={width} height={height} fill="url(#sramGrid)" />
+
+          {/* VDD rail with gradient */}
+          <line x1={80} y1={50} x2={320} y2={50} stroke="url(#sramVddGradient)" strokeWidth={4} strokeLinecap="round" />
 
           {/* Left inverter (P1, N1) */}
           <g transform="translate(100, 70)">
-            {/* PMOS P1 */}
-            <rect x={0} y={0} width={30} height={25} fill={colors.transistor} rx={4} opacity={0.8} />
-            <text x={15} y={16} fill="white" fontSize={9} textAnchor="middle">P1</text>
+            {/* PMOS P1 with gradient and glow */}
+            <rect x={0} y={0} width={30} height={25} fill="url(#sramPmosGradient)" rx={4} filter="url(#sramTransistorGlow)" />
+            <rect x={2} y={2} width={26} height={4} fill="rgba(255,255,255,0.2)" rx={2} />
 
-            {/* NMOS N1 */}
-            <rect x={0} y={60} width={30} height={25} fill={colors.transistor} rx={4} opacity={0.8} />
-            <text x={15} y={76} fill="white" fontSize={9} textAnchor="middle">N1</text>
+            {/* NMOS N1 with gradient and glow */}
+            <rect x={0} y={60} width={30} height={25} fill="url(#sramNmosGradient)" rx={4} filter="url(#sramTransistorGlow)" />
+            <rect x={2} y={62} width={26} height={4} fill="rgba(255,255,255,0.15)" rx={2} />
 
-            {/* Connections */}
-            <line x1={15} y1={25} x2={15} y2={60} stroke={colors.textSecondary} strokeWidth={2} />
+            {/* Connections with metallic look */}
+            <line x1={15} y1={25} x2={15} y2={60} stroke="#94a3b8" strokeWidth={3} />
+            <line x1={15} y1={25} x2={15} y2={60} stroke="#cbd5e1" strokeWidth={1} />
 
-            {/* Q node */}
-            <circle cx={15} cy={42} r={8} fill={qVoltage > 0.5 ? colors.high : colors.low} />
-            <text x={15} y={46} fill="white" fontSize={8} textAnchor="middle">Q</text>
+            {/* Q node with glow */}
+            <circle cx={15} cy={42} r={10} fill={qVoltage > 0.5 ? 'url(#sramNodeHighGradient)' : 'url(#sramNodeLowGradient)'} filter="url(#sramNodeGlow)" />
+            {/* Storage pulse animation around active node */}
+            {storedBit === 1 && (
+              <circle cx={15} cy={42} r={14} fill="url(#sramStoragePulse)" />
+            )}
           </g>
 
           {/* Right inverter (P2, N2) */}
           <g transform="translate(270, 70)">
-            {/* PMOS P2 */}
-            <rect x={0} y={0} width={30} height={25} fill={colors.transistor} rx={4} opacity={0.8} />
-            <text x={15} y={16} fill="white" fontSize={9} textAnchor="middle">P2</text>
+            {/* PMOS P2 with gradient and glow */}
+            <rect x={0} y={0} width={30} height={25} fill="url(#sramPmosGradient)" rx={4} filter="url(#sramTransistorGlow)" />
+            <rect x={2} y={2} width={26} height={4} fill="rgba(255,255,255,0.2)" rx={2} />
 
-            {/* NMOS N2 */}
-            <rect x={0} y={60} width={30} height={25} fill={colors.transistor} rx={4} opacity={0.8} />
-            <text x={15} y={76} fill="white" fontSize={9} textAnchor="middle">N2</text>
+            {/* NMOS N2 with gradient and glow */}
+            <rect x={0} y={60} width={30} height={25} fill="url(#sramNmosGradient)" rx={4} filter="url(#sramTransistorGlow)" />
+            <rect x={2} y={62} width={26} height={4} fill="rgba(255,255,255,0.15)" rx={2} />
 
-            {/* Connections */}
-            <line x1={15} y1={25} x2={15} y2={60} stroke={colors.textSecondary} strokeWidth={2} />
+            {/* Connections with metallic look */}
+            <line x1={15} y1={25} x2={15} y2={60} stroke="#94a3b8" strokeWidth={3} />
+            <line x1={15} y1={25} x2={15} y2={60} stroke="#cbd5e1" strokeWidth={1} />
 
-            {/* Q-bar node */}
-            <circle cx={15} cy={42} r={8} fill={qBarVoltage > 0.5 ? colors.high : colors.low} />
-            <text x={15} y={46} fill="white" fontSize={7} textAnchor="middle">Q</text>
+            {/* Q-bar node with glow */}
+            <circle cx={15} cy={42} r={10} fill={qBarVoltage > 0.5 ? 'url(#sramNodeHighGradient)' : 'url(#sramNodeLowGradient)'} filter="url(#sramNodeGlow)" />
+            {/* Storage pulse animation around active node */}
+            {storedBit === 0 && (
+              <circle cx={15} cy={42} r={14} fill="url(#sramStoragePulse)" />
+            )}
           </g>
 
-          {/* Cross-coupling connections */}
-          <path d="M 145 112 C 180 112, 180 90, 235 90" stroke={colors.accent} strokeWidth={2} fill="none" strokeDasharray={wordLineActive ? "none" : "4,2"} />
-          <path d="M 255 112 C 220 112, 220 90, 165 90" stroke={colors.accent} strokeWidth={2} fill="none" strokeDasharray={wordLineActive ? "none" : "4,2"} />
+          {/* Cross-coupling connections with gradient */}
+          <path
+            d="M 145 112 C 180 112, 180 90, 235 90"
+            stroke="url(#sramCrossCouple)"
+            strokeWidth={2.5}
+            fill="none"
+            strokeDasharray={wordLineActive ? "none" : "6,3"}
+            opacity={wordLineActive ? 1 : 0.7}
+          />
+          <path
+            d="M 255 112 C 220 112, 220 90, 165 90"
+            stroke="url(#sramCrossCouple)"
+            strokeWidth={2.5}
+            fill="none"
+            strokeDasharray={wordLineActive ? "none" : "6,3"}
+            opacity={wordLineActive ? 1 : 0.7}
+          />
 
           {/* Access transistors */}
           <g transform="translate(60, 140)">
-            {/* Left access transistor */}
-            <rect x={0} y={0} width={25} height={20} fill={wordLineActive ? colors.wordline : colors.transistor} rx={3} opacity={0.8} />
-            <text x={12} y={14} fill="white" fontSize={8} textAnchor="middle">A1</text>
+            {/* Left access transistor with dynamic gradient */}
+            <rect
+              x={0} y={0} width={25} height={20}
+              fill={wordLineActive ? 'url(#sramAccessActiveGradient)' : 'url(#sramAccessGradient)'}
+              rx={3}
+              filter={wordLineActive ? 'url(#sramTransistorGlow)' : 'none'}
+            />
+            <rect x={2} y={2} width={21} height={3} fill="rgba(255,255,255,0.2)" rx={1} />
           </g>
 
           <g transform="translate(315, 140)">
-            {/* Right access transistor */}
-            <rect x={0} y={0} width={25} height={20} fill={wordLineActive ? colors.wordline : colors.transistor} rx={3} opacity={0.8} />
-            <text x={12} y={14} fill="white" fontSize={8} textAnchor="middle">A2</text>
+            {/* Right access transistor with dynamic gradient */}
+            <rect
+              x={0} y={0} width={25} height={20}
+              fill={wordLineActive ? 'url(#sramAccessActiveGradient)' : 'url(#sramAccessGradient)'}
+              rx={3}
+              filter={wordLineActive ? 'url(#sramTransistorGlow)' : 'none'}
+            />
+            <rect x={2} y={2} width={21} height={3} fill="rgba(255,255,255,0.2)" rx={1} />
           </g>
 
-          {/* Word line */}
-          <line x1={30} y1={150} x2={370} y2={150} stroke={wordLineActive ? colors.wordline : colors.textMuted} strokeWidth={wordLineActive ? 3 : 2} />
-          <text x={20} y={150} fill={wordLineActive ? colors.wordline : colors.textMuted} fontSize={9} textAnchor="end">WL</text>
+          {/* Word line with gradient and conditional glow */}
+          <line
+            x1={30} y1={150} x2={370} y2={150}
+            stroke={wordLineActive ? 'url(#sramWordlineActiveGradient)' : 'url(#sramWordlineGradient)'}
+            strokeWidth={wordLineActive ? 4 : 2}
+            strokeLinecap="round"
+            filter={wordLineActive ? 'url(#sramWordlineGlow)' : 'none'}
+          />
 
-          {/* Bit lines */}
-          <line x1={72} y1={165} x2={72} y2={220} stroke={colors.bitline} strokeWidth={2} />
-          <text x={72} y={235} fill={colors.bitline} fontSize={9} textAnchor="middle">BL</text>
+          {/* Bit lines with gradient and glow during operations */}
+          <line
+            x1={72} y1={165} x2={72} y2={220}
+            stroke="url(#sramBitlineGradient)"
+            strokeWidth={3}
+            strokeLinecap="round"
+            filter={(isReading || isWriting) ? 'url(#sramBitlineGlow)' : 'none'}
+          />
+          <line
+            x1={327} y1={165} x2={327} y2={220}
+            stroke="url(#sramBitlineGradient)"
+            strokeWidth={3}
+            strokeLinecap="round"
+            filter={(isReading || isWriting) ? 'url(#sramBitlineGlow)' : 'none'}
+          />
 
-          <line x1={327} y1={165} x2={327} y2={220} stroke={colors.bitline} strokeWidth={2} />
-          <text x={327} y={235} fill={colors.bitline} fontSize={9} textAnchor="middle">BL</text>
+          {/* GND rail with gradient */}
+          <line x1={80} y1={175} x2={320} y2={175} stroke="url(#sramGndGradient)" strokeWidth={4} strokeLinecap="round" />
 
-          {/* GND rail */}
-          <line x1={80} y1={175} x2={320} y2={175} stroke={colors.low} strokeWidth={3} />
-          <text x={200} y={190} fill={colors.low} fontSize={10} textAnchor="middle">GND</text>
-
-          {/* Status indicators */}
+          {/* Read/Write operation indicators */}
           {isReading && (
             <g>
-              <rect x={150} y={200} width={100} height={25} fill="rgba(6, 182, 212, 0.3)" rx={4} />
-              <text x={200} y={217} fill={colors.bitline} fontSize={11} textAnchor="middle" fontWeight="bold">
-                READING...
-              </text>
+              <rect x={140} y={195} width={120} height={30} fill="url(#sramReadingBg)" rx={6} />
+              <rect x={140} y={195} width={120} height={30} fill="none" stroke="#06b6d4" strokeWidth={1} rx={6} strokeOpacity={0.5} />
+              {/* Animated data flow indicators */}
+              <circle cx={72} cy={190} r={4} fill="#22d3ee" filter="url(#sramNodeGlow)">
+                <animate attributeName="cy" values="190;200;190" dur="0.5s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="1;0.3;1" dur="0.5s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={327} cy={190} r={4} fill="#22d3ee" filter="url(#sramNodeGlow)">
+                <animate attributeName="cy" values="190;200;190" dur="0.5s" repeatCount="indefinite" />
+                <animate attributeName="opacity" values="1;0.3;1" dur="0.5s" repeatCount="indefinite" />
+              </circle>
             </g>
           )}
 
           {isWriting && (
             <g>
-              <rect x={150} y={200} width={100} height={25} fill="rgba(249, 115, 22, 0.3)" rx={4} />
-              <text x={200} y={217} fill={colors.wordline} fontSize={11} textAnchor="middle" fontWeight="bold">
-                WRITING {writeValue}...
-              </text>
+              <rect x={130} y={195} width={140} height={30} fill="url(#sramWritingBg)" rx={6} />
+              <rect x={130} y={195} width={140} height={30} fill="none" stroke="#f97316" strokeWidth={1} rx={6} strokeOpacity={0.5} />
+              {/* Animated write pulses on bit lines */}
+              <circle cx={72} cy={200} r={5} fill="#fb923c" filter="url(#sramNodeGlow)">
+                <animate attributeName="cy" values="200;175;200" dur="0.4s" repeatCount="indefinite" />
+              </circle>
+              <circle cx={327} cy={200} r={5} fill="#fb923c" filter="url(#sramNodeGlow)">
+                <animate attributeName="cy" values="200;175;200" dur="0.4s" repeatCount="indefinite" />
+              </circle>
             </g>
           )}
 
-          {readDisturbOccurred && (
+          {readDisturbOccurred && !isReading && (
             <g>
-              <rect x={120} y={200} width={160} height={25} fill="rgba(239, 68, 68, 0.3)" rx={4} />
-              <text x={200} y={217} fill={colors.error} fontSize={11} textAnchor="middle" fontWeight="bold">
-                READ DISTURB!
-              </text>
+              <rect x={115} y={195} width={170} height={30} fill="url(#sramDisturbBg)" rx={6} />
+              <rect x={115} y={195} width={170} height={30} fill="none" stroke="#ef4444" strokeWidth={1.5} rx={6}>
+                <animate attributeName="strokeOpacity" values="1;0.3;1" dur="0.8s" repeatCount="indefinite" />
+              </rect>
             </g>
           )}
 
-          {/* Metrics panel */}
-          <rect x={20} y={250} width={360} height={120} fill="rgba(0,0,0,0.4)" rx={8} />
-
-          <text x={35} y={275} fill={colors.textSecondary} fontSize={11}>SNM: {(output.snm * 1000).toFixed(0)} mV</text>
-          <text x={35} y={295} fill={colors.textSecondary} fontSize={11}>Read Margin: {(output.readMargin * 1000).toFixed(0)} mV</text>
-          <text x={35} y={315} fill={colors.textSecondary} fontSize={11}>Write Margin: {(output.writeMargin * 1000).toFixed(0)} mV</text>
-
-          <text x={200} y={275} fill={colors.textSecondary} fontSize={11}>Cell Ratio: {cellRatio.toFixed(1)}</text>
-          <text x={200} y={295} fill={output.readStable ? colors.success : colors.error} fontSize={11}>
-            Read Disturb Risk: {output.readDisturbProb.toFixed(1)}%
-          </text>
-          <text x={200} y={315} fill={output.writeCapable ? colors.success : colors.error} fontSize={11}>
-            Write Failure Risk: {output.writeFailureProb.toFixed(1)}%
-          </text>
-
-          <text x={35} y={350} fill={colors.textSecondary} fontSize={11}>
-            Stability: {output.isStable ? 'STABLE' : 'UNSTABLE'} | Q={qVoltage.toFixed(1)}V, Q={qBarVoltage.toFixed(1)}V
-          </text>
+          {/* Metrics panel with gradient background */}
+          <rect x={15} y={235} width={370} height={140} fill="url(#sramMetricsBg)" rx={10} stroke="#334155" strokeWidth={1} />
         </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: '8px',
+          width: '100%',
+          maxWidth: '500px',
+          marginTop: '-130px',
+          padding: '12px 20px',
+          position: 'relative',
+          zIndex: 1
+        }}>
+          {/* Left column - margins */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <div style={{ fontSize: typo.small, color: colors.textSecondary }}>
+              SNM: <span style={{ color: colors.textPrimary, fontWeight: 600 }}>{(output.snm * 1000).toFixed(0)} mV</span>
+            </div>
+            <div style={{ fontSize: typo.small, color: colors.textSecondary }}>
+              Read Margin: <span style={{ color: colors.textPrimary, fontWeight: 600 }}>{(output.readMargin * 1000).toFixed(0)} mV</span>
+            </div>
+            <div style={{ fontSize: typo.small, color: colors.textSecondary }}>
+              Write Margin: <span style={{ color: colors.textPrimary, fontWeight: 600 }}>{(output.writeMargin * 1000).toFixed(0)} mV</span>
+            </div>
+          </div>
+
+          {/* Center column - cell info */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'center' }}>
+            <div style={{ fontSize: typo.small, color: colors.textSecondary }}>
+              Cell Ratio: <span style={{ color: colors.accent, fontWeight: 600 }}>{cellRatio.toFixed(1)}</span>
+            </div>
+            <div style={{ fontSize: typo.small, color: colors.high }}>
+              VDD: {supplyVoltage.toFixed(2)}V
+            </div>
+            <div style={{
+              fontSize: typo.small,
+              color: output.isStable ? colors.success : colors.error,
+              fontWeight: 700
+            }}>
+              {output.isStable ? 'STABLE' : 'UNSTABLE'}
+            </div>
+          </div>
+
+          {/* Right column - risks */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', alignItems: 'flex-end' }}>
+            <div style={{ fontSize: typo.small, color: output.readStable ? colors.success : colors.error }}>
+              Read Risk: {output.readDisturbProb.toFixed(1)}%
+            </div>
+            <div style={{ fontSize: typo.small, color: output.writeCapable ? colors.success : colors.error }}>
+              Write Risk: {output.writeFailureProb.toFixed(1)}%
+            </div>
+            <div style={{ fontSize: typo.small, color: colors.textMuted }}>
+              Q={qVoltage.toFixed(1)}V | Q̄={qBarVoltage.toFixed(1)}V
+            </div>
+          </div>
+        </div>
+
+        {/* Status messages outside SVG */}
+        {isReading && (
+          <div style={{
+            fontSize: typo.body,
+            color: colors.bitline,
+            fontWeight: 700,
+            padding: '8px 16px',
+            background: 'rgba(6, 182, 212, 0.15)',
+            borderRadius: '8px',
+            border: '1px solid rgba(6, 182, 212, 0.3)'
+          }}>
+            READING...
+          </div>
+        )}
+
+        {isWriting && (
+          <div style={{
+            fontSize: typo.body,
+            color: colors.wordline,
+            fontWeight: 700,
+            padding: '8px 16px',
+            background: 'rgba(249, 115, 22, 0.15)',
+            borderRadius: '8px',
+            border: '1px solid rgba(249, 115, 22, 0.3)'
+          }}>
+            WRITING {writeValue}...
+          </div>
+        )}
+
+        {readDisturbOccurred && !isReading && (
+          <div style={{
+            fontSize: typo.body,
+            color: colors.error,
+            fontWeight: 700,
+            padding: '8px 16px',
+            background: 'rgba(239, 68, 68, 0.15)',
+            borderRadius: '8px',
+            border: '1px solid rgba(239, 68, 68, 0.3)',
+            animation: 'pulse 1s ease-in-out infinite'
+          }}>
+            READ DISTURB OCCURRED!
+          </div>
+        )}
 
         {interactive && (
           <div style={{ display: 'flex', gap: '12px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>

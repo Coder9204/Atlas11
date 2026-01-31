@@ -126,6 +126,7 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
     border: '#475569',
     textPrimary: '#f8fafc',
     textSecondary: '#94a3b8',
+    textMuted: '#64748b', // slate-500
   };
 
   // Navigation function
@@ -462,108 +463,543 @@ const SolarYieldPredictionRenderer: React.FC<SolarYieldPredictionRendererProps> 
   const renderVisualization = () => {
     const output = calculateYield();
 
+    // Calculate sun position based on irradiance (higher = higher in sky)
+    const sunY = 70 - (irradiance - 3) * 10;
+    const sunIntensity = (irradiance - 3) / 4; // 0-1 scale
+
+    // Energy production graph data (hourly simulation)
+    const hourlyProduction = Array.from({ length: 24 }, (_, hour) => {
+      if (hour < 6 || hour > 20) return 0;
+      const solarAngle = ((hour - 6) / 14) * Math.PI;
+      return Math.sin(solarAngle) * output.dailyYield / 6 * (1 - (temperature - 25) * 0.004);
+    });
+    const maxHourly = Math.max(...hourlyProduction);
+
+    // Weather indicator based on irradiance
+    const weatherState = irradiance > 5.5 ? 'sunny' : irradiance > 4.5 ? 'partlyCloudy' : 'cloudy';
+
     return (
-      <svg width="100%" height="450" viewBox="0 0 500 450" style={{ maxWidth: '600px' }}>
-        <defs>
-          <linearGradient id="solarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#f59e0b" />
-            <stop offset="100%" stopColor="#eab308" />
-          </linearGradient>
-          <linearGradient id="yieldGrad" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#22c55e" />
-            <stop offset="100%" stopColor="#84cc16" />
-          </linearGradient>
-        </defs>
+      <div style={{ position: 'relative' }}>
+        <svg width="100%" height="520" viewBox="0 0 600 520" style={{ maxWidth: '700px' }}>
+          <defs>
+            {/* Premium sky gradient with multiple stops */}
+            <linearGradient id="sypSkyGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0c4a6e" />
+              <stop offset="25%" stopColor="#0369a1" />
+              <stop offset="50%" stopColor="#0ea5e9" />
+              <stop offset="75%" stopColor="#38bdf8" />
+              <stop offset="100%" stopColor="#7dd3fc" />
+            </linearGradient>
 
-        <rect width="500" height="450" fill="#0f172a" rx="12" />
+            {/* Ground gradient */}
+            <linearGradient id="sypGroundGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#166534" />
+              <stop offset="50%" stopColor="#15803d" />
+              <stop offset="100%" stopColor="#14532d" />
+            </linearGradient>
 
-        <text x="250" y="30" fill="#f8fafc" fontSize="16" fontWeight="bold" textAnchor="middle">
-          Solar Yield Prediction Model
-        </text>
+            {/* Solar panel gradient - silicon blue */}
+            <linearGradient id="sypPanelGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="25%" stopColor="#1e40af" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#1e40af" />
+              <stop offset="100%" stopColor="#1e3a5f" />
+            </linearGradient>
 
-        <g transform="translate(20, 50)">
-          <rect width="200" height="160" fill="rgba(30, 41, 59, 0.8)" rx="8" />
-          <text x="100" y="20" fill="#f59e0b" fontSize="12" fontWeight="bold" textAnchor="middle">INPUT PARAMETERS</text>
+            {/* Panel frame metallic gradient */}
+            <linearGradient id="sypFrameGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#94a3b8" />
+              <stop offset="30%" stopColor="#64748b" />
+              <stop offset="70%" stopColor="#475569" />
+              <stop offset="100%" stopColor="#334155" />
+            </linearGradient>
 
-          <text x="10" y="45" fill="#94a3b8" fontSize="10">Irradiance:</text>
-          <text x="190" y="45" fill="#f8fafc" fontSize="10" textAnchor="end">{irradiance.toFixed(1)} kWh/m2/day</text>
+            {/* Sun gradient with glow */}
+            <radialGradient id="sypSunGradient" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="30%" stopColor="#fde047" />
+              <stop offset="60%" stopColor="#facc15" />
+              <stop offset="80%" stopColor="#eab308" />
+              <stop offset="100%" stopColor="#ca8a04" />
+            </radialGradient>
 
-          <text x="10" y="65" fill="#94a3b8" fontSize="10">System Size:</text>
-          <text x="190" y="65" fill="#f8fafc" fontSize="10" textAnchor="end">{systemSize} kW</text>
+            {/* Sun outer glow */}
+            <radialGradient id="sypSunOuterGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef08a" stopOpacity="0.6" />
+              <stop offset="40%" stopColor="#fde047" stopOpacity="0.3" />
+              <stop offset="70%" stopColor="#facc15" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
+            </radialGradient>
 
-          <text x="10" y="85" fill="#94a3b8" fontSize="10">Tilt Angle:</text>
-          <text x="190" y="85" fill="#f8fafc" fontSize="10" textAnchor="end">{tiltAngle} deg</text>
+            {/* Energy bar gradient */}
+            <linearGradient id="sypEnergyGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#166534" />
+              <stop offset="25%" stopColor="#15803d" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="75%" stopColor="#4ade80" />
+              <stop offset="100%" stopColor="#86efac" />
+            </linearGradient>
 
-          <text x="10" y="105" fill="#94a3b8" fontSize="10">Temperature:</text>
-          <text x="190" y="105" fill="#f8fafc" fontSize="10" textAnchor="end">{temperature} C</text>
+            {/* Temperature indicator gradient */}
+            <linearGradient id="sypTempGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="25%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
 
-          <text x="10" y="125" fill="#94a3b8" fontSize="10">Soiling Loss:</text>
-          <text x="190" y="125" fill="#f8fafc" fontSize="10" textAnchor="end">{soilingLoss}%</text>
+            {/* Card background gradient */}
+            <linearGradient id="sypCardGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
 
-          <text x="10" y="145" fill="#94a3b8" fontSize="10">Inverter Eff:</text>
-          <text x="190" y="145" fill="#f8fafc" fontSize="10" textAnchor="end">{inverterEfficiency}%</text>
-        </g>
+            {/* Uncertainty band gradient */}
+            <linearGradient id="sypUncertaintyGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#8b5cf6" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#8b5cf6" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#8b5cf6" stopOpacity="0.1" />
+            </linearGradient>
 
-        <g transform="translate(240, 50)">
-          <rect width="240" height="160" fill="rgba(30, 41, 59, 0.8)" rx="8" />
-          <text x="120" y="20" fill="#22c55e" fontSize="12" fontWeight="bold" textAnchor="middle">YIELD CALCULATION</text>
+            {/* Cloud gradient */}
+            <radialGradient id="sypCloudGradient" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#f1f5f9" />
+              <stop offset="50%" stopColor="#e2e8f0" />
+              <stop offset="100%" stopColor="#cbd5e1" />
+            </radialGradient>
 
-          <text x="10" y="45" fill="#94a3b8" fontSize="9">Irradiance x Size x Days:</text>
-          <text x="230" y="45" fill="#f8fafc" fontSize="9" textAnchor="end">{(irradiance * systemSize * 365).toFixed(0)} kWh base</text>
+            {/* Sun glow filter */}
+            <filter id="sypSunGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="8" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-          <text x="10" y="65" fill="#94a3b8" fontSize="9">x Cosine Factor:</text>
-          <text x="230" y="65" fill="#f8fafc" fontSize="9" textAnchor="end">x {output.cosineFactor.toFixed(3)}</text>
+            {/* Panel reflection filter */}
+            <filter id="sypPanelShine" x="-10%" y="-10%" width="120%" height="120%">
+              <feGaussianBlur stdDeviation="1" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-          <text x="10" y="85" fill="#94a3b8" fontSize="9">x Temp Derate:</text>
-          <text x="230" y="85" fill={output.tempDerate < 1 ? '#ef4444' : '#22c55e'} fontSize="9" textAnchor="end">x {output.tempDerate.toFixed(3)}</text>
+            {/* Energy glow filter */}
+            <filter id="sypEnergyGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-          <text x="10" y="105" fill="#94a3b8" fontSize="9">x Soiling Factor:</text>
-          <text x="230" y="105" fill="#f8fafc" fontSize="9" textAnchor="end">x {output.soilingFactor.toFixed(3)}</text>
+            {/* Soft shadow filter */}
+            <filter id="sypSoftShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="shadow" />
+              <feOffset dx="2" dy="4" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-          <text x="10" y="125" fill="#94a3b8" fontSize="9">x Inverter Eff:</text>
-          <text x="230" y="125" fill="#f8fafc" fontSize="9" textAnchor="end">x {output.inverterFactor.toFixed(3)}</text>
+            {/* Ray pattern for sun */}
+            <pattern id="sypSunRays" x="0" y="0" width="60" height="60" patternUnits="userSpaceOnUse">
+              <line x1="30" y1="0" x2="30" y2="60" stroke="#fde047" strokeWidth="1" opacity="0.3" />
+              <line x1="0" y1="30" x2="60" y2="30" stroke="#fde047" strokeWidth="1" opacity="0.3" />
+              <line x1="0" y1="0" x2="60" y2="60" stroke="#fde047" strokeWidth="0.5" opacity="0.2" />
+              <line x1="60" y1="0" x2="0" y2="60" stroke="#fde047" strokeWidth="0.5" opacity="0.2" />
+            </pattern>
+          </defs>
 
-          <text x="10" y="145" fill="#94a3b8" fontSize="9">x System Losses:</text>
-          <text x="230" y="145" fill="#f8fafc" fontSize="9" textAnchor="end">x 0.860</text>
-        </g>
+          {/* Sky background */}
+          <rect width="600" height="200" fill="url(#sypSkyGradient)" rx="12" />
 
-        <g transform="translate(20, 220)">
-          <rect width="460" height="80" fill="rgba(34, 197, 94, 0.1)" rx="8" stroke="#22c55e" strokeWidth="2" />
-          <text x="230" y="25" fill="#22c55e" fontSize="14" fontWeight="bold" textAnchor="middle">PREDICTED ANNUAL YIELD</text>
-          <text x="230" y="55" fill="#f8fafc" fontSize="28" fontWeight="bold" textAnchor="middle">
-            {output.annualYield.toFixed(0)} kWh/year
-          </text>
-          {showUncertainty && (
-            <text x="230" y="72" fill="#94a3b8" fontSize="10" textAnchor="middle">
-              Range: {output.lowEstimate.toFixed(0)} - {output.highEstimate.toFixed(0)} kWh (+/-{(output.uncertainty * 100).toFixed(1)}%)
-            </text>
+          {/* Ground */}
+          <rect y="180" width="600" height="40" fill="url(#sypGroundGradient)" />
+
+          {/* Sun with glow effect */}
+          <g transform={`translate(480, ${sunY})`}>
+            {/* Outer glow */}
+            <circle r="50" fill="url(#sypSunOuterGlow)" opacity={0.4 + sunIntensity * 0.4} />
+            {/* Sun rays animation placeholder */}
+            <circle r="35" fill="url(#sypSunOuterGlow)" opacity={0.5 + sunIntensity * 0.3} />
+            {/* Main sun */}
+            <circle r="25" fill="url(#sypSunGradient)" filter="url(#sypSunGlow)" />
+            {/* Sun highlight */}
+            <circle cx="-5" cy="-5" r="8" fill="#fef9c3" opacity="0.6" />
+          </g>
+
+          {/* Weather indicator clouds */}
+          {(weatherState === 'partlyCloudy' || weatherState === 'cloudy') && (
+            <g transform="translate(400, 50)">
+              <ellipse cx="0" cy="0" rx="35" ry="20" fill="url(#sypCloudGradient)" opacity="0.9" />
+              <ellipse cx="-25" cy="5" rx="25" ry="15" fill="url(#sypCloudGradient)" opacity="0.9" />
+              <ellipse cx="20" cy="8" rx="28" ry="16" fill="url(#sypCloudGradient)" opacity="0.9" />
+            </g>
           )}
-        </g>
+          {weatherState === 'cloudy' && (
+            <g transform="translate(320, 70)">
+              <ellipse cx="0" cy="0" rx="30" ry="18" fill="url(#sypCloudGradient)" opacity="0.85" />
+              <ellipse cx="-20" cy="5" rx="22" ry="14" fill="url(#sypCloudGradient)" opacity="0.85" />
+              <ellipse cx="18" cy="6" rx="24" ry="14" fill="url(#sypCloudGradient)" opacity="0.85" />
+            </g>
+          )}
 
-        <g transform="translate(20, 320)">
-          <text x="230" y="0" fill="#f59e0b" fontSize="12" fontWeight="bold" textAnchor="middle">
-            SENSITIVITY ANALYSIS - What Matters Most?
-          </text>
+          {/* Solar Panel with cell grid */}
+          <g transform={`translate(80, 140) rotate(${-tiltAngle}, 100, 60)`} filter="url(#sypSoftShadow)">
+            {/* Panel frame */}
+            <rect x="-5" y="-5" width="210" height="70" rx="3" fill="url(#sypFrameGradient)" />
 
-          <rect x="10" y="20" width={output.sensitivities.irradiance * 15} height="20" fill="#f59e0b" rx="4" />
-          <text x="10" y="55" fill="#94a3b8" fontSize="9">Irradiance ({output.sensitivities.irradiance.toFixed(1)}%)</text>
+            {/* Panel surface */}
+            <rect width="200" height="60" rx="2" fill="url(#sypPanelGradient)" filter="url(#sypPanelShine)" />
 
-          <rect x="10" y="65" width={output.sensitivities.temperature * 15} height="20" fill="#ef4444" rx="4" />
-          <text x="10" y="100" fill="#94a3b8" fontSize="9">Temperature ({output.sensitivities.temperature.toFixed(1)}%)</text>
+            {/* Cell grid - 6x4 cells */}
+            {Array.from({ length: 6 }).map((_, col) => (
+              Array.from({ length: 4 }).map((_, row) => (
+                <g key={`cell-${col}-${row}`}>
+                  <rect
+                    x={col * 33 + 2}
+                    y={row * 15 + 1}
+                    width="31"
+                    height="14"
+                    fill="#1e3a8a"
+                    stroke="#3b82f6"
+                    strokeWidth="0.5"
+                    opacity="0.8"
+                  />
+                  {/* Cell bus bars */}
+                  <line
+                    x1={col * 33 + 17}
+                    y1={row * 15 + 1}
+                    x2={col * 33 + 17}
+                    y2={row * 15 + 15}
+                    stroke="#94a3b8"
+                    strokeWidth="0.5"
+                    opacity="0.6"
+                  />
+                </g>
+              ))
+            ))}
 
-          <rect x="250" y="20" width={output.sensitivities.soiling * 15} height="20" fill="#8b5cf6" rx="4" />
-          <text x="250" y="55" fill="#94a3b8" fontSize="9">Soiling ({output.sensitivities.soiling.toFixed(1)}%)</text>
+            {/* Panel glass reflection */}
+            <rect width="200" height="60" rx="2" fill="white" opacity="0.05" />
+            <line x1="10" y1="5" x2="50" y2="5" stroke="white" strokeWidth="2" opacity="0.15" strokeLinecap="round" />
+          </g>
 
-          <rect x="250" y="65" width={output.sensitivities.inverter * 15} height="20" fill="#3b82f6" rx="4" />
-          <text x="250" y="100" fill="#94a3b8" fontSize="9">Inverter ({output.sensitivities.inverter.toFixed(1)}%)</text>
-        </g>
+          {/* Sun rays hitting panel */}
+          <g opacity={sunIntensity * 0.6}>
+            {Array.from({ length: 5 }).map((_, i) => (
+              <line
+                key={`ray-${i}`}
+                x1={480 - i * 8}
+                y1={sunY + 25}
+                x2={130 + i * 30}
+                y2={120}
+                stroke="#fde047"
+                strokeWidth="1.5"
+                strokeDasharray="8,4"
+                opacity={0.3 + sunIntensity * 0.2}
+              />
+            ))}
+          </g>
 
-        <g transform="translate(20, 430)">
-          <text x="230" y="0" fill="#94a3b8" fontSize="10" textAnchor="middle">
-            Simple physics: multiply a few factors to predict kWh within 5-10%
-          </text>
-        </g>
-      </svg>
+          {/* Data panels background */}
+          <rect y="220" width="600" height="300" fill="#0f172a" />
+
+          {/* Energy Production Graph */}
+          <g transform="translate(20, 240)">
+            <rect width="260" height="130" fill="url(#sypCardGradient)" rx="8" stroke="#334155" strokeWidth="1" />
+
+            {/* Graph area */}
+            <g transform="translate(35, 25)">
+              {/* Grid lines */}
+              {Array.from({ length: 5 }).map((_, i) => (
+                <line key={`grid-${i}`} x1="0" y1={i * 22} x2="210" y2={i * 22} stroke="#334155" strokeWidth="0.5" />
+              ))}
+
+              {/* Uncertainty band if enabled */}
+              {showUncertainty && (
+                <rect x="0" y="20" width="210" height="50" fill="url(#sypUncertaintyGradient)" rx="4" />
+              )}
+
+              {/* Production curve */}
+              <path
+                d={`M 0,88 ${hourlyProduction.map((val, i) =>
+                  `L ${i * 8.75},${88 - (val / (maxHourly || 1)) * 80}`
+                ).join(' ')}`}
+                fill="none"
+                stroke="url(#sypEnergyGradient)"
+                strokeWidth="2.5"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+                filter="url(#sypEnergyGlow)"
+              />
+
+              {/* Area fill under curve */}
+              <path
+                d={`M 0,88 ${hourlyProduction.map((val, i) =>
+                  `L ${i * 8.75},${88 - (val / (maxHourly || 1)) * 80}`
+                ).join(' ')} L 210,88 Z`}
+                fill="url(#sypEnergyGradient)"
+                opacity="0.15"
+              />
+
+              {/* Current production dot */}
+              <circle
+                cx={12 * 8.75}
+                cy={88 - (hourlyProduction[12] / (maxHourly || 1)) * 80}
+                r="5"
+                fill="#22c55e"
+                filter="url(#sypEnergyGlow)"
+              />
+            </g>
+          </g>
+
+          {/* Input Parameters Panel */}
+          <g transform="translate(300, 240)">
+            <rect width="280" height="130" fill="url(#sypCardGradient)" rx="8" stroke="#334155" strokeWidth="1" />
+
+            {/* Parameters with visual indicators */}
+            <g transform="translate(15, 25)">
+              {/* Irradiance */}
+              <rect x="0" y="0" width={irradiance * 20} height="12" rx="2" fill="url(#sypSunGradient)" opacity="0.8" />
+
+              {/* Temperature indicator */}
+              <rect x="0" y="22" width={3} height="12" rx="1" fill="#3b82f6" />
+              <rect x="0" y="22" width={3 + (temperature - 15) * 1.5} height="12" rx="1" fill="url(#sypTempGradient)" />
+
+              {/* Soiling bar */}
+              <rect x="140" y="0" width="100" height="12" rx="2" fill="#334155" />
+              <rect x="140" y="0" width={(100 - soilingLoss) * 1} height="12" rx="2" fill="#8b5cf6" opacity="0.7" />
+
+              {/* Inverter efficiency */}
+              <rect x="140" y="22" width="100" height="12" rx="2" fill="#334155" />
+              <rect x="140" y="22" width={(inverterEfficiency - 90) * 11} height="12" rx="2" fill="#3b82f6" opacity="0.7" />
+            </g>
+          </g>
+
+          {/* Yield Result Panel */}
+          <g transform="translate(20, 385)">
+            <rect width="560" height="70" fill="rgba(34, 197, 94, 0.1)" rx="8" stroke="#22c55e" strokeWidth="2" filter="url(#sypEnergyGlow)" />
+
+            {/* Main yield value with glow */}
+            <g filter="url(#sypEnergyGlow)">
+              <circle cx="50" cy="35" r="20" fill="url(#sypEnergyGradient)" opacity="0.2" />
+            </g>
+
+            {/* Uncertainty range visual */}
+            {showUncertainty && (
+              <g transform="translate(350, 50)">
+                <line x1="0" y1="0" x2="180" y2="0" stroke="#8b5cf6" strokeWidth="4" strokeLinecap="round" opacity="0.3" />
+                <line
+                  x1={(output.lowEstimate / output.highEstimate) * 180}
+                  y1="0"
+                  x2={180}
+                  y2="0"
+                  stroke="#8b5cf6"
+                  strokeWidth="4"
+                  strokeLinecap="round"
+                />
+                <circle cx={(output.annualYield / output.highEstimate) * 180} cy="0" r="6" fill="#22c55e" filter="url(#sypEnergyGlow)" />
+              </g>
+            )}
+          </g>
+
+          {/* Sensitivity Analysis */}
+          <g transform="translate(20, 470)">
+            {/* Bars with gradients */}
+            <rect x="0" y="0" width={output.sensitivities.irradiance * 12} height="16" rx="3" fill="url(#sypSunGradient)" filter="url(#sypEnergyGlow)" opacity="0.9" />
+            <rect x="150" y="0" width={output.sensitivities.temperature * 12} height="16" rx="3" fill="url(#sypTempGradient)" opacity="0.9" />
+            <rect x="300" y="0" width={output.sensitivities.soiling * 12} height="16" rx="3" fill="#8b5cf6" opacity="0.9" />
+            <rect x="450" y="0" width={output.sensitivities.inverter * 12} height="16" rx="3" fill="#3b82f6" opacity="0.9" />
+          </g>
+        </svg>
+
+        {/* Text labels outside SVG using typo system */}
+        <div style={{
+          position: 'absolute',
+          top: '245px',
+          left: '30px',
+          color: colors.primary,
+          fontSize: typo.small,
+          fontWeight: 'bold'
+        }}>
+          HOURLY PRODUCTION
+        </div>
+
+        <div style={{
+          position: 'absolute',
+          top: '362px',
+          left: '35px',
+          color: colors.textSecondary,
+          fontSize: typo.label
+        }}>
+          6AM
+        </div>
+        <div style={{
+          position: 'absolute',
+          top: '362px',
+          left: '135px',
+          color: colors.textSecondary,
+          fontSize: typo.label
+        }}>
+          12PM
+        </div>
+        <div style={{
+          position: 'absolute',
+          top: '362px',
+          left: '235px',
+          color: colors.textSecondary,
+          fontSize: typo.label
+        }}>
+          8PM
+        </div>
+
+        <div style={{
+          position: 'absolute',
+          top: '245px',
+          left: '310px',
+          color: colors.primary,
+          fontSize: typo.small,
+          fontWeight: 'bold'
+        }}>
+          PARAMETERS
+        </div>
+
+        <div style={{
+          position: 'absolute',
+          top: '268px',
+          left: '315px',
+          color: colors.textSecondary,
+          fontSize: typo.label
+        }}>
+          Irradiance: {irradiance.toFixed(1)} kWh/m2/day
+        </div>
+        <div style={{
+          position: 'absolute',
+          top: '290px',
+          left: '315px',
+          color: colors.textSecondary,
+          fontSize: typo.label
+        }}>
+          Temp: {temperature}C
+        </div>
+        <div style={{
+          position: 'absolute',
+          top: '268px',
+          left: '455px',
+          color: colors.textSecondary,
+          fontSize: typo.label
+        }}>
+          Soiling: {soilingLoss}%
+        </div>
+        <div style={{
+          position: 'absolute',
+          top: '290px',
+          left: '455px',
+          color: colors.textSecondary,
+          fontSize: typo.label
+        }}>
+          Inverter: {inverterEfficiency}%
+        </div>
+
+        <div style={{
+          position: 'absolute',
+          top: '318px',
+          left: '315px',
+          color: colors.textSecondary,
+          fontSize: typo.label
+        }}>
+          System: {systemSize} kW | Tilt: {tiltAngle} deg
+        </div>
+
+        <div style={{
+          position: 'absolute',
+          top: '395px',
+          left: '90px',
+          color: colors.success,
+          fontSize: typo.heading,
+          fontWeight: 'bold'
+        }}>
+          {output.annualYield.toFixed(0)} kWh/year
+        </div>
+        <div style={{
+          position: 'absolute',
+          top: '425px',
+          left: '90px',
+          color: colors.textSecondary,
+          fontSize: typo.small
+        }}>
+          Predicted Annual Yield
+        </div>
+
+        {showUncertainty && (
+          <div style={{
+            position: 'absolute',
+            top: '425px',
+            left: '350px',
+            color: '#8b5cf6',
+            fontSize: typo.label
+          }}>
+            Range: {output.lowEstimate.toFixed(0)} - {output.highEstimate.toFixed(0)} kWh (+/-{(output.uncertainty * 100).toFixed(1)}%)
+          </div>
+        )}
+
+        <div style={{
+          position: 'absolute',
+          top: '476px',
+          left: '10px',
+          color: colors.textSecondary,
+          fontSize: typo.label
+        }}>
+          Irradiance ({output.sensitivities.irradiance.toFixed(0)}%)
+        </div>
+        <div style={{
+          position: 'absolute',
+          top: '476px',
+          left: '160px',
+          color: colors.textSecondary,
+          fontSize: typo.label
+        }}>
+          Temp ({output.sensitivities.temperature.toFixed(0)}%)
+        </div>
+        <div style={{
+          position: 'absolute',
+          top: '476px',
+          left: '310px',
+          color: colors.textSecondary,
+          fontSize: typo.label
+        }}>
+          Soiling ({output.sensitivities.soiling.toFixed(0)}%)
+        </div>
+        <div style={{
+          position: 'absolute',
+          top: '476px',
+          left: '460px',
+          color: colors.textSecondary,
+          fontSize: typo.label
+        }}>
+          Inverter ({output.sensitivities.inverter.toFixed(0)}%)
+        </div>
+
+        <div style={{
+          position: 'absolute',
+          top: '500px',
+          left: '0',
+          right: '0',
+          textAlign: 'center',
+          color: colors.textMuted,
+          fontSize: typo.small
+        }}>
+          Simple physics: multiply key factors to predict kWh within 5-10%
+        </div>
+      </div>
     );
   };
 

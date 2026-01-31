@@ -520,165 +520,402 @@ const PowerDeliveryNetworkRenderer: React.FC<PowerDeliveryNetworkRendererProps> 
     // Voltage droop animation during surge
     const droopActive = isSurging && pdn.droopPercentage > 5;
 
+    // Ripple animation for voltage indicator
+    const rippleOffset = Math.sin(surgePhase * 3) * 2;
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+        {/* Title moved outside SVG using typo system */}
+        <div style={{
+          fontSize: typo.heading,
+          fontWeight: 700,
+          color: colors.textPrimary,
+          textAlign: 'center',
+          marginBottom: '4px'
+        }}>
+          Power Delivery Network (PDN)
+        </div>
+
         <svg
           width="100%"
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
+          height={height - 30}
+          viewBox={`0 0 ${width} ${height - 30}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
         >
           <defs>
-            <linearGradient id="powerGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.power} />
-              <stop offset="100%" stopColor="#dc2626" />
+            {/* Premium VRM metallic gradient with 6 color stops */}
+            <linearGradient id="pdnVrmMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7f1d1d" />
+              <stop offset="20%" stopColor="#b91c1c" />
+              <stop offset="40%" stopColor="#ef4444" />
+              <stop offset="60%" stopColor="#dc2626" />
+              <stop offset="80%" stopColor="#991b1b" />
+              <stop offset="100%" stopColor="#7f1d1d" />
             </linearGradient>
-            <linearGradient id="capGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.capacitor} />
-              <stop offset="100%" stopColor="#15803d" />
+
+            {/* VRM brushed metal effect */}
+            <linearGradient id="pdnVrmBrushed" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="15%" stopColor="#4b5563" />
+              <stop offset="30%" stopColor="#374151" />
+              <stop offset="45%" stopColor="#6b7280" />
+              <stop offset="60%" stopColor="#374151" />
+              <stop offset="75%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
             </linearGradient>
+
+            {/* Capacitor premium gradient with 5 color stops */}
+            <linearGradient id="pdnCapGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4ade80" />
+              <stop offset="25%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#16a34a" />
+              <stop offset="75%" stopColor="#15803d" />
+              <stop offset="100%" stopColor="#166534" />
+            </linearGradient>
+
+            {/* Ceramic capacitor gradient */}
+            <linearGradient id="pdnCeramicGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="30%" stopColor="#4ade80" />
+              <stop offset="70%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#16a34a" />
+            </linearGradient>
+
+            {/* Power plane gradient with 4 color stops */}
+            <linearGradient id="pdnPowerPlane" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#312e81" />
+              <stop offset="33%" stopColor="#4338ca" />
+              <stop offset="66%" stopColor="#6366f1" />
+              <stop offset="100%" stopColor="#4338ca" />
+            </linearGradient>
+
+            {/* Ground plane premium gradient */}
+            <linearGradient id="pdnGroundPlane" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e1b4b" />
+              <stop offset="25%" stopColor="#312e81" />
+              <stop offset="50%" stopColor="#4338ca" />
+              <stop offset="75%" stopColor="#312e81" />
+              <stop offset="100%" stopColor="#1e1b4b" />
+            </linearGradient>
+
+            {/* CPU die gradient */}
+            <linearGradient id="pdnCpuDie" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e1b4b" />
+              <stop offset="25%" stopColor="#312e81" />
+              <stop offset="50%" stopColor="#3730a3" />
+              <stop offset="75%" stopColor="#312e81" />
+              <stop offset="100%" stopColor="#1e1b4b" />
+            </linearGradient>
+
+            {/* Voltage ripple indicator gradient */}
+            <linearGradient id="pdnVoltageRipple" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fcd34d" stopOpacity="0" />
+              <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="1" />
+              <stop offset="70%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#fcd34d" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Inductance coil gradient */}
+            <linearGradient id="pdnInductorGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="25%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+
+            {/* Current flow glow */}
+            <radialGradient id="pdnCurrentGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="50%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Waveform background gradient */}
+            <linearGradient id="pdnWaveformBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#020617" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Metrics panel gradient */}
+            <linearGradient id="pdnMetricsBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#1e293b" stopOpacity="0.6" />
+            </linearGradient>
+
+            {/* VRM glow filter */}
+            <filter id="pdnVrmGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Capacitor glow filter */}
+            <filter id="pdnCapGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Current flow blur */}
+            <filter id="pdnCurrentBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" />
+            </filter>
+
+            {/* Voltage droop glow */}
+            <filter id="pdnDroopGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Pin glow effect */}
+            <filter id="pdnPinGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
           </defs>
 
-          {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
-            Power Delivery Network (PDN)
-          </text>
-
           {/* System diagram */}
-          <g transform="translate(30, 50)">
-            {/* VRM (Voltage Regulator Module) */}
-            <rect x={0} y={40} width={60} height={80} fill="url(#powerGrad)" rx={8} />
-            <text x={30} y={75} fill="white" fontSize={10} fontWeight="bold" textAnchor="middle">VRM</text>
-            <text x={30} y={90} fill="white" fontSize={8} textAnchor="middle">12V to 1V</text>
-            <text x={30} y={105} fill="white" fontSize={8} textAnchor="middle">{currentDemand}A</text>
+          <g transform="translate(30, 20)">
+            {/* VRM (Voltage Regulator Module) with premium metallic look */}
+            <g filter="url(#pdnVrmGlow)">
+              {/* VRM base with brushed metal */}
+              <rect x={0} y={40} width={60} height={80} fill="url(#pdnVrmBrushed)" rx={8} />
+              {/* VRM heatsink fins */}
+              {[0, 1, 2, 3, 4].map(i => (
+                <rect key={i} x={5 + i * 11} y={42} width={8} height={20} fill="url(#pdnVrmMetal)" rx={1} opacity={0.9} />
+              ))}
+              {/* VRM core */}
+              <rect x={8} y={65} width={44} height={50} fill="url(#pdnVrmMetal)" rx={4} />
+              {/* VRM indicator LED */}
+              <circle cx={52} cy={110} r={3} fill={isSurging ? '#ef4444' : '#22c55e'}>
+                <animate attributeName="opacity" values="0.6;1;0.6" dur="1s" repeatCount="indefinite" />
+              </circle>
+            </g>
 
             {/* Power path (with inductance representation) */}
             <g transform="translate(70, 70)">
-              {/* Inductance coils */}
+              {/* Inductance coils with premium gradient */}
               <path d="M 0 10 C 10 0, 20 0, 30 10 C 40 20, 50 20, 60 10 C 70 0, 80 0, 90 10"
-                stroke={colors.voltage} strokeWidth={3} fill="none" />
-              <text x={45} y={35} fill={colors.textMuted} fontSize={8} textAnchor="middle">
-                L = {pdn.totalInductance.toFixed(0)} pH
-              </text>
+                stroke="url(#pdnInductorGrad)" strokeWidth={4} fill="none" strokeLinecap="round" />
+              {/* Inductance glow */}
+              <path d="M 0 10 C 10 0, 20 0, 30 10 C 40 20, 50 20, 60 10 C 70 0, 80 0, 90 10"
+                stroke="url(#pdnInductorGrad)" strokeWidth={8} fill="none" opacity={0.3} filter="url(#pdnCurrentBlur)" />
 
-              {/* Current flow indicator */}
+              {/* Current flow indicators - multiple animated particles */}
               {isSurging && (
-                <circle cx={45 + Math.sin(surgePhase * 5) * 40} cy={10} r={4} fill={colors.power}>
-                  <animate attributeName="opacity" values="0.5;1;0.5" dur="0.2s" repeatCount="indefinite" />
-                </circle>
+                <>
+                  <circle cx={15 + Math.sin(surgePhase * 5) * 15 + 30} cy={10 + Math.cos(surgePhase * 5) * 5} r={6} fill="url(#pdnCurrentGlow)" filter="url(#pdnCurrentBlur)" />
+                  <circle cx={15 + Math.sin(surgePhase * 5) * 15 + 30} cy={10 + Math.cos(surgePhase * 5) * 5} r={3} fill="#fbbf24" />
+                  <circle cx={45 + Math.sin(surgePhase * 5 + 1) * 15} cy={10 + Math.cos(surgePhase * 5 + 1) * 5} r={5} fill="url(#pdnCurrentGlow)" filter="url(#pdnCurrentBlur)" />
+                  <circle cx={45 + Math.sin(surgePhase * 5 + 1) * 15} cy={10 + Math.cos(surgePhase * 5 + 1) * 5} r={2} fill="#fbbf24" />
+                </>
               )}
             </g>
 
-            {/* Decoupling capacitors */}
+            {/* Decoupling capacitors with premium visualization */}
             <g transform="translate(180, 40)">
-              {/* Bulk capacitors */}
-              <rect x={0} y={0} width={30} height={50} fill="url(#capGrad)" rx={4} />
-              <text x={15} y={30} fill="white" fontSize={8} textAnchor="middle">Bulk</text>
-              <text x={15} y={65} fill={colors.textMuted} fontSize={7} textAnchor="middle">100uF</text>
+              {/* Bulk capacitors with glow */}
+              <g filter="url(#pdnCapGlow)">
+                <rect x={0} y={0} width={30} height={50} fill="url(#pdnCapGrad)" rx={4} />
+                {/* Capacitor terminals */}
+                <rect x={12} y={-5} width={6} height={8} fill="#9ca3af" rx={1} />
+                <rect x={12} y={47} width={6} height={8} fill="#9ca3af" rx={1} />
+                {/* Capacitor marking */}
+                <rect x={5} y={20} width={20} height={10} fill="rgba(0,0,0,0.3)" rx={2} />
+              </g>
 
               {/* Ceramic capacitors */}
-              <rect x={40} y={10} width={20} height={30} fill={colors.capacitor} rx={3} opacity={0.8} />
-              <text x={50} y={30} fill="white" fontSize={7} textAnchor="middle">10uF</text>
+              <g filter="url(#pdnCapGlow)">
+                <rect x={40} y={10} width={20} height={30} fill="url(#pdnCeramicGrad)" rx={3} />
+                {/* Ceramic capacitor terminals */}
+                <rect x={42} y={8} width={4} height={4} fill="#d4d4d4" rx={1} />
+                <rect x={54} y={8} width={4} height={4} fill="#d4d4d4" rx={1} />
+                <rect x={42} y={38} width={4} height={4} fill="#d4d4d4" rx={1} />
+                <rect x={54} y={38} width={4} height={4} fill="#d4d4d4" rx={1} />
+              </g>
 
               {/* On-package capacitors */}
-              <rect x={70} y={15} width={15} height={20} fill={colors.capacitor} rx={2} opacity={0.6} />
-              <text x={77} y={28} fill="white" fontSize={6} textAnchor="middle">1uF</text>
+              <rect x={70} y={15} width={15} height={20} fill="url(#pdnCeramicGrad)" rx={2} opacity={0.8} />
             </g>
 
-            {/* CPU/Chip */}
-            <rect x={270} y={30} width={70} height={100} fill="rgba(100, 100, 200, 0.3)" stroke={colors.ground} strokeWidth={2} rx={8} />
-            <text x={305} y={60} fill={colors.textPrimary} fontSize={12} fontWeight="bold" textAnchor="middle">CPU</text>
+            {/* CPU/Chip with premium die appearance */}
+            <g>
+              {/* CPU package substrate */}
+              <rect x={268} y={28} width={74} height={104} fill="#1e293b" rx={10} stroke="#475569" strokeWidth={1} />
+              {/* CPU die with gradient */}
+              <rect x={275} y={35} width={60} height={55} fill="url(#pdnCpuDie)" rx={4} stroke={colors.ground} strokeWidth={2} />
+              {/* Die hotspot glow */}
+              <ellipse cx={305} cy={55} rx={15} ry={10} fill="rgba(99, 102, 241, 0.3)" filter="url(#pdnCurrentBlur)" />
 
-            {/* On-die capacitors */}
-            <rect x={280} y={70} width={50} height={15} fill={colors.capacitor} opacity={0.4} rx={2} />
-            <text x={305} y={80} fill="white" fontSize={6} textAnchor="middle">On-die C</text>
+              {/* On-die capacitors with premium look */}
+              <rect x={280} y={70} width={50} height={12} fill="url(#pdnCeramicGrad)" opacity={0.5} rx={2} />
+              {/* On-die cap pattern */}
+              {[0, 1, 2, 3, 4].map(i => (
+                <rect key={i} x={282 + i * 10} y={72} width={6} height={8} fill="url(#pdnCapGrad)" opacity={0.7} rx={1} />
+              ))}
+            </g>
 
-            {/* Power pins visualization */}
-            {[0, 1, 2, 3, 4, 5].map(i => (
-              <rect
-                key={i}
-                x={275 + i * 10}
-                y={95}
-                width={6}
-                height={30}
-                fill={isSurging ? colors.power : colors.voltage}
-                opacity={0.7 + Math.sin(surgePhase + i) * 0.3}
-                rx={1}
-              />
+            {/* Power pins visualization with glow */}
+            <g filter="url(#pdnPinGlow)">
+              {[0, 1, 2, 3, 4, 5].map(i => (
+                <rect
+                  key={i}
+                  x={275 + i * 10}
+                  y={95}
+                  width={6}
+                  height={30}
+                  fill={isSurging ? 'url(#pdnVrmMetal)' : 'url(#pdnInductorGrad)'}
+                  opacity={0.8 + Math.sin(surgePhase + i) * 0.2}
+                  rx={1}
+                />
+              ))}
+            </g>
+
+            {/* Ground return with premium gradient */}
+            <rect x={0} y={155} width={340} height={8} fill="url(#pdnGroundPlane)" rx={2} />
+            {/* Ground plane pattern lines */}
+            {[0, 1, 2, 3, 4, 5, 6, 7].map(i => (
+              <line key={i} x1={20 + i * 40} y1={157} x2={20 + i * 40} y2={161} stroke="#6366f1" strokeWidth={1} opacity={0.5} />
             ))}
-            <text x={305} y={140} fill={colors.textMuted} fontSize={7} textAnchor="middle">Many Power Pins</text>
 
-            {/* Ground return */}
-            <line x1={0} y1={160} x2={340} y2={160} stroke={colors.ground} strokeWidth={3} />
-            <text x={170} y={175} fill={colors.ground} fontSize={9} textAnchor="middle">Ground Plane</text>
-
-            {/* VRM distance indicator */}
-            <line x1={60} y1={145} x2={270} y2={145} stroke={colors.accent} strokeWidth={1} strokeDasharray="4,4" />
-            <text x={165} y={155} fill={colors.accent} fontSize={8} textAnchor="middle">{vrDistance}mm</text>
+            {/* VRM distance indicator with premium style */}
+            <line x1={60} y1={140} x2={270} y2={140} stroke="url(#pdnVoltageRipple)" strokeWidth={2} strokeDasharray="6,3" />
+            {/* Distance markers */}
+            <line x1={60} y1={135} x2={60} y2={145} stroke={colors.accent} strokeWidth={2} />
+            <line x1={270} y1={135} x2={270} y2={145} stroke={colors.accent} strokeWidth={2} />
           </g>
 
-          {/* Voltage waveform */}
-          <g transform="translate(30, 240)">
-            <text x={0} y={0} fill={colors.textSecondary} fontSize={11} fontWeight="bold">Supply Voltage During Load Transient:</text>
-
-            <rect x={0} y={10} width={340} height={60} fill="rgba(0,0,0,0.3)" rx={4} />
+          {/* Voltage waveform section */}
+          <g transform="translate(30, 210)">
+            <rect x={0} y={0} width={340} height={60} fill="url(#pdnWaveformBg)" rx={6} stroke="#334155" strokeWidth={1} />
 
             {/* Target voltage line */}
-            <line x1={10} y1={25} x2={330} y2={25} stroke={colors.success} strokeWidth={1} strokeDasharray="4,4" />
-            <text x={335} y={28} fill={colors.success} fontSize={8}>1.0V</text>
+            <line x1={10} y1={15} x2={320} y2={15} stroke={colors.success} strokeWidth={1.5} strokeDasharray="4,4" opacity={0.8} />
 
             {/* Minimum voltage line */}
-            <line x1={10} y1={55} x2={330} y2={55} stroke={colors.error} strokeWidth={1} strokeDasharray="4,4" />
-            <text x={335} y={58} fill={colors.error} fontSize={8}>Min</text>
+            <line x1={10} y1={45} x2={320} y2={45} stroke={colors.error} strokeWidth={1.5} strokeDasharray="4,4" opacity={0.8} />
 
-            {/* Actual voltage with droop */}
+            {/* Voltage ripple indicator - animated wave */}
             <path
-              d={`M 10 25 L 80 25 L 85 ${25 + pdn.droopPercentage * 0.6} L 120 ${25 + pdn.droopPercentage * 0.4} L 160 ${25 + pdn.droopPercentage * 0.2} L 200 27 L 240 25 L 330 25`}
-              stroke={droopActive ? colors.error : colors.voltage}
-              strokeWidth={2}
-              fill="none"
+              d={`M 10 ${15 + rippleOffset} Q 40 ${12 + rippleOffset}, 70 ${15 + rippleOffset} T 130 ${15 + rippleOffset} T 190 ${15 + rippleOffset} T 250 ${15 + rippleOffset} T 310 ${15 + rippleOffset}`}
+              stroke="url(#pdnVoltageRipple)" strokeWidth={2} fill="none" opacity={0.6}
             />
 
-            {/* Droop indicator */}
+            {/* Actual voltage with droop - premium animated path */}
+            <path
+              d={`M 10 15 L 80 15 L 85 ${15 + pdn.droopPercentage * 0.6} L 120 ${15 + pdn.droopPercentage * 0.4} L 160 ${15 + pdn.droopPercentage * 0.2} L 200 17 L 240 15 L 320 15`}
+              stroke={droopActive ? colors.error : colors.voltage}
+              strokeWidth={2.5}
+              fill="none"
+              filter={droopActive ? 'url(#pdnDroopGlow)' : undefined}
+            />
+
+            {/* Droop indicator with glow */}
             {pdn.droopPercentage > 3 && (
-              <>
-                <line x1={100} y1={25} x2={100} y2={25 + pdn.droopPercentage * 0.5} stroke={colors.accent} strokeWidth={2} />
-                <text x={105} y={35 + pdn.droopPercentage * 0.25} fill={colors.accent} fontSize={9}>
-                  -{pdn.inductiveDroop.toFixed(0)}mV
-                </text>
-              </>
+              <g filter="url(#pdnDroopGlow)">
+                <line x1={100} y1={15} x2={100} y2={15 + pdn.droopPercentage * 0.5} stroke={colors.accent} strokeWidth={2} />
+                <circle cx={100} cy={15 + pdn.droopPercentage * 0.5} r={3} fill={colors.accent} />
+              </g>
             )}
           </g>
 
-          {/* Metrics panel */}
-          <g transform="translate(30, 320)">
-            <rect x={0} y={0} width={340} height={70} fill="rgba(0,0,0,0.3)" rx={8} />
+          {/* Metrics panel with premium background */}
+          <g transform="translate(30, 280)">
+            <rect x={0} y={0} width={340} height={90} fill="url(#pdnMetricsBg)" rx={8} stroke="#334155" strokeWidth={1} />
 
-            <text x={15} y={20} fill={colors.textSecondary} fontSize={10}>Droop:</text>
-            <text x={15} y={35} fill={pdn.droopPercentage > 10 ? colors.error : colors.success} fontSize={12} fontWeight="bold">
-              {pdn.droopPercentage.toFixed(1)}% ({pdn.inductiveDroop.toFixed(0)}mV)
-            </text>
+            {/* Droop status indicator bar */}
+            <rect x={10} y={10} width={100} height={4} fill="#1e293b" rx={2} />
+            <rect x={10} y={10} width={Math.min(pdn.droopPercentage * 5, 100)} height={4}
+              fill={pdn.droopPercentage > 10 ? colors.error : pdn.droopPercentage > 5 ? colors.warning : colors.success} rx={2} />
 
-            <text x={120} y={20} fill={colors.textSecondary} fontSize={10}>PDN Z:</text>
-            <text x={120} y={35} fill={colors.textPrimary} fontSize={12} fontWeight="bold">
-              {pdn.pdnImpedance.toFixed(2)} mohm
-            </text>
+            {/* Impedance match indicator */}
+            <rect x={120} y={10} width={100} height={4} fill="#1e293b" rx={2} />
+            <rect x={120} y={10} width={Math.min((pdn.targetImpedance / pdn.pdnImpedance) * 100, 100)} height={4}
+              fill={pdn.pdnImpedance < pdn.targetImpedance ? colors.success : colors.error} rx={2} />
 
-            <text x={220} y={20} fill={colors.textSecondary} fontSize={10}>Target Z:</text>
-            <text x={220} y={35} fill={colors.textPrimary} fontSize={12} fontWeight="bold">
-              {pdn.targetImpedance.toFixed(2)} mohm
-            </text>
-
-            <text x={15} y={55} fill={colors.textSecondary} fontSize={10}>Resonant Freq:</text>
-            <text x={100} y={55} fill={colors.textPrimary} fontSize={10}>{pdn.resonantFreq.toFixed(1)} MHz</text>
-
-            <text x={180} y={55} fill={colors.textSecondary} fontSize={10}>Status:</text>
-            <text x={220} y={55} fill={pdn.pdnImpedance < pdn.targetImpedance ? colors.success : colors.error} fontSize={10} fontWeight="bold">
-              {pdn.pdnImpedance < pdn.targetImpedance ? 'GOOD' : 'NEEDS MORE CAPS'}
-            </text>
+            {/* Status LED */}
+            <circle cx={320} cy={12} r={6} fill={pdn.pdnImpedance < pdn.targetImpedance ? colors.success : colors.error}>
+              <animate attributeName="opacity" values="0.5;1;0.5" dur="1.5s" repeatCount="indefinite" />
+            </circle>
           </g>
         </svg>
+
+        {/* Metrics labels moved outside SVG using typo system */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'repeat(3, 1fr)',
+          gap: typo.elementGap,
+          width: '100%',
+          maxWidth: '500px',
+          padding: `0 ${typo.cardPadding}`,
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.small, color: colors.textMuted }}>Droop</div>
+            <div style={{
+              fontSize: typo.bodyLarge,
+              fontWeight: 700,
+              color: pdn.droopPercentage > 10 ? colors.error : colors.success
+            }}>
+              {pdn.droopPercentage.toFixed(1)}% ({pdn.inductiveDroop.toFixed(0)}mV)
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.small, color: colors.textMuted }}>PDN Z</div>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary }}>
+              {pdn.pdnImpedance.toFixed(2)} mohm
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ fontSize: typo.small, color: colors.textMuted }}>Target Z</div>
+            <div style={{ fontSize: typo.bodyLarge, fontWeight: 700, color: colors.textPrimary }}>
+              {pdn.targetImpedance.toFixed(2)} mohm
+            </div>
+          </div>
+        </div>
+
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          width: '100%',
+          maxWidth: '500px',
+          padding: `0 ${typo.cardPadding}`,
+          marginTop: '4px',
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: typo.small, color: colors.textMuted }}>Inductance:</span>
+            <span style={{ fontSize: typo.body, color: colors.voltage }}>{pdn.totalInductance.toFixed(0)} pH</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: typo.small, color: colors.textMuted }}>VRM Distance:</span>
+            <span style={{ fontSize: typo.body, color: colors.accent }}>{vrDistance}mm</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+            <span style={{ fontSize: typo.small, color: colors.textMuted }}>Status:</span>
+            <span style={{
+              fontSize: typo.body,
+              fontWeight: 700,
+              color: pdn.pdnImpedance < pdn.targetImpedance ? colors.success : colors.error
+            }}>
+              {pdn.pdnImpedance < pdn.targetImpedance ? 'GOOD' : 'NEEDS CAPS'}
+            </span>
+          </div>
+        </div>
       </div>
     );
   };

@@ -398,131 +398,439 @@ const ServerAirflowRenderer: React.FC<ServerAirflowRendererProps> = ({
 
   const renderDataCenterVisualization = () => {
     return (
-      <svg viewBox="0 0 500 350" className="w-full max-w-2xl mx-auto">
-        <defs>
-          <linearGradient id="coldAirGradient" x1="0%" y1="100%" x2="0%" y2="0%">
-            <stop offset="0%" stopColor="#1e40af" />
-            <stop offset="100%" stopColor="#3b82f6" />
-          </linearGradient>
-          <linearGradient id="hotAirGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#dc2626" />
-            <stop offset="100%" stopColor="#f97316" />
-          </linearGradient>
-        </defs>
+      <div className="relative">
+        {/* External Labels using typo system */}
+        <div className="flex justify-between mb-2 px-2">
+          <div className="bg-slate-800/80 rounded-lg px-3 py-2 border border-slate-700/50">
+            <div style={{ fontSize: typo.small, fontWeight: 700 }} className="text-slate-200 mb-1">Temperatures</div>
+            <div style={{ fontSize: typo.label }} className="text-blue-400">Cold: {metrics.coldAisleTemp.toFixed(1)}C</div>
+            <div style={{ fontSize: typo.label }} className="text-orange-400">Hot: {metrics.hotAisleTemp.toFixed(1)}C</div>
+          </div>
+          <div className="bg-slate-800/80 rounded-lg px-3 py-2 border border-slate-700/50 text-center">
+            <div style={{ fontSize: typo.label }} className="text-amber-400">Heat Load</div>
+            <div style={{ fontSize: typo.small, fontWeight: 700 }} className="text-amber-300">{metrics.heatGenerated.toFixed(0)} kW</div>
+          </div>
+          <div className="bg-slate-800/80 rounded-lg px-3 py-2 border border-slate-700/50">
+            <div style={{ fontSize: typo.small, fontWeight: 700 }} className="text-slate-200 mb-1">Airflow Metrics</div>
+            <div style={{ fontSize: typo.label }} className="text-slate-400">CFM: {metrics.effectiveCFM.toFixed(0)}</div>
+            <div style={{ fontSize: typo.label }} className="text-slate-400">Static: {metrics.staticPressure.toFixed(3)}&quot; WC</div>
+            <div style={{ fontSize: typo.label, color: blankingPanels ? '#22c55e' : '#ef4444' }}>Recirc: {metrics.recirculationPercent.toFixed(0)}%</div>
+          </div>
+        </div>
 
-        {/* Floor/Plenum */}
-        <rect x="20" y="280" width="460" height="40" fill="#374151" stroke="#4b5563" strokeWidth="2" />
-        <text x="250" y="305" textAnchor="middle" fontSize="12" fill="#9ca3af">Raised Floor Plenum (Pressurized)</text>
+        <svg viewBox="0 0 500 300" className="w-full max-w-2xl mx-auto">
+          <defs>
+            {/* Premium cold air gradient with 5 stops */}
+            <linearGradient id="sairColdAir" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#1e3a8a" />
+              <stop offset="25%" stopColor="#1e40af" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="75%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#60a5fa" />
+            </linearGradient>
 
-        {/* Floor tiles with perforations */}
-        {[0, 1, 2, 3, 4, 5].map((i) => {
-          const x = 50 + i * 75;
-          const isPerforated = i === 1 || i === 4; // Cold aisle tiles
-          return (
-            <g key={i}>
-              <rect x={x} y="260" width="60" height="20" fill={isPerforated ? '#1e40af' : '#6b7280'} stroke="#374151" />
-              {isPerforated && raisedFloorOpen > 20 && (
+            {/* Premium hot air gradient with 5 stops */}
+            <linearGradient id="sairHotAir" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#7c2d12" />
+              <stop offset="25%" stopColor="#c2410c" />
+              <stop offset="50%" stopColor="#ea580c" />
+              <stop offset="75%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#fb923c" />
+            </linearGradient>
+
+            {/* Server chassis metallic gradient */}
+            <linearGradient id="sairChassisMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="20%" stopColor="#4b5563" />
+              <stop offset="40%" stopColor="#374151" />
+              <stop offset="60%" stopColor="#1f2937" />
+              <stop offset="80%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* Rack frame brushed metal */}
+            <linearGradient id="sairRackMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="15%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="85%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Server LED glow */}
+            <radialGradient id="sairServerLED" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#16a34a" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Blanking panel gradient */}
+            <linearGradient id="sairBlankingPanel" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="25%" stopColor="#6b7280" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="75%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+
+            {/* Floor tile gradient */}
+            <linearGradient id="sairFloorTile" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="30%" stopColor="#4b5563" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* Perforated tile gradient */}
+            <linearGradient id="sairPerfTile" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="30%" stopColor="#1d4ed8" />
+              <stop offset="70%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#3b82f6" />
+            </linearGradient>
+
+            {/* Plenum chamber gradient */}
+            <linearGradient id="sairPlenum" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1f2937" />
+              <stop offset="30%" stopColor="#111827" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Fan blade gradient */}
+            <radialGradient id="sairFanBlade" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="40%" stopColor="#475569" />
+              <stop offset="80%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </radialGradient>
+
+            {/* Containment barrier gradient */}
+            <linearGradient id="sairContainment" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#c2410c" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#f97316" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#c2410c" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Temperature zone gradients */}
+            <linearGradient id="sairTempZoneCold" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e40af" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#3b82f6" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0.1" />
+            </linearGradient>
+
+            <linearGradient id="sairTempZoneHot" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" stopOpacity="0.1" />
+              <stop offset="50%" stopColor="#f97316" stopOpacity="0.25" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0.1" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="sairColdGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="sairHotGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="sairLEDGlow" x="-200%" y="-200%" width="500%" height="500%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="sairSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" />
+            </filter>
+
+            {/* Airflow streamline pattern */}
+            <pattern id="sairStreamlines" width="20" height="10" patternUnits="userSpaceOnUse">
+              <path d="M0,5 Q5,2 10,5 T20,5" fill="none" stroke="#60a5fa" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* Background with subtle grid */}
+          <rect width="500" height="300" fill="#030712" />
+          <pattern id="sairGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.3" />
+          </pattern>
+          <rect width="500" height="300" fill="url(#sairGrid)" />
+
+          {/* Floor/Plenum with depth */}
+          <rect x="20" y="235" width="460" height="55" rx="4" fill="url(#sairPlenum)" />
+          <rect x="20" y="235" width="460" height="4" fill="#374151" opacity="0.5" />
+          {/* Plenum internal cold air glow */}
+          <ellipse cx="250" cy="265" rx="180" ry="20" fill="url(#sairColdAir)" opacity="0.2" filter="url(#sairSoftGlow)" />
+
+          {/* Floor tiles with perforations */}
+          {[0, 1, 2, 3, 4, 5].map((i) => {
+            const x = 50 + i * 75;
+            const isPerforated = i === 1 || i === 4;
+            return (
+              <g key={i}>
+                <rect x={x} y="215" width="60" height="20" rx="2" fill={isPerforated ? 'url(#sairPerfTile)' : 'url(#sairFloorTile)'} stroke="#475569" strokeWidth="1" />
+                {/* Tile surface highlight */}
+                <rect x={x + 2} y="217" width="56" height="2" fill="rgba(255,255,255,0.1)" rx="1" />
+                {isPerforated && raisedFloorOpen > 20 && (
+                  <g>
+                    {[...Array(4)].map((_, j) => (
+                      <rect key={j} x={x + 8 + j * 14} y="219" width="8" height="12" rx="1" fill="#3b82f6" opacity={0.4 + (raisedFloorOpen / 200)} />
+                    ))}
+                    {/* Cold air glow from perforations */}
+                    <ellipse cx={x + 30} cy="225" rx="25" ry="8" fill="#3b82f6" opacity="0.15" filter="url(#sairColdGlow)" />
+                  </g>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Temperature zones */}
+          {/* Cold aisle zone */}
+          <rect x="160" y="70" width="180" height="140" rx="8" fill="url(#sairTempZoneCold)" />
+
+          {/* Hot aisle zones */}
+          <rect x="20" y="70" width="45" height="140" rx="4" fill="url(#sairTempZoneHot)" />
+          <rect x="435" y="70" width="45" height="140" rx="4" fill="url(#sairTempZoneHot)" />
+
+          {/* Server racks with premium styling */}
+          {[0, 1, 2].map((row) => {
+            const y = 75 + row * 48;
+            return (
+              <g key={row}>
+                {/* Left rack */}
                 <g>
-                  {[...Array(3)].map((_, j) => (
-                    <rect key={j} x={x + 10 + j * 18} y="263" width="10" height="14" fill="#3b82f6" opacity="0.5" />
+                  {/* Rack frame */}
+                  <rect x="55" y={y} width="90" height="42" rx="4" fill="url(#sairRackMetal)" stroke="#475569" strokeWidth="1.5" />
+                  {/* Rack top highlight */}
+                  <rect x="57" y={y + 2} width="86" height="2" fill="rgba(255,255,255,0.08)" rx="1" />
+
+                  {blankingPanels ? (
+                    <>
+                      {/* Blanking panel with texture */}
+                      <rect x="60" y={y + 5} width="80" height="9" rx="2" fill="url(#sairBlankingPanel)" />
+                      <rect x="62" y={y + 6} width="76" height="1" fill="rgba(255,255,255,0.1)" />
+
+                      {/* Active server with LED and vents */}
+                      <rect x="60" y={y + 16} width="80" height="10" rx="2" fill="url(#sairChassisMetal)" />
+                      <circle cx="68" cy={y + 21} r="2.5" fill="url(#sairServerLED)" filter="url(#sairLEDGlow)">
+                        <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
+                      </circle>
+                      {/* Server vents */}
+                      {[...Array(6)].map((_, v) => (
+                        <rect key={v} x={80 + v * 10} y={y + 18} width="6" height="6" rx="1" fill="#1f2937" opacity="0.6" />
+                      ))}
+
+                      {/* Blanking panel */}
+                      <rect x="60" y={y + 28} width="80" height="9" rx="2" fill="url(#sairBlankingPanel)" />
+                      <rect x="62" y={y + 29} width="76" height="1" fill="rgba(255,255,255,0.1)" />
+                    </>
+                  ) : (
+                    <>
+                      {/* Active server */}
+                      <rect x="60" y={y + 5} width="80" height="10" rx="2" fill="url(#sairChassisMetal)" />
+                      <circle cx="68" cy={y + 10} r="2.5" fill="url(#sairServerLED)" filter="url(#sairLEDGlow)">
+                        <animate attributeName="opacity" values="0.7;1;0.7" dur="1.5s" repeatCount="indefinite" />
+                      </circle>
+                      {[...Array(6)].map((_, v) => (
+                        <rect key={v} x={80 + v * 10} y={y + 7} width="6" height="6" rx="1" fill="#1f2937" opacity="0.6" />
+                      ))}
+
+                      {/* Empty slot (gap) with recirculation indicator */}
+                      <rect x="60" y={y + 17} width="80" height="8" rx="1" fill="#0f172a" stroke="#ef4444" strokeWidth="0.5" strokeDasharray="3 2" strokeOpacity="0.5" />
+
+                      {/* Active server */}
+                      <rect x="60" y={y + 27} width="80" height="10" rx="2" fill="url(#sairChassisMetal)" />
+                      <circle cx="68" cy={y + 32} r="2.5" fill="url(#sairServerLED)" filter="url(#sairLEDGlow)">
+                        <animate attributeName="opacity" values="0.7;1;0.7" dur="1.2s" repeatCount="indefinite" />
+                      </circle>
+                      {[...Array(6)].map((_, v) => (
+                        <rect key={v} x={80 + v * 10} y={y + 29} width="6" height="6" rx="1" fill="#1f2937" opacity="0.6" />
+                      ))}
+                    </>
+                  )}
+                </g>
+
+                {/* Right rack */}
+                <g>
+                  <rect x="355" y={y} width="90" height="42" rx="4" fill="url(#sairRackMetal)" stroke="#475569" strokeWidth="1.5" />
+                  <rect x="357" y={y + 2} width="86" height="2" fill="rgba(255,255,255,0.08)" rx="1" />
+
+                  {[0, 1, 2].map((slot) => (
+                    <g key={slot}>
+                      <rect x="360" y={y + 5 + slot * 12} width="80" height="10" rx="2" fill="url(#sairChassisMetal)" />
+                      <circle cx="368" cy={y + 10 + slot * 12} r="2.5" fill="url(#sairServerLED)" filter="url(#sairLEDGlow)">
+                        <animate attributeName="opacity" values="0.7;1;0.7" dur={`${1.2 + slot * 0.3}s`} repeatCount="indefinite" />
+                      </circle>
+                      {[...Array(6)].map((_, v) => (
+                        <rect key={v} x={380 + v * 10} y={y + 7 + slot * 12} width="6" height="6" rx="1" fill="#1f2937" opacity="0.6" />
+                      ))}
+                    </g>
                   ))}
                 </g>
-              )}
+              </g>
+            );
+          })}
+
+          {/* Fan visualization at top of racks */}
+          {[75, 375].map((x, idx) => (
+            <g key={`fan-${idx}`} transform={`translate(${x}, 55)`}>
+              <circle cx="35" cy="8" r="12" fill="url(#sairFanBlade)" stroke="#475569" strokeWidth="1" />
+              <circle cx="35" cy="8" r="4" fill="#1e293b" />
+              {/* Fan blades - animated rotation */}
+              {[0, 60, 120, 180, 240, 300].map((angle, i) => (
+                <line
+                  key={i}
+                  x1="35"
+                  y1="8"
+                  x2={35 + 9 * Math.cos((angle + animationFrame * (fanSpeed / 10)) * Math.PI / 180)}
+                  y2={8 + 9 * Math.sin((angle + animationFrame * (fanSpeed / 10)) * Math.PI / 180)}
+                  stroke="#94a3b8"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                />
+              ))}
             </g>
-          );
-        })}
+          ))}
 
-        {/* Server racks */}
-        {[0, 1, 2].map((row) => {
-          const y = 100 + row * 55;
-          return (
-            <g key={row}>
-              {/* Left rack row */}
-              <rect x="60" y={y} width="80" height="45" fill="#1f2937" stroke="#374151" strokeWidth="2" rx="3" />
-              {blankingPanels ? (
-                <>
-                  <rect x="65" y={y + 5} width="70" height="10" fill="#4b5563" />
-                  <rect x="65" y={y + 18} width="70" height="10" fill="#22c55e" />
-                  <rect x="65" y={y + 31} width="70" height="10" fill="#4b5563" />
-                </>
-              ) : (
-                <>
-                  <rect x="65" y={y + 5} width="70" height="10" fill="#22c55e" />
-                  <rect x="65" y={y + 18} width="70" height="3" fill="#1f2937" />
-                  <rect x="65" y={y + 31} width="70" height="10" fill="#22c55e" />
-                </>
-              )}
+          {/* Hot aisle containment barriers */}
+          {hotAisleContainment && (
+            <>
+              <rect x="20" y="60" width="40" height="8" rx="2" fill="url(#sairContainment)" />
+              <rect x="440" y="60" width="40" height="8" rx="2" fill="url(#sairContainment)" />
+              {/* Containment ceiling panels */}
+              <rect x="20" y="60" width="40" height="2" fill="#f97316" opacity="0.8" />
+              <rect x="440" y="60" width="40" height="2" fill="#f97316" opacity="0.8" />
+            </>
+          )}
 
-              {/* Right rack row */}
-              <rect x="360" y={y} width="80" height="45" fill="#1f2937" stroke="#374151" strokeWidth="2" rx="3" />
-              <rect x="365" y={y + 5} width="70" height="10" fill="#22c55e" />
-              <rect x="365" y={y + 18} width="70" height="10" fill="#22c55e" />
-              <rect x="365" y={y + 31} width="70" height="10" fill="#22c55e" />
+          {/* Animated cold air streamlines rising from floor */}
+          {[...Array(Math.round(raisedFloorOpen / 15))].map((_, i) => {
+            const baseX = 180 + i * 25;
+            const yOffset = (animationFrame * 2 + i * 15) % 60;
+            const opacity = 0.4 + (raisedFloorOpen / 200);
+            return (
+              <g key={`cold-stream-${i}`} filter="url(#sairColdGlow)">
+                <path
+                  d={`M${baseX},${215 - yOffset} Q${baseX + 5},${200 - yOffset} ${baseX},${185 - yOffset}`}
+                  fill="none"
+                  stroke="#60a5fa"
+                  strokeWidth="2"
+                  strokeLinecap="round"
+                  opacity={opacity}
+                />
+                {/* Arrow head */}
+                <polygon
+                  points={`${baseX},${182 - yOffset} ${baseX - 4},${190 - yOffset} ${baseX + 4},${190 - yOffset}`}
+                  fill="#60a5fa"
+                  opacity={opacity}
+                />
+              </g>
+            );
+          })}
+
+          {/* Animated airflow through servers - streamlines */}
+          {[...Array(6)].map((_, i) => {
+            const row = i % 3;
+            const baseY = 95 + row * 48;
+            const xOffset = (animationFrame * 1.5 + i * 20) % 80;
+            const tempProgress = xOffset / 80;
+            const streamColor = tempProgress < 0.3 ? '#60a5fa' : tempProgress < 0.6 ? '#fbbf24' : '#f97316';
+            return (
+              <g key={`flow-${i}`}>
+                {/* Streamline path through server */}
+                <path
+                  d={`M${148 + xOffset},${baseY} l15,0`}
+                  fill="none"
+                  stroke={streamColor}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                  opacity="0.7"
+                />
+                {/* Small particle effect */}
+                <circle
+                  cx={155 + xOffset}
+                  cy={baseY}
+                  r="2"
+                  fill={streamColor}
+                  opacity="0.9"
+                />
+              </g>
+            );
+          })}
+
+          {/* Hot air recirculation visualization when no blanking panels */}
+          {!blankingPanels && (
+            <g filter="url(#sairHotGlow)">
+              {[0, 1, 2].map((row) => {
+                const y = 75 + row * 48 + 21;
+                const loopOffset = (animationFrame * 2 + row * 30) % 100;
+                return (
+                  <g key={`recirc-${row}`}>
+                    {/* Recirculation loop path */}
+                    <path
+                      d={`M148,${y} Q130,${y - 15} 130,${y - 30} Q130,${y - 45} 150,${y - 40}`}
+                      fill="none"
+                      stroke="#ef4444"
+                      strokeWidth="2"
+                      strokeDasharray="6 3"
+                      opacity="0.6"
+                    >
+                      <animate
+                        attributeName="stroke-dashoffset"
+                        from="0"
+                        to="18"
+                        dur="0.8s"
+                        repeatCount="indefinite"
+                      />
+                    </path>
+                    {/* Hot air particle */}
+                    <circle
+                      cx={130 + (loopOffset % 25)}
+                      cy={y - 20 - Math.sin(loopOffset * 0.1) * 10}
+                      r="3"
+                      fill="#ef4444"
+                      opacity="0.7"
+                    />
+                  </g>
+                );
+              })}
             </g>
-          );
-        })}
+          )}
 
-        {/* Cold aisle label */}
-        <rect x="170" y="120" width="160" height="100" fill="url(#coldAirGradient)" opacity="0.3" rx="5" />
-        <text x="250" y="145" textAnchor="middle" fontSize="14" fill="#60a5fa" fontWeight="bold">Cold Aisle</text>
-        <text x="250" y="165" textAnchor="middle" fontSize="12" fill="#93c5fd">{metrics.coldAisleTemp.toFixed(1)}C</text>
-
-        {/* Hot aisle labels */}
-        <rect x="20" y="95" width="35" height="170" fill="url(#hotAirGradient)" opacity="0.3" rx="3" />
-        <rect x="445" y="95" width="35" height="170" fill="url(#hotAirGradient)" opacity="0.3" rx="3" />
-
-        {/* Hot aisle containment visualization */}
-        {hotAisleContainment && (
-          <>
-            <rect x="20" y="90" width="35" height="5" fill="#f97316" />
-            <rect x="445" y="90" width="35" height="5" fill="#f97316" />
-            <text x="37" y="85" textAnchor="middle" fontSize="8" fill="#f97316">Contained</text>
-          </>
-        )}
-
-        {/* Airflow arrows - cold air rising from floor */}
-        {[...Array(Math.round(raisedFloorOpen / 20))].map((_, i) => {
-          const x = 200 + i * 30;
-          const yOffset = (animationFrame * 2 + i * 20) % 40;
-          return (
-            <path key={`cold-${i}`} d={`M${x},${260 - yOffset} L${x},${240 - yOffset} L${x - 5},${245 - yOffset} M${x},${240 - yOffset} L${x + 5},${245 - yOffset}`}
-              fill="none" stroke="#60a5fa" strokeWidth="2" opacity={0.7} />
-          );
-        })}
-
-        {/* Airflow through servers */}
-        {[...Array(5)].map((_, i) => {
-          const x = 145 + ((animationFrame * 1.5 + i * 25) % 70);
-          const y = 115 + (i % 3) * 55 + 22;
-          return (
-            <path key={`flow-${i}`} d={`M${x},${y} L${x + 15},${y}`}
-              fill="none" stroke={getTempColor(metrics.coldAisleTemp + i * 3)} strokeWidth="2" opacity={0.8} />
-          );
-        })}
-
-        {/* Hot air recirculation if no blanking panels */}
-        {!blankingPanels && (
-          <path d="M145,130 Q120,100 145,150" fill="none" stroke="#ef4444" strokeWidth="2" strokeDasharray="4 2" opacity="0.7">
-            <animate attributeName="stroke-dashoffset" from="0" to="12" dur="1s" repeatCount="indefinite" />
-          </path>
-        )}
-
-        {/* Metrics panel */}
-        <rect x="330" y="10" width="160" height="80" fill="#1f2937" rx="5" />
-        <text x="410" y="30" textAnchor="middle" fontSize="11" fill="#e5e7eb" fontWeight="bold">Airflow Metrics</text>
-        <text x="340" y="48" fontSize="10" fill="#9ca3af">CFM: {metrics.effectiveCFM.toFixed(0)}</text>
-        <text x="340" y="62" fontSize="10" fill="#9ca3af">Static: {metrics.staticPressure.toFixed(3)}" WC</text>
-        <text x="340" y="76" fontSize="10" fill={blankingPanels ? '#22c55e' : '#ef4444'}>Recirc: {metrics.recirculationPercent.toFixed(0)}%</text>
-
-        {/* Temperature display */}
-        <rect x="20" y="10" width="100" height="70" fill="#1f2937" rx="5" />
-        <text x="70" y="30" textAnchor="middle" fontSize="11" fill="#e5e7eb" fontWeight="bold">Temperatures</text>
-        <text x="30" y="50" fontSize="10" fill="#60a5fa">Cold: {metrics.coldAisleTemp.toFixed(1)}C</text>
-        <text x="30" y="65" fontSize="10" fill="#f97316">Hot: {metrics.hotAisleTemp.toFixed(1)}C</text>
-
-        {/* Heat load */}
-        <text x="250" y="30" textAnchor="middle" fontSize="10" fill="#fbbf24">Heat Load: {metrics.heatGenerated.toFixed(0)} kW</text>
-      </svg>
+          {/* Hot exhaust rising from hot aisles */}
+          {[30, 455].map((x, idx) => (
+            <g key={`exhaust-${idx}`}>
+              {[...Array(3)].map((_, i) => {
+                const yOffset = (animationFrame * 1.5 + i * 25) % 50;
+                return (
+                  <g key={`heat-${idx}-${i}`} filter="url(#sairHotGlow)">
+                    <ellipse
+                      cx={x + 15}
+                      cy={70 - yOffset}
+                      rx="8"
+                      ry="4"
+                      fill="#f97316"
+                      opacity={0.3 - yOffset / 200}
+                    />
+                  </g>
+                );
+              })}
+            </g>
+          ))}
+        </svg>
+      </div>
     );
   };
 

@@ -363,132 +363,460 @@ const GPUMemoryBandwidthRenderer: React.FC<GPUMemoryBandwidthRendererProps> = ({
   // ─────────────────────────────────────────────────────────────────────────────
   const renderBandwidthVisualization = () => {
     const width = 400;
-    const height = 320;
+    const height = 280;
     const bandwidth = calculateBandwidth();
     const effectiveBusWidth = memoryType === 'hbm2e' ? 1024 : busWidth;
 
     // Calculate data flow positions
     const numLanes = Math.min(8, effectiveBusWidth / 32);
-    const laneSpacing = 180 / numLanes;
+    const laneSpacing = 140 / numLanes;
+
+    // Calculate bandwidth meter fill (normalized to 0-100%, max around 3500 GB/s for HBM3)
+    const maxBandwidth = 3500;
+    const bandwidthPercent = Math.min(100, (bandwidth / maxBandwidth) * 100);
 
     return (
-      <svg
-        width="100%"
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
-        style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
-      >
-        <defs>
-          <linearGradient id="gpuGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={colors.gpu} />
-            <stop offset="100%" stopColor="#a855f7" />
-          </linearGradient>
-          <linearGradient id="memGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={colors.memory} />
-            <stop offset="100%" stopColor="#0ea5e9" />
-          </linearGradient>
-          <filter id="dataGlow">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
-            <feMerge>
-              <feMergeNode in="coloredBlur"/>
-              <feMergeNode in="SourceGraphic"/>
-            </feMerge>
-          </filter>
-        </defs>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
+        <svg
+          width="100%"
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          style={{ borderRadius: '12px', maxWidth: '500px' }}
+        >
+          <defs>
+            {/* Premium lab background gradient */}
+            <linearGradient id="gpumbLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0a0f1a" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
 
-        {/* Title */}
-        <text x={width/2} y={25} textAnchor="middle" fill={colors.textPrimary} fontSize={14} fontWeight="bold">
-          GPU Memory Bus Architecture
-        </text>
+            {/* GPU chip metallic gradient */}
+            <linearGradient id="gpumbChipMetal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7c3aed" />
+              <stop offset="20%" stopColor="#8b5cf6" />
+              <stop offset="50%" stopColor="#a78bfa" />
+              <stop offset="70%" stopColor="#8b5cf6" />
+              <stop offset="100%" stopColor="#6d28d9" />
+            </linearGradient>
 
-        {/* GPU Chip */}
-        <rect x={30} y={80} width={100} height={140} rx={8} fill="url(#gpuGrad)" />
-        <text x={80} y={110} textAnchor="middle" fill="white" fontSize={12} fontWeight="bold">GPU</text>
-        <text x={80} y={130} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize={10}>Compute</text>
-        <text x={80} y={145} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize={10}>Units</text>
+            {/* GPU chip inner die gradient */}
+            <linearGradient id="gpumbChipDie" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e1b4b" />
+              <stop offset="30%" stopColor="#312e81" />
+              <stop offset="60%" stopColor="#3730a3" />
+              <stop offset="100%" stopColor="#1e1b4b" />
+            </linearGradient>
 
-        {/* Memory bandwidth indicator */}
-        <text x={80} y={200} textAnchor="middle" fill={colors.data} fontSize={11} fontWeight="bold">
-          {bandwidth.toFixed(0)} GB/s
-        </text>
+            {/* Memory module gradient with 3D depth */}
+            <linearGradient id="gpumbMemoryMain" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#0ea5e9" />
+              <stop offset="15%" stopColor="#3b82f6" />
+              <stop offset="50%" stopColor="#2563eb" />
+              <stop offset="85%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
 
-        {/* Memory Chips */}
-        <g>
-          <rect x={270} y={60} width={100} height={60} rx={6} fill="url(#memGrad)" />
-          <text x={320} y={90} textAnchor="middle" fill="white" fontSize={10} fontWeight="bold">
-            {memoryType === 'hbm2e' ? 'HBM2e Stack' : memoryType.toUpperCase()}
-          </text>
-          <text x={320} y={105} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize={9}>
-            {effectiveBusWidth}-bit bus
-          </text>
+            {/* Memory module highlight for 3D effect */}
+            <linearGradient id="gpumbMemoryHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#3b82f6" stopOpacity="0.2" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+            </linearGradient>
 
-          <rect x={270} y={140} width={100} height={60} rx={6} fill="url(#memGrad)" />
-          <text x={320} y={170} textAnchor="middle" fill="white" fontSize={10} fontWeight="bold">
-            {memoryType === 'hbm2e' ? 'HBM2e Stack' : memoryType.toUpperCase()}
-          </text>
-          <text x={320} y={185} textAnchor="middle" fill="rgba(255,255,255,0.7)" fontSize={9}>
-            {clockSpeed} MHz
-          </text>
-        </g>
+            {/* HBM stacked memory gradient */}
+            <linearGradient id="gpumbHBMStack" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#14b8a6" />
+              <stop offset="25%" stopColor="#0d9488" />
+              <stop offset="50%" stopColor="#0f766e" />
+              <stop offset="75%" stopColor="#115e59" />
+              <stop offset="100%" stopColor="#134e4a" />
+            </linearGradient>
 
-        {/* Data lanes animation */}
-        {Array.from({ length: numLanes }).map((_, i) => {
-          const y = 80 + i * laneSpacing + laneSpacing / 2;
-          const offset = (dataFlowPhase + i * 12) % 100;
+            {/* Data flow particle gradient */}
+            <radialGradient id="gpumbDataParticle" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#67e8f9" stopOpacity="1" />
+              <stop offset="40%" stopColor="#22d3ee" stopOpacity="0.9" />
+              <stop offset="70%" stopColor="#06b6d4" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#0891b2" stopOpacity="0" />
+            </radialGradient>
 
-          return (
-            <g key={i}>
-              {/* Lane background */}
-              <line
-                x1={140}
-                y1={y}
-                x2={260}
-                y2={y}
-                stroke="rgba(255,255,255,0.1)"
-                strokeWidth={4}
-              />
-              {/* Data packets flowing */}
-              {isAnimating && (
-                <>
-                  <circle
-                    cx={140 + (offset / 100) * 120}
-                    cy={y}
-                    r={5}
-                    fill={colors.data}
-                    filter="url(#dataGlow)"
-                    opacity={0.9}
+            {/* Data lane gradient */}
+            <linearGradient id="gpumbDataLane" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#06b6d4" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#22d3ee" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#06b6d4" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Bandwidth meter gradient */}
+            <linearGradient id="gpumbMeterFill" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#10b981" />
+              <stop offset="30%" stopColor="#22c55e" />
+              <stop offset="60%" stopColor="#eab308" />
+              <stop offset="85%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Meter track gradient */}
+            <linearGradient id="gpumbMeterTrack" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* Data glow filter */}
+            <filter id="gpumbDataGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Strong glow for active elements */}
+            <filter id="gpumbStrongGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Chip shadow filter */}
+            <filter id="gpumbChipShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feDropShadow dx="2" dy="4" stdDeviation="4" floodColor="#000000" floodOpacity="0.5" />
+            </filter>
+
+            {/* Inner glow for chip die */}
+            <filter id="gpumbInnerGlow">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+          </defs>
+
+          {/* Premium dark lab background */}
+          <rect width={width} height={height} fill="url(#gpumbLabBg)" />
+
+          {/* Subtle grid pattern */}
+          <g opacity="0.1">
+            {Array.from({ length: 20 }).map((_, i) => (
+              <line key={`vgrid-${i}`} x1={i * 20} y1="0" x2={i * 20} y2={height} stroke="#64748b" strokeWidth="0.5" />
+            ))}
+            {Array.from({ length: 14 }).map((_, i) => (
+              <line key={`hgrid-${i}`} x1="0" y1={i * 20} x2={width} y2={i * 20} stroke="#64748b" strokeWidth="0.5" />
+            ))}
+          </g>
+
+          {/* GPU Chip with metallic effect and shadow */}
+          <g filter="url(#gpumbChipShadow)">
+            {/* Chip substrate/package */}
+            <rect x={20} y={50} width={110} height={130} rx={6} fill="url(#gpumbChipMetal)" />
+            {/* Inner die */}
+            <rect x={30} y={60} width={90} height={110} rx={4} fill="url(#gpumbChipDie)" />
+            {/* Die highlight */}
+            <rect x={30} y={60} width={90} height={55} rx={4} fill="url(#gpumbMemoryHighlight)" />
+            {/* Shader core grid visualization */}
+            <g>
+              {Array.from({ length: 4 }).map((_, row) =>
+                Array.from({ length: 3 }).map((_, col) => (
+                  <rect
+                    key={`core-${row}-${col}`}
+                    x={38 + col * 26}
+                    y={68 + row * 24}
+                    width={20}
+                    height={18}
+                    rx={2}
+                    fill="#4c1d95"
+                    stroke="#7c3aed"
+                    strokeWidth="0.5"
+                    opacity={0.8}
                   />
-                  <circle
-                    cx={140 + ((offset + 50) % 100) / 100 * 120}
-                    cy={y}
-                    r={5}
-                    fill={colors.data}
-                    filter="url(#dataGlow)"
-                    opacity={0.9}
-                  />
-                </>
+                ))
               )}
             </g>
-          );
-        })}
+            {/* Pin contacts on sides */}
+            {Array.from({ length: 6 }).map((_, i) => (
+              <rect key={`lpin-${i}`} x={15} y={60 + i * 18} width={8} height={10} rx={1} fill="#a78bfa" />
+            ))}
+            {Array.from({ length: 6 }).map((_, i) => (
+              <rect key={`rpin-${i}`} x={127} y={60 + i * 18} width={8} height={10} rx={1} fill="#a78bfa" />
+            ))}
+          </g>
 
-        {/* Bus width label */}
-        <text x={200} y={65} textAnchor="middle" fill={colors.textSecondary} fontSize={10}>
-          {numLanes} x {effectiveBusWidth / numLanes}-bit lanes
-        </text>
+          {/* Memory Modules with 3D effect */}
+          <g filter="url(#gpumbChipShadow)">
+            {memoryType === 'hbm2e' ? (
+              /* HBM stacked memory visualization */
+              <>
+                {/* HBM Stack 1 */}
+                <g>
+                  {Array.from({ length: 4 }).map((_, layer) => (
+                    <g key={`hbm1-${layer}`}>
+                      <rect
+                        x={275 - layer * 2}
+                        y={45 + layer * 8}
+                        width={55}
+                        height={30}
+                        rx={3}
+                        fill="url(#gpumbHBMStack)"
+                        stroke="#2dd4bf"
+                        strokeWidth="0.5"
+                      />
+                    </g>
+                  ))}
+                  {/* TSV connections visualization */}
+                  <g opacity="0.6">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <line
+                        key={`tsv1-${i}`}
+                        x1={283 + i * 10}
+                        y1={50}
+                        x2={277 + i * 10}
+                        y2={74}
+                        stroke="#5eead4"
+                        strokeWidth="1"
+                        strokeDasharray="2,2"
+                      />
+                    ))}
+                  </g>
+                </g>
 
-        {/* Info panel */}
-        <rect x={30} y={250} width={340} height={60} rx={8} fill="rgba(0,0,0,0.5)" />
-        <text x={50} y={270} fill={colors.textSecondary} fontSize={11}>
-          Bus Width: {effectiveBusWidth} bits
-        </text>
-        <text x={50} y={290} fill={colors.textSecondary} fontSize={11}>
-          Clock: {clockSpeed} MHz ({memoryType === 'gddr6x' ? '4x' : '2x'} transfers/clock)
-        </text>
-        <text x={230} y={280} fill={colors.accent} fontSize={14} fontWeight="bold">
-          = {bandwidth.toFixed(0)} GB/s
-        </text>
-      </svg>
+                {/* HBM Stack 2 */}
+                <g>
+                  {Array.from({ length: 4 }).map((_, layer) => (
+                    <g key={`hbm2-${layer}`}>
+                      <rect
+                        x={275 - layer * 2}
+                        y={115 + layer * 8}
+                        width={55}
+                        height={30}
+                        rx={3}
+                        fill="url(#gpumbHBMStack)"
+                        stroke="#2dd4bf"
+                        strokeWidth="0.5"
+                      />
+                    </g>
+                  ))}
+                  <g opacity="0.6">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <line
+                        key={`tsv2-${i}`}
+                        x1={283 + i * 10}
+                        y1={120}
+                        x2={277 + i * 10}
+                        y2={144}
+                        stroke="#5eead4"
+                        strokeWidth="1"
+                        strokeDasharray="2,2"
+                      />
+                    ))}
+                  </g>
+                </g>
+
+                {/* HBM Stack 3 */}
+                <g>
+                  {Array.from({ length: 4 }).map((_, layer) => (
+                    <g key={`hbm3-${layer}`}>
+                      <rect
+                        x={340 - layer * 2}
+                        y={80 + layer * 8}
+                        width={55}
+                        height={30}
+                        rx={3}
+                        fill="url(#gpumbHBMStack)"
+                        stroke="#2dd4bf"
+                        strokeWidth="0.5"
+                      />
+                    </g>
+                  ))}
+                  <g opacity="0.6">
+                    {Array.from({ length: 5 }).map((_, i) => (
+                      <line
+                        key={`tsv3-${i}`}
+                        x1={348 + i * 10}
+                        y1={85}
+                        x2={342 + i * 10}
+                        y2={109}
+                        stroke="#5eead4"
+                        strokeWidth="1"
+                        strokeDasharray="2,2"
+                      />
+                    ))}
+                  </g>
+                </g>
+              </>
+            ) : (
+              /* GDDR memory modules */
+              <>
+                {/* Memory Module 1 */}
+                <g>
+                  <rect x={275} y={45} width={55} height={50} rx={4} fill="url(#gpumbMemoryMain)" />
+                  <rect x={275} y={45} width={55} height={25} rx={4} fill="url(#gpumbMemoryHighlight)" />
+                  {/* Memory chip details */}
+                  <rect x={280} y={52} width={45} height={12} rx={2} fill="#0f172a" opacity="0.5" />
+                  <rect x={280} y={68} width={45} height={20} rx={2} fill="#1e3a5f" opacity="0.4" />
+                  {/* Memory pins */}
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <rect key={`m1pin-${i}`} x={278 + i * 6} y={95} width={4} height={6} rx={1} fill="#60a5fa" />
+                  ))}
+                </g>
+
+                {/* Memory Module 2 */}
+                <g>
+                  <rect x={275} y={115} width={55} height={50} rx={4} fill="url(#gpumbMemoryMain)" />
+                  <rect x={275} y={115} width={55} height={25} rx={4} fill="url(#gpumbMemoryHighlight)" />
+                  <rect x={280} y={122} width={45} height={12} rx={2} fill="#0f172a" opacity="0.5" />
+                  <rect x={280} y={138} width={45} height={20} rx={2} fill="#1e3a5f" opacity="0.4" />
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <rect key={`m2pin-${i}`} x={278 + i * 6} y={165} width={4} height={6} rx={1} fill="#60a5fa" />
+                  ))}
+                </g>
+
+                {/* Memory Module 3 */}
+                <g>
+                  <rect x={340} y={80} width={55} height={50} rx={4} fill="url(#gpumbMemoryMain)" />
+                  <rect x={340} y={80} width={55} height={25} rx={4} fill="url(#gpumbMemoryHighlight)" />
+                  <rect x={345} y={87} width={45} height={12} rx={2} fill="#0f172a" opacity="0.5" />
+                  <rect x={345} y={103} width={45} height={20} rx={2} fill="#1e3a5f" opacity="0.4" />
+                  {Array.from({ length: 8 }).map((_, i) => (
+                    <rect key={`m3pin-${i}`} x={343 + i * 6} y={130} width={4} height={6} rx={1} fill="#60a5fa" />
+                  ))}
+                </g>
+              </>
+            )}
+          </g>
+
+          {/* Data lanes with glow effect */}
+          {Array.from({ length: numLanes }).map((_, i) => {
+            const y = 60 + i * laneSpacing + laneSpacing / 2;
+            const offset = (dataFlowPhase + i * 12) % 100;
+
+            return (
+              <g key={i}>
+                {/* Lane track with gradient */}
+                <line
+                  x1={140}
+                  y1={y}
+                  x2={265}
+                  y2={y}
+                  stroke="url(#gpumbDataLane)"
+                  strokeWidth={6}
+                  strokeLinecap="round"
+                />
+                {/* Lane inner highlight */}
+                <line
+                  x1={140}
+                  y1={y}
+                  x2={265}
+                  y2={y}
+                  stroke="rgba(34, 211, 238, 0.2)"
+                  strokeWidth={2}
+                  strokeLinecap="round"
+                />
+                {/* Data packets flowing with glow */}
+                {isAnimating && (
+                  <>
+                    <circle
+                      cx={140 + (offset / 100) * 125}
+                      cy={y}
+                      r={6}
+                      fill="url(#gpumbDataParticle)"
+                      filter="url(#gpumbDataGlow)"
+                    />
+                    <circle
+                      cx={140 + ((offset + 50) % 100) / 100 * 125}
+                      cy={y}
+                      r={6}
+                      fill="url(#gpumbDataParticle)"
+                      filter="url(#gpumbDataGlow)"
+                    />
+                    {/* Additional particles for higher bandwidth */}
+                    {bandwidth > 200 && (
+                      <circle
+                        cx={140 + ((offset + 25) % 100) / 100 * 125}
+                        cy={y}
+                        r={5}
+                        fill="url(#gpumbDataParticle)"
+                        filter="url(#gpumbDataGlow)"
+                        opacity={0.7}
+                      />
+                    )}
+                  </>
+                )}
+              </g>
+            );
+          })}
+
+          {/* Bandwidth Meter */}
+          <g>
+            {/* Meter background track */}
+            <rect x={20} y={200} width={360} height={20} rx={10} fill="url(#gpumbMeterTrack)" stroke="#334155" strokeWidth="1" />
+            {/* Meter fill with clipping */}
+            <clipPath id="gpumbMeterClip">
+              <rect x={22} y={202} width={356 * (bandwidthPercent / 100)} height={16} rx={8} />
+            </clipPath>
+            <rect x={22} y={202} width={356} height={16} rx={8} fill="url(#gpumbMeterFill)" clipPath="url(#gpumbMeterClip)" />
+            {/* Meter glow overlay */}
+            <rect
+              x={22}
+              y={202}
+              width={356 * (bandwidthPercent / 100)}
+              height={8}
+              rx={4}
+              fill="rgba(255,255,255,0.2)"
+            />
+            {/* Meter tick marks */}
+            {[0, 25, 50, 75, 100].map((tick) => (
+              <line
+                key={`tick-${tick}`}
+                x1={22 + (356 * tick / 100)}
+                y1={200}
+                x2={22 + (356 * tick / 100)}
+                y2={196}
+                stroke="#64748b"
+                strokeWidth="1"
+              />
+            ))}
+          </g>
+
+          {/* Info panel with premium styling */}
+          <g>
+            <rect x={20} y={230} width={360} height={45} rx={8} fill="rgba(15, 23, 42, 0.9)" stroke="#334155" strokeWidth="1" />
+            {/* Panel inner highlight */}
+            <rect x={21} y={231} width={358} height={22} rx={7} fill="rgba(255,255,255,0.02)" />
+          </g>
+        </svg>
+
+        {/* External labels using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '500px',
+          padding: `0 ${typo.pagePadding}`,
+          marginTop: `-${typo.sectionGap}`,
+        }}>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.small }}>Bus Width</div>
+            <div style={{ color: colors.textSecondary, fontSize: typo.body, fontWeight: 600 }}>
+              {effectiveBusWidth} bits ({numLanes}x {effectiveBusWidth / numLanes}-bit)
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: colors.accent, fontSize: typo.heading, fontWeight: 700 }}>
+              {bandwidth.toFixed(0)} GB/s
+            </div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.small }}>Clock Speed</div>
+            <div style={{ color: colors.textSecondary, fontSize: typo.body, fontWeight: 600 }}>
+              {clockSpeed} MHz ({memoryType === 'gddr6x' ? '4x' : '2x'})
+            </div>
+          </div>
+        </div>
+      </div>
     );
   };
 

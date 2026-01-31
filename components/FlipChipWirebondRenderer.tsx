@@ -438,144 +438,306 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+        {/* Title outside SVG using typo system */}
+        <div style={{ textAlign: 'center', marginBottom: '4px' }}>
+          <div style={{
+            color: colors.textPrimary,
+            fontSize: typo.heading,
+            fontWeight: 'bold',
+            marginBottom: '4px'
+          }}>
+            {packageType === 'wirebond' ? 'Wire Bond Package' : 'Flip-Chip Package'}
+          </div>
+          <div style={{
+            color: colors.textSecondary,
+            fontSize: typo.small
+          }}>
+            Cross-Section View | {showThermalMode && showThermal ? 'Thermal Mode' : 'Electrical Mode'}
+          </div>
+        </div>
+
         <svg
           width="100%"
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
+          height={height - 50}
+          viewBox={`0 0 ${width} ${height - 50}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px' }}
         >
           <defs>
-            <linearGradient id="dieGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#6366f1" />
-              <stop offset="100%" stopColor="#4338ca" />
+            {/* Premium silicon die gradient with depth */}
+            <linearGradient id="fcwbDieGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#818cf8" />
+              <stop offset="20%" stopColor="#6366f1" />
+              <stop offset="50%" stopColor="#4f46e5" />
+              <stop offset="80%" stopColor="#4338ca" />
+              <stop offset="100%" stopColor="#3730a3" />
             </linearGradient>
-            <linearGradient id="heatGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.error} />
-              <stop offset="50%" stopColor={colors.warning} />
-              <stop offset="100%" stopColor={colors.success} />
-            </linearGradient>
-          </defs>
 
-          {/* Title */}
-          <text x={250} y={25} fill={colors.textPrimary} fontSize={14} textAnchor="middle" fontWeight="bold">
-            {packageType === 'wirebond' ? 'Wire Bond Package' : 'Flip-Chip Package'}
-          </text>
-          <text x={250} y={42} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
-            Cross-Section View | {showThermalMode && showThermal ? 'Thermal Mode' : 'Electrical Mode'}
-          </text>
+            {/* Premium heatsink aluminum gradient */}
+            <linearGradient id="fcwbHeatsinkGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#9ca3af" />
+              <stop offset="15%" stopColor="#6b7280" />
+              <stop offset="40%" stopColor="#4b5563" />
+              <stop offset="60%" stopColor="#6b7280" />
+              <stop offset="85%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* PCB substrate with FR4 texture */}
+            <linearGradient id="fcwbSubstrateGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#065f46" />
+              <stop offset="25%" stopColor="#047857" />
+              <stop offset="50%" stopColor="#059669" />
+              <stop offset="75%" stopColor="#047857" />
+              <stop offset="100%" stopColor="#065f46" />
+            </linearGradient>
+
+            {/* Copper traces pattern for substrate */}
+            <linearGradient id="fcwbCopperGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b45309" />
+              <stop offset="30%" stopColor="#d97706" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="70%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+
+            {/* Metallic gold wire bond gradient */}
+            <linearGradient id="fcwbGoldWireGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="25%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
+
+            {/* Die attach epoxy gradient */}
+            <linearGradient id="fcwbDieAttachGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#78716c" />
+              <stop offset="30%" stopColor="#57534e" />
+              <stop offset="70%" stopColor="#44403c" />
+              <stop offset="100%" stopColor="#292524" />
+            </linearGradient>
+
+            {/* TIM (Thermal Interface Material) gradient */}
+            <linearGradient id="fcwbTIMGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="20%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="80%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#475569" />
+            </linearGradient>
+
+            {/* Solder bump 3D radial gradient */}
+            <radialGradient id="fcwbSolderBumpGrad" cx="35%" cy="35%" r="65%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="30%" stopColor="#60a5fa" />
+              <stop offset="60%" stopColor="#3b82f6" />
+              <stop offset="85%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </radialGradient>
+
+            {/* BGA ball 3D radial gradient */}
+            <radialGradient id="fcwbBGAGrad" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#e5e7eb" />
+              <stop offset="25%" stopColor="#d1d5db" />
+              <stop offset="50%" stopColor="#9ca3af" />
+              <stop offset="75%" stopColor="#6b7280" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </radialGradient>
+
+            {/* Signal glow gradient */}
+            <radialGradient id="fcwbSignalGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#34d399" stopOpacity="1" />
+              <stop offset="40%" stopColor="#10b981" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#059669" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#047857" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Thermal path gradient */}
+            <linearGradient id="fcwbThermalGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#f97316" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#eab308" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Panel background gradient */}
+            <linearGradient id="fcwbPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity="0.98" />
+            </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="fcwbWireGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="fcwbSignalGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="fcwbThermalGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="fcwbBumpGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="fcwbPanelShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feOffset dx="2" dy="2" result="offsetBlur" />
+              <feMerge>
+                <feMergeNode in="offsetBlur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+          </defs>
 
           {/* Package cross-section */}
           {packageType === 'wirebond' ? (
             <>
-              {/* Heatsink at bottom */}
-              <rect x={250 - heatsinkWidth/2} y={280} width={heatsinkWidth} height={heatsinkHeight} fill={colors.heatsink} rx={4} />
-              <text x={250} y={305} fill={colors.textPrimary} fontSize={9} textAnchor="middle">Heat Sink</text>
+              {/* Heatsink at bottom with premium gradient */}
+              <rect x={250 - heatsinkWidth/2} y={230} width={heatsinkWidth} height={heatsinkHeight} fill="url(#fcwbHeatsinkGrad)" rx={4} stroke="#9ca3af" strokeWidth={0.5} />
+              {/* Heatsink fins detail */}
+              {[-70, -35, 0, 35, 70].map((offset, i) => (
+                <line key={`fin${i}`} x1={250 + offset} y1={232} x2={250 + offset} y2={268} stroke="#374151" strokeWidth={1} strokeOpacity={0.5} />
+              ))}
 
-              {/* Substrate */}
-              <rect x={250 - substrateWidth/2} y={240} width={substrateWidth} height={substrateHeight} fill={colors.substrate} rx={2} />
-              <text x={250} y={260} fill={colors.textSecondary} fontSize={9} textAnchor="middle">Substrate/Leadframe</text>
+              {/* Substrate with PCB texture */}
+              <rect x={250 - substrateWidth/2} y={190} width={substrateWidth} height={substrateHeight} fill="url(#fcwbSubstrateGrad)" rx={2} stroke="#10b981" strokeWidth={0.5} />
+              {/* Copper traces on substrate */}
+              {[-60, -30, 0, 30, 60].map((offset, i) => (
+                <rect key={`trace${i}`} x={250 + offset - 8} y={192} width={16} height={2} fill="url(#fcwbCopperGrad)" rx={1} />
+              ))}
 
-              {/* Die attach */}
-              <rect x={250 - dieWidth/2 - 5} y={215} width={dieWidth + 10} height={25} fill="#5a4a3a" rx={2} />
+              {/* Die attach with epoxy gradient */}
+              <rect x={250 - dieWidth/2 - 5} y={165} width={dieWidth + 10} height={25} fill="url(#fcwbDieAttachGrad)" rx={2} />
 
-              {/* Die (face up) */}
-              <rect x={250 - dieWidth/2} y={180} width={dieWidth} height={dieHeight} fill="url(#dieGrad)" rx={2} />
-              <text x={250} y={194} fill={colors.textPrimary} fontSize={10} textAnchor="middle">Die</text>
+              {/* Die (face up) with silicon gradient */}
+              <rect x={250 - dieWidth/2} y={130} width={dieWidth} height={dieHeight} fill="url(#fcwbDieGrad)" rx={2} stroke="#818cf8" strokeWidth={0.5} />
+              {/* Die circuit pattern detail */}
+              <rect x={250 - dieWidth/2 + 5} y={133} width={dieWidth - 10} height={3} fill="#a5b4fc" opacity={0.3} rx={1} />
+              <rect x={250 - dieWidth/2 + 5} y={140} width={dieWidth - 10} height={2} fill="#a5b4fc" opacity={0.2} rx={1} />
 
-              {/* Wire bonds */}
+              {/* Wire bonds with metallic gold and glow */}
               {[-40, -25, 25, 40].map((offset, i) => (
                 <path
                   key={`wire${i}`}
-                  d={`M ${250 + offset * 0.6} 180 Q ${250 + offset * 0.8} ${140 - wireLength * 10} ${250 + offset * 1.3} 240`}
+                  d={`M ${250 + offset * 0.6} 130 Q ${250 + offset * 0.8} ${90 - wireLength * 10} ${250 + offset * 1.3} 190`}
                   fill="none"
-                  stroke={colors.wirebond}
-                  strokeWidth={2}
-                  opacity={0.9}
+                  stroke="url(#fcwbGoldWireGrad)"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  filter="url(#fcwbWireGlow)"
                 />
               ))}
 
-              {/* Signal ringing animation */}
+              {/* Bond pads on die */}
+              {[-40, -25, 25, 40].map((offset, i) => (
+                <rect key={`pad${i}`} x={250 + offset * 0.6 - 4} y={128} width={8} height={4} fill="#fcd34d" rx={1} />
+              ))}
+
+              {/* Signal ringing animation with glow */}
               {isAnimating && (
-                <g>
+                <g filter="url(#fcwbSignalGlowFilter)">
                   {[-40, 40].map((offset, i) => (
                     <circle
                       key={`sig${i}`}
                       cx={250 + offset * 0.8}
-                      cy={160 - wireLength * 5 + ringing * 10}
-                      r={3}
-                      fill={colors.signal}
+                      cy={110 - wireLength * 5 + ringing * 10}
+                      r={4}
+                      fill="url(#fcwbSignalGlow)"
                     >
                       <animate attributeName="opacity" values="1;0.3;1" dur="0.3s" repeatCount="indefinite" />
+                      <animate attributeName="r" values="4;6;4" dur="0.3s" repeatCount="indefinite" />
                     </circle>
                   ))}
                 </g>
               )}
 
               {/* Wire length indicator */}
-              <line x1={340} y1={180} x2={340} y2={240} stroke={colors.textMuted} strokeDasharray="3,3" />
-              <text x={350} y={210} fill={colors.textMuted} fontSize={9}>L={wireLength}mm</text>
+              <line x1={340} y1={130} x2={340} y2={190} stroke={colors.textMuted} strokeDasharray="3,3" />
 
-              {/* Thermal path */}
+              {/* Thermal path with gradient */}
               {showThermalMode && showThermal && (
-                <>
-                  <line x1={250} y1={200} x2={250} y2={320} stroke={colors.thermal} strokeWidth={4} opacity={0.5} />
-                  <text x={280} y={220} fill={colors.thermal} fontSize={9}>Thermal Path</text>
-                  <text x={280} y={232} fill={colors.thermal} fontSize={8}>(Rth = {thermal.rthJunction.toFixed(1)} K/W)</text>
-                </>
+                <g filter="url(#fcwbThermalGlowFilter)">
+                  <rect x={245} y={150} width={10} height={120} fill="url(#fcwbThermalGrad)" rx={2} opacity={0.7} />
+                </g>
               )}
             </>
           ) : (
             <>
-              {/* Heatsink on top of die */}
-              <rect x={250 - heatsinkWidth/2} y={100} width={heatsinkWidth} height={heatsinkHeight} fill={colors.heatsink} rx={4} />
-              <text x={250} y={125} fill={colors.textPrimary} fontSize={9} textAnchor="middle">Heat Spreader/Lid</text>
+              {/* Heatsink on top of die (heat spreader/lid) */}
+              <rect x={250 - heatsinkWidth/2} y={50} width={heatsinkWidth} height={heatsinkHeight} fill="url(#fcwbHeatsinkGrad)" rx={4} stroke="#9ca3af" strokeWidth={0.5} />
+              {/* Heatsink fins detail */}
+              {[-70, -35, 0, 35, 70].map((offset, i) => (
+                <line key={`fin${i}`} x1={250 + offset} y1={52} x2={250 + offset} y2={88} stroke="#374151" strokeWidth={1} strokeOpacity={0.5} />
+              ))}
 
-              {/* TIM layer */}
-              <rect x={250 - dieWidth/2 - 5} y={140} width={dieWidth + 10} height={8} fill="#4a6b8a" rx={1} />
+              {/* TIM layer with metallic gradient */}
+              <rect x={250 - dieWidth/2 - 5} y={90} width={dieWidth + 10} height={8} fill="url(#fcwbTIMGrad)" rx={1} />
 
-              {/* Die (face down) */}
-              <rect x={250 - dieWidth/2} y={148} width={dieWidth} height={dieHeight} fill="url(#dieGrad)" rx={2} />
-              <text x={250} y={162} fill={colors.textPrimary} fontSize={10} textAnchor="middle">Die (flipped)</text>
+              {/* Die (face down) with silicon gradient */}
+              <rect x={250 - dieWidth/2} y={98} width={dieWidth} height={dieHeight} fill="url(#fcwbDieGrad)" rx={2} stroke="#818cf8" strokeWidth={0.5} />
+              {/* Die circuit pattern detail (inverted) */}
+              <rect x={250 - dieWidth/2 + 5} y={112} width={dieWidth - 10} height={3} fill="#a5b4fc" opacity={0.3} rx={1} />
 
-              {/* Solder bumps */}
+              {/* Solder bumps with 3D effect */}
               {[-35, -20, -5, 5, 20, 35].map((offset, i) => (
-                <circle
-                  key={`bump${i}`}
-                  cx={250 + offset}
-                  cy={175}
-                  r={5}
-                  fill={colors.flipchip}
-                />
+                <g key={`bump${i}`}>
+                  <ellipse cx={250 + offset} cy={125} rx={6} ry={4} fill="url(#fcwbSolderBumpGrad)" filter="url(#fcwbBumpGlow)" />
+                  {/* Highlight on bump */}
+                  <ellipse cx={250 + offset - 1.5} cy={123} rx={2} ry={1} fill="#bfdbfe" opacity={0.6} />
+                </g>
               ))}
 
-              {/* Substrate */}
-              <rect x={250 - substrateWidth/2} y={180} width={substrateWidth} height={substrateHeight} fill={colors.substrate} rx={2} />
-              <text x={250} y={200} fill={colors.textSecondary} fontSize={9} textAnchor="middle">Organic Substrate</text>
+              {/* Substrate with PCB texture */}
+              <rect x={250 - substrateWidth/2} y={130} width={substrateWidth} height={substrateHeight} fill="url(#fcwbSubstrateGrad)" rx={2} stroke="#10b981" strokeWidth={0.5} />
+              {/* Copper traces on substrate */}
+              {[-60, -30, 0, 30, 60].map((offset, i) => (
+                <rect key={`trace${i}`} x={250 + offset - 8} y={132} width={16} height={2} fill="url(#fcwbCopperGrad)" rx={1} />
+              ))}
+              {/* Via holes in substrate */}
+              {[-35, -20, -5, 5, 20, 35].map((offset, i) => (
+                <circle key={`via${i}`} cx={250 + offset} cy={145} r={2} fill="#fcd34d" opacity={0.7} />
+              ))}
 
-              {/* BGA balls */}
+              {/* BGA balls with 3D effect */}
               {[-60, -40, -20, 0, 20, 40, 60].map((offset, i) => (
-                <circle
-                  key={`bga${i}`}
-                  cx={250 + offset}
-                  cy={220}
-                  r={6}
-                  fill="#a0a0a0"
-                />
+                <g key={`bga${i}`}>
+                  <circle cx={250 + offset} cy={170} r={7} fill="url(#fcwbBGAGrad)" />
+                  {/* Highlight on ball */}
+                  <circle cx={250 + offset - 2} cy={167} r={2} fill="#f3f4f6" opacity={0.5} />
+                </g>
               ))}
 
-              <text x={250} y={250} fill={colors.textMuted} fontSize={9} textAnchor="middle">BGA Solder Balls</text>
-
-              {/* Signal with minimal ringing */}
+              {/* Signal with minimal ringing and glow */}
               {isAnimating && (
-                <g>
+                <g filter="url(#fcwbSignalGlowFilter)">
                   {[-35, 35].map((offset, i) => (
                     <circle
                       key={`sig${i}`}
                       cx={250 + offset}
-                      cy={175}
-                      r={3}
-                      fill={colors.signal}
+                      cy={125}
+                      r={4}
+                      fill="url(#fcwbSignalGlow)"
                     >
                       <animate attributeName="opacity" values="1;0.7;1" dur="0.5s" repeatCount="indefinite" />
                     </circle>
@@ -583,52 +745,104 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
                 </g>
               )}
 
-              {/* Bump height indicator */}
-              <text x={350} y={172} fill={colors.textMuted} fontSize={9}>L~0.1mm</text>
-
-              {/* Thermal path */}
+              {/* Thermal path with gradient */}
               {showThermalMode && showThermal && (
-                <>
-                  <line x1={250} y1={148} x2={250} y2={100} stroke={colors.thermal} strokeWidth={8} opacity={0.5} />
-                  <text x={280} y={128} fill={colors.success} fontSize={9}>Short Thermal Path</text>
-                  <text x={280} y={140} fill={colors.success} fontSize={8}>(Rth = {thermal.rthJunction.toFixed(1)} K/W)</text>
-                </>
+                <g filter="url(#fcwbThermalGlowFilter)">
+                  <rect x={245} y={50} width={10} height={48} fill="url(#fcwbThermalGrad)" rx={2} opacity={0.8} />
+                </g>
               )}
             </>
           )}
 
-          {/* Electrical metrics panel */}
-          <rect x={10} y={330} width={230} height={80} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.accent} strokeWidth={1} />
-          <text x={20} y={348} fill={colors.textSecondary} fontSize={11} fontWeight="bold">Electrical Parasitics</text>
-
-          <text x={20} y={366} fill={colors.textSecondary} fontSize={10}>
-            Inductance: <tspan fill={electrical.inductance < 1 ? colors.success : colors.warning}>{electrical.inductance.toFixed(2)} nH</tspan>
-          </text>
-          <text x={20} y={382} fill={colors.textSecondary} fontSize={10}>
-            Ground Bounce: <tspan fill={electrical.groundBounce < 50 ? colors.success : colors.error}>{electrical.groundBounce.toFixed(0)} mV</tspan>
-          </text>
-          <text x={20} y={398} fill={colors.textSecondary} fontSize={10}>
-            IR Drop: <tspan fill={electrical.irDrop < 10 ? colors.success : colors.warning}>{electrical.irDrop.toFixed(1)} mV</tspan>
-          </text>
+          {/* Electrical metrics panel with premium styling */}
+          <rect x={10} y={280} width={230} height={80} fill="url(#fcwbPanelBg)" rx={8} stroke={colors.accent} strokeWidth={1} filter="url(#fcwbPanelShadow)" />
 
           {/* Thermal metrics panel */}
           {showThermalMode && showThermal && (
-            <>
-              <rect x={260} y={330} width={230} height={80} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.thermal} strokeWidth={1} />
-              <text x={270} y={348} fill={colors.textSecondary} fontSize={11} fontWeight="bold">Thermal Performance</text>
-
-              <text x={270} y={366} fill={colors.textSecondary} fontSize={10}>
-                Rth Junction: <tspan fill={thermal.rthJunction < 1 ? colors.success : colors.warning}>{thermal.rthJunction.toFixed(1)} K/W</tspan>
-              </text>
-              <text x={270} y={382} fill={colors.textSecondary} fontSize={10}>
-                Tj at {diePower}W: <tspan fill={thermal.junctionTemp < 85 ? colors.success : colors.error}>{thermal.junctionTemp.toFixed(0)}C</tspan>
-              </text>
-              <text x={270} y={398} fill={colors.textSecondary} fontSize={10}>
-                Max Power: <tspan fill={colors.accent}>{thermal.maxPower.toFixed(0)} W</tspan>
-              </text>
-            </>
+            <rect x={260} y={280} width={230} height={80} fill="url(#fcwbPanelBg)" rx={8} stroke={colors.thermal} strokeWidth={1} filter="url(#fcwbPanelShadow)" />
           )}
         </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '550px',
+          padding: '0 12px',
+          gap: '16px'
+        }}>
+          {/* Electrical metrics */}
+          <div style={{
+            flex: 1,
+            background: 'rgba(30, 41, 59, 0.95)',
+            borderRadius: '8px',
+            padding: typo.cardPadding,
+            border: `1px solid ${colors.accent}`
+          }}>
+            <div style={{ color: colors.textSecondary, fontSize: typo.body, fontWeight: 'bold', marginBottom: '8px' }}>
+              Electrical Parasitics
+            </div>
+            <div style={{ color: colors.textSecondary, fontSize: typo.small, marginBottom: '4px' }}>
+              Inductance: <span style={{ color: electrical.inductance < 1 ? colors.success : colors.warning }}>{electrical.inductance.toFixed(2)} nH</span>
+            </div>
+            <div style={{ color: colors.textSecondary, fontSize: typo.small, marginBottom: '4px' }}>
+              Ground Bounce: <span style={{ color: electrical.groundBounce < 50 ? colors.success : colors.error }}>{electrical.groundBounce.toFixed(0)} mV</span>
+            </div>
+            <div style={{ color: colors.textSecondary, fontSize: typo.small }}>
+              IR Drop: <span style={{ color: electrical.irDrop < 10 ? colors.success : colors.warning }}>{electrical.irDrop.toFixed(1)} mV</span>
+            </div>
+          </div>
+
+          {/* Thermal metrics */}
+          {showThermalMode && showThermal && (
+            <div style={{
+              flex: 1,
+              background: 'rgba(30, 41, 59, 0.95)',
+              borderRadius: '8px',
+              padding: typo.cardPadding,
+              border: `1px solid ${colors.thermal}`
+            }}>
+              <div style={{ color: colors.textSecondary, fontSize: typo.body, fontWeight: 'bold', marginBottom: '8px' }}>
+                Thermal Performance
+              </div>
+              <div style={{ color: colors.textSecondary, fontSize: typo.small, marginBottom: '4px' }}>
+                Rth Junction: <span style={{ color: thermal.rthJunction < 1 ? colors.success : colors.warning }}>{thermal.rthJunction.toFixed(1)} K/W</span>
+              </div>
+              <div style={{ color: colors.textSecondary, fontSize: typo.small, marginBottom: '4px' }}>
+                Tj at {diePower}W: <span style={{ color: thermal.junctionTemp < 85 ? colors.success : colors.error }}>{thermal.junctionTemp.toFixed(0)}C</span>
+              </div>
+              <div style={{ color: colors.textSecondary, fontSize: typo.small }}>
+                Max Power: <span style={{ color: colors.accent }}>{thermal.maxPower.toFixed(0)} W</span>
+              </div>
+            </div>
+          )}
+        </div>
+
+        {/* Component labels using typo system */}
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          gap: '12px',
+          marginTop: '8px',
+          fontSize: typo.label,
+          color: colors.textMuted
+        }}>
+          {packageType === 'wirebond' ? (
+            <>
+              <span>Wire Length: {wireLength}mm</span>
+              <span>|</span>
+              <span>Rth: {thermal.rthJunction.toFixed(1)} K/W</span>
+            </>
+          ) : (
+            <>
+              <span>Bump Height: ~0.1mm</span>
+              <span>|</span>
+              <span>Rth: {thermal.rthJunction.toFixed(1)} K/W</span>
+            </>
+          )}
+        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
@@ -638,11 +852,12 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: packageType === 'wirebond' ? colors.wirebond : colors.flipchip,
+                background: packageType === 'wirebond' ? `linear-gradient(135deg, ${colors.wirebond} 0%, #d97706 100%)` : `linear-gradient(135deg, ${colors.flipchip} 0%, #1d4ed8 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
+                boxShadow: `0 4px 12px ${packageType === 'wirebond' ? 'rgba(245, 158, 11, 0.3)' : 'rgba(59, 130, 246, 0.3)'}`,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -654,11 +869,12 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.error : colors.signal,
+                background: isAnimating ? `linear-gradient(135deg, ${colors.error} 0%, #dc2626 100%)` : `linear-gradient(135deg, ${colors.signal} 0%, #059669 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
+                boxShadow: `0 4px 12px ${isAnimating ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)'}`,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -674,7 +890,7 @@ const FlipChipWirebondRenderer: React.FC<FlipChipWirebondRendererProps> = ({
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >

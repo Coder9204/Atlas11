@@ -484,35 +484,218 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
     const showECCRepair = animationStep >= 3 || !isAnimating;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
+        {/* Title moved outside SVG */}
+        <div style={{ textAlign: 'center', marginBottom: '4px' }}>
+          <div style={{
+            fontSize: typo.bodyLarge,
+            fontWeight: 'bold',
+            color: colors.textPrimary,
+            marginBottom: '4px'
+          }}>
+            SRAM Array: {arrayRows} x {arrayCols} = {yieldData.totalBits} bits
+          </div>
+          <div style={{
+            fontSize: typo.small,
+            color: colors.textSecondary
+          }}>
+            Defect Density: {defectDensity} per 1000 bits | {yieldData.defects.length} defects found
+          </div>
+        </div>
+
         <svg
           width="100%"
-          height={height}
-          viewBox={`0 0 ${width} ${height}`}
+          height={height - 50}
+          viewBox={`0 0 ${width} ${height - 50}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px' }}
+          style={{ borderRadius: '12px', maxWidth: '550px' }}
         >
-          {/* Title */}
-          <text x={250} y={25} fill={colors.textPrimary} fontSize={14} textAnchor="middle" fontWeight="bold">
-            SRAM Array: {arrayRows} x {arrayCols} = {yieldData.totalBits} bits
-          </text>
-          <text x={250} y={45} fill={colors.textSecondary} fontSize={11} textAnchor="middle">
-            Defect Density: {defectDensity} per 1000 bits | {yieldData.defects.length} defects found
-          </text>
+          <defs>
+            {/* Premium lab background gradient */}
+            <linearGradient id="sramyLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0a0f1a" />
+              <stop offset="25%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1a1a2e" />
+              <stop offset="75%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#0a0f1a" />
+            </linearGradient>
 
-          {/* Memory array grid */}
+            {/* Memory array substrate gradient */}
+            <linearGradient id="sramySubstrate" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="30%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#1e293b" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Good cell gradient - emerald tones */}
+            <linearGradient id="sramyGoodCell" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="40%" stopColor="#10b981" />
+              <stop offset="70%" stopColor="#059669" />
+              <stop offset="100%" stopColor="#047857" />
+            </linearGradient>
+
+            {/* Defect cell gradient - red danger tones */}
+            <linearGradient id="sramyDefectCell" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="30%" stopColor="#ef4444" />
+              <stop offset="60%" stopColor="#dc2626" />
+              <stop offset="100%" stopColor="#b91c1c" />
+            </linearGradient>
+
+            {/* Spare cell gradient - blue tones */}
+            <linearGradient id="sramySpareCell" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" />
+              <stop offset="35%" stopColor="#3b82f6" />
+              <stop offset="65%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
+            </linearGradient>
+
+            {/* Repaired cell gradient - purple tones */}
+            <linearGradient id="sramyRepairedCell" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#c084fc" />
+              <stop offset="30%" stopColor="#a855f7" />
+              <stop offset="60%" stopColor="#9333ea" />
+              <stop offset="100%" stopColor="#7c3aed" />
+            </linearGradient>
+
+            {/* ECC corrected cell gradient - cyan tones */}
+            <linearGradient id="sramyECCCell" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#67e8f9" />
+              <stop offset="35%" stopColor="#22d3ee" />
+              <stop offset="65%" stopColor="#06b6d4" />
+              <stop offset="100%" stopColor="#0891b2" />
+            </linearGradient>
+
+            {/* Statistics panel gradient */}
+            <linearGradient id="sramyPanelBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Yield bar success gradient */}
+            <linearGradient id="sramyYieldSuccess" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#34d399" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#059669" />
+            </linearGradient>
+
+            {/* Yield bar warning gradient */}
+            <linearGradient id="sramyYieldWarning" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Yield bar error gradient */}
+            <linearGradient id="sramyYieldError" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* Defect glow filter */}
+            <filter id="sramyDefectGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Repair pulse glow filter */}
+            <filter id="sramyRepairGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Status indicator glow */}
+            <filter id="sramyStatusGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Grid pattern for memory array */}
+            <pattern id="sramyGridPattern" width="10" height="10" patternUnits="userSpaceOnUse">
+              <rect width="10" height="10" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+            </pattern>
+
+            {/* Spare row highlight gradient */}
+            <linearGradient id="sramySpareRowHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+              <stop offset="10%" stopColor="#3b82f6" stopOpacity="0.3" />
+              <stop offset="90%" stopColor="#3b82f6" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Spare column highlight gradient */}
+            <linearGradient id="sramySpareColHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0" />
+              <stop offset="10%" stopColor="#3b82f6" stopOpacity="0.3" />
+              <stop offset="90%" stopColor="#3b82f6" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity="0" />
+            </linearGradient>
+          </defs>
+
+          {/* Premium dark lab background */}
+          <rect width={width} height={height - 50} fill="url(#sramyLabBg)" />
+
+          {/* Subtle grid overlay */}
+          <rect width={width} height={height - 50} fill="url(#sramyGridPattern)" opacity="0.5" />
+
+          {/* Memory array substrate with border */}
           <rect
-            x={gridStartX - 2}
-            y={gridStartY - 2}
-            width={arrayCols * cellSize + 4}
-            height={arrayRows * cellSize + 4}
-            fill="rgba(0,0,0,0.4)"
-            stroke={colors.textMuted}
-            strokeWidth={1}
-            rx={2}
+            x={gridStartX - 6}
+            y={gridStartY - 56}
+            width={arrayCols * cellSize + 12}
+            height={arrayRows * cellSize + 12}
+            fill="url(#sramySubstrate)"
+            stroke="#475569"
+            strokeWidth={2}
+            rx={6}
           />
 
-          {/* Draw cells */}
+          {/* Spare row highlight bands */}
+          {Array.from({ length: spareRows }).map((_, i) => {
+            const rowIndex = arrayRows - spareRows + i;
+            return (
+              <rect
+                key={`spare-row-${i}`}
+                x={gridStartX - 4}
+                y={gridStartY - 54 + rowIndex * cellSize}
+                width={arrayCols * cellSize + 8}
+                height={cellSize}
+                fill="url(#sramySpareRowHighlight)"
+                rx={2}
+              />
+            );
+          })}
+
+          {/* Spare column highlight bands */}
+          {Array.from({ length: spareCols }).map((_, i) => {
+            const colIndex = arrayCols - spareCols + i;
+            return (
+              <rect
+                key={`spare-col-${i}`}
+                x={gridStartX + colIndex * cellSize}
+                y={gridStartY - 56}
+                width={cellSize}
+                height={arrayRows * cellSize + 8}
+                fill="url(#sramySpareColHighlight)"
+                rx={2}
+              />
+            );
+          })}
+
+          {/* Draw cells with premium gradients */}
           {Array.from({ length: arrayRows }).map((_, row) =>
             Array.from({ length: arrayCols }).map((_, col) => {
               const isDefect = yieldData.defects.some(d => d.row === row && d.col === col);
@@ -521,17 +704,22 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
               const isSpareRow = row >= arrayRows - spareRows;
               const isSpareCol = col >= arrayCols - spareCols;
 
-              let cellColor = colors.good;
+              let cellFill = 'url(#sramyGoodCell)';
+              let cellFilter = undefined;
+
               if (isSpareRow || isSpareCol) {
-                cellColor = colors.spare;
+                cellFill = 'url(#sramySpareCell)';
               }
               if (isDefect && showDefects) {
                 if (isRepairedByRow || isRepairedByCol) {
-                  cellColor = colors.repaired;
+                  cellFill = 'url(#sramyRepairedCell)';
+                  cellFilter = isAnimating ? 'url(#sramyRepairGlow)' : undefined;
                 } else if (showECC && enableECC && showECCRepair) {
-                  cellColor = colors.ecc;
+                  cellFill = 'url(#sramyECCCell)';
+                  cellFilter = isAnimating ? 'url(#sramyRepairGlow)' : undefined;
                 } else {
-                  cellColor = colors.defect;
+                  cellFill = 'url(#sramyDefectCell)';
+                  cellFilter = 'url(#sramyDefectGlow)';
                 }
               }
 
@@ -539,99 +727,225 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
                 <rect
                   key={`${row}-${col}`}
                   x={gridStartX + col * cellSize}
-                  y={gridStartY + row * cellSize}
+                  y={gridStartY - 54 + row * cellSize}
                   width={cellSize - 1}
                   height={cellSize - 1}
-                  fill={cellColor}
-                  opacity={0.8}
+                  fill={cellFill}
+                  filter={cellFilter}
                   rx={1}
                 />
               );
             })
           )}
 
-          {/* Legend */}
-          <g transform={`translate(${gridStartX + arrayCols * cellSize + 20}, ${gridStartY})`}>
-            <text y={0} fill={colors.textSecondary} fontSize={10} fontWeight="bold">Legend</text>
+          {/* Statistics panel with premium gradient */}
+          <rect
+            x={10}
+            y={gridStartY + arrayRows * cellSize - 30}
+            width={220}
+            height={120}
+            fill="url(#sramyPanelBg)"
+            rx={8}
+            stroke={colors.accent}
+            strokeWidth={1.5}
+          />
 
-            <rect x={0} y={10} width={12} height={12} fill={colors.good} rx={2} />
-            <text x={18} y={20} fill={colors.textSecondary} fontSize={9}>Good Cell</text>
+          {/* Yield gauge panel */}
+          <rect
+            x={250}
+            y={gridStartY + arrayRows * cellSize - 30}
+            width={240}
+            height={120}
+            fill="url(#sramyPanelBg)"
+            rx={8}
+            stroke={yieldData.remainingDefects === 0 ? colors.success : colors.warning}
+            strokeWidth={1.5}
+          />
 
-            <rect x={0} y={28} width={12} height={12} fill={colors.defect} rx={2} />
-            <text x={18} y={38} fill={colors.textSecondary} fontSize={9}>Defect</text>
+          {/* Repair status indicator */}
+          <circle
+            cx={460}
+            cy={gridStartY + arrayRows * cellSize - 15}
+            r={8}
+            fill={yieldData.remainingDefects === 0 ? colors.success : colors.error}
+            filter="url(#sramyStatusGlow)"
+          />
 
-            <rect x={0} y={46} width={12} height={12} fill={colors.spare} rx={2} />
-            <text x={18} y={56} fill={colors.textSecondary} fontSize={9}>Spare</text>
+          {/* Raw yield bar background */}
+          <rect x={330} y={gridStartY + arrayRows * cellSize + 8} width={100} height={14} fill="rgba(255,255,255,0.1)" rx={3} />
+          {/* Raw yield bar fill */}
+          <rect
+            x={330}
+            y={gridStartY + arrayRows * cellSize + 8}
+            width={yieldData.rawYield}
+            height={14}
+            fill="url(#sramyYieldError)"
+            rx={3}
+          />
 
-            <rect x={0} y={64} width={12} height={12} fill={colors.repaired} rx={2} />
-            <text x={18} y={74} fill={colors.textSecondary} fontSize={9}>Repaired</text>
-
-            {showECC && (
-              <>
-                <rect x={0} y={82} width={12} height={12} fill={colors.ecc} rx={2} />
-                <text x={18} y={92} fill={colors.textSecondary} fontSize={9}>ECC Fixed</text>
-              </>
-            )}
-          </g>
-
-          {/* Statistics panel */}
-          <rect x={10} y={gridStartY + arrayRows * cellSize + 20} width={220} height={130} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.accent} strokeWidth={1} />
-          <text x={20} y={gridStartY + arrayRows * cellSize + 38} fill={colors.textSecondary} fontSize={11} fontWeight="bold">Repair Analysis</text>
-
-          <text x={20} y={gridStartY + arrayRows * cellSize + 55} fill={colors.defect} fontSize={10}>
-            Total Defects: {yieldData.defects.length}
-          </text>
-          <text x={20} y={gridStartY + arrayRows * cellSize + 70} fill={colors.textSecondary} fontSize={10}>
-            Defective Rows: {yieldData.defectiveRows.length} (spare: {spareRows})
-          </text>
-          <text x={20} y={gridStartY + arrayRows * cellSize + 85} fill={colors.textSecondary} fontSize={10}>
-            Defective Cols: {yieldData.defectiveCols.length} (spare: {spareCols})
-          </text>
-          <text x={20} y={gridStartY + arrayRows * cellSize + 100} fill={colors.repaired} fontSize={10}>
-            Row/Col Repaired: {yieldData.repairedDefects}
-          </text>
-          {showECC && enableECC && (
-            <text x={20} y={gridStartY + arrayRows * cellSize + 115} fill={colors.ecc} fontSize={10}>
-              ECC Corrected: {yieldData.eccCorrected}
-            </text>
-          )}
-          <text x={20} y={gridStartY + arrayRows * cellSize + 130} fill={yieldData.remainingDefects === 0 ? colors.success : colors.error} fontSize={10} fontWeight="bold">
-            Remaining: {yieldData.remainingDefects}
-          </text>
-
-          {/* Yield gauge */}
-          <rect x={250} y={gridStartY + arrayRows * cellSize + 20} width={240} height={130} fill="rgba(0,0,0,0.6)" rx={8} stroke={yieldData.remainingDefects === 0 ? colors.success : colors.warning} strokeWidth={1} />
-          <text x={370} y={gridStartY + arrayRows * cellSize + 38} fill={colors.textSecondary} fontSize={11} fontWeight="bold" textAnchor="middle">Yield Status</text>
-
-          {/* Raw yield */}
-          <text x={260} y={gridStartY + arrayRows * cellSize + 58} fill={colors.textSecondary} fontSize={10}>
-            Raw Yield:
-          </text>
-          <rect x={330} y={gridStartY + arrayRows * cellSize + 48} width={100} height={14} fill="rgba(255,255,255,0.1)" rx={3} />
-          <rect x={330} y={gridStartY + arrayRows * cellSize + 48} width={yieldData.rawYield} height={14} fill={colors.error} rx={3} />
-          <text x={385} y={gridStartY + arrayRows * cellSize + 59} fill={colors.textPrimary} fontSize={9} textAnchor="middle">
-            {yieldData.rawYield.toFixed(1)}%
-          </text>
-
-          {/* Repaired yield */}
-          <text x={260} y={gridStartY + arrayRows * cellSize + 80} fill={colors.textSecondary} fontSize={10}>
-            After Repair:
-          </text>
-          <rect x={330} y={gridStartY + arrayRows * cellSize + 70} width={100} height={14} fill="rgba(255,255,255,0.1)" rx={3} />
-          <rect x={330} y={gridStartY + arrayRows * cellSize + 70} width={yieldData.repairedYield} height={14} fill={yieldData.repairedYield > 80 ? colors.success : colors.warning} rx={3} />
-          <text x={385} y={gridStartY + arrayRows * cellSize + 81} fill={colors.textPrimary} fontSize={9} textAnchor="middle">
-            {yieldData.repairedYield.toFixed(1)}%
-          </text>
-
-          {/* Status */}
-          <text x={370} y={gridStartY + arrayRows * cellSize + 110} fill={yieldData.remainingDefects === 0 ? colors.success : colors.error} fontSize={14} fontWeight="bold" textAnchor="middle">
-            {yieldData.remainingDefects === 0 ? 'PASS - Fully Repaired' : 'FAIL - Unrepairable'}
-          </text>
-
-          <text x={370} y={gridStartY + arrayRows * cellSize + 130} fill={colors.textMuted} fontSize={10} textAnchor="middle">
-            Spares: {spareRows}R + {spareCols}C {showECC && enableECC ? `+ ECC(${eccBits}b)` : ''}
-          </text>
+          {/* Repaired yield bar background */}
+          <rect x={330} y={gridStartY + arrayRows * cellSize + 30} width={100} height={14} fill="rgba(255,255,255,0.1)" rx={3} />
+          {/* Repaired yield bar fill */}
+          <rect
+            x={330}
+            y={gridStartY + arrayRows * cellSize + 30}
+            width={yieldData.repairedYield}
+            height={14}
+            fill={yieldData.repairedYield > 80 ? 'url(#sramyYieldSuccess)' : 'url(#sramyYieldWarning)'}
+            rx={3}
+          />
         </svg>
+
+        {/* Legend moved outside SVG */}
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '12px',
+          justifyContent: 'center',
+          padding: '8px 16px',
+          background: colors.bgCard,
+          borderRadius: '8px',
+          maxWidth: '500px'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '14px', height: '14px', background: 'linear-gradient(135deg, #34d399 0%, #047857 100%)', borderRadius: '3px' }} />
+            <span style={{ fontSize: typo.label, color: colors.textSecondary }}>Good Cell</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '14px', height: '14px', background: 'linear-gradient(135deg, #f87171 0%, #b91c1c 100%)', borderRadius: '3px' }} />
+            <span style={{ fontSize: typo.label, color: colors.textSecondary }}>Defect</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '14px', height: '14px', background: 'linear-gradient(135deg, #60a5fa 0%, #1d4ed8 100%)', borderRadius: '3px' }} />
+            <span style={{ fontSize: typo.label, color: colors.textSecondary }}>Spare</span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+            <div style={{ width: '14px', height: '14px', background: 'linear-gradient(135deg, #c084fc 0%, #7c3aed 100%)', borderRadius: '3px' }} />
+            <span style={{ fontSize: typo.label, color: colors.textSecondary }}>Repaired</span>
+          </div>
+          {showECC && (
+            <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+              <div style={{ width: '14px', height: '14px', background: 'linear-gradient(135deg, #67e8f9 0%, #0891b2 100%)', borderRadius: '3px' }} />
+              <span style={{ fontSize: typo.label, color: colors.textSecondary }}>ECC Fixed</span>
+            </div>
+          )}
+        </div>
+
+        {/* Statistics panel moved outside SVG */}
+        <div style={{
+          display: 'flex',
+          flexWrap: 'wrap',
+          gap: '16px',
+          justifyContent: 'center',
+          maxWidth: '520px',
+          width: '100%'
+        }}>
+          {/* Repair Analysis Panel */}
+          <div style={{
+            flex: '1 1 220px',
+            background: colors.bgCard,
+            padding: typo.cardPadding,
+            borderRadius: '8px',
+            borderLeft: `3px solid ${colors.accent}`,
+          }}>
+            <div style={{ fontSize: typo.small, fontWeight: 'bold', color: colors.textPrimary, marginBottom: '8px' }}>
+              Repair Analysis
+            </div>
+            <div style={{ fontSize: typo.label, color: colors.defect, marginBottom: '4px' }}>
+              Total Defects: {yieldData.defects.length}
+            </div>
+            <div style={{ fontSize: typo.label, color: colors.textSecondary, marginBottom: '4px' }}>
+              Defective Rows: {yieldData.defectiveRows.length} (spare: {spareRows})
+            </div>
+            <div style={{ fontSize: typo.label, color: colors.textSecondary, marginBottom: '4px' }}>
+              Defective Cols: {yieldData.defectiveCols.length} (spare: {spareCols})
+            </div>
+            <div style={{ fontSize: typo.label, color: colors.repaired, marginBottom: '4px' }}>
+              Row/Col Repaired: {yieldData.repairedDefects}
+            </div>
+            {showECC && enableECC && (
+              <div style={{ fontSize: typo.label, color: colors.ecc, marginBottom: '4px' }}>
+                ECC Corrected: {yieldData.eccCorrected}
+              </div>
+            )}
+            <div style={{
+              fontSize: typo.label,
+              fontWeight: 'bold',
+              color: yieldData.remainingDefects === 0 ? colors.success : colors.error
+            }}>
+              Remaining: {yieldData.remainingDefects}
+            </div>
+          </div>
+
+          {/* Yield Status Panel */}
+          <div style={{
+            flex: '1 1 220px',
+            background: colors.bgCard,
+            padding: typo.cardPadding,
+            borderRadius: '8px',
+            borderLeft: `3px solid ${yieldData.remainingDefects === 0 ? colors.success : colors.warning}`,
+          }}>
+            <div style={{ fontSize: typo.small, fontWeight: 'bold', color: colors.textPrimary, marginBottom: '8px' }}>
+              Yield Status
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <div style={{ fontSize: typo.label, color: colors.textSecondary, marginBottom: '4px' }}>
+                Raw Yield: {yieldData.rawYield.toFixed(1)}%
+              </div>
+              <div style={{
+                width: '100%',
+                height: '8px',
+                background: 'rgba(255,255,255,0.1)',
+                borderRadius: '4px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  width: `${yieldData.rawYield}%`,
+                  height: '100%',
+                  background: 'linear-gradient(90deg, #f87171 0%, #dc2626 100%)',
+                  borderRadius: '4px'
+                }} />
+              </div>
+            </div>
+            <div style={{ marginBottom: '8px' }}>
+              <div style={{ fontSize: typo.label, color: colors.textSecondary, marginBottom: '4px' }}>
+                After Repair: {yieldData.repairedYield.toFixed(1)}%
+              </div>
+              <div style={{
+                width: '100%',
+                height: '8px',
+                background: 'rgba(255,255,255,0.1)',
+                borderRadius: '4px',
+                overflow: 'hidden'
+              }}>
+                <div style={{
+                  width: `${yieldData.repairedYield}%`,
+                  height: '100%',
+                  background: yieldData.repairedYield > 80
+                    ? 'linear-gradient(90deg, #34d399 0%, #059669 100%)'
+                    : 'linear-gradient(90deg, #fcd34d 0%, #d97706 100%)',
+                  borderRadius: '4px'
+                }} />
+              </div>
+            </div>
+            <div style={{
+              fontSize: typo.body,
+              fontWeight: 'bold',
+              color: yieldData.remainingDefects === 0 ? colors.success : colors.error,
+              textAlign: 'center',
+              padding: '4px',
+              background: yieldData.remainingDefects === 0
+                ? 'rgba(16, 185, 129, 0.15)'
+                : 'rgba(239, 68, 68, 0.15)',
+              borderRadius: '4px'
+            }}>
+              {yieldData.remainingDefects === 0 ? 'PASS - Fully Repaired' : 'FAIL - Unrepairable'}
+            </div>
+            <div style={{ fontSize: typo.label, color: colors.textMuted, textAlign: 'center', marginTop: '4px' }}>
+              Spares: {spareRows}R + {spareCols}C {showECC && enableECC ? `+ ECC(${eccBits}b)` : ''}
+            </div>
+          </div>
+        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
@@ -641,12 +955,13 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: colors.repaired,
+                background: `linear-gradient(135deg, ${colors.repaired} 0%, #7c3aed 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
+                boxShadow: `0 4px 14px rgba(139, 92, 246, 0.4)`,
               }}
             >
               Animate Repair
@@ -657,12 +972,13 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: colors.defect,
+                background: `linear-gradient(135deg, ${colors.defect} 0%, #b91c1c 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
+                boxShadow: `0 4px 14px rgba(239, 68, 68, 0.4)`,
               }}
             >
               New Defects
@@ -672,12 +988,12 @@ const SRAMYieldRedundancyRenderer: React.FC<SRAMYieldRedundancyRendererProps> = 
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
+                border: `2px solid ${colors.accent}`,
                 background: 'transparent',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >

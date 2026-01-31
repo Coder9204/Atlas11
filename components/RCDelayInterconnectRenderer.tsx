@@ -336,142 +336,347 @@ const RCDelayInterconnectRenderer: React.FC<RCDelayInterconnectRendererProps> = 
   const renderVisualization = () => {
     const delay = calculateRCDelay();
     const width = 400;
-    const height = 380;
+    const height = 340;
 
     // Signal propagation animation
     const signalProgress = (animationTime / 360);
+    const pulsePhase = Math.sin(animationTime * 0.05) * 0.5 + 0.5;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
+        {/* Title outside SVG */}
+        <h3 style={{
+          color: colors.textPrimary,
+          fontSize: typo.heading,
+          fontWeight: 700,
+          margin: 0,
+          textAlign: 'center',
+          letterSpacing: '-0.01em',
+        }}>
+          RC Delay in Chip{' '}
+          <span style={{
+            background: 'linear-gradient(135deg, #f59e0b 0%, #b87333 50%, #f59e0b 100%)',
+            WebkitBackgroundClip: 'text',
+            WebkitTextFillColor: 'transparent',
+            backgroundClip: 'text',
+          }}>Interconnects</span>
+        </h3>
+
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '500px' }}
         >
           <defs>
-            <linearGradient id="wireGradCopper" x1="0%" y1="0%" x2="100%" y2="0%">
+            {/* Premium lab background gradient */}
+            <linearGradient id="rcdiLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0f172a" />
+              <stop offset="25%" stopColor="#1a1a2e" />
+              <stop offset="50%" stopColor="#0f0f1a" />
+              <stop offset="75%" stopColor="#1a1a2e" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
+
+            {/* Premium copper wire gradient with metallic sheen */}
+            <linearGradient id="rcdiCopperWire" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#8b4513" />
+              <stop offset="15%" stopColor="#b87333" />
+              <stop offset="35%" stopColor="#da9f5f" />
+              <stop offset="50%" stopColor="#e8c496" />
+              <stop offset="65%" stopColor="#da9f5f" />
+              <stop offset="85%" stopColor="#b87333" />
+              <stop offset="100%" stopColor="#8b4513" />
+            </linearGradient>
+
+            {/* Premium aluminum wire gradient */}
+            <linearGradient id="rcdiAluminumWire" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7a7a7a" />
+              <stop offset="15%" stopColor="#a8a8a8" />
+              <stop offset="35%" stopColor="#c8c8c8" />
+              <stop offset="50%" stopColor="#e0e0e0" />
+              <stop offset="65%" stopColor="#c8c8c8" />
+              <stop offset="85%" stopColor="#a8a8a8" />
+              <stop offset="100%" stopColor="#7a7a7a" />
+            </linearGradient>
+
+            {/* Dielectric layer gradient */}
+            <linearGradient id="rcdiDielectric" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#3b4f7a" stopOpacity="0.4" />
+              <stop offset="30%" stopColor="#4a5f8a" stopOpacity="0.3" />
+              <stop offset="70%" stopColor="#3b4f7a" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#2a3f6a" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Signal pulse gradient */}
+            <radialGradient id="rcdiSignalPulse" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="1" />
+              <stop offset="30%" stopColor="#4ade80" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#22c55e" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#16a34a" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Delayed signal gradient */}
+            <linearGradient id="rcdiDelayedSignal" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.2" />
+              <stop offset="30%" stopColor="#f87171" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#fca5a5" stopOpacity="1" />
+              <stop offset="70%" stopColor="#f87171" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.2" />
+            </linearGradient>
+
+            {/* Waveform background gradient */}
+            <linearGradient id="rcdiWaveformBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#000000" stopOpacity="0.5" />
+              <stop offset="50%" stopColor="#0a0a0a" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#000000" stopOpacity="0.5" />
+            </linearGradient>
+
+            {/* Capacitor plate gradient */}
+            <linearGradient id="rcdiCapPlate" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#d97706" />
+              <stop offset="25%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#fbbf24" />
+              <stop offset="75%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Resistor gradient */}
+            <linearGradient id="rcdiResistor" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#b87333" />
-              <stop offset="50%" stopColor="#da9f5f" />
+              <stop offset="50%" stopColor="#f59e0b" />
               <stop offset="100%" stopColor="#b87333" />
             </linearGradient>
-            <linearGradient id="wireGradAlu" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="#a8a8a8" />
-              <stop offset="50%" stopColor="#d0d0d0" />
-              <stop offset="100%" stopColor="#a8a8a8" />
+
+            {/* Stats panel gradient */}
+            <linearGradient id="rcdiStatsBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#1e293b" stopOpacity="0.95" />
             </linearGradient>
-            <linearGradient id="signalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.signal} stopOpacity="0" />
-              <stop offset="50%" stopColor={colors.signal} />
-              <stop offset="100%" stopColor={colors.signal} stopOpacity="0" />
+
+            {/* Ground plane gradient */}
+            <linearGradient id="rcdiGround" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#475569" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#64748b" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#475569" stopOpacity="0.3" />
             </linearGradient>
+
+            {/* Glow filters */}
+            <filter id="rcdiSignalGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="rcdiWireGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="rcdiAccentGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="rcdiSoftGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
           </defs>
 
-          {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
-            RC Delay in Chip Interconnects
-          </text>
+          {/* Premium dark lab background */}
+          <rect width={width} height={height} fill="url(#rcdiLabBg)" rx={12} />
 
-          {/* Wire representation */}
-          <g transform="translate(50, 50)">
-            {/* Dielectric layers */}
-            <rect x={0} y={15} width={300} height={50} fill="rgba(100, 100, 200, 0.2)" rx={4} />
-            <text x={150} y={10} fill={colors.textMuted} fontSize={9} textAnchor="middle">Low-k Dielectric</text>
+          {/* Wire representation section */}
+          <g transform="translate(50, 15)">
+            {/* Dielectric layers with gradient */}
+            <rect x={0} y={15} width={300} height={50} fill="url(#rcdiDielectric)" rx={6} stroke="rgba(100,100,200,0.3)" strokeWidth={1} />
 
-            {/* The wire itself */}
+            {/* The wire itself with premium gradient */}
             <rect
               x={10}
               y={30}
               width={280}
-              height={Math.max(4, wireWidth / 25)}
-              fill={metalLayer === 'copper' ? 'url(#wireGradCopper)' : 'url(#wireGradAlu)'}
-              rx={2}
+              height={Math.max(6, wireWidth / 20)}
+              fill={metalLayer === 'copper' ? 'url(#rcdiCopperWire)' : 'url(#rcdiAluminumWire)'}
+              rx={3}
+              filter="url(#rcdiWireGlow)"
             />
 
-            {/* Parallel plate capacitance visualization */}
-            <line x1={10} y1={55} x2={290} y2={55} stroke={colors.textMuted} strokeWidth={1} strokeDasharray="4,4" />
-            <text x={150} y={75} fill={colors.textMuted} fontSize={8} textAnchor="middle">Ground Plane (Capacitance)</text>
-
-            {/* Signal propagation animation */}
+            {/* Wire highlight */}
             <rect
-              x={10 + signalProgress * 260}
+              x={10}
               y={30}
-              width={20}
-              height={Math.max(4, wireWidth / 25)}
-              fill={colors.signal}
-              opacity={0.8}
+              width={280}
+              height={Math.max(2, wireWidth / 60)}
+              fill="rgba(255,255,255,0.2)"
+              rx={1}
+            />
+
+            {/* Ground plane with gradient */}
+            <line x1={10} y1={58} x2={290} y2={58} stroke="url(#rcdiGround)" strokeWidth={2} strokeDasharray="6,3" />
+
+            {/* Signal propagation animation with glow */}
+            <ellipse
+              cx={10 + signalProgress * 270}
+              cy={30 + Math.max(3, wireWidth / 40)}
+              rx={15}
+              ry={Math.max(4, wireWidth / 30)}
+              fill="url(#rcdiSignalPulse)"
+              filter="url(#rcdiSignalGlow)"
+              opacity={0.7 + pulsePhase * 0.3}
             >
               <animate attributeName="opacity" values="0.6;1;0.6" dur="0.3s" repeatCount="indefinite" />
-            </rect>
+            </ellipse>
           </g>
 
-          {/* Waveform comparison */}
-          <g transform="translate(50, 130)">
-            <text x={0} y={0} fill={colors.textSecondary} fontSize={11} fontWeight="bold">Input vs Output Signals:</text>
-
+          {/* Waveform comparison section */}
+          <g transform="translate(50, 95)">
             {/* Input signal - ideal square wave */}
-            <rect x={0} y={10} width={300} height={50} fill="rgba(0,0,0,0.3)" rx={4} />
-            <text x={5} y={25} fill={colors.signal} fontSize={9}>Input</text>
+            <rect x={0} y={0} width={300} height={45} fill="url(#rcdiWaveformBg)" rx={6} stroke="rgba(34,197,94,0.3)" strokeWidth={1} />
             <path
-              d="M 10 50 L 10 20 L 80 20 L 80 50 L 150 50 L 150 20 L 220 20 L 220 50 L 290 50"
+              d="M 10 35 L 10 12 L 80 12 L 80 35 L 150 35 L 150 12 L 220 12 L 220 35 L 290 35"
               stroke={colors.signal}
-              strokeWidth={2}
+              strokeWidth={2.5}
               fill="none"
+              filter="url(#rcdiSoftGlow)"
             />
 
             {/* Output signal - RC delayed (exponential rise/fall) */}
-            <rect x={0} y={70} width={300} height={50} fill="rgba(0,0,0,0.3)" rx={4} />
-            <text x={5} y={85} fill={colors.delayed} fontSize={9}>Output</text>
+            <rect x={0} y={55} width={300} height={45} fill="url(#rcdiWaveformBg)" rx={6} stroke="rgba(239,68,68,0.3)" strokeWidth={1} />
             <path
-              d={`M 10 110
-                  Q 30 110, 40 90
-                  Q 50 80, 80 80
-                  Q 90 80, 100 90
-                  Q 120 110, 150 110
-                  Q 160 110, 170 90
-                  Q 180 80, 220 80
-                  Q 230 80, 240 90
-                  Q 260 110, 290 110`}
-              stroke={colors.delayed}
-              strokeWidth={2}
+              d={`M 10 90
+                  Q 30 90, 40 75
+                  Q 50 65, 80 65
+                  Q 90 65, 100 75
+                  Q 120 90, 150 90
+                  Q 160 90, 170 75
+                  Q 180 65, 220 65
+                  Q 230 65, 240 75
+                  Q 260 90, 290 90`}
+              stroke="url(#rcdiDelayedSignal)"
+              strokeWidth={2.5}
               fill="none"
+              filter="url(#rcdiSoftGlow)"
             />
 
-            {/* Delay indicator */}
-            <line x1={10} y1={140} x2={40} y2={140} stroke={colors.accent} strokeWidth={2} />
-            <text x={50} y={143} fill={colors.accent} fontSize={10}>RC Delay: {delay.rcDelay.toFixed(1)} ps</text>
+            {/* Delay indicator arrow */}
+            <line x1={10} y1={110} x2={45} y2={110} stroke={colors.accent} strokeWidth={3} filter="url(#rcdiAccentGlow)" />
+            <polygon points="45,106 55,110 45,114" fill={colors.accent} filter="url(#rcdiAccentGlow)" />
           </g>
 
-          {/* RC circuit model */}
-          <g transform="translate(50, 280)">
-            <text x={0} y={0} fill={colors.textSecondary} fontSize={11} fontWeight="bold">Distributed RC Model:</text>
-
-            {/* Resistor symbols */}
+          {/* RC circuit model - RC ladder visualization */}
+          <g transform="translate(50, 220)">
+            {/* Resistor and capacitor ladder */}
             {[0, 1, 2, 3].map(i => (
-              <g key={i} transform={`translate(${i * 70 + 20}, 15)`}>
-                <path d="M 0 10 L 5 10 L 8 5 L 14 15 L 20 5 L 26 15 L 32 5 L 38 15 L 41 10 L 50 10" stroke={colors.wire} strokeWidth={2} fill="none" />
-                <line x1={25} y1={25} x2={25} y2={40} stroke={colors.textMuted} strokeWidth={1} />
-                <line x1={15} y1={40} x2={35} y2={40} stroke={colors.accent} strokeWidth={2} />
-                <line x1={15} y1={45} x2={35} y2={45} stroke={colors.accent} strokeWidth={2} />
-                <line x1={25} y1={45} x2={25} y2={55} stroke={colors.textMuted} strokeWidth={1} />
+              <g key={i} transform={`translate(${i * 70 + 20}, 0)`}>
+                {/* Resistor symbol with gradient */}
+                <path
+                  d="M 0 10 L 5 10 L 8 3 L 14 17 L 20 3 L 26 17 L 32 3 L 38 17 L 41 10 L 50 10"
+                  stroke="url(#rcdiResistor)"
+                  strokeWidth={2.5}
+                  fill="none"
+                  filter="url(#rcdiSoftGlow)"
+                />
+                {/* Capacitor connection line */}
+                <line x1={25} y1={22} x2={25} y2={35} stroke={colors.textMuted} strokeWidth={1.5} />
+                {/* Capacitor plates with gradient */}
+                <line x1={15} y1={35} x2={35} y2={35} stroke="url(#rcdiCapPlate)" strokeWidth={3} filter="url(#rcdiSoftGlow)" />
+                <line x1={15} y1={42} x2={35} y2={42} stroke="url(#rcdiCapPlate)" strokeWidth={3} filter="url(#rcdiSoftGlow)" />
+                {/* Ground connection */}
+                <line x1={25} y1={42} x2={25} y2={55} stroke={colors.textMuted} strokeWidth={1.5} />
               </g>
             ))}
 
-            {/* Ground */}
-            <line x1={20} y1={70} x2={300} y2={70} stroke={colors.textMuted} strokeWidth={1} />
-            <text x={310} y={73} fill={colors.textMuted} fontSize={9}>GND</text>
+            {/* Ground line with gradient */}
+            <line x1={20} y1={60} x2={300} y2={60} stroke="url(#rcdiGround)" strokeWidth={2} />
+            {/* Ground symbol */}
+            <g transform="translate(302, 55)">
+              <line x1={0} y1={5} x2={15} y2={5} stroke={colors.textMuted} strokeWidth={2} />
+              <line x1={3} y1={9} x2={12} y2={9} stroke={colors.textMuted} strokeWidth={1.5} />
+              <line x1={6} y1={13} x2={9} y2={13} stroke={colors.textMuted} strokeWidth={1} />
+            </g>
           </g>
 
-          {/* Stats panel */}
-          <g transform="translate(260, 45)">
-            <rect x={0} y={0} width={130} height={80} fill="rgba(0,0,0,0.5)" rx={8} stroke={colors.accent} strokeWidth={1} />
-            <text x={10} y={18} fill={colors.textSecondary} fontSize={10}>R: {delay.resistance.toFixed(2)} kohm</text>
-            <text x={10} y={34} fill={colors.textSecondary} fontSize={10}>C: {delay.capacitance.toFixed(1)} fF</text>
-            <text x={10} y={50} fill={colors.accent} fontSize={10}>Delay: {delay.rcDelay.toFixed(1)} ps</text>
-            <text x={10} y={66} fill={colors.success} fontSize={10}>Max f: {delay.maxFrequency.toFixed(2)} GHz</text>
+          {/* Stats panel with premium styling */}
+          <g transform="translate(250, 10)">
+            <rect x={0} y={0} width={140} height={80} fill="url(#rcdiStatsBg)" rx={10} stroke={colors.accent} strokeWidth={1.5} filter="url(#rcdiSoftGlow)" />
+            {/* Stats content */}
+            <text x={10} y={20} fill={colors.textSecondary} fontSize={11} fontWeight="500">R: {delay.resistance.toFixed(2)} k\u03A9</text>
+            <text x={10} y={38} fill={colors.textSecondary} fontSize={11} fontWeight="500">C: {delay.capacitance.toFixed(1)} fF</text>
+            <text x={10} y={56} fill={colors.accent} fontSize={11} fontWeight="700" filter="url(#rcdiAccentGlow)">Delay: {delay.rcDelay.toFixed(1)} ps</text>
+            <text x={10} y={72} fill={colors.success} fontSize={11} fontWeight="600">Max f: {delay.maxFrequency.toFixed(2)} GHz</text>
           </g>
         </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '500px',
+          padding: `0 ${typo.pagePadding}`,
+          gap: typo.elementGap,
+        }}>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-start',
+          }}>
+            <span style={{
+              color: colors.textMuted,
+              fontSize: typo.label,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}>Dielectric</span>
+            <span style={{
+              color: colors.textSecondary,
+              fontSize: typo.small,
+            }}>Low-k Material</span>
+          </div>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+          }}>
+            <span style={{
+              color: colors.signal,
+              fontSize: typo.small,
+              fontWeight: 600,
+            }}>Input Signal</span>
+            <span style={{
+              color: colors.delayed,
+              fontSize: typo.small,
+              fontWeight: 600,
+            }}>Output (Delayed)</span>
+          </div>
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'flex-end',
+          }}>
+            <span style={{
+              color: colors.textMuted,
+              fontSize: typo.label,
+              textTransform: 'uppercase',
+              letterSpacing: '0.5px',
+            }}>RC Model</span>
+            <span style={{
+              color: colors.textSecondary,
+              fontSize: typo.small,
+            }}>Distributed RC</span>
+          </div>
+        </div>
       </div>
     );
   };

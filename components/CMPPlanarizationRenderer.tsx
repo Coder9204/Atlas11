@@ -318,76 +318,260 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
       { x: 320, width: 40, type: 'oxide' },
     ];
 
+    // Calculate material removal animation offset
+    const removalAnimOffset = isAnimating ? Math.sin(Date.now() / 100) * 2 : 0;
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+        {/* Labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '550px',
+          padding: '0 8px',
+          marginBottom: '4px'
+        }}>
+          <span style={{
+            color: colors.textPrimary,
+            fontSize: typo.body,
+            fontWeight: 'bold'
+          }}>
+            CMP Planarization Process
+          </span>
+          <span style={{
+            color: colors.accent,
+            fontSize: typo.small
+          }}>
+            Time: {polishTime}% | Pressure: {polishPressure}%
+          </span>
+        </div>
+
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '550px' }}
+          style={{ borderRadius: '12px', maxWidth: '550px' }}
         >
           <defs>
-            <linearGradient id="copperGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#f59e0b" />
-              <stop offset="100%" stopColor="#d97706" />
+            {/* Premium background gradient */}
+            <linearGradient id="cmpBackgroundGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a0f1a" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a0f1a" />
+              <stop offset="100%" stopColor="#030712" />
             </linearGradient>
-            <linearGradient id="oxideGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#60a5fa" />
-              <stop offset="100%" stopColor="#3b82f6" />
+
+            {/* Premium copper gradient with metallic sheen */}
+            <linearGradient id="cmpCopperGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="20%" stopColor="#f59e0b" />
+              <stop offset="40%" stopColor="#d97706" />
+              <stop offset="60%" stopColor="#f59e0b" />
+              <stop offset="80%" stopColor="#b45309" />
+              <stop offset="100%" stopColor="#92400e" />
             </linearGradient>
-            <linearGradient id="padGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor="#6b7280" />
-              <stop offset="100%" stopColor="#4b5563" />
+
+            {/* Premium oxide gradient with depth */}
+            <linearGradient id="cmpOxideGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#93c5fd" />
+              <stop offset="25%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#2563eb" />
+              <stop offset="100%" stopColor="#1d4ed8" />
             </linearGradient>
-            <pattern id="slurryPattern" x="0" y="0" width="10" height="10" patternUnits="userSpaceOnUse">
-              <circle cx="5" cy="5" r="1.5" fill={colors.accent} opacity="0.6" />
+
+            {/* Premium polishing pad gradient */}
+            <linearGradient id="cmpPadGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#9ca3af" />
+              <stop offset="15%" stopColor="#6b7280" />
+              <stop offset="40%" stopColor="#4b5563" />
+              <stop offset="60%" stopColor="#374151" />
+              <stop offset="85%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Premium substrate gradient */}
+            <linearGradient id="cmpSubstrateGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#334155" />
+              <stop offset="30%" stopColor="#1e293b" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#020617" />
+            </linearGradient>
+
+            {/* Barrier layer gradient */}
+            <linearGradient id="cmpBarrierGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#c084fc" />
+              <stop offset="25%" stopColor="#a855f7" />
+              <stop offset="50%" stopColor="#9333ea" />
+              <stop offset="75%" stopColor="#a855f7" />
+              <stop offset="100%" stopColor="#7c3aed" />
+            </linearGradient>
+
+            {/* Slurry particle gradient */}
+            <radialGradient id="cmpSlurryParticle" cx="30%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#f9a8d4" stopOpacity="1" />
+              <stop offset="50%" stopColor="#ec4899" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#be185d" stopOpacity="0.4" />
+            </radialGradient>
+
+            {/* Wafer surface reflection gradient */}
+            <linearGradient id="cmpWaferReflection" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="rgba(255,255,255,0.15)" />
+              <stop offset="50%" stopColor="rgba(255,255,255,0.05)" />
+              <stop offset="100%" stopColor="rgba(255,255,255,0.1)" />
+            </linearGradient>
+
+            {/* Planarity indicator gradient */}
+            <linearGradient id="cmpPlanarityGood" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#34d399" />
+            </linearGradient>
+
+            <linearGradient id="cmpPlanarityWarn" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#d97706" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#fbbf24" />
+            </linearGradient>
+
+            <linearGradient id="cmpPlanarityBad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+
+            {/* Glow filters using feGaussianBlur + feMerge pattern */}
+            <filter id="cmpCopperGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="cmpOxideGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="cmpSlurryGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="cmpDefectGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="cmpPadShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="4" result="shadow" />
+              <feOffset dx="0" dy="4" in="shadow" result="offsetShadow" />
+              <feMerge>
+                <feMergeNode in="offsetShadow" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Animated slurry pattern */}
+            <pattern id="cmpSlurryPattern" x="0" y="0" width="15" height="15" patternUnits="userSpaceOnUse">
+              <circle cx="5" cy="5" r="2" fill="url(#cmpSlurryParticle)" />
+              <circle cx="12" cy="10" r="1.5" fill="url(#cmpSlurryParticle)" opacity="0.7" />
+              <circle cx="3" cy="12" r="1" fill="url(#cmpSlurryParticle)" opacity="0.5" />
             </pattern>
+
+            {/* Lab grid pattern */}
+            <pattern id="cmpLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+
+            {/* Arrow marker */}
+            <marker id="cmpMoveArrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+              <polygon points="0 0, 8 4, 0 8" fill="#94a3b8" />
+            </marker>
+
+            {/* Material removal particles gradient */}
+            <radialGradient id="cmpRemovalParticle" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fcd34d" stopOpacity="1" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
           </defs>
 
-          {/* Title */}
-          <text x={width / 2} y={25} fill={colors.textPrimary} fontSize={14} textAnchor="middle" fontWeight="bold">
-            CMP Planarization Process
-          </text>
-          <text x={width / 2} y={42} fill={colors.accent} fontSize={11} textAnchor="middle">
-            Polishing Time: {polishTime}% | Pressure: {polishPressure}%
-          </text>
+          {/* Premium background */}
+          <rect width={width} height={height} fill="url(#cmpBackgroundGrad)" />
+          <rect width={width} height={height} fill="url(#cmpLabGrid)" />
 
-          {/* Polishing pad (above wafer) */}
+          {/* Polishing pad (above wafer) with premium styling */}
           {polishTime > 0 && polishTime < 100 && (
-            <g>
-              <rect x={50} y={60} width={300} height={30} fill="url(#padGrad)" rx={4} />
-              <text x={200} y={80} fill={colors.textPrimary} fontSize={10} textAnchor="middle">
-                Polishing Pad
-              </text>
-              {/* Slurry particles */}
-              <rect x={50} y={90} width={300} height={20} fill="url(#slurryPattern)" />
-              <text x={200} y={125} fill={colors.accent} fontSize={9} textAnchor="middle">
-                Slurry (abrasive + chemistry)
-              </text>
+            <g filter="url(#cmpPadShadow)">
+              {/* Pad body with texture */}
+              <rect x={50} y={55} width={300} height={35} fill="url(#cmpPadGrad)" rx={6} />
+              {/* Pad surface texture lines */}
+              {[0, 1, 2, 3, 4, 5].map(i => (
+                <line
+                  key={i}
+                  x1={60 + i * 50}
+                  y1={60}
+                  x2={60 + i * 50}
+                  y2={85}
+                  stroke="rgba(255,255,255,0.1)"
+                  strokeWidth={1}
+                />
+              ))}
+              {/* Pad highlight */}
+              <rect x={50} y={55} width={300} height={4} fill="rgba(255,255,255,0.2)" rx={2} />
+
+              {/* Slurry layer with glow */}
+              <g filter="url(#cmpSlurryGlow)">
+                <rect x={50} y={90} width={300} height={25} fill="url(#cmpSlurryPattern)" opacity={0.8} />
+              </g>
+
+              {/* Material removal effect - animated particles */}
+              {isAnimating && (
+                <g>
+                  {[0, 1, 2, 3, 4].map(i => (
+                    <circle
+                      key={i}
+                      cx={100 + i * 50 + removalAnimOffset}
+                      cy={115 + Math.sin(Date.now() / 200 + i) * 5}
+                      r={3}
+                      fill="url(#cmpRemovalParticle)"
+                      filter="url(#cmpSlurryGlow)"
+                    />
+                  ))}
+                </g>
+              )}
+
               {/* Movement arrows */}
-              <g opacity={0.7}>
-                <line x1={100} y1={75} x2={150} y2={75} stroke={colors.textPrimary} strokeWidth={2} markerEnd="url(#moveArrow)" />
-                <line x1={250} y1={75} x2={300} y2={75} stroke={colors.textPrimary} strokeWidth={2} markerEnd="url(#moveArrow)" />
+              <g opacity={0.8}>
+                <line x1={80} y1={72} x2={140} y2={72} stroke="#94a3b8" strokeWidth={2} markerEnd="url(#cmpMoveArrow)" />
+                <line x1={210} y1={72} x2={270} y2={72} stroke="#94a3b8" strokeWidth={2} markerEnd="url(#cmpMoveArrow)" />
               </g>
             </g>
           )}
 
-          {/* Arrow marker */}
-          <defs>
-            <marker id="moveArrow" markerWidth="6" markerHeight="6" refX="5" refY="3" orient="auto">
-              <polygon points="0 0, 6 3, 0 6" fill={colors.textPrimary} />
-            </marker>
-          </defs>
+          {/* Substrate base with premium gradient */}
+          <rect x={50} y={baseY} width={320} height={50} fill="url(#cmpSubstrateGrad)" rx={2} />
+          {/* Substrate texture */}
+          <rect x={50} y={baseY} width={320} height={2} fill="rgba(255,255,255,0.05)" />
 
-          {/* Substrate base */}
-          <rect x={50} y={baseY} width={320} height={50} fill={colors.substrate} />
-          <text x={210} y={baseY + 30} fill={colors.textMuted} fontSize={9} textAnchor="middle">
-            Silicon Substrate
-          </text>
-
-          {/* Barrier layer */}
-          <rect x={50} y={baseY - 10} width={320} height={10} fill={colors.barrier} opacity={0.7} />
+          {/* Barrier layer with gradient */}
+          <rect x={50} y={baseY - 12} width={320} height={12} fill="url(#cmpBarrierGrad)" rx={1} />
+          {/* Barrier highlight */}
+          <rect x={50} y={baseY - 12} width={320} height={2} fill="rgba(255,255,255,0.2)" />
 
           {/* Features with dynamic heights based on polish */}
           {features.map((feature, i) => {
@@ -398,23 +582,35 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
             // Dishing effect for copper
             const dishingAmount = feature.type === 'copper' && result.dishing > 0 ? result.dishing * 0.5 : 0;
 
+            const featureGrad = feature.type === 'copper' ? 'url(#cmpCopperGrad)' : 'url(#cmpOxideGrad)';
+            const featureFilter = feature.type === 'copper' ? 'url(#cmpCopperGlow)' : 'url(#cmpOxideGlow)';
+
             return (
-              <g key={i}>
+              <g key={i} filter={featureFilter}>
                 <rect
                   x={feature.x}
-                  y={baseY - 10 - currentHeight + dishingAmount}
+                  y={baseY - 12 - currentHeight + dishingAmount}
                   width={feature.width}
                   height={currentHeight - dishingAmount}
-                  fill={feature.type === 'copper' ? 'url(#copperGrad)' : 'url(#oxideGrad)'}
+                  fill={featureGrad}
+                  rx={2}
+                />
+                {/* Surface reflection */}
+                <rect
+                  x={feature.x}
+                  y={baseY - 12 - currentHeight + dishingAmount}
+                  width={feature.width}
+                  height={3}
+                  fill="url(#cmpWaferReflection)"
                   rx={1}
                 />
                 {/* Dishing visualization */}
                 {feature.type === 'copper' && dishingAmount > 5 && (
                   <path
-                    d={`M ${feature.x} ${baseY - 10 - currentHeight + dishingAmount}
-                        Q ${feature.x + feature.width / 2} ${baseY - 10 - currentHeight + dishingAmount + 5}
-                          ${feature.x + feature.width} ${baseY - 10 - currentHeight + dishingAmount}`}
-                    fill="url(#copperGrad)"
+                    d={`M ${feature.x} ${baseY - 12 - currentHeight + dishingAmount}
+                        Q ${feature.x + feature.width / 2} ${baseY - 12 - currentHeight + dishingAmount + 8}
+                          ${feature.x + feature.width} ${baseY - 12 - currentHeight + dishingAmount}`}
+                    fill={featureGrad}
                   />
                 )}
               </g>
@@ -424,126 +620,195 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
           {/* Initial surface line (reference) */}
           <line
             x1={50}
-            y1={baseY - 10 - 150 * scale / 1.5}
+            y1={baseY - 12 - 150 * scale / 1.5}
             x2={370}
-            y2={baseY - 10 - 150 * scale / 1.5}
+            y2={baseY - 12 - 150 * scale / 1.5}
             stroke={colors.textMuted}
             strokeWidth={1}
-            strokeDasharray="4,4"
-            opacity={0.5}
+            strokeDasharray="6,4"
+            opacity={0.6}
           />
-          <text x={380} y={baseY - 10 - 150 * scale / 1.5 + 4} fill={colors.textMuted} fontSize={8}>
-            Initial
-          </text>
 
           {/* Target surface line */}
           <line
             x1={50}
-            y1={baseY - 10 - 100 * scale / 1.5}
+            y1={baseY - 12 - 100 * scale / 1.5}
             x2={370}
-            y2={baseY - 10 - 100 * scale / 1.5}
+            y2={baseY - 12 - 100 * scale / 1.5}
             stroke={colors.success}
-            strokeWidth={1}
-            strokeDasharray="4,4"
-            opacity={0.5}
+            strokeWidth={1.5}
+            strokeDasharray="6,4"
+            opacity={0.7}
           />
-          <text x={380} y={baseY - 10 - 100 * scale / 1.5 + 4} fill={colors.success} fontSize={8}>
-            Target
-          </text>
 
-          {/* Defect indicators */}
+          {/* Planarity indicator bar */}
+          <g transform="translate(50, 340)">
+            <rect x={0} y={0} width={320} height={8} fill="rgba(255,255,255,0.1)" rx={4} />
+            <rect
+              x={0}
+              y={0}
+              width={Math.min(320, result.planarityScore * 3.2)}
+              height={8}
+              fill={result.planarityScore > 70 ? 'url(#cmpPlanarityGood)' : result.planarityScore > 40 ? 'url(#cmpPlanarityWarn)' : 'url(#cmpPlanarityBad)'}
+              rx={4}
+            />
+          </g>
+
+          {/* Defect indicators with glow */}
           {showDefectMode && result.isOverPolished && (
-            <g>
+            <g filter="url(#cmpDefectGlow)">
               {result.dishing > 15 && (
                 <g>
-                  <circle cx={185} cy={baseY - 60} r={12} fill={colors.error} opacity={0.3} />
-                  <text x={185} y={baseY - 56} fill={colors.error} fontSize={10} textAnchor="middle">D</text>
-                  <text x={185} y={baseY - 40} fill={colors.error} fontSize={8} textAnchor="middle">Dishing</text>
+                  <circle cx={185} cy={baseY - 70} r={16} fill={colors.error} opacity={0.4} />
+                  <circle cx={185} cy={baseY - 70} r={10} fill={colors.error} opacity={0.6} />
                 </g>
               )}
               {result.erosion > 10 && (
                 <g>
-                  <circle cx={285} cy={baseY - 60} r={12} fill={colors.warning} opacity={0.3} />
-                  <text x={285} y={baseY - 56} fill={colors.warning} fontSize={10} textAnchor="middle">E</text>
-                  <text x={285} y={baseY - 40} fill={colors.warning} fontSize={8} textAnchor="middle">Erosion</text>
+                  <circle cx={285} cy={baseY - 70} r={16} fill={colors.warning} opacity={0.4} />
+                  <circle cx={285} cy={baseY - 70} r={10} fill={colors.warning} opacity={0.6} />
                 </g>
               )}
             </g>
           )}
 
-          {/* Before/After comparison */}
-          <g transform="translate(380, 140)">
-            <text x={50} y={0} fill={colors.textSecondary} fontSize={10} textAnchor="middle">Topography</text>
+          {/* Before/After comparison panel */}
+          <g transform="translate(380, 50)">
+            <rect x={0} y={0} width={110} height={95} fill="rgba(0,0,0,0.5)" rx={8} stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
 
             {/* Before */}
-            <rect x={0} y={15} width={100} height={35} fill="rgba(0,0,0,0.3)" rx={4} />
-            <text x={50} y={30} fill={colors.textMuted} fontSize={8} textAnchor="middle">Before CMP</text>
-            <rect x={10} y={38} width={30} height={8} fill={colors.copper} />
-            <rect x={40} y={42} width={20} height={4} fill={colors.oxide} />
-            <rect x={60} y={38} width={30} height={8} fill={colors.copper} />
+            <rect x={5} y={20} width={100} height={30} fill="rgba(0,0,0,0.3)" rx={4} />
+            <rect x={15} y={32} width={25} height={12} fill="url(#cmpCopperGrad)" rx={1} />
+            <rect x={40} y={38} width={15} height={6} fill="url(#cmpOxideGrad)" rx={1} />
+            <rect x={55} y={32} width={25} height={12} fill="url(#cmpCopperGrad)" rx={1} />
 
             {/* After */}
-            <rect x={0} y={55} width={100} height={35} fill="rgba(0,0,0,0.3)" rx={4} />
-            <text x={50} y={70} fill={colors.textMuted} fontSize={8} textAnchor="middle">After CMP</text>
-            <rect x={10} y={78} width={30} height={4} fill={colors.copper} />
-            <rect x={40} y={78} width={20} height={4} fill={colors.oxide} />
-            <rect x={60} y={78} width={30} height={4} fill={colors.copper} />
+            <rect x={5} y={55} width={100} height={30} fill="rgba(0,0,0,0.3)" rx={4} />
+            <rect x={15} y={70} width={25} height={6} fill="url(#cmpCopperGrad)" rx={1} />
+            <rect x={40} y={70} width={15} height={6} fill="url(#cmpOxideGrad)" rx={1} />
+            <rect x={55} y={70} width={25} height={6} fill="url(#cmpCopperGrad)" rx={1} />
           </g>
 
-          {/* Legend */}
-          <g transform="translate(380, 240)">
-            <rect x={5} y={5} width={12} height={12} fill={colors.copper} rx={2} />
-            <text x={22} y={15} fill={colors.textSecondary} fontSize={9}>Copper</text>
-            <rect x={55} y={5} width={12} height={12} fill={colors.oxide} rx={2} />
-            <text x={72} y={15} fill={colors.textSecondary} fontSize={9}>Oxide</text>
+          {/* Legend panel */}
+          <g transform="translate(380, 155)">
+            <rect x={0} y={0} width={110} height={50} fill="rgba(0,0,0,0.5)" rx={8} stroke="rgba(255,255,255,0.1)" strokeWidth={1} />
+            <rect x={10} y={12} width={16} height={10} fill="url(#cmpCopperGrad)" rx={2} />
+            <rect x={10} y={28} width={16} height={10} fill="url(#cmpOxideGrad)" rx={2} />
           </g>
 
-          {/* Metrics panel */}
-          <rect x={20} y={320} width={180} height={90} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.accent} strokeWidth={1} />
-          <text x={30} y={340} fill={colors.textSecondary} fontSize={10}>CMP METRICS</text>
+          {/* Metrics panel with premium styling */}
+          <rect x={380} y={215} width={110} height={130} fill="rgba(0,0,0,0.6)" rx={8} stroke={colors.accent} strokeWidth={1} strokeOpacity={0.5} />
 
-          <text x={30} y={358} fill={colors.textPrimary} fontSize={10}>
-            Step Height: {result.currentStep.toFixed(0)} nm
-          </text>
-          <text x={30} y={373} fill={result.dishing < 10 ? colors.success : colors.error} fontSize={10}>
-            Dishing: {result.dishing.toFixed(1)} nm
-          </text>
-          <text x={30} y={388} fill={result.erosion < 10 ? colors.success : colors.warning} fontSize={10}>
-            Erosion: {result.erosion.toFixed(1)} nm
-          </text>
-          <text x={30} y={403} fill={colors.textMuted} fontSize={10}>
-            Non-uniformity: {result.nonUniformity.toFixed(1)}%
-          </text>
-
-          {/* Quality indicator */}
-          <rect x={220} y={320} width={140} height={90} fill="rgba(0,0,0,0.4)" rx={8} />
-          <text x={290} y={340} fill={colors.textSecondary} fontSize={10} textAnchor="middle">Process Quality</text>
-          <rect x={230} y={355} width={120} height={10} fill="rgba(255,255,255,0.1)" rx={3} />
+          {/* Status indicator */}
           <rect
-            x={230}
-            y={355}
-            width={result.planarityScore * 1.2}
-            height={10}
-            fill={result.planarityScore > 70 ? colors.success : result.planarityScore > 40 ? colors.warning : colors.error}
-            rx={3}
+            x={385}
+            y={295}
+            width={100}
+            height={45}
+            fill={result.isComplete ? 'rgba(16, 185, 129, 0.2)' : result.isOverPolished ? 'rgba(239, 68, 68, 0.2)' : 'rgba(245, 158, 11, 0.2)'}
+            rx={6}
           />
-          <text
-            x={290}
-            y={385}
-            fill={result.isComplete ? colors.success : result.isOverPolished ? colors.error : colors.warning}
-            fontSize={14}
-            fontWeight="bold"
-            textAnchor="middle"
-          >
-            {result.isComplete ? 'OPTIMAL' : result.isOverPolished ? 'OVER-POLISH' : 'IN PROGRESS'}
-          </text>
-          <text x={290} y={403} fill={colors.textMuted} fontSize={9} textAnchor="middle">
-            Planarity: {result.planarityScore.toFixed(0)}%
-          </text>
         </svg>
 
+        {/* Labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '550px',
+          padding: '0 8px',
+          marginTop: '4px'
+        }}>
+          {/* Left side labels */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            {polishTime > 0 && polishTime < 100 && (
+              <>
+                <span style={{ color: colors.textMuted, fontSize: typo.label }}>Polishing Pad</span>
+                <span style={{ color: colors.accent, fontSize: typo.label }}>Slurry (abrasive + chemistry)</span>
+              </>
+            )}
+          </div>
+          {/* Right side labels */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '2px', textAlign: 'right' }}>
+            <span style={{ color: colors.textMuted, fontSize: typo.label }}>Initial</span>
+            <span style={{ color: colors.success, fontSize: typo.label }}>Target</span>
+          </div>
+        </div>
+
+        {/* Before/After labels */}
+        <div style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: '550px',
+          display: 'flex',
+          justifyContent: 'flex-end',
+          marginTop: '-380px',
+          paddingRight: '8px',
+          pointerEvents: 'none'
+        }}>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px', width: '110px', paddingLeft: '8px' }}>
+            <span style={{ color: colors.textSecondary, fontSize: typo.label, textAlign: 'center', marginTop: '50px' }}>Topography</span>
+            <span style={{ color: colors.textMuted, fontSize: typo.label, textAlign: 'center', marginTop: '8px' }}>Before CMP</span>
+            <span style={{ color: colors.textMuted, fontSize: typo.label, textAlign: 'center', marginTop: '20px' }}>After CMP</span>
+            <span style={{ color: colors.textSecondary, fontSize: typo.label, textAlign: 'center', marginTop: '20px' }}>Legend</span>
+            <span style={{ color: colors.copper, fontSize: typo.label, marginTop: '4px', marginLeft: '30px' }}>Copper</span>
+            <span style={{ color: colors.oxide, fontSize: typo.label, marginLeft: '30px' }}>Oxide</span>
+            <span style={{ color: colors.textSecondary, fontSize: typo.label, textAlign: 'center', marginTop: '15px' }}>CMP Metrics</span>
+            <span style={{ color: colors.textPrimary, fontSize: typo.label, marginLeft: '8px' }}>Step: {result.currentStep.toFixed(0)} nm</span>
+            <span style={{ color: result.dishing < 10 ? colors.success : colors.error, fontSize: typo.label, marginLeft: '8px' }}>Dish: {result.dishing.toFixed(1)} nm</span>
+            <span style={{ color: result.erosion < 10 ? colors.success : colors.warning, fontSize: typo.label, marginLeft: '8px' }}>Eros: {result.erosion.toFixed(1)} nm</span>
+            <span style={{ color: colors.textMuted, fontSize: typo.label, marginLeft: '8px' }}>NU: {result.nonUniformity.toFixed(1)}%</span>
+            <span style={{
+              color: result.isComplete ? colors.success : result.isOverPolished ? colors.error : colors.warning,
+              fontSize: typo.small,
+              fontWeight: 'bold',
+              textAlign: 'center',
+              marginTop: '8px'
+            }}>
+              {result.isComplete ? 'OPTIMAL' : result.isOverPolished ? 'OVER-POLISH' : 'IN PROGRESS'}
+            </span>
+            <span style={{ color: colors.textMuted, fontSize: typo.label, textAlign: 'center' }}>
+              Planarity: {result.planarityScore.toFixed(0)}%
+            </span>
+          </div>
+        </div>
+
+        {/* Defect labels */}
+        {showDefectMode && result.isOverPolished && (
+          <div style={{
+            position: 'relative',
+            width: '100%',
+            maxWidth: '550px',
+            display: 'flex',
+            justifyContent: 'center',
+            marginTop: '130px',
+            gap: '80px',
+            pointerEvents: 'none'
+          }}>
+            {result.dishing > 15 && (
+              <span style={{ color: colors.error, fontSize: typo.small, fontWeight: 'bold' }}>Dishing</span>
+            )}
+            {result.erosion > 10 && (
+              <span style={{ color: colors.warning, fontSize: typo.small, fontWeight: 'bold' }}>Erosion</span>
+            )}
+          </div>
+        )}
+
+        {/* Substrate label */}
+        <div style={{
+          position: 'relative',
+          width: '100%',
+          maxWidth: '550px',
+          display: 'flex',
+          justifyContent: 'center',
+          marginTop: showDefectMode && result.isOverPolished ? '20px' : '180px',
+          pointerEvents: 'none'
+        }}>
+          <span style={{ color: colors.textMuted, fontSize: typo.label }}>Silicon Substrate</span>
+        </div>
+
         {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px', marginTop: '8px' }}>
             <button
               onClick={() => {
                 setPolishTime(0);
@@ -554,11 +819,12 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: isAnimating ? colors.textMuted : colors.success,
+                background: isAnimating ? colors.textMuted : `linear-gradient(135deg, ${colors.success} 0%, #059669 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: isAnimating ? 'not-allowed' : 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
+                boxShadow: isAnimating ? 'none' : '0 4px 12px rgba(16, 185, 129, 0.3)',
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -570,11 +836,11 @@ const CMPPlanarizationRenderer: React.FC<CMPPlanarizationRendererProps> = ({
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: `1px solid ${colors.accent}`,
-                background: 'transparent',
+                background: 'rgba(236, 72, 153, 0.1)',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >

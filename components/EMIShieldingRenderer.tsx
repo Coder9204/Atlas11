@@ -470,6 +470,9 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
     const noiseWave1 = Math.sin(animationFrame * 0.15) * (effectiveNoise / 10);
     const noiseWave2 = Math.sin(animationFrame * 0.2 + 2) * (effectiveNoise / 15);
 
+    // Calculate shielding effectiveness for meter
+    const shieldingEffectiveness = Math.round(100 - cable.emiSusceptibility);
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '12px' }}>
         <svg
@@ -477,189 +480,488 @@ const EMIShieldingRenderer: React.FC<EMIShieldingRendererProps> = ({
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: '#1e293b', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ background: 'linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%)', borderRadius: '12px', maxWidth: '500px' }}
         >
           <defs>
-            <linearGradient id="signalGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor={colors.signal} />
-              <stop offset="100%" stopColor={colors.signal} stopOpacity={signalIntegrity / 100} />
+            {/* Premium lab background gradient */}
+            <linearGradient id="emiLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="25%" stopColor="#0a1628" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="75%" stopColor="#0a1628" />
+              <stop offset="100%" stopColor="#030712" />
             </linearGradient>
-            <linearGradient id="noiseGrad" x1="50%" y1="0%" x2="50%" y2="100%">
-              <stop offset="0%" stopColor={colors.noise} stopOpacity={0.6} />
-              <stop offset="100%" stopColor={colors.noise} stopOpacity={0} />
+
+            {/* EMI source device gradient */}
+            <linearGradient id="emiSourceGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#475569" />
+              <stop offset="25%" stopColor="#374151" />
+              <stop offset="50%" stopColor="#292524" />
+              <stop offset="75%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#475569" />
             </linearGradient>
-            <filter id="glow">
-              <feGaussianBlur stdDeviation="2" result="coloredBlur"/>
+
+            {/* EMI wave radiation gradient */}
+            <radialGradient id="emiWaveRadiation" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#f87171" stopOpacity="0.6" />
+              <stop offset="60%" stopColor="#fca5a5" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#fecaca" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Metal shield gradient */}
+            <linearGradient id="emiShieldMetal" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="20%" stopColor="#94a3b8" />
+              <stop offset="40%" stopColor="#64748b" />
+              <stop offset="60%" stopColor="#94a3b8" />
+              <stop offset="80%" stopColor="#64748b" />
+              <stop offset="100%" stopColor="#94a3b8" />
+            </linearGradient>
+
+            {/* Signal wire gradient */}
+            <linearGradient id="emiSignalWire" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="25%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#93c5fd" />
+              <stop offset="75%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#3b82f6" stopOpacity={signalIntegrity / 100} />
+            </linearGradient>
+
+            {/* Twisted pair wire gradient */}
+            <linearGradient id="emiTwistedWire" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#16a34a" />
+              <stop offset="25%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#4ade80" />
+              <stop offset="75%" stopColor="#22c55e" />
+              <stop offset="100%" stopColor="#16a34a" />
+            </linearGradient>
+
+            {/* Ground wire gradient */}
+            <linearGradient id="emiGroundWire" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#64748b" />
+              <stop offset="50%" stopColor="#94a3b8" />
+              <stop offset="100%" stopColor="#64748b" />
+            </linearGradient>
+
+            {/* Effectiveness meter gradient */}
+            <linearGradient id="emiMeterGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#84cc16" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
+
+            {/* Phosphor screen gradient */}
+            <linearGradient id="emiPhosphorScreen" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#022c22" />
+              <stop offset="30%" stopColor="#064e3b" />
+              <stop offset="70%" stopColor="#065f46" />
+              <stop offset="100%" stopColor="#022c22" />
+            </linearGradient>
+
+            {/* Clean signal glow */}
+            <linearGradient id="emiCleanSignal" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22d3ee" />
+              <stop offset="50%" stopColor="#67e8f9" />
+              <stop offset="100%" stopColor="#22d3ee" />
+            </linearGradient>
+
+            {/* EMI source glow filter */}
+            <filter id="emiSourceGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
-                <feMergeNode in="coloredBlur"/>
-                <feMergeNode in="SourceGraphic"/>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
               </feMerge>
+            </filter>
+
+            {/* Signal glow filter */}
+            <filter id="emiSignalGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Shield glow filter */}
+            <filter id="emiShieldGlow" x="-25%" y="-25%" width="150%" height="150%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Wave blur for attenuation effect */}
+            <filter id="emiWaveBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" />
+            </filter>
+
+            {/* Inner glow for components */}
+            <filter id="emiInnerGlow">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
             </filter>
           </defs>
 
-          {/* Title */}
-          <text x={200} y={20} textAnchor="middle" fill={colors.textPrimary} fontSize={14} fontWeight="bold">
-            Electromagnetic Interference (EMI)
-          </text>
-          <text x={200} y={38} textAnchor="middle" fill={colors.textSecondary} fontSize={11}>
-            {cable.name}
-          </text>
+          {/* Premium dark lab background */}
+          <rect width={width} height={height} fill="url(#emiLabBg)" />
 
-          {/* EMI Source (represented as radiating waves) */}
-          <g transform="translate(60, 140)">
-            <rect x={-25} y={-30} width={50} height={60} rx={4} fill="#374151" stroke={colors.noise} strokeWidth={2} />
-            <text x={0} y={0} textAnchor="middle" fill={colors.noise} fontSize={10}>EMI</text>
-            <text x={0} y={12} textAnchor="middle" fill={colors.noise} fontSize={8}>Source</text>
+          {/* EMI Source Device */}
+          <g transform="translate(60, 130)">
+            {/* Device body with gradient */}
+            <rect
+              x={-28}
+              y={-35}
+              width={56}
+              height={70}
+              rx={6}
+              fill="url(#emiSourceGrad)"
+              stroke="#ef4444"
+              strokeWidth={2}
+              filter="url(#emiSourceGlow)"
+            />
 
-            {/* Radiating EMI waves */}
-            {[0, 1, 2].map(i => (
-              <circle
-                key={i}
-                r={30 + i * 20 + (animationFrame % 30)}
-                fill="none"
-                stroke={colors.noise}
-                strokeWidth={1}
-                opacity={0.5 - i * 0.15 - (animationFrame % 30) / 100}
-              />
-            ))}
+            {/* Device inner glow */}
+            <rect
+              x={-20}
+              y={-25}
+              width={40}
+              height={50}
+              rx={3}
+              fill="none"
+              stroke="#ef4444"
+              strokeWidth={1}
+              opacity={0.4}
+            />
+
+            {/* Pulsing core */}
+            <circle
+              cx={0}
+              cy={0}
+              r={12 + Math.sin(animationFrame * 0.2) * 3}
+              fill="url(#emiWaveRadiation)"
+              opacity={0.8}
+            />
+            <circle
+              cx={0}
+              cy={0}
+              r={6}
+              fill="#ef4444"
+              filter="url(#emiSourceGlow)"
+            />
+
+            {/* Radiating EMI waves with attenuation */}
+            {[0, 1, 2, 3].map(i => {
+              const waveRadius = 35 + i * 25 + (animationFrame % 40);
+              const attenuation = cable.shielding > 0 ?
+                Math.max(0, 0.6 - i * 0.15 - (animationFrame % 40) / 80 - (cable.shielding / 200)) :
+                0.6 - i * 0.15 - (animationFrame % 40) / 80;
+              return (
+                <circle
+                  key={i}
+                  r={waveRadius}
+                  fill="none"
+                  stroke="url(#emiWaveRadiation)"
+                  strokeWidth={2 - i * 0.3}
+                  opacity={Math.max(0, attenuation)}
+                  filter={cable.shielding > 50 ? "url(#emiWaveBlur)" : undefined}
+                />
+              );
+            })}
           </g>
 
-          {/* Cable visualization */}
-          <g transform="translate(150, 100)">
-            {/* Shield (if present) */}
+          {/* Cable visualization with premium graphics */}
+          <g transform="translate(150, 95)">
+            {/* Shield (if present) - premium metal look */}
             {cable.shielding > 0 && (
-              <rect
-                x={-5}
-                y={-10}
-                width={190}
-                height={100}
-                rx={6}
-                fill="none"
-                stroke={colors.shield}
-                strokeWidth={3}
-                strokeDasharray={cable.shielding > 50 ? 'none' : '10,5'}
-                opacity={cable.shielding / 100}
-              />
+              <g>
+                {/* Outer shield with metallic gradient */}
+                <rect
+                  x={-8}
+                  y={-15}
+                  width={196}
+                  height={110}
+                  rx={8}
+                  fill="none"
+                  stroke="url(#emiShieldMetal)"
+                  strokeWidth={cable.shielding > 50 ? 4 : 2}
+                  strokeDasharray={cable.shielding > 50 ? 'none' : '12,6'}
+                  opacity={0.3 + (cable.shielding / 150)}
+                  filter="url(#emiShieldGlow)"
+                />
+
+                {/* Shield effectiveness indicator */}
+                <rect
+                  x={-8}
+                  y={-15}
+                  width={196}
+                  height={110}
+                  rx={8}
+                  fill={`rgba(100, 116, 139, ${cable.shielding / 400})`}
+                />
+
+                {/* Blocked waves visualization */}
+                {cable.shielding > 50 && (
+                  <g opacity={0.3}>
+                    {[0, 1, 2].map(i => (
+                      <line
+                        key={i}
+                        x1={-8}
+                        y1={10 + i * 25}
+                        x2={-8}
+                        y2={20 + i * 25}
+                        stroke="#64748b"
+                        strokeWidth={2}
+                        strokeLinecap="round"
+                      />
+                    ))}
+                  </g>
+                )}
+              </g>
             )}
 
             {/* Wire pair visualization */}
             {cable.twisting ? (
-              // Twisted pair
+              // Twisted pair with premium gradients
               <g>
                 {/* Wire 1 (signal +) */}
                 <path
                   d={`M 0 30 ${Array.from({ length: 18 }, (_, i) =>
-                    `Q ${i * 10 + 5} ${20 + Math.sin(i * Math.PI) * 10 + noiseWave1}, ${i * 10 + 10} 30`
+                    `Q ${i * 10 + 5} ${20 + Math.sin(i * Math.PI) * 10 + noiseWave1 * 0.3}, ${i * 10 + 10} 30`
                   ).join(' ')}`}
                   fill="none"
-                  stroke={colors.signal}
-                  strokeWidth={3}
+                  stroke="url(#emiSignalWire)"
+                  strokeWidth={4}
+                  strokeLinecap="round"
+                  filter="url(#emiSignalGlow)"
                 />
                 {/* Wire 2 (signal -) */}
                 <path
                   d={`M 0 50 ${Array.from({ length: 18 }, (_, i) =>
-                    `Q ${i * 10 + 5} ${60 - Math.sin(i * Math.PI) * 10 + noiseWave1}, ${i * 10 + 10} 50`
+                    `Q ${i * 10 + 5} ${60 - Math.sin(i * Math.PI) * 10 + noiseWave1 * 0.3}, ${i * 10 + 10} 50`
                   ).join(' ')}`}
                   fill="none"
-                  stroke={colors.twistedPair}
-                  strokeWidth={3}
+                  stroke="url(#emiTwistedWire)"
+                  strokeWidth={4}
+                  strokeLinecap="round"
+                  filter="url(#emiSignalGlow)"
                 />
-                <text x={90} y={90} textAnchor="middle" fill={colors.twistedPair} fontSize={9}>
-                  Twisted: noise cancels!
-                </text>
               </g>
             ) : (
-              // Straight wires
+              // Straight wires with noise effect
               <g>
                 <path
                   d={`M 0 30 ${Array.from({ length: 18 }, (_, i) =>
                     `L ${i * 10 + 10} ${30 + Math.sin((i + waveOffset) * 0.5) * noiseWave1}`
                   ).join(' ')}`}
                   fill="none"
-                  stroke={colors.signal}
-                  strokeWidth={3}
+                  stroke="url(#emiSignalWire)"
+                  strokeWidth={4}
+                  strokeLinecap="round"
+                  filter="url(#emiSignalGlow)"
                 />
                 <path
                   d={`M 0 50 ${Array.from({ length: 18 }, (_, i) =>
                     `L ${i * 10 + 10} ${50 + Math.sin((i + waveOffset) * 0.5) * noiseWave2}`
                   ).join(' ')}`}
                   fill="none"
-                  stroke="#94a3b8"
-                  strokeWidth={3}
+                  stroke="url(#emiGroundWire)"
+                  strokeWidth={4}
+                  strokeLinecap="round"
                 />
-                {cable.shielding === 0 && (
-                  <text x={90} y={90} textAnchor="middle" fill={colors.error} fontSize={9}>
-                    Unshielded: vulnerable!
-                  </text>
-                )}
               </g>
             )}
           </g>
 
-          {/* Signal quality display */}
-          <rect x={30} y={220} width={340} height={110} rx={8} fill="rgba(0,0,0,0.3)" />
+          {/* Shielding Effectiveness Meter */}
+          <g transform="translate(30, 20)">
+            {/* Meter background */}
+            <rect x={0} y={0} width={140} height={28} rx={4} fill="rgba(0,0,0,0.4)" />
 
-          {/* Clean signal */}
-          <text x={50} y={242} fill={colors.textSecondary} fontSize={10}>Clean Signal:</text>
-          <path
-            d={`M 140 238 ${Array.from({ length: 20 }, (_, i) =>
-              `L ${140 + i * 10} ${238 + Math.sin(i * 0.8 + waveOffset * 0.1) * 8}`
-            ).join(' ')}`}
-            fill="none"
-            stroke={colors.signal}
-            strokeWidth={2}
-          />
+            {/* Meter track */}
+            <rect x={8} y={16} width={124} height={6} rx={3} fill="rgba(255,255,255,0.1)" />
 
-          {/* Received signal with noise */}
-          <text x={50} y={272} fill={colors.textSecondary} fontSize={10}>Received:</text>
-          <path
-            d={`M 140 268 ${Array.from({ length: 20 }, (_, i) => {
-              const clean = Math.sin(i * 0.8 + waveOffset * 0.1) * 8;
-              const noise = (Math.random() - 0.5) * effectiveNoise * 0.3;
-              return `L ${140 + i * 10} ${268 + clean + noise}`;
-            }).join(' ')}`}
-            fill="none"
-            stroke={signalIntegrity > 70 ? colors.success : signalIntegrity > 40 ? colors.warning : colors.error}
-            strokeWidth={2}
-          />
+            {/* Meter fill */}
+            <rect
+              x={8}
+              y={16}
+              width={124 * (shieldingEffectiveness / 100)}
+              height={6}
+              rx={3}
+              fill="url(#emiMeterGrad)"
+              filter="url(#emiSignalGlow)"
+            />
+          </g>
 
-          {/* Metrics */}
-          <text x={50} y={300} fill={colors.textMuted} fontSize={10}>Signal Integrity:</text>
-          <text x={160} y={300} fill={signalIntegrity > 70 ? colors.success : signalIntegrity > 40 ? colors.warning : colors.error} fontSize={12} fontWeight="bold">
-            {signalIntegrity.toFixed(0)}%
-          </text>
+          {/* Signal quality display panel */}
+          <g transform="translate(30, 215)">
+            {/* Panel background */}
+            <rect x={0} y={0} width={340} height={115} rx={10} fill="url(#emiPhosphorScreen)" opacity={0.8} />
+            <rect x={0} y={0} width={340} height={115} rx={10} fill="none" stroke="#065f46" strokeWidth={1} />
 
-          <text x={220} y={300} fill={colors.textMuted} fontSize={10}>Noise Level:</text>
-          <text x={310} y={300} fill={colors.error} fontSize={12} fontWeight="bold">
-            {effectiveNoise.toFixed(1)}
-          </text>
+            {/* Clean signal waveform */}
+            <path
+              d={`M 120 25 ${Array.from({ length: 20 }, (_, i) =>
+                `L ${120 + i * 10} ${25 + Math.sin(i * 0.8 + waveOffset * 0.1) * 8}`
+              ).join(' ')}`}
+              fill="none"
+              stroke="url(#emiCleanSignal)"
+              strokeWidth={2}
+              filter="url(#emiSignalGlow)"
+            />
 
-          <text x={50} y={320} fill={colors.textMuted} fontSize={10}>Radiated EMI:</text>
-          <text x={160} y={320} fill={colors.warning} fontSize={12} fontWeight="bold">
-            {radiatedEMI.toFixed(1)} (arbitrary)
-          </text>
+            {/* Received signal with noise */}
+            <path
+              d={`M 120 55 ${Array.from({ length: 20 }, (_, i) => {
+                const clean = Math.sin(i * 0.8 + waveOffset * 0.1) * 8;
+                const noise = (Math.random() - 0.5) * effectiveNoise * 0.3;
+                return `L ${120 + i * 10} ${55 + clean + noise}`;
+              }).join(' ')}`}
+              fill="none"
+              stroke={signalIntegrity > 70 ? '#22c55e' : signalIntegrity > 40 ? '#eab308' : '#ef4444'}
+              strokeWidth={2}
+              filter="url(#emiSignalGlow)"
+            />
 
-          <text x={220} y={320} fill={colors.textMuted} fontSize={10}>Twist Cancellation:</text>
-          <text x={345} y={320} fill={colors.twistedPair} fontSize={12} fontWeight="bold">
-            {twistCancellation}%
-          </text>
+            {/* Signal integrity bar */}
+            <rect x={10} y={80} width={100} height={8} rx={4} fill="rgba(255,255,255,0.1)" />
+            <rect
+              x={10}
+              y={80}
+              width={signalIntegrity}
+              height={8}
+              rx={4}
+              fill={signalIntegrity > 70 ? '#22c55e' : signalIntegrity > 40 ? '#eab308' : '#ef4444'}
+            />
+
+            {/* Noise level indicator */}
+            <rect x={120} y={80} width={100} height={8} rx={4} fill="rgba(255,255,255,0.1)" />
+            <rect
+              x={120}
+              y={80}
+              width={Math.min(100, effectiveNoise * 2)}
+              height={8}
+              rx={4}
+              fill="#ef4444"
+            />
+
+            {/* Radiated EMI indicator */}
+            <rect x={230} y={80} width={100} height={8} rx={4} fill="rgba(255,255,255,0.1)" />
+            <rect
+              x={230}
+              y={80}
+              width={Math.min(100, radiatedEMI)}
+              height={8}
+              rx={4}
+              fill="#f59e0b"
+            />
+          </g>
         </svg>
+
+        {/* Labels outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '500px',
+          padding: '0 16px',
+          marginTop: '-8px'
+        }}>
+          <div style={{ textAlign: 'left' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>SHIELDING EFFECTIVENESS</div>
+            <div style={{ color: shieldingEffectiveness > 50 ? colors.success : colors.warning, fontSize: typo.body, fontWeight: 'bold' }}>
+              {shieldingEffectiveness}%
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>{cable.name.toUpperCase()}</div>
+            <div style={{ color: cable.twisting ? colors.twistedPair : colors.textSecondary, fontSize: typo.small }}>
+              {cable.twisting ? 'Twisted Pair' : 'Straight Wire'}
+            </div>
+          </div>
+        </div>
+
+        {/* Metric labels outside SVG */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-around',
+          width: '100%',
+          maxWidth: '500px',
+          background: colors.bgCard,
+          padding: typo.cardPadding,
+          borderRadius: '8px'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>CLEAN SIGNAL</div>
+            <div style={{ color: '#22d3ee', fontSize: typo.small }}>Reference</div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>RECEIVED</div>
+            <div style={{ color: signalIntegrity > 70 ? colors.success : signalIntegrity > 40 ? colors.warning : colors.error, fontSize: typo.small }}>
+              {signalIntegrity.toFixed(0)}% Integrity
+            </div>
+          </div>
+        </div>
+
+        {/* Metrics row outside SVG */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-around',
+          width: '100%',
+          maxWidth: '500px',
+          background: colors.bgCard,
+          padding: typo.cardPadding,
+          borderRadius: '8px'
+        }}>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>SIGNAL</div>
+            <div style={{
+              color: signalIntegrity > 70 ? colors.success : signalIntegrity > 40 ? colors.warning : colors.error,
+              fontSize: typo.body,
+              fontWeight: 'bold'
+            }}>
+              {signalIntegrity.toFixed(0)}%
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>NOISE</div>
+            <div style={{ color: colors.error, fontSize: typo.body, fontWeight: 'bold' }}>
+              {effectiveNoise.toFixed(1)}
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>RADIATED</div>
+            <div style={{ color: colors.warning, fontSize: typo.body, fontWeight: 'bold' }}>
+              {radiatedEMI.toFixed(1)}
+            </div>
+          </div>
+          <div style={{ textAlign: 'center' }}>
+            <div style={{ color: colors.textMuted, fontSize: typo.label }}>TWIST</div>
+            <div style={{ color: colors.twistedPair, fontSize: typo.body, fontWeight: 'bold' }}>
+              {twistCancellation}%
+            </div>
+          </div>
+        </div>
 
         {interactive && (
           <div style={{ display: 'flex', gap: '8px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
             <div style={{ background: colors.bgCard, padding: '8px 12px', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ color: colors.textMuted, fontSize: '9px' }}>SHIELDING</div>
-              <div style={{ color: colors.shield, fontSize: '14px', fontWeight: 'bold' }}>{cable.shielding}%</div>
+              <div style={{ color: colors.textMuted, fontSize: typo.label }}>SHIELDING</div>
+              <div style={{ color: colors.shield, fontSize: typo.body, fontWeight: 'bold' }}>{cable.shielding}%</div>
             </div>
             <div style={{ background: colors.bgCard, padding: '8px 12px', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ color: colors.textMuted, fontSize: '9px' }}>TWISTING</div>
-              <div style={{ color: cable.twisting ? colors.twistedPair : colors.error, fontSize: '14px', fontWeight: 'bold' }}>
+              <div style={{ color: colors.textMuted, fontSize: typo.label }}>TWISTING</div>
+              <div style={{ color: cable.twisting ? colors.twistedPair : colors.error, fontSize: typo.body, fontWeight: 'bold' }}>
                 {cable.twisting ? 'Yes' : 'No'}
               </div>
             </div>
             <div style={{ background: colors.bgCard, padding: '8px 12px', borderRadius: '8px', textAlign: 'center' }}>
-              <div style={{ color: colors.textMuted, fontSize: '9px' }}>INTEGRITY</div>
-              <div style={{ color: signalIntegrity > 70 ? colors.success : colors.error, fontSize: '14px', fontWeight: 'bold' }}>
+              <div style={{ color: colors.textMuted, fontSize: typo.label }}>INTEGRITY</div>
+              <div style={{ color: signalIntegrity > 70 ? colors.success : colors.error, fontSize: typo.body, fontWeight: 'bold' }}>
                 {signalIntegrity.toFixed(0)}%
               </div>
             </div>

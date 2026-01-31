@@ -361,176 +361,430 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
 
     // Color interpolation for yellowing
     const yellowFactor = output.yellowingIndex / 100;
-    const panelColor = `rgb(${96 + yellowFactor * 120}, ${165 - yellowFactor * 80}, ${250 - yellowFactor * 200})`;
 
-    // Transmittance visualization
-    const transmittanceHeight = (output.transmittance / 100) * 120;
+    // Protection level for meter (inverse of degradation)
+    const protectionLevel = 100 - output.yellowingIndex;
 
     return (
-      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
         <svg
           width="100%"
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1e1b4b 0%, #0f172a 100%)', borderRadius: '12px', maxWidth: '550px' }}
+          style={{ borderRadius: '12px', maxWidth: '550px' }}
         >
           <defs>
-            <linearGradient id="uvGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={colors.uv} stopOpacity="0.8" />
-              <stop offset="100%" stopColor={colors.uv} stopOpacity="0.1" />
+            {/* Premium lab background gradient */}
+            <linearGradient id="encapLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e1b4b" />
+              <stop offset="30%" stopColor="#0f172a" />
+              <stop offset="70%" stopColor="#1e1b4b" />
+              <stop offset="100%" stopColor="#0f172a" />
             </linearGradient>
-            <linearGradient id="solarPanelGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-              <stop offset="0%" stopColor={panelColor} />
-              <stop offset="100%" stopColor={`rgb(${40 + yellowFactor * 80}, ${80 - yellowFactor * 40}, ${150 - yellowFactor * 100})`} />
+
+            {/* Sun/UV source radial gradient */}
+            <radialGradient id="encapSunGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="1" />
+              <stop offset="30%" stopColor="#f59e0b" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#d97706" stopOpacity="0.6" />
+              <stop offset="80%" stopColor="#b45309" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#92400e" stopOpacity="0" />
+            </radialGradient>
+
+            {/* UV ray gradient - purple to violet with fade */}
+            <linearGradient id="encapUvRay" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#a855f7" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#8b5cf6" stopOpacity="0.7" />
+              <stop offset="50%" stopColor="#7c3aed" stopOpacity="0.5" />
+              <stop offset="75%" stopColor="#6d28d9" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#5b21b6" stopOpacity="0.1" />
             </linearGradient>
-            <filter id="glowUV">
-              <feGaussianBlur stdDeviation="3" result="coloredBlur" />
+
+            {/* Glass layer gradient - realistic refraction effect */}
+            <linearGradient id="encapGlassLayer" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#e0f2fe" stopOpacity="0.5" />
+              <stop offset="20%" stopColor="#bae6fd" stopOpacity="0.4" />
+              <stop offset="50%" stopColor="#7dd3fc" stopOpacity="0.3" />
+              <stop offset="80%" stopColor="#bae6fd" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#e0f2fe" stopOpacity="0.5" />
+            </linearGradient>
+
+            {/* Fresh encapsulant gradient - clear blue */}
+            <linearGradient id="encapFreshEncap" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#60a5fa" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#3b82f6" stopOpacity="0.85" />
+              <stop offset="50%" stopColor="#2563eb" stopOpacity="0.8" />
+              <stop offset="75%" stopColor="#3b82f6" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#60a5fa" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Yellowed encapsulant gradient - amber/brown */}
+            <linearGradient id="encapYellowedEncap" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fbbf24" stopOpacity="0.9" />
+              <stop offset="25%" stopColor="#f59e0b" stopOpacity="0.85" />
+              <stop offset="50%" stopColor="#d97706" stopOpacity="0.8" />
+              <stop offset="75%" stopColor="#f59e0b" stopOpacity="0.85" />
+              <stop offset="100%" stopColor="#fbbf24" stopOpacity="0.9" />
+            </linearGradient>
+
+            {/* Dynamic encapsulant gradient based on yellowing */}
+            <linearGradient id="encapDynamicEncap" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor={`rgb(${96 + yellowFactor * 159}, ${165 - yellowFactor * 80}, ${250 - yellowFactor * 200})`} />
+              <stop offset="25%" stopColor={`rgb(${80 + yellowFactor * 165}, ${150 - yellowFactor * 75}, ${235 - yellowFactor * 185})`} />
+              <stop offset="50%" stopColor={`rgb(${70 + yellowFactor * 170}, ${140 - yellowFactor * 70}, ${220 - yellowFactor * 170})`} />
+              <stop offset="75%" stopColor={`rgb(${80 + yellowFactor * 165}, ${150 - yellowFactor * 75}, ${235 - yellowFactor * 185})`} />
+              <stop offset="100%" stopColor={`rgb(${96 + yellowFactor * 159}, ${165 - yellowFactor * 80}, ${250 - yellowFactor * 200})`} />
+            </linearGradient>
+
+            {/* Solar cell gradient - silicon blue */}
+            <linearGradient id="encapSolarCell" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#3b82f6" />
+              <stop offset="30%" stopColor="#2563eb" />
+              <stop offset="70%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e40af" />
+            </linearGradient>
+
+            {/* Cell substrate gradient */}
+            <linearGradient id="encapCellSubstrate" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="50%" stopColor="#0f2942" />
+              <stop offset="100%" stopColor="#1e3a5f" />
+            </linearGradient>
+
+            {/* Backsheet gradient - polymer gray */}
+            <linearGradient id="encapBacksheet" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="30%" stopColor="#374151" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#4b5563" />
+            </linearGradient>
+
+            {/* Protection meter gradient */}
+            <linearGradient id="encapProtectionMeter" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#84cc16" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
+
+            {/* Yellowing bar gradient */}
+            <linearGradient id="encapYellowBar" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="100%" stopColor="#d97706" />
+            </linearGradient>
+
+            {/* Transmittance bar gradient */}
+            <linearGradient id="encapTransBar" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#38bdf8" />
+              <stop offset="50%" stopColor="#0ea5e9" />
+              <stop offset="100%" stopColor="#0284c7" />
+            </linearGradient>
+
+            {/* Power loss bar gradient */}
+            <linearGradient id="encapPowerLossBar" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f87171" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#dc2626" />
+            </linearGradient>
+
+            {/* Power curve gradient */}
+            <linearGradient id="encapPowerCurve" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* UV glow filter */}
+            <filter id="encapUvGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
               <feMerge>
-                <feMergeNode in="coloredBlur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Sun glow filter */}
+            <filter id="encapSunFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="6" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Cell glow filter */}
+            <filter id="encapCellGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Degradation particle effect filter */}
+            <filter id="encapDegradation" x="-10%" y="-10%" width="120%" height="120%">
+              <feTurbulence type="fractalNoise" baseFrequency={0.05 + yellowFactor * 0.1} numOctaves="3" result="noise" />
+              <feDisplacementMap in="SourceGraphic" in2="noise" scale={yellowFactor * 3} xChannelSelector="R" yChannelSelector="G" />
+            </filter>
+
+            {/* Meter glow filter */}
+            <filter id="encapMeterGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
           </defs>
 
-          {/* UV rays from top */}
-          {[...Array(12)].map((_, i) => (
-            <line
-              key={`uv${i}`}
-              x1={50 + i * 35}
-              y1={10}
-              x2={50 + i * 35 + (Math.random() - 0.5) * 20}
-              y2={80}
-              stroke={colors.uv}
-              strokeWidth={2}
-              opacity={0.6}
-              filter="url(#glowUV)"
-              strokeDasharray="8,4"
-            />
-          ))}
+          {/* Background */}
+          <rect width={width} height={height} fill="url(#encapLabBg)" />
 
-          {/* Sun indicator */}
-          <circle cx={250} cy={30} r={25} fill={colors.warning} opacity={0.8} />
-          <text x={250} y={35} fill={colors.bgPrimary} fontSize={12} textAnchor="middle" fontWeight="bold">UV</text>
+          {/* Subtle grid pattern */}
+          <pattern id="encapGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.3" />
+          </pattern>
+          <rect width={width} height={height} fill="url(#encapGrid)" opacity="0.5" />
 
-          {/* Main solar panel */}
+          {/* Sun with glow */}
+          <g filter="url(#encapSunFilter)">
+            <circle cx={250} cy={32} r={28} fill="url(#encapSunGlow)" />
+          </g>
+
+          {/* UV rays with premium styling */}
+          {[...Array(16)].map((_, i) => {
+            const baseX = 35 + i * 28;
+            const waveOffset = Math.sin(i * 0.5) * 8;
+            return (
+              <g key={`uvray${i}`} filter="url(#encapUvGlow)">
+                <line
+                  x1={baseX}
+                  y1={55}
+                  x2={baseX + waveOffset}
+                  y2={95}
+                  stroke="url(#encapUvRay)"
+                  strokeWidth={2.5}
+                  strokeLinecap="round"
+                  strokeDasharray="6,3"
+                  opacity={0.7 + Math.random() * 0.3}
+                />
+                {/* UV photon particles */}
+                <circle
+                  cx={baseX + waveOffset * 0.5}
+                  cy={75 + Math.random() * 15}
+                  r={2}
+                  fill="#a855f7"
+                  opacity={0.6}
+                />
+              </g>
+            );
+          })}
+
+          {/* Main solar panel - enhanced with premium gradients */}
           <g transform="translate(100, 100)">
-            {/* Glass layer */}
-            <rect x={0} y={0} width={300} height={15} fill="rgba(200, 220, 255, 0.3)" stroke={colors.textMuted} strokeWidth={1} rx={2} />
-            <text x={150} y={11} fill={colors.textSecondary} fontSize={9} textAnchor="middle">Glass</text>
+            {/* Panel shadow */}
+            <rect x={4} y={4} width={300} height={138} fill="rgba(0,0,0,0.3)" rx={4} />
 
-            {/* Encapsulant layer */}
-            <rect x={0} y={18} width={300} height={30} fill="url(#solarPanelGrad)" rx={2} />
-            <text x={150} y={37} fill={yellowFactor > 0.5 ? colors.bgPrimary : colors.textPrimary} fontSize={10} textAnchor="middle">
-              {materialType.toUpperCase()} Encapsulant ({uvExposureYears.toFixed(1)} years)
-            </text>
+            {/* Glass layer with realistic effect */}
+            <rect x={0} y={0} width={300} height={18} fill="url(#encapGlassLayer)" stroke="#64748b" strokeWidth={1} rx={3} />
+            {/* Glass reflection highlight */}
+            <rect x={5} y={2} width={290} height={4} fill="rgba(255,255,255,0.2)" rx={2} />
 
-            {/* Solar cells */}
-            <rect x={10} y={52} width={280} height={40} fill="#1e3a5f" rx={2} />
+            {/* Encapsulant layer with dynamic gradient and degradation effect */}
+            <g filter={yellowFactor > 0.3 ? 'url(#encapDegradation)' : undefined}>
+              <rect x={0} y={20} width={300} height={32} fill="url(#encapDynamicEncap)" rx={2} />
+            </g>
+            {/* Encapsulant edge highlight */}
+            <rect x={0} y={20} width={300} height={1} fill="rgba(255,255,255,0.15)" />
+
+            {/* Solar cells with premium styling */}
+            <rect x={8} y={55} width={284} height={42} fill="url(#encapCellSubstrate)" rx={3} />
             {[...Array(6)].map((_, i) => (
-              <rect key={`cell${i}`} x={15 + i * 46} y={55} width={40} height={34} fill="#2563eb" stroke="#1e40af" strokeWidth={1} rx={1} />
+              <g key={`cell${i}`} filter="url(#encapCellGlow)">
+                <rect
+                  x={14 + i * 46}
+                  y={58}
+                  width={42}
+                  height={36}
+                  fill="url(#encapSolarCell)"
+                  stroke="#1e40af"
+                  strokeWidth={1}
+                  rx={2}
+                />
+                {/* Cell bus bars */}
+                <line x1={14 + i * 46 + 14} y1={58} x2={14 + i * 46 + 14} y2={94} stroke="#94a3b8" strokeWidth={1} opacity={0.6} />
+                <line x1={14 + i * 46 + 28} y1={58} x2={14 + i * 46 + 28} y2={94} stroke="#94a3b8" strokeWidth={1} opacity={0.6} />
+              </g>
             ))}
 
-            {/* Back encapsulant */}
-            <rect x={0} y={95} width={300} height={20} fill="url(#solarPanelGrad)" rx={2} />
+            {/* Back encapsulant with same dynamic gradient */}
+            <rect x={0} y={100} width={300} height={22} fill="url(#encapDynamicEncap)" rx={2} />
 
-            {/* Backsheet or glass */}
-            {showComparison ? (
-              <rect
-                x={0}
-                y={118}
-                width={300}
-                height={15}
-                fill={comparisonMode === 'glass_glass' ? 'rgba(200, 220, 255, 0.3)' : '#374151'}
-                stroke={colors.textMuted}
-                strokeWidth={1}
-                rx={2}
-              />
+            {/* Backsheet or rear glass */}
+            {showComparison && comparisonMode === 'glass_glass' ? (
+              <rect x={0} y={124} width={300} height={14} fill="url(#encapGlassLayer)" stroke="#64748b" strokeWidth={1} rx={3} />
             ) : (
-              <rect x={0} y={118} width={300} height={15} fill="#374151" rx={2} />
+              <rect x={0} y={124} width={300} height={14} fill="url(#encapBacksheet)" stroke="#4b5563" strokeWidth={1} rx={3} />
             )}
-            <text x={150} y={129} fill={colors.textSecondary} fontSize={9} textAnchor="middle">
-              {showComparison ? (comparisonMode === 'glass_glass' ? 'Rear Glass' : 'Backsheet') : 'Backsheet'}
-            </text>
           </g>
 
-          {/* Degradation indicators */}
-          <g transform="translate(20, 260)">
-            <text x={0} y={0} fill={colors.accent} fontSize={12} fontWeight="bold">Degradation Metrics</text>
+          {/* Protection Meter - circular gauge */}
+          <g transform="translate(25, 115)">
+            <rect x={-5} y={-5} width={55} height={110} fill="rgba(0,0,0,0.4)" rx={6} />
 
+            {/* Meter background */}
+            <rect x={5} y={5} width={35} height={90} fill="rgba(0,0,0,0.5)" rx={4} stroke="#475569" strokeWidth={1} />
+
+            {/* Protection level bar */}
+            <rect
+              x={10}
+              y={10 + (80 - protectionLevel * 0.8)}
+              width={25}
+              height={protectionLevel * 0.8}
+              fill="url(#encapProtectionMeter)"
+              rx={2}
+              filter="url(#encapMeterGlow)"
+            />
+
+            {/* Meter tick marks */}
+            {[0, 25, 50, 75, 100].map((tick) => (
+              <g key={`tick${tick}`}>
+                <line x1={38} y1={90 - tick * 0.8} x2={42} y2={90 - tick * 0.8} stroke="#64748b" strokeWidth={1} />
+              </g>
+            ))}
+          </g>
+
+          {/* Degradation metrics - moved below panel */}
+          <g transform="translate(20, 260)">
             {/* Yellowing index bar */}
-            <text x={0} y={25} fill={colors.textSecondary} fontSize={11}>Yellowing Index:</text>
-            <rect x={110} y={13} width={100} height={14} fill="rgba(255,255,255,0.1)" rx={3} />
-            <rect x={110} y={13} width={output.yellowingIndex} height={14} fill={colors.yellowed} rx={3} />
-            <text x={220} y={25} fill={colors.textPrimary} fontSize={11}>{output.yellowingIndex.toFixed(1)}%</text>
+            <rect x={0} y={8} width={140} height={18} fill="rgba(0,0,0,0.3)" rx={4} />
+            <rect x={2} y={10} width={Math.min(output.yellowingIndex * 1.36, 136)} height={14} fill="url(#encapYellowBar)" rx={3} />
 
             {/* Transmittance bar */}
-            <text x={0} y={50} fill={colors.textSecondary} fontSize={11}>Transmittance:</text>
-            <rect x={110} y={38} width={100} height={14} fill="rgba(255,255,255,0.1)" rx={3} />
-            <rect x={110} y={38} width={(output.transmittance / 100) * 100} height={14} fill={colors.fresh} rx={3} />
-            <text x={220} y={50} fill={colors.textPrimary} fontSize={11}>{output.transmittance.toFixed(1)}%</text>
+            <rect x={0} y={33} width={140} height={18} fill="rgba(0,0,0,0.3)" rx={4} />
+            <rect x={2} y={35} width={(output.transmittance / 100) * 136} height={14} fill="url(#encapTransBar)" rx={3} />
 
             {/* Power loss bar */}
-            <text x={0} y={75} fill={colors.textSecondary} fontSize={11}>Power Loss:</text>
-            <rect x={110} y={63} width={100} height={14} fill="rgba(255,255,255,0.1)" rx={3} />
-            <rect x={110} y={63} width={output.powerLoss * 4} height={14} fill={colors.error} rx={3} />
-            <text x={220} y={75} fill={colors.textPrimary} fontSize={11}>{output.powerLoss.toFixed(1)}%</text>
+            <rect x={0} y={58} width={140} height={18} fill="rgba(0,0,0,0.3)" rx={4} />
+            <rect x={2} y={60} width={Math.min(output.powerLoss * 5.44, 136)} height={14} fill="url(#encapPowerLossBar)" rx={3} />
           </g>
 
-          {/* Power loss curve */}
-          <g transform="translate(280, 250)">
-            <text x={100} y={0} fill={colors.accent} fontSize={12} fontWeight="bold" textAnchor="middle">Power vs Age</text>
-            <rect x={0} y={10} width={200} height={100} fill="rgba(0,0,0,0.3)" rx={4} />
+          {/* Power loss curve with gradient stroke */}
+          <g transform="translate(280, 252)">
+            <rect x={-5} y={-5} width={210} height={120} fill="rgba(0,0,0,0.4)" rx={6} />
+
+            {/* Grid lines */}
+            {[0, 25, 50, 75].map((y) => (
+              <line key={`grid${y}`} x1={20} y1={20 + y * 0.8} x2={185} y2={20 + y * 0.8} stroke="#334155" strokeWidth={0.5} strokeDasharray="3,3" />
+            ))}
 
             {/* Axes */}
-            <line x1={20} y1={100} x2={190} y2={100} stroke={colors.textMuted} strokeWidth={1} />
-            <line x1={20} y1={20} x2={20} y2={100} stroke={colors.textMuted} strokeWidth={1} />
+            <line x1={20} y1={95} x2={185} y2={95} stroke="#64748b" strokeWidth={1.5} />
+            <line x1={20} y1={20} x2={20} y2={95} stroke="#64748b" strokeWidth={1.5} />
 
-            {/* Curve */}
+            {/* Power curve */}
             <path
               d={`M 20,25 ${[...Array(30)].map((_, i) => {
                 const year = i;
                 const loss = 100 * (1 - Math.exp(-0.015 * year * 1.5)) * 0.15;
-                const x = 20 + (i / 30) * 170;
+                const x = 20 + (i / 30) * 165;
                 const y = 25 + loss * 4;
                 return `L ${x},${y}`;
               }).join(' ')}`}
               fill="none"
-              stroke={colors.solar}
-              strokeWidth={2}
+              stroke="url(#encapPowerCurve)"
+              strokeWidth={2.5}
+              strokeLinecap="round"
             />
 
-            {/* Current position marker */}
-            <circle
-              cx={20 + (uvExposureYears / 30) * 170}
-              cy={25 + output.powerLoss * 4}
-              r={5}
-              fill={colors.accent}
-            />
-
-            <text x={100} y={118} fill={colors.textMuted} fontSize={9} textAnchor="middle">Years</text>
-            <text x={8} y={60} fill={colors.textMuted} fontSize={9} textAnchor="middle" transform="rotate(-90, 8, 60)">Power</text>
+            {/* Current position marker with glow */}
+            <g filter="url(#encapMeterGlow)">
+              <circle
+                cx={20 + (uvExposureYears / 30) * 165}
+                cy={25 + output.powerLoss * 4}
+                r={6}
+                fill={colors.accent}
+              />
+              <circle
+                cx={20 + (uvExposureYears / 30) * 165}
+                cy={25 + output.powerLoss * 4}
+                r={3}
+                fill="#fff"
+              />
+            </g>
           </g>
 
-          {/* Comparison info if enabled */}
+          {/* Comparison info box if enabled */}
           {showComparison && (
             <g transform="translate(280, 100)">
-              <rect x={0} y={0} width={200} height={80} fill="rgba(0,0,0,0.4)" rx={8} />
-              <text x={10} y={20} fill={colors.accent} fontSize={11} fontWeight="bold">
-                {comparisonMode === 'glass_glass' ? 'Glass/Glass Module' : 'Glass/Backsheet Module'}
-              </text>
-              <text x={10} y={40} fill={colors.textSecondary} fontSize={10}>
-                Expected Life: {durability.expectedLifespan} years
-              </text>
-              <text x={10} y={55} fill={colors.textSecondary} fontSize={10}>
-                Moisture Ingress: {durability.moistureIngress}
-              </text>
-              <text x={10} y={70} fill={colors.textSecondary} fontSize={10}>
-                Degradation: {durability.degradation.toFixed(1)}%
-              </text>
+              <rect x={0} y={0} width={200} height={85} fill="rgba(0,0,0,0.5)" rx={8} stroke="#475569" strokeWidth={1} />
+              {/* Indicator stripe */}
+              <rect x={0} y={0} width={4} height={85} fill={comparisonMode === 'glass_glass' ? colors.success : colors.warning} rx={2} />
             </g>
           )}
         </svg>
+
+        {/* Labels moved outside SVG using typo system */}
+        <div style={{
+          display: 'grid',
+          gridTemplateColumns: 'auto 1fr auto 1fr',
+          gap: typo.elementGap,
+          width: '100%',
+          maxWidth: '550px',
+          padding: `0 ${typo.pagePadding}`,
+        }}>
+          {/* Left column - metrics */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Yellowing:</span>
+            <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Transmit.:</span>
+            <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Power Loss:</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: typo.small, color: colors.yellowed, fontWeight: 'bold' }}>{output.yellowingIndex.toFixed(1)}%</span>
+            <span style={{ fontSize: typo.small, color: colors.fresh, fontWeight: 'bold' }}>{output.transmittance.toFixed(1)}%</span>
+            <span style={{ fontSize: typo.small, color: colors.error, fontWeight: 'bold' }}>{output.powerLoss.toFixed(1)}%</span>
+          </div>
+
+          {/* Right column - material info */}
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Material:</span>
+            <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Exposure:</span>
+            <span style={{ fontSize: typo.small, color: colors.textSecondary }}>Protection:</span>
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '6px' }}>
+            <span style={{ fontSize: typo.small, color: colors.accent, fontWeight: 'bold' }}>{materialType.toUpperCase()}</span>
+            <span style={{ fontSize: typo.small, color: colors.uv, fontWeight: 'bold' }}>{uvExposureYears.toFixed(1)} years</span>
+            <span style={{ fontSize: typo.small, color: protectionLevel > 70 ? colors.success : protectionLevel > 40 ? colors.warning : colors.error, fontWeight: 'bold' }}>
+              {protectionLevel.toFixed(0)}%
+            </span>
+          </div>
+        </div>
+
+        {/* Comparison mode info */}
+        {showComparison && (
+          <div style={{
+            display: 'flex',
+            gap: typo.elementGap,
+            padding: typo.cardPadding,
+            background: 'rgba(0,0,0,0.3)',
+            borderRadius: '8px',
+            borderLeft: `3px solid ${comparisonMode === 'glass_glass' ? colors.success : colors.warning}`,
+            maxWidth: '550px',
+            width: '100%',
+          }}>
+            <div style={{ flex: 1 }}>
+              <div style={{ fontSize: typo.body, color: colors.textPrimary, fontWeight: 'bold' }}>
+                {comparisonMode === 'glass_glass' ? 'Glass/Glass Module' : 'Glass/Backsheet Module'}
+              </div>
+              <div style={{ fontSize: typo.small, color: colors.textSecondary, marginTop: '4px' }}>
+                Expected Life: {durability.expectedLifespan} years | Moisture: {durability.moistureIngress} | Degrad.: {durability.degradation.toFixed(1)}%
+              </div>
+            </div>
+          </div>
+        )}
 
         {interactive && (
           <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
@@ -544,7 +798,7 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -560,7 +814,7 @@ const EncapsulationUVAgingRenderer: React.FC<EncapsulationUVAgingRendererProps> 
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >

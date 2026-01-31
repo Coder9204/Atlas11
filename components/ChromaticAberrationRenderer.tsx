@@ -463,14 +463,14 @@ export default function ChromaticAberrationRenderer({
   const allAppsCompleted = completedApps.every(Boolean);
 
   // =============================================================================
-  // CHROMATIC ABERRATION VISUALIZATION
+  // CHROMATIC ABERRATION VISUALIZATION - PREMIUM SVG GRAPHICS
   // =============================================================================
   const renderChromaticVisualization = useCallback(() => {
-    const width = isMobile ? 320 : 580;
-    const height = isMobile ? 380 : 420;
-    const lensX = width * 0.35;
-    const lensY = height * 0.5;
-    const lensHeight = 120;
+    const width = isMobile ? 340 : 620;
+    const height = isMobile ? 400 : 450;
+    const lensX = width * 0.32;
+    const lensY = height * 0.48;
+    const lensHeight = isMobile ? 100 : 130;
 
     // Calculate focal points for each wavelength
     const focalPoints = wavelengths.map((_, i) => ({
@@ -480,200 +480,560 @@ export default function ChromaticAberrationRenderer({
     }));
 
     // Incoming ray position
-    const rayStartX = 30;
+    const rayStartX = 40;
     const rayY = lensY;
+
+    // Correction status for indicator
+    const correctionLevel = useDoublet ? 'Corrected' : 'Uncorrected';
+    const focalSpread = Math.max(...focalPoints.map(f => f.x)) - Math.min(...focalPoints.map(f => f.x));
 
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: defined.spacing.md }}>
+        {/* SVG Labels - Outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: `${width}px`,
+          padding: `0 ${defined.spacing.sm}`,
+          marginBottom: defined.spacing.xs,
+        }}>
+          <span style={{ color: defined.colors.text.muted, fontSize: typo.small }}>White Light Source</span>
+          <span style={{
+            color: useDoublet ? defined.colors.success : defined.colors.primary,
+            fontSize: typo.small,
+            fontWeight: defined.typography.weights.semibold,
+          }}>
+            {useDoublet ? 'Achromatic Doublet' : 'Simple Lens'}
+          </span>
+          <span style={{ color: defined.colors.text.muted, fontSize: typo.small }}>Focal Region</span>
+        </div>
+
         <svg width={width} height={height} style={{ overflow: 'visible' }}>
           <defs>
-            <linearGradient id="crownGlassGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(147, 197, 253, 0.1)" />
-              <stop offset="50%" stopColor="rgba(147, 197, 253, 0.3)" />
-              <stop offset="100%" stopColor="rgba(147, 197, 253, 0.1)" />
+            {/* Premium background gradient */}
+            <linearGradient id="chromBgGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0a0f1a" />
+              <stop offset="25%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1e293b" />
+              <stop offset="75%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#0a0f1a" />
             </linearGradient>
-            <linearGradient id="flintGlassGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-              <stop offset="0%" stopColor="rgba(251, 191, 36, 0.1)" />
-              <stop offset="50%" stopColor="rgba(251, 191, 36, 0.3)" />
-              <stop offset="100%" stopColor="rgba(251, 191, 36, 0.1)" />
+
+            {/* Crown glass lens gradient - premium glass refraction effect */}
+            <linearGradient id="chromCrownGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(96, 165, 250, 0.08)" />
+              <stop offset="20%" stopColor="rgba(147, 197, 253, 0.25)" />
+              <stop offset="50%" stopColor="rgba(191, 219, 254, 0.4)" />
+              <stop offset="80%" stopColor="rgba(147, 197, 253, 0.25)" />
+              <stop offset="100%" stopColor="rgba(96, 165, 250, 0.08)" />
             </linearGradient>
-            <filter id="rayGlow" x="-20%" y="-20%" width="140%" height="140%">
-              <feGaussianBlur stdDeviation="2" result="glow" />
+
+            {/* Crown glass radial highlight for 3D effect */}
+            <radialGradient id="chromCrownHighlight" cx="30%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="rgba(255, 255, 255, 0.35)" />
+              <stop offset="40%" stopColor="rgba(191, 219, 254, 0.15)" />
+              <stop offset="100%" stopColor="rgba(96, 165, 250, 0)" />
+            </radialGradient>
+
+            {/* Flint glass gradient - warmer amber tones */}
+            <linearGradient id="chromFlintGlass" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="rgba(217, 119, 6, 0.1)" />
+              <stop offset="25%" stopColor="rgba(251, 191, 36, 0.3)" />
+              <stop offset="50%" stopColor="rgba(253, 224, 71, 0.4)" />
+              <stop offset="75%" stopColor="rgba(251, 191, 36, 0.3)" />
+              <stop offset="100%" stopColor="rgba(217, 119, 6, 0.1)" />
+            </linearGradient>
+
+            {/* Flint glass radial highlight */}
+            <radialGradient id="chromFlintHighlight" cx="70%" cy="30%" r="60%">
+              <stop offset="0%" stopColor="rgba(255, 255, 255, 0.3)" />
+              <stop offset="40%" stopColor="rgba(253, 224, 71, 0.1)" />
+              <stop offset="100%" stopColor="rgba(251, 191, 36, 0)" />
+            </radialGradient>
+
+            {/* White light source gradient */}
+            <radialGradient id="chromWhiteLight" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ffffff" />
+              <stop offset="40%" stopColor="#f8fafc" />
+              <stop offset="70%" stopColor="#e2e8f0" />
+              <stop offset="100%" stopColor="#94a3b8" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Spectrum gradient for wavelength bar */}
+            <linearGradient id="chromSpectrumBar" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor={defined.colors.spectrum.red} />
+              <stop offset="17%" stopColor={defined.colors.spectrum.orange} />
+              <stop offset="33%" stopColor={defined.colors.spectrum.yellow} />
+              <stop offset="50%" stopColor={defined.colors.spectrum.green} />
+              <stop offset="67%" stopColor={defined.colors.spectrum.cyan} />
+              <stop offset="83%" stopColor={defined.colors.spectrum.blue} />
+              <stop offset="100%" stopColor={defined.colors.spectrum.violet} />
+            </linearGradient>
+
+            {/* Correction indicator gradients */}
+            <linearGradient id="chromCorrectedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#059669" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="100%" stopColor="#34d399" />
+            </linearGradient>
+
+            <linearGradient id="chromUncorrectedGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#ef4444" />
+              <stop offset="100%" stopColor="#f87171" />
+            </linearGradient>
+
+            {/* Ray glow filter - premium light effect */}
+            <filter id="chromRayGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
               <feMerge>
-                <feMergeNode in="glow" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
                 <feMergeNode in="SourceGraphic" />
               </feMerge>
             </filter>
+
+            {/* Intense glow for white light source */}
+            <filter id="chromSourceGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur1" />
+              <feGaussianBlur stdDeviation="12" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur2" />
+                <feMergeNode in="blur1" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Focal point glow */}
+            <filter id="chromFocalGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Lens edge highlight filter */}
+            <filter id="chromLensGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle inner shadow for depth */}
+            <filter id="chromInnerShadow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
           </defs>
 
-          {/* Background */}
-          <rect width={width} height={height} fill={defined.colors.background.secondary} rx="12" />
+          {/* Premium dark background with gradient */}
+          <rect width={width} height={height} fill="url(#chromBgGrad)" rx="16" />
 
-          {/* Labels */}
-          <text x="30" y="25" fill={defined.colors.text.muted} fontSize="11">White light source</text>
-          <text x={lensX - 10} y="25" fill={defined.colors.text.muted} fontSize="11">{useDoublet ? 'Achromatic Doublet' : 'Simple Lens'}</text>
-          <text x={width - 80} y="25" fill={defined.colors.text.muted} fontSize="11">Focal points</text>
+          {/* Subtle grid pattern for lab feel */}
+          <defs>
+            <pattern id="chromLabGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#334155" strokeWidth="0.3" strokeOpacity="0.4" />
+            </pattern>
+          </defs>
+          <rect width={width} height={height} fill="url(#chromLabGrid)" rx="16" opacity="0.5" />
 
-          {/* Optical axis */}
-          <line x1="20" y1={lensY} x2={width - 20} y2={lensY} stroke={defined.colors.text.muted} strokeWidth="1" strokeDasharray="4,4" />
+          {/* Optical axis - dashed line */}
+          <line
+            x1="25"
+            y1={lensY}
+            x2={width - 25}
+            y2={lensY}
+            stroke="#475569"
+            strokeWidth="1"
+            strokeDasharray="8,4"
+            opacity="0.6"
+          />
 
-          {/* Simple lens or doublet */}
-          {useDoublet ? (
-            <>
-              {/* Crown glass (converging) */}
-              <ellipse cx={lensX - 8} cy={lensY} rx="12" ry={lensHeight / 2} fill="url(#crownGlassGrad)" stroke={defined.colors.spectrum.blue} strokeWidth="2" />
-              {/* Flint glass (diverging) */}
-              <path
-                d={`M ${lensX + 4} ${lensY - lensHeight / 2}
-                    Q ${lensX - 5} ${lensY} ${lensX + 4} ${lensY + lensHeight / 2}
-                    L ${lensX + 15} ${lensY + lensHeight / 2}
-                    Q ${lensX + 5} ${lensY} ${lensX + 15} ${lensY - lensHeight / 2}
-                    Z`}
-                fill="url(#flintGlassGrad)"
-                stroke={defined.colors.accent}
-                strokeWidth="2"
+          {/* ============ WHITE LIGHT SOURCE ============ */}
+          <g>
+            {/* Outer glow rings */}
+            <circle cx={rayStartX} cy={rayY} r="22" fill="none" stroke="rgba(255,255,255,0.1)" strokeWidth="1" />
+            <circle cx={rayStartX} cy={rayY} r="28" fill="none" stroke="rgba(255,255,255,0.05)" strokeWidth="1" />
+
+            {/* Main light source with intense glow */}
+            <circle cx={rayStartX} cy={rayY} r="16" fill="url(#chromWhiteLight)" filter="url(#chromSourceGlow)" />
+            <circle cx={rayStartX} cy={rayY} r="10" fill="white" />
+            <circle cx={rayStartX} cy={rayY} r="5" fill="white" opacity="0.9" />
+
+            {/* Rainbow corona around source */}
+            {wavelengths.map((wl, i) => (
+              <circle
+                key={`corona-${wl.name}`}
+                cx={rayStartX}
+                cy={rayY}
+                r={18 + i * 1.5}
+                fill="none"
+                stroke={wl.color}
+                strokeWidth="0.8"
+                opacity={0.3 - i * 0.03}
               />
-              <text x={lensX - 15} y={lensY + lensHeight / 2 + 20} fill={defined.colors.spectrum.blue} fontSize="9" textAnchor="middle">Crown</text>
-              <text x={lensX + 10} y={lensY + lensHeight / 2 + 20} fill={defined.colors.accent} fontSize="9" textAnchor="middle">Flint</text>
-            </>
+            ))}
+          </g>
+
+          {/* ============ LENS SYSTEM ============ */}
+          {useDoublet ? (
+            <g>
+              {/* Crown glass (converging lens) - biconvex shape */}
+              <ellipse
+                cx={lensX - 10}
+                cy={lensY}
+                rx={14 + lensCurvature * 0.08}
+                ry={lensHeight / 2}
+                fill="url(#chromCrownGlass)"
+                stroke="rgba(96, 165, 250, 0.6)"
+                strokeWidth="1.5"
+                filter="url(#chromLensGlow)"
+              />
+              {/* Crown glass highlight overlay */}
+              <ellipse
+                cx={lensX - 12}
+                cy={lensY - 10}
+                rx={10 + lensCurvature * 0.06}
+                ry={lensHeight / 2.5}
+                fill="url(#chromCrownHighlight)"
+              />
+
+              {/* Flint glass (diverging lens) - meniscus shape */}
+              <path
+                d={`M ${lensX + 6} ${lensY - lensHeight / 2}
+                    Q ${lensX - 4} ${lensY} ${lensX + 6} ${lensY + lensHeight / 2}
+                    L ${lensX + 20} ${lensY + lensHeight / 2}
+                    Q ${lensX + 10} ${lensY} ${lensX + 20} ${lensY - lensHeight / 2}
+                    Z`}
+                fill="url(#chromFlintGlass)"
+                stroke="rgba(251, 191, 36, 0.6)"
+                strokeWidth="1.5"
+                filter="url(#chromLensGlow)"
+              />
+              {/* Flint glass highlight */}
+              <path
+                d={`M ${lensX + 12} ${lensY - lensHeight / 3}
+                    Q ${lensX + 6} ${lensY - 10} ${lensX + 12} ${lensY + lensHeight / 4}`}
+                fill="none"
+                stroke="rgba(255, 255, 255, 0.2)"
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+
+              {/* Cement line between lenses */}
+              <line
+                x1={lensX + 3}
+                y1={lensY - lensHeight / 2 + 5}
+                x2={lensX + 3}
+                y2={lensY + lensHeight / 2 - 5}
+                stroke="rgba(148, 163, 184, 0.4)"
+                strokeWidth="1"
+                strokeDasharray="3,2"
+              />
+            </g>
           ) : (
-            <ellipse
-              cx={lensX}
-              cy={lensY}
-              rx={8 + lensCurvature * 0.1}
-              ry={lensHeight / 2}
-              fill="url(#crownGlassGrad)"
-              stroke={defined.colors.primary}
-              strokeWidth="2"
-            />
+            <g>
+              {/* Simple biconvex lens with glass refraction effect */}
+              <ellipse
+                cx={lensX}
+                cy={lensY}
+                rx={10 + lensCurvature * 0.12}
+                ry={lensHeight / 2}
+                fill="url(#chromCrownGlass)"
+                stroke="rgba(99, 102, 241, 0.5)"
+                strokeWidth="2"
+                filter="url(#chromLensGlow)"
+              />
+              {/* Glass highlight for 3D effect */}
+              <ellipse
+                cx={lensX - 3}
+                cy={lensY - 15}
+                rx={6 + lensCurvature * 0.08}
+                ry={lensHeight / 2.8}
+                fill="url(#chromCrownHighlight)"
+              />
+              {/* Edge refraction lines */}
+              <ellipse
+                cx={lensX}
+                cy={lensY}
+                rx={10 + lensCurvature * 0.12}
+                ry={lensHeight / 2}
+                fill="none"
+                stroke="rgba(255, 255, 255, 0.1)"
+                strokeWidth="1"
+              />
+            </g>
           )}
 
-          {/* White light indicator */}
-          <circle cx={rayStartX} cy={rayY} r="10" fill="white" filter="url(#rayGlow)" />
-          <circle cx={rayStartX} cy={rayY} r="6" fill="white" />
-
-          {/* Rays - either all wavelengths or selected one */}
+          {/* ============ COLOR SEPARATION RAYS ============ */}
           {showAllWavelengths ? (
             wavelengths.map((wl, i) => {
-              const focalX = focalPoints[i].x;
-              const yOffset = (i - 3) * 3; // Slight vertical spread for visibility
-
-              // Ray from source to lens
+              const focalX = Math.min(focalPoints[i].x, width - 40);
+              const yOffset = (i - 3) * 3.5;
               const lensHitY = lensY + yOffset * 2;
 
               // Animated light pulse
-              const pulseProgress = ((animationFrame / 360) + i * 0.1) % 1;
-              const pulseX = rayStartX + pulseProgress * (lensX - rayStartX - 10);
+              const pulseProgress = ((animationFrame / 360) + i * 0.12) % 1;
+              const incomingPulseX = rayStartX + 18 + pulseProgress * (lensX - rayStartX - 35);
+              const outgoingPulseProgress = ((animationFrame / 360) + i * 0.12 + 0.3) % 1;
 
               return (
                 <g key={wl.name}>
-                  {/* Incoming ray */}
+                  {/* Incoming white light ray segment (colored for visualization) */}
                   <line
-                    x1={rayStartX + 10}
+                    x1={rayStartX + 16}
                     y1={rayY}
-                    x2={lensX - 10}
+                    x2={lensX - (useDoublet ? 24 : 12)}
                     y2={lensHitY}
                     stroke={wl.color}
-                    strokeWidth="2"
-                    opacity="0.8"
+                    strokeWidth="2.5"
+                    opacity="0.7"
                   />
-                  {/* Refracted ray to focal point */}
+
+                  {/* Refracted ray after lens - with glow */}
                   <line
-                    x1={lensX + 10}
+                    x1={lensX + (useDoublet ? 22 : 12)}
                     y1={lensHitY}
-                    x2={Math.min(focalX, width - 30)}
+                    x2={focalX}
                     y2={lensY}
                     stroke={wl.color}
-                    strokeWidth="2"
-                    opacity="0.8"
-                    filter="url(#rayGlow)"
+                    strokeWidth="2.5"
+                    opacity="0.85"
+                    filter="url(#chromRayGlow)"
                   />
-                  {/* Focal point indicator */}
-                  <circle cx={Math.min(focalX, width - 30)} cy={lensY} r="5" fill={wl.color} />
 
-                  {/* Animated pulse */}
-                  {pulseProgress < 0.5 && (
+                  {/* Ray continuation past focal point (dimmer) */}
+                  <line
+                    x1={focalX}
+                    y1={lensY}
+                    x2={focalX + 35}
+                    y2={lensY + (i - 3) * 4}
+                    stroke={wl.color}
+                    strokeWidth="1.5"
+                    opacity="0.3"
+                  />
+
+                  {/* Focal point marker with glow */}
+                  <circle
+                    cx={focalX}
+                    cy={lensY}
+                    r="6"
+                    fill={wl.color}
+                    filter="url(#chromFocalGlow)"
+                    opacity="0.9"
+                  />
+                  <circle cx={focalX} cy={lensY} r="3" fill="white" opacity="0.6" />
+
+                  {/* Animated photon pulse on incoming ray */}
+                  {pulseProgress < 0.7 && (
                     <circle
-                      cx={pulseX}
-                      cy={rayY + yOffset * (pulseProgress * 4)}
+                      cx={incomingPulseX}
+                      cy={rayY + yOffset * (pulseProgress * 2)}
+                      r="5"
+                      fill={wl.color}
+                      opacity={0.9 - pulseProgress}
+                      filter="url(#chromRayGlow)"
+                    />
+                  )}
+
+                  {/* Animated photon pulse on outgoing ray */}
+                  {outgoingPulseProgress > 0.2 && outgoingPulseProgress < 0.9 && (
+                    <circle
+                      cx={lensX + (useDoublet ? 22 : 12) + (outgoingPulseProgress - 0.2) * (focalX - lensX - 30)}
+                      cy={lensHitY - (outgoingPulseProgress - 0.2) * yOffset * 1.5}
                       r="4"
                       fill={wl.color}
-                      opacity={1 - pulseProgress * 2}
+                      opacity={0.8 - (outgoingPulseProgress - 0.2)}
+                      filter="url(#chromRayGlow)"
                     />
                   )}
                 </g>
               );
             })
           ) : (
-            // Single wavelength
+            // Single wavelength mode
             (() => {
               const wl = wavelengths[selectedWavelength];
-              const focalX = focalPoints[selectedWavelength].x;
+              const focalX = Math.min(focalPoints[selectedWavelength].x, width - 40);
 
               return (
                 <g>
+                  {/* Incoming ray - thicker for single wavelength */}
                   <line
-                    x1={rayStartX + 10}
+                    x1={rayStartX + 16}
                     y1={rayY}
-                    x2={lensX - 10}
+                    x2={lensX - (useDoublet ? 24 : 12)}
                     y2={lensY}
                     stroke={wl.color}
-                    strokeWidth="3"
+                    strokeWidth="4"
+                    opacity="0.8"
                   />
+                  {/* Refracted ray */}
                   <line
-                    x1={lensX + 10}
+                    x1={lensX + (useDoublet ? 22 : 12)}
                     y1={lensY}
-                    x2={Math.min(focalX, width - 30)}
+                    x2={focalX}
                     y2={lensY}
                     stroke={wl.color}
-                    strokeWidth="3"
-                    filter="url(#rayGlow)"
+                    strokeWidth="4"
+                    opacity="0.9"
+                    filter="url(#chromRayGlow)"
                   />
-                  <circle cx={Math.min(focalX, width - 30)} cy={lensY} r="8" fill={wl.color} />
-                  <text x={Math.min(focalX, width - 30)} y={lensY + 25} fill={wl.color} fontSize="11" textAnchor="middle">
-                    {wl.name} ({wl.wavelength}nm)
-                  </text>
+                  {/* Focal point with enhanced glow */}
+                  <circle cx={focalX} cy={lensY} r="12" fill={wl.color} filter="url(#chromFocalGlow)" opacity="0.8" />
+                  <circle cx={focalX} cy={lensY} r="6" fill="white" opacity="0.7" />
                 </g>
               );
             })()
           )}
 
-          {/* Focal spread indicator */}
+          {/* ============ FOCAL SPREAD INDICATOR ============ */}
           {showAllWavelengths && (
             <g>
+              {/* Focal region bracket */}
               <line
-                x1={Math.min(...focalPoints.map(f => f.x))}
-                y1={lensY + 50}
-                x2={Math.max(...focalPoints.map(f => f.x))}
-                y2={lensY + 50}
-                stroke={defined.colors.accent}
-                strokeWidth="2"
+                x1={Math.min(...focalPoints.map(f => Math.min(f.x, width - 40)))}
+                y1={lensY + 55}
+                x2={Math.max(...focalPoints.map(f => Math.min(f.x, width - 40)))}
+                y2={lensY + 55}
+                stroke={useDoublet ? 'url(#chromCorrectedGrad)' : 'url(#chromUncorrectedGrad)'}
+                strokeWidth="3"
+                strokeLinecap="round"
               />
-              <text
-                x={(Math.min(...focalPoints.map(f => f.x)) + Math.max(...focalPoints.map(f => f.x))) / 2}
-                y={lensY + 70}
-                fill={defined.colors.accent}
-                fontSize="10"
-                textAnchor="middle"
-              >
-                Focal spread: {useDoublet ? 'Minimized' : 'Chromatic aberration!'}
-              </text>
+              {/* End caps */}
+              <line
+                x1={Math.min(...focalPoints.map(f => Math.min(f.x, width - 40)))}
+                y1={lensY + 48}
+                x2={Math.min(...focalPoints.map(f => Math.min(f.x, width - 40)))}
+                y2={lensY + 62}
+                stroke={useDoublet ? '#10b981' : '#ef4444'}
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
+              <line
+                x1={Math.max(...focalPoints.map(f => Math.min(f.x, width - 40)))}
+                y1={lensY + 48}
+                x2={Math.max(...focalPoints.map(f => Math.min(f.x, width - 40)))}
+                y2={lensY + 62}
+                stroke={useDoublet ? '#10b981' : '#ef4444'}
+                strokeWidth="2"
+                strokeLinecap="round"
+              />
             </g>
           )}
 
-          {/* Legend */}
-          <g transform={`translate(20, ${height - 70})`}>
-            <rect x="-5" y="-5" width={width - 30} height="55" fill={defined.colors.background.card} rx="4" />
-            {wavelengths.map((wl, i) => (
-              <g key={wl.name} transform={`translate(${i * ((width - 40) / 7)}, 0)`}>
-                <circle cx="10" cy="15" r="6" fill={wl.color} />
-                <text x="10" y="35" fill={defined.colors.text.muted} fontSize="8" textAnchor="middle">
-                  {wl.wavelength}
-                </text>
-              </g>
-            ))}
+          {/* ============ WAVELENGTH SPECTRUM BAR ============ */}
+          <g transform={`translate(25, ${height - 55})`}>
+            {/* Background panel */}
+            <rect
+              x="-10"
+              y="-10"
+              width={width - 30}
+              height="50"
+              fill="rgba(15, 23, 42, 0.85)"
+              rx="8"
+              stroke="rgba(71, 85, 105, 0.4)"
+              strokeWidth="1"
+            />
+
+            {/* Spectrum gradient bar */}
+            <rect
+              x="5"
+              y="2"
+              width={width - 60}
+              height="8"
+              fill="url(#chromSpectrumBar)"
+              rx="4"
+            />
+
+            {/* Individual wavelength markers */}
+            {wavelengths.map((wl, i) => {
+              const xPos = 5 + (i / (wavelengths.length - 1)) * (width - 70);
+              return (
+                <g key={wl.name} transform={`translate(${xPos}, 0)`}>
+                  <circle cy="6" r="5" fill={wl.color} stroke="rgba(255,255,255,0.3)" strokeWidth="1" />
+                  <text y="26" fill={defined.colors.text.muted} fontSize="9" textAnchor="middle">
+                    {wl.wavelength}nm
+                  </text>
+                </g>
+              );
+            })}
+          </g>
+
+          {/* ============ CORRECTION STATUS INDICATOR ============ */}
+          <g transform={`translate(${width - 95}, 18)`}>
+            <rect
+              x="-8"
+              y="-8"
+              width="88"
+              height="28"
+              fill={useDoublet ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)'}
+              rx="6"
+              stroke={useDoublet ? 'rgba(16, 185, 129, 0.4)' : 'rgba(239, 68, 68, 0.4)'}
+              strokeWidth="1"
+            />
+            <circle
+              cx="6"
+              cy="6"
+              r="5"
+              fill={useDoublet ? '#10b981' : '#ef4444'}
+            />
+            <text
+              x="18"
+              y="10"
+              fill={useDoublet ? '#34d399' : '#f87171'}
+              fontSize="10"
+              fontWeight="600"
+            >
+              {correctionLevel}
+            </text>
           </g>
         </svg>
+
+        {/* External Labels - Using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          width: '100%',
+          maxWidth: `${width}px`,
+          padding: `0 ${defined.spacing.sm}`,
+        }}>
+          {useDoublet && (
+            <div style={{ display: 'flex', gap: defined.spacing.md, fontSize: typo.small }}>
+              <span style={{ color: defined.colors.spectrum.blue }}>Crown Glass</span>
+              <span style={{ color: defined.colors.text.muted }}>+</span>
+              <span style={{ color: defined.colors.accent }}>Flint Glass</span>
+            </div>
+          )}
+          {!useDoublet && (
+            <span style={{ color: defined.colors.text.muted, fontSize: typo.small }}>
+              Curvature affects dispersion
+            </span>
+          )}
+          {showAllWavelengths && (
+            <span style={{
+              color: useDoublet ? defined.colors.success : defined.colors.error,
+              fontSize: typo.small,
+              fontWeight: defined.typography.weights.medium,
+            }}>
+              Focal Spread: {useDoublet ? 'Minimized' : `${Math.round(focalSpread)}px`}
+            </span>
+          )}
+          {!showAllWavelengths && (
+            <span style={{
+              color: wavelengths[selectedWavelength].color,
+              fontSize: typo.small,
+              fontWeight: defined.typography.weights.medium,
+            }}>
+              {wavelengths[selectedWavelength].name} ({wavelengths[selectedWavelength].wavelength}nm)
+            </span>
+          )}
+        </div>
 
         {/* Controls */}
         <div style={{
@@ -681,10 +1041,21 @@ export default function ChromaticAberrationRenderer({
           gridTemplateColumns: isMobile ? '1fr' : '1fr 1fr',
           gap: defined.spacing.md,
           width: '100%',
-          maxWidth: '550px',
+          maxWidth: `${width}px`,
         }}>
-          <div style={{ background: defined.colors.background.card, padding: defined.spacing.md, borderRadius: defined.radius.lg }}>
-            <label style={{ color: defined.colors.primary, fontSize: defined.typography.sizes.sm, display: 'block', marginBottom: '4px' }}>
+          <div style={{
+            background: defined.colors.background.card,
+            padding: defined.spacing.md,
+            borderRadius: defined.radius.lg,
+            border: '1px solid rgba(71, 85, 105, 0.3)',
+          }}>
+            <label style={{
+              color: defined.colors.primary,
+              fontSize: typo.small,
+              display: 'block',
+              marginBottom: '6px',
+              fontWeight: defined.typography.weights.medium,
+            }}>
               Lens Curvature: {lensCurvature}%
             </label>
             <input
@@ -693,30 +1064,44 @@ export default function ChromaticAberrationRenderer({
               max="100"
               value={lensCurvature}
               onChange={(e) => setLensCurvature(Number(e.target.value))}
-              style={{ width: '100%' }}
+              style={{ width: '100%', accentColor: defined.colors.primary }}
             />
-            <div style={{ color: defined.colors.text.muted, fontSize: defined.typography.sizes.xs, marginTop: '4px' }}>
-              More curvature = stronger lens = more aberration
+            <div style={{ color: defined.colors.text.muted, fontSize: typo.label, marginTop: '4px' }}>
+              Higher curvature = more dispersion
             </div>
           </div>
-          <div style={{ background: defined.colors.background.card, padding: defined.spacing.md, borderRadius: defined.radius.lg }}>
-            <label style={{ color: defined.colors.text.secondary, fontSize: defined.typography.sizes.sm, display: 'block', marginBottom: '8px' }}>
+          <div style={{
+            background: defined.colors.background.card,
+            padding: defined.spacing.md,
+            borderRadius: defined.radius.lg,
+            border: '1px solid rgba(71, 85, 105, 0.3)',
+          }}>
+            <label style={{
+              color: defined.colors.text.secondary,
+              fontSize: typo.small,
+              display: 'block',
+              marginBottom: '8px',
+              fontWeight: defined.typography.weights.medium,
+            }}>
               Wavelength Selection
             </label>
-            <div style={{ display: 'flex', gap: '4px', flexWrap: 'wrap' }}>
+            <div style={{ display: 'flex', gap: '6px', flexWrap: 'wrap', alignItems: 'center' }}>
               <button
                 onClick={() => setShowAllWavelengths(true)}
                 style={{
-                  padding: '4px 8px',
-                  background: showAllWavelengths ? defined.colors.primary : defined.colors.background.tertiary,
+                  padding: '6px 12px',
+                  background: showAllWavelengths
+                    ? `linear-gradient(135deg, ${defined.colors.primary}, ${defined.colors.secondary})`
+                    : defined.colors.background.tertiary,
                   color: defined.colors.text.primary,
                   border: 'none',
                   borderRadius: defined.radius.sm,
-                  fontSize: defined.typography.sizes.xs,
+                  fontSize: typo.label,
                   cursor: 'pointer',
+                  fontWeight: defined.typography.weights.medium,
                 }}
               >
-                All
+                All Colors
               </button>
               {wavelengths.map((wl, i) => (
                 <button
@@ -725,13 +1110,20 @@ export default function ChromaticAberrationRenderer({
                     setShowAllWavelengths(false);
                     setSelectedWavelength(i);
                   }}
+                  title={`${wl.name} (${wl.wavelength}nm)`}
                   style={{
-                    width: '20px',
-                    height: '20px',
-                    background: !showAllWavelengths && selectedWavelength === i ? wl.color : defined.colors.background.tertiary,
+                    width: '24px',
+                    height: '24px',
+                    background: !showAllWavelengths && selectedWavelength === i
+                      ? wl.color
+                      : defined.colors.background.tertiary,
                     border: `2px solid ${wl.color}`,
                     borderRadius: defined.radius.full,
                     cursor: 'pointer',
+                    boxShadow: !showAllWavelengths && selectedWavelength === i
+                      ? `0 0 8px ${wl.color}`
+                      : 'none',
+                    transition: 'box-shadow 0.2s ease',
                   }}
                 />
               ))}
@@ -739,25 +1131,33 @@ export default function ChromaticAberrationRenderer({
           </div>
         </div>
 
-        {/* Doublet toggle */}
+        {/* Doublet toggle - premium styling */}
         <button
           onClick={() => setUseDoublet(!useDoublet)}
           style={{
-            padding: `${defined.spacing.sm} ${defined.spacing.lg}`,
-            background: useDoublet ? defined.colors.success : defined.colors.background.tertiary,
+            padding: `${defined.spacing.sm} ${defined.spacing.xl}`,
+            background: useDoublet
+              ? `linear-gradient(135deg, ${defined.colors.success}, #059669)`
+              : defined.colors.background.tertiary,
             color: defined.colors.text.primary,
-            border: `2px solid ${useDoublet ? defined.colors.success : defined.colors.primary}`,
-            borderRadius: defined.radius.md,
+            border: useDoublet
+              ? 'none'
+              : `2px solid ${defined.colors.primary}`,
+            borderRadius: defined.radius.lg,
             cursor: 'pointer',
-            fontSize: defined.typography.sizes.sm,
+            fontSize: typo.body,
             fontWeight: defined.typography.weights.semibold,
+            boxShadow: useDoublet
+              ? `0 4px 15px rgba(16, 185, 129, 0.3)`
+              : 'none',
+            transition: 'all 0.3s ease',
           }}
         >
-          {useDoublet ? '✓ Achromatic Doublet (Corrected)' : 'Simple Lens (Uncorrected)'}
+          {useDoublet ? 'Achromatic Doublet (Corrected)' : 'Simple Lens (Uncorrected)'}
         </button>
       </div>
     );
-  }, [isMobile, lensCurvature, showAllWavelengths, selectedWavelength, useDoublet, animationFrame, getFocalPoint]);
+  }, [isMobile, lensCurvature, showAllWavelengths, selectedWavelength, useDoublet, animationFrame, getFocalPoint, typo]);
 
   // =============================================================================
   // PHASE RENDERERS

@@ -484,202 +484,659 @@ export default function CableSizingRenderer({
   // ──────────────────────────────────────────────────────────────────────────
 
   const renderCableVisualization = () => {
-    const cableThickness = Math.max(4, 20 - wireGauge);
+    const cableThickness = Math.max(8, 24 - wireGauge);
     const heatIntensity = Math.min(1, powerLoss / 500);
+    const copperCoreRadius = cableThickness * 0.4;
+    const insulationThickness = cableThickness * 0.3;
 
     return (
-      <svg viewBox="0 0 400 280" className="w-full h-64">
-        <defs>
-          <linearGradient id="copperGrad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#f97316" />
-            <stop offset="50%" stopColor="#c2410c" />
-            <stop offset="100%" stopColor="#9a3412" />
-          </linearGradient>
-          <linearGradient id="heatGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor="#22c55e" />
-            <stop offset="50%" stopColor="#eab308" />
-            <stop offset="100%" stopColor="#ef4444" />
-          </linearGradient>
-        </defs>
+      <div>
+        <svg viewBox="0 0 400 220" className="w-full h-56">
+          <defs>
+            {/* Premium copper core gradient with realistic metallic sheen */}
+            <linearGradient id="cableCopperCore" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#f5a54a" />
+              <stop offset="25%" stopColor="#e07d31" />
+              <stop offset="50%" stopColor="#b87333" />
+              <stop offset="75%" stopColor="#a05a20" />
+              <stop offset="100%" stopColor="#8b4513" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect width="400" height="280" fill="#1e293b" rx="12" />
+            {/* Copper highlight for 3D effect */}
+            <linearGradient id="cableCopperHighlight" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#ffd700" stopOpacity="0.6" />
+              <stop offset="30%" stopColor="#f5a54a" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#8b4513" stopOpacity="0" />
+            </linearGradient>
 
-        {/* Title */}
-        <text x="200" y="25" textAnchor="middle" fill="#ffffff" fontSize="14" fontWeight="bold">
-          Cable Power Loss: I²R
-        </text>
+            {/* Insulation gradient - dark rubber look */}
+            <linearGradient id="cableInsulation" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#4a4a4a" />
+              <stop offset="30%" stopColor="#2d2d2d" />
+              <stop offset="70%" stopColor="#1a1a1a" />
+              <stop offset="100%" stopColor="#0f0f0f" />
+            </linearGradient>
 
-        {/* Power source */}
-        <rect x="30" y="80" width="60" height="80" fill="#374151" rx="8" stroke="#4b5563" strokeWidth="2" />
-        <text x="60" y="115" textAnchor="middle" fill="#fbbf24" fontSize="14" fontWeight="bold">240V</text>
-        <text x="60" y="135" textAnchor="middle" fill="#94a3b8" fontSize="10">Source</text>
+            {/* Outer jacket gradient */}
+            <linearGradient id="cableJacket" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="25%" stopColor="#1f2937" />
+              <stop offset="75%" stopColor="#111827" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        {/* Cable - top conductor */}
-        <rect
-          x="90"
-          y={110 - cableThickness / 2}
-          width="180"
-          height={cableThickness}
-          fill="url(#copperGrad)"
-          rx={cableThickness / 2}
-        />
+            {/* Power source housing gradient */}
+            <linearGradient id="cableSourceHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4b5563" />
+              <stop offset="30%" stopColor="#374151" />
+              <stop offset="70%" stopColor="#1f2937" />
+              <stop offset="100%" stopColor="#111827" />
+            </linearGradient>
 
-        {/* Cable - bottom conductor */}
-        <rect
-          x="90"
-          y={140 - cableThickness / 2}
-          width="180"
-          height={cableThickness}
-          fill="url(#copperGrad)"
-          rx={cableThickness / 2}
-        />
+            {/* Load housing gradient */}
+            <linearGradient id="cableLoadHousing" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e40af" />
+              <stop offset="30%" stopColor="#1e3a8a" />
+              <stop offset="70%" stopColor="#172554" />
+              <stop offset="100%" stopColor="#0f172a" />
+            </linearGradient>
 
-        {/* Heat waves */}
-        {heatIntensity > 0.1 && [...Array(Math.ceil(heatIntensity * 6))].map((_, i) => (
-          <path
-            key={i}
-            d={`M ${110 + i * 30} ${80 - (animationFrame + i * 20) % 30}
-                Q ${115 + i * 30} ${70 - (animationFrame + i * 20) % 30},
-                  ${120 + i * 30} ${80 - (animationFrame + i * 20) % 30}`}
-            fill="none"
-            stroke={`rgba(239, 68, 68, ${0.5 - ((animationFrame + i * 20) % 30) / 60})`}
-            strokeWidth="2"
-          />
-        ))}
+            {/* Heat gradient for temperature indicator */}
+            <linearGradient id="cableHeatGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="33%" stopColor="#84cc16" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
 
-        {/* Current flow animation */}
-        {[...Array(5)].map((_, i) => (
-          <circle
-            key={i}
-            cx={90 + ((animationFrame * 2 + i * 40) % 180)}
-            cy={110}
-            r="4"
-            fill="#fbbf24"
-            opacity={0.7}
-          />
-        ))}
+            {/* Current flow particle glow */}
+            <radialGradient id="cableCurrentGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+              <stop offset="40%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#f59e0b" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
 
-        {/* Load */}
-        <rect x="270" y="80" width="60" height="80" fill="#374151" rx="8" stroke="#3b82f6" strokeWidth="2" />
-        <text x="300" y="115" textAnchor="middle" fill="#3b82f6" fontSize="14" fontWeight="bold">
-          {(240 - voltageDrop).toFixed(1)}V
-        </text>
-        <text x="300" y="135" textAnchor="middle" fill="#94a3b8" fontSize="10">Load</text>
+            {/* Heat wave glow */}
+            <radialGradient id="cableHeatWaveGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fca5a5" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#dc2626" stopOpacity="0" />
+            </radialGradient>
 
-        {/* Stats panel */}
-        <rect x="30" y="180" width="340" height="85" fill="#0f172a" rx="8" />
+            {/* Premium electron glow filter */}
+            <filter id="cableElectronGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        <g transform="translate(50, 200)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">CABLE</text>
-          <text x="0" y="18" fill="#f97316" fontSize="12" fontWeight="bold">AWG {wireGauge}</text>
-          <text x="0" y="35" fill="#64748b" fontSize="9">{cableLength}m length</text>
-        </g>
+            {/* Heat wave blur filter */}
+            <filter id="cableHeatBlur" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        <g transform="translate(130, 200)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">CURRENT</text>
-          <text x="0" y="18" fill="#fbbf24" fontSize="12" fontWeight="bold">{loadCurrent}A</text>
-          <text x="0" y="35" fill="#64748b" fontSize="9">{resistance.toFixed(3)}Ω</text>
-        </g>
+            {/* Inner glow for components */}
+            <filter id="cableInnerGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
 
-        <g transform="translate(210, 200)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">POWER LOSS</text>
-          <text x="0" y="18" fill={powerLoss > 200 ? '#ef4444' : powerLoss > 100 ? '#fbbf24' : '#22c55e'} fontSize="12" fontWeight="bold">
-            {powerLoss.toFixed(0)}W
-          </text>
-          <text x="0" y="35" fill="#64748b" fontSize="9">I²R loss</text>
-        </g>
+            {/* Background gradient */}
+            <linearGradient id="cableBackground" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-        <g transform="translate(290, 200)">
-          <text x="0" y="0" fill="#94a3b8" fontSize="10">V DROP</text>
-          <text x="0" y="18" fill={voltageDropPercent > 5 ? '#ef4444' : voltageDropPercent > 3 ? '#fbbf24' : '#22c55e'} fontSize="12" fontWeight="bold">
-            {voltageDropPercent.toFixed(1)}%
-          </text>
-          <text x="0" y="35" fill="#64748b" fontSize="9">{voltageDrop.toFixed(1)}V</text>
-        </g>
-      </svg>
+            {/* Subtle grid pattern */}
+            <pattern id="cableGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* Premium background */}
+          <rect width="400" height="220" fill="url(#cableBackground)" rx="12" />
+          <rect width="400" height="220" fill="url(#cableGridPattern)" rx="12" />
+
+          {/* === POWER SOURCE === */}
+          <g transform="translate(20, 60)">
+            {/* Main housing */}
+            <rect x="0" y="0" width="60" height="80" rx="8" fill="url(#cableSourceHousing)" stroke="#4b5563" strokeWidth="1.5" />
+            {/* Inner panel */}
+            <rect x="5" y="5" width="50" height="70" rx="6" fill="#0f172a" opacity="0.5" />
+            {/* Voltage indicator light */}
+            <circle cx="30" cy="20" r="6" fill="#fbbf24" filter="url(#cableElectronGlow)" />
+            <circle cx="30" cy="20" r="3" fill="#fef3c7" />
+            {/* Terminal connections */}
+            <rect x="50" y="30" width="15" height="8" rx="2" fill="url(#cableCopperCore)" />
+            <rect x="50" y="62" width="15" height="8" rx="2" fill="url(#cableCopperCore)" />
+          </g>
+
+          {/* === CABLE CROSS-SECTION INDICATOR === */}
+          <g transform="translate(180, 150)">
+            {/* Cable cross-section showing layers */}
+            <circle cx="0" cy="0" r={cableThickness} fill="url(#cableJacket)" />
+            <circle cx="0" cy="0" r={cableThickness - 2} fill="url(#cableInsulation)" />
+            <circle cx="0" cy="0" r={copperCoreRadius + insulationThickness} fill="#1a1a1a" />
+            <circle cx="0" cy="0" r={copperCoreRadius} fill="url(#cableCopperCore)" />
+            <circle cx="0" cy="0" r={copperCoreRadius * 0.6} fill="url(#cableCopperHighlight)" />
+          </g>
+
+          {/* === TOP CABLE WITH LAYERS === */}
+          <g>
+            {/* Outer jacket */}
+            <rect
+              x="80"
+              y={95 - cableThickness / 2}
+              width="180"
+              height={cableThickness}
+              fill="url(#cableJacket)"
+              rx={cableThickness / 2}
+            />
+            {/* Insulation layer */}
+            <rect
+              x="82"
+              y={95 - (cableThickness - 4) / 2}
+              width="176"
+              height={cableThickness - 4}
+              fill="url(#cableInsulation)"
+              rx={(cableThickness - 4) / 2}
+            />
+            {/* Copper core */}
+            <rect
+              x="84"
+              y={95 - copperCoreRadius}
+              width="172"
+              height={copperCoreRadius * 2}
+              fill="url(#cableCopperCore)"
+              rx={copperCoreRadius}
+            />
+            {/* Copper highlight */}
+            <rect
+              x="84"
+              y={95 - copperCoreRadius}
+              width="172"
+              height={copperCoreRadius}
+              fill="url(#cableCopperHighlight)"
+              rx={copperCoreRadius}
+              opacity="0.5"
+            />
+          </g>
+
+          {/* === BOTTOM CABLE WITH LAYERS === */}
+          <g>
+            {/* Outer jacket */}
+            <rect
+              x="80"
+              y={125 - cableThickness / 2}
+              width="180"
+              height={cableThickness}
+              fill="url(#cableJacket)"
+              rx={cableThickness / 2}
+            />
+            {/* Insulation layer */}
+            <rect
+              x="82"
+              y={125 - (cableThickness - 4) / 2}
+              width="176"
+              height={cableThickness - 4}
+              fill="url(#cableInsulation)"
+              rx={(cableThickness - 4) / 2}
+            />
+            {/* Copper core */}
+            <rect
+              x="84"
+              y={125 - copperCoreRadius}
+              width="172"
+              height={copperCoreRadius * 2}
+              fill="url(#cableCopperCore)"
+              rx={copperCoreRadius}
+            />
+            {/* Copper highlight */}
+            <rect
+              x="84"
+              y={125 - copperCoreRadius}
+              width="172"
+              height={copperCoreRadius}
+              fill="url(#cableCopperHighlight)"
+              rx={copperCoreRadius}
+              opacity="0.5"
+            />
+          </g>
+
+          {/* === HEAT WAVES (animated) === */}
+          {heatIntensity > 0.1 && [...Array(Math.ceil(heatIntensity * 8))].map((_, i) => {
+            const xPos = 100 + i * 25;
+            const yOffset = (animationFrame * 1.5 + i * 30) % 40;
+            const opacity = Math.max(0, 0.6 - yOffset / 60);
+            return (
+              <g key={`heat-${i}`} filter="url(#cableHeatBlur)">
+                <path
+                  d={`M ${xPos} ${75 - yOffset}
+                      Q ${xPos + 5} ${65 - yOffset}, ${xPos + 10} ${75 - yOffset}
+                      Q ${xPos + 15} ${85 - yOffset}, ${xPos + 20} ${75 - yOffset}`}
+                  fill="none"
+                  stroke={`rgba(239, 68, 68, ${opacity})`}
+                  strokeWidth="2.5"
+                  strokeLinecap="round"
+                />
+              </g>
+            );
+          })}
+
+          {/* === CURRENT FLOW PARTICLES (top cable) === */}
+          {[...Array(6)].map((_, i) => {
+            const xPos = 90 + ((animationFrame * 2.5 + i * 30) % 170);
+            return (
+              <g key={`current-top-${i}`} filter="url(#cableElectronGlow)">
+                <circle
+                  cx={xPos}
+                  cy={95}
+                  r="5"
+                  fill="url(#cableCurrentGlow)"
+                />
+                <circle
+                  cx={xPos}
+                  cy={95}
+                  r="2"
+                  fill="#fef3c7"
+                />
+              </g>
+            );
+          })}
+
+          {/* === CURRENT FLOW PARTICLES (bottom cable - return) === */}
+          {[...Array(6)].map((_, i) => {
+            const xPos = 260 - ((animationFrame * 2.5 + i * 30) % 170);
+            return (
+              <g key={`current-bottom-${i}`} filter="url(#cableElectronGlow)">
+                <circle
+                  cx={xPos}
+                  cy={125}
+                  r="5"
+                  fill="url(#cableCurrentGlow)"
+                />
+                <circle
+                  cx={xPos}
+                  cy={125}
+                  r="2"
+                  fill="#fef3c7"
+                />
+              </g>
+            );
+          })}
+
+          {/* === LOAD === */}
+          <g transform="translate(260, 60)">
+            {/* Main housing */}
+            <rect x="0" y="0" width="60" height="80" rx="8" fill="url(#cableLoadHousing)" stroke="#3b82f6" strokeWidth="1.5" />
+            {/* Inner panel */}
+            <rect x="5" y="5" width="50" height="70" rx="6" fill="#0f172a" opacity="0.5" />
+            {/* Status LED based on voltage drop */}
+            <circle
+              cx="30"
+              cy="20"
+              r="6"
+              fill={voltageDropPercent > 5 ? '#ef4444' : voltageDropPercent > 3 ? '#fbbf24' : '#22c55e'}
+              filter="url(#cableElectronGlow)"
+            />
+            <circle
+              cx="30"
+              cy="20"
+              r="3"
+              fill={voltageDropPercent > 5 ? '#fecaca' : voltageDropPercent > 3 ? '#fef3c7' : '#bbf7d0'}
+            />
+            {/* Terminal connections */}
+            <rect x="-5" y="30" width="15" height="8" rx="2" fill="url(#cableCopperCore)" />
+            <rect x="-5" y="62" width="15" height="8" rx="2" fill="url(#cableCopperCore)" />
+          </g>
+
+          {/* === TEMPERATURE/RESISTANCE INDICATOR BAR === */}
+          <g transform="translate(20, 195)">
+            {/* Background bar */}
+            <rect x="0" y="0" width="360" height="12" rx="6" fill="#1e293b" />
+            {/* Gradient fill */}
+            <rect x="1" y="1" width="358" height="10" rx="5" fill="url(#cableHeatGradient)" opacity="0.3" />
+            {/* Active fill based on heat intensity */}
+            <rect
+              x="1"
+              y="1"
+              width={Math.max(10, heatIntensity * 358)}
+              height="10"
+              rx="5"
+              fill="url(#cableHeatGradient)"
+            />
+            {/* Indicator position */}
+            <circle
+              cx={Math.max(10, heatIntensity * 358)}
+              cy="6"
+              r="8"
+              fill="#ffffff"
+              stroke={heatIntensity > 0.6 ? '#ef4444' : heatIntensity > 0.3 ? '#fbbf24' : '#22c55e'}
+              strokeWidth="2"
+            />
+          </g>
+        </svg>
+
+        {/* Stats panel - moved outside SVG using typo system */}
+        <div
+          className="grid grid-cols-4 gap-2 mt-3 p-3 rounded-xl"
+          style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.border}` }}
+        >
+          <div className="text-center">
+            <div style={{ fontSize: typo.label, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Cable</div>
+            <div style={{ fontSize: typo.body, color: colors.copper, fontWeight: 700 }}>AWG {wireGauge}</div>
+            <div style={{ fontSize: typo.label, color: colors.textMuted }}>{cableLength}m</div>
+          </div>
+          <div className="text-center">
+            <div style={{ fontSize: typo.label, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Current</div>
+            <div style={{ fontSize: typo.body, color: colors.energy, fontWeight: 700 }}>{loadCurrent}A</div>
+            <div style={{ fontSize: typo.label, color: colors.textMuted }}>{resistance.toFixed(3)}Ω</div>
+          </div>
+          <div className="text-center">
+            <div style={{ fontSize: typo.label, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>Power Loss</div>
+            <div style={{ fontSize: typo.body, color: powerLoss > 200 ? colors.danger : powerLoss > 100 ? colors.warning : colors.success, fontWeight: 700 }}>
+              {powerLoss.toFixed(0)}W
+            </div>
+            <div style={{ fontSize: typo.label, color: colors.textMuted }}>I²R loss</div>
+          </div>
+          <div className="text-center">
+            <div style={{ fontSize: typo.label, color: colors.textMuted, textTransform: 'uppercase', letterSpacing: '0.5px' }}>V Drop</div>
+            <div style={{ fontSize: typo.body, color: voltageDropPercent > 5 ? colors.danger : voltageDropPercent > 3 ? colors.warning : colors.success, fontWeight: 700 }}>
+              {voltageDropPercent.toFixed(1)}%
+            </div>
+            <div style={{ fontSize: typo.label, color: colors.textMuted }}>{voltageDrop.toFixed(1)}V</div>
+          </div>
+        </div>
+      </div>
     );
   };
 
   const renderVoltageComparisonVisualization = () => {
     const maxLoss = Math.max(lossAt208V, lossAt480V, 100);
-    const bar208Height = (lossAt208V / maxLoss) * 150;
-    const bar480Height = (lossAt480V / maxLoss) * 150;
+    const bar208Height = (lossAt208V / maxLoss) * 120;
+    const bar480Height = (lossAt480V / maxLoss) * 120;
+    const savingsPercent = lossAt208V > 0 ? ((1 - lossAt480V / lossAt208V) * 100).toFixed(0) : '0';
 
     return (
-      <svg viewBox="0 0 400 300" className="w-full h-64">
-        <defs>
-          <linearGradient id="bar208Grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#f59e0b" />
-            <stop offset="100%" stopColor="#d97706" />
-          </linearGradient>
-          <linearGradient id="bar480Grad" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#22c55e" />
-            <stop offset="100%" stopColor="#16a34a" />
-          </linearGradient>
-        </defs>
+      <div>
+        <svg viewBox="0 0 400 220" className="w-full h-56">
+          <defs>
+            {/* 208V bar gradient - amber/orange warning colors */}
+            <linearGradient id="cableBar208Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#fcd34d" />
+              <stop offset="25%" stopColor="#fbbf24" />
+              <stop offset="50%" stopColor="#f59e0b" />
+              <stop offset="75%" stopColor="#d97706" />
+              <stop offset="100%" stopColor="#b45309" />
+            </linearGradient>
 
-        {/* Background */}
-        <rect width="400" height="300" fill="#1e293b" rx="12" />
+            {/* 480V bar gradient - green success colors */}
+            <linearGradient id="cableBar480Grad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#6ee7b7" />
+              <stop offset="25%" stopColor="#34d399" />
+              <stop offset="50%" stopColor="#10b981" />
+              <stop offset="75%" stopColor="#059669" />
+              <stop offset="100%" stopColor="#047857" />
+            </linearGradient>
 
-        {/* Title */}
-        <text x="200" y="25" textAnchor="middle" fill="#ffffff" fontSize="14" fontWeight="bold">
-          Higher Voltage = Lower Losses
-        </text>
-        <text x="200" y="45" textAnchor="middle" fill="#94a3b8" fontSize="11">
-          Same {(loadPower / 1000).toFixed(0)}kW load, different distribution voltage
-        </text>
+            {/* Bar glow effect for 208V */}
+            <filter id="cableBar208Glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#f59e0b" floodOpacity="0.5" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* Chart area */}
-        <rect x="50" y="60" width="300" height="180" fill="#0f172a" rx="8" />
+            {/* Bar glow effect for 480V */}
+            <filter id="cableBar480Glow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feFlood floodColor="#10b981" floodOpacity="0.5" />
+              <feComposite in2="blur" operator="in" />
+              <feMerge>
+                <feMergeNode />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
 
-        {/* 208V Bar */}
-        <g transform="translate(100, 220)">
-          <rect
-            x="0"
-            y={-bar208Height}
-            width="80"
-            height={bar208Height}
-            fill="url(#bar208Grad)"
-            rx="4"
-          />
-          <text x="40" y="-bar208Height - 10" textAnchor="middle" fill="#f59e0b" fontSize="12" fontWeight="bold">
-            {lossAt208V.toFixed(0)}W
+            {/* Current flow indicators */}
+            <radialGradient id="cableCurrentDot208" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            <radialGradient id="cableCurrentDot480" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#d1fae5" stopOpacity="1" />
+              <stop offset="50%" stopColor="#34d399" stopOpacity="0.7" />
+              <stop offset="100%" stopColor="#059669" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Premium background */}
+            <linearGradient id="cableVoltBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="50%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
+
+            {/* Chart area background */}
+            <linearGradient id="cableChartBg" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#0f172a" stopOpacity="0.8" />
+            </linearGradient>
+
+            {/* Grid pattern */}
+            <pattern id="cableVoltGrid" width="30" height="30" patternUnits="userSpaceOnUse">
+              <rect width="30" height="30" fill="none" stroke="#334155" strokeWidth="0.5" strokeOpacity="0.2" />
+            </pattern>
+
+            {/* Savings arrow gradient */}
+            <linearGradient id="cableSavingsArrow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="50%" stopColor="#84cc16" />
+              <stop offset="100%" stopColor="#10b981" />
+            </linearGradient>
+          </defs>
+
+          {/* Background */}
+          <rect width="400" height="220" fill="url(#cableVoltBg)" rx="12" />
+          <rect width="400" height="220" fill="url(#cableVoltGrid)" rx="12" />
+
+          {/* Chart area */}
+          <rect x="40" y="30" width="320" height="150" fill="url(#cableChartBg)" rx="8" stroke="#334155" strokeWidth="1" />
+
+          {/* Horizontal grid lines */}
+          {[0, 1, 2, 3].map(i => (
+            <line
+              key={`grid-${i}`}
+              x1="50"
+              y1={165 - i * 35}
+              x2="350"
+              y2={165 - i * 35}
+              stroke="#334155"
+              strokeWidth="0.5"
+              strokeDasharray="4 4"
+            />
+          ))}
+
+          {/* 208V Column */}
+          <g transform="translate(90, 165)">
+            {/* Bar shadow */}
+            <rect
+              x="5"
+              y={-bar208Height + 3}
+              width="70"
+              height={bar208Height}
+              fill="#000"
+              opacity="0.3"
+              rx="6"
+            />
+            {/* Main bar */}
+            <rect
+              x="0"
+              y={-bar208Height}
+              width="70"
+              height={bar208Height}
+              fill="url(#cableBar208Grad)"
+              rx="6"
+              filter="url(#cableBar208Glow)"
+            />
+            {/* Bar highlight */}
+            <rect
+              x="5"
+              y={-bar208Height + 5}
+              width="20"
+              height={bar208Height - 10}
+              fill="rgba(255,255,255,0.1)"
+              rx="4"
+            />
+            {/* Current flow dots */}
+            {[...Array(Math.min(5, Math.ceil(currentAt208V / 20)))].map((_, i) => (
+              <circle
+                key={`dot208-${i}`}
+                cx="35"
+                cy={-10 - i * 20 - ((animationFrame * 2) % 20)}
+                r="4"
+                fill="url(#cableCurrentDot208)"
+                opacity={0.8 - i * 0.15}
+              />
+            ))}
+          </g>
+
+          {/* 480V Column */}
+          <g transform="translate(240, 165)">
+            {/* Bar shadow */}
+            <rect
+              x="5"
+              y={-bar480Height + 3}
+              width="70"
+              height={bar480Height}
+              fill="#000"
+              opacity="0.3"
+              rx="6"
+            />
+            {/* Main bar */}
+            <rect
+              x="0"
+              y={-bar480Height}
+              width="70"
+              height={bar480Height}
+              fill="url(#cableBar480Grad)"
+              rx="6"
+              filter="url(#cableBar480Glow)"
+            />
+            {/* Bar highlight */}
+            <rect
+              x="5"
+              y={-bar480Height + 5}
+              width="20"
+              height={Math.max(0, bar480Height - 10)}
+              fill="rgba(255,255,255,0.1)"
+              rx="4"
+            />
+            {/* Current flow dots (fewer because lower current) */}
+            {[...Array(Math.min(3, Math.ceil(currentAt480V / 20)))].map((_, i) => (
+              <circle
+                key={`dot480-${i}`}
+                cx="35"
+                cy={-10 - i * 20 - ((animationFrame * 2) % 20)}
+                r="4"
+                fill="url(#cableCurrentDot480)"
+                opacity={0.8 - i * 0.15}
+              />
+            ))}
+          </g>
+
+          {/* Savings arrow connecting the bars */}
+          {lossAt208V > lossAt480V && (
+            <g>
+              <path
+                d={`M 165 ${165 - bar208Height / 2}
+                    C 200 ${165 - bar208Height / 2},
+                      200 ${165 - bar480Height / 2},
+                      235 ${165 - bar480Height / 2}`}
+                fill="none"
+                stroke="url(#cableSavingsArrow)"
+                strokeWidth="3"
+                strokeDasharray="6 3"
+                opacity="0.7"
+              />
+              <polygon
+                points={`235,${165 - bar480Height / 2 - 5} 245,${165 - bar480Height / 2} 235,${165 - bar480Height / 2 + 5}`}
+                fill="#10b981"
+              />
+            </g>
+          )}
+
+          {/* Y-axis label */}
+          <text
+            x="25"
+            y="100"
+            fill="#64748b"
+            fontSize="10"
+            transform="rotate(-90, 25, 100)"
+            textAnchor="middle"
+          >
+            Power Loss (W)
           </text>
-          <text x="40" y="20" textAnchor="middle" fill="#ffffff" fontSize="12">208V</text>
-          <text x="40" y="35" textAnchor="middle" fill="#94a3b8" fontSize="10">
-            {currentAt208V.toFixed(1)}A
-          </text>
-        </g>
+        </svg>
 
-        {/* 480V Bar */}
-        <g transform="translate(220, 220)">
-          <rect
-            x="0"
-            y={-bar480Height}
-            width="80"
-            height={bar480Height}
-            fill="url(#bar480Grad)"
-            rx="4"
-          />
-          <text x="40" y={-bar480Height - 10} textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">
-            {lossAt480V.toFixed(0)}W
-          </text>
-          <text x="40" y="20" textAnchor="middle" fill="#ffffff" fontSize="12">480V</text>
-          <text x="40" y="35" textAnchor="middle" fill="#94a3b8" fontSize="10">
-            {currentAt480V.toFixed(1)}A
-          </text>
-        </g>
+        {/* Stats panel - moved outside SVG using typo system */}
+        <div
+          className="grid grid-cols-2 gap-4 mt-3 p-4 rounded-xl"
+          style={{ backgroundColor: colors.bgCard, border: `1px solid ${colors.border}` }}
+        >
+          {/* 208V Stats */}
+          <div
+            className="p-3 rounded-lg text-center"
+            style={{ backgroundColor: 'rgba(245, 158, 11, 0.1)', border: '1px solid rgba(245, 158, 11, 0.3)' }}
+          >
+            <div style={{ fontSize: typo.heading, color: colors.warning, fontWeight: 700 }}>208V</div>
+            <div style={{ fontSize: typo.body, color: colors.textSecondary }}>{currentAt208V.toFixed(1)}A current</div>
+            <div style={{ fontSize: typo.bodyLarge, color: colors.warning, fontWeight: 700, marginTop: '4px' }}>
+              {lossAt208V.toFixed(0)}W loss
+            </div>
+          </div>
+
+          {/* 480V Stats */}
+          <div
+            className="p-3 rounded-lg text-center"
+            style={{ backgroundColor: 'rgba(16, 185, 129, 0.1)', border: '1px solid rgba(16, 185, 129, 0.3)' }}
+          >
+            <div style={{ fontSize: typo.heading, color: colors.success, fontWeight: 700 }}>480V</div>
+            <div style={{ fontSize: typo.body, color: colors.textSecondary }}>{currentAt480V.toFixed(1)}A current</div>
+            <div style={{ fontSize: typo.bodyLarge, color: colors.success, fontWeight: 700, marginTop: '4px' }}>
+              {lossAt480V.toFixed(0)}W loss
+            </div>
+          </div>
+        </div>
 
         {/* Savings indicator */}
         {lossAt208V > lossAt480V && (
-          <g transform="translate(200, 275)">
-            <text x="0" y="0" textAnchor="middle" fill="#22c55e" fontSize="12" fontWeight="bold">
-              480V saves {((1 - lossAt480V / lossAt208V) * 100).toFixed(0)}% in cable losses!
-            </text>
-          </g>
+          <div
+            className="mt-3 p-3 rounded-xl text-center"
+            style={{
+              background: 'linear-gradient(135deg, rgba(16, 185, 129, 0.15) 0%, rgba(5, 150, 105, 0.1) 100%)',
+              border: '1px solid rgba(16, 185, 129, 0.3)'
+            }}
+          >
+            <span style={{ fontSize: typo.bodyLarge, color: colors.success, fontWeight: 700 }}>
+              480V saves {savingsPercent}% in cable losses!
+            </span>
+          </div>
         )}
-      </svg>
+      </div>
     );
   };
 

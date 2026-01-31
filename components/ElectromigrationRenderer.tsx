@@ -480,141 +480,458 @@ const ElectromigrationRenderer: React.FC<ElectromigrationRendererProps> = ({
 
   const renderVisualization = (interactive: boolean = false, showTemperatureEffect: boolean = false) => {
     const width = 400;
-    const height = 300;
+    const height = 260;
     const atomCount = 20;
     const electronCount = Math.floor(currentDensity * 3);
 
+    // Current density intensity for visual feedback (0-1 scale)
+    const currentIntensity = Math.min(currentDensity / 20, 1);
+
     return (
-      <svg
-        width="100%"
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
-        style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
-      >
-        <defs>
-          <linearGradient id="copperGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={colors.copper} />
-            <stop offset="100%" stopColor="#cd853f" />
-          </linearGradient>
-          <filter id="glow">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
-
-        <text x="200" y="25" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
+        {/* Title outside SVG */}
+        <div style={{
+          fontSize: typo.body,
+          fontWeight: 700,
+          color: colors.textPrimary,
+          textAlign: 'center'
+        }}>
           Copper Interconnect Cross-Section
-        </text>
+        </div>
 
-        <rect x="50" y="80" width="300" height="60" fill="url(#copperGrad)" rx="4" />
-        <text x="200" y="175" fill={colors.textMuted} fontSize="10" textAnchor="middle">
-          Copper Wire ({wireWidth}nm wide)
-        </text>
+        <svg
+          width="100%"
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          style={{ borderRadius: '12px', maxWidth: '500px' }}
+        >
+          <defs>
+            {/* Premium dark lab background gradient */}
+            <linearGradient id="emigLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#030712" />
+              <stop offset="30%" stopColor="#0a0f1a" />
+              <stop offset="70%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#030712" />
+            </linearGradient>
 
-        {voidFormation > 10 && (
-          <ellipse
-            cx={80 + voidFormation * 0.3}
-            cy={110}
-            rx={Math.min(voidFormation * 0.4, 25)}
-            ry={Math.min(voidFormation * 0.25, 15)}
-            fill={colors.void}
-            opacity={Math.min(voidFormation / 50, 1)}
-          />
-        )}
-        {voidFormation > 10 && (
-          <text x={80 + voidFormation * 0.3} y={110} fill={colors.textPrimary} fontSize="8" textAnchor="middle" opacity={Math.min(voidFormation / 30, 1)}>
-            VOID
-          </text>
-        )}
+            {/* Premium copper metal gradient with depth */}
+            <linearGradient id="emigCopperMetal" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#cd7f32" />
+              <stop offset="15%" stopColor="#e8a860" />
+              <stop offset="35%" stopColor="#b87333" />
+              <stop offset="65%" stopColor="#a0522d" />
+              <stop offset="85%" stopColor="#8b4513" />
+              <stop offset="100%" stopColor="#704214" />
+            </linearGradient>
 
-        {hillockFormation > 10 && (
-          <ellipse
-            cx={320 - hillockFormation * 0.2}
-            cy={75}
-            rx={Math.min(hillockFormation * 0.25, 20)}
-            ry={Math.min(hillockFormation * 0.15, 12)}
-            fill={colors.atom}
-            opacity={Math.min(hillockFormation / 50, 0.8)}
-          />
-        )}
-        {hillockFormation > 10 && (
-          <text x={320 - hillockFormation * 0.2} y={72} fill={colors.bgPrimary} fontSize="7" textAnchor="middle" opacity={Math.min(hillockFormation / 30, 1)}>
-            HILLOCK
-          </text>
-        )}
+            {/* Copper surface highlight */}
+            <linearGradient id="emigCopperHighlight" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#b87333" stopOpacity="0.3" />
+              <stop offset="20%" stopColor="#e8a860" stopOpacity="0.6" />
+              <stop offset="50%" stopColor="#ffd700" stopOpacity="0.2" />
+              <stop offset="80%" stopColor="#e8a860" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#b87333" stopOpacity="0.3" />
+            </linearGradient>
 
-        {Array.from({ length: atomCount }, (_, i) => {
-          const x = 70 + (i % 10) * 26;
-          const y = 95 + Math.floor(i / 10) * 30;
-          const displacement = isAnimating ? Math.sin(animationTime * 0.1 + i) * (currentDensity * 0.3) : 0;
-          return (
-            <circle
-              key={`atom-${i}`}
-              cx={x + displacement}
-              cy={y}
-              r={6}
-              fill={colors.atom}
-              opacity={0.8}
+            {/* Current flow gradient - intensity-based */}
+            <linearGradient id="emigCurrentFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#1e40af" stopOpacity="0" />
+              <stop offset="20%" stopColor="#3b82f6" stopOpacity={0.3 + currentIntensity * 0.4} />
+              <stop offset="50%" stopColor="#60a5fa" stopOpacity={0.5 + currentIntensity * 0.5} />
+              <stop offset="80%" stopColor="#3b82f6" stopOpacity={0.3 + currentIntensity * 0.4} />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+            </linearGradient>
+
+            {/* Electron glow - premium radial */}
+            <radialGradient id="emigElectronGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#93c5fd" stopOpacity="1" />
+              <stop offset="30%" stopColor="#60a5fa" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#3b82f6" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#1d4ed8" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Atom glow - golden radial */}
+            <radialGradient id="emigAtomGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="30%" stopColor="#fbbf24" stopOpacity="0.9" />
+              <stop offset="60%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Void darkness gradient */}
+            <radialGradient id="emigVoidDark" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#030712" stopOpacity="1" />
+              <stop offset="40%" stopColor="#0f172a" stopOpacity="0.95" />
+              <stop offset="70%" stopColor="#1e293b" stopOpacity="0.8" />
+              <stop offset="100%" stopColor="#334155" stopOpacity="0.4" />
+            </radialGradient>
+
+            {/* Hillock buildup gradient */}
+            <radialGradient id="emigHillockGlow" cx="50%" cy="70%" r="60%">
+              <stop offset="0%" stopColor="#fef3c7" stopOpacity="1" />
+              <stop offset="25%" stopColor="#fcd34d" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#fbbf24" stopOpacity="0.8" />
+              <stop offset="75%" stopColor="#f59e0b" stopOpacity="0.6" />
+              <stop offset="100%" stopColor="#d97706" stopOpacity="0.3" />
+            </radialGradient>
+
+            {/* Temperature heat gradient */}
+            <linearGradient id="emigHeatGradient" x1="0%" y1="100%" x2="0%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="25%" stopColor="#84cc16" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Substrate/barrier layer gradient */}
+            <linearGradient id="emigBarrierLayer" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#374151" />
+              <stop offset="30%" stopColor="#4b5563" />
+              <stop offset="70%" stopColor="#374151" />
+              <stop offset="100%" stopColor="#1f2937" />
+            </linearGradient>
+
+            {/* Current density indicator gradient */}
+            <linearGradient id="emigDensityBar" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="33%" stopColor="#eab308" />
+              <stop offset="66%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* Electron blur/glow filter */}
+            <filter id="emigElectronBlur" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Stronger glow for atoms */}
+            <filter id="emigAtomGlowFilter" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Void shadow filter */}
+            <filter id="emigVoidShadow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Hillock glow filter */}
+            <filter id="emigHillockGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Current pulse animation effect */}
+            <filter id="emigCurrentPulse" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="1.5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Arrow markers */}
+            <marker id="emigArrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
+              <polygon points="0 0, 10 3.5, 0 7" fill="url(#emigElectronGlow)" />
+            </marker>
+            <marker id="emigAtomArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
+              <polygon points="0 0, 8 3, 0 6" fill="#fbbf24" />
+            </marker>
+
+            {/* Grid pattern for substrate */}
+            <pattern id="emigSubstrateGrid" width="10" height="10" patternUnits="userSpaceOnUse">
+              <rect width="10" height="10" fill="none" stroke="#1e293b" strokeWidth="0.3" strokeOpacity="0.5" />
+            </pattern>
+          </defs>
+
+          {/* Background with gradient */}
+          <rect width={width} height={height} fill="url(#emigLabBg)" />
+          <rect width={width} height={height} fill="url(#emigSubstrateGrid)" />
+
+          {/* Barrier/substrate layer below copper */}
+          <rect x="45" y="135" width="310" height="8" fill="url(#emigBarrierLayer)" rx="2" />
+
+          {/* Main copper interconnect with premium gradient */}
+          <rect x="50" y="70" width="300" height="65" fill="url(#emigCopperMetal)" rx="4" />
+
+          {/* Copper surface highlight for metallic sheen */}
+          <rect x="50" y="70" width="300" height="12" fill="url(#emigCopperHighlight)" rx="4" />
+
+          {/* Current flow overlay - pulsing effect */}
+          {isAnimating && (
+            <rect
+              x="50" y="70"
+              width="300" height="65"
+              fill="url(#emigCurrentFlow)"
+              rx="4"
+              style={{
+                opacity: 0.4 + Math.sin(animationTime * 0.2) * 0.2
+              }}
             />
-          );
-        })}
+          )}
 
-        {isAnimating && Array.from({ length: electronCount }, (_, i) => {
-          const baseX = ((animationTime * 5 + i * 40) % 280) + 60;
-          const y = 90 + (i % 3) * 20;
-          return (
-            <circle
-              key={`electron-${i}`}
-              cx={baseX}
-              cy={y}
-              r={3}
-              fill={colors.electron}
-              filter="url(#glow)"
+          {/* Void formation with premium dark gradient */}
+          {voidFormation > 10 && (
+            <g filter="url(#emigVoidShadow)">
+              <ellipse
+                cx={80 + voidFormation * 0.3}
+                cy={102}
+                rx={Math.min(voidFormation * 0.5, 30)}
+                ry={Math.min(voidFormation * 0.35, 22)}
+                fill="url(#emigVoidDark)"
+                opacity={Math.min(voidFormation / 40, 1)}
+              />
+              {/* Void edge highlight */}
+              <ellipse
+                cx={80 + voidFormation * 0.3}
+                cy={102}
+                rx={Math.min(voidFormation * 0.5, 30)}
+                ry={Math.min(voidFormation * 0.35, 22)}
+                fill="none"
+                stroke="#475569"
+                strokeWidth="1"
+                opacity={Math.min(voidFormation / 50, 0.6)}
+              />
+            </g>
+          )}
+
+          {/* Hillock formation with glowing buildup */}
+          {hillockFormation > 10 && (
+            <g filter="url(#emigHillockGlowFilter)">
+              <ellipse
+                cx={320 - hillockFormation * 0.2}
+                cy={65}
+                rx={Math.min(hillockFormation * 0.3, 25)}
+                ry={Math.min(hillockFormation * 0.2, 16)}
+                fill="url(#emigHillockGlow)"
+                opacity={Math.min(hillockFormation / 40, 0.9)}
+              />
+            </g>
+          )}
+
+          {/* Copper atoms with premium glow */}
+          {Array.from({ length: atomCount }, (_, i) => {
+            const x = 70 + (i % 10) * 26;
+            const y = 88 + Math.floor(i / 10) * 28;
+            const displacement = isAnimating ? Math.sin(animationTime * 0.1 + i) * (currentDensity * 0.4) : 0;
+            const atomOpacity = voidFormation > 30 && x < 120 ? Math.max(0.2, 1 - voidFormation / 80) : 0.9;
+            return (
+              <g key={`atom-${i}`} filter="url(#emigAtomGlowFilter)">
+                <circle
+                  cx={x + displacement}
+                  cy={y}
+                  r={7}
+                  fill="url(#emigAtomGlow)"
+                  opacity={atomOpacity}
+                />
+                {/* Atom core for depth */}
+                <circle
+                  cx={x + displacement}
+                  cy={y}
+                  r={4}
+                  fill="#fcd34d"
+                  opacity={atomOpacity * 0.8}
+                />
+              </g>
+            );
+          })}
+
+          {/* Flowing electrons with premium glow */}
+          {isAnimating && Array.from({ length: electronCount }, (_, i) => {
+            const baseX = ((animationTime * 5 + i * 40) % 280) + 60;
+            const y = 85 + (i % 3) * 18;
+            return (
+              <g key={`electron-${i}`} filter="url(#emigElectronBlur)">
+                <circle
+                  cx={baseX}
+                  cy={y}
+                  r={4}
+                  fill="url(#emigElectronGlow)"
+                />
+                {/* Electron core */}
+                <circle
+                  cx={baseX}
+                  cy={y}
+                  r={2}
+                  fill="#bfdbfe"
+                />
+              </g>
+            );
+          })}
+
+          {/* Electron flow arrow with gradient */}
+          <path
+            d="M 60 175 L 340 175"
+            stroke="url(#emigCurrentFlow)"
+            strokeWidth="3"
+            markerEnd="url(#emigArrowhead)"
+            filter="url(#emigCurrentPulse)"
+          />
+
+          {/* Atom drift indicator when animating */}
+          {isAnimating && (
+            <g>
+              <path
+                d="M 180 95 L 260 95"
+                stroke="#fbbf24"
+                strokeWidth="1.5"
+                strokeDasharray="6,3"
+                markerEnd="url(#emigAtomArrow)"
+                opacity="0.8"
+              />
+            </g>
+          )}
+
+          {/* Current density indicator bar */}
+          <g>
+            <rect x="50" y="200" width="140" height="6" fill="#1e293b" rx="3" />
+            <rect
+              x="50" y="200"
+              width={140 * currentIntensity}
+              height="6"
+              fill="url(#emigDensityBar)"
+              rx="3"
             />
-          );
-        })}
+            {/* Tick marks */}
+            {[0.25, 0.5, 0.75].map((tick, i) => (
+              <line
+                key={i}
+                x1={50 + 140 * tick} y1="198"
+                x2={50 + 140 * tick} y2="208"
+                stroke="#64748b"
+                strokeWidth="1"
+              />
+            ))}
+          </g>
 
-        <path d="M 60 200 L 340 200" stroke={colors.electron} strokeWidth="2" markerEnd="url(#arrowhead)" />
-        <defs>
-          <marker id="arrowhead" markerWidth="10" markerHeight="7" refX="9" refY="3.5" orient="auto">
-            <polygon points="0 0, 10 3.5, 0 7" fill={colors.electron} />
-          </marker>
-        </defs>
-        <text x="200" y="220" fill={colors.textMuted} fontSize="10" textAnchor="middle">
-          Electron Flow Direction (e-)
-        </text>
-        <text x="80" y="240" fill={colors.error} fontSize="9" textAnchor="middle">
-          Cathode (-)
-        </text>
-        <text x="320" y="240" fill={colors.success} fontSize="9" textAnchor="middle">
-          Anode (+)
-        </text>
+          {/* Temperature indicator when showing temperature effect */}
+          {showTemperatureEffect && (
+            <g>
+              <rect x="320" y="185" width="60" height="50" fill="rgba(15, 23, 42, 0.9)" rx="6" stroke="#334155" strokeWidth="1" />
+              {/* Heat bar */}
+              <rect x="328" y="195" width="8" height="32" fill="#1e293b" rx="2" />
+              <rect
+                x="328"
+                y={227 - (temperature - 25) / 125 * 32}
+                width="8"
+                height={(temperature - 25) / 125 * 32}
+                fill="url(#emigHeatGradient)"
+                rx="2"
+              />
+              {/* Temperature value */}
+              <text x="355" y="215" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">
+                {temperature}°C
+              </text>
+            </g>
+          )}
+        </svg>
 
+        {/* Labels below SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '500px',
+          paddingLeft: '50px',
+          paddingRight: '50px'
+        }}>
+          <div style={{
+            fontSize: typo.small,
+            color: colors.error,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}>
+            <span style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: colors.error,
+              display: 'inline-block'
+            }} />
+            Cathode (-)
+          </div>
+          <div style={{
+            fontSize: typo.label,
+            color: colors.textMuted,
+            textAlign: 'center'
+          }}>
+            Electron Flow →
+          </div>
+          <div style={{
+            fontSize: typo.small,
+            color: colors.success,
+            fontWeight: 600,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '4px'
+          }}>
+            Anode (+)
+            <span style={{
+              width: '8px',
+              height: '8px',
+              borderRadius: '50%',
+              background: colors.success,
+              display: 'inline-block'
+            }} />
+          </div>
+        </div>
+
+        {/* Wire info and current density display */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '500px',
+          fontSize: typo.label,
+          color: colors.textMuted
+        }}>
+          <span>Wire: {wireWidth}nm</span>
+          <span style={{
+            color: currentDensity > 15 ? colors.error : currentDensity > 8 ? colors.warning : colors.success,
+            fontWeight: 600
+          }}>
+            J = {currentDensity} MA/cm²
+          </span>
+        </div>
+
+        {/* Status indicators */}
         {isAnimating && (
-          <g>
-            <path d="M 200 100 L 270 100" stroke={colors.atom} strokeWidth="1" strokeDasharray="4,2" markerEnd="url(#atomArrow)" />
-            <defs>
-              <marker id="atomArrow" markerWidth="8" markerHeight="6" refX="7" refY="3" orient="auto">
-                <polygon points="0 0, 8 3, 0 6" fill={colors.atom} />
-              </marker>
-            </defs>
-            <text x="235" y="95" fill={colors.atom} fontSize="8" textAnchor="middle">
-              Atom drift
-            </text>
-          </g>
+          <div style={{
+            display: 'flex',
+            gap: '16px',
+            fontSize: typo.label,
+            color: colors.textSecondary
+          }}>
+            {voidFormation > 10 && (
+              <span style={{ color: colors.error }}>
+                Void forming at cathode
+              </span>
+            )}
+            {hillockFormation > 10 && (
+              <span style={{ color: colors.warning }}>
+                Hillock at anode
+              </span>
+            )}
+          </div>
         )}
-
-        {showTemperatureEffect && (
-          <g>
-            <rect x="320" y="30" width="70" height="50" fill="rgba(239, 68, 68, 0.2)" rx="4" />
-            <text x="355" y="50" fill={colors.error} fontSize="10" textAnchor="middle">Temp</text>
-            <text x="355" y="70" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">{temperature}C</text>
-          </g>
-        )}
-      </svg>
+      </div>
     );
   };
 

@@ -263,167 +263,509 @@ const ESDProtectionRenderer: React.FC<ESDProtectionRendererProps> = ({
 
   const renderVisualization = (showTiming: boolean = false) => {
     const width = 400;
-    const height = 340;
+    const height = 280;
 
     // Spark animation
     const sparkIntensity = isDischarging ? Math.max(0, 1 - animationTime / 15) : 0;
 
+    // Clamping voltage calculation (for display)
+    const clampingVoltage = hasProtection ? 5.5 : esdVoltage;
+    const clampingEfficiency = hasProtection ? ((esdVoltage - clampingVoltage) / esdVoltage * 100).toFixed(0) : 0;
+
     return (
-      <svg
-        width="100%"
-        height={height}
-        viewBox={`0 0 ${width} ${height}`}
-        style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
-      >
-        <defs>
-          <linearGradient id="sparkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={colors.spark} />
-            <stop offset="100%" stopColor={colors.human} />
-          </linearGradient>
-          <filter id="sparkGlow">
-            <feGaussianBlur stdDeviation="4" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-          <filter id="chipGlow">
-            <feGaussianBlur stdDeviation="2" result="coloredBlur" />
-            <feMerge>
-              <feMergeNode in="coloredBlur" />
-              <feMergeNode in="SourceGraphic" />
-            </feMerge>
-          </filter>
-        </defs>
+      <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: typo.elementGap }}>
+        <svg
+          width="100%"
+          height={height}
+          viewBox={`0 0 ${width} ${height}`}
+          style={{ background: 'linear-gradient(180deg, #0a0f1a 0%, #030712 100%)', borderRadius: '12px', maxWidth: '500px' }}
+        >
+          <defs>
+            {/* === PREMIUM GRADIENTS === */}
 
-        {/* Title */}
-        <text x="200" y="25" fill={colors.textPrimary} fontSize="14" textAnchor="middle" fontWeight="bold">
-          ESD Protection Circuit
-        </text>
+            {/* ESD Spark gradient - electric yellow to orange */}
+            <linearGradient id="esdSparkGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fef08a" />
+              <stop offset="25%" stopColor="#fde047" />
+              <stop offset="50%" stopColor="#facc15" />
+              <stop offset="75%" stopColor="#fb923c" />
+              <stop offset="100%" stopColor="#f97316" />
+            </linearGradient>
 
-        {/* Human hand/finger */}
-        <g transform="translate(50, 80)">
-          <ellipse cx="30" cy="40" rx="20" ry="35" fill={colors.human} opacity="0.8" />
-          <text x="30" y="100" fill={colors.textMuted} fontSize="10" textAnchor="middle">Human</text>
-          <text x="30" y="112" fill={colors.human} fontSize="9" textAnchor="middle">{esdVoltage}V</text>
-        </g>
+            {/* Human skin gradient */}
+            <radialGradient id="esdHumanGrad" cx="40%" cy="30%" r="70%">
+              <stop offset="0%" stopColor="#fdba74" />
+              <stop offset="30%" stopColor="#fb923c" />
+              <stop offset="60%" stopColor="#f97316" />
+              <stop offset="100%" stopColor="#ea580c" />
+            </radialGradient>
 
-        {/* ESD discharge path */}
-        {sparkIntensity > 0 && (
-          <g filter="url(#sparkGlow)">
-            <path
-              d={`M 100 120 L 130 115 L 120 125 L 160 120 L 150 130 L ${hasProtection ? '200 160' : '220 180'}`}
-              fill="none"
-              stroke="url(#sparkGrad)"
-              strokeWidth={3 + sparkIntensity * 4}
-              opacity={sparkIntensity}
-            />
-            {/* Spark particles */}
-            {Array.from({ length: 8 }, (_, i) => {
-              const t = (animationTime + i * 3) % 20;
-              const x = 100 + t * 6 + Math.sin(i) * 10;
-              const y = 120 + Math.cos(t + i) * 20;
-              return (
-                <circle
-                  key={i}
-                  cx={x}
-                  cy={y}
-                  r={2 + Math.random() * 2}
-                  fill={colors.spark}
-                  opacity={sparkIntensity * 0.8}
-                />
-              );
-            })}
+            {/* Diode gradient - green semiconductor */}
+            <linearGradient id="esdDiodeGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#86efac" />
+              <stop offset="25%" stopColor="#4ade80" />
+              <stop offset="50%" stopColor="#22c55e" />
+              <stop offset="75%" stopColor="#16a34a" />
+              <stop offset="100%" stopColor="#15803d" />
+            </linearGradient>
+
+            {/* Diode active glow gradient */}
+            <radialGradient id="esdDiodeGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#4ade80" stopOpacity="1" />
+              <stop offset="40%" stopColor="#22c55e" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#16a34a" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#15803d" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Circuit trace gradient - metallic blue */}
+            <linearGradient id="esdCircuitGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#38bdf8" />
+              <stop offset="25%" stopColor="#60a5fa" />
+              <stop offset="50%" stopColor="#3b82f6" />
+              <stop offset="75%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#38bdf8" />
+            </linearGradient>
+
+            {/* Chip silicon gradient */}
+            <linearGradient id="esdChipGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#6366f1" stopOpacity="0.4" />
+              <stop offset="30%" stopColor="#4f46e5" stopOpacity="0.3" />
+              <stop offset="70%" stopColor="#4338ca" stopOpacity="0.35" />
+              <stop offset="100%" stopColor="#3730a3" stopOpacity="0.4" />
+            </linearGradient>
+
+            {/* Chip border gradient */}
+            <linearGradient id="esdChipBorderGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#818cf8" />
+              <stop offset="50%" stopColor="#6366f1" />
+              <stop offset="100%" stopColor="#4f46e5" />
+            </linearGradient>
+
+            {/* VDD power rail gradient - red */}
+            <linearGradient id="esdVddGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#fca5a5" />
+              <stop offset="50%" stopColor="#f87171" />
+              <stop offset="100%" stopColor="#ef4444" />
+            </linearGradient>
+
+            {/* GND power rail gradient - dark gray */}
+            <linearGradient id="esdGndGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#6b7280" />
+              <stop offset="50%" stopColor="#4b5563" />
+              <stop offset="100%" stopColor="#374151" />
+            </linearGradient>
+
+            {/* Damage overlay gradient */}
+            <radialGradient id="esdDamageGrad" cx="50%" cy="50%" r="60%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.8" />
+              <stop offset="50%" stopColor="#dc2626" stopOpacity="0.5" />
+              <stop offset="100%" stopColor="#b91c1c" stopOpacity="0.2" />
+            </radialGradient>
+
+            {/* Current flow particle gradient */}
+            <radialGradient id="esdCurrentGrad" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#fef08a" stopOpacity="1" />
+              <stop offset="40%" stopColor="#fde047" stopOpacity="0.8" />
+              <stop offset="70%" stopColor="#facc15" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#eab308" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Card background gradient */}
+            <linearGradient id="esdCardBgGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.95" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.9" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="0.95" />
+            </linearGradient>
+
+            {/* === GLOW FILTERS === */}
+
+            {/* Spark glow filter - intense */}
+            <filter id="esdSparkGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="6" result="blur1" />
+              <feGaussianBlur stdDeviation="3" result="blur2" />
+              <feMerge>
+                <feMergeNode in="blur1" />
+                <feMergeNode in="blur2" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Diode glow filter */}
+            <filter id="esdDiodeGlowFilter" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Chip glow filter */}
+            <filter id="esdChipGlow" x="-20%" y="-20%" width="140%" height="140%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Current flow glow */}
+            <filter id="esdCurrentGlow" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Damage pulse filter */}
+            <filter id="esdDamageGlow" x="-30%" y="-30%" width="160%" height="160%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            {/* Subtle grid pattern */}
+            <pattern id="esdGridPattern" width="20" height="20" patternUnits="userSpaceOnUse">
+              <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+            </pattern>
+          </defs>
+
+          {/* Background grid */}
+          <rect width={width} height={height} fill="url(#esdGridPattern)" />
+
+          {/* Human finger/hand with premium gradient */}
+          <g transform="translate(35, 55)">
+            {/* Finger shadow */}
+            <ellipse cx="32" cy="42" rx="22" ry="38" fill="#000" opacity="0.3" />
+            {/* Finger body */}
+            <ellipse cx="30" cy="40" rx="20" ry="35" fill="url(#esdHumanGrad)" />
+            {/* Finger highlight */}
+            <ellipse cx="25" cy="30" rx="8" ry="15" fill="#fdba74" opacity="0.5" />
+            {/* Fingernail hint */}
+            <ellipse cx="30" cy="12" rx="10" ry="8" fill="#fef3c7" opacity="0.3" />
           </g>
-        )}
 
-        {/* Input pin */}
-        <rect x="180" y="140" width="40" height="10" fill={colors.circuit} />
-        <text x="200" y="160" fill={colors.textMuted} fontSize="8" textAnchor="middle">I/O Pin</text>
+          {/* ESD discharge path - lightning bolt */}
+          {sparkIntensity > 0 && (
+            <g filter="url(#esdSparkGlow)">
+              {/* Main lightning bolt path */}
+              <path
+                d={`M 85 95 L 110 88 L 100 100 L 130 92 L 118 105 L 150 95 L 138 110 L ${hasProtection ? '175 130' : '200 155'}`}
+                fill="none"
+                stroke="url(#esdSparkGrad)"
+                strokeWidth={3 + sparkIntensity * 5}
+                opacity={sparkIntensity}
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+              {/* Secondary branch */}
+              <path
+                d={`M 130 92 L 145 105 L 135 112`}
+                fill="none"
+                stroke="url(#esdSparkGrad)"
+                strokeWidth={2 + sparkIntensity * 2}
+                opacity={sparkIntensity * 0.7}
+                strokeLinecap="round"
+              />
+              {/* Spark particles */}
+              {Array.from({ length: 12 }, (_, i) => {
+                const t = (animationTime + i * 2.5) % 20;
+                const baseX = 85 + t * 5;
+                const baseY = 95 + Math.sin(t * 0.5 + i) * 15;
+                const size = 2 + Math.sin(animationTime * 0.3 + i) * 1.5;
+                return (
+                  <circle
+                    key={i}
+                    cx={baseX + Math.sin(i * 1.2) * 12}
+                    cy={baseY + Math.cos(i * 0.8 + t) * 10}
+                    r={size}
+                    fill="url(#esdCurrentGrad)"
+                    opacity={sparkIntensity * (0.5 + Math.sin(i) * 0.3)}
+                    filter="url(#esdCurrentGlow)"
+                  />
+                );
+              })}
+            </g>
+          )}
 
-        {/* ESD Protection diodes (if enabled) */}
-        {hasProtection && (
+          {/* I/O Pin with gradient */}
           <g>
-            {/* Upper diode to VDD */}
-            <polygon points="200,130 210,115 190,115" fill={colors.diode} />
-            <line x1="190" y1="115" x2="210" y2="115" stroke={colors.diode} strokeWidth="2" />
-            <line x1="200" y1="115" x2="200" y2="95" stroke={colors.diode} strokeWidth="2" />
-            <text x="200" y="88" fill={colors.diode} fontSize="8" textAnchor="middle">VDD</text>
+            <rect x="165" y="115" width="50" height="12" rx="2" fill="url(#esdCircuitGrad)" />
+            {/* Pin highlight */}
+            <rect x="165" y="115" width="50" height="4" rx="1" fill="#93c5fd" opacity="0.4" />
+          </g>
 
-            {/* Lower diode to GND */}
-            <polygon points="200,175 190,190 210,190" fill={colors.diode} />
-            <line x1="190" y1="190" x2="210" y2="190" stroke={colors.diode} strokeWidth="2" />
-            <line x1="200" y1="190" x2="200" y2="210" stroke={colors.diode} strokeWidth="2" />
-            <line x1="185" y1="210" x2="215" y2="210" stroke={colors.diode} strokeWidth="3" />
-            <text x="200" y="225" fill={colors.textMuted} fontSize="8" textAnchor="middle">GND</text>
+          {/* ESD Protection diodes (if enabled) */}
+          {hasProtection && (
+            <g>
+              {/* VDD Rail */}
+              <line x1="165" y1="70" x2="235" y2="70" stroke="url(#esdVddGrad)" strokeWidth="3" strokeLinecap="round" />
 
-            {/* Current flow indicator when discharging */}
-            {isDischarging && dischargePath === 'diode' && (
-              <g>
-                <circle cx="200" cy={130 - (animationTime % 10) * 3} r="3" fill={colors.spark} opacity={0.8} />
-                <circle cx="200" cy={175 + (animationTime % 10) * 3} r="3" fill={colors.spark} opacity={0.8} />
+              {/* Upper diode to VDD */}
+              <g filter={isDischarging && dischargePath === 'diode' ? "url(#esdDiodeGlowFilter)" : undefined}>
+                {/* Diode body */}
+                <polygon points="190,108 205,85 175,85" fill="url(#esdDiodeGrad)" />
+                {/* Diode cathode bar */}
+                <rect x="173" y="83" width="34" height="4" rx="1" fill="url(#esdDiodeGrad)" />
+                {/* Connection to VDD */}
+                <line x1="190" y1="83" x2="190" y2="70" stroke="url(#esdDiodeGrad)" strokeWidth="3" strokeLinecap="round" />
+                {/* Active glow when discharging */}
+                {isDischarging && dischargePath === 'diode' && (
+                  <ellipse cx="190" cy="95" rx="20" ry="15" fill="url(#esdDiodeGlow)" opacity={0.5 + Math.sin(animationTime * 0.5) * 0.3} />
+                )}
               </g>
-            )}
+
+              {/* Lower diode to GND */}
+              <g filter={isDischarging && dischargePath === 'diode' ? "url(#esdDiodeGlowFilter)" : undefined}>
+                {/* Diode body (inverted) */}
+                <polygon points="190,140 175,163 205,163" fill="url(#esdDiodeGrad)" />
+                {/* Diode anode bar */}
+                <rect x="173" y="161" width="34" height="4" rx="1" fill="url(#esdDiodeGrad)" />
+                {/* Connection to GND */}
+                <line x1="190" y1="165" x2="190" y2="182" stroke="url(#esdDiodeGrad)" strokeWidth="3" strokeLinecap="round" />
+                {/* Active glow when discharging */}
+                {isDischarging && dischargePath === 'diode' && (
+                  <ellipse cx="190" cy="153" rx="20" ry="15" fill="url(#esdDiodeGlow)" opacity={0.5 + Math.sin(animationTime * 0.5 + 1) * 0.3} />
+                )}
+              </g>
+
+              {/* GND Rail */}
+              <line x1="165" y1="182" x2="235" y2="182" stroke="url(#esdGndGrad)" strokeWidth="3" strokeLinecap="round" />
+              {/* GND symbol */}
+              <g transform="translate(190, 188)">
+                <line x1="-15" y1="0" x2="15" y2="0" stroke="url(#esdGndGrad)" strokeWidth="3" />
+                <line x1="-10" y1="5" x2="10" y2="5" stroke="url(#esdGndGrad)" strokeWidth="2" />
+                <line x1="-5" y1="10" x2="5" y2="10" stroke="url(#esdGndGrad)" strokeWidth="1.5" />
+              </g>
+
+              {/* Clamping voltage indicator */}
+              {isDischarging && dischargePath === 'diode' && (
+                <g transform="translate(140, 120)">
+                  <rect x="-25" y="-12" width="50" height="24" rx="4" fill="url(#esdCardBgGrad)" stroke="#22c55e" strokeWidth="1" opacity="0.9" />
+                </g>
+              )}
+
+              {/* Current flow animation particles */}
+              {isDischarging && dischargePath === 'diode' && (
+                <g filter="url(#esdCurrentGlow)">
+                  {/* Upper path current */}
+                  {[0, 1, 2].map((i) => {
+                    const progress = ((animationTime * 3 + i * 10) % 30) / 30;
+                    const y = 108 - progress * 38;
+                    return (
+                      <circle
+                        key={`up-${i}`}
+                        cx={190}
+                        cy={y}
+                        r={4}
+                        fill="url(#esdCurrentGrad)"
+                        opacity={0.9 - progress * 0.3}
+                      />
+                    );
+                  })}
+                  {/* Lower path current */}
+                  {[0, 1, 2].map((i) => {
+                    const progress = ((animationTime * 3 + i * 10) % 30) / 30;
+                    const y = 140 + progress * 42;
+                    return (
+                      <circle
+                        key={`down-${i}`}
+                        cx={190}
+                        cy={y}
+                        r={4}
+                        fill="url(#esdCurrentGrad)"
+                        opacity={0.9 - progress * 0.3}
+                      />
+                    );
+                  })}
+                </g>
+              )}
+            </g>
+          )}
+
+          {/* Wire from pin to chip */}
+          <line x1="215" y1="121" x2="245" y2="130" stroke="url(#esdCircuitGrad)" strokeWidth="2" strokeLinecap="round" />
+
+          {/* Internal chip circuitry with premium styling */}
+          <g filter="url(#esdChipGlow)">
+            {/* Chip body */}
+            <rect x="245" y="95" width="110" height="85" rx="6" fill="url(#esdChipGrad)" stroke="url(#esdChipBorderGrad)" strokeWidth="2" />
+            {/* Chip internal pattern */}
+            <g opacity="0.3">
+              <rect x="255" y="105" width="30" height="20" rx="2" fill="#6366f1" />
+              <rect x="290" y="105" width="25" height="20" rx="2" fill="#6366f1" />
+              <rect x="320" y="105" width="25" height="20" rx="2" fill="#6366f1" />
+              <rect x="255" y="130" width="40" height="15" rx="2" fill="#6366f1" />
+              <rect x="300" y="130" width="45" height="15" rx="2" fill="#6366f1" />
+              <rect x="255" y="150" width="90" height="20" rx="2" fill="#6366f1" />
+            </g>
+            {/* Chip pins (left side) */}
+            {[105, 120, 135, 150, 165].map((y) => (
+              <rect key={y} x="238" y={y} width="10" height="4" rx="1" fill="url(#esdCircuitGrad)" />
+            ))}
+            {/* Chip pins (right side) */}
+            {[105, 120, 135, 150, 165].map((y) => (
+              <rect key={y} x="352" y={y} width="10" height="4" rx="1" fill="url(#esdCircuitGrad)" />
+            ))}
           </g>
-        )}
 
-        {/* Internal chip circuitry */}
-        <rect x="240" y="120" width="100" height="80" fill="rgba(99, 102, 241, 0.3)" rx="4" stroke={colors.circuit} strokeWidth="2" />
-        <text x="290" y="155" fill={colors.textPrimary} fontSize="10" textAnchor="middle">Internal</text>
-        <text x="290" y="170" fill={colors.textPrimary} fontSize="10" textAnchor="middle">Circuits</text>
+          {/* Damage indicator overlay */}
+          {chipDamage > 0 && (
+            <g filter={chipDamage > 50 ? "url(#esdDamageGlow)" : undefined}>
+              <rect
+                x="245"
+                y="95"
+                width="110"
+                height="85"
+                rx="6"
+                fill="url(#esdDamageGrad)"
+                opacity={chipDamage / 150}
+              />
+              {/* Damage cracks when severely damaged */}
+              {chipDamage > 60 && (
+                <g stroke="#ef4444" strokeWidth="1.5" opacity={0.7}>
+                  <path d="M 260 100 L 275 120 L 265 135 L 280 155" fill="none" />
+                  <path d="M 330 100 L 315 125 L 325 145 L 310 170" fill="none" />
+                </g>
+              )}
+            </g>
+          )}
 
-        {/* Damage indicator */}
-        {chipDamage > 0 && (
-          <g>
-            <rect
-              x="240"
-              y="120"
-              width="100"
-              height="80"
-              fill={colors.error}
-              rx="4"
-              opacity={chipDamage / 200}
-            />
-            {chipDamage > 30 && (
-              <text x="290" y="190" fill={colors.error} fontSize="8" textAnchor="middle">
-                Damage: {chipDamage.toFixed(0)}%
-              </text>
-            )}
-          </g>
-        )}
+          {/* Direct ESD hit animation (when no protection) */}
+          {isDischarging && dischargePath === 'chip' && (
+            <g filter="url(#esdSparkGlow)">
+              {/* Impact flash */}
+              <ellipse
+                cx="265"
+                cy="138"
+                rx={15 + animationTime}
+                ry={10 + animationTime * 0.7}
+                fill="url(#esdSparkGrad)"
+                opacity={sparkIntensity * 0.8}
+              />
+              {/* Scattered damage particles */}
+              {Array.from({ length: 8 }, (_, i) => {
+                const angle = (i / 8) * Math.PI * 2;
+                const dist = 10 + animationTime * 2;
+                return (
+                  <circle
+                    key={i}
+                    cx={265 + Math.cos(angle) * dist}
+                    cy={138 + Math.sin(angle) * dist * 0.6}
+                    r={3}
+                    fill="#ef4444"
+                    opacity={sparkIntensity * 0.6}
+                  />
+                );
+              })}
+            </g>
+          )}
+        </svg>
 
-        {/* Wire to chip */}
-        <line x1="220" y1="145" x2="240" y2="160" stroke={colors.circuit} strokeWidth="2" />
+        {/* Labels and status indicators outside SVG */}
+        <div style={{
+          display: 'flex',
+          gap: typo.elementGap,
+          flexWrap: 'wrap',
+          justifyContent: 'center',
+          width: '100%',
+          maxWidth: '500px'
+        }}>
+          {/* Human label */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            background: colors.bgCard,
+            borderRadius: '8px',
+            padding: typo.cardPadding,
+            minWidth: isMobile ? '80px' : '90px',
+            flex: '1'
+          }}>
+            <span style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Human Touch</span>
+            <span style={{ color: colors.human, fontSize: typo.body, fontWeight: 'bold' }}>{esdVoltage}V</span>
+          </div>
 
-        {/* Status indicator */}
-        <g transform="translate(20, 240)">
-          <rect x="0" y="0" width="120" height="60" fill={colors.bgCard} rx="8" />
-          <text x="60" y="20" fill={colors.textMuted} fontSize="10" textAnchor="middle">Protection</text>
-          <text x="60" y="45" fill={hasProtection ? colors.success : colors.error} fontSize="14" textAnchor="middle" fontWeight="bold">
-            {hasProtection ? 'ENABLED' : 'DISABLED'}
-          </text>
-        </g>
+          {/* Protection status */}
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            background: colors.bgCard,
+            borderRadius: '8px',
+            padding: typo.cardPadding,
+            minWidth: isMobile ? '80px' : '90px',
+            flex: '1',
+            borderLeft: `3px solid ${hasProtection ? colors.success : colors.error}`
+          }}>
+            <span style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Protection</span>
+            <span style={{
+              color: hasProtection ? colors.success : colors.error,
+              fontSize: typo.body,
+              fontWeight: 'bold'
+            }}>
+              {hasProtection ? 'ENABLED' : 'DISABLED'}
+            </span>
+          </div>
 
-        {/* Timing indicator for twist */}
-        {showTiming && (
-          <g transform="translate(280, 240)">
-            <rect x="0" y="0" width="100" height="60" fill={colors.bgCard} rx="8" />
-            <text x="50" y="20" fill={colors.textMuted} fontSize="10" textAnchor="middle">Response</text>
-            <text x="50" y="45" fill={colors.warning} fontSize="14" textAnchor="middle" fontWeight="bold">
-              {responseTime}ns
-            </text>
-          </g>
-        )}
+          {/* Clamping voltage (when protection enabled) */}
+          {hasProtection && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              background: colors.bgCard,
+              borderRadius: '8px',
+              padding: typo.cardPadding,
+              minWidth: isMobile ? '80px' : '90px',
+              flex: '1',
+              borderLeft: `3px solid ${colors.diode}`
+            }}>
+              <span style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Clamped To</span>
+              <span style={{ color: colors.diode, fontSize: typo.body, fontWeight: 'bold' }}>{clampingVoltage}V</span>
+              <span style={{ color: colors.textMuted, fontSize: typo.label }}>{clampingEfficiency}% blocked</span>
+            </div>
+          )}
 
-        {/* Voltage display */}
-        <g transform="translate(150, 240)">
-          <rect x="0" y="0" width="120" height="60" fill={colors.bgCard} rx="8" />
-          <text x="60" y="20" fill={colors.textMuted} fontSize="10" textAnchor="middle">ESD Voltage</text>
-          <text x="60" y="45" fill={colors.spark} fontSize="14" textAnchor="middle" fontWeight="bold">
-            {esdVoltage}V
-          </text>
-        </g>
-      </svg>
+          {/* Response time (for twist phase) */}
+          {showTiming && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              background: colors.bgCard,
+              borderRadius: '8px',
+              padding: typo.cardPadding,
+              minWidth: isMobile ? '80px' : '90px',
+              flex: '1',
+              borderLeft: `3px solid ${colors.warning}`
+            }}>
+              <span style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Response</span>
+              <span style={{ color: colors.warning, fontSize: typo.body, fontWeight: 'bold' }}>{responseTime}ns</span>
+            </div>
+          )}
+
+          {/* Chip damage */}
+          {chipDamage > 0 && (
+            <div style={{
+              display: 'flex',
+              flexDirection: 'column',
+              alignItems: 'center',
+              background: colors.bgCard,
+              borderRadius: '8px',
+              padding: typo.cardPadding,
+              minWidth: isMobile ? '80px' : '90px',
+              flex: '1',
+              borderLeft: `3px solid ${colors.error}`
+            }}>
+              <span style={{ color: colors.textMuted, fontSize: typo.label, marginBottom: '4px' }}>Chip Damage</span>
+              <span style={{ color: colors.error, fontSize: typo.body, fontWeight: 'bold' }}>{chipDamage.toFixed(0)}%</span>
+            </div>
+          )}
+        </div>
+      </div>
     );
   };
 

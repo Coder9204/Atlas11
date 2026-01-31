@@ -560,53 +560,135 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
     return (
       <div style={{ position: 'relative', width: '100%', maxWidth: '620px', margin: '0 auto' }}>
         {renderLegend()}
+
+        {/* Title moved outside SVG using typo system */}
+        <div style={{ textAlign: 'center', marginBottom: typo.elementGap }}>
+          <h3 style={{
+            fontSize: typo.heading,
+            fontWeight: 700,
+            color: colors.textPrimary,
+            margin: 0,
+            marginBottom: '4px'
+          }}>
+            Classic DC Motor
+          </h3>
+          <p style={{
+            fontSize: typo.small,
+            color: colors.textSecondary,
+            margin: 0
+          }}>
+            Commutation keeps the rotation going
+          </p>
+        </div>
+
         <svg
-          viewBox={`0 0 ${width} ${height}`}
+          viewBox={`0 0 ${width} ${height - 50}`}
           preserveAspectRatio="xMidYMid meet"
           style={{ width: '100%', height: 'auto', display: 'block' }}
         >
         <defs>
-          {/* Magnet gradients */}
-          <linearGradient id="dcMagnetNorth" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={colors.error} />
-            <stop offset="50%" stopColor={colors.errorLight} />
-            <stop offset="100%" stopColor={colors.error} />
-          </linearGradient>
-          <linearGradient id="dcMagnetSouth" x1="0%" y1="0%" x2="100%" y2="0%">
-            <stop offset="0%" stopColor={colors.magnetSouth} />
-            <stop offset="50%" stopColor="#60a5fa" />
-            <stop offset="100%" stopColor={colors.magnetSouth} />
+          {/* === PREMIUM BACKGROUND GRADIENT === */}
+          <linearGradient id="dcmLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#030712" />
+            <stop offset="25%" stopColor="#0a0f1a" />
+            <stop offset="50%" stopColor="#0f172a" />
+            <stop offset="75%" stopColor="#0a0f1a" />
+            <stop offset="100%" stopColor="#030712" />
           </linearGradient>
 
-          {/* Copper coil gradient */}
-          <linearGradient id="dcCopperCoil" x1="0%" y1="0%" x2="100%" y2="100%">
-            <stop offset="0%" stopColor={colors.copper} />
-            <stop offset="50%" stopColor={colors.copperLight} />
-            <stop offset="100%" stopColor="#d97706" />
+          {/* === PREMIUM NORTH MAGNET GRADIENT (6 stops) === */}
+          <linearGradient id="dcmMagnetNorth" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#7f1d1d" />
+            <stop offset="20%" stopColor="#dc2626" />
+            <stop offset="40%" stopColor="#ef4444" />
+            <stop offset="60%" stopColor="#f87171" />
+            <stop offset="80%" stopColor="#ef4444" />
+            <stop offset="100%" stopColor="#b91c1c" />
           </linearGradient>
 
-          {/* Commutator gradient */}
-          <linearGradient id="dcCommutatorGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor={colors.copperLight} />
-            <stop offset="50%" stopColor={colors.commutator} />
-            <stop offset="100%" stopColor="#92400e" />
+          {/* === PREMIUM SOUTH MAGNET GRADIENT (6 stops) === */}
+          <linearGradient id="dcmMagnetSouth" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#1e3a8a" />
+            <stop offset="20%" stopColor="#2563eb" />
+            <stop offset="40%" stopColor="#3b82f6" />
+            <stop offset="60%" stopColor="#60a5fa" />
+            <stop offset="80%" stopColor="#3b82f6" />
+            <stop offset="100%" stopColor="#1d4ed8" />
           </linearGradient>
 
-          {/* Brush gradient */}
-          <linearGradient id="dcBrushGradient" x1="0%" y1="0%" x2="0%" y2="100%">
-            <stop offset="0%" stopColor="#4b5563" />
-            <stop offset="100%" stopColor="#1f2937" />
+          {/* === PREMIUM COPPER ROTOR GRADIENT (6 stops) === */}
+          <linearGradient id="dcmCopperCoil" x1="0%" y1="0%" x2="100%" y2="100%">
+            <stop offset="0%" stopColor="#92400e" />
+            <stop offset="20%" stopColor="#b45309" />
+            <stop offset="40%" stopColor="#d97706" />
+            <stop offset="50%" stopColor="#fbbf24" />
+            <stop offset="70%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#b45309" />
           </linearGradient>
 
-          {/* Shaft gradient */}
-          <linearGradient id="dcShaftGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+          {/* === PREMIUM COPPER RADIAL (for coil depth) === */}
+          <radialGradient id="dcmCopperRadial" cx="30%" cy="30%" r="70%">
+            <stop offset="0%" stopColor="#fcd34d" />
+            <stop offset="30%" stopColor="#fbbf24" />
+            <stop offset="60%" stopColor="#f59e0b" />
+            <stop offset="100%" stopColor="#b45309" />
+          </radialGradient>
+
+          {/* === PREMIUM COMMUTATOR GRADIENT (5 stops) === */}
+          <linearGradient id="dcmCommutatorGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+            <stop offset="0%" stopColor="#fcd34d" />
+            <stop offset="25%" stopColor="#f59e0b" />
+            <stop offset="50%" stopColor="#d97706" />
+            <stop offset="75%" stopColor="#b45309" />
+            <stop offset="100%" stopColor="#78350f" />
+          </linearGradient>
+
+          {/* === PREMIUM BRUSH CARBON GRADIENT (5 stops) === */}
+          <linearGradient id="dcmBrushGradient" x1="0%" y1="0%" x2="0%" y2="100%">
             <stop offset="0%" stopColor="#6b7280" />
-            <stop offset="50%" stopColor="#9ca3af" />
-            <stop offset="100%" stopColor="#6b7280" />
+            <stop offset="25%" stopColor="#4b5563" />
+            <stop offset="50%" stopColor="#374151" />
+            <stop offset="75%" stopColor="#1f2937" />
+            <stop offset="100%" stopColor="#111827" />
           </linearGradient>
 
-          {/* Glow filter */}
-          <filter id="dcGlow" x="-50%" y="-50%" width="200%" height="200%">
+          {/* === PREMIUM SHAFT STEEL GRADIENT (6 stops) === */}
+          <linearGradient id="dcmShaftGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#4b5563" />
+            <stop offset="20%" stopColor="#6b7280" />
+            <stop offset="40%" stopColor="#9ca3af" />
+            <stop offset="60%" stopColor="#d1d5db" />
+            <stop offset="80%" stopColor="#9ca3af" />
+            <stop offset="100%" stopColor="#4b5563" />
+          </linearGradient>
+
+          {/* === PREMIUM CURRENT FLOW GRADIENT === */}
+          <linearGradient id="dcmCurrentFlow" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#fbbf24" stopOpacity="0" />
+            <stop offset="30%" stopColor="#fcd34d" stopOpacity="0.8" />
+            <stop offset="50%" stopColor="#fef3c7" stopOpacity="1" />
+            <stop offset="70%" stopColor="#fcd34d" stopOpacity="0.8" />
+            <stop offset="100%" stopColor="#fbbf24" stopOpacity="0" />
+          </linearGradient>
+
+          {/* === PREMIUM FORCE ARROW GRADIENT === */}
+          <linearGradient id="dcmForceGradient" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#166534" />
+            <stop offset="30%" stopColor="#22c55e" />
+            <stop offset="50%" stopColor="#4ade80" />
+            <stop offset="70%" stopColor="#22c55e" />
+            <stop offset="100%" stopColor="#166534" />
+          </linearGradient>
+
+          {/* === MAGNETIC FIELD LINE GRADIENT === */}
+          <linearGradient id="dcmFieldLine" x1="0%" y1="0%" x2="100%" y2="0%">
+            <stop offset="0%" stopColor="#ef4444" stopOpacity="0.6" />
+            <stop offset="50%" stopColor="#a855f7" stopOpacity="0.4" />
+            <stop offset="100%" stopColor="#3b82f6" stopOpacity="0.6" />
+          </linearGradient>
+
+          {/* === GLOW FILTERS === */}
+          <filter id="dcmCoilGlow" x="-100%" y="-100%" width="300%" height="300%">
             <feGaussianBlur stdDeviation="4" result="blur" />
             <feMerge>
               <feMergeNode in="blur" />
@@ -614,271 +696,479 @@ const ClassicDCMotorRenderer: React.FC<ClassicDCMotorRendererProps> = ({
             </feMerge>
           </filter>
 
-          {/* Force arrow */}
-          <marker id="dcForceArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
-            <path d="M0,0 L0,10 L10,5 z" fill={colors.success} />
+          <filter id="dcmMagnetGlow" x="-50%" y="-50%" width="200%" height="200%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="dcmForceGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="2" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="dcmCurrentGlow" x="-100%" y="-100%" width="300%" height="300%">
+            <feGaussianBlur stdDeviation="3" result="blur" />
+            <feMerge>
+              <feMergeNode in="blur" />
+              <feMergeNode in="SourceGraphic" />
+            </feMerge>
+          </filter>
+
+          <filter id="dcmInnerShadow">
+            <feOffset dx="0" dy="2" />
+            <feGaussianBlur stdDeviation="2" result="shadow" />
+            <feComposite in="SourceGraphic" in2="shadow" operator="over" />
+          </filter>
+
+          {/* === FORCE ARROW MARKER === */}
+          <marker id="dcmForceArrow" markerWidth="10" markerHeight="10" refX="8" refY="5" orient="auto">
+            <path d="M0,0 L0,10 L10,5 z" fill="url(#dcmForceGradient)" />
           </marker>
+
+          {/* === FIELD LINE ARROW MARKER === */}
+          <marker id="dcmFieldArrow" markerWidth="8" markerHeight="8" refX="6" refY="4" orient="auto">
+            <path d="M0,0 L0,8 L8,4 z" fill="#a855f7" fillOpacity="0.6" />
+          </marker>
+
+          {/* === GRID PATTERN FOR BACKGROUND === */}
+          <pattern id="dcmLabGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+            <rect width="20" height="20" fill="none" stroke="#1e293b" strokeWidth="0.5" strokeOpacity="0.3" />
+          </pattern>
         </defs>
 
-        {/* Background */}
-        <rect x="0" y="0" width={width} height={height} fill={colors.bgDark} rx="12" />
+        {/* === PREMIUM BACKGROUND === */}
+        <rect x="0" y="0" width={width} height={height - 50} fill="url(#dcmLabBg)" rx="12" />
+        <rect x="0" y="0" width={width} height={height - 50} fill="url(#dcmLabGrid)" rx="12" />
 
-        {/* Title */}
-        <text x={cx} y="28" textAnchor="middle" fill={colors.textPrimary} fontSize={isMobile ? 16 : 20} fontWeight="bold">
-          Classic DC Motor
-        </text>
-        <text x={cx} y="48" textAnchor="middle" fill="#e2e8f0" fontSize={isMobile ? 11 : 13}>
-          Commutation keeps the rotation going
-        </text>
+        {/* === ENHANCED MAGNETIC FIELD LINES === */}
+        {[...Array(7)].map((_, i) => {
+          const yOffset = cy - 75 - 25 + i * 22;
+          const amplitude = 6;
+          const wavePoints: string[] = [];
+          const startX = cx - (isMobile ? 100 : 170);
+          const endX = cx + (isMobile ? 100 : 170);
 
-        {/* Magnetic field lines */}
-        {[...Array(5)].map((_, i) => {
-          const y = cy - 55 + i * 28;
+          for (let x = startX; x <= endX; x += 3) {
+            const progress = (x - startX) / (endX - startX);
+            const wave = Math.sin(progress * Math.PI * 3 + i * 0.5) * amplitude * (0.3 + 0.7 * Math.sin(progress * Math.PI));
+            wavePoints.push(`${x === startX ? 'M' : 'L'} ${x},${yOffset + wave}`);
+          }
+
           return (
             <g key={`field-${i}`}>
-              <line
-                x1={cx - (isMobile ? 115 : 195)}
-                y1={y}
-                x2={cx + (isMobile ? 115 : 195)}
-                y2={y}
-                stroke={colors.textMuted}
-                strokeWidth="1"
-                strokeDasharray="6,4"
-                opacity="0.3"
-              />
-              <polygon
-                points={`${cx + (isMobile ? 100 : 175)},${y - 4} ${cx + (isMobile ? 100 : 175)},${y + 4} ${cx + (isMobile ? 110 : 190)},${y}`}
-                fill={colors.textMuted}
-                opacity="0.4"
+              <path
+                d={wavePoints.join(' ')}
+                fill="none"
+                stroke="url(#dcmFieldLine)"
+                strokeWidth="1.5"
+                strokeOpacity={0.4 + (i % 2) * 0.2}
+                markerEnd="url(#dcmFieldArrow)"
               />
             </g>
           );
         })}
 
-        {/* Left Magnet (North) */}
-        <g transform={`translate(${cx - (isMobile ? 125 : 210)}, ${cy - 55})`}>
+        {/* === LEFT MAGNET (NORTH) WITH PREMIUM STYLING === */}
+        <g transform={`translate(${cx - (isMobile ? 125 : 210)}, ${cy - 55 - 25})`}>
+          {/* Magnet shadow */}
+          <rect
+            x="3"
+            y="3"
+            width={isMobile ? 32 : 48}
+            height="110"
+            rx="6"
+            fill="#000"
+            opacity="0.4"
+          />
+          {/* Main magnet body */}
           <rect
             x="0"
             y="0"
             width={isMobile ? 32 : 48}
             height="110"
-            rx="4"
-            fill="url(#dcMagnetNorth)"
-            stroke={colors.errorLight}
+            rx="6"
+            fill="url(#dcmMagnetNorth)"
+            stroke="#fca5a5"
             strokeWidth="2"
+            filter="url(#dcmMagnetGlow)"
           />
-          <text x={isMobile ? 16 : 24} y="60" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">N</text>
+          {/* Highlight edge */}
+          <rect
+            x="2"
+            y="2"
+            width={isMobile ? 8 : 12}
+            height="106"
+            rx="4"
+            fill="white"
+            opacity="0.15"
+          />
+          {/* Pole face detail */}
+          <rect
+            x={isMobile ? 28 : 42}
+            y="10"
+            width="4"
+            height="90"
+            rx="2"
+            fill="#fecaca"
+            opacity="0.5"
+          />
         </g>
 
-        {/* Right Magnet (South) */}
-        <g transform={`translate(${cx + (isMobile ? 93 : 162)}, ${cy - 55})`}>
+        {/* === RIGHT MAGNET (SOUTH) WITH PREMIUM STYLING === */}
+        <g transform={`translate(${cx + (isMobile ? 93 : 162)}, ${cy - 55 - 25})`}>
+          {/* Magnet shadow */}
+          <rect
+            x="3"
+            y="3"
+            width={isMobile ? 32 : 48}
+            height="110"
+            rx="6"
+            fill="#000"
+            opacity="0.4"
+          />
+          {/* Main magnet body */}
           <rect
             x="0"
             y="0"
             width={isMobile ? 32 : 48}
             height="110"
-            rx="4"
-            fill="url(#dcMagnetSouth)"
+            rx="6"
+            fill="url(#dcmMagnetSouth)"
             stroke="#93c5fd"
             strokeWidth="2"
+            filter="url(#dcmMagnetGlow)"
           />
-          <text x={isMobile ? 16 : 24} y="60" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold">S</text>
+          {/* Highlight edge */}
+          <rect
+            x="2"
+            y="2"
+            width={isMobile ? 8 : 12}
+            height="106"
+            rx="4"
+            fill="white"
+            opacity="0.15"
+          />
+          {/* Pole face detail */}
+          <rect
+            x={isMobile ? 28 : 42}
+            y="10"
+            width="4"
+            height="90"
+            rx="2"
+            fill="#bfdbfe"
+            opacity="0.5"
+          />
         </g>
 
         {/* Second magnet pair (if enabled) */}
         {magnetCount === 2 && (
           <>
-            <g transform={`translate(${cx - (isMobile ? 125 : 210)}, ${cy - 55})`}>
+            <g transform={`translate(${cx - (isMobile ? 125 : 210)}, ${cy - 55 - 25})`}>
               <rect
                 x={isMobile ? -22 : -32}
                 y="20"
                 width={isMobile ? 18 : 28}
                 height="70"
-                rx="3"
-                fill="url(#dcMagnetNorth)"
-                stroke={colors.errorLight}
+                rx="4"
+                fill="url(#dcmMagnetNorth)"
+                stroke="#fca5a5"
                 strokeWidth="1"
-                opacity="0.7"
+                opacity="0.8"
               />
             </g>
-            <g transform={`translate(${cx + (isMobile ? 93 : 162)}, ${cy - 55})`}>
+            <g transform={`translate(${cx + (isMobile ? 93 : 162)}, ${cy - 55 - 25})`}>
               <rect
                 x={isMobile ? 36 : 52}
                 y="20"
                 width={isMobile ? 18 : 28}
                 height="70"
-                rx="3"
-                fill="url(#dcMagnetSouth)"
+                rx="4"
+                fill="url(#dcmMagnetSouth)"
                 stroke="#93c5fd"
                 strokeWidth="1"
-                opacity="0.7"
+                opacity="0.8"
               />
             </g>
           </>
         )}
 
-        {/* Rotating Coil */}
-        <g transform={`translate(${cx}, ${cy}) rotate(${coilAngle})`}>
-          {/* Coil rectangle */}
+        {/* === ROTATING COIL WITH PREMIUM COPPER STYLING === */}
+        <g transform={`translate(${cx}, ${cy - 25}) rotate(${coilAngle})`}>
+          {/* Coil shadow */}
+          <rect
+            x={-coilWidth / 2 + 2}
+            y={-coilHeight / 2 + 2}
+            width={coilWidth}
+            height={coilHeight}
+            rx="6"
+            fill="none"
+            stroke="#000"
+            strokeWidth={isMobile ? 8 : 12}
+            opacity="0.3"
+          />
+
+          {/* Main coil with premium copper gradient */}
           <rect
             x={-coilWidth / 2}
             y={-coilHeight / 2}
             width={coilWidth}
             height={coilHeight}
-            rx="4"
+            rx="6"
             fill="none"
-            stroke="url(#dcCopperCoil)"
-            strokeWidth={isMobile ? 6 : 9}
-            filter={isRunning ? 'url(#dcGlow)' : undefined}
+            stroke="url(#dcmCopperCoil)"
+            strokeWidth={isMobile ? 7 : 10}
+            filter={isRunning ? 'url(#dcmCoilGlow)' : undefined}
           />
 
-          {/* Current direction arrows on coil */}
+          {/* Coil wire detail (inner highlight) */}
+          <rect
+            x={-coilWidth / 2 + 2}
+            y={-coilHeight / 2 + 2}
+            width={coilWidth - 4}
+            height={coilHeight - 4}
+            rx="4"
+            fill="none"
+            stroke="#fcd34d"
+            strokeWidth="1"
+            opacity="0.4"
+          />
+
+          {/* Current direction arrows on coil with glow */}
           {isRunning && (
             <>
               <polygon
-                points={`${currentDirection === 'cw' ? -10 : 10},-${coilHeight / 2} 0,-${coilHeight / 2 - 8} ${currentDirection === 'cw' ? 10 : -10},-${coilHeight / 2}`}
-                fill={colors.current}
+                points={`${currentDirection === 'cw' ? -12 : 12},-${coilHeight / 2} 0,-${coilHeight / 2 - 10} ${currentDirection === 'cw' ? 12 : -12},-${coilHeight / 2}`}
+                fill="#fef3c7"
+                filter="url(#dcmCurrentGlow)"
               />
               <polygon
-                points={`${currentDirection === 'cw' ? 10 : -10},${coilHeight / 2} 0,${coilHeight / 2 + 8} ${currentDirection === 'cw' ? -10 : 10},${coilHeight / 2}`}
-                fill={colors.current}
+                points={`${currentDirection === 'cw' ? 12 : -12},${coilHeight / 2} 0,${coilHeight / 2 + 10} ${currentDirection === 'cw' ? -12 : 12},${coilHeight / 2}`}
+                fill="#fef3c7"
+                filter="url(#dcmCurrentGlow)"
               />
             </>
           )}
 
-          {/* Shaft */}
+          {/* Premium shaft with steel gradient */}
           <rect
-            x="-4"
-            y={-coilHeight / 2 - 25}
-            width="8"
-            height={coilHeight + 50}
-            fill="url(#dcShaftGradient)"
+            x="-5"
+            y={-coilHeight / 2 - 28}
+            width="10"
+            height={coilHeight + 56}
+            rx="2"
+            fill="url(#dcmShaftGradient)"
+          />
+          {/* Shaft highlight */}
+          <rect
+            x="-2"
+            y={-coilHeight / 2 - 26}
+            width="2"
+            height={coilHeight + 52}
+            rx="1"
+            fill="white"
+            opacity="0.3"
           />
         </g>
 
-        {/* Force arrows showing torque */}
+        {/* === FORCE ARROWS WITH PREMIUM GLOW === */}
         {isRunning && torqueAbs > 0.1 && (
-          <g transform={`translate(${cx}, ${cy})`}>
+          <g transform={`translate(${cx}, ${cy - 25})`}>
             <line
               x1={coilWidth / 2 * Math.cos(angleRad)}
               y1={-coilHeight / 2 * Math.cos(angleRad)}
-              x2={coilWidth / 2 * Math.cos(angleRad) + 25 * torque}
+              x2={coilWidth / 2 * Math.cos(angleRad) + 30 * torque}
               y2={-coilHeight / 2 * Math.cos(angleRad)}
-              stroke={colors.success}
-              strokeWidth="3"
-              markerEnd="url(#dcForceArrow)"
+              stroke="url(#dcmForceGradient)"
+              strokeWidth="4"
+              markerEnd="url(#dcmForceArrow)"
+              filter="url(#dcmForceGlow)"
             />
-            <text
-              x={isMobile ? 55 : 85}
-              y="-25"
-              fill={colors.success}
-              fontSize="12"
-              fontWeight="bold"
-            >
-              F
-            </text>
           </g>
         )}
 
-        {/* Commutator and Brushes */}
+        {/* === PREMIUM COMMUTATOR AND BRUSHES === */}
         {showCommutator && (
-          <g transform={`translate(${cx}, ${cy + (isMobile ? 65 : 95)})`}>
+          <g transform={`translate(${cx}, ${cy + (isMobile ? 40 : 60)})`}>
+            {/* Commutator housing shadow */}
+            <ellipse cx="2" cy="2" rx="18" ry="18" fill="#000" opacity="0.3" />
+
             {/* Commutator segments (rotating with coil) */}
             <g transform={`rotate(${coilAngle})`}>
+              {/* Top segment */}
               <path
-                d="M -14,-11 A 14,14 0 0,1 14,-11 L 11,-11 A 11,11 0 0,0 -11,-11 Z"
-                fill="url(#dcCommutatorGradient)"
+                d="M -16,-12 A 16,16 0 0,1 16,-12 L 12,-12 A 12,12 0 0,0 -12,-12 Z"
+                fill="url(#dcmCommutatorGradient)"
                 stroke="#92400e"
+                strokeWidth="1.5"
+              />
+              {/* Bottom segment */}
+              <path
+                d="M -16,12 A 16,16 0 0,0 16,12 L 12,12 A 12,12 0 0,1 -12,12 Z"
+                fill="url(#dcmCommutatorGradient)"
+                stroke="#92400e"
+                strokeWidth="1.5"
+              />
+              {/* Segment highlights */}
+              <path
+                d="M -14,-10 A 14,14 0 0,1 0,-14"
+                fill="none"
+                stroke="#fcd34d"
                 strokeWidth="1"
+                opacity="0.5"
               />
               <path
-                d="M -14,11 A 14,14 0 0,0 14,11 L 11,11 A 11,11 0 0,1 -11,11 Z"
-                fill="url(#dcCommutatorGradient)"
-                stroke="#92400e"
+                d="M 0,14 A 14,14 0 0,0 14,10"
+                fill="none"
+                stroke="#fcd34d"
                 strokeWidth="1"
+                opacity="0.5"
               />
-              <rect x="-2" y="-14" width="4" height="28" fill={colors.bgDark} />
+              {/* Gap between segments */}
+              <rect x="-3" y="-16" width="6" height="32" fill="#030712" />
             </g>
 
-            {/* Static Brushes */}
-            <rect x="-24" y="-5" width="7" height="10" rx="1" fill="url(#dcBrushGradient)" />
-            <rect x="17" y="-5" width="7" height="10" rx="1" fill="url(#dcBrushGradient)" />
+            {/* Static carbon brushes with premium gradient */}
+            <rect x="-28" y="-6" width="9" height="12" rx="2" fill="url(#dcmBrushGradient)" stroke="#4b5563" strokeWidth="1" />
+            <rect x="19" y="-6" width="9" height="12" rx="2" fill="url(#dcmBrushGradient)" stroke="#4b5563" strokeWidth="1" />
 
-            {/* Brush connections */}
-            <line x1="-28" y1="0" x2="-38" y2="0" stroke={colors.error} strokeWidth="2" />
-            <line x1="24" y1="0" x2="38" y2="0" stroke={colors.magnetSouth} strokeWidth="2" />
+            {/* Brush sparks when running */}
+            {isRunning && (
+              <>
+                <circle cx="-22" cy="0" r="2" fill="#fbbf24" opacity="0.7" />
+                <circle cx="22" cy="0" r="2" fill="#fbbf24" opacity="0.7" />
+              </>
+            )}
 
-            {/* Labels */}
-            <text x="-42" y="4" fill={colors.error} fontSize="10" fontWeight="bold">+</text>
-            <text x="40" y="4" fill={colors.magnetSouth} fontSize="10" fontWeight="bold">−</text>
+            {/* Power connections with premium wires */}
+            <line x1="-32" y1="0" x2="-45" y2="0" stroke="#ef4444" strokeWidth="3" strokeLinecap="round" />
+            <line x1="32" y1="0" x2="45" y2="0" stroke="#3b82f6" strokeWidth="3" strokeLinecap="round" />
+
+            {/* Connection terminals */}
+            <circle cx="-48" cy="0" r="5" fill="#dc2626" stroke="#fca5a5" strokeWidth="1" />
+            <circle cx="48" cy="0" r="5" fill="#2563eb" stroke="#93c5fd" strokeWidth="1" />
           </g>
         )}
 
-        {/* Torque vs Angle Graph */}
-        <g transform={`translate(${isMobile ? 18 : 35}, ${height - (isMobile ? 75 : 95)})`}>
-          <rect x="0" y="0" width={isMobile ? 75 : 115} height={isMobile ? 48 : 68} fill={colors.bgCard} rx="4" stroke={colors.border} />
-          <text x={isMobile ? 37 : 57} y="12" textAnchor="middle" fill="#f8fafc" fontSize="9">Torque vs Angle</text>
+        {/* === TORQUE VS ANGLE GRAPH === */}
+        <g transform={`translate(${isMobile ? 12 : 25}, ${height - 50 - (isMobile ? 60 : 80)})`}>
+          <rect x="0" y="0" width={isMobile ? 80 : 120} height={isMobile ? 50 : 68} fill="rgba(30,41,59,0.9)" rx="6" stroke={colors.border} />
 
           <path
-            d={`M 5,${isMobile ? 28 : 38} ${[...Array(isMobile ? 65 : 105)].map((_, i) => {
-              const x = 5 + i;
-              const angle = (i / (isMobile ? 65 : 105)) * 2 * Math.PI;
-              const y = (isMobile ? 28 : 38) - Math.sin(angle) * (isMobile ? 10 : 16);
+            d={`M 8,${isMobile ? 30 : 40} ${[...Array(isMobile ? 64 : 104)].map((_, i) => {
+              const x = 8 + i;
+              const angle = (i / (isMobile ? 64 : 104)) * 2 * Math.PI;
+              const y = (isMobile ? 30 : 40) - Math.sin(angle) * (isMobile ? 12 : 16);
               return `L ${x},${y}`;
             }).join(' ')}`}
             fill="none"
-            stroke={colors.success}
-            strokeWidth="1.5"
+            stroke="url(#dcmForceGradient)"
+            strokeWidth="2"
           />
 
           <circle
-            cx={5 + ((coilAngle % 360) / 360) * (isMobile ? 65 : 105)}
-            cy={(isMobile ? 28 : 38) - torque * (isMobile ? 10 : 16)}
-            r="4"
-            fill={colors.current}
+            cx={8 + ((coilAngle % 360) / 360) * (isMobile ? 64 : 104)}
+            cy={(isMobile ? 30 : 40) - torque * (isMobile ? 12 : 16)}
+            r="5"
+            fill="#fbbf24"
+            stroke="#fef3c7"
+            strokeWidth="2"
+            filter="url(#dcmCurrentGlow)"
           />
         </g>
 
-        {/* Current direction indicator */}
-        <g transform={`translate(${width - (isMobile ? 95 : 155)}, ${height - (isMobile ? 75 : 95)})`}>
-          <rect x="0" y="0" width={isMobile ? 77 : 120} height={isMobile ? 48 : 68} fill={colors.bgCard} rx="4" stroke={colors.border} />
-          <text x={isMobile ? 38 : 60} y="12" textAnchor="middle" fill="#f8fafc" fontSize="9">Current Direction</text>
+        {/* === CURRENT DIRECTION INDICATOR === */}
+        <g transform={`translate(${width - (isMobile ? 92 : 145)}, ${height - 50 - (isMobile ? 60 : 80)})`}>
+          <rect x="0" y="0" width={isMobile ? 80 : 120} height={isMobile ? 50 : 68} fill="rgba(30,41,59,0.9)" rx="6" stroke={colors.border} />
 
           <rect
             x="8"
-            y="18"
-            width={isMobile ? 26 : 45}
-            height={isMobile ? 22 : 32}
-            rx="3"
-            fill={currentDirection === 'cw' ? colors.success : colors.bgCardLight}
+            y="16"
+            width={isMobile ? 28 : 46}
+            height={isMobile ? 26 : 38}
+            rx="4"
+            fill={currentDirection === 'cw' ? 'url(#dcmForceGradient)' : 'rgba(51,65,85,0.8)'}
           />
-          <text x={isMobile ? 21 : 30} y={isMobile ? 33 : 40} textAnchor="middle" fill="white" fontSize="9">CW</text>
 
           <rect
-            x={isMobile ? 42 : 63}
-            y="18"
-            width={isMobile ? 26 : 45}
-            height={isMobile ? 22 : 32}
-            rx="3"
-            fill={currentDirection === 'ccw' ? colors.success : colors.bgCardLight}
+            x={isMobile ? 44 : 62}
+            y="16"
+            width={isMobile ? 28 : 46}
+            height={isMobile ? 26 : 38}
+            rx="4"
+            fill={currentDirection === 'ccw' ? 'url(#dcmForceGradient)' : 'rgba(51,65,85,0.8)'}
           />
-          <text x={isMobile ? 55 : 85} y={isMobile ? 33 : 40} textAnchor="middle" fill="white" fontSize="9">CCW</text>
         </g>
-
-        {/* Status */}
-        {isRunning && (
-          <text x={cx} y={height - 12} textAnchor="middle" fill="#e2e8f0" fontSize="11">
-            Angle: {Math.round(coilAngle % 360)}° | Torque: {torque.toFixed(2)} | {magnetCount} magnet{magnetCount > 1 ? 's' : ''}
-          </text>
-        )}
-
-        {/* Formula */}
-        {!isRunning && (
-          <text x={cx} y={height - 12} textAnchor="middle" fill="#e2e8f0" fontSize="11">
-            τ = nBIA sin(θ)
-          </text>
-        )}
       </svg>
+
+      {/* Labels moved outside SVG using typo system */}
+      <div style={{
+        display: 'flex',
+        justifyContent: 'space-between',
+        alignItems: 'center',
+        padding: `${typo.elementGap} ${typo.cardPadding}`,
+        marginTop: typo.elementGap
+      }}>
+        {/* Torque graph label */}
+        <div style={{
+          background: 'rgba(30,41,59,0.9)',
+          borderRadius: '6px',
+          padding: '6px 12px',
+          border: `1px solid ${colors.border}`
+        }}>
+          <span style={{ fontSize: typo.label, color: colors.textSecondary, fontWeight: 600 }}>
+            Torque vs Angle
+          </span>
+        </div>
+
+        {/* Status indicator */}
+        <div style={{
+          background: 'rgba(30,41,59,0.9)',
+          borderRadius: '6px',
+          padding: '6px 12px',
+          border: `1px solid ${colors.border}`
+        }}>
+          {isRunning ? (
+            <span style={{ fontSize: typo.label, color: colors.textSecondary }}>
+              <span style={{ color: colors.copper, fontWeight: 700 }}>{Math.round(coilAngle % 360)}deg</span>
+              {' | '}
+              <span style={{ color: colors.success, fontWeight: 700 }}>{torque.toFixed(2)}</span>
+              {' | '}
+              <span style={{ color: colors.textMuted }}>{magnetCount} magnet{magnetCount > 1 ? 's' : ''}</span>
+            </span>
+          ) : (
+            <span style={{ fontSize: typo.label, color: colors.textSecondary, fontFamily: 'monospace' }}>
+              tau = nBIA sin(theta)
+            </span>
+          )}
+        </div>
+
+        {/* Current direction label */}
+        <div style={{
+          background: 'rgba(30,41,59,0.9)',
+          borderRadius: '6px',
+          padding: '6px 12px',
+          border: `1px solid ${colors.border}`,
+          display: 'flex',
+          gap: '8px'
+        }}>
+          <span style={{
+            fontSize: typo.label,
+            color: currentDirection === 'cw' ? colors.success : colors.textMuted,
+            fontWeight: currentDirection === 'cw' ? 700 : 400
+          }}>CW</span>
+          <span style={{
+            fontSize: typo.label,
+            color: currentDirection === 'ccw' ? colors.success : colors.textMuted,
+            fontWeight: currentDirection === 'ccw' ? 700 : 400
+          }}>CCW</span>
+        </div>
+      </div>
       </div>
     );
   };

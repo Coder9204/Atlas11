@@ -341,6 +341,9 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
     const height = 400;
     const security = calculateSecurityStatus();
 
+    // Calculate safety meter percentage (0-100)
+    const safetyLevel = hasSafeFolder ? (injectionAttempted ? 85 : 100) : (injectionAttempted ? 10 : 50);
+
     return (
       <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: '8px' }}>
         <svg
@@ -348,15 +351,260 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
           height={height}
           viewBox={`0 0 ${width} ${height}`}
           preserveAspectRatio="xMidYMid meet"
-          style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #0f0f1a 100%)', borderRadius: '12px', maxWidth: '500px' }}
+          style={{ borderRadius: '12px', maxWidth: '500px' }}
         >
-          {/* Title */}
-          <text x={width/2} y={25} fill={colors.textPrimary} fontSize={14} fontWeight="bold" textAnchor="middle">
-            Agent Permission Graph
-          </text>
+          {/* Premium SVG Definitions */}
+          <defs>
+            {/* Background gradient */}
+            <linearGradient id="pisLabBg" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#0a0f1a" />
+              <stop offset="25%" stopColor="#0f172a" />
+              <stop offset="50%" stopColor="#1a1f35" />
+              <stop offset="75%" stopColor="#0f172a" />
+              <stop offset="100%" stopColor="#0a0f1a" />
+            </linearGradient>
+
+            {/* Security shield gradient - safe state */}
+            <linearGradient id="pisShieldSafe" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" />
+              <stop offset="25%" stopColor="#16a34a" />
+              <stop offset="50%" stopColor="#15803d" />
+              <stop offset="75%" stopColor="#166534" />
+              <stop offset="100%" stopColor="#14532d" />
+            </linearGradient>
+
+            {/* Security shield gradient - danger state */}
+            <linearGradient id="pisShieldDanger" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="25%" stopColor="#dc2626" />
+              <stop offset="50%" stopColor="#b91c1c" />
+              <stop offset="75%" stopColor="#991b1b" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </linearGradient>
+
+            {/* Security shield gradient - warning state */}
+            <linearGradient id="pisShieldWarning" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#f59e0b" />
+              <stop offset="25%" stopColor="#d97706" />
+              <stop offset="50%" stopColor="#b45309" />
+              <stop offset="75%" stopColor="#92400e" />
+              <stop offset="100%" stopColor="#78350f" />
+            </linearGradient>
+
+            {/* Agent node gradient */}
+            <radialGradient id="pisAgentGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#3b82f6" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#2563eb" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#1d4ed8" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#1e40af" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Agent node gradient - compromised */}
+            <radialGradient id="pisAgentCompromised" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#dc2626" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#b91c1c" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#991b1b" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Agent node gradient - protected */}
+            <radialGradient id="pisAgentProtected" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.9" />
+              <stop offset="30%" stopColor="#16a34a" stopOpacity="0.7" />
+              <stop offset="60%" stopColor="#15803d" stopOpacity="0.4" />
+              <stop offset="100%" stopColor="#166534" stopOpacity="0" />
+            </radialGradient>
+
+            {/* File card gradient - normal */}
+            <linearGradient id="pisFileNormal" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" />
+              <stop offset="50%" stopColor="#334155" />
+              <stop offset="100%" stopColor="#1e293b" />
+            </linearGradient>
+
+            {/* File card gradient - malicious */}
+            <linearGradient id="pisFileMalicious" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#7f1d1d" />
+              <stop offset="25%" stopColor="#991b1b" />
+              <stop offset="50%" stopColor="#b91c1c" />
+              <stop offset="75%" stopColor="#991b1b" />
+              <stop offset="100%" stopColor="#7f1d1d" />
+            </linearGradient>
+
+            {/* File card gradient - sensitive */}
+            <linearGradient id="pisFileSensitive" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#4c1d95" />
+              <stop offset="25%" stopColor="#5b21b6" />
+              <stop offset="50%" stopColor="#6d28d9" />
+              <stop offset="75%" stopColor="#5b21b6" />
+              <stop offset="100%" stopColor="#4c1d95" />
+            </linearGradient>
+
+            {/* File card gradient - selected */}
+            <linearGradient id="pisFileSelected" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#1e3a5f" />
+              <stop offset="50%" stopColor="#1d4ed8" />
+              <stop offset="100%" stopColor="#1e3a5f" />
+            </linearGradient>
+
+            {/* Safe zone gradient */}
+            <linearGradient id="pisSafeZone" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.15" />
+              <stop offset="50%" stopColor="#16a34a" stopOpacity="0.1" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.15" />
+            </linearGradient>
+
+            {/* Status panel gradient */}
+            <linearGradient id="pisStatusPanel" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#1e293b" stopOpacity="0.9" />
+              <stop offset="50%" stopColor="#0f172a" stopOpacity="0.95" />
+              <stop offset="100%" stopColor="#020617" stopOpacity="1" />
+            </linearGradient>
+
+            {/* Safety meter gradient */}
+            <linearGradient id="pisSafetyMeter" x1="0%" y1="0%" x2="100%" y2="0%">
+              <stop offset="0%" stopColor="#ef4444" />
+              <stop offset="25%" stopColor="#f97316" />
+              <stop offset="50%" stopColor="#eab308" />
+              <stop offset="75%" stopColor="#84cc16" />
+              <stop offset="100%" stopColor="#22c55e" />
+            </linearGradient>
+
+            {/* Connection line gradient - safe */}
+            <linearGradient id="pisConnectionSafe" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#22c55e" stopOpacity="1" />
+              <stop offset="100%" stopColor="#22c55e" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Connection line gradient - danger */}
+            <linearGradient id="pisConnectionDanger" x1="0%" y1="0%" x2="100%" y2="100%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="0.3" />
+              <stop offset="50%" stopColor="#ef4444" stopOpacity="1" />
+              <stop offset="100%" stopColor="#ef4444" stopOpacity="0.3" />
+            </linearGradient>
+
+            {/* Attack indicator gradient */}
+            <radialGradient id="pisAttackGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#ef4444" stopOpacity="1" />
+              <stop offset="40%" stopColor="#dc2626" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#b91c1c" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#7f1d1d" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Defense indicator gradient */}
+            <radialGradient id="pisDefenseGlow" cx="50%" cy="50%" r="50%">
+              <stop offset="0%" stopColor="#22c55e" stopOpacity="1" />
+              <stop offset="40%" stopColor="#16a34a" stopOpacity="0.6" />
+              <stop offset="70%" stopColor="#15803d" stopOpacity="0.3" />
+              <stop offset="100%" stopColor="#14532d" stopOpacity="0" />
+            </radialGradient>
+
+            {/* Glow filters */}
+            <filter id="pisGlowSoft" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="3" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="pisGlowStrong" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="5" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="pisGlowDanger" x="-100%" y="-100%" width="300%" height="300%">
+              <feGaussianBlur stdDeviation="4" result="blur" />
+              <feMerge>
+                <feMergeNode in="blur" />
+                <feMergeNode in="blur" />
+                <feMergeNode in="SourceGraphic" />
+              </feMerge>
+            </filter>
+
+            <filter id="pisInnerGlow" x="-50%" y="-50%" width="200%" height="200%">
+              <feGaussianBlur stdDeviation="2" result="blur" />
+              <feComposite in="SourceGraphic" in2="blur" operator="over" />
+            </filter>
+
+            {/* Grid pattern */}
+            <pattern id="pisGrid" width="20" height="20" patternUnits="userSpaceOnUse">
+              <path d="M 20 0 L 0 0 0 20" fill="none" stroke="rgba(148, 163, 184, 0.05)" strokeWidth="0.5" />
+            </pattern>
+          </defs>
+
+          {/* Premium dark background with gradient */}
+          <rect width={width} height={height} fill="url(#pisLabBg)" />
+          <rect width={width} height={height} fill="url(#pisGrid)" />
+
+          {/* Security Shield Visualization - top left */}
+          <g transform="translate(15, 15)">
+            <path
+              d="M25 5 L45 12 L45 30 C45 42 35 52 25 58 C15 52 5 42 5 30 L5 12 Z"
+              fill={security.status === 'danger' || agentFollowedInjection
+                ? 'url(#pisShieldDanger)'
+                : security.status === 'blocked'
+                  ? 'url(#pisShieldSafe)'
+                  : 'url(#pisShieldWarning)'}
+              stroke={security.status === 'danger' || agentFollowedInjection
+                ? '#ef4444'
+                : security.status === 'blocked'
+                  ? '#22c55e'
+                  : '#f59e0b'}
+              strokeWidth="2"
+              filter="url(#pisGlowSoft)"
+            />
+            {/* Shield icon inner detail */}
+            {hasSafeFolder && !agentFollowedInjection && (
+              <path
+                d="M18 28 L23 33 L34 22"
+                fill="none"
+                stroke="white"
+                strokeWidth="3"
+                strokeLinecap="round"
+                strokeLinejoin="round"
+              />
+            )}
+            {agentFollowedInjection && (
+              <g>
+                <line x1="18" y1="22" x2="32" y2="38" stroke="white" strokeWidth="3" strokeLinecap="round" />
+                <line x1="32" y1="22" x2="18" y2="38" stroke="white" strokeWidth="3" strokeLinecap="round" />
+              </g>
+            )}
+          </g>
+
+          {/* Safety Meter - top right */}
+          <g transform="translate(320, 15)">
+            <rect x="0" y="0" width="120" height="50" rx="8" fill="url(#pisStatusPanel)" stroke="rgba(148, 163, 184, 0.2)" strokeWidth="1" />
+            {/* Meter background */}
+            <rect x="10" y="25" width="100" height="12" rx="6" fill="rgba(0,0,0,0.5)" />
+            {/* Meter fill */}
+            <rect
+              x="10"
+              y="25"
+              width={safetyLevel}
+              height="12"
+              rx="6"
+              fill="url(#pisSafetyMeter)"
+              filter="url(#pisGlowSoft)"
+            />
+            {/* Meter glow indicator */}
+            <circle
+              cx={10 + safetyLevel}
+              cy="31"
+              r="4"
+              fill={safetyLevel > 70 ? '#22c55e' : safetyLevel > 30 ? '#f59e0b' : '#ef4444'}
+              filter="url(#pisGlowSoft)"
+            />
+          </g>
 
           {/* File system visualization */}
-          <g transform="translate(30, 50)">
+          <g transform="translate(30, 70)">
             {/* Safe folder boundary */}
             {showSafeFolder && hasSafeFolder && (
               <rect
@@ -364,17 +612,13 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 y={0}
                 width={180}
                 height={150}
-                fill="rgba(34, 197, 94, 0.1)"
-                stroke={colors.security.safe}
+                fill="url(#pisSafeZone)"
+                stroke="url(#pisShieldSafe)"
                 strokeWidth={2}
-                strokeDasharray="5,5"
-                rx={8}
+                strokeDasharray="8,4"
+                rx={12}
+                filter="url(#pisInnerGlow)"
               />
-            )}
-            {showSafeFolder && hasSafeFolder && (
-              <text x={90} y={-5} fill={colors.security.safe} fontSize={10} textAnchor="middle">
-                SAFE ZONE: /work/
-              </text>
             )}
 
             {/* Files */}
@@ -385,6 +629,15 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
               const x = isInSafe ? 20 : 220;
               const y = 20 + (index % 3) * 45;
 
+              const getFillGradient = () => {
+                if (isSelected) {
+                  if (info.malicious) return 'url(#pisFileMalicious)';
+                  if (info.sensitive) return 'url(#pisFileSensitive)';
+                  return 'url(#pisFileSelected)';
+                }
+                return 'url(#pisFileNormal)';
+              };
+
               return (
                 <g key={path} transform={`translate(${x}, ${y})`}>
                   <rect
@@ -392,23 +645,18 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                     y={0}
                     width={150}
                     height={35}
-                    fill={isSelected
-                      ? info.malicious
-                        ? 'rgba(239, 68, 68, 0.3)'
-                        : info.sensitive
-                          ? 'rgba(139, 92, 246, 0.3)'
-                          : 'rgba(59, 130, 246, 0.3)'
-                      : 'rgba(255,255,255,0.05)'}
+                    fill={getFillGradient()}
                     stroke={isSelected
                       ? info.malicious
-                        ? colors.security.tainted
+                        ? '#ef4444'
                         : colors.accent
                       : blocked
                         ? colors.security.restricted
-                        : 'rgba(255,255,255,0.2)'}
+                        : 'rgba(148, 163, 184, 0.3)'}
                     strokeWidth={isSelected ? 2 : 1}
-                    rx={4}
+                    rx={6}
                     style={{ cursor: interactive ? 'pointer' : 'default' }}
+                    filter={isSelected ? 'url(#pisGlowSoft)' : undefined}
                     onClick={interactive ? () => {
                       if (!blocked) {
                         setFileBeingRead(path);
@@ -419,108 +667,310 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                       }
                     } : undefined}
                   />
-                  <text x={10} y={15} fill={blocked ? colors.textMuted : colors.textPrimary} fontSize={9}>
-                    {path.split('/').pop()}
-                  </text>
-                  <text x={10} y={28} fill={colors.textMuted} fontSize={8}>
-                    {info.malicious ? 'TAINTED' : info.sensitive ? 'SENSITIVE' : info.trusted ? 'trusted' : 'untrusted'}
-                  </text>
+                  {/* File icon */}
+                  <rect x={8} y={8} width={12} height={16} rx={2} fill="rgba(148, 163, 184, 0.3)" />
+                  <rect x={8} y={8} width={8} height={4} rx={1} fill="rgba(148, 163, 184, 0.5)" />
                   {blocked && (
-                    <text x={130} y={20} fill={colors.security.restricted} fontSize={10}>X</text>
+                    <g transform="translate(125, 10)">
+                      <circle cx="8" cy="8" r="10" fill="url(#pisAttackGlow)" filter="url(#pisGlowDanger)" />
+                      <line x1="4" y1="4" x2="12" y2="12" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                      <line x1="12" y1="4" x2="4" y2="12" stroke="white" strokeWidth="2" strokeLinecap="round" />
+                    </g>
+                  )}
+                  {/* Attack indicator for malicious files */}
+                  {info.malicious && isSelected && (
+                    <g transform="translate(125, 10)">
+                      <circle cx="8" cy="8" r="8" fill="url(#pisAttackGlow)" filter="url(#pisGlowDanger)">
+                        <animate attributeName="r" values="6;10;6" dur="1s" repeatCount="indefinite" />
+                      </circle>
+                      <text x="8" y="12" fontSize="10" fill="white" textAnchor="middle" fontWeight="bold">!</text>
+                    </g>
                   )}
                 </g>
               );
             })}
           </g>
 
-          {/* Agent node */}
+          {/* Agent node with premium styling */}
           <g transform="translate(225, 280)">
+            {/* Outer glow ring */}
+            <circle
+              cx={0}
+              cy={0}
+              r={45}
+              fill={security.status === 'danger' || agentFollowedInjection
+                ? 'url(#pisAgentCompromised)'
+                : security.status === 'blocked'
+                  ? 'url(#pisAgentProtected)'
+                  : 'url(#pisAgentGlow)'}
+              filter="url(#pisGlowStrong)"
+            />
+            {/* Inner circle */}
             <circle
               cx={0}
               cy={0}
               r={35}
-              fill={security.status === 'danger'
-                ? 'rgba(239, 68, 68, 0.3)'
+              fill={security.status === 'danger' || agentFollowedInjection
+                ? 'url(#pisShieldDanger)'
                 : security.status === 'blocked'
-                  ? 'rgba(16, 185, 129, 0.3)'
-                  : 'rgba(59, 130, 246, 0.3)'}
-              stroke={security.status === 'danger' ? colors.security.tainted : '#3b82f6'}
-              strokeWidth={2}
+                  ? 'url(#pisShieldSafe)'
+                  : 'url(#pisFileSelected)'}
+              stroke={security.status === 'danger' || agentFollowedInjection ? '#ef4444' : security.status === 'blocked' ? '#22c55e' : '#3b82f6'}
+              strokeWidth={3}
             />
-            <text x={0} y={5} fill={colors.textPrimary} fontSize={12} textAnchor="middle" fontWeight="bold">
-              AGENT
-            </text>
+            {/* Agent icon - robot head */}
+            <rect x="-12" y="-15" width="24" height="20" rx="4" fill="rgba(255,255,255,0.9)" />
+            <circle cx="-6" cy="-8" r="3" fill={agentFollowedInjection ? '#ef4444' : '#3b82f6'} />
+            <circle cx="6" cy="-8" r="3" fill={agentFollowedInjection ? '#ef4444' : '#3b82f6'} />
+            <rect x="-8" y="0" width="16" height="3" rx="1" fill="rgba(100,100,100,0.8)" />
+            {/* Antenna */}
+            <line x1="0" y1="-15" x2="0" y2="-22" stroke="rgba(255,255,255,0.9)" strokeWidth="2" />
+            <circle cx="0" cy="-24" r="3" fill={agentFollowedInjection ? '#ef4444' : '#22c55e'} filter="url(#pisGlowSoft)">
+              <animate attributeName="opacity" values="1;0.5;1" dur="1.5s" repeatCount="indefinite" />
+            </circle>
           </g>
 
-          {/* Connection line */}
+          {/* Connection line with gradient */}
           {fileBeingRead && (
             <line
               x1={fileBeingRead.startsWith('/work/') ? 130 : 320}
-              y1={fileBeingRead.startsWith('/work/') ? 120 : 120}
+              y1={fileBeingRead.startsWith('/work/') ? 140 : 140}
               x2={225}
-              y2={245}
+              y2={235}
               stroke={security.status === 'blocked'
-                ? colors.security.restricted
+                ? 'url(#pisConnectionSafe)'
                 : security.isMalicious
-                  ? colors.security.tainted
-                  : colors.security.safe}
-              strokeWidth={2}
-              strokeDasharray={security.status === 'blocked' ? '5,5' : 'none'}
+                  ? 'url(#pisConnectionDanger)'
+                  : 'url(#pisConnectionSafe)'}
+              strokeWidth={3}
+              strokeDasharray={security.status === 'blocked' ? '8,4' : 'none'}
+              filter="url(#pisGlowSoft)"
             />
           )}
 
-          {/* Status panel */}
-          <g transform="translate(320, 250)">
-            <rect x={0} y={0} width={120} height={130} fill="rgba(0,0,0,0.5)" rx={8} />
-            <text x={60} y={20} fill={colors.textSecondary} fontSize={10} textAnchor="middle">STATUS</text>
+          {/* Status panel with premium gradient */}
+          <g transform="translate(320, 230)">
+            <rect x={0} y={0} width={120} height={150} fill="url(#pisStatusPanel)" rx={10} stroke="rgba(148, 163, 184, 0.2)" strokeWidth="1" />
 
-            <circle cx={15} cy={45} r={6} fill={security.isTainted ? colors.security.tainted : colors.security.safe} />
-            <text x={30} y={48} fill={colors.textPrimary} fontSize={9}>
-              {security.isTainted ? 'Tainted' : 'Clean'}
-            </text>
+            {/* Status indicators */}
+            <g transform="translate(15, 25)">
+              <circle cx={8} cy={0} r={8} fill={security.isTainted ? 'url(#pisAttackGlow)' : 'url(#pisDefenseGlow)'} filter="url(#pisGlowSoft)" />
+            </g>
 
-            <circle cx={15} cy={70} r={6} fill={hasSafeFolder ? colors.security.safe : colors.security.restricted} />
-            <text x={30} y={73} fill={colors.textPrimary} fontSize={9}>
-              {hasSafeFolder ? 'Restricted' : 'Unrestricted'}
-            </text>
+            <g transform="translate(15, 55)">
+              <circle cx={8} cy={0} r={8} fill={hasSafeFolder ? 'url(#pisDefenseGlow)' : 'url(#pisAttackGlow)'} filter="url(#pisGlowSoft)" />
+            </g>
 
-            <circle cx={15} cy={95} r={6} fill={security.status === 'blocked' ? colors.security.safe : injectionAttempted ? colors.security.tainted : colors.textMuted} />
-            <text x={30} y={98} fill={colors.textPrimary} fontSize={9}>
-              {security.status === 'blocked' ? 'Blocked' : injectionAttempted ? 'Attempted!' : 'No attack'}
-            </text>
+            <g transform="translate(15, 85)">
+              <circle cx={8} cy={0} r={8} fill={security.status === 'blocked' ? 'url(#pisDefenseGlow)' : injectionAttempted ? 'url(#pisAttackGlow)' : 'rgba(100, 116, 139, 0.5)'} filter="url(#pisGlowSoft)" />
+            </g>
 
+            {/* Final status bar */}
             <rect
-              x={5}
-              y={108}
-              width={110}
-              height={18}
+              x={8}
+              y={110}
+              width={104}
+              height={28}
               fill={security.status === 'danger' || agentFollowedInjection
-                ? 'rgba(239, 68, 68, 0.4)'
+                ? 'url(#pisShieldDanger)'
                 : security.status === 'blocked'
-                  ? 'rgba(16, 185, 129, 0.4)'
-                  : 'rgba(59, 130, 246, 0.3)'}
-              rx={4}
+                  ? 'url(#pisShieldSafe)'
+                  : 'url(#pisFileSelected)'}
+              rx={6}
+              filter="url(#pisGlowSoft)"
             />
-            <text x={60} y={121} fill={agentFollowedInjection ? colors.error : colors.textPrimary} fontSize={9} textAnchor="middle" fontWeight="bold">
-              {agentFollowedInjection ? 'COMPROMISED!' : security.status === 'blocked' ? 'PROTECTED' : 'MONITORING'}
-            </text>
           </g>
 
-          {/* Warning message */}
+          {/* Attack/Defense indicator animation */}
           {injectionAttempted && (
-            <g transform={`translate(${width/2}, 380)`}>
-              <rect x={-180} y={-15} width={360} height={30} fill="rgba(239, 68, 68, 0.3)" rx={4} />
-              <text x={0} y={5} fill={colors.error} fontSize={11} textAnchor="middle" fontWeight="bold">
-                {agentFollowedInjection
-                  ? 'INJECTION SUCCEEDED - Agent followed malicious instructions!'
-                  : 'INJECTION BLOCKED - Safe folder rule prevented access!'}
-              </text>
+            <g transform={`translate(${width/2}, 370)`}>
+              <rect
+                x={-195}
+                y={-18}
+                width={390}
+                height={36}
+                rx={8}
+                fill={agentFollowedInjection ? 'url(#pisShieldDanger)' : 'url(#pisShieldSafe)'}
+                stroke={agentFollowedInjection ? '#ef4444' : '#22c55e'}
+                strokeWidth="2"
+                filter="url(#pisGlowStrong)"
+              />
+              {/* Animated pulse */}
+              <rect
+                x={-195}
+                y={-18}
+                width={390}
+                height={36}
+                rx={8}
+                fill="none"
+                stroke={agentFollowedInjection ? '#ef4444' : '#22c55e'}
+                strokeWidth="2"
+              >
+                <animate attributeName="stroke-opacity" values="1;0;1" dur="2s" repeatCount="indefinite" />
+              </rect>
             </g>
           )}
         </svg>
 
+        {/* Labels rendered outside SVG using typo system */}
+        <div style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          width: '100%',
+          maxWidth: '500px',
+          padding: '0 8px',
+          marginTop: '-390px',
+          position: 'relative',
+          pointerEvents: 'none'
+        }}>
+          <div style={{
+            fontSize: typo.small,
+            color: agentFollowedInjection ? colors.error : hasSafeFolder ? colors.security.safe : colors.warning,
+            fontWeight: 'bold',
+            marginLeft: '70px',
+            marginTop: '20px'
+          }}>
+            {agentFollowedInjection ? 'BREACHED' : hasSafeFolder ? 'SECURE' : 'AT RISK'}
+          </div>
+          <div style={{
+            fontSize: typo.label,
+            color: colors.textSecondary,
+            marginRight: '10px',
+            marginTop: '8px'
+          }}>
+            SAFETY LEVEL
+          </div>
+        </div>
+
+        {/* Safe zone label */}
+        {showSafeFolder && hasSafeFolder && (
+          <div style={{
+            position: 'relative',
+            marginTop: '-330px',
+            marginLeft: '-200px',
+            fontSize: typo.small,
+            color: colors.security.safe,
+            fontWeight: 'bold',
+            pointerEvents: 'none'
+          }}>
+            SAFE ZONE: /work/
+          </div>
+        )}
+
+        {/* File labels */}
+        <div style={{
+          position: 'relative',
+          marginTop: showSafeFolder && hasSafeFolder ? '15px' : '-315px',
+          width: '100%',
+          maxWidth: '500px',
+          pointerEvents: 'none'
+        }}>
+          {Object.entries(fileSystem).map(([path, info], index) => {
+            const isInSafe = path.startsWith('/work/');
+            const blocked = showSafeFolder && hasSafeFolder && !isInSafe;
+            const x = isInSafe ? 78 : 278;
+            const y = 85 + (index % 3) * 45;
+
+            return (
+              <div key={path} style={{
+                position: 'absolute',
+                left: `${x}px`,
+                top: `${y}px`,
+                fontSize: typo.label,
+                color: blocked ? colors.textMuted : colors.textPrimary,
+                lineHeight: 1.3
+              }}>
+                <div style={{ fontWeight: 500 }}>{path.split('/').pop()}</div>
+                <div style={{
+                  fontSize: '9px',
+                  color: info.malicious ? colors.security.tainted : info.sensitive ? colors.security.untrusted : colors.textMuted,
+                  textTransform: 'uppercase'
+                }}>
+                  {info.malicious ? 'TAINTED' : info.sensitive ? 'SENSITIVE' : info.trusted ? 'trusted' : 'untrusted'}
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Agent label */}
+        <div style={{
+          position: 'relative',
+          marginTop: '115px',
+          fontSize: typo.body,
+          color: colors.textPrimary,
+          fontWeight: 'bold',
+          textAlign: 'center',
+          pointerEvents: 'none'
+        }}>
+          AGENT
+        </div>
+
+        {/* Status panel labels */}
+        <div style={{
+          position: 'absolute',
+          right: '30px',
+          top: '310px',
+          fontSize: typo.label,
+          color: colors.textSecondary,
+          textAlign: 'center',
+          pointerEvents: 'none',
+          width: '120px'
+        }}>
+          STATUS
+        </div>
+
+        <div style={{
+          position: 'absolute',
+          right: '10px',
+          top: '332px',
+          fontSize: typo.label,
+          pointerEvents: 'none'
+        }}>
+          <div style={{ marginBottom: '22px', marginLeft: '38px', color: colors.textPrimary }}>
+            {security.isTainted ? 'Tainted' : 'Clean'}
+          </div>
+          <div style={{ marginBottom: '22px', marginLeft: '38px', color: colors.textPrimary }}>
+            {hasSafeFolder ? 'Restricted' : 'Unrestricted'}
+          </div>
+          <div style={{ marginLeft: '38px', color: colors.textPrimary }}>
+            {security.status === 'blocked' ? 'Blocked' : injectionAttempted ? 'Attempted!' : 'No attack'}
+          </div>
+        </div>
+
+        <div style={{
+          position: 'absolute',
+          right: '20px',
+          top: '428px',
+          fontSize: typo.label,
+          color: agentFollowedInjection ? colors.error : colors.textPrimary,
+          fontWeight: 'bold',
+          textAlign: 'center',
+          width: '104px',
+          pointerEvents: 'none'
+        }}>
+          {agentFollowedInjection ? 'COMPROMISED!' : security.status === 'blocked' ? 'PROTECTED' : 'MONITORING'}
+        </div>
+
+        {/* Warning message label */}
+        {injectionAttempted && (
+          <div style={{
+            position: 'relative',
+            marginTop: '20px',
+            fontSize: typo.small,
+            color: agentFollowedInjection ? colors.error : colors.security.safe,
+            fontWeight: 'bold',
+            textAlign: 'center',
+            pointerEvents: 'none'
+          }}>
+            {agentFollowedInjection
+              ? 'INJECTION SUCCEEDED - Agent followed malicious instructions!'
+              : 'INJECTION BLOCKED - Safe folder rule prevented access!'}
+          </div>
+        )}
+
         {interactive && (
-          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px' }}>
+          <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap', justifyContent: 'center', padding: '8px', marginTop: injectionAttempted ? '8px' : '40px' }}>
             <button
               onClick={() => {
                 setFileBeingRead('/tmp/downloaded.txt');
@@ -531,11 +981,12 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
                 padding: '12px 24px',
                 borderRadius: '8px',
                 border: 'none',
-                background: colors.error,
+                background: `linear-gradient(135deg, ${colors.error} 0%, #b91c1c 100%)`,
                 color: 'white',
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
+                boxShadow: `0 4px 20px rgba(239, 68, 68, 0.4)`,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
@@ -550,12 +1001,12 @@ const PromptInjectionSafetyRenderer: React.FC<PromptInjectionSafetyRendererProps
               style={{
                 padding: '12px 24px',
                 borderRadius: '8px',
-                border: `1px solid ${colors.accent}`,
+                border: `2px solid ${colors.accent}`,
                 background: 'transparent',
                 color: colors.accent,
                 fontWeight: 'bold',
                 cursor: 'pointer',
-                fontSize: '14px',
+                fontSize: typo.body,
                 WebkitTapHighlightColor: 'transparent',
               }}
             >
